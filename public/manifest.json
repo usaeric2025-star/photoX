@@ -1,0 +1,21 @@
+{
+  "name": "產品相冊",
+  "short_name": "產品相冊",
+  "description": "產品照片分類和快速查找",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#cbd5e1",
+  "theme_color": "#cbd5e1",
+  "icons": [
+    {
+      "src": "https://www.gstatic.com/images/branding/product/1x/keep_2020q4_48dp.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://www.gstatic.com/images/branding/product/1x/keep_2020q4_48dp.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
