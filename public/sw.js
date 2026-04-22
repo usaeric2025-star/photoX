@@ -1,34 +1,76 @@
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+const CACHE_NAME = 'photox-offline-v4';
+const OFFLINE_URL = '/offline.html';
+const RESOURCES_TO_CACHE = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  OFFLINE_URL
+];
 
-workbox.core.clientsClaim();
-workbox.core.skipWaiting();
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(RESOURCES_TO_CACHE);
+      self.skipWaiting();
+    })()
+  );
+});
 
-// Network-first strategy for pages to ensure offline fallback functionality
-workbox.routing.registerRoute(
-    ({request}) => request.mode === 'navigate',
-    new workbox.strategies.NetworkFirst({
-        cacheName: 'pages-cache',
-        plugins: [
-            new workbox.cacheableResponse.CacheableResponsePlugin({statuses: [200]}),
-        ]
-    })
-);
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      if ('navigationPreload' in self.registration) {
+        await self.registration.navigationPreload.enable();
+      }
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+      self.clients.claim();
+    })()
+  );
+});
 
-// Stale-while-revalidate for assets
-workbox.routing.registerRoute(
-    ({request}) => request.destination === 'style' || request.destination === 'script' || request.destination === 'worker',
-    new workbox.strategies.StaleWhileRevalidate({
-        cacheName: 'assets-cache',
-    })
-);
-
-// Cache-first for images
-workbox.routing.registerRoute(
-    ({request}) => request.destination === 'image',
-    new workbox.strategies.CacheFirst({
-        cacheName: 'images-cache',
-        plugins: [
-            new workbox.expiration.ExpirationPlugin({maxEntries: 100}),
-        ]
-    })
-);
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const preloadResponse = await event.preloadResponse;
+          if (preloadResponse) {
+            return preloadResponse;
+          }
+          const networkResponse = await fetch(event.request);
+          return networkResponse;
+        } catch (error) {
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(OFFLINE_URL);
+          return cachedResponse;
+        }
+      })()
+    );
+  } else {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE_NAME);
+        const cachedResponse = await cache.match(event.request);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        try {
+          const networkResponse = await fetch(event.request);
+          return networkResponse;
+        } catch (error) {
+          // If fetch fails for other assets, we can silently fail
+        }
+      })()
+    );
+  }
+});
