@@ -5,10 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme-color" content="#cbd5e1" />
+    <meta name="theme-color" content="#ffffff" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="https://www.gstatic.com/images/branding/product/1x/keep_2020q4_48dp.png" />
-    <title>產品相冊</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <title>photoX</title>
+    
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('ServiceWorker registered:', reg.scope);
+          }).catch(err => {
+            console.log('ServiceWorker registration failed:', err);
+          });
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

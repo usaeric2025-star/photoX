@@ -468,7 +468,7 @@ export default function App() {
   const MainHeader = () => (
     <header className="sticky top-0 z-30 bg-white/40 backdrop-blur-md border-b border-white/50 px-6 pt-10 pb-4 flex items-center justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">產品相冊</h1>
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">photoX</h1>
         <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">已匯入 {photos.length} 張照片</p>
       </div>
       <div className="flex items-center gap-2">

@@ -1,21 +1,17 @@
 {
-  "name": "產品相冊",
-  "short_name": "產品相冊",
-  "description": "產品照片分類和快速查找",
+  "name": "photoX",
+  "short_name": "photoX",
+  "description": "企業內部分行專用產品分類與 AI 輔助相冊系統",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#cbd5e1",
-  "theme_color": "#cbd5e1",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "https://www.gstatic.com/images/branding/product/1x/keep_2020q4_48dp.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "https://www.gstatic.com/images/branding/product/1x/keep_2020q4_48dp.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
