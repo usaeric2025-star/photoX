@@ -6,22 +6,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="theme-color" content="#ffffff" />
-    <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>photoX</title>
-    
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').then(reg => {
-            console.log('ServiceWorker registered:', reg.scope);
-          }).catch(err => {
-            console.log('ServiceWorker registration failed:', err);
-          });
-        });
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
