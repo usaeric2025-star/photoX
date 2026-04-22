@@ -3,8 +3,10 @@
   "short_name": "photoX",
   "description": "企業內部分行專用產品分類與 AI 輔助相冊系統",
   "start_url": "/",
+  "id": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "dir": "ltr",
@@ -14,37 +16,38 @@
   "icons": [
     {
       "src": "/icon.svg",
-      "sizes": "48x48 72x72 96x96 128x128 256x256",
+      "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "https://www.gstatic.com/images/branding/product/1x/keep_2020q4_48dp.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
     {
-      "src": "https://www.gstatic.com/images/branding/product/1x/keep_2020q4_48dp.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "name": "新增照片",
+      "url": "/",
+      "description": "匯入新產品照片"
     }
   ],
   "screenshots": [
     {
-      "src": "https://www.gstatic.com/companion/icon_assets/keep_2020q4v3_2x.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/screenshot-wide.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
       "form_factor": "wide",
-      "label": "Desktop view placeholder"
+      "label": "Desktop interface"
     },
     {
-      "src": "https://www.gstatic.com/companion/icon_assets/keep_2020q4v3_2x.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/screenshot-narrow.svg",
+      "sizes": "720x1280",
+      "type": "image/svg+xml",
       "form_factor": "narrow",
-      "label": "Mobile view placeholder"
+      "label": "Mobile interface"
     }
   ]
 }
