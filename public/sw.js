@@ -1,50 +1,34 @@
-const CACHE_NAME = 'photox-cache-v2';
-const PRECACHE_URLS = ['/', '/index.html', '/manifest.json', '/icon.svg'];
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  );
-});
+workbox.core.clientsClaim();
+workbox.core.skipWaiting();
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(clients.claim());
-  // Clear old caches
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((cacheName) => cacheName !== CACHE_NAME)
-          .map((cacheName) => caches.delete(cacheName))
-      );
+// Network-first strategy for pages to ensure offline fallback functionality
+workbox.routing.registerRoute(
+    ({request}) => request.mode === 'navigate',
+    new workbox.strategies.NetworkFirst({
+        cacheName: 'pages-cache',
+        plugins: [
+            new workbox.cacheableResponse.CacheableResponsePlugin({statuses: [200]}),
+        ]
     })
-  );
-});
+);
 
-self.addEventListener('fetch', (event) => {
-  // Ignore non-GET requests and cross-origin requests
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
-        // Don't cache bad responses
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        return response;
-      }).catch(() => {
-        // Fallback for offline mode, ideally an offline page
-        return caches.match('/');
-      });
+// Stale-while-revalidate for assets
+workbox.routing.registerRoute(
+    ({request}) => request.destination === 'style' || request.destination === 'script' || request.destination === 'worker',
+    new workbox.strategies.StaleWhileRevalidate({
+        cacheName: 'assets-cache',
     })
-  );
-});
+);
+
+// Cache-first for images
+workbox.routing.registerRoute(
+    ({request}) => request.destination === 'image',
+    new workbox.strategies.CacheFirst({
+        cacheName: 'images-cache',
+        plugins: [
+            new workbox.expiration.ExpirationPlugin({maxEntries: 100}),
+        ]
+    })
+);
