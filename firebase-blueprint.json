@@ -1,0 +1,68 @@
+{
+  "entities": {
+    "Photo": {
+      "title": "Product Photo",
+      "description": "Information about a product photo, including its categorization and tags.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "uri": { "type": "string", "description": "The data URI of the photo" },
+        "categoryId": { "type": "string" },
+        "subcategoryId": { "type": "string" },
+        "tagIds": { "type": "array", "items": { "type": "string" } },
+        "note": { "type": "string" },
+        "timestamp": { "type": "number" },
+        "groupId": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "uri", "timestamp", "userId"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product category definition.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "aliases": { "type": "array", "items": { "type": "string" } },
+        "subcategories": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" }
+            }
+          }
+        },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "name", "userId"]
+    },
+    "Tag": {
+      "title": "Tag",
+      "description": "Product tag definition.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "name", "userId"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/photos/{photoId}": {
+      "schema": "Photo",
+      "description": "Stores individual photo metadata for a specific user."
+    },
+    "users/{userId}/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Stores custom categories defined by the user."
+    },
+    "users/{userId}/tags/{tagId}": {
+      "schema": "Tag",
+      "description": "Stores custom tags defined by the user."
+    }
+  }
+}

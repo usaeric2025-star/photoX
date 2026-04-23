@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprints
+    function isValidPhoto(data) {
+      return data.keys().hasAll(['id', 'uri', 'createdAt', 'userId']) 
+        && data.id is string && data.id.size() <= 100
+        && data.uri is string && data.uri.size() <= 2000000 
+        && data.createdAt is string
+        && data.userId == request.auth.uid
+        && (data.get('note', '') is string && data.note.size() <= 1000)
+        && (data.get('categoryId', null) == null || data.categoryId is string)
+        && (data.get('subcategoryId', null) == null || data.subcategoryId is string)
+        && (data.get('groupId', null) == null || data.groupId is string)
+        && (data.get('tagIds', []) is list && data.tagIds.size() <= 50);
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['id', 'name', 'userId'])
+        && data.id is string
+        && data.name is string && data.name.size() <= 100
+        && data.userId == request.auth.uid
+        && (data.get('aliases', []) is list)
+        && (data.get('subcategories', []) is list);
+    }
+
+    function isValidTag(data) {
+      return data.keys().hasAll(['id', 'name', 'userId'])
+        && data.id is string
+        && data.name is string && data.name.size() <= 100
+        && data.userId == request.auth.uid;
+    }
+
+    // Collection Rules
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      
+      match /photos/{photoId} {
+        allow get: if isOwner(userId) && isValidId(photoId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(photoId) && isValidPhoto(incoming());
+        allow update: if isOwner(userId) && isValidId(photoId) && isValidPhoto(incoming()) 
+                      && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(photoId);
+      }
+
+      match /categories/{categoryId} {
+        allow get: if isOwner(userId) && isValidId(categoryId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(categoryId) && isValidCategory(incoming());
+        allow update: if isOwner(userId) && isValidId(categoryId) && isValidCategory(incoming())
+                      && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(categoryId);
+      }
+
+      match /tags/{tagId} {
+        allow get: if isOwner(userId) && isValidId(tagId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(tagId) && isValidTag(incoming());
+        allow update: if isOwner(userId) && isValidId(tagId) && isValidTag(incoming())
+                      && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(tagId);
+      }
+    }
+  }
+}

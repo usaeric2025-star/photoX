@@ -16,12 +16,32 @@ import {
   Trash2,
   ChevronLeft,
   Filter,
-  Settings2
+  Settings2,
+  Layers,
+  Sparkles,
+  Minimize2,
+  LogIn,
+  Cloud
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo, Category, Tag, SubCategory } from './types';
 import { analyzeProductPhoto } from './services/geminiService';
 import { obfuscateKey, deobfuscateKey } from './utils/crypto';
+import { 
+  onAuthChange, 
+  loginWithGoogle, 
+  logout, 
+  loadPhotosFromCloud, 
+  loadCategoriesFromCloud, 
+  loadTagsFromCloud,
+  savePhotoToCloud,
+  deletePhotoFromCloud,
+  syncPhotosToCloud,
+  syncCategoriesToCloud,
+  syncTagsToCloud
+} from './services/firebaseService';
+import { User } from 'firebase/auth';
+import { Cloud, CloudOff, LogOut, LogIn, RefreshCcw } from 'lucide-react';
 
 // Default Data for initial setup
 const DEFAULT_CATEGORIES: Category[] = [
@@ -116,12 +136,92 @@ const loadData = async (key: string) => {
   });
 };
 
+// --- Photo Card Component (Memoized for Performance) ---
+interface PhotoCardProps {
+  photo: Photo;
+  isMultiSelect: boolean;
+  isSelected: boolean;
+  isGroupMaster: boolean;
+  groupCount: number;
+  categoryName: string | undefined;
+  onClick: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
+}
+
+const PhotoCard = React.memo(({ 
+  photo, 
+  isMultiSelect, 
+  isSelected, 
+  isGroupMaster, 
+  groupCount, 
+  categoryName, 
+  onClick, 
+  onContextMenu 
+}: PhotoCardProps) => {
+  return (
+    <motion.div 
+      initial={false}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`relative aspect-square rounded-2xl overflow-hidden group shadow-sm active:scale-95 transition-all ring-offset-2 will-change-transform ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    >
+      <img 
+        src={photo.uri} 
+        loading="lazy"
+        className={`w-full h-full object-cover transition-transform duration-500 ${isSelected ? 'scale-110 opacity-70' : 'group-hover:scale-105'}`}
+        alt="Product"
+      />
+      
+      {photo.groupId && (
+        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-[4px] text-[7px] text-white font-bold tracking-tighter flex items-center gap-1 border border-white/20">
+          <Layers size={8} />
+          {photo.groupId}
+        </div>
+      )}
+
+      {isGroupMaster && groupCount > 1 && (
+        <div className="absolute top-2 right-2 bg-blue-500 px-1.5 py-0.5 rounded-[4px] text-[7px] text-white font-bold shadow-lg ring-1 ring-white/30">
+          {groupCount}
+        </div>
+      )}
+
+      {isMultiSelect && !isGroupMaster && (
+        <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center shadow-md transition-all ${isSelected ? 'bg-blue-500 text-white' : 'bg-white/60 backdrop-blur-sm border border-white/50'}`}>
+          {isSelected && <Check size={12} strokeWidth={4} />}
+        </div>
+      )}
+      
+      {photo.isAnalyzing && (
+        <div 
+          onClick={(e) => e.stopPropagation()}
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col justify-center items-center cursor-default"
+        >
+          <div className="w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full animate-spin mb-1"></div>
+          <span className="text-[8px] text-white font-bold tracking-wider">AI</span>
+        </div>
+      )}
+
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
+        <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase">
+          {categoryName}
+        </p>
+      </div>
+    </motion.div>
+  );
+});
+
 export default function App() {
   // --- State ---
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncAction, setSyncAction] = useState<'push' | 'pull' | 'idle'>('idle');
+  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
   
   // Navigation & UI State
   const [activeScreen, setActiveScreen] = useState<'home' | 'add' | 'manage' | 'settings'>('home');
@@ -134,6 +234,10 @@ export default function App() {
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+  const [isUnifiedEditing, setIsUnifiedEditing] = useState(false);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Add/Edit Photo State
@@ -145,14 +249,47 @@ export default function App() {
   const [addTagIds, setAddTagIds] = useState<string[]>([]);
   const [addNote, setAddNote] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isImportAnalyzing, setIsImportAnalyzing] = useState<{current: parseInt, total: parseInt} | null>(null);
+  const [isBatchAnalyzing, setIsBatchAnalyzing] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   
   // Custom Confirm Dialog State
   const [confirmDialog, setConfirmDialog] = useState<{ message: string, onConfirm: () => void } | null>(null);
+  
+  // Custom Alert Dialog State (for replacing native alerts on mobile)
+  const [alertDialog, setAlertDialog] = useState<{ title: string, message: string } | null>(null);
 
   // Custom Prompt Dialog State
   const [promptDialog, setPromptDialog] = useState<{ title: string, placeholder: string, onSubmit: (val: string) => void } | null>(null);
   const [promptValue, setPromptValue] = useState('');
+
+  // Stuck Analysis Safety Net
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = Date.now();
+      setPhotos(prev => {
+        let changed = false;
+        const next = prev.map(p => {
+          if (p.isAnalyzing && p.createdAt) {
+             const created = new Date(p.createdAt).getTime();
+             if (now - created > 60000) { // 60 seconds threshold
+                changed = true;
+                return { ...p, isAnalyzing: false };
+             }
+          }
+          return p;
+        });
+        return changed ? next : prev;
+      });
+    }, 10000); // Check every 10 seconds
+    return () => clearInterval(timer);
+  }, []);
+
+  // Manage Screen Internal States (Moved here to stabilize component)
+  const [newCatName, setNewCatName] = useState('');
+  const [newTagName, setNewTagName] = useState('');
+  const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [newSubName, setNewSubName] = useState('');
 
   const quickAddCategory = () => {
     setPromptValue('');
@@ -199,152 +336,332 @@ export default function App() {
   };
 
   // Gemini API Key State
+  const [aiProvider, setAiProvider] = useState(localStorage.getItem('ai_provider') || 'auto');
   const [geminiApiKey, setGeminiApiKey] = useState(deobfuscateKey(localStorage.getItem('gemini_api_key_safe') || '') || process.env.GEMINI_API_KEY || '');
+  
+  // Cleanup deprecated models stored in user config
+  const initialCustomModel = localStorage.getItem('ai_custom_model') || '';
+  const [customModel, setCustomModel] = useState(() => {
+    if (initialCustomModel === 'llama-3.2-11b-vision-preview' || initialCustomModel === 'llama-3.2-90b-vision-preview') {
+      localStorage.removeItem('ai_custom_model');
+      return '';
+    }
+    return initialCustomModel;
+  });
+
+  // Refs for background workers
+  const catsRef = useRef(categories);
+  const tagsRef = useRef(tags);
+  const photosRef = useRef(photos);
+
+  useEffect(() => {
+    catsRef.current = categories;
+    tagsRef.current = tags;
+    photosRef.current = photos;
+  }, [categories, tags, photos]);
 
   // --- Effects ---
   useEffect(() => {
-    const boot = async () => {
+    const unsubscribe = onAuthChange(async (u) => {
+      setUser(u);
+      
+      // Always load from local on start to prevent overwriting recent offline changes
+      // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
       try {
         const savedPhotos = await loadData('product_photos');
         const savedCats = await loadData('product_categories');
         const savedTags = await loadData('product_tags');
         
-        if (savedPhotos) setPhotos(savedPhotos);
-        if (savedCats) setCategories(savedCats);
-        if (savedTags) setTags(savedTags);
+        if (savedPhotos && savedPhotos.length > 0) setPhotos(savedPhotos);
+        if (savedCats && savedCats.length > 0) setCategories(savedCats);
+        if (savedTags && savedTags.length > 0) setTags(savedTags);
       } catch (e) {
-        console.error('Failed to load from IndexedDB', e);
+        console.error("Local data load failed:", e);
       } finally {
         setIsInitializing(false);
       }
-    };
-    boot();
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
     if (isInitializing) return;
     const persist = async () => {
+      // Local Backup
       await saveData('product_photos', photos);
       await saveData('product_categories', categories);
       await saveData('product_tags', tags);
     };
-    persist();
-  }, [photos, categories, tags, isInitializing]);
+    const cleanup = persist();
+    return () => {
+      if (typeof cleanup === 'function') cleanup();
+    };
+  }, [photos, categories, tags, isInitializing, user]);
+
+  // Specific save/delete handlers for cloud performance
+  const syncItemToCloud = async (photo: Photo) => {
+    if (user) {
+      await savePhotoToCloud(user.uid, photo);
+    }
+  };
+
+  const removeItemFromCloud = async (photoId: string) => {
+    if (user) {
+      await deletePhotoFromCloud(user.uid, photoId);
+    }
+  };
 
   // --- Derived Data ---
   const filteredPhotos = useMemo(() => {
     return photos.filter(p => {
-      // Category filters
+      // ... same logic
       if (filterCatId && p.categoryId !== filterCatId) return false;
       if (filterSubId && p.subcategoryId !== filterSubId) return false;
       
-      // Tag filters (AND logic)
       if (filterTagIds.length > 0) {
         if (!filterTagIds.every(tid => p.tagIds.includes(tid))) return false;
       }
       
-      // Text search (aliases matching)
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
         const cat = categories.find(c => c.id === p.categoryId);
         const sub = cat?.subcategories.find(s => s.id === p.subcategoryId);
         const pTags = tags.filter(t => p.tagIds.includes(t.id));
         
-        const matchesCat = cat?.aliases.some(a => a.toLowerCase().includes(query));
-        const matchesSub = sub?.aliases.some(a => a.toLowerCase().includes(query));
-        const matchesTags = pTags.some(t => t.aliases.some(a => a.toLowerCase().includes(query)));
+        const matchesCat = cat?.name.toLowerCase().includes(query) || cat?.aliases.some(a => a.toLowerCase().includes(query));
+        const matchesSub = sub?.name.toLowerCase().includes(query) || sub?.aliases.some(a => a.toLowerCase().includes(query));
+        const matchesTags = pTags.some(t => t.name.toLowerCase().includes(query) || t.aliases.some(a => a.toLowerCase().includes(query)));
         const matchesNote = p.note.toLowerCase().includes(query);
+        const matchesGroupId = p.groupId?.toLowerCase().includes(query);
         
-        if (!matchesCat && !matchesSub && !matchesTags && !matchesNote) return false;
+        if (!matchesCat && !matchesSub && !matchesTags && !matchesNote && !matchesGroupId) return false;
       }
       
       return true;
     });
   }, [photos, filterCatId, filterSubId, filterTagIds, searchQuery, categories, tags]);
 
+  const displayPhotos = useMemo(() => {
+    if (!showGroupsCollapsed) return filteredPhotos;
+    const groupsSeen = new Set<string>();
+    return filteredPhotos.filter(p => {
+      if (!p.groupId) return true;
+      if (groupsSeen.has(p.groupId)) return false;
+      groupsSeen.add(p.groupId);
+      return true;
+    });
+  }, [filteredPhotos, showGroupsCollapsed]);
+
   // --- Handlers ---
+  const handleBatchAiIdentify = async () => {
+    // Check key
+    const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
+    
+    // 檢查是否有分類或標籤。如果缺少分類「或」缺少標籤，就會進行 AI 辨識。
+    const unProcessed = photos.filter(p => (!p.categoryId || !p.tagIds || p.tagIds.length === 0) && !p.isAnalyzing);
+    
+    if (unProcessed.length === 0) {
+      setAlertDialog({ title: '提示', message: '所有照片都已經有分類和標籤了，無需重複識別。' });
+      return;
+    }
+    
+    if (!effectiveKey) {
+      setAlertDialog({ title: '提示', message: '請先在設定中設定 AI 金鑰' });
+      return;
+    }
+
+    setBatchProgress({ current: 0, total: unProcessed.length });
+    setIsBatchAnalyzing(true);
+    let successCount = 0;
+
+    try {
+      for (let i = 0; i < unProcessed.length; i++) {
+        const photo = unProcessed[i];
+        setBatchProgress(prev => ({ ...prev, current: i + 1 }));
+        
+        // Mark as analyzing
+        setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
+        
+        try {
+          console.log(`DEBUG: Calling analyzeProductPhoto for ${photo.id}`);
+          const result = await analyzeProductPhoto(photo.uri, catsRef.current, tagsRef.current, effectiveKey, aiProvider, customModel);
+          console.log(`DEBUG: Result for ${photo.id}:`, result);
+          
+          let finalCatId = result.categoryId || null;
+          let finalSubId = result.subcategoryId || null;
+          let finalTagIds = result.tagIds || [];
+          
+          // Sync logic for new cats/tags
+          // ... (keep the existing logic)
+          if (result.newCategoryName && !result.categoryId) {
+            const newCat = { id: 'cat_' + Date.now() + Math.random().toString(36).substr(2, 5), name: result.newCategoryName, aliases: [], subcategories: [] };
+            setCategories(prev => [...prev, newCat]);
+            finalCatId = newCat.id;
+          } else if (result.newSubCategoryName && !result.subcategoryId && finalCatId) {
+             const newSubId = 'sub_' + Date.now();
+             setCategories(prev => prev.map(c => c.id === finalCatId ? {
+               ...c, subcategories: [...c.subcategories, { id: newSubId, name: result.newSubCategoryName, aliases: []}]
+             } : c));
+             finalSubId = newSubId;
+          }
+          
+          if (result.newTagName) {
+            const newTagId = 'tag_' + Date.now();
+            setTags(prev => [...prev, { id: newTagId, name: result.newTagName, aliases: [] }]);
+            finalTagIds.push(newTagId);
+          }
+
+          setPhotos(prev => prev.map(p => p.id === photo.id ? { 
+            ...p, 
+            categoryId: finalCatId, 
+            subcategoryId: finalSubId, 
+            tagIds: finalTagIds,
+            isAnalyzing: false 
+          } : p));
+          successCount++;
+
+        } catch (err: any) {
+          console.error("Batch AI skipped photo due to error:", photo.id, err);
+          const errorDetail = err.message || '未知錯誤';
+          
+          let alertMsg = `AI 辨識失敗。\n\n照片 ID: ${photo.id}\n錯誤原因: ${errorDetail}\n\n請檢查 API 金鑰是否有效、該金鑰是否支援視覺模型並且有足夠權限。`;
+          
+          setPhotos(prev => prev.map(p => p.id === photo.id ? { 
+            ...p, 
+            isAnalyzing: false,
+            note: `辨識失敗: ${errorDetail}` 
+          } : p));
+          
+          setAlertDialog({ title: '辨識失敗', message: alertMsg });
+          // Stop batch process immediately if an API fails (like 400, 401, quota, deprecation)
+          break;
+        }
+      }
+      if (successCount > 0) {
+        setAlertDialog({ title: '處理完成', message: `處理終止或完成！成功辨識了 ${successCount} 張照片。` });
+      }
+    } finally {
+      setIsBatchAnalyzing(false);
+      setBatchProgress({ current: 0, total: 0 });
+    }
+  };
+
   const handlePhotoImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
     const useAi = !!geminiApiKey || !!process.env.GEMINI_API_KEY;
-    if (useAi) setIsImportAnalyzing({ current: 1, total: files.length });
-    
-    let currentCats = [...categories];
-    let currentTags = [...tags];
-    let newPhotos: Photo[] = [];
-    
     const fileArray = Array.from(files);
     
-    for (let i = 0; i < fileArray.length; i++) {
-      if (useAi) setIsImportAnalyzing({ current: i + 1, total: fileArray.length });
-      const file = fileArray[i];
-      const rawUri = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (event) => resolve(event.target?.result as string);
-        reader.readAsDataURL(file);
-      });
-      const compressedUri = await compressImage(rawUri);
+    setIsImporting(true);
+    setActiveScreen('home');
+    
+    // Process in Chunks to avoid crashing/freezing
+    const CHUNK_SIZE = 5;
+    for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
+      const chunk = fileArray.slice(i, i + CHUNK_SIZE);
+      const newPhotosDraft: Photo[] = [];
       
-      let finalCatId = null;
-      let finalSubId = null;
-      let finalTagIds: string[] = [];
-      
-      if (useAi) {
-         try {
-           const result = await analyzeProductPhoto(compressedUri, currentCats, currentTags, geminiApiKey);
-           
-           if (result.newCategoryName && !result.categoryId) {
-              const newCat = { id: 'cat_' + Date.now() + Math.random().toString(36).substr(2, 5), name: result.newCategoryName, aliases: [], subcategories: [] };
-              currentCats.push(newCat);
-              finalCatId = newCat.id;
-           } else {
-              finalCatId = result.categoryId || null;
-           }
-           
-           if (result.newSubCategoryName && !result.subcategoryId && finalCatId) {
-              const catIndex = currentCats.findIndex(c => c.id === finalCatId);
-              if (catIndex >= 0) {
-                 const newSubId = 'sub_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                 currentCats[catIndex].subcategories.push({ id: newSubId, name: result.newSubCategoryName, aliases: [] });
-                 finalSubId = newSubId;
+      for (const file of chunk) {
+        try {
+          const rawUri = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target?.result as string);
+            reader.readAsDataURL(file);
+          });
+          const compressedUri = await compressImage(rawUri);
+          
+          // Check for exact duplicate
+          const isDuplicate = photosRef.current.some(p => p.uri === compressedUri) || newPhotosDraft.some(p => p.uri === compressedUri);
+          if (isDuplicate) continue;
+          
+          const newPhoto: Photo = {
+            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            uri: compressedUri,
+            categoryId: null,
+            subcategoryId: null,
+            tagIds: [],
+            note: '',
+            createdAt: new Date().toISOString(),
+            isAnalyzing: !!useAi
+          };
+          
+          newPhotosDraft.push(newPhoto);
+          
+          // Trigger AI if enabled (non-blocking)
+          if (useAi) {
+            (async (photoId: string, uri: string) => {
+              try {
+                const result = await analyzeProductPhoto(uri, catsRef.current, tagsRef.current, geminiApiKey, aiProvider, customModel);
+                let finalCatId = result.categoryId || null;
+                let finalSubId = result.subcategoryId || null;
+                let finalTagIds = result.tagIds || [];
+                
+                if (result.newCategoryName && !result.categoryId) {
+                  const newCat = { id: 'cat_' + Date.now() + Math.random().toString(36).substr(2, 5), name: result.newCategoryName, aliases: [], subcategories: [] };
+                  setCategories(prev => [...prev, newCat]);
+                  finalCatId = newCat.id;
+                } else if (result.newSubCategoryName && !result.subcategoryId && finalCatId) {
+                  const newSubId = 'sub_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                  setCategories(prev => prev.map(c => c.id === finalCatId ? {
+                    ...c, subcategories: [...c.subcategories, { id: newSubId, name: result.newSubCategoryName, aliases: []}]
+                  } : c));
+                  finalSubId = newSubId;
+                }
+                
+                if (result.newTagName) {
+                  const newTagId = 'tag_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                  setTags(prev => [...prev, { id: newTagId, name: result.newTagName, aliases: [] }]);
+                  finalTagIds.push(newTagId);
+                }
+                
+                setPhotos(prev => prev.map(p => p.id === photoId ? { 
+                  ...p, 
+                  categoryId: finalCatId, 
+                  subcategoryId: finalSubId, 
+                  tagIds: finalTagIds,
+                  isAnalyzing: false 
+                } : p));
+              } catch (err: any) {
+                console.error("AI Analysis failed:", err);
+                const errorDetail = err.message || '未知錯誤';
+                
+                // Update photo note with error
+                setPhotos(prev => prev.map(p => p.id === photoId ? { 
+                  ...p, 
+                  isAnalyzing: false,
+                  note: `辨識失敗: ${errorDetail}`
+                } : p));
+                
+                // Notify user safely using custom dialog
+                setAlertDialog({
+                  title: '辨識提醒',
+                  message: `單張相片 AI 辨識失敗。\n\n錯誤原因: ${errorDetail}\n\n請檢查 API Key 是否正確、模型名稱是否支援圖片輸入，或嘗試更換模型。`
+                });
               }
-           } else {
-              finalSubId = result.subcategoryId || null;
-           }
-           
-           finalTagIds = result.tagIds || [];
-           if (result.newTagName) {
-               const newTagId = 'tag_' + Date.now() + Math.random().toString(36).substr(2, 5);
-               currentTags.push({ id: newTagId, name: result.newTagName, aliases: [] });
-               finalTagIds.push(newTagId);
-           }
-           
-         } catch (err) {
-             console.error("AI Analysis failed for a photo", err);
-         }
+            })(newPhoto.id, newPhoto.uri);
+          }
+        } catch (err) {
+          console.error("File processing error", err);
+        }
       }
-
-      newPhotos.push({
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        uri: compressedUri,
-        categoryId: finalCatId,
-        subcategoryId: finalSubId,
-        tagIds: finalTagIds,
-        note: '',
-        createdAt: new Date().toISOString()
-      });
+      
+      // Update photos state with the processed chunk
+      if (newPhotosDraft.length > 0) {
+        setPhotos(prev => [...newPhotosDraft, ...prev]);
+        // Small delay to allow UI to render and JS engine to breathe
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     }
     
-    setCategories(currentCats);
-    setTags(currentTags);
-    setPhotos(prev => [...newPhotos, ...prev]);
-    if (useAi) setIsImportAnalyzing(null);
-    setActiveScreen('home');
+    setIsImporting(false);
   };
 
   const saveNewPhoto = async () => {
-    if (!newPhotoData || !addCatId) return;
+    if (!newPhotoData) return;
+    
+    // Default to 'uncategorized' if user hasn't selected a category for an existing photo
+    const catId = addCatId || 'uncategorized';
     
     const compressedData = await compressImage(newPhotoData);
     
@@ -352,7 +669,7 @@ export default function App() {
       setPhotos(prev => prev.map(p => p.id === editPhotoId ? {
         ...p,
         uri: compressedData,
-        categoryId: addCatId,
+        categoryId: catId,
         subcategoryId: addSubId,
         tagIds: addTagIds,
         note: addNote
@@ -362,7 +679,7 @@ export default function App() {
       const newPhoto: Photo = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         uri: compressedData,
-        categoryId: addCatId,
+        categoryId: catId,
         subcategoryId: addSubId,
         tagIds: addTagIds,
         note: addNote,
@@ -385,12 +702,17 @@ export default function App() {
   };
 
   const saveBatchEdit = () => {
-    if (!batchEditIds || !addCatId) return;
+    if (!batchEditIds) return;
+    // Allow saving if either a category is selected OR at least one tag is selected
+    if (!addCatId && addTagIds.length === 0) return;
+
     setPhotos(prev => prev.map(p => batchEditIds.includes(p.id) ? {
       ...p,
-      categoryId: addCatId!,
-      subcategoryId: addSubId,
-      tagIds: addTagIds
+      ...(addCatId ? { categoryId: addCatId } : {}),
+      ...(addSubId ? { subcategoryId: addSubId } : {}),
+      // If tags were touched, update them. Since they start empty in batch mode,
+      // any selection means the user wants to apply exactly those tags.
+      ...(addTagIds.length > 0 ? { tagIds: addTagIds } : {})
     } : p));
     resetAddState();
     setIsMultiSelect(false);
@@ -398,43 +720,75 @@ export default function App() {
   };
 
   const togglePhotoSelection = (id: string) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+    setSelectedIds(prev => {
+      const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+      if (next.length === 0) setIsMultiSelect(false);
+      return next;
+    });
+  };
+
+  const handleGroupPhotos = () => {
+    if (selectedIds.length < 2) {
+      setAlertDialog({ title: '系統提示', message: '請至少選取兩張照片來組成群組' });
+      return;
+    }
+    const newGroupId = 'G' + Math.floor(1000 + Math.random() * 9000);
+    setPhotos(prev => prev.map(p => 
+      selectedIds.includes(p.id) ? { ...p, groupId: newGroupId } : p
+    ));
+    setIsMultiSelect(false);
+    setSelectedIds([]);
+  };
+
+  const handleUngroup = (gid: string) => {
+    setPhotos(prev => prev.map(p => p.groupId === gid ? { ...p, groupId: null } : p));
   };
 
   const handleShare = async () => {
     if (selectedIds.length === 0) return;
+    const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
+
     try {
       if (navigator.share) {
         // Prepare files for sharing from base64 data URIs
-        const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
         const shareFiles = await Promise.all(
           selectedPhotos.map(async (photo, index) => {
             const res = await fetch(photo.uri);
             const blob = await res.blob();
             // Assign a reliable filename with jpg extension since we compressed as image/jpeg
-            return new File([blob], `product_${index + 1}.jpg`, { type: 'image/jpeg' });
+            return new File([blob], `photoX_${new Date().getTime()}_${index + 1}.jpg`, { type: 'image/jpeg' });
           })
         );
 
         if (navigator.canShare && navigator.canShare({ files: shareFiles })) {
           await navigator.share({
-            title: '產品照片分享',
+            title: 'photoX 照片分享',
             files: shareFiles
           });
-        } else {
-          // Fallback if the device doesn't support file sharing
-          await navigator.share({
-            title: '分享產品照片',
-            text: `(您的裝置不支援直接分享圖片) 這裡有 ${selectedIds.length} 張產品照片`
-          });
+          return; // Exit after successful share
         }
-      } else {
-        alert('您的瀏覽器不支援原生分享。');
-      }
+      } 
+      
+      // Fallback: If share API fails or is not supported (WebView environment)
+      setAlertDialog({ title: '系統提示', message: '當前應用環境不支援原生分享，將自動為您下載圖片至手機中以便分享。' });
+      selectedPhotos.forEach((photo, index) => {
+        // slight delay to prevent popup blockers for multiple downloads
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = photo.uri;
+          link.download = `photoX_export_${new Date().getTime()}_${index + 1}.jpg`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }, index * 200);
+      });
+
     } catch (err) {
-      console.error('Share error:', err);
+      console.error('Share/Download error:', err);
+      // Sometimes user cancelling share throws an error, we ignore it usually. If it fails, fallback to download.
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setAlertDialog({ title: '系統提示', message: '分享遭中斷，可嘗試直接備份下載。' });
+      }
     }
   };
 
@@ -464,22 +818,40 @@ export default function App() {
     });
   };
 
-  // --- UI Components ---
-  const MainHeader = () => (
-    <header className="sticky top-0 z-30 bg-white/40 backdrop-blur-md border-b border-white/50 px-6 pt-10 pb-4 flex items-center justify-between">
+  // --- UI Render Functions (Defined as functions to prevent remounting) ---
+  const renderMainHeader = () => (
+    <header className="relative z-50 bg-white/10 border-b border-white/20 px-6 pt-10 pb-4 flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-bold text-slate-800 tracking-tight">photoX</h1>
         <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">已匯入 {photos.length} 張照片</p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative z-50">
+        <button 
+          onClick={handleBatchAiIdentify}
+          disabled={isBatchAnalyzing}
+          className={`cursor-pointer touch-manipulation relative z-50 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-1 shadow-sm ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white/60 border-white/50 text-purple-600 hover:bg-purple-50'}`}
+        >
+          {isBatchAnalyzing ? (
+             <><span className="animate-pulse">AI {batchProgress.current}/{batchProgress.total}</span></>
+          ) : (
+             <><Sparkles size={14} className="text-purple-500" /> AI</>
+          )}
+        </button>
         <button 
           onClick={() => {
-            setIsMultiSelect(!isMultiSelect);
-            if (isMultiSelect) setSelectedIds([]);
+            if (isMultiSelect) {
+              if (selectedIds.length === filteredPhotos.length) {
+                setSelectedIds([]);
+              } else {
+                setSelectedIds(filteredPhotos.map(p => p.id));
+              }
+            } else {
+              setIsMultiSelect(true);
+            }
           }}
           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
         >
-          {isMultiSelect ? '取消選擇' : '選擇'}
+          {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
         </button>
         <button 
           onClick={() => setActiveScreen('manage')}
@@ -495,28 +867,37 @@ export default function App() {
     </header>
   );
 
-  const SearchAndFilter = () => (
-    <div className="bg-transparent px-6 py-4 space-y-4 sticky top-[97px] z-20">
-      <div className="relative group">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600 transition-colors" size={18} />
-        <input 
-          type="text" 
-          placeholder="搜尋產品、分類或標籤..."
-          className="w-full bg-white/50 border border-white/50 rounded-2xl py-3 pl-11 pr-4 text-sm focus:bg-white/80 transition-all outline-none text-slate-800 placeholder-slate-400 border border-white/50"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        {searchQuery && (
-          <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-            <X size={16} />
-          </button>
-        )}
+  const renderSearchAndFilter = () => (
+    <div className="bg-transparent px-6 py-2 space-y-3">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600 transition-colors" size={14} />
+          <input 
+            type="text" 
+            placeholder="搜尋..."
+            className="w-full bg-white/40 border border-white/50 rounded-xl py-2 pl-9 pr-4 text-xs focus:bg-white/80 transition-all outline-none text-slate-800 placeholder-slate-400"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <button 
+          onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
+          className={`p-2 rounded-xl border transition-all ${showGroupsCollapsed ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white/40 border-white/50 text-slate-500'}`}
+          title={showGroupsCollapsed ? "展開群組" : "合併群組"}
+        >
+          <Layers size={16} />
+        </button>
       </div>
 
-      <div className="flex overflow-x-auto pb-1 gap-2 scrollbar-none no-scrollbar">
+      <div className="flex overflow-x-auto pb-1 gap-1.5 no-scrollbar">
         <button 
           onClick={() => { setFilterCatId(null); setFilterSubId(null); }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${!filterCatId ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white/60 border-white/40 text-slate-700'}`}
+          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight whitespace-nowrap transition-all border ${!filterCatId ? 'bg-slate-800 border-slate-800 text-white shadow-sm' : 'bg-white/40 border-white/40 text-slate-600'}`}
         >
           全部
         </button>
@@ -524,7 +905,7 @@ export default function App() {
           <button 
             key={cat.id}
             onClick={() => { setFilterCatId(cat.id); setFilterSubId(null); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border ${filterCatId === cat.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white/60 border-white/40 text-slate-700'}`}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight whitespace-nowrap transition-all border ${filterCatId === cat.id ? 'bg-slate-800 border-slate-800 text-white shadow-sm' : 'bg-white/40 border-white/40 text-slate-600'}`}
           >
             {cat.name}
           </button>
@@ -532,97 +913,108 @@ export default function App() {
       </div>
 
       <AnimatePresence>
-        {filterCatId && (
+        {(filterCatId || tags.length > 0) && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }} 
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex overflow-x-auto pb-1 gap-2 no-scrollbar"
+            className="space-y-2 overflow-hidden"
           >
-            <button 
-              onClick={() => setFilterSubId(null)}
-              className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${!filterSubId ? 'bg-slate-600 border-slate-600 text-white' : 'bg-white/40 border-white/20 text-slate-500'}`}
-            >
-              全部子類
-            </button>
-            {categories.find(c => c.id === filterCatId)?.subcategories.map(sub => (
-              <button 
-                key={sub.id}
-                onClick={() => setFilterSubId(sub.id)}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap border transition-all ${filterSubId === sub.id ? 'bg-slate-600 border-slate-600 text-white' : 'bg-white/40 border-white/20 text-slate-500'}`}
-              >
-                {sub.name}
-              </button>
-            ))}
+            {filterCatId && (
+              <div className="flex overflow-x-auto pb-1 gap-1.5 no-scrollbar">
+                <button 
+                  onClick={() => setFilterSubId(null)}
+                  className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tighter whitespace-nowrap border transition-all ${!filterSubId ? 'bg-slate-600 border-slate-600 text-white' : 'bg-white/40 border-white/20 text-slate-500'}`}
+                >
+                  ALL
+                </button>
+                {categories.find(c => c.id === filterCatId)?.subcategories.map(sub => (
+                  <button 
+                    key={sub.id}
+                    onClick={() => setFilterSubId(sub.id)}
+                    className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tighter whitespace-nowrap border transition-all ${filterSubId === sub.id ? 'bg-slate-600 border-slate-600 text-white' : 'bg-white/40 border-white/20 text-slate-500'}`}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex overflow-x-auto pb-1 gap-1.5 no-scrollbar">
+              {tags.map(tag => (
+                <button 
+                  key={tag.id}
+                  onClick={() => setFilterTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
+                  className={`px-2 py-0.5 rounded-md text-[9px] font-bold whitespace-nowrap transition-all border ${filterTagIds.includes(tag.id) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-slate-100/40 border-slate-200/40 text-slate-500'}`}
+                >
+                  #{tag.name}
+                </button>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar">
-        {tags.map(tag => (
-          <button 
-            key={tag.id}
-            onClick={() => setFilterTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
-            className={`px-2 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap transition-all border ${filterTagIds.includes(tag.id) ? 'bg-blue-500/80 border-blue-500 text-white shadow-sm' : 'bg-slate-100/50 border-slate-200/50 text-slate-600'}`}
-          >
-            #{tag.name}
-          </button>
-        ))}
-      </div>
     </div>
   );
 
-  const HomeView = () => (
+  const renderHomeView = () => (
     <div className="flex flex-col min-h-screen bg-transparent pb-32">
-      <MainHeader />
-      <SearchAndFilter />
+      {renderMainHeader()}
+      {renderSearchAndFilter()}
       
       <div className="px-6 py-2">
         <div className="grid grid-cols-3 gap-3">
-          {filteredPhotos.map((photo) => (
-            <motion.div 
-              layout
-              key={photo.id}
-              className={`relative aspect-square rounded-2xl overflow-hidden group shadow-sm active:scale-95 transition-all ring-offset-2 ${selectedIds.includes(photo.id) ? 'ring-2 ring-blue-500' : ''}`}
-              onClick={() => {
-                if (isMultiSelect) {
-                  togglePhotoSelection(photo.id);
-                } else {
-                  setPreviewUri(photo.uri);
-                }
-              }}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                setEditPhotoId(photo.id);
-                setAddCatId(photo.categoryId);
-                setAddSubId(photo.subcategoryId);
-                setAddTagIds(photo.tagIds);
-                setAddNote(photo.note);
-                setNewPhotoData(photo.uri);
-              }}
-            >
-              <img 
-                src={photo.uri} 
-                className={`w-full h-full object-cover transition-all duration-300 ${selectedIds.includes(photo.id) ? 'scale-110 opacity-70' : 'group-hover:scale-105'}`}
-                alt="Product"
-              />
-              
-              {isMultiSelect && (
-                <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center shadow-md transition-all ${selectedIds.includes(photo.id) ? 'bg-blue-500 text-white' : 'bg-white/60 backdrop-blur-sm border border-white/50'}`}>
-                  {selectedIds.includes(photo.id) && <Check size={12} strokeWidth={4} />}
-                </div>
-              )}
+          {displayPhotos.map((photo) => {
+            const groupPhotos = photo.groupId ? photos.filter(p => p.groupId === photo.groupId) : [];
+            const isGroupMaster = photo.groupId && showGroupsCollapsed;
+            const groupCount = groupPhotos.length;
+            const isGroupSelected = isGroupMaster ? groupPhotos.every(p => selectedIds.includes(p.id)) : selectedIds.includes(photo.id);
 
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
-                <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase">
-                  {categories.find(c => c.id === photo.categoryId)?.name}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+            return (
+              <PhotoCard 
+                key={photo.id}
+                photo={photo}
+                isMultiSelect={isMultiSelect}
+                isSelected={isGroupSelected}
+                isGroupMaster={isGroupMaster}
+                groupCount={groupCount}
+                categoryName={categories.find(c => c.id === photo.categoryId)?.name}
+                onClick={() => {
+                  if (isMultiSelect) {
+                    if (isGroupMaster) {
+                      const gIds = groupPhotos.map(p => p.id);
+                      if (isGroupSelected) {
+                        const next = selectedIds.filter(id => !gIds.includes(id));
+                        setSelectedIds(next);
+                        if (next.length === 0) setIsMultiSelect(false);
+                      } else {
+                        setSelectedIds(prev => [...new Set([...prev, ...gIds])]);
+                      }
+                    } else {
+                      togglePhotoSelection(photo.id);
+                    }
+                  } else {
+                    if (isGroupMaster) {
+                      setActiveGroupId(photo.groupId!);
+                    } else {
+                      setPreviewUri(photo.uri);
+                    }
+                  }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setEditPhotoId(photo.id);
+                  setAddCatId(photo.categoryId);
+                  setAddSubId(photo.subcategoryId);
+                  setAddTagIds(photo.tagIds);
+                  setAddNote(photo.note);
+                  setNewPhotoData(photo.uri);
+                }}
+              />
+            );
+          })}
         </div>
         
-        {filteredPhotos.length === 0 && (
+        {displayPhotos.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white/50 shadow-sm">
               <ImageIcon size={32} className="opacity-40" />
@@ -630,8 +1022,6 @@ export default function App() {
             <p className="text-xs font-medium">找不到符合條件的照片</p>
           </div>
         )}
-      </div>
-
       <AnimatePresence>
         {isMultiSelect && (
           <motion.div 
@@ -641,33 +1031,17 @@ export default function App() {
             className="fixed bottom-10 left-10 right-10 z-40 bg-white/80 backdrop-blur-xl rounded-[32px] p-4 flex flex-col gap-3 shadow-2xl border border-white/50"
           >
             <div className="flex justify-between items-center px-2">
-              <div className="flex flex-col">
-                <span className={`text-xs font-bold transition-colors ${selectedIds.length > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
-                  {selectedIds.length > 0 ? `已選取 ${selectedIds.length} 張照片` : `請點選照片`}
-                </span>
-                <div className="flex gap-2 mt-1">
-                  <button 
-                    onClick={() => {
-                      if (selectedIds.length === filteredPhotos.length) {
-                        setSelectedIds([]);
-                      } else {
-                        setSelectedIds(filteredPhotos.map(p => p.id));
-                      }
-                    }}
-                    className="text-[10px] text-blue-500 font-bold hover:text-blue-700"
-                  >
-                    {selectedIds.length === filteredPhotos.length ? '取消全選' : '全選'}
-                  </button>
-                  <span className="text-[10px] text-slate-300">|</span>
-                  <button 
-                    onClick={() => { setIsMultiSelect(false); setSelectedIds([]); }}
-                    className="text-[10px] text-slate-400 font-medium hover:text-slate-600"
-                  >
-                    結束選擇
-                  </button>
-                </div>
-              </div>
-              <div className="flex gap-4">
+              <span className={`text-xs font-bold transition-colors ${selectedIds.length > 0 ? 'text-blue-600' : 'text-slate-400'}`}>
+                {selectedIds.length > 0 ? `已選取 ${selectedIds.length} 張` : `選取照片`}
+              </span>
+              <button 
+                onClick={() => { setIsMultiSelect(false); setSelectedIds([]); }}
+                className="text-[10px] text-slate-400 font-medium hover:text-slate-600"
+              >
+                結束選擇
+              </button>
+            </div>
+            <div className="flex gap-4 items-center justify-center">
                 <button 
                   disabled={selectedIds.length === 0}
                   onClick={() => {
@@ -694,6 +1068,17 @@ export default function App() {
                    <span className="text-[9px] mt-1 text-blue-600 font-bold">分享</span>
                 </button>
 
+                <button 
+                  disabled={selectedIds.length < 2}
+                  onClick={handleGroupPhotos}
+                  className="flex flex-col items-center group disabled:opacity-30 disabled:pointer-events-none"
+                >
+                   <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shadow-sm group-active:scale-90 transition-transform">
+                     <Layers size={18} />
+                   </div>
+                   <span className="text-[9px] mt-1 text-purple-600 font-bold">設為同組</span>
+                </button>
+
                 {selectedIds.length > 0 && (
                   <button 
                     onClick={deleteSelected}
@@ -705,25 +1090,30 @@ export default function App() {
                      <span className="text-[9px] mt-1 font-bold">刪除</span>
                   </button>
                 )}
-              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 
-  const BatchEditScreen = () => (
-    <div className="absolute inset-0 z-[60] bg-white/60 backdrop-blur-xl flex flex-col pt-safe">
+  const renderBatchEditScreen = () => (
+    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
       <div className="px-6 py-4 border-b border-white/50 flex items-center justify-between">
         <button onClick={resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
           <X size={24} />
         </button>
         <h2 className="font-bold text-lg text-slate-800">批量修改 ({batchEditIds?.length} 張)</h2>
         <button 
-          onClick={saveBatchEdit}
-          disabled={!addCatId}
-          className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg disabled:opacity-30 disabled:shadow-none transition-all active:scale-95"
+          onClick={() => {
+            if (!addCatId && addTagIds.length === 0) {
+              setAlertDialog({ title: '系統提示', message: "請至少選擇一個「主分類」或「統一標籤」才能進行套用。" });
+              return;
+            }
+            saveBatchEdit();
+          }}
+          className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95"
         >
           套用
         </button>
@@ -801,20 +1191,29 @@ export default function App() {
     </div>
   );
 
-  const AddPhotoScreen = () => (
-    <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-xl flex flex-col pt-safe">
+  const renderAddPhotoScreen = () => (
+    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
       <div className="px-6 py-4 border-b border-white/50 flex items-center justify-between">
         <button onClick={() => { resetAddState(); setActiveScreen('home'); }} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
           <X size={24} />
         </button>
         <h2 className="font-bold text-lg text-slate-800">{editPhotoId ? '編輯產品資訊' : '分類產品照片'}</h2>
-        <button 
-          onClick={saveNewPhoto}
-          disabled={!addCatId}
-          className="bg-slate-800 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg disabled:opacity-30 disabled:shadow-none transition-all active:scale-95"
-        >
-          儲存
-        </button>
+        <div className="flex items-center gap-2">
+          {editPhotoId && (
+            <button 
+              onClick={() => deletePhoto(editPhotoId)}
+              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <Trash2 size={20} />
+            </button>
+          )}
+          <button 
+            onClick={saveNewPhoto}
+            className="bg-slate-800 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95"
+          >
+            儲存
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-20">
@@ -884,63 +1283,6 @@ export default function App() {
         <section className="space-y-3">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">備註</h3>
-            <button 
-              onClick={async () => {
-                if (!newPhotoData) return;
-                setIsAnalyzing(true);
-                try {
-                  const result = await analyzeProductPhoto(newPhotoData, categories, tags, geminiApiKey);
-                  // Update logic for AI generating new categories
-                  if (result.newCategoryName && !result.categoryId) {
-                     const newCat = { id: 'cat_' + Date.now(), name: result.newCategoryName, aliases: [], subcategories: [] };
-                     setCategories(prev => [...prev, newCat]);
-                     setAddCatId(newCat.id);
-                  } else if (result.categoryId) {
-                     setAddCatId(result.categoryId);
-                  }
-                  
-                  if (result.newSubCategoryName && !result.subcategoryId) {
-                     const subIdToUse = result.categoryId || addCatId;
-                     if (subIdToUse) {
-                       const newSubId = 'sub_' + Date.now();
-                       setCategories(prev => prev.map(c => c.id === subIdToUse ? {
-                         ...c,
-                         subcategories: [...c.subcategories, { id: newSubId, name: result.newSubCategoryName, aliases: [] }]
-                       } : c));
-                       setAddSubId(newSubId);
-                     }
-                  } else if (result.subcategoryId) {
-                     setAddSubId(result.subcategoryId);
-                  }
-                  
-                  let newTagId = null;
-                  if (result.newTagName) {
-                     newTagId = 'tag_' + Date.now();
-                     setTags(prev => [...prev, { id: newTagId, name: result.newTagName, aliases: []}]);
-                  }
-                  
-                  if ((result.tagIds && result.tagIds.length > 0) || newTagId) {
-                    setAddTagIds(prev => {
-                      const all = new Set([...prev, ...(result.tagIds || [])]);
-                      if (newTagId) all.add(newTagId);
-                      return Array.from(all);
-                    });
-                  }
-                } catch (e: any) {
-                  alert(e.message);
-                } finally {
-                  setIsAnalyzing(false);
-                }
-              }}
-              disabled={isAnalyzing || (!geminiApiKey && !process.env.GEMINI_API_KEY)}
-              className="px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg text-white text-[10px] font-bold shadow-md shadow-purple-500/30 flex items-center gap-1 active:scale-95 transition-all disabled:opacity-50 disabled:grayscale"
-            >
-              {isAnalyzing ? (
-                <span className="animate-pulse">辨識中...</span>
-              ) : (
-                <>✨ AI 智能辨識與撰寫</>
-              )}
-            </button>
           </div>
           <textarea 
             placeholder="輸入產品特色或注意事項..."
@@ -977,6 +1319,19 @@ export default function App() {
     });
   };
 
+  const deletePhoto = (id: string) => {
+    setConfirmDialog({
+      message: '確定要刪除這張照片嗎？',
+      onConfirm: () => {
+        setPhotos(prev => prev.filter(p => p.id !== id));
+        if (editPhotoId === id) {
+          resetAddState();
+          setActiveScreen('home');
+        }
+      }
+    });
+  };
+
   const deleteTag = (id: string) => {
     setConfirmDialog({
       message: '確定要刪除此標籤嗎？',
@@ -990,12 +1345,7 @@ export default function App() {
     });
   };
 
-  const ManageScreen = () => {
-    const [newCatName, setNewCatName] = useState('');
-    const [newTagName, setNewTagName] = useState('');
-    const [expandedCat, setExpandedCat] = useState<string | null>(null);
-    const [newSubName, setNewSubName] = useState('');
-
+  const renderManageScreen = () => {
     const addCategory = () => {
       if (!newCatName.trim()) return;
       const newCat: Category = {
@@ -1033,8 +1383,8 @@ export default function App() {
     };
 
     return (
-      <div className="absolute inset-0 z-50 bg-slate-50/80 backdrop-blur-xl flex flex-col pt-safe">
-        <div className="px-6 py-4 border-b border-white/50 flex items-center gap-3 bg-white/40">
+      <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
+        <div className="px-6 py-4 border-b border-white/50 flex items-center gap-3 bg-white/40 pt-safe">
           <button onClick={() => setActiveScreen('home')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
             <ChevronLeft size={24} />
           </button>
@@ -1187,8 +1537,74 @@ export default function App() {
     );
   };
 
-  const SettingsScreen = () => (
-    <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-xl flex flex-col pt-safe">
+  const handleCloudSync = () => {                
+    if (!user) return;
+  };
+
+  const performPushSync = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    setSyncAction('push');
+    try {
+      await syncPhotosToCloud(user.uid, photos);
+      await syncCategoriesToCloud(user.uid, categories);
+      await syncTagsToCloud(user.uid, tags);
+      setLastSyncTime(Date.now());
+      setAlertDialog({ title: '系統提示', message: '已成功將本地資料上傳並覆蓋雲端！' });
+    } catch (e) {
+      console.error(e);
+      setAlertDialog({ title: '系統提示', message: '上傳失敗，請檢查網路連線。' });
+    } finally {
+      setIsSyncing(false);
+      setSyncAction('idle');
+    }
+  };
+
+  const performPullSync = async () => {
+    if (!user) return;
+    if (!window.confirm("警告：從雲端下載將會覆蓋您設備上目前的所有資料。如果您近期在本機有新增或刪除相片且「尚未上傳備份」，這些變更將會遺失（被刪除的照片會因為雲端還有存檔而重新出現）。\n\n您確定要繼續下載嗎？")) {
+      return;
+    }
+    setIsSyncing(true);
+    setSyncAction('pull');
+    try {
+      const cloudPhotos = await loadPhotosFromCloud(user.uid);
+      const cloudCats = await loadCategoriesFromCloud(user.uid);
+      const cloudTags = await loadTagsFromCloud(user.uid);
+      
+      setPhotos(cloudPhotos);
+      setCategories(cloudCats);
+      setTags(cloudTags);
+      
+      await saveData('product_photos', cloudPhotos);
+      await saveData('product_categories', cloudCats);
+      await saveData('product_tags', cloudTags);
+
+      setLastSyncTime(Date.now());
+      setAlertDialog({ title: '系統提示', message: '已成功將雲端資料下載並覆蓋本地！' });
+    } catch (e) {
+      console.error(e);
+      setAlertDialog({ title: '系統提示', message: '下載失敗，請檢查網路連線。' });
+    } finally {
+      setIsSyncing(false);
+      setSyncAction('idle');
+    }
+  };
+
+  const handleLogin = async () => {
+    try {
+      const u = await loginWithGoogle();
+      if (u) {
+        setAlertDialog({ title: '系統提示', message: `歡迎回來, ${u.displayName}！已開啟雲端同步。` });
+      }
+    } catch (e) {
+      console.error(e);
+      setAlertDialog({ title: '系統提示', message: '登入失敗，請稍後再試。' });
+    }
+  };
+
+  const renderSettingsScreen = () => (
+    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
       <div className="px-6 py-4 border-b border-white/50 flex items-center gap-3">
         <button onClick={() => setActiveScreen('manage')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
           <ChevronLeft size={24} />
@@ -1196,22 +1612,144 @@ export default function App() {
         <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1">其他設定</h2>
       </div>
 
-      <div className="p-6">
-        <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4 mb-4">
-          <h4 className="font-bold text-slate-800 text-sm">✨ AI 功能設定</h4>
-          <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-            設定您的 Google Gemini API Key 以啟用「智能辨識」功能。自動分類與文案撰寫功能需要此金鑰。
+      <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-20">
+        {/* Firebase Cloud Sync Section */}
+        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 shadow-xl border border-white/10 space-y-4 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
+          
+          <div className="flex items-center justify-between">
+            <h4 className="font-bold text-white text-sm flex items-center gap-2">
+              <Cloud size={18} className={user ? 'text-blue-400' : 'text-slate-500'} />
+              雲端同步中心
+            </h4>
+            {user && (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/20 rounded-full border border-blue-500/30">
+                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                <span className="text-[9px] font-bold text-blue-300 uppercase leading-none">Connected</span>
+              </div>
+            )}
+          </div>
+
+          <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+            使用 Google 登入後，您的照片記錄與分類標籤將自動備份至雲端，實現跨設備同步。
           </p>
-          <input 
-            type="password" 
-            placeholder="填寫 Gemini API Key..."
-            className="w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
-            value={geminiApiKey}
-            onChange={(e) => {
-              setGeminiApiKey(e.target.value);
-              localStorage.setItem('gemini_api_key_safe', obfuscateKey(e.target.value));
-            }}
-          />
+
+          {!user ? (
+            <button 
+              onClick={handleLogin}
+              className="w-full bg-white text-slate-900 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+            >
+              <LogIn size={16} /> 使用 Google 登入
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-white/20" alt="Avatar" />
+                  <div>
+                    <p className="text-white text-xs font-bold truncate max-w-[120px]">{user.displayName}</p>
+                    <p className="text-[9px] text-slate-500 truncate max-w-[120px]">{user.email}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => { logout(); setUser(null); }}
+                  className="bg-white/10 hover:bg-red-500/20 text-slate-400 hover:text-red-400 p-2 rounded-xl transition-all"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={performPushSync}
+                  disabled={isSyncing}
+                  className="bg-blue-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isSyncing && syncAction === 'push' ? (
+                    <>
+                      <RefreshCcw size={16} className="animate-spin" />
+                      上傳中...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw size={16} />
+                      上傳備份
+                    </>
+                  )}
+                </button>
+                <button 
+                  onClick={performPullSync}
+                  disabled={isSyncing}
+                  className="bg-red-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95 transition-all disabled:opacity-50"
+                >
+                  {isSyncing && syncAction === 'pull' ? (
+                    <>
+                      <RefreshCcw size={16} className="animate-spin" />
+                      下載中...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCcw size={16} />
+                      下載備份
+                    </>
+                  )}
+                </button>
+                <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2">
+                   <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">雲端備份</p>
+                   <p className="text-[10px] text-slate-300 font-mono">{photos.length} 張 | {lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : '未同步'}</p>
+                </div>
+              </div>
+            </div>)}
+        </div>
+
+        <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 shadow-sm border border-white/50 space-y-4">
+          <h4 className="font-bold text-slate-800 text-sm">✨ AI 智慧辨識切換器 (多平台體驗)</h4>
+          <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+            您的應用程式已升級「通用 AI 引擎」。您可以貼上支援平台的 API Key 啟用極速辨識通道 (不再塞車)：
+          </p>
+          
+          <div className="space-y-3">
+            <input 
+              type="password" 
+              placeholder="請貼上您申請的 API Key..."
+              className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
+              value={geminiApiKey}
+              onChange={(e) => {
+                setGeminiApiKey(e.target.value);
+                localStorage.setItem('gemini_api_key_safe', obfuscateKey(e.target.value));
+              }}
+            />
+            <input 
+              type="text" 
+              placeholder="指定特定模型 (選填，如: tencent/hy3-preview:free)"
+              className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
+              value={customModel}
+              onChange={(e) => {
+                setCustomModel(e.target.value);
+                localStorage.setItem('ai_custom_model', e.target.value);
+              }}
+            />
+            {geminiApiKey && (
+              <div className="mt-2 text-[10px] font-bold text-slate-500 bg-white/40 p-3 rounded-lg border border-white/60 flex flex-col gap-2 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span>當前生效通道</span>
+                  <span className="text-purple-600 bg-purple-100/50 px-2 py-1 rounded-md">{
+                    (geminiApiKey.startsWith('AIza')) ? '✨ Google Gemini API' :
+                    (aiProvider === 'openrouter' || (aiProvider === 'auto' && geminiApiKey.startsWith('sk-or-'))) ? '🌐 OpenRouter' :
+                    (aiProvider === 'github' || (aiProvider === 'auto' && geminiApiKey.startsWith('ghp_'))) ? '🐙 GitHub Models' :
+                    (aiProvider === 'groq' || (aiProvider === 'auto' && geminiApiKey.startsWith('gsk_'))) ? '🚀 Groq' :
+                    '🚀 Groq (目前預設)'
+                  }</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>實際使用模型</span>
+                  <span className="text-slate-700 bg-white/50 px-2 py-1 rounded-md border border-slate-200">
+                    {customModel || '預設模型'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4">
@@ -1250,9 +1788,9 @@ export default function App() {
                       if (json.photos) setPhotos(json.photos);
                       if (json.categories) setCategories(json.categories);
                       if (json.tags) setTags(json.tags);
-                      alert('數據匯入成功！');
+                      setAlertDialog({ title: '系統提示', message: '數據匯入成功！' });
                     } catch (e) {
-                      alert('檔案格式錯誤');
+                      setAlertDialog({ title: '系統提示', message: '檔案格式錯誤' });
                     }
                   };
                   reader.readAsText(file);
@@ -1266,6 +1804,275 @@ export default function App() {
     </div>
   );
 
+  const renderGroupDetailScreen = () => {
+    const groupPhotos = photos.filter(p => p.groupId === activeGroupId);
+    if (groupPhotos.length === 0) return null;
+
+    const focusedPhoto = focusedGroupPhotoId ? groupPhotos.find(p => p.id === focusedGroupPhotoId) : null;
+    
+    return (
+      <div className="fixed inset-0 z-[110] bg-slate-50 flex flex-col">
+        {/* Header Updated with Close Button */}
+        <div className="px-6 py-4 border-b border-white/50 flex items-center justify-between bg-white/40 pt-safe">
+          <button onClick={() => { setActiveGroupId(null); setFocusedGroupPhotoId(null); }} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+          <div className="flex-1 ml-1 text-center">
+             <h2 className="font-bold text-lg text-slate-800 leading-tight">同組照片</h2>
+             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Group {activeGroupId}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={async () => {
+                const files = await Promise.all(groupPhotos.map(async (p, i) => {
+                  const res = await fetch(p.uri);
+                  const blob = await res.blob();
+                  return new File([blob], `group_${activeGroupId}_${i+1}.jpg`, { type: 'image/jpeg' });
+                }));
+
+                if (navigator.share) {
+                  try {
+                    await navigator.share({
+                      files: files,
+                      title: `照片組 ${activeGroupId}`,
+                    });
+                  } catch (err) {
+                    setAlertDialog({ title: '系統提示', message: '分享失敗，部分瀏覽器不支援多檔分享。' });
+                  }
+                }
+              }}
+              className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+              title="分享全組"
+            >
+              <Share2 size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto no-scrollbar">
+           <div className="p-6 space-y-6 pb-20">
+              
+              {/* Focused Selection Preview */}
+              <AnimatePresence>
+                {focusedPhoto && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="aspect-square bg-slate-900 rounded-[32px] overflow-hidden shadow-2xl relative group border border-white/20 mb-8"
+                  >
+                    <img 
+                      src={focusedPhoto.uri} 
+                      className="w-full h-full object-contain" 
+                      onClick={() => setPreviewUri(focusedPhoto.uri)}
+                      alt="Focused Photo" 
+                    />
+                    
+                    {/* Minimal Floating Note Badge */}
+                    <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
+                       <div className="bg-black/30 backdrop-blur-lg border border-white/20 p-3 rounded-2xl inline-block max-w-[85%] shadow-xl">
+                          <p className="text-white text-[10px] font-medium leading-relaxed line-clamp-2 opacity-90">
+                            {focusedPhoto.note || "點擊圖片查看大圖"}
+                          </p>
+                       </div>
+                    </div>
+
+                    <button 
+                      onClick={() => setFocusedGroupPhotoId(null)}
+                      className="absolute top-4 right-4 bg-black/40 backdrop-blur-md p-2 rounded-full text-white/80 hover:bg-black/60 transition-colors"
+                    >
+                      <Minimize2 size={16} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Compact Unified Editing Header/Toggle */}
+              <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-white shadow-sm overflow-hidden">
+                <button 
+                  onClick={() => setIsUnifiedEditing(!isUnifiedEditing)}
+                  className="w-full px-6 py-4 flex items-center justify-between active:bg-white/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-xl transition-colors ${isUnifiedEditing ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                      <Settings2 size={16} />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xs font-bold text-slate-800">🛠️ 統一修改工具</h3>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Batch Tagging & Category</p>
+                    </div>
+                  </div>
+                  <motion.div
+                    animate={{ rotate: isUnifiedEditing ? 180 : 0 }}
+                    className="text-slate-400"
+                  >
+                    <ChevronRight size={18} />
+                  </motion.div>
+                </button>
+
+                <AnimatePresence>
+                  {isUnifiedEditing && (
+                    <motion.div 
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 space-y-4 pt-1 border-t border-white/40">
+                        <div className="space-y-2">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速分類套用</p>
+                          <div className="flex flex-wrap gap-2">
+                            {categories.map(cat => {
+                              const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.categoryId === cat.id);
+                              return (
+                                <button 
+                                  key={cat.id}
+                                  onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: cat.id, subcategoryId: null } : p))}
+                                  className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 active:bg-slate-50'}`}
+                                >
+                                  {cat.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {groupPhotos.length > 0 && groupPhotos.every(p => p.categoryId === groupPhotos[0].categoryId) && groupPhotos[0].categoryId && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                            className="space-y-2"
+                          >
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">子分類套用</p>
+                            <div className="flex flex-wrap gap-2">
+                              {categories.find(c => c.id === groupPhotos[0].categoryId)?.subcategories.map(sub => {
+                                const isAllMatch = groupPhotos.every(p => p.subcategoryId === sub.id);
+                                return (
+                                  <button 
+                                    key={sub.id}
+                                    onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: sub.id } : p))}
+                                    className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
+                                  >
+                                    {sub.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+
+                         <div className="space-y-2">
+                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速標籤套用</p>
+                           <div className="flex flex-wrap gap-1.5">
+                             {tags.map(tag => {
+                               const isAllMatch = groupPhotos.every(p => p.tagIds.includes(tag.id));
+                               return (
+                                 <button 
+                                   key={tag.id}
+                                   onClick={() => setPhotos(prev => {
+                                     // Determine action: if not all have it, Add to all. 
+                                     // If all have it, Remove from all.
+                                     const notAllHaveItByGroupId = photos.filter(ph => ph.groupId === activeGroupId).some(p => !p.tagIds.includes(tag.id));
+                                     return prev.map(p => {
+                                       if (p.groupId !== activeGroupId) return p;
+                                       const hasIt = p.tagIds.includes(tag.id);
+                                       
+                                       if (notAllHaveItByGroupId) {
+                                         // Apply to all (if doesn't have it)
+                                         return hasIt ? p : { ...p, tagIds: [...p.tagIds, tag.id] };
+                                       } else {
+                                         // Remove from all
+                                         return { ...p, tagIds: p.tagIds.filter(id => id !== tag.id) };
+                                       }
+                                     });
+                                   })}
+                                   className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold transition-all ${isAllMatch ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
+                                 >
+                                   #{tag.name}
+                                 </button>
+                               );
+                             })}
+                           </div>
+                         </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="space-y-4 pt-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-1 h-3 bg-slate-300 rounded-full"></div>
+                    組內容 ({groupPhotos.length})
+                  </h3>
+                  <button 
+                    onClick={() => {
+                      setConfirmDialog({
+                        message: `確定要將這 ${groupPhotos.length} 張照片解除同組嗎？`,
+                        onConfirm: () => {
+                          handleUngroup(activeGroupId);
+                          setActiveGroupId(null);
+                          setFocusedGroupPhotoId(null);
+                        }
+                      });
+                    }}
+                    className="text-[10px] text-red-500 font-bold flex items-center gap-1 active:scale-95 transition-all"
+                  >
+                    <X size={12} /> 解除群組
+                  </button>
+                </div>
+                
+                {/* Fixed Grid for Group Management */}
+                <div className="grid grid-cols-3 gap-3">
+                  {groupPhotos.map((photo, idx) => (
+                    <motion.div 
+                      key={photo.id}
+                      layoutId={`group-item-${photo.id}`}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setFocusedGroupPhotoId(photo.id)}
+                      className={`relative aspect-square rounded-2xl overflow-hidden shadow-md border-2 transition-all ${focusedGroupPhotoId === photo.id ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50' : 'border-white'}`}
+                    >
+                      <img src={photo.uri} className="w-full h-full object-cover" alt={`Group index ${idx}`} />
+                      <div className="absolute inset-0 bg-black/5" />
+                      {idx === 0 && (
+                        <div className="absolute top-1.5 left-1.5 bg-black/40 backdrop-blur-sm text-white px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-tighter ring-1 ring-white/20">
+                           封面
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                  <button 
+                    onClick={() => {
+                       setActiveGroupId(null);
+                       setFocusedGroupPhotoId(null);
+                       setIsMultiSelect(true);
+                       setAlertDialog({ title: '系統提示', message: '請從主畫面選取要加入此組的照片' });
+                    }}
+                    className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
+                  >
+                    <Plus size={20} />
+                    <span className="text-[8px] font-bold mt-1 uppercase">新增</span>
+                  </button>
+                </div>
+              </div>
+           </div>
+        </div>
+
+        {/* Floating Close Button in Bottom Right for Mobile Ergonomics */}
+        <div className="absolute bottom-10 right-8 z-[120]">
+           <motion.button
+             whileHover={{ scale: 1.1 }}
+             whileTap={{ scale: 0.9 }}
+             onClick={() => { setActiveGroupId(null); setFocusedGroupPhotoId(null); }}
+             className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-2xl border border-white/20 active:bg-slate-900 transition-all group"
+           >
+             <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+           </motion.button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full h-full min-h-screen bg-transparent p-4 font-sans select-none flex items-center justify-center relative overflow-hidden">
       <div className="frosted-bg">
@@ -1275,39 +2082,70 @@ export default function App() {
 
       <div className="w-full max-w-[420px] h-[85vh] bg-white/40 backdrop-blur-2xl rounded-[48px] border border-white/50 shadow-2xl overflow-hidden flex flex-col relative z-10 animate-in fade-in zoom-in duration-700">
         <div className="flex-1 overflow-y-auto no-scrollbar relative">
-          {activeScreen === 'home' && <HomeView />}
-          {(activeScreen === 'add' || editPhotoId) && <AddPhotoScreen />}
-          {batchEditIds && <BatchEditScreen />}
-          {activeScreen === 'manage' && <ManageScreen />}
-          {activeScreen === 'settings' && <SettingsScreen />}
+          {activeScreen === 'home' && renderHomeView()}
         </div>
       </div>
 
-      {/* Full-screen preview on long press */}
+      <AnimatePresence>
+        {(activeScreen === 'add' || editPhotoId) && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {renderAddPhotoScreen()}
+          </motion.div>
+        )}
+        {batchEditIds && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {renderBatchEditScreen()}
+          </motion.div>
+        )}
+        {activeScreen === 'manage' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {renderManageScreen()}
+          </motion.div>
+        )}
+        {activeScreen === 'settings' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            {renderSettingsScreen()}
+          </motion.div>
+        )}
+        {activeGroupId && (
+          <motion.div initial={{ opacity: 0, y: 100 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 100 }}>
+            {renderGroupDetailScreen()}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full-screen preview optimized for screenshots */}
       <AnimatePresence>
         {previewUri && (
           <motion.div 
-            initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            animate={{ opacity: 1, backdropFilter: 'blur(20px)' }}
-            exit={{ opacity: 0, backdropFilter: 'blur(0px)' }}
-            className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] bg-black flex items-center justify-center"
             onClick={() => setPreviewUri(null)}
           >
             <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-[320px] bg-white rounded-[32px] p-2 shadow-2xl overflow-hidden relative"
-              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full h-full flex items-center justify-center p-0"
             >
               <img 
                 src={previewUri} 
-                className="w-full aspect-square rounded-[24px] object-cover mb-3"
-                alt="Peek preview"
+                className="max-w-full max-h-full object-contain"
+                alt="Fullscreen preview"
               />
-              <div className="px-3 pb-3">
-                <h3 className="font-bold text-slate-800 text-base mb-1">產品預覽</h3>
-              </div>
+              
+              {/* Subtle close hint that fades out */}
+              <motion.div 
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 0 }}
+                transition={{ delay: 2, duration: 1 }}
+                className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/30 text-[10px] font-medium tracking-widest uppercase pointer-events-none"
+              >
+                點擊任意處退出
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
@@ -1415,42 +2253,83 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {/* Global Safe Area Inset styles */}
-      <style>{`
-        .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
-      
-      {/* Import Analyzing Overlay */}
+
+      {/* Custom Alert Dialog */}
       <AnimatePresence>
-        {isImportAnalyzing && (
+        {alertDialog && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-md flex flex-col items-center justify-center p-8"
+            className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
+            onClick={() => setAlertDialog(null)}
           >
-            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl mb-6 relative overflow-hidden">
-               <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/20 to-blue-500/20 animate-pulse"></div>
-               <div className="w-8 h-8 rounded-full border-4 border-slate-200 border-t-purple-600 animate-spin"></div>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[280px] bg-white rounded-[24px] p-6 shadow-2xl overflow-hidden relative text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="font-bold text-slate-800 text-lg mb-2">{alertDialog.title}</h3>
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed whitespace-pre-wrap text-left">
+                {alertDialog.message}
+              </p>
+              <button 
+                onClick={() => setAlertDialog(null)}
+                className="w-full py-3 px-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-colors"
+              >
+                我知道了
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Footer / Mobile Nav could go here if needed */}
+      {/* AI Progress Toast / Overlay */}
+      <AnimatePresence>
+        {isBatchAnalyzing && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-28 left-6 right-6 z-[160] bg-slate-900/90 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl flex items-center gap-4"
+          >
+            <div className="w-10 h-10 bg-purple-500 rounded-2xl flex items-center justify-center text-white shrink-0 shadow-lg shadow-purple-500/40">
+              <Sparkles size={20} className="animate-pulse" />
             </div>
-            <h3 className="text-white font-bold text-lg mb-2 text-center drop-shadow-md">✨ AI 正在為您智慧分類</h3>
-            <p className="text-white/80 text-sm font-medium text-center">
-              分析中... 照片 {isImportAnalyzing.current} / {isImportAnalyzing.total}
-            </p>
-            <div className="w-full max-w-[200px] h-2 bg-white/20 rounded-full mt-6 overflow-hidden">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-purple-500 to-blue-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${(isImportAnalyzing.current / isImportAnalyzing.total) * 100}%` }}
-              />
+            <div className="flex-1">
+               <div className="flex justify-between items-end mb-1.5">
+                  <p className="text-white text-[11px] font-bold">批量 AI 智能辨識中...</p>
+                  <p className="text-purple-400 text-[10px] font-black">{batchProgress.current} / {batchProgress.total}</p>
+               </div>
+               <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500"
+                  />
+               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Import Progress Overlay */}
+      <AnimatePresence>
+        {isImporting && (
+          <motion.div 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -20, opacity: 0 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-white/80 backdrop-blur-md border border-blue-100 px-4 py-2 rounded-2xl shadow-xl flex items-center gap-2"
+          >
+            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">正在匯入大量照片中...</span>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
 }
+
