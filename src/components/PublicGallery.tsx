@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Photo, DB_Category } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, MapPin, MessageCircle, Share2, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -68,6 +68,36 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [pinnedPhotos, setPinnedPhotos] = useState<Set<string>>(new Set());
+  const [headerClickCount, setHeaderClickCount] = useState(0);
+
+  // Auto-exit selection mode if nothing is selected
+  useEffect(() => {
+    if (selectionMode && selectedPhotos.size === 0) {
+      // Don't auto-close immediately, let user decide
+    }
+  }, [selectedPhotos.size, selectionMode]);
+
+  const togglePin = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setPinnedPhotos(prev => {
+        const next = new Set(prev);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        return next;
+    });
+  }
+
+  const handleHeaderClick = () => {
+    setHeaderClickCount(prev => {
+        const next = prev + 1;
+        if (next >= 3) {
+            onLogin && onLogin();
+            return 0;
+        }
+        return next;
+    });
+  }
 
   const displayPhotos = useMemo(() => {
     let filtered = photos;
@@ -120,6 +150,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      
+      // Auto-exit if nothing selected
+      if (next.size === 0) setSelectionMode(false);
       return next;
     });
   };
@@ -214,8 +247,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
     <div className="flex flex-col h-screen bg-bg w-full overflow-hidden text-text">
       {/* Header */}
       <header className="shrink-0 z-50 bg-bg/90 backdrop-blur-sm border-b border-text/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold tracking-tight truncate leading-tight">Photo Gallery</h1>
+        <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
+          <h1 className="text-xl font-bold tracking-tight truncate leading-tight cursor-pointer">公开</h1>
         </div>
         <div className="flex items-center gap-2 shrink-0">
            <div className="flex items-center gap-1 text-xs font-semibold">
@@ -241,6 +274,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
             />
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
           </div>
+          {/* Group Toggle */}
+          <button
+              onClick={() => {}}
+              className="p-2 bg-white border border-text/10 rounded-lg text-text/60 hover:text-text"
+          >
+              <Layers size={18} />
+          </button>
           {/* Column Toggle */}
           <button 
             onClick={() => setColumnCount(prev => prev === 3 ? 2 : 3)}
@@ -279,7 +319,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       </div>
 
       {/* Grid - Scrollable area */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-40">
         {displayPhotos.length === 0 ? (                
           <div className="flex flex-col items-center justify-center py-20 text-text/40">
             <p className="text-sm">{t.empty}</p>
@@ -316,24 +356,52 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                   </div>
                 )}
                 
-                <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-text/50 to-transparent">
-                  <p className="text-bg text-[10px] font-semibold truncate">
-                    {dbCategories.find(c => c.code === photo.category)?.[lang] || photo.category}
-                  </p>
-                </div>
+                {/* Category label */}
+                {(() => {
+                  const cat = dbCategories.find(c => c.code === photo.category);
+                  const catName = cat ? (cat[lang] || cat.en) : photo.category;
+                  const isUncategorized = !catName || 
+                    ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
+                  
+                  if (isUncategorized) return null;
+                  
+                  return (
+                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-text/50 to-transparent">
+                      <p className="text-bg text-[10px] font-semibold truncate">
+                        {catName}
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
             ))}
           </div>
         )}
-        <div ref={observerTarget} className="h-10"></div>
+        <div ref={observerTarget} className="h-40"></div>
       </div>
 
       {/* Selection Footer */}
-      {selectionMode && selectedPhotos.size > 0 && (
-         <div className="fixed bottom-0 left-0 w-full bg-bg border-t border-text/10 p-4 flex gap-4 shadow-lg z-[300]">
-             <button onClick={shareSelected} className="flex-1 bg-text text-bg py-3 rounded-lg text-sm font-semibold">Share</button>
-             <button onClick={contactWhatsApp} className="flex-1 bg-[#25D366] text-white py-3 rounded-lg text-sm font-semibold">WhatsApp</button>
+      {selectionMode && (
+         <div className="fixed bottom-20 left-0 w-full bg-bg border-t border-text/10 p-4 flex gap-4 shadow-lg z-[300]">
+             <button onClick={shareSelected} className="flex-1 bg-text text-bg py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+               <Share2 size={16} /> Share
+             </button>
+             <button onClick={contactWhatsApp} className="flex-1 bg-[#25D366] text-white py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+               <MessageCircle size={16} /> WhatsApp
+             </button>
          </div>
+      )}
+
+      {/* Floating Action Buttons (Normal Mode) */}
+      {!selectionMode && (
+        <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400]">
+            <button onClick={() => setSelectionMode(true)} className="bg-text text-bg p-4 rounded-full shadow-lg">
+              <MapPin size={24} />
+            </button>
+            <button onClick={() => setSelectionMode(true)} className="bg-[#25D366] text-white p-4 rounded-full shadow-lg">
+              <MessageCircle size={24} />
+            </button>
+        </div>
       )}
 
       {/* Lightbox */}
