@@ -576,13 +576,7 @@ export default function App() {
           const imgHash = calculateMD5(compressedUri);
 
           const isLocalDuplicate = photosRef.current.some(p => p.image_hash === imgHash) || newPhotosDraft.some(p => p.image_hash === imgHash);
-          if (isLocalDuplicate) {
-            setAlertDialog({
-              title: '重複記錄跳過',
-              message: `照片「${file.name}」在本地紀錄中已存在，系統已自動跳過。`
-            });
-            continue;
-          }
+          if (isLocalDuplicate) continue;
           
           if (user) {
             const existingManualCode = await checkImageHashExists(user.id, imgHash);
@@ -719,10 +713,7 @@ export default function App() {
       // Check for local duplicates first
       const isLocalDuplicate = photos.some(p => p.image_hash === imgHash);
       if (isLocalDuplicate) {
-        setAlertDialog({
-          title: '重複記錄',
-          message: '此照片在本地紀錄中已存在，請勿重複添加。'
-        });
+        // Just return silently as per user request to avoid too many alerts
         return;
       }
 
