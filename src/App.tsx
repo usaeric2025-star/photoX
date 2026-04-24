@@ -200,13 +200,20 @@ export default function App() {
   // --- State ---
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [dbCategories, setDbCategories] = useState<DB_Category[]>([]);
-  const [appLang, setAppLang] = useState<'zh' | 'en' | 'ms'>('zh');
+  const appLang = 'zh';
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
   const [viewMode, setViewMode] = useState<'public' | 'private'>('public');
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const handleManageClick = () => {
+    if (user) {
+      setActiveScreen('manage');
+    } else {
+      setShowManageAccess(true);
+    }
+  };
+
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncAction, setSyncAction] = useState<'push' | 'pull' | 'idle'>('idle');
@@ -215,6 +222,7 @@ export default function App() {
   
   // Navigation & UI State
   const [activeScreen, setActiveScreen] = useState<'home' | 'add' | 'manage' | 'settings'>('home');
+  const [showManageAccess, setShowManageAccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCatId, setFilterCatId] = useState<string | null>(null);
   const [filterSubId, setFilterSubId] = useState<string | null>(null);
@@ -251,9 +259,8 @@ export default function App() {
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   
   // Custom Confirm Dialog State
+  const [internalPassword, setInternalPassword] = useState<string>(() => localStorage.getItem('internal_password') || '');
   const [confirmDialog, setConfirmDialog] = useState<{ message: string, onConfirm: () => void } | null>(null);
-  
-  // Custom Alert Dialog State (for replacing native alerts on mobile)
   const [alertDialog, setAlertDialog] = useState<{ title: string, message: string } | null>(null);
 
   // Custom Prompt Dialog State
@@ -287,24 +294,9 @@ export default function App() {
   }, []);
 
   // Manage Screen Internal States (Moved here to stabilize component)
-  const [newCatName, setNewCatName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
   const [newSubName, setNewSubName] = useState('');
-
-  const quickAddCategory = () => {
-    setPromptValue('');
-    setPromptDialog({
-      title: '新增主分類',
-      placeholder: '輸入新主分類名稱',
-      onSubmit: (val) => {
-        const newCat = { id: crypto.randomUUID(), name: val.trim(), aliases: [], subcategories: [] };
-        setCategories(prev => [...prev, newCat]);
-        setAddCatId(newCat.id);
-        setAddSubId(null);
-      }
-    });
-  };
 
   const quickAddSubCategory = () => {
     if (!addCatId) return;
@@ -374,10 +366,12 @@ export default function App() {
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
       try {
-        const savedPhotos = await loadData('product_photos');
-        const savedCats = await loadData('product_categories');
-        const savedTags = await loadData('product_tags');
-        const savedSyncTime = await loadData('last_sync_time');
+        const [savedPhotos, savedCats, savedTags, savedSyncTime] = await Promise.all([
+          loadData('product_photos'),
+          loadData('product_categories'),
+          loadData('product_tags'),
+          loadData('last_sync_time')
+        ]);
         
         let finalPhotos = savedPhotos;
         if ((!savedPhotos || savedPhotos.length === 0) && u) {
@@ -880,7 +874,10 @@ export default function App() {
       const newSubId = addSubId || p.subcategoryId;
       const newTagIds = addTagIds.length > 0 ? addTagIds : p.tagIds;
       
-      const catName = categories.find(c => c.id === newCatId)?.name || p.category || '未分類';
+      const dbCat = dbCategories.find(c => c.code === newCatId);
+      const catCode = dbCat?.code || newCatId || 'others';
+      const catName = dbCat ? (dbCat[appLang] || dbCat.zh) : (categories.find(c => c.id === newCatId)?.name || p.category || '未分類');
+      
       const subName = categories.find(c => c.id === newCatId)?.subcategories.find(s => s.id === newSubId)?.name || (newSubId === p.subcategoryId ? p.sub_category : '');
       const tagNames = tags.filter(t => newTagIds.includes(t.id)).map(t => t.name);
 
@@ -889,7 +886,7 @@ export default function App() {
         categoryId: newCatId,
         subcategoryId: newSubId,
         tagIds: newTagIds,
-        category: catName,
+        category: catCode,
         sub_category: subName,
         tags: tagNames,
         manual_code: addManualCode || p.manual_code,
@@ -1019,14 +1016,14 @@ export default function App() {
   const renderMainHeader = () => (
     <header className="relative z-50 bg-white/10 border-b border-white/20 px-6 pt-10 pb-4 flex items-center justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-          {viewMode === 'public' ? 'Public Gallery' : 'photoX'}
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight shrink-0">
+          {viewMode === 'public' ? 'Gallery' : 'photoX'}
         </h1>
         <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">
           {viewMode === 'public' ? `共 ${publicPhotos.length} 張公開照片` : `已匯入 ${photos.length} 張照片`}
         </p>
       </div>
-      <div className="flex items-center gap-2 relative z-50">
+      <div className="flex items-center gap-2 relative z-50 shrink-0">
         {!user ? (
           <button 
             onClick={async () => {
@@ -1045,7 +1042,7 @@ export default function App() {
             onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${viewMode === 'public' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-purple-50 text-purple-600 border-purple-200'}`}
           >
-            {viewMode === 'public' ? '我的相庫' : '公開探索'}
+            {viewMode === 'public' ? (appLang === 'zh' ? '我的相庫' : appLang === 'ms' ? 'Galeri Saya' : 'My Gallery') : (appLang === 'zh' ? '公開探索' : appLang === 'ms' ? 'Teroka' : 'Explore')}
           </button>
         )}
 
@@ -1074,27 +1071,12 @@ export default function App() {
                   setIsMultiSelect(true);
                 }
               }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
+              className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
             >
               {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
             </button>
-            <div className="flex bg-white/40 backdrop-blur-md border border-white/50 rounded-xl overflow-hidden p-0.5 shadow-sm">
-              {[
-                { id: 'zh', label: '中文' },
-                { id: 'en', label: 'EN' },
-                { id: 'ms', label: 'BM' }
-              ].map(l => (
-                <button
-                  key={l.id}
-                  onClick={() => setAppLang(l.id as any)}
-                  className={`px-3 py-1 text-[10px] font-black tracking-wider transition-all rounded-[9px] ${appLang === l.id ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  {l.label}
-                </button>
-              ))}
-            </div>
             <button 
-              onClick={() => setActiveScreen('manage')}
+              onClick={handleManageClick}
               className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
             >
               <Settings size={20} />
@@ -1222,7 +1204,19 @@ export default function App() {
                 categoryName={(() => {
                   const code = photo.category;
                   const dbCat = dbCategories.find(c => c.code === code);
-                  return dbCat ? (dbCat[appLang] || dbCat.zh) : categories.find(c => c.id === photo.categoryId)?.name || code;
+                  if (dbCat) {
+                    const name = dbCat[appLang] || dbCat.zh;
+                    const isUncat = (n: string) => ['未分类', '未分類', 'uncategorized', 'others'].includes(n.toLowerCase());
+                    return isUncat(name) ? undefined : name;
+                  }
+                  const legacyCat = categories.find(c => c.id === photo.categoryId);
+                  const legacyName = legacyCat?.name;
+                  const isUncategorized = (n: string) => 
+                    ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(n.toLowerCase());
+                  
+                  if (legacyName && !isUncategorized(legacyName)) return legacyName;
+                  if (code && !isUncategorized(code)) return code;
+                  return undefined;
                 })()}
                 onClick={() => {
                   if (isMultiSelect) {
@@ -1376,17 +1370,16 @@ export default function App() {
         <section className="space-y-3">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標主分類 *</h3>
-            <button onClick={quickAddCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {categories.map(cat => (
+            {dbCategories.map(cat => (
               <button 
-                key={cat.id}
-                onClick={() => { setAddCatId(cat.id); setAddSubId(null); }}
-                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.id ? 'bg-white/80 border-blue-500 text-blue-600 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                key={cat.code}
+                onClick={() => { setAddCatId(cat.code); setAddSubId(null); }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.code ? 'bg-white/80 border-blue-500 text-blue-600 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
               >
-                <span className="font-bold block text-sm">{cat.name}</span>
-                <span className="text-[9px] uppercase tracking-tighter opacity-60">Category</span>
+                <span className="font-bold block text-sm">{cat[appLang] || cat.zh}</span>
+                <span className="text-[9px] uppercase tracking-tighter opacity-60">{cat.en}</span>
               </button>
             ))}
           </div>
@@ -1512,13 +1505,23 @@ export default function App() {
   );
 
   const renderAddPhotoScreen = () => (
-    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
-      <div className="px-6 py-4 border-b border-white/50 flex items-center justify-between">
+    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
+      <div className="px-6 py-3 border-b border-white/50 flex items-center justify-between bg-white/40">
         <button onClick={() => { resetAddState(); setActiveScreen('home'); }} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
           <X size={24} />
         </button>
-        <h2 className="font-bold text-lg text-slate-800">{editPhotoId ? '編輯產品資訊' : '分類產品照片'}</h2>
+        <h2 className="font-bold text-base text-slate-800 truncate px-2">{editPhotoId ? '編輯產品資訊' : '分類產品照片'}</h2>
         <div className="flex items-center gap-2">
+          {!editPhotoId && newPhotoData && (
+            <button 
+              onClick={handleSingleAiAnalyze}
+              disabled={isAnalyzing}
+              className={`p-2 rounded-xl border transition-all ${isAnalyzing ? 'bg-purple-100 border-purple-200' : 'bg-white border-slate-200 hover:bg-purple-50 text-purple-600'}`}
+              title="AI 辨識"
+            >
+              {isAnalyzing ? <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" /> : <Sparkles size={20} />}
+            </button>
+          )}
           {editPhotoId && (
             <button 
               onClick={() => deletePhoto(editPhotoId)}
@@ -1564,7 +1567,7 @@ export default function App() {
             <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
               <div className="flex items-center justify-between pl-1">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">子分類</h3>
-                <button onClick={quickAddSubCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
+                <button onClick={() => quickAddSubCategory()} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
               </div>
               <div className="flex flex-wrap gap-2">
                 {categories.find(c => c.id === addCatId)?.subcategories.map(sub => (
@@ -1688,16 +1691,6 @@ export default function App() {
     </div>
   );
 
-  const deleteCategory = (id: string) => {
-    setConfirmDialog({
-      message: '確定要刪除此分類嗎？相關照片的分類將會被清空。',
-      onConfirm: () => {
-        setCategories(prev => prev.filter(c => c.id !== id));
-        setPhotos(prev => prev.map(p => p.categoryId === id ? { ...p, categoryId: null, subcategoryId: null } : p));
-      }
-    });
-  };
-
   const deleteSubCategory = (catId: string, subId: string) => {
     setConfirmDialog({
       message: '確定要刪除此子分類嗎？',
@@ -1732,6 +1725,48 @@ export default function App() {
     });
   };
 
+  const handleSingleAiAnalyze = async () => {
+    if (!newPhotoData) return;
+    
+    // Check key
+    const effectiveKey = geminiApiKey;
+    if (!effectiveKey) {
+      setAlertDialog({ title: '需要 API 金鑰', message: '請先在設定中設定相容的 API 金鑰 (Gemini, Groq, OpenRouter 或 GitHub Models)。' });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeProductPhoto(newPhotoData, categories, tags, effectiveKey, aiProvider, customModel);
+      
+      if (result.categoryId) setAddCatId(result.categoryId);
+      if (result.subcategoryId) setAddSubId(result.subcategoryId);
+      if (result.tagIds) setAddTagIds(result.tagIds);
+      if (result.name) {
+        // Maybe update note with dimensions if name is used
+      }
+      if (result.newTagName) {
+        const newTagId = crypto.randomUUID();
+        const newTagArr = [...tags, { id: newTagId, name: result.newTagName, aliases: [] }];
+        setTags(newTagArr);
+        setAddTagIds(prev => Array.from(new Set([...prev, newTagId])));
+      }
+      
+      // Auto-set additional fields if they are empty
+      if (result.dimensions) {
+        if (!addDimL) setAddDimL(String(result.dimensions.length || ''));
+        if (!addDimW) setAddDimW(String(result.dimensions.width || ''));
+        if (!addDimH) setAddDimH(String(result.dimensions.height || ''));
+      }
+      
+    } catch (err: any) {
+      console.error("AI error:", err);
+      setAlertDialog({ title: '辨識失敗', message: err.message || '無法辨識此照片' });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const deleteTag = (id: string) => {
     setConfirmDialog({
       message: '確定要刪除此標籤嗎？',
@@ -1746,28 +1781,33 @@ export default function App() {
   };
 
   const renderManageScreen = () => {
-    const addCategory = () => {
-      if (!newCatName.trim()) return;
-      const newCat: Category = {
-        id: crypto.randomUUID(),
-        name: newCatName.trim(),
-        aliases: [newCatName.trim()],
-        subcategories: []
-      };
-      setCategories([...categories, newCat]);
-      setNewCatName('');
-    };
-
     const addSubCategory = (catId: string) => {
       if (!newSubName.trim()) return;
-      setCategories(prev => prev.map(c => c.id === catId ? {
-        ...c,
-        subcategories: [...(c.subcategories || []), {
-          id: crypto.randomUUID(),
-          name: newSubName.trim(),
-          aliases: [newSubName.trim()]
-        }]
-      } : c));
+      const exists = categories.find(c => c.id === catId);
+      if (!exists) {
+        // Create matching local category if it doesn't exist
+        const dbCat = dbCategories.find(c => c.code === catId);
+        const newCat: Category = {
+          id: catId,
+          name: dbCat ? (dbCat[appLang] || dbCat.zh) : catId,
+          aliases: [],
+          subcategories: [{
+            id: crypto.randomUUID(),
+            name: newSubName.trim(),
+            aliases: [newSubName.trim()]
+          }]
+        };
+        setCategories([...categories, newCat]);
+      } else {
+        setCategories(prev => prev.map(c => c.id === catId ? {
+          ...c,
+          subcategories: [...(c.subcategories || []), {
+            id: crypto.randomUUID(),
+            name: newSubName.trim(),
+            aliases: [newSubName.trim()]
+          }]
+        } : c));
+      }
       setNewSubName('');
     };
 
@@ -1791,126 +1831,113 @@ export default function App() {
           <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1">目錄與標籤管理</h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar pb-32">
-          {/* Categories Section */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <div className="w-1.5 h-4 bg-blue-500 rounded-full"></div>
-                主分類管理
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-32">
+      {/* Categories & Manufacturers Management */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between pl-1">
+              <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
+                厂商管理 (按分类)
               </h3>
             </div>
             
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="輸入新分類名稱..."
-                className="flex-1 bg-white/60 border border-white p-3 rounded-xl text-sm outline-none focus:bg-white transition-all shadow-sm"
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addCategory()}
-              />
-              <button 
-                onClick={addCategory}
-                className="bg-slate-800 text-white px-4 rounded-xl shadow-lg active:scale-95 transition-all"
-              >
-                <Plus size={20} />
-              </button>
-            </div>
+            <div className="space-y-1.5">
+              {dbCategories.map(cat => {
+                // Find local manufacturers for this category code
+                const localCat = categories.find(c => c.id === cat.code);
+                const manufacturers = localCat?.subcategories || [];
 
-            <div className="space-y-2">
-              {categories.map(cat => (
-                <div key={cat.id} className="bg-white/40 border border-white rounded-2xl overflow-hidden shadow-sm">
-                  <div className="p-4 flex items-center justify-between">
-                    <button 
-                      onClick={() => setExpandedCat(expandedCat === cat.id ? null : cat.id)}
-                      className="flex-1 text-left flex items-center gap-2 group"
-                    >
-                      <ChevronRight 
-                        size={18} 
-                        className={`text-slate-400 transition-transform ${expandedCat === cat.id ? 'rotate-90 text-blue-500' : ''}`} 
-                      />
-                      <span className="font-bold text-slate-700">{cat.name}</span>
-                      <span className="text-[10px] text-slate-400 font-medium">({cat.subcategories.length})</span>
-                    </button>
-                    <button 
-                      onClick={() => deleteCategory(cat.id)}
-                      className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  
-                  {expandedCat === cat.id && (
-                    <motion.div 
-                      initial={{ height: 0 }} 
-                      animate={{ height: 'auto' }}
-                      className="bg-slate-50/50 border-t border-white px-4 py-3 space-y-3"
-                    >
-                      <div className="flex gap-2">
-                        <input 
-                          type="text" 
-                          placeholder="新增子分類..."
-                          className="flex-1 bg-white border border-slate-100 p-2 rounded-lg text-xs outline-none"
-                          value={newSubName}
-                          onChange={(e) => setNewSubName(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && addSubCategory(cat.id)}
+                return (
+                  <div key={cat.code} className="bg-white/40 border border-white rounded-xl overflow-hidden shadow-sm">
+                    <div className="p-2.5 flex items-center justify-between">
+                      <button 
+                        onClick={() => setExpandedCat(expandedCat === cat.code ? null : cat.code)}
+                        className="flex-1 text-left flex items-center gap-2 group"
+                      >
+                        <ChevronRight 
+                          size={16} 
+                          className={`text-slate-400 transition-transform ${expandedCat === cat.code ? 'rotate-90 text-blue-500' : ''}`} 
                         />
-                        <button 
-                          onClick={() => addSubCategory(cat.id)}
-                          className="px-3 bg-blue-500 text-white rounded-lg text-xs font-bold"
-                        >
-                          添加
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {cat.subcategories.map(sub => (
-                          <div key={sub.id} className="bg-white border border-slate-200 px-3 py-1 rounded-full flex items-center gap-2 shadow-sm">
-                            <span className="text-xs font-medium text-slate-600">{sub.name}</span>
-                            <button onClick={() => deleteSubCategory(cat.id, sub.id)} className="text-slate-300 hover:text-red-500">
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              ))}
+                        <span className="font-bold text-slate-700 text-sm">{cat[appLang] || cat.zh}</span>
+                        <span className="text-[9px] text-slate-400 font-medium">({manufacturers.length})</span>
+                      </button>
+                    </div>
+                    
+                    {expandedCat === cat.code && (
+                      <motion.div 
+                        initial={{ height: 0 }} 
+                        animate={{ height: 'auto' }}
+                        className="bg-slate-50/30 border-t border-white px-3 py-2.5 space-y-2.5"
+                      >
+                        <div className="flex gap-1.5">
+                          <input 
+                            type="text" 
+                            placeholder="新增厂商..."
+                            className="flex-1 bg-white border border-slate-100 p-1.5 rounded-lg text-[11px] outline-none"
+                            value={newSubName}
+                            onChange={(e) => setNewSubName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && addSubCategory(cat.code)}
+                          />
+                          <button 
+                            onClick={() => addSubCategory(cat.code)}
+                            className="px-2.5 bg-blue-500 text-white rounded-lg text-[10px] font-bold"
+                          >
+                            添加
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {manufacturers.map(sub => (
+                            <div key={sub.id} className="bg-white border border-slate-200 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                              <span className="text-[10px] font-medium text-slate-600">{sub.name}</span>
+                              <button onClick={() => deleteSubCategory(cat.code, sub.id)} className="text-slate-300 hover:text-red-500">
+                                <X size={10} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
 
           {/* Tags Section */}
-          <section className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-              <div className="w-1.5 h-4 bg-purple-500 rounded-full"></div>
-              標籤管理
-            </h3>
-            <div className="flex gap-2">
-              <input 
-                type="text" 
-                placeholder="輸入新標籤..."
-                className="flex-1 bg-white/60 border border-white p-3 rounded-xl text-sm outline-none focus:bg-white transition-all shadow-sm"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addTag()}
-              />
-              <button 
-                onClick={addTag}
-                className="bg-slate-800 text-white px-4 rounded-xl shadow-lg active:scale-95 transition-all"
-              >
-                <Plus size={20} />
-              </button>
+          <section className="space-y-3">
+            <div className="flex items-center justify-between pl-1">
+              <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2">
+                <div className="w-1.5 h-3.5 bg-purple-500 rounded-full"></div>
+                標籤管理
+              </h3>
             </div>
-            <div className="flex flex-wrap gap-2 bg-white/40 p-4 rounded-2xl border border-white shadow-inner min-h-[100px] align-top">
-              {tags.map(tag => (
-                <div key={tag.id} className="bg-white px-3 py-1.5 rounded-xl border border-slate-100 flex items-center gap-2 shadow-sm group">
-                  <span className="text-xs font-bold text-slate-600">#{tag.name}</span>
-                  <button onClick={() => deleteTag(tag.id)} className="text-slate-300 hover:text-red-500 transition-colors">
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
+            <div className="space-y-3 bg-white/40 p-3 rounded-xl border border-white shadow-sm">
+              <div className="flex gap-1.5">
+                <input 
+                  type="text" 
+                  placeholder="輸入新標籤..."
+                  className="flex-1 bg-white border border-slate-100 p-1.5 rounded-lg text-[11px] outline-none"
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addTag()}
+                />
+                <button 
+                  onClick={addTag}
+                  className="px-2.5 bg-slate-800 text-white rounded-lg text-[10px] font-bold"
+                >
+                  添加
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {tags.map(tag => (
+                  <div key={tag.id} className="bg-white border border-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                    <span className="text-[10px] font-medium text-slate-600">#{tag.name}</span>
+                    <button onClick={() => deleteTag(tag.id)} className="text-slate-300 hover:text-red-500">
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
 
@@ -2162,6 +2189,26 @@ export default function App() {
           </div>
 
           <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4">
+            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <Lock size={16} className="text-orange-500" />
+              員工訪問密鑰 (Staff Access)
+            </h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+              設定密鑰後，員工可在公開相簿透過解鎖查看「廠商資訊」與「手動編號」，但無編輯權限。
+            </p>
+            <input 
+              type="password" 
+              placeholder="設定密鑰 (例如: 1234)..."
+              className="w-full bg-white border border-slate-100 p-3 rounded-xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm"
+              value={internalPassword}
+              onChange={(e) => {
+                setInternalPassword(e.target.value);
+                localStorage.setItem('internal_password', e.target.value);
+              }}
+            />
+          </div>
+
+          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4">
             <h4 className="font-bold text-slate-800 text-sm">數據管理</h4>
             <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
               您的產品目錄均儲存在手機本機。建議定期匯出備份，避免數據意外遺失。
@@ -2370,34 +2417,34 @@ export default function App() {
                         <div className="space-y-2">
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速分類套用</p>
                           <div className="flex flex-wrap gap-2">
-                            {categories.map(cat => {
-                              const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.categoryId === cat.id);
+                            {dbCategories.map(cat => {
+                              const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.category === cat.code);
                               return (
                                 <button 
-                                  key={cat.id}
-                                  onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: cat.id, subcategoryId: null } : p))}
+                                  key={cat.code}
+                                  onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, category: cat.code, categoryId: cat.code, subcategoryId: null, sub_category: '' } : p))}
                                   className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 active:bg-slate-50'}`}
                                 >
-                                  {cat.name}
+                                  {cat[appLang] || cat.zh}
                                 </button>
                               );
                             })}
                           </div>
                         </div>
 
-                        {groupPhotos.length > 0 && groupPhotos.every(p => p.categoryId === groupPhotos[0].categoryId) && groupPhotos[0].categoryId && (
+                        {groupPhotos.length > 0 && groupPhotos.every(p => p.category === groupPhotos[0].category) && groupPhotos[0].category && (
                           <motion.div 
                             initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
                             className="space-y-2"
                           >
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">子分類套用</p>
                             <div className="flex flex-wrap gap-2">
-                              {categories.find(c => c.id === groupPhotos[0].categoryId)?.subcategories.map(sub => {
+                              {categories.find(c => c.id === groupPhotos[0].category)?.subcategories.map(sub => {
                                 const isAllMatch = groupPhotos.every(p => p.subcategoryId === sub.id);
                                 return (
                                   <button 
                                     key={sub.id}
-                                    onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: sub.id } : p))}
+                                    onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: sub.id, sub_category: sub.name } : p))}
                                     className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
                                   >
                                     {sub.name}
@@ -2599,6 +2646,7 @@ export default function App() {
                   dbCategories={dbCategories}
                   showExit={!!user} 
                   onExit={() => setViewMode('private')} 
+                  internalPassword={internalPassword}
                   onLogin={async () => {
                     try {
                       await loginWithGoogle();
@@ -2679,6 +2727,42 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Manage Access Dialog */}
+      {showManageAccess && (
+          <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4">
+              <h3 className="font-bold text-lg">登入管理</h3>
+              <button 
+                onClick={async () => {
+                  await loginWithGoogle();
+                  setShowManageAccess(false);
+                }}
+                className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold"
+              >
+                Google 登入
+              </button>
+              <div className="relative">
+                <input 
+                  type="password" 
+                  placeholder="輸入管理密碼" 
+                  className="w-full border p-4 rounded-xl"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (e.currentTarget.value === internalPassword) {
+                        setActiveScreen('manage');
+                        setShowManageAccess(false);
+                      } else {
+                        alert('密碼錯誤');
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <button onClick={() => setShowManageAccess(false)} className="w-full text-slate-500">取消</button>
+            </div>
+          </div>
+      )}
 
       {/* Custom Confirmation Dialog */}
       <AnimatePresence>

@@ -43,15 +43,19 @@ export const analyzeProductPhoto = async (
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
 
   const promptText = `
-  你是一位家具型錄專家。請分析這張照片並提供家具的分類資訊。
+  你是一位家具型錄專家。請分析這張照片並提供家具的分類與標籤資訊。
   
   關鍵規則：
   1. 主分類與子分類：從「現有分類」中選擇最合適的一個。如果都不適合，請在 newCategoryName 中建議一個新分類名。
-  2. 標籤 (產品分組)：如果這張照片看起來與「現有標籤」中的某個產品完全相同，請共用該標籤 ID。
+  2. 標籤 (Tags)：這非常重要。除了主要分類，請添加描述產品屬性的標籤（如材質：木質、大理石；風格：簡約、工業風；或關聯產品：如果是桌子但風格像某組椅子，可標記相關性）。
+     - 最多回傳 2 個標籤。
+     - 優先從「現有標籤」中選擇。如果不夠，可在 newTagName 中建議 1 個新標籤名。
   3. 家具名稱 (name)：根據圖片生成一個優雅簡短的家具名稱。
-  4. 尺寸 (dimensions)：根據視覺經驗估算該家具的大約尺寸 (長、寬、高，單位：cm)。
+  4. 尺寸 (dimensions)：估算大約尺寸 (長、寬、高，單位：cm)。
   
-  注意：不要生成家具描述 (description)，該欄位保留給用戶手動輸入。
+  注意：
+  - 不要生成家具描述 (description)，該欄位保留給用戶手動輸入。
+  - 專注於分類與標籤的精確度。
   
   現有分類：
   ${JSON.stringify(categoriesJson)}
@@ -59,23 +63,17 @@ export const analyzeProductPhoto = async (
   現有標籤：
   ${JSON.stringify(tagsJson)}
   
-  請務必回傳嚴格的 JSON 格式，結構如下：
+  請回傳 JSON 格式：
   {
     "name": "家具名稱",
     "categoryId": "string or null",
     "newCategoryName": "string or null",
     "subcategoryId": "string or null",
     "newSubCategoryName": "string or null",
-    "tagIds": ["string array"],
+    "tagIds": ["string array, max 2 items"],
     "newTagName": "string or null",
-    "dimensions": {
-      "length": 0,
-      "width": 0,
-      "height": 0,
-      "unit": "cm"
-    }
+    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" }
   }
-  不要包含 markdown 標籤 (\`\`\`json)。
   `;
 
   try {
@@ -137,11 +135,11 @@ export const analyzeProductPhoto = async (
     const parsedData = JSON.parse(jsonStr);
     
     // Failsafe restrictions: enforce limits even if AI disobeys
-    if (Array.isArray(parsedData.tagIds) && parsedData.tagIds.length > 1) {
-      parsedData.tagIds = [parsedData.tagIds[0]]; // force keep only 1
+    if (Array.isArray(parsedData.tagIds) && parsedData.tagIds.length > 2) {
+      parsedData.tagIds = parsedData.tagIds.slice(0, 2); // force keep only 2
     }
-    if (Array.isArray(parsedData.tagIds) && parsedData.tagIds.length === 1) {
-      parsedData.newTagName = null; // if an existing tag is selected, DO NOT add a duplicate new tag
+    if (Array.isArray(parsedData.tagIds) && parsedData.tagIds.length > 0) {
+      parsedData.newTagName = null; // if existing tags are selected, prefer them
     }
     
     // Attach the model info so the UI can log/show it
