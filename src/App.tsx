@@ -395,6 +395,7 @@ export default function App() {
         }
       } catch (e) {
         console.error("Data load failed:", e);
+        alert('雲端數據加載失敗: ' + JSON.stringify(e));
       } finally {
         setIsInitializing(false);
       }
@@ -1843,7 +1844,7 @@ export default function App() {
   const performPushSync = async () => {
     if (!user) return;
     setConfirmDialog({
-      message: "警告：上傳將會以『目前本地資料』覆蓋雲端。雲端上多出的照片將會被刪除。確定繼續備份嗎？",
+      message: "警告：上傳備份將會以『目前本地資料』完整覆蓋雲端數據。如果雲端存有本地目前已刪除的照片，雲端上的對應記錄也將被移除。此操作不可逆，您確定要開始備份嗎？",
       onConfirm: async () => {
         setIsSyncing(true);
         setSyncAction('push');
@@ -1864,7 +1865,7 @@ export default function App() {
           alert('備份成功');
         } catch (e) {
           console.error(e);
-          alert('同步發生錯誤');
+          alert('同步發生錯誤: ' + JSON.stringify(e));
         } finally {
           setIsSyncing(false);
           setSyncAction('idle');
@@ -1877,7 +1878,7 @@ export default function App() {
   const performPullSync = async () => {
     if (!user) return;
     setConfirmDialog({
-      message: "警告：下載將會以『雲端備份』覆蓋目前本地資料。本地未備份的變更將會遺失。確定繼續下載嗎？",
+      message: "警告：從雲端下載將會覆蓋您設備上目前的所有資料。如果您近期在本機有新增或刪除相片且「尚未上傳備份」，這些變更將因覆蓋而遺失。您確定要繼續下載雲端資料嗎？",
       onConfirm: async () => {
         setIsSyncing(true);
         setSyncAction('pull');
@@ -1905,7 +1906,7 @@ export default function App() {
           alert('下載並同步成功');
         } catch (e: any) {
           console.error(e);
-          alert(`下載失敗: ${e.message || '請檢查網路'}`);
+          alert(`下載失敗: ${JSON.stringify(e)}`);
         } finally {
           setIsSyncing(false);
           setSyncAction('idle');
@@ -1961,7 +1962,7 @@ export default function App() {
           </div>
 
           <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-            使用 Google 登入後，您的照片記錄與分類標籤將自動備份至雲端，實現跨設備同步。
+            將您的家具照片、目錄分類及標籤備份至 Supabase 雲端。透過此功能，您可以在多台設備（iOS、Android、網頁）之間同步產品目錄，且照片會自動壓縮轉換為 webp 格式以節省雲端空間。
           </p>
 
           {!user ? (
@@ -1978,7 +1979,7 @@ export default function App() {
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm" alt="Avatar" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10 uppercase">
                       {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
                     </div>
                   )}
@@ -2017,7 +2018,7 @@ export default function App() {
                     </>
                   ) : (
                     <>
-                      <RefreshCcw size={16} />
+                      <ArrowUpCloud size={16} />
                       上傳備份
                     </>
                   )}
@@ -2034,15 +2035,17 @@ export default function App() {
                     </>
                   ) : (
                     <>
-                      <RefreshCcw size={16} />
+                      <ArrowDownCloud size={16} />
                       下載備份
                     </>
                   )}
                 </button>
-                <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2">
-                   <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">雲端備份</p>
-                   <p className="text-[10px] text-slate-300 font-mono">{photos.length} 張 | {lastSyncTime ? new Date(lastSyncTime).toLocaleTimeString() : '未同步'}</p>
-                </div>
+                <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2 text-center">
+                    <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">雲端同步狀態</p>
+                    <p className="text-[10px] text-slate-300 font-mono">
+                      {photos.length} 張照片 | {lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-TW') : '尚未備份'}
+                    </p>
+                  </div>
               </div>
             </div>)}
         </div>
@@ -2149,7 +2152,7 @@ export default function App() {
         {/* Version Info */}
         <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1704</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1708</p>
         </div>
       </div>
     </div>

@@ -116,9 +116,7 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 
     if (storageError) {
       console.error("Supabase Storage Upload Error details:", storageError);
-      const msg = `儲存空間上傳失敗: ${storageError.message}`;
-      alert(msg);
-      throw new Error(msg);
+      throw new Error(`儲存空間上傳失敗: ${storageError.message}`);
     }
 
     const { data: { publicUrl } } = supabase.storage
@@ -129,9 +127,7 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
   } catch (err: any) {
     console.error("Blob conversion or upload failed:", err);
     if (!err.message?.includes('儲存空間')) {
-      const msg = `圖片處理異常: ${err.message || '請檢查網絡'}`;
-      alert(msg);
-      throw new Error(msg);
+      throw new Error(`圖片處理異常: ${err.message || '請檢查網絡'}`);
     }
     throw err;
   }
@@ -195,9 +191,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<bo
 
   if (dbError) {
     console.error("Supabase Database Upsert Error:", dbError);
-    const msg = `數據同步失敗: ${dbError.message}`;
-    alert(msg);
-    throw new Error(msg);
+    throw new Error(`數據同步失敗: ${dbError.message}`);
   }
 
   // If ignoreDuplicates is true, data will be empty if it was a duplicate
