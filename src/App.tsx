@@ -286,7 +286,7 @@ export default function App() {
       title: '新增主分類',
       placeholder: '輸入新主分類名稱',
       onSubmit: (val) => {
-        const newCat = { id: 'cat_' + Date.now(), name: val.trim(), aliases: [], subcategories: [] };
+        const newCat = { id: crypto.randomUUID(), name: val.trim(), aliases: [], subcategories: [] };
         setCategories(prev => [...prev, newCat]);
         setAddCatId(newCat.id);
         setAddSubId(null);
@@ -301,7 +301,7 @@ export default function App() {
       title: '新增子分類',
       placeholder: '輸入新子分類名稱',
       onSubmit: (val) => {
-        const newSubId = 'sub_' + Date.now();
+        const newSubId = crypto.randomUUID();
         setCategories(prev => prev.map(c => c.id === addCatId ? {
           ...c,
           subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
@@ -317,7 +317,7 @@ export default function App() {
       title: '自定義標籤',
       placeholder: '輸入新標籤名稱',
       onSubmit: (val) => {
-        const newTagId = 'tag_' + Date.now();
+        const newTagId = crypto.randomUUID();
         setTags(prev => [...prev, { id: newTagId, name: val.trim(), aliases: [] }]);
         setAddTagIds(prev => [...prev, newTagId]);
       }
@@ -485,11 +485,11 @@ export default function App() {
           // Sync logic for new cats/tags
           // ... (keep the existing logic)
           if (result.newCategoryName && !result.categoryId) {
-            const newCat = { id: 'cat_' + Date.now() + Math.random().toString(36).substr(2, 5), name: result.newCategoryName, aliases: [], subcategories: [] };
+            const newCat = { id: crypto.randomUUID(), name: result.newCategoryName, aliases: [], subcategories: [] };
             setCategories(prev => [...prev, newCat]);
             finalCatId = newCat.id;
           } else if (result.newSubCategoryName && !result.subcategoryId && finalCatId) {
-             const newSubId = 'sub_' + Date.now();
+             const newSubId = crypto.randomUUID();
              setCategories(prev => prev.map(c => c.id === finalCatId ? {
                ...c, subcategories: [...c.subcategories, { id: newSubId, name: result.newSubCategoryName, aliases: []}]
              } : c));
@@ -497,7 +497,7 @@ export default function App() {
           }
           
           if (result.newTagName) {
-            const newTagId = 'tag_' + Date.now();
+            const newTagId = crypto.randomUUID();
             setTags(prev => [...prev, { id: newTagId, name: result.newTagName, aliases: [] }]);
             finalTagIds.push(newTagId);
           }
@@ -589,7 +589,7 @@ export default function App() {
             }
           }
 
-          const photoId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+          const photoId = crypto.randomUUID();
           let cloudUrl = '';
           
           if (user) {
@@ -643,11 +643,11 @@ export default function App() {
                 let finalTagIds = result.tagIds || [];
                 
                 if (result.newCategoryName && !result.categoryId) {
-                  const newCat = { id: 'cat_' + Date.now() + Math.random().toString(36).substr(2, 5), name: result.newCategoryName, aliases: [], subcategories: [] };
+                  const newCat = { id: crypto.randomUUID(), name: result.newCategoryName, aliases: [], subcategories: [] };
                   setCategories(prev => [...prev, newCat]);
                   finalCatId = newCat.id;
                 } else if (result.newSubCategoryName && !result.subcategoryId && finalCatId) {
-                  const newSubId = 'sub_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                  const newSubId = crypto.randomUUID();
                   setCategories(prev => prev.map(c => c.id === finalCatId ? {
                     ...c, subcategories: [...c.subcategories, { id: newSubId, name: result.newSubCategoryName, aliases: []}]
                   } : c));
@@ -655,7 +655,7 @@ export default function App() {
                 }
                 
                 if (result.newTagName) {
-                  const newTagId = 'tag_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                  const newTagId = crypto.randomUUID();
                   setTags(prev => [...prev, { id: newTagId, name: result.newTagName, aliases: [] }]);
                   finalTagIds.push(newTagId);
                 }
@@ -740,7 +740,7 @@ export default function App() {
         }
       }
 
-      const photoId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      const photoId = crypto.randomUUID();
       let cloudUrl = '';
       if (user && compressedData) {
         cloudUrl = await uploadImage(user.id, photoId, compressedData);
@@ -1610,7 +1610,7 @@ export default function App() {
     const addCategory = () => {
       if (!newCatName.trim()) return;
       const newCat: Category = {
-        id: 'c' + Date.now(),
+        id: crypto.randomUUID(),
         name: newCatName.trim(),
         aliases: [newCatName.trim()],
         subcategories: []
@@ -1624,7 +1624,7 @@ export default function App() {
       setCategories(prev => prev.map(c => c.id === catId ? {
         ...c,
         subcategories: [...c.subcategories, {
-          id: 's' + Date.now(),
+          id: crypto.randomUUID(),
           name: newSubName.trim(),
           aliases: [newSubName.trim()]
         }]
@@ -1635,7 +1635,7 @@ export default function App() {
     const addTag = () => {
       if (!newTagName.trim()) return;
       const newTag: Tag = {
-        id: 't' + Date.now(),
+        id: crypto.randomUUID(),
         name: newTagName.trim(),
         aliases: [newTagName.trim()]
       };

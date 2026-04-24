@@ -82,9 +82,7 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
 };
 
 export const uploadImage = async (userId: string, photoId: string, base64Data: string): Promise<string> => {
-  // Debug: Check Session
   const { data: { session } } = await supabase.auth.getSession();
-  alert('Storage Session狀態: ' + JSON.stringify(session?.user?.id));
 
   if (!session?.user) {
     alert('上傳失敗: Session 已失效，請重新登入');
@@ -110,8 +108,6 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 
     const fileName = `public/${photoId}.webp`;
     
-    alert(`上傳路徑: ${fileName}\nBucket: ${BUCKET_NAME}`);
-
     const { error: storageError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(fileName, blob, {
@@ -123,8 +119,6 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
       console.error("Supabase Storage Upload Error details:", storageError);
       alert('上傳失敗 (Storage 階段): ' + JSON.stringify(storageError, null, 2));
       throw storageError;
-    } else {
-      alert('Storage 階段: 成功上傳');
     }
 
     const { data: { publicUrl } } = supabase.storage
@@ -163,20 +157,22 @@ export const checkImageHashExists = async (userId: string, hash: string): Promis
 };
 
 export const savePhotoToCloud = async (userId: string, photo: Photo) => {
-  // Debug: Check Session
   const { data: { session } } = await supabase.auth.getSession();
-  alert('Database Session狀態: ' + JSON.stringify(session?.user?.id));
 
   if (!session?.user) {
     alert('寫入失敗: Session 已失效，請重新登入');
     throw new Error('No active session for database');
   }
 
+  // Ensure ID is UUID format as requested
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
+  const newId = isUUID ? photo.id : crypto.randomUUID();
+
   const { error: dbError } = await supabase
     .from(TABLE_NAME)
     .upsert({
-      id: photo.id,
-      user_id: session.user.id, // Use ID from session directly for security
+      id: newId,
+      user_id: session.user.id,
       item_code: photo.item_code,
       manual_code: photo.manual_code || '',
       image_hash: photo.image_hash,
@@ -203,8 +199,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
     };
     alert('Database階段失敗: ' + JSON.stringify(errorDetails, null, 2));
     throw dbError;
-  } else {
-    alert('Database 階段: 成功記錄數據');
   }
 };
 
@@ -226,6 +220,10 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
       }
       throw err;
     }
+  }
+  
+  if (photos.length > 0) {
+    alert('同步成功');
   }
 };
 
