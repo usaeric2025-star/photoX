@@ -381,19 +381,86 @@ export const fetchSettings = async () => {
         console.error("Failed to fetch settings:", error);
         return null;
     }
+    
+    // Parse JSON data if it exists
+    if (data.categories_json) {
+      try { data.categories = JSON.parse(data.categories_json); } catch(e) { console.error(e); }
+    }
+    if (data.tags_json) {
+      try { data.tags = JSON.parse(data.tags_json); } catch(e) { console.error(e); }
+    }
+    
     return data;
 };
 
 export const saveSettings = async (settings: any) => {
-    const { error } = await supabase
-        .from('settings')
-        .upsert({ ...settings, id: 1 });
-    
-    if (error) {
-        console.error("Failed to save settings:", error);
-        throw error;
+    try {
+        // Prepare the payload
+        const payload = { ...settings };
+        
+        // Clean up temporary UI fields before saving
+        if (payload.categories) {
+          payload.categories_json = JSON.stringify(payload.categories);
+          delete payload.categories;
+        }
+        if (payload.tags) {
+          payload.tags_json = JSON.stringify(payload.tags);
+          delete payload.tags;
+        }
+
+        console.log("Attempting to save settings to Supabase...", payload);
+
+        // First, check if there's any row in settings
+        const { data: existingRows, error: fetchError } = await supabase
+            .from('settings')
+            .select('*')
+            .limit(1);
+
+        if (fetchError) {
+            console.error("Error checking existing settings:", fetchError);
+            throw fetchError;
+        }
+
+        if (existingRows && existingRows.length > 0) {
+            // Row exists, try to update it
+            const existing = existingRows[0];
+            const updatePayload = { ...payload };
+            
+            // Try updating using 'id' if it exists in the data we fetched
+            if (existing.id !== undefined) {
+                const { error: updateError } = await supabase
+                    .from('settings')
+                    .update(updatePayload)
+                    .eq('id', existing.id);
+                
+                if (updateError) throw updateError;
+            } else {
+                // If no 'id', try to update everything (risky if multiple rows, but likely there's only one)
+                // Use the first available column as a matcher if possible, or just upsert without onConflict
+                const { error: upsertError } = await supabase
+                    .from('settings')
+                    .upsert({ ...updatePayload, id: 1 }); // Still try id: 1 as fallback
+                
+                if (upsertError) throw upsertError;
+            }
+        } else {
+            // No row exists, insert as id: 1
+            const { error: insertError } = await supabase
+                .from('settings')
+                .insert({ ...payload, id: 1 });
+            
+            if (insertError) throw insertError;
+        }
+        
+        return true;
+    } catch (err: any) {
+        console.error("Detailed error in saveSettings:", err);
+        // Provide the user with a specific message if columns/id are missing
+        if (err.message && err.message.includes("column \"id\" of relation \"settings\" does not exist")) {
+            console.error("MIGRATION REQUIRED: The 'settings' table is missing the 'id' column.");
+        }
+        return false;
     }
-    return true;
 };
 
 export const uploadLogo = async (file: File) => {

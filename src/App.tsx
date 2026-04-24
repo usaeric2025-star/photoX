@@ -299,6 +299,14 @@ export default function App() {
         document.documentElement.style.setProperty('--custom-bg', s.background_color);
         document.documentElement.style.setProperty('--custom-text', s.primary_color);
         document.documentElement.style.setProperty('--custom-accent', s.accent_color);
+        
+        // Load tree categories and tags from cloud settings if they exist
+        if (s.categories && s.categories.length > 0) {
+          setCategories(s.categories);
+        }
+        if (s.tags && s.tags.length > 0) {
+          setTags(s.tags);
+        }
       }
     });
 

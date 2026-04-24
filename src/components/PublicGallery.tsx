@@ -27,6 +27,7 @@ const translations = {
     tags: '标签',
     close: '关闭',
     empty: '没有找到匹配的照片',
+    whatsAppInquiry: 'WhatsApp 諮詢'
   },
   en: {
     galleryName: 'Gallery',
@@ -205,10 +206,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     }
   };
 
-  const openWhatsApp = (num: string) => {
-    const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
+  const openWhatsApp = (num: string, singlePhotoId?: string) => {
     let msg = '';
-    if (selected.length > 0) {
+    if (singlePhotoId) {
+      const p = photos.find(ph => ph.id === singlePhotoId);
+      if (p) {
+        msg = `你好，我对这个家具有兴趣：\n\n${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
+      }
+    } else if (selectedPhotos.size > 0) {
+      const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
       const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
       msg = `你好，我对以下家具有兴趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`;
     } else {
@@ -218,18 +224,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     setShowWhatsAppChoice(false);
   };
 
-  const contactWhatsApp = () => {
+  const contactWhatsApp = (photoId?: string) => {
     const num1 = settings?.whatsapp_1;
     const num2 = settings?.whatsapp_2;
 
     if (num1 && num2) {
+      // Store which photo we are sharing if any
+      (window as any)._pendingPhotoId = photoId;
       setShowWhatsAppChoice(true);
     } else if (num1 || num2) {
-      openWhatsApp(num1 || num2);
+      openWhatsApp(num1 || num2, photoId);
     } else {
-      // Fallback to VITE_WHATSAPP_NUMBER or alert
       const fallback = (import.meta as any).env.VITE_WHATSAPP_NUMBER;
-      if (fallback) openWhatsApp(fallback);
+      if (fallback) openWhatsApp(fallback, photoId);
       else alert('未設定聯繫號碼');
     }
   };
@@ -299,24 +306,26 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
-      <header className="shrink-0 z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
-        <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
-          {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-10 max-w-[160px] object-contain cursor-pointer" />
-          ) : (
-            <h1 className="text-xl font-black tracking-tight truncate leading-tight cursor-pointer text-[#1D3557]">Gallery</h1>
-          )}
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-           <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest">
-             {['zh', 'en', 'ms'].map(l => (
-               <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-2.5 py-1 rounded-xl transition-all shadow-sm`}>
-                 {l}
-               </button>
-             ))}
-           </div>
-        </div>
-      </header>
+      {lightboxIndex === null && (
+        <header className="shrink-0 z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
+          <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
+            {settings?.logo_url ? (
+              <img src={settings.logo_url} alt="Logo" className="h-14 max-w-[200px] object-contain cursor-pointer" />
+            ) : (
+              <h1 className="text-2xl font-black tracking-tight truncate leading-tight cursor-pointer text-[#1D3557]">Gallery</h1>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+             <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest">
+               {['zh', 'en', 'ms'].map(l => (
+                 <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95`}>
+                   {l}
+                 </button>
+               ))}
+             </div>
+          </div>
+        </header>
+      )}
 
       {/* Filter & Search */}
       <div className="shrink-0 p-4 z-40 bg-[#FDFAF6] border-b border-[#1D3557]/5 shadow-sm space-y-4">
@@ -341,9 +350,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
           </button>
         </div>
 
-        <div className="flex overflow-x-auto gap-2 no-scrollbar scroll-smooth px-1">
+        <div className="grid grid-cols-4 gap-2 px-1">
           {selectionMode ? (
-            <div className="flex justify-between w-full items-center p-1">
+            <div className="col-span-4 flex justify-between w-full items-center p-1">
                <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-xs font-black text-[#1D3557]/50 uppercase tracking-widest">Cancel</button>
                <span className="text-[10px] font-black text-[#1D3557] uppercase tracking-[0.2em]">{selectedPhotos.size} selected</span>
                <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-xs font-black text-[#D4A853] uppercase tracking-widest">Done</button>
@@ -352,7 +361,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             <>
               <button 
                 onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); }}
-                className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all shadow-sm border whitespace-nowrap ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
               >
                 {t.allCats}
               </button>
@@ -360,7 +369,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 <button 
                   key={cat.code}
                   onClick={() => { setSelectedCatCode(cat.code); setSelectedSubId(null); }}
-                  className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all shadow-sm border whitespace-nowrap ${selectedCatCode === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                  className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                 >
                   {cat[lang] || cat.en}
                 </button>
@@ -370,18 +379,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
         </div>
 
         {!selectionMode && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <AnimatePresence>
               {selectedCatCode && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }} 
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="flex overflow-x-auto gap-1.5 no-scrollbar scroll-smooth"
+                  className="flex flex-wrap gap-1.5"
                 >
                   <button 
                     onClick={() => setSelectedSubId(null)}
-                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${!selectedSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
+                    className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${!selectedSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                   >
                     ALL
                   </button>
@@ -391,7 +400,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                       <button 
                         key={sub.id}
                         onClick={() => setSelectedSubId(sub.id)}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
+                        className={`px-3 py-1 rounded-lg text-[9px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                       >
                         {sub.name}
                       </button>
@@ -401,12 +410,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               )}
             </AnimatePresence>
 
-            <div className="flex overflow-x-auto gap-2 no-scrollbar scroll-smooth">
+            <div className="flex flex-wrap gap-1.5 items-center">
               {tags.map(tag => (
                 <button 
                   key={tag.id}
                   onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
-                  className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/5 text-[#1D3557]/50'}`}
+                  className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/5 text-[#1D3557]/50'}`}
                 >
                   #{tag.name}
                 </button>
@@ -492,19 +501,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
       </div>
 
       {/* Selection Footer */}
-      {selectionMode && (
+      {selectionMode && lightboxIndex === null && (
          <div className="fixed bottom-20 left-0 w-full bg-bg border-t border-text/10 p-4 flex gap-4 shadow-lg z-[300]">
              <button onClick={shareSelected} className="flex-1 bg-text text-bg py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
                <Share2 size={16} /> Share
              </button>
-             <button onClick={contactWhatsApp} className="flex-1 bg-[#25D366] text-white py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
+             <button onClick={() => contactWhatsApp()} className="flex-1 bg-[#25D366] text-white py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
                <MessageCircle size={16} /> WhatsApp
              </button>
          </div>
       )}
 
       {/* Floating Action Buttons (Normal Mode) */}
-      {!selectionMode && (
+      {!selectionMode && lightboxIndex === null && (
         <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400]">
             <button 
               onClick={scrollToTop} 
@@ -512,7 +521,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             >
               <ArrowUpToLine size={24} />
             </button>
-            <button onClick={() => setSelectionMode(true)} className="bg-[#25D366] text-white p-4 rounded-full shadow-lg">
+            <button onClick={() => contactWhatsApp()} className="bg-[#25D366] text-white p-4 rounded-full shadow-lg">
               <MessageCircle size={24} />
             </button>
         </div>
@@ -633,6 +642,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     </div>
                   </div>
                 )}
+                
+                <div className="pt-4 border-t border-slate-100">
+                   <button 
+                    onClick={() => contactWhatsApp(displayPhotos[lightboxIndex!].id)}
+                    className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"
+                   >
+                     <MessageCircle size={20} />
+                     {t.whatsAppInquiry}
+                   </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -726,7 +745,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               <div className="space-y-3">
                 {settings?.whatsapp_1 && (
                   <button 
-                    onClick={() => openWhatsApp(settings.whatsapp_1)}
+                    onClick={() => openWhatsApp(settings.whatsapp_1, (window as any)._pendingPhotoId)}
                     className="w-full py-4 px-6 bg-[#25D366] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
                     <MessageCircle size={20} />
@@ -735,7 +754,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 )}
                 {settings?.whatsapp_2 && (
                   <button 
-                    onClick={() => openWhatsApp(settings.whatsapp_2)}
+                    onClick={() => openWhatsApp(settings.whatsapp_2, (window as any)._pendingPhotoId)}
                     className="w-full py-4 px-6 bg-[#128C7E] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
                     <MessageCircle size={20} />
