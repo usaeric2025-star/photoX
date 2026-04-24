@@ -365,12 +365,36 @@ export default function App() {
         const savedPhotos = await loadData('product_photos');
         const savedCats = await loadData('product_categories');
         const savedTags = await loadData('product_tags');
+        const savedSyncTime = await loadData('last_sync_time');
         
         if (savedPhotos && savedPhotos.length > 0) setPhotos(savedPhotos);
         if (savedCats && savedCats.length > 0) setCategories(savedCats);
         if (savedTags && savedTags.length > 0) setTags(savedTags);
+        if (savedSyncTime) setLastSyncTime(savedSyncTime);
+        
+        // Auto-fetch from cloud if user is logged in
+        if (u) {
+          const cloudPhotos = await loadPhotosFromCloud(u.id);
+          if (cloudPhotos && cloudPhotos.length > 0) {
+            setPhotos(cloudPhotos);
+            await saveData('product_photos', cloudPhotos);
+          }
+          const cloudCats = await loadCategoriesFromCloud(u.id);
+          if (cloudCats && cloudCats.length > 0) {
+            setCategories(cloudCats);
+            await saveData('product_categories', cloudCats);
+          }
+          const cloudTags = await loadTagsFromCloud(u.id);
+          if (cloudTags && cloudTags.length > 0) {
+            setTags(cloudTags);
+            await saveData('product_tags', cloudTags);
+          }
+          const now = Date.now();
+          setLastSyncTime(now);
+          await saveData('last_sync_time', now);
+        }
       } catch (e) {
-        console.error("Local data load failed:", e);
+        console.error("Data load failed:", e);
       } finally {
         setIsInitializing(false);
       }
@@ -1818,33 +1842,42 @@ export default function App() {
 
   const performPushSync = async () => {
     if (!user) return;
-    setIsSyncing(true);
-    setSyncAction('push');
-    setSyncPercent(0);
-    try {
-      try {
-        await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
-      } catch (e) {
-        console.error("Photo sync error:", e);
-      }
+    setConfirmDialog({
+      message: "警告：上傳將會以『目前本地資料』覆蓋雲端。雲端上多出的照片將會被刪除。確定繼續備份嗎？",
+      onConfirm: async () => {
+        setIsSyncing(true);
+        setSyncAction('push');
+        setSyncPercent(0);
+        try {
+          try {
+            await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+          } catch (e) {
+            console.error("Photo sync error:", e);
+          }
 
-      await syncCategoriesToCloud(user.id, categories);
-      await syncTagsToCloud(user.id, tags);
-      
-      setLastSyncTime(Date.now());
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSyncing(false);
-      setSyncAction('idle');
-      setSyncPercent(0);
-    }
+          await syncCategoriesToCloud(user.id, categories);
+          await syncTagsToCloud(user.id, tags);
+          
+          const now = Date.now();
+          setLastSyncTime(now);
+          await saveData('last_sync_time', now);
+          alert('備份成功');
+        } catch (e) {
+          console.error(e);
+          alert('同步發生錯誤');
+        } finally {
+          setIsSyncing(false);
+          setSyncAction('idle');
+          setSyncPercent(0);
+        }
+      }
+    });
   };
 
   const performPullSync = async () => {
     if (!user) return;
     setConfirmDialog({
-      message: "警告：下載會覆蓋目前資料。未上傳的變更將會遺失。確定繼續？",
+      message: "警告：下載將會以『雲端備份』覆蓋目前本地資料。本地未備份的變更將會遺失。確定繼續下載嗎？",
       onConfirm: async () => {
         setIsSyncing(true);
         setSyncAction('pull');
@@ -1864,9 +1897,12 @@ export default function App() {
           await saveData('product_categories', cloudCats);
           await saveData('product_tags', cloudTags);
 
-          setLastSyncTime(Date.now());
+          const now = Date.now();
+          setLastSyncTime(now);
+          await saveData('last_sync_time', now);
+          
           setSyncPercent(100);
-          alert('同步成功');
+          alert('下載並同步成功');
         } catch (e: any) {
           console.error(e);
           alert(`下載失敗: ${e.message || '請檢查網路'}`);
@@ -2113,7 +2149,7 @@ export default function App() {
         {/* Version Info */}
         <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1648</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1704</p>
         </div>
       </div>
     </div>

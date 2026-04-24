@@ -208,6 +208,34 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   let successCount = 0;
   let skippedCount = 0;
   
+  // 1. Get current cloud state
+  const { data: cloudItems, error: fetchError } = await supabase
+    .from(TABLE_NAME)
+    .select('id, storageId')
+    .eq('user_id', userId);
+  
+  if (fetchError) {
+    console.error("Failed to fetch cloud items for comparison:", fetchError);
+  } else {
+    // 2. Identify cloud items that are NOT in the local list
+    const localIds = new Set(photos.map(p => p.id));
+    const itemsToDelete = (cloudItems || []).filter(item => !localIds.has(item.id));
+    
+    if (itemsToDelete.length > 0) {
+      console.log(`Cleaning up ${itemsToDelete.length} orphan items from cloud...`);
+      for (const item of itemsToDelete) {
+        try {
+          await supabase.from(TABLE_NAME).delete().match({ id: item.id, user_id: userId });
+          const filename = item.storageId || item.id;
+          await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`]);
+        } catch (e) {
+          console.warn(`Failed to delete orphan ${item.id}:`, e);
+        }
+      }
+    }
+  }
+
+  // 3. Process uploads
   for (const photo of photos) {
     try {
       if (!photo.image_url && photo.uri) {
@@ -226,10 +254,6 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
       console.error(`Sync failed for photo ${photo.id}:`, err);
       throw err;
     }
-  }
-  
-  if (photos.length > 0) {
-    alert('同步成功');
   }
   
   return { success: successCount, skipped: skippedCount };
