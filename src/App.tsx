@@ -526,13 +526,14 @@ export default function App() {
           
           let alertMsg = `AI 辨識失敗。\n\n照片 ID: ${photo.id}\n錯誤原因: ${errorDetail}\n\n請檢查 API 金鑰是否有效、該金鑰是否支援視覺模型並且有足夠權限。`;
           
+          // Notify user
+          setAlertDialog({ title: '辨識失敗', message: alertMsg });
+          
           setPhotos(prev => prev.map(p => p.id === photo.id ? { 
             ...p, 
-            isAnalyzing: false,
-            note: `辨識失敗: ${errorDetail}` 
+            isAnalyzing: false 
           } : p));
           
-          setAlertDialog({ title: '辨識失敗', message: alertMsg });
           // Stop batch process immediately if an API fails (like 400, 401, quota, deprecation)
           break;
         }
@@ -626,11 +627,10 @@ export default function App() {
                 console.error("AI Analysis failed:", err);
                 const errorDetail = err.message || '未知錯誤';
                 
-                // Update photo note with error
+                // Update photo state
                 setPhotos(prev => prev.map(p => p.id === photoId ? { 
                   ...p, 
-                  isAnalyzing: false,
-                  note: `辨識失敗: ${errorDetail}`
+                  isAnalyzing: false
                 } : p));
                 
                 // Notify user safely using custom dialog
@@ -1597,9 +1597,24 @@ export default function App() {
       if (u) {
         setAlertDialog({ title: '系統提示', message: `歡迎回來, ${u.displayName}！已開啟雲端同步。` });
       }
-    } catch (e) {
-      console.error(e);
-      setAlertDialog({ title: '系統提示', message: '登入失敗，請稍後再試。' });
+    } catch (e: any) {
+      console.error('Firebase Login Error:', e);
+      let errorMsg = '登入失敗，請稍後再試。';
+      
+      if (e.code === 'auth/unauthorized-domain') {
+        const currentDomain = window.location.hostname;
+        errorMsg = `登入失敗：當前網域 [${currentDomain}] 未獲授權。\n\n請檢查：\n1. Firebase 控制台 -> Authentication -> Settings -> Authorized domains 是否已加入此網域。\n2. Google Cloud Console -> 憑證 -> OAuth 2.0 用戶端識別碼 -> 已授權的 Javascript 來源是否已加入此網域。`;
+      } else if (e.code === 'auth/popup-blocked') {
+        errorMsg = '登入失敗：彈出視窗被瀏覽器攔截，請允許彈出視窗後再試。';
+      } else if (e.code === 'auth/operation-not-allowed') {
+        errorMsg = '登入失敗：尚未在 Firebase 控制台啟用 Google 登入方法。';
+      } else if (e.code === 'auth/internal-error') {
+        errorMsg = `登入失敗：內部錯誤 (${e.message})。請檢查 Firebase 設定檔是否正確。`;
+      } else if (e.message) {
+        errorMsg = `登入失敗 [${e.code || 'unknown'}]: ${e.message}`;
+      }
+      
+      setAlertDialog({ title: '登入錯誤', message: errorMsg });
     }
   };
 
