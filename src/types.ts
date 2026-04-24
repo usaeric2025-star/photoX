@@ -25,16 +25,32 @@ export interface Tag {
 }
 
 export interface Photo {
-  id: string;
-  uri: string; // Base64 image data
-  categoryId: string | null;
-  subcategoryId: string | null;
-  tagIds: string[];
-  note: string;
+  id: string; // Internal ID
+  item_code: string; // System auto-code (FUR-YYYYMMDD-RAND)
+  manual_code?: string; // Hidden price code
+  image_hash: string; // MD5 fingerprint
+  name: string; // AI generated name
+  category: string; // Main category name
+  sub_category?: string; // Sub category name
+  tags: string[]; // Tag array
+  description?: string; // AI generated description
+  image_url: string; // Public URL in Storage
+  dimensions?: {
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: string;
+  } | null;
+  exif_data?: any | null;
   createdAt: string;
   groupId?: string | null;
   isAnalyzing?: boolean;
   userId?: string;
+  // UI legacy fields mapping if needed
+  uri?: string; // For local preview
+  categoryId?: string | null; // For local filter
+  subcategoryId?: string | null; // For local filter
+  tagIds?: string[]; // For local filter
 }
 
 export interface AppState {

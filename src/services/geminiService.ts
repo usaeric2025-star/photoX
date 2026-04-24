@@ -43,29 +43,39 @@ export const analyzeProductPhoto = async (
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
 
   const promptText = `
-  You are an expert product cataloger. Analyze this product photo.
+  你是一位家具型錄專家。請分析這張照片並提供家具的分類資訊。
   
-  CRITICAL RULES:
-  1. EXACTLY ONE CATEGORY: Choose the single best category and subcategory from the 'Available Categories'. If none fit, suggest exactly ONE new category (newCategoryName).
-  2. EXACTLY ONE TAG (Product ID grouping): The Tag represents the unique item. If this item looks like the same product (even if a different angle) as an 'Available Tag', YOU MUST REUSE THAT TAG. Do not create a new tag for the exact same item. 
-  3. The 'tagIds' array MUST contain maximum 1 item. If NO available tag fits, suggest exactly ONE new tag (newTagName). Do NOT return multiple tags. Do NOT create a new tag if you already selected one from the list.
-
-  Available Categories:
+  關鍵規則：
+  1. 主分類與子分類：從「現有分類」中選擇最合適的一個。如果都不適合，請在 newCategoryName 中建議一個新分類名。
+  2. 標籤 (產品分組)：如果這張照片看起來與「現有標籤」中的某個產品完全相同，請共用該標籤 ID。
+  3. 家具名稱 (name)：根據圖片生成一個優雅簡短的家具名稱。
+  4. 尺寸 (dimensions)：根據視覺經驗估算該家具的大約尺寸 (長、寬、高，單位：cm)。
+  
+  注意：不要生成家具描述 (description)，該欄位保留給用戶手動輸入。
+  
+  現有分類：
   ${JSON.stringify(categoriesJson)}
-
-  Available Tags:
+  
+  現有標籤：
   ${JSON.stringify(tagsJson)}
-
-  Return ONLY a valid JSON object matching this exact structure:
+  
+  請務必回傳嚴格的 JSON 格式，結構如下：
   {
+    "name": "家具名稱",
     "categoryId": "string or null",
     "newCategoryName": "string or null",
     "subcategoryId": "string or null",
     "newSubCategoryName": "string or null",
-    "tagIds": ["string array with MAX 1 item"],
-    "newTagName": "string or null"
+    "tagIds": ["string array"],
+    "newTagName": "string or null",
+    "dimensions": {
+      "length": 0,
+      "width": 0,
+      "height": 0,
+      "unit": "cm"
+    }
   }
-  Do not include markdown tags (\`\`\`json) in the response.
+  不要包含 markdown 標籤 (\`\`\`json)。
   `;
 
   try {

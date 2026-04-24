@@ -21,7 +21,11 @@ import {
   Sparkles,
   Minimize2,
   LogIn,
-  Cloud
+  LogOut,
+  Cloud,
+  CloudOff,
+  RefreshCcw,
+  Edit3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo, Category, Tag, SubCategory } from './types';
@@ -38,10 +42,13 @@ import {
   deletePhotoFromCloud,
   syncPhotosToCloud,
   syncCategoriesToCloud,
-  syncTagsToCloud
-} from './services/firebaseService';
-import { User } from 'firebase/auth';
-import { Cloud, CloudOff, LogOut, LogIn, RefreshCcw } from 'lucide-react';
+  syncTagsToCloud,
+  calculateMD5,
+  generateItemCode,
+  checkImageHashExists,
+  uploadImage
+} from './services/supabaseService';
+import { User } from '@supabase/supabase-js';
 
 // Default Data for initial setup
 const DEFAULT_CATEGORIES: Category[] = [
@@ -64,7 +71,7 @@ const DEFAULT_TAGS: Tag[] = [
 ];
 
 // --- Utilities ---
-const compressImage = (base64Str: string, maxWidth = 1280, maxHeight = 1280, quality = 0.75): Promise<string> => {
+const compressImage = (base64Str: string, maxWidth = 1600, maxHeight = 1600, quality = 0.85): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -203,10 +210,20 @@ const PhotoCard = React.memo(({
         </div>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
-        <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
+        <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase mb-0.5">
           {categoryName}
         </p>
+        <div className="flex items-center justify-between gap-1">
+          <p className="text-[7px] text-white/60 font-black truncate flex-1">
+            {photo.item_code}
+          </p>
+          {photo.manual_code && (
+            <p className="text-[8px] text-yellow-400 font-bold bg-black/40 px-1 rounded">
+              {photo.manual_code}
+            </p>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -221,6 +238,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncAction, setSyncAction] = useState<'push' | 'pull' | 'idle'>('idle');
+  const [syncPercent, setSyncPercent] = useState(0);
   const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
   
   // Navigation & UI State
@@ -248,6 +266,10 @@ export default function App() {
   const [addSubId, setAddSubId] = useState<string | null>(null);
   const [addTagIds, setAddTagIds] = useState<string[]>([]);
   const [addNote, setAddNote] = useState('');
+  const [addManualCode, setAddManualCode] = useState('');
+  const [addDimL, setAddDimL] = useState<string>('');
+  const [addDimW, setAddDimW] = useState<string>('');
+  const [addDimH, setAddDimH] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isBatchAnalyzing, setIsBatchAnalyzing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -392,22 +414,19 @@ export default function App() {
       await saveData('product_categories', categories);
       await saveData('product_tags', tags);
     };
-    const cleanup = persist();
-    return () => {
-      if (typeof cleanup === 'function') cleanup();
-    };
+    persist();
   }, [photos, categories, tags, isInitializing, user]);
 
   // Specific save/delete handlers for cloud performance
   const syncItemToCloud = async (photo: Photo) => {
     if (user) {
-      await savePhotoToCloud(user.uid, photo);
+      await savePhotoToCloud(user.id, photo);
     }
   };
 
   const removeItemFromCloud = async (photoId: string) => {
     if (user) {
-      await deletePhotoFromCloud(user.uid, photoId);
+      await deletePhotoFromCloud(user.id, photoId);
     }
   };
 
@@ -431,7 +450,7 @@ export default function App() {
         const matchesCat = cat?.name.toLowerCase().includes(query) || cat?.aliases.some(a => a.toLowerCase().includes(query));
         const matchesSub = sub?.name.toLowerCase().includes(query) || sub?.aliases.some(a => a.toLowerCase().includes(query));
         const matchesTags = pTags.some(t => t.name.toLowerCase().includes(query) || t.aliases.some(a => a.toLowerCase().includes(query)));
-        const matchesNote = p.note.toLowerCase().includes(query);
+        const matchesNote = (p.description || '').toLowerCase().includes(query) || (p.note || '').toLowerCase().includes(query);
         const matchesGroupId = p.groupId?.toLowerCase().includes(query);
         
         if (!matchesCat && !matchesSub && !matchesTags && !matchesNote && !matchesGroupId) return false;
@@ -516,6 +535,11 @@ export default function App() {
             categoryId: finalCatId, 
             subcategoryId: finalSubId, 
             tagIds: finalTagIds,
+            name: result.name || p.name,
+            category: categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || p.category,
+            sub_category: categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || p.sub_category,
+            tags: tags.filter(t => finalTagIds.includes(t.id)).map(t => t.name),
+            dimensions: result.dimensions || p.dimensions,
             isAnalyzing: false 
           } : p));
           successCount++;
@@ -552,13 +576,17 @@ export default function App() {
     if (!files || files.length === 0) return;
     
     const useAi = !!geminiApiKey || !!process.env.GEMINI_API_KEY;
-    const fileArray = Array.from(files);
+    const fileArray = Array.from(files) as File[];
     
     setIsImporting(true);
     setActiveScreen('home');
+
+    // Only assign a batch ID if uploading MORE THAN one photo
+    const batchGroupId = fileArray.length > 1 
+      ? 'GRP-' + Date.now().toString() + Math.random().toString(36).substr(2, 4).toUpperCase()
+      : null;
     
-    // Process in Chunks to avoid crashing/freezing
-    const CHUNK_SIZE = 5;
+    const CHUNK_SIZE = 3;
     for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
       const chunk = fileArray.slice(i, i + CHUNK_SIZE);
       const newPhotosDraft: Photo[] = [];
@@ -572,28 +600,64 @@ export default function App() {
           });
           const compressedUri = await compressImage(rawUri);
           
-          // Check for exact duplicate
-          const isDuplicate = photosRef.current.some(p => p.uri === compressedUri) || newPhotosDraft.some(p => p.uri === compressedUri);
-          if (isDuplicate) continue;
+          const imgHash = calculateMD5(compressedUri);
+
+          const isLocalDuplicate = photosRef.current.some(p => p.image_hash === imgHash) || newPhotosDraft.some(p => p.image_hash === imgHash);
+          if (isLocalDuplicate) continue;
           
+          if (user) {
+            const existingManualCode = await checkImageHashExists(user.id, imgHash);
+            if (existingManualCode) {
+              setAlertDialog({ 
+                title: '重複上傳跳過', 
+                message: `照片「${file.name}」已錄入過！\n現有手動編號為：${existingManualCode}\n已自動跳過此照片。` 
+              });
+              continue;
+            }
+          }
+
+          const photoId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+          let cloudUrl = '';
+          
+          if (user) {
+             try {
+               cloudUrl = await uploadImage(user.id, photoId, compressedUri);
+             } catch (upErr) {
+               console.error("Cloud upload failed during import:", upErr);
+             }
+          }
+
           const newPhoto: Photo = {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            id: photoId,
+            item_code: generateItemCode(),
+            manual_code: '',
+            image_hash: imgHash,
+            name: file.name.split('.')[0] || '未命名家具',
+            category: '未分類',
+            sub_category: '',
+            tags: [],
+            description: '',
+            image_url: cloudUrl || '',
             uri: compressedUri,
             categoryId: null,
             subcategoryId: null,
             tagIds: [],
-            note: '',
             createdAt: new Date().toISOString(),
+            groupId: batchGroupId,
             isAnalyzing: !!useAi
           };
           
           newPhotosDraft.push(newPhoto);
           
-          // Trigger AI if enabled (non-blocking)
           if (useAi) {
-            (async (photoId: string, uri: string) => {
+            (async (targetPhoto: Photo) => {
               try {
-                const result = await analyzeProductPhoto(uri, catsRef.current, tagsRef.current, geminiApiKey, aiProvider, customModel);
+                const result = await analyzeProductPhoto(targetPhoto.uri!, catsRef.current, tagsRef.current, geminiApiKey, aiProvider, customModel);
+                
+                // Sync logic for new cats/tags
+                const currentCats = catsRef.current;
+                const currentTags = tagsRef.current;
+                
                 let finalCatId = result.categoryId || null;
                 let finalSubId = result.subcategoryId || null;
                 let finalTagIds = result.tagIds || [];
@@ -621,6 +685,11 @@ export default function App() {
                   categoryId: finalCatId, 
                   subcategoryId: finalSubId, 
                   tagIds: finalTagIds,
+                  name: result.name || p.name,
+                  category: categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || p.category,
+                  sub_category: categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || p.sub_category,
+                  tags: tags.filter(t => finalTagIds.includes(t.id)).map(t => t.name),
+                  dimensions: result.dimensions || p.dimensions,
                   isAnalyzing: false 
                 } : p));
               } catch (err: any) {
@@ -639,7 +708,7 @@ export default function App() {
                   message: `單張相片 AI 辨識失敗。\n\n錯誤原因: ${errorDetail}\n\n請檢查 API Key 是否正確、模型名稱是否支援圖片輸入，或嘗試更換模型。`
                 });
               }
-            })(newPhoto.id, newPhoto.uri);
+              })(newPhoto);
           }
         } catch (err) {
           console.error("File processing error", err);
@@ -658,32 +727,79 @@ export default function App() {
   };
 
   const saveNewPhoto = async () => {
-    if (!newPhotoData) return;
+    if (!newPhotoData && !editPhotoId) return;
     
     // Default to 'uncategorized' if user hasn't selected a category for an existing photo
     const catId = addCatId || 'uncategorized';
+    const catName = categories.find(c => c.id === catId)?.name || '未分類';
+    const subName = categories.find(c => c.id === catId)?.subcategories.find(s => s.id === addSubId)?.name || '';
+    const tagNames = tags.filter(t => addTagIds.includes(t.id)).map(t => t.name);
     
-    const compressedData = await compressImage(newPhotoData);
+    const compressedData = newPhotoData ? await compressImage(newPhotoData) : null;
+    const imgHash = compressedData ? calculateMD5(compressedData) : (editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_hash : '');
     
     if (editPhotoId) {
       setPhotos(prev => prev.map(p => p.id === editPhotoId ? {
         ...p,
-        uri: compressedData,
+        ...(compressedData ? { uri: compressedData, image_hash: imgHash } : {}),
         categoryId: catId,
         subcategoryId: addSubId,
         tagIds: addTagIds,
-        note: addNote
+        category: catName,
+        sub_category: subName,
+        tags: tagNames,
+        description: addNote,
+        manual_code: addManualCode,
+        dimensions: {
+          length: Number(addDimL) || 0,
+          width: Number(addDimW) || 0,
+          height: Number(addDimH) || 0,
+          unit: 'cm'
+        }
       } : p));
       setEditPhotoId(null);
     } else {
+      // Check for duplicates in Cloud if logged in
+      if (user && imgHash) {
+        const existingManualCode = await checkImageHashExists(user.id, imgHash);
+        if (existingManualCode) {
+          setAlertDialog({ 
+            title: '重複上傳', 
+            message: `此照片已錄入過！\n現有手動編號為：${existingManualCode}\n已自動取消添加以避免重複。` 
+          });
+          return;
+        }
+      }
+
+      const photoId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      let cloudUrl = '';
+      if (user && compressedData) {
+        cloudUrl = await uploadImage(user.id, photoId, compressedData);
+      }
+
       const newPhoto: Photo = {
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-        uri: compressedData,
+        id: photoId,
+        item_code: generateItemCode(),
+        manual_code: addManualCode,
+        image_hash: imgHash || '',
+        name: '新家具紀錄',
+        category: catName,
+        sub_category: subName,
+        tags: tagNames,
+        description: addNote,
+        image_url: cloudUrl,
+        uri: compressedData || '',
         categoryId: catId,
         subcategoryId: addSubId,
         tagIds: addTagIds,
-        note: addNote,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        groupId: null,
+        dimensions: {
+          length: Number(addDimL) || 0,
+          width: Number(addDimW) || 0,
+          height: Number(addDimH) || 0,
+          unit: 'cm'
+        }
       };
       setPhotos([newPhoto, ...photos]);
     }
@@ -699,21 +815,45 @@ export default function App() {
     setAddSubId(null);
     setAddTagIds([]);
     setAddNote('');
+    setAddManualCode('');
+    setAddDimL('');
+    setAddDimW('');
+    setAddDimH('');
   };
 
   const saveBatchEdit = () => {
     if (!batchEditIds) return;
-    // Allow saving if either a category is selected OR at least one tag is selected
-    if (!addCatId && addTagIds.length === 0) return;
+    // Allow saving if either a category is selected OR at least one tag is selected OR a manual code is set
+    if (!addCatId && addTagIds.length === 0 && !addManualCode) return;
 
-    setPhotos(prev => prev.map(p => batchEditIds.includes(p.id) ? {
-      ...p,
-      ...(addCatId ? { categoryId: addCatId } : {}),
-      ...(addSubId ? { subcategoryId: addSubId } : {}),
-      // If tags were touched, update them. Since they start empty in batch mode,
-      // any selection means the user wants to apply exactly those tags.
-      ...(addTagIds.length > 0 ? { tagIds: addTagIds } : {})
-    } : p));
+    setPhotos(prev => prev.map(p => {
+      if (!batchEditIds.includes(p.id)) return p;
+      
+      const newCatId = addCatId || p.categoryId;
+      const newSubId = addSubId || p.subcategoryId;
+      const newTagIds = addTagIds.length > 0 ? addTagIds : p.tagIds;
+      
+      const catName = categories.find(c => c.id === newCatId)?.name || p.category || '未分類';
+      const subName = categories.find(c => c.id === newCatId)?.subcategories.find(s => s.id === newSubId)?.name || (newSubId === p.subcategoryId ? p.sub_category : '');
+      const tagNames = tags.filter(t => newTagIds.includes(t.id)).map(t => t.name);
+
+      return {
+        ...p,
+        categoryId: newCatId,
+        subcategoryId: newSubId,
+        tagIds: newTagIds,
+        category: catName,
+        sub_category: subName,
+        tags: tagNames,
+        manual_code: addManualCode || p.manual_code,
+        dimensions: (addDimL || addDimW || addDimH) ? {
+          length: Number(addDimL) || p.dimensions?.length || 0,
+          width: Number(addDimW) || p.dimensions?.width || 0,
+          height: Number(addDimH) || p.dimensions?.height || 0,
+          unit: 'cm'
+        } : p.dimensions
+      };
+    }));
     resetAddState();
     setIsMultiSelect(false);
     setSelectedIds([]);
@@ -1128,6 +1268,57 @@ export default function App() {
 
         <section className="space-y-3">
           <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">手動編號 / 價格暗號</h3>
+          </div>
+          <input 
+            type="text" 
+            placeholder="輸入手動編號 (如：價格暗碼)..."
+            value={addManualCode}
+            onChange={(e) => setAddManualCode(e.target.value)}
+            className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-blue-500">批次修改家具尺寸 (長 x 寬 x 高) cm</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+             <div className="relative">
+                <input 
+                  type="number"
+                  placeholder="長"
+                  value={addDimL}
+                  onChange={(e) => setAddDimL(e.target.value)}
+                  className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                />
+                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
+             </div>
+             <div className="relative">
+                <input 
+                   type="number"
+                   placeholder="寬"
+                   value={addDimW}
+                   onChange={(e) => setAddDimW(e.target.value)}
+                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                />
+                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
+             </div>
+             <div className="relative">
+                <input 
+                   type="number"
+                   placeholder="高"
+                   value={addDimH}
+                   onChange={(e) => setAddDimH(e.target.value)}
+                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                />
+                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
+             </div>
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目標主分類 *</h3>
             <button onClick={quickAddCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
           </div>
@@ -1220,6 +1411,57 @@ export default function App() {
         <div className="aspect-[4/3] rounded-3xl overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border border-white/20">
           {newPhotoData && <img src={newPhotoData} className="max-w-full max-h-full object-contain" alt="New" />}
         </div>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">手動編號 / 價格暗號</h3>
+          </div>
+          <input 
+            type="text" 
+            placeholder="輸入手動編號 (如：價格暗碼)..."
+            value={addManualCode}
+            onChange={(e) => setAddManualCode(e.target.value)}
+            className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
+          />
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-blue-500">家具尺寸 (長 x 寬 x 高) cm</h3>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+             <div className="relative">
+                <input 
+                  type="number"
+                  placeholder="長"
+                  value={addDimL}
+                  onChange={(e) => setAddDimL(e.target.value)}
+                  className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                />
+                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
+             </div>
+             <div className="relative">
+                <input 
+                   type="number"
+                   placeholder="寬"
+                   value={addDimW}
+                   onChange={(e) => setAddDimW(e.target.value)}
+                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                />
+                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
+             </div>
+             <div className="relative">
+                <input 
+                   type="number"
+                   placeholder="高"
+                   value={addDimH}
+                   onChange={(e) => setAddDimH(e.target.value)}
+                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                />
+                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
+             </div>
+          </div>
+        </section>
 
         <section className="space-y-3">
           <div className="flex items-center justify-between pl-1">
@@ -1545,50 +1787,62 @@ export default function App() {
     if (!user) return;
     setIsSyncing(true);
     setSyncAction('push');
+    setSyncPercent(0);
     try {
-      await syncPhotosToCloud(user.uid, photos);
-      await syncCategoriesToCloud(user.uid, categories);
-      await syncTagsToCloud(user.uid, tags);
+      await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+      await syncCategoriesToCloud(user.id, categories);
+      await syncTagsToCloud(user.id, tags);
       setLastSyncTime(Date.now());
-      setAlertDialog({ title: '系統提示', message: '已成功將本地資料上傳並覆蓋雲端！' });
+      setAlertDialog({ title: '系統提示', message: `已成功將 ${photos.length} 筆本地資料上傳並同步至 Supabase 雲端！` });
     } catch (e) {
       console.error(e);
-      setAlertDialog({ title: '系統提示', message: '上傳失敗，請檢查網路連線。' });
+      setAlertDialog({ title: '系統提示', message: '上傳失敗，請檢查網路連線或 Supabase 設定。' });
     } finally {
       setIsSyncing(false);
       setSyncAction('idle');
+      setSyncPercent(0);
     }
   };
 
   const performPullSync = async () => {
     if (!user) return;
-    if (!window.confirm("警告：從雲端下載將會覆蓋您設備上目前的所有資料。如果您近期在本機有新增或刪除相片且「尚未上傳備份」，這些變更將會遺失（被刪除的照片會因為雲端還有存檔而重新出現）。\n\n您確定要繼續下載嗎？")) {
-      return;
-    }
-    setIsSyncing(true);
-    setSyncAction('pull');
-    try {
-      const cloudPhotos = await loadPhotosFromCloud(user.uid);
-      const cloudCats = await loadCategoriesFromCloud(user.uid);
-      const cloudTags = await loadTagsFromCloud(user.uid);
-      
-      setPhotos(cloudPhotos);
-      setCategories(cloudCats);
-      setTags(cloudTags);
-      
-      await saveData('product_photos', cloudPhotos);
-      await saveData('product_categories', cloudCats);
-      await saveData('product_tags', cloudTags);
+    setConfirmDialog({
+      message: "警告：從雲端下載將會覆蓋您設備上目前的所有資料。如果您近期在本機有新增或刪除相片且「尚未上傳備份」，這些變更將會遺失。您確定要繼續下載嗎？",
+      onConfirm: async () => {
+        setIsSyncing(true);
+        setSyncAction('pull');
+        setSyncPercent(20);
+        try {
+          const cloudPhotos = await loadPhotosFromCloud(user.id);
+          setSyncPercent(50);
+          const cloudCats = await loadCategoriesFromCloud(user.id);
+          setSyncPercent(75);
+          const cloudTags = await loadTagsFromCloud(user.id);
+          
+          setPhotos(cloudPhotos);
+          setCategories(cloudCats);
+          setTags(cloudTags);
+          
+          await saveData('product_photos', cloudPhotos);
+          await saveData('product_categories', cloudCats);
+          await saveData('product_tags', cloudTags);
 
-      setLastSyncTime(Date.now());
-      setAlertDialog({ title: '系統提示', message: '已成功將雲端資料下載並覆蓋本地！' });
-    } catch (e) {
-      console.error(e);
-      setAlertDialog({ title: '系統提示', message: '下載失敗，請檢查網路連線。' });
-    } finally {
-      setIsSyncing(false);
-      setSyncAction('idle');
-    }
+          setLastSyncTime(Date.now());
+          setSyncPercent(100);
+          setAlertDialog({ 
+            title: '系統提示', 
+            message: `已成功將雲端資料下載並覆蓋本地！\n\n同步成功，共載入：\n- ${cloudPhotos.length} 張照片\n- ${cloudCats.length} 個分類\n- ${cloudTags.length} 個標籤` 
+          });
+        } catch (e) {
+          console.error(e);
+          setAlertDialog({ title: '系統提示', message: '下載失敗，請檢查網路連線。' });
+        } finally {
+          setIsSyncing(false);
+          setSyncAction('idle');
+          setSyncPercent(0);
+        }
+      }
+    });
   };
 
   const handleLogin = async () => {
@@ -1598,20 +1852,13 @@ export default function App() {
         setAlertDialog({ title: '系統提示', message: `歡迎回來, ${u.displayName}！已開啟雲端同步。` });
       }
     } catch (e: any) {
-      console.error('Firebase Login Error:', e);
+      console.error('Login Error:', e);
       let errorMsg = '登入失敗，請稍後再試。';
       
-      if (e.code === 'auth/unauthorized-domain') {
-        const currentDomain = window.location.hostname;
-        errorMsg = `登入失敗：當前網域 [${currentDomain}] 未獲授權。\n\n請檢查：\n1. Firebase 控制台 -> Authentication -> Settings -> Authorized domains 是否已加入此網域。\n2. Google Cloud Console -> 憑證 -> OAuth 2.0 用戶端識別碼 -> 已授權的 Javascript 來源是否已加入此網域。`;
-      } else if (e.code === 'auth/popup-blocked') {
+      if (e.message && e.message.includes('popup')) {
         errorMsg = '登入失敗：彈出視窗被瀏覽器攔截，請允許彈出視窗後再試。';
-      } else if (e.code === 'auth/operation-not-allowed') {
-        errorMsg = '登入失敗：尚未在 Firebase 控制台啟用 Google 登入方法。';
-      } else if (e.code === 'auth/internal-error') {
-        errorMsg = `登入失敗：內部錯誤 (${e.message})。請檢查 Firebase 設定檔是否正確。`;
       } else if (e.message) {
-        errorMsg = `登入失敗 [${e.code || 'unknown'}]: ${e.message}`;
+        errorMsg = `登入失敗: ${e.message}`;
       }
       
       setAlertDialog({ title: '登入錯誤', message: errorMsg });
@@ -1887,9 +2134,38 @@ export default function App() {
                     <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
                        <div className="bg-black/30 backdrop-blur-lg border border-white/20 p-3 rounded-2xl inline-block max-w-[85%] shadow-xl">
                           <p className="text-white text-[10px] font-medium leading-relaxed line-clamp-2 opacity-90">
-                            {focusedPhoto.note || "點擊圖片查看大圖"}
+                            {focusedPhoto.description || focusedPhoto.note || "點擊圖片查看大圖"}
                           </p>
+                          {focusedPhoto.dimensions && (focusedPhoto.dimensions.length || focusedPhoto.dimensions.width || focusedPhoto.dimensions.height) && (
+                            <div className="flex gap-2 mt-1 px-1">
+                              <span className="text-[8px] font-black text-blue-300 uppercase tracking-widest bg-blue-500/20 px-1 rounded">
+                                {focusedPhoto.dimensions.length} x {focusedPhoto.dimensions.width} x {focusedPhoto.dimensions.height} {focusedPhoto.dimensions.unit || 'cm'}
+                              </span>
+                            </div>
+                          )}
                        </div>
+                    </div>
+
+                    <div className="absolute top-4 left-4 flex gap-1">
+                      <button 
+                        onClick={() => {
+                          setEditPhotoId(focusedPhoto.id);
+                          setAddCatId(focusedPhoto.categoryId);
+                          setAddSubId(focusedPhoto.subcategoryId);
+                          setAddTagIds(focusedPhoto.tagIds);
+                          setAddNote(focusedPhoto.description || focusedPhoto.note || '');
+                          setAddManualCode(focusedPhoto.manual_code || '');
+                          setAddDimL(focusedPhoto.dimensions?.length?.toString() || '');
+                          setAddDimW(focusedPhoto.dimensions?.width?.toString() || '');
+                          setAddDimH(focusedPhoto.dimensions?.height?.toString() || '');
+                          setNewPhotoData(focusedPhoto.uri);
+                          setActiveScreen('add');
+                        }}
+                        className="bg-black/40 backdrop-blur-md p-2 rounded-xl text-white/80 hover:bg-blue-600 transition-colors shadow-lg border border-white/10"
+                        title="編輯此相片"
+                      >
+                        <Edit3 size={16} />
+                      </button>
                     </div>
 
                     <button 
@@ -2341,6 +2617,51 @@ export default function App() {
           >
             <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">正在匯入大量照片中...</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Cloud Sync Progress Overlay */}
+      <AnimatePresence>
+        {isSyncing && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-8"
+          >
+            <div className="w-full max-w-[300px] bg-white rounded-[32px] p-8 shadow-2xl flex flex-col items-center">
+              <div className="w-16 h-16 relative mb-6">
+                <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                <svg className="absolute inset-0 w-full h-full -rotate-90">
+                  <circle
+                    cx="32" cy="32" r="28"
+                    fill="transparent"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    strokeDasharray={175.92}
+                    strokeDashoffset={175.92 - (175.92 * syncPercent) / 100}
+                    className="text-blue-500 transition-all duration-300"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Cloud className="text-blue-500 animate-pulse" size={24} />
+                </div>
+              </div>
+              <h3 className="font-bold text-slate-800 text-lg mb-2">雲端備份進行中</h3>
+              <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-widest">
+                {syncAction === 'push' ? '正在將資料存入 Supabase' : '正在從 Supabase 獲取資料'}
+              </p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-2">
+                <motion.div 
+                  className="h-full bg-blue-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${syncPercent}%` }}
+                />
+              </div>
+              <p className="text-center text-slate-600 font-bold text-sm">
+                {syncPercent}%
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
