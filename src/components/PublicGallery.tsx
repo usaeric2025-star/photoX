@@ -63,7 +63,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
   
-  const [visibleCount, setVisibleCount] = useState(20);
+  const [visibleCount, setVisibleCount] = useState(12);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const displayPhotos = useMemo(() => {
@@ -99,7 +99,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount(prev => Math.min(prev + 20, displayPhotos.length));
+          setVisibleCount(prev => Math.min(prev + 12, displayPhotos.length));
         }
       },
       { threshold: 0.1 }
@@ -249,10 +249,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
             </button>
           )}
         </div>
-        <div className="flex items-center overflow-x-auto no-scrollbar gap-2 pb-1 -mx-2 px-2">
+        <div className="flex flex-wrap items-center gap-2 pb-1 -mx-2 px-2">
           <button 
             onClick={() => setSelectedCatCode(null)}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors flex-shrink-0 ${!selectedCatCode ? 'bg-slate-800 text-white shadow-md' : 'bg-white/60 border-white text-slate-600 hover:bg-white'}`}
+            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${!selectedCatCode ? 'bg-slate-800 text-white shadow-md' : 'bg-white/60 border-white text-slate-600 hover:bg-white'}`}
           >
             {t.allCats}
           </button>
@@ -260,7 +260,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
             <button 
               key={cat.code}
               onClick={() => setSelectedCatCode(cat.code)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors flex-shrink-0 ${selectedCatCode === cat.code ? 'bg-slate-800 text-white shadow-md' : 'bg-white/60 border-white text-slate-600 hover:bg-white'}`}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${selectedCatCode === cat.code ? 'bg-slate-800 text-white shadow-md' : 'bg-white/60 border-white text-slate-600 hover:bg-white'}`}
             >
               {cat[lang] || cat.en}
             </button>
@@ -270,11 +270,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
 
       {/* Grid - Scrollable area */}
       <div className="flex-1 overflow-y-auto no-scrollbar p-6">
-        {displayPhotos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-            <ImageIcon size={48} className="mb-4 opacity-50" />
-            <p className="font-medium text-sm">{t.empty}</p>
-          </div>
+        {displayPhotos.length === 0 ? (                
+          photos.length === 0 ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 animate-pulse">
+                {Array.from({ length: 15 }).map((_, i) => (
+                    <div key={i} className="aspect-square bg-slate-100 rounded-2xl" />
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <ImageIcon size={48} className="mb-4 opacity-50" />
+              <p className="font-medium text-sm">{t.empty}</p>
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
             {visiblePhotos.map((photo, i) => (

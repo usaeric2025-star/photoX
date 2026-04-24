@@ -368,11 +368,12 @@ export default function App() {
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
       try {
-                const [savedPhotos, savedCats, savedTags, savedSyncTime] = await Promise.all([
+                const [savedPhotos, savedCats, savedTags, savedSyncTime, savedPublicPhotos] = await Promise.all([
           loadData('product_photos'),
           loadData('product_categories'),
           loadData('product_tags'),
-          loadData('last_sync_time')
+          loadData('last_sync_time'),
+          loadData('public_photos')
         ]);
         
         let finalPhotos = savedPhotos;
@@ -392,6 +393,7 @@ export default function App() {
         }
 
         if (finalPhotos && finalPhotos.length > 0) setPhotos(finalPhotos);
+        if (savedPublicPhotos && savedPublicPhotos.length > 0) setPublicPhotos(savedPublicPhotos);
         if (savedCats && savedCats.length > 0) setCategories(savedCats);
         if (savedTags && savedTags.length > 0) setTags(savedTags);
         if (savedSyncTime && (!finalPhotos || finalPhotos === savedPhotos)) {
@@ -412,6 +414,7 @@ export default function App() {
         try {
           const publicData = await loadAllPhotosFromCloud();
           setPublicPhotos(publicData);
+          await saveData('public_photos', publicData);
         } catch(e) {
           console.error("Public load err:", e);
         }
@@ -2649,13 +2652,7 @@ export default function App() {
                   showExit={!!user} 
                   onExit={() => setViewMode('private')} 
                   internalPassword={internalPassword}
-                  onLogin={async () => {
-                    try {
-                      await loginWithGoogle();
-                    } catch(e: any) {
-                      alert('登入失敗: ' + (e.message || JSON.stringify(e)));
-                    }
-                  }}
+                  onLogin={() => setShowManageAccess(true)}
                 />
               ) : (
                 renderHomeView()
