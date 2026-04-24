@@ -387,8 +387,7 @@ export const fetchSettings = async () => {
 export const saveSettings = async (settings: any) => {
     const { error } = await supabase
         .from('settings')
-        .update(settings)
-        .eq('id', 1);
+        .upsert({ ...settings, id: 1 });
     
     if (error) {
         console.error("Failed to save settings:", error);

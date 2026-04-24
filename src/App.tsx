@@ -153,7 +153,7 @@ const PhotoCard = React.memo(({
       initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`relative aspect-square rounded-[32px] overflow-hidden group shadow-md active:scale-95 transition-all ring-offset-2 will-change-transform ${isSelected ? 'ring-2 ring-[#D4A853]' : 'border-4 border-white shadow-xl shadow-[#1D3557]/5'}`}
+      className={`relative aspect-square rounded-2xl overflow-hidden group shadow-sm active:scale-95 transition-all ring-offset-2 will-change-transform ${isSelected ? 'ring-2 ring-[#D4A853]' : 'bg-white'}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
     >
@@ -193,8 +193,8 @@ const PhotoCard = React.memo(({
         </div>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent pt-8 pb-3 px-4 translate-y-2 group-hover:translate-y-0 transition-transform">
-        <p className="text-[10px] text-white font-black tracking-[0.1em] truncate uppercase shadow-sm">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
+        <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase mb-0.5">
           {categoryName}
         </p>
       </div>
@@ -220,7 +220,9 @@ export default function App() {
     if (e.target.files && e.target.files[0]) {
         try {
             const url = await uploadLogo(e.target.files[0]);
-            setSettings(prev => ({ ...prev, logo_url: url }));
+            const newSettings = { ...settings, logo_url: url };
+            setSettings(newSettings);
+            await saveSettings(newSettings);
             setAlertDialog({ title: '上傳成功', message: '品牌 Logo 已更新' });
         } catch (err: any) {
             console.error("Logo upload failed:", err);
@@ -1058,13 +1060,10 @@ export default function App() {
     <header className="relative z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-10 pb-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="w-10 h-10 rounded-2xl object-cover shadow-sm border border-white" />
+            <img src={settings.logo_url} alt="Logo" className="w-10 h-10 rounded-xl object-cover shadow-sm border border-white" />
         ) : (
-            <div className="w-10 h-10 bg-[#1D3557]/5 rounded-2xl flex items-center justify-center text-xs text-[#1D3557] font-bold border border-[#1D3557]/10">PPPT</div>
+            <div className="w-10 h-10 bg-[#1D3557]/5 rounded-xl flex items-center justify-center text-xs text-[#1D3557] font-bold border border-[#1D3557]/10">PPPT</div>
         )}
-        <h1 className="text-xl font-black text-[#1D3557] tracking-tighter">
-          {settings?.company_name || settings?.app_name || '新一PPPT'}
-        </h1>
       </div>
 
       <div className="flex items-center gap-2">
@@ -1176,18 +1175,19 @@ export default function App() {
         </button>
       </div>
 
+      {/* Directory Row 1: Main Categories */}
       <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar px-1">
         <button 
           onClick={() => { setFilterCatId(null); setFilterSubId(null); }}
-          className={`px-5 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all border shadow-sm ${!filterCatId ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60 hover:bg-white'}`}
+          className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] whitespace-nowrap transition-all border shadow-sm ${!filterCatId ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60 hover:bg-white'}`}
         >
-          全部產品
+          全部产品
         </button>
         {dbCategories.map(cat => (
           <button 
             key={cat.code}
             onClick={() => { setFilterCatId(cat.code); setFilterSubId(null); }}
-            className={`px-5 py-2.5 rounded-full text-[11px] font-bold tracking-wider whitespace-nowrap transition-all border shadow-sm ${filterCatId === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60 hover:bg-white'}`}
+            className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] whitespace-nowrap transition-all border shadow-sm ${filterCatId === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60 hover:bg-white'}`}
           >
             {cat[appLang] || cat.zh}
           </button>
@@ -1200,33 +1200,38 @@ export default function App() {
             initial={{ opacity: 0, height: 0 }} 
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="space-y-3 overflow-hidden"
+            className="space-y-4 overflow-hidden"
           >
+            {/* Directory Row 2: Sub-categories (Conditional) */}
             {filterCatId && (
               <div className="flex overflow-x-auto pb-1 gap-1.5 no-scrollbar">
                 <button 
                   onClick={() => setFilterSubId(null)}
-                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap border transition-all ${!filterSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${!filterSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                 >
                   ALL
                 </button>
-                {categories.find(c => c.id === filterCatId)?.subcategories.map(sub => (
-                  <button 
-                    key={sub.id}
-                    onClick={() => setFilterSubId(sub.id)}
-                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-widest whitespace-nowrap border transition-all ${filterSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
-                  >
-                    {sub.name}
-                  </button>
-                ))}
+                {(() => {
+                  const legacyMatchedCat = categories.find(c => c.name === dbCategories.find(dc => dc.code === filterCatId)?.zh || c.id === filterCatId);
+                  return legacyMatchedCat?.subcategories.map(sub => (
+                    <button 
+                      key={sub.id}
+                      onClick={() => setFilterSubId(sub.id)}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest whitespace-nowrap border transition-all ${filterSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white shadow-md' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium hover:text-[#1D3557]/60'}`}
+                    >
+                      {sub.name}
+                    </button>
+                  ));
+                })()}
               </div>
             )}
-            <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth">
+            
+            <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth px-1">
               {tags.map(tag => (
                 <button 
                   key={tag.id}
                   onClick={() => setFilterTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
-                  className={`px-4 py-2 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border shadow-sm ${filterTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/60 border-[#1D3557]/5 text-[#1D3557]/50'}`}
+                  className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${filterTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/40 hover:bg-white'}`}
                 >
                   #{tag.name}
                 </button>
@@ -2332,6 +2337,8 @@ export default function App() {
               viewMode === 'public' ? (
                 <PublicGallery 
                   photos={publicPhotos} 
+                  categories={categories}
+                  tags={tags}
                   dbCategories={dbCategories}
                   showExit={!!user} 
                   onExit={() => setViewMode('private')} 

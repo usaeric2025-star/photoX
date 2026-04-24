@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
   photos: Photo[];
+  categories: Category[];
+  tags: Tag[];
   dbCategories: DB_Category[];
   onExit?: () => void;
   showExit?: boolean;
@@ -52,7 +54,7 @@ const translations = {
   }
 };
 
-export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategories, onExit, showExit, onLogin, internalPassword, settings }) => {
+export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories, tags, dbCategories, onExit, showExit, onLogin, internalPassword, settings }) => {
   const [lang, setLang] = useState<'zh' | 'en' | 'ms'>('zh');
   const t = translations[lang];
 
@@ -63,6 +65,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
+  const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
   const [columnCount, setColumnCount] = useState(3);
   const [visibleCount, setVisibleCount] = useState(12);
@@ -91,8 +95,31 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   const displayPhotos = useMemo(() => {
     let filtered = photos;
     if (selectedCatCode) {
-      filtered = filtered.filter(p => p.category === selectedCatCode);
+      // Check both category name and code for public data consistency
+      const activeCat = dbCategories.find(c => c.code === selectedCatCode);
+      filtered = filtered.filter(p => 
+        p.category === selectedCatCode || 
+        p.category === activeCat?.zh || 
+        p.categoryId === selectedCatCode
+      );
     }
+    
+    if (selectedSubId) {
+      const activeSub = categories.flatMap(c => c.subcategories).find(s => s.id === selectedSubId);
+      filtered = filtered.filter(p => p.subcategoryId === selectedSubId || p.sub_category === activeSub?.name);
+    }
+
+    if (selectedTagIds.length > 0) {
+      filtered = filtered.filter(p => {
+        const pTags = p.tags || [];
+        const pTagIds = p.tagIds || [];
+        return selectedTagIds.every(tid => {
+          const tagName = tags.find(t => t.id === tid)?.name;
+          return pTagIds.includes(tid) || (tagName && pTags.includes(tagName));
+        });
+      });
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => {
@@ -275,12 +302,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       <header className="shrink-0 z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="w-10 h-10 rounded-2xl object-cover shadow-sm border border-white cursor-pointer" />
+            <img src={settings.logo_url} alt="Logo" className="h-10 max-w-[160px] object-contain cursor-pointer" />
           ) : (
-            <div className="flex items-center gap-2 cursor-pointer">
-              <div className="w-8 h-8 bg-[#1D3557]/5 rounded-xl border border-[#1D3557]/10 flex items-center justify-center font-black text-[#1D3557] text-xs">P</div>
-              <h1 className="text-lg font-black tracking-tight truncate leading-tight text-[#1D3557] uppercase">新一PPPT</h1>
-            </div>
+            <h1 className="text-xl font-black tracking-tight truncate leading-tight cursor-pointer text-[#1D3557]">Gallery</h1>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -327,7 +351,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
           ) : (
             <>
               <button 
-                onClick={() => setSelectedCatCode(null)}
+                onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); }}
                 className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all shadow-sm border whitespace-nowrap ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
               >
                 {t.allCats}
@@ -335,7 +359,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
               {dbCategories.map(cat => (
                 <button 
                   key={cat.code}
-                  onClick={() => setSelectedCatCode(cat.code)}
+                  onClick={() => { setSelectedCatCode(cat.code); setSelectedSubId(null); }}
                   className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all shadow-sm border whitespace-nowrap ${selectedCatCode === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                 >
                   {cat[lang] || cat.en}
@@ -344,6 +368,52 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
             </>
           )}
         </div>
+
+        {!selectionMode && (
+          <div className="space-y-4">
+            <AnimatePresence>
+              {selectedCatCode && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }} 
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex overflow-x-auto gap-1.5 no-scrollbar scroll-smooth"
+                >
+                  <button 
+                    onClick={() => setSelectedSubId(null)}
+                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${!selectedSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
+                  >
+                    ALL
+                  </button>
+                  {(() => {
+                    const legacyMatchedCat = categories.find(c => c.name === dbCategories.find(dc => dc.code === selectedCatCode)?.zh || c.id === selectedCatCode);
+                    return legacyMatchedCat?.subcategories.map(sub => (
+                      <button 
+                        key={sub.id}
+                        onClick={() => setSelectedSubId(sub.id)}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
+                      >
+                        {sub.name}
+                      </button>
+                    ));
+                  })()}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex overflow-x-auto gap-2 no-scrollbar scroll-smooth">
+              {tags.map(tag => (
+                <button 
+                  key={tag.id}
+                  onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
+                  className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/5 text-[#1D3557]/50'}`}
+                >
+                  #{tag.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Grid - Scrollable area */}
@@ -375,25 +445,25 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                   if (!selectionMode) setSelectionMode(true);
                   toggleSelect(photo.id);
                 }}
-                className={`aspect-square bg-white rounded-[32px] overflow-hidden cursor-pointer relative shadow-xl shadow-[#1D3557]/5 border-4 border-white transition-all active:scale-[0.98] group ${selectedPhotos.has(photo.id) ? 'ring-2 ring-[#D4A853]' : ''}`}
+                className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${selectedPhotos.has(photo.id) ? 'ring-2 ring-[#D4A853]' : ''}`}
               >
                 <img 
                   src={photo.image_url || photo.uri} 
                   alt={photo.name}
                   loading="lazy" 
-                  className={`w-full h-full object-cover transition-transform duration-700 ${selectedPhotos.has(photo.id) ? 'scale-110 opacity-70' : 'group-hover:scale-110'}`}
+                  className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(photo.id) ? 'scale-110 opacity-70' : 'group-hover:scale-105'}`}
                 />
 
                 {photo.groupId && (
-                  <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[7px] text-white font-black tracking-widest flex items-center gap-1 border border-white/20 uppercase">
+                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[7px] text-white font-bold flex items-center gap-1 border border-white/20 uppercase">
                     <Layers size={9} />
                     {photo.groupId}
                   </div>
                 )}
                 
                 {selectedPhotos.has(photo.id) && (
-                  <div className="absolute top-3 right-3 bg-[#1D3557] text-[#FDFAF6] rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
-                    <X size={14} strokeWidth={3} />
+                  <div className="absolute top-2 right-2 bg-[#1D3557] text-[#FDFAF6] rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
+                    <X size={12} strokeWidth={3} />
                   </div>
                 )}
                 
@@ -407,8 +477,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                   if (isUncategorized) return null;
                   
                   return (
-                    <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/60 to-transparent pt-8 translate-y-2 group-hover:translate-y-0 transition-transform">
-                      <p className="text-white text-[10px] font-black uppercase tracking-widest truncate shadow-sm">
+                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent translate-y-1 group-hover:translate-y-0 transition-transform">
+                      <p className="text-white text-[9px] font-bold truncate uppercase tracking-wider">
                         {catName}
                       </p>
                     </div>
