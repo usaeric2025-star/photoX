@@ -85,7 +85,6 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
-    alert('上傳失敗: Session 已失效，請重新登入');
     throw new Error('No active session for storage');
   }
 
@@ -117,7 +116,6 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 
     if (storageError) {
       console.error("Supabase Storage Upload Error details:", storageError);
-      alert('上傳失敗 (Storage 階段): ' + JSON.stringify(storageError, null, 2));
       throw storageError;
     }
 
@@ -128,9 +126,6 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
     return publicUrl;
   } catch (err: any) {
     console.error("Blob conversion or upload failed:", err);
-    if (!err.message?.includes('Storage階段')) {
-      alert('圖片處理或上傳異常: ' + (err.message || JSON.stringify(err)));
-    }
     throw err;
   }
 };
@@ -160,7 +155,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
-    alert('寫入失敗: Session 已失效，請重新登入');
     throw new Error('No active session for database');
   }
 
@@ -189,15 +183,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
 
   if (dbError) {
     console.error("Supabase Database Insert Error:", dbError);
-    const errorDetails = {
-      message: dbError.message,
-      details: dbError.details,
-      hint: dbError.hint,
-      code: dbError.code,
-      tableName: TABLE_NAME,
-      photoId: photo.id
-    };
-    alert('Database階段失敗: ' + JSON.stringify(errorDetails, null, 2));
     throw dbError;
   }
 };
@@ -207,17 +192,15 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   for (const photo of photos) {
     try {
       if (!photo.image_url && photo.uri) {
-        photo.image_url = await uploadImage(userId, photo.id, photo.uri);
+        // Use storageId if available, fallback to id
+        const filename = photo.storageId || photo.id;
+        photo.image_url = await uploadImage(userId, filename, photo.uri);
       }
       await savePhotoToCloud(userId, photo);
       count++;
       if (onProgress) onProgress((count / photos.length) * 100);
     } catch (err: any) {
       console.error(`Sync failed for photo ${photo.id}:`, err);
-      // Detailed alert only if it's not already alerted internally
-      if (!err.message?.includes('階段失敗')) {
-        alert(`照片同步失敗: ` + (err.message || JSON.stringify(err)));
-      }
       throw err;
     }
   }
@@ -236,35 +219,49 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
 
   if (error) throw error;
 
-  return (data || []).map(item => ({
-    id: item.id,
-    item_code: item.item_code,
-    manual_code: item.manual_code,
-    image_hash: item.image_hash,
-    name: item.name,
-    category: item.category,
-    sub_category: item.sub_category,
-    tags: item.tags,
-    description: item.description,
-    image_url: item.image_url,
-    dimensions: item.dimensions,
-    exif_data: item.exif_data,
-    createdAt: item.created_at,
-    groupId: item.group_id,
-    userId: item.user_id,
-    uri: item.image_url
-  }));
+  return (data || []).map(item => {
+    // Extract storageId from image_url if possible
+    let storageId = item.id;
+    if (item.image_url) {
+      const parts = item.image_url.split('/');
+      const lastPart = parts[parts.length - 1];
+      if (lastPart) {
+        storageId = lastPart.split('.')[0];
+      }
+    }
+
+    return {
+      id: item.id,
+      storageId: storageId,
+      item_code: item.item_code,
+      manual_code: item.manual_code,
+      image_hash: item.image_hash,
+      name: item.name,
+      category: item.category,
+      sub_category: item.sub_category,
+      tags: item.tags,
+      description: item.description,
+      image_url: item.image_url,
+      dimensions: item.dimensions,
+      exif_data: item.exif_data,
+      createdAt: item.created_at,
+      groupId: item.group_id,
+      userId: item.user_id,
+      uri: item.image_url
+    };
+  });
 };
 
-export const deletePhotoFromCloud = async (userId: string, photoId: string) => {
+export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
   const { error } = await supabase
     .from(TABLE_NAME)
     .delete()
-    .match({ id: photoId, user_id: userId });
+    .match({ id: photo.id, user_id: userId });
 
   if (error) throw error;
   
-  await supabase.storage.from(BUCKET_NAME).remove([`public/${photoId}.webp`]);
+  const filename = photo.storageId || photo.id;
+  await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`]);
 };
 
 // --- Settings Sync ---

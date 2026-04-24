@@ -25,7 +25,8 @@ export interface Tag {
 }
 
 export interface Photo {
-  id: string; // Internal ID
+  id: string; // Database UUID
+  storageId?: string; // Filename for Supabase Storage
   item_code: string; // System auto-code (FUR-YYYYMMDD-RAND)
   manual_code?: string; // Hidden price code
   image_hash: string; // MD5 fingerprint

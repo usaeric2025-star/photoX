@@ -589,21 +589,12 @@ export default function App() {
             }
           }
 
-          const photoId = crypto.randomUUID();
-          let cloudUrl = '';
-          
-          if (user) {
-             try {
-               cloudUrl = await uploadImage(user.id, photoId, compressedUri);
-             } catch (upErr: any) {
-               console.error("Cloud upload failed during import:", upErr);
-               // If storage fails, we might still want to add it locally, or stop.
-               // User wants "no silent failure", so we alerted in uploadImage already.
-             }
-          }
+          const storageId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+          const dbId = crypto.randomUUID();
 
           const newPhoto: Photo = {
-            id: photoId,
+            id: dbId,
+            storageId: storageId,
             item_code: generateItemCode(),
             manual_code: '',
             image_hash: imgHash,
@@ -612,7 +603,7 @@ export default function App() {
             sub_category: '',
             tags: [],
             description: '',
-            image_url: cloudUrl || '',
+            image_url: '',
             uri: compressedUri,
             categoryId: null,
             subcategoryId: null,
@@ -621,15 +612,6 @@ export default function App() {
             groupId: null,
             isAnalyzing: !!useAi
           };
-          
-          // Save to Database if logged in
-          if (user && cloudUrl) {
-            try {
-              await savePhotoToCloud(user.id, newPhoto);
-            } catch (dbErr: any) {
-              console.error("Database save failed during import:", dbErr);
-            }
-          }
           
           newPhotosDraft.push(newPhoto);
           
@@ -660,7 +642,7 @@ export default function App() {
                   finalTagIds.push(newTagId);
                 }
                 
-                setPhotos(prev => prev.map(p => p.id === photoId ? { 
+                setPhotos(prev => prev.map(p => p.id === dbId ? { 
                   ...p, 
                   categoryId: finalCatId, 
                   subcategoryId: finalSubId, 
@@ -674,7 +656,7 @@ export default function App() {
                 } : p));
               } catch (err: any) {
                 console.error("AI Analysis failed:", err);
-                setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false } : p));
+                setPhotos(prev => prev.map(p => p.id === dbId ? { ...p, isAnalyzing: false } : p));
               }
             })(newPhoto);
           }
@@ -740,14 +722,16 @@ export default function App() {
         }
       }
 
-      const photoId = crypto.randomUUID();
+      const storageId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      const dbId = crypto.randomUUID();
       let cloudUrl = '';
       if (user && compressedData) {
-        cloudUrl = await uploadImage(user.id, photoId, compressedData);
+        cloudUrl = await uploadImage(user.id, storageId, compressedData);
       }
 
       const newPhoto: Photo = {
-        id: photoId,
+        id: dbId,
+        storageId: storageId,
         item_code: generateItemCode(),
         manual_code: addManualCode,
         image_hash: imgHash || '',
@@ -1581,13 +1565,21 @@ export default function App() {
   };
 
   const deletePhoto = (id: string) => {
+    const photo = photos.find(p => p.id === id);
     setConfirmDialog({
       message: '確定要刪除這張照片嗎？',
-      onConfirm: () => {
+      onConfirm: async () => {
         setPhotos(prev => prev.filter(p => p.id !== id));
         if (editPhotoId === id) {
           resetAddState();
           setActiveScreen('home');
+        }
+        if (user && photo) {
+          try {
+            await deletePhotoFromCloud(user.id, photo);
+          } catch (err) {
+            console.error("Cloud deletion failed:", err);
+          }
         }
       }
     });
