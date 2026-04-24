@@ -354,11 +354,6 @@ export default function App() {
     const unsubscribe = onAuthChange(async (u) => {
       setUser(u);
       
-      // Auto-jump to home if user is logged in and currently on home anyway or initializing
-      if (u) {
-        setActiveScreen('home');
-      }
-      
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
       try {
@@ -372,8 +367,9 @@ export default function App() {
         if (savedTags && savedTags.length > 0) setTags(savedTags);
         if (savedSyncTime) setLastSyncTime(savedSyncTime);
         
-        // Auto-fetch from cloud if user is logged in
-        if (u) {
+        // Auto-fetch from cloud if user is logged in but has no local data
+        // Only do this if locally empty to avoid overwriting or race conditions
+        if (u && (!savedPhotos || savedPhotos.length === 0)) {
           const cloudPhotos = await loadPhotosFromCloud(u.id);
           if (cloudPhotos && cloudPhotos.length > 0) {
             setPhotos(cloudPhotos);
@@ -395,7 +391,6 @@ export default function App() {
         }
       } catch (e) {
         console.error("Data load failed:", e);
-        alert('雲端數據加載失敗: ' + JSON.stringify(e));
       } finally {
         setIsInitializing(false);
       }
@@ -2152,7 +2147,7 @@ export default function App() {
         {/* Version Info */}
         <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1708</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1711</p>
         </div>
       </div>
     </div>
