@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Photo, Category, Tag } from '../types';
+import { Photo, Category, Tag, DB_Category } from '../types';
 import SparkMD5 from 'spark-md5';
 
 const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || 'https://vbpnlkeweqkjufijtdph.supabase.co';
@@ -261,20 +261,39 @@ export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
   
   if (error) throw error;
 
-  return data.map(item => ({
-    id: item.id,
-    uri: item.image_url,
-    categoryId: item.categoryId || null,
-    subcategoryId: item.subcategoryId || null,
-    tagIds: item.tagIds || [],
-    analysis: item.analysis,
-    note: item.note || '',
-    itemCode: item.itemCode || '',
-    dimensions: item.dimensions || { l: '', w: '', h: '' },
-    isAnalyzing: false,
-    groupId: item.groupId || null,
-    createdAt: item.created_at
-  }));
+  return (data || []).map(item => {
+    // Extract storageId from image_url if possible
+    let storageId = item.id;
+    if (item.image_url) {
+      const parts = item.image_url.split('/');
+      const lastPart = parts[parts.length - 1];
+      if (lastPart) {
+        storageId = lastPart.split('.')[0];
+      }
+    }
+
+    return {
+      id: item.id,
+      storageId: storageId,
+      item_code: item.item_code,
+      manual_code: item.manual_code,
+      image_hash: item.image_hash,
+      name: item.name,
+      category: item.category,
+      sub_category: item.sub_category,
+      tags: item.tags,
+      description: item.description,
+      image_url: item.image_url,
+      dimensions: item.dimensions,
+      exif_data: item.exif_data,
+      createdAt: item.created_at,
+      groupId: item.group_id,
+      userId: item.user_id,
+      // Local fallbacks
+      uri: item.image_url, 
+      tagIds: item.tags || []
+    };
+  });
 };
 
 export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
@@ -332,4 +351,17 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
 };
 
 // --- Settings Sync ---
+
+export const loadCategoriesFromCloud = async (): Promise<DB_Category[]> => {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    console.error("Failed to load categories:", error);
+    return [];
+  }
+  return data || [];
+};
 

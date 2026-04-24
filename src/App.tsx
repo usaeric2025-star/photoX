@@ -30,7 +30,6 @@ import {
   CloudDownload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Photo, Category, Tag, SubCategory } from './types';
 import { analyzeProductPhoto } from './services/geminiService';
 import { obfuscateKey, deobfuscateKey } from './utils/crypto';
 import { 
@@ -46,9 +45,12 @@ import {
   generateItemCode,
   checkImageHashExists,
   uploadImage,
-  compressImage
+  compressImage,
+  loadCategoriesFromCloud
 } from './services/supabaseService';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { PublicGallery } from './components/PublicGallery';
+import { Photo, Category, Tag, SubCategory, DB_Category } from './types';
 
 interface User extends SupabaseUser {
   displayName?: string;
@@ -197,8 +199,11 @@ const PhotoCard = React.memo(({
 export default function App() {
   // --- State ---
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [dbCategories, setDbCategories] = useState<DB_Category[]>([]);
+  const [appLang, setAppLang] = useState<'zh' | 'en' | 'ms'>('zh');
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
   const [viewMode, setViewMode] = useState<'public' | 'private'>('public');
+  const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -224,6 +229,8 @@ export default function App() {
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isUnifiedEditing, setIsUnifiedEditing] = useState(false);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const cancelBatchAiRef = useRef(false);
 
   // Add/Edit Photo State
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
@@ -252,6 +259,10 @@ export default function App() {
   // Custom Prompt Dialog State
   const [promptDialog, setPromptDialog] = useState<{ title: string, placeholder: string, onSubmit: (val: string) => void } | null>(null);
   const [promptValue, setPromptValue] = useState('');
+
+  useEffect(() => {
+    loadCategoriesFromCloud().then(setDbCategories);
+  }, []);
 
   // Stuck Analysis Safety Net
   useEffect(() => {
@@ -368,10 +379,28 @@ export default function App() {
         const savedTags = await loadData('product_tags');
         const savedSyncTime = await loadData('last_sync_time');
         
-        if (savedPhotos && savedPhotos.length > 0) setPhotos(savedPhotos);
+        let finalPhotos = savedPhotos;
+        if ((!savedPhotos || savedPhotos.length === 0) && u) {
+          try {
+            const cloudPhotos = await loadPhotosFromCloud(u.id);
+            if (cloudPhotos && cloudPhotos.length > 0) {
+              finalPhotos = cloudPhotos;
+              const now = Date.now();
+              setLastSyncTime(now);
+              await saveData('last_sync_time', now);
+              await saveData('product_photos', cloudPhotos);
+            }
+          } catch(err) {
+            console.error("Auto pull failed", err);
+          }
+        }
+
+        if (finalPhotos && finalPhotos.length > 0) setPhotos(finalPhotos);
         if (savedCats && savedCats.length > 0) setCategories(savedCats);
         if (savedTags && savedTags.length > 0) setTags(savedTags);
-        if (savedSyncTime) setLastSyncTime(savedSyncTime);
+        if (savedSyncTime && (!finalPhotos || finalPhotos === savedPhotos)) {
+           setLastSyncTime(savedSyncTime);
+        }
       } catch (e) {
         console.error("Data load failed:", e);
       } finally {
@@ -394,6 +423,14 @@ export default function App() {
       fetchPublic();
     }
   }, [viewMode]);
+
+  useEffect(() => {
+    if (activeScreen === 'settings' && user) {
+      loadPhotosFromCloud(user.id)
+        .then(data => setCloudCount(data ? data.length : 0))
+        .catch(err => console.error("Failed to fetch cloud count", err));
+    }
+  }, [activeScreen, user]);
 
   useEffect(() => {
     if (isInitializing) return;
@@ -425,11 +462,14 @@ export default function App() {
   const filteredPhotos = useMemo(() => {
     return activePhotosSource.filter(p => {
       if (viewMode === 'private') {
-        if (filterCatId && p.categoryId !== filterCatId) return false;
+        if (filterCatId) {
+          // Check both code (new) and id (legacy) for robustness
+          if (p.category !== filterCatId && p.categoryId !== filterCatId) return false;
+        }
         if (filterSubId && p.subcategoryId !== filterSubId) return false;
         
         if (filterTagIds.length > 0) {
-          if (!filterTagIds.every(tid => p.tagIds.includes(tid))) return false;
+          if (!filterTagIds.every(tid => (p.tagIds || []).includes(tid))) return false;
         }
       }
       
@@ -437,11 +477,12 @@ export default function App() {
         const query = searchQuery.toLowerCase().trim();
         
         if (viewMode === 'private') {
-          const cat = categories.find(c => c.id === p.categoryId);
-          const sub = cat?.subcategories.find(s => s.id === p.subcategoryId);
-          const pTags = tags.filter(t => p.tagIds.includes(t.id));
+          const dbCat = dbCategories.find(c => c.code === p.category);
+          const legacyCat = categories.find(c => c.id === p.categoryId);
+          const sub = (dbCat || legacyCat)?.subcategories?.find(s => s.id === p.subcategoryId);
+          const pTags = tags.filter(t => (p.tagIds || []).includes(t.id));
           
-          const matchesCat = cat?.name.toLowerCase().includes(query) || cat?.aliases.some(a => a.toLowerCase().includes(query));
+          const matchesCat = dbCat ? (dbCat.zh.includes(query) || dbCat.en.toLowerCase().includes(query) || dbCat.ms.toLowerCase().includes(query)) : (legacyCat?.name.toLowerCase().includes(query) || legacyCat?.aliases.some(a => a.toLowerCase().includes(query)));
           const matchesSub = sub?.name.toLowerCase().includes(query) || sub?.aliases.some(a => a.toLowerCase().includes(query));
           const matchesTags = pTags.some(t => t.name.toLowerCase().includes(query) || t.aliases.some(a => a.toLowerCase().includes(query)));
           const matchesNote = (p.description || '').toLowerCase().includes(query) || (p.note || '').toLowerCase().includes(query);
@@ -494,10 +535,13 @@ export default function App() {
 
     setBatchProgress({ current: 0, total: unProcessed.length });
     setIsBatchAnalyzing(true);
+    cancelBatchAiRef.current = false;
     let successCount = 0;
 
     try {
       for (let i = 0; i < unProcessed.length; i++) {
+        if (cancelBatchAiRef.current) break;
+        
         const photo = unProcessed[i];
         setBatchProgress(prev => ({ ...prev, current: i + 1 }));
         
@@ -712,10 +756,11 @@ export default function App() {
     if (!newPhotoData && !editPhotoId) return;
     
     try {
-      // Default to 'uncategorized' if user hasn't selected a category for an existing photo
-      const catId = addCatId || 'uncategorized';
-      const catName = categories.find(c => c.id === catId)?.name || '未分類';
-      const subName = categories.find(c => c.id === catId)?.subcategories.find(s => s.id === addSubId)?.name || '';
+      const selectedDbCat = dbCategories.find(c => c.code === addCatId);
+      const catCode = selectedDbCat?.code || addCatId || 'others';
+      const catName = selectedDbCat ? (selectedDbCat[appLang] || selectedDbCat.zh) : (categories.find(c => c.id === addCatId)?.name || '未分類');
+      
+      const subName = categories.find(c => c.id === addCatId)?.subcategories.find(s => s.id === addSubId)?.name || '';
       const tagNames = tags.filter(t => addTagIds.includes(t.id)).map(t => t.name);
       
       const compressedData = newPhotoData ? await compressImage(newPhotoData) : null;
@@ -725,10 +770,10 @@ export default function App() {
         setPhotos(prev => prev.map(p => p.id === editPhotoId ? {
           ...p,
           ...(compressedData ? { uri: compressedData, image_hash: imgHash } : {}),
-          categoryId: catId,
+          categoryId: addCatId,
           subcategoryId: addSubId,
           tagIds: addTagIds,
-          category: catName,
+          category: catCode,
           sub_category: subName,
           tags: tagNames,
           description: addNote,
@@ -775,13 +820,13 @@ export default function App() {
           manual_code: addManualCode,
           image_hash: imgHash || '',
           name: '新家具紀錄',
-          category: catName,
+          category: catCode,
           sub_category: subName,
           tags: tagNames,
           description: addNote,
           image_url: cloudUrl,
           uri: compressedData || '',
-          categoryId: catId,
+          categoryId: addCatId,
           subcategoryId: addSubId,
           tagIds: addTagIds,
           createdAt: new Date().toISOString(),
@@ -1033,6 +1078,21 @@ export default function App() {
             >
               {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
             </button>
+            <div className="flex bg-white/40 backdrop-blur-md border border-white/50 rounded-xl overflow-hidden p-0.5 shadow-sm">
+              {[
+                { id: 'zh', label: '中文' },
+                { id: 'en', label: 'EN' },
+                { id: 'ms', label: 'BM' }
+              ].map(l => (
+                <button
+                  key={l.id}
+                  onClick={() => setAppLang(l.id as any)}
+                  className={`px-3 py-1 text-[10px] font-black tracking-wider transition-all rounded-[9px] ${appLang === l.id ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
             <button 
               onClick={() => setActiveScreen('manage')}
               className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
@@ -1083,13 +1143,13 @@ export default function App() {
         >
           全部
         </button>
-        {categories.map(cat => (
+        {dbCategories.map(cat => (
           <button 
-            key={cat.id}
-            onClick={() => { setFilterCatId(cat.id); setFilterSubId(null); }}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight whitespace-nowrap transition-all border ${filterCatId === cat.id ? 'bg-slate-800 border-slate-800 text-white shadow-sm' : 'bg-white/40 border-white/40 text-slate-600'}`}
+            key={cat.code}
+            onClick={() => { setFilterCatId(cat.code); setFilterSubId(null); }}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight whitespace-nowrap transition-all border ${filterCatId === cat.code ? 'bg-slate-800 border-slate-800 text-white shadow-sm' : 'bg-white/40 border-white/40 text-slate-600'}`}
           >
-            {cat.name}
+            {cat[appLang] || cat.zh}
           </button>
         ))}
       </div>
@@ -1159,7 +1219,11 @@ export default function App() {
                 isSelected={isGroupSelected}
                 isGroupMaster={isGroupMaster}
                 groupCount={groupCount}
-                categoryName={viewMode === 'public' ? photo.category : categories.find(c => c.id === photo.categoryId)?.name}
+                categoryName={(() => {
+                  const code = photo.category;
+                  const dbCat = dbCategories.find(c => c.code === code);
+                  return dbCat ? (dbCat[appLang] || dbCat.zh) : categories.find(c => c.id === photo.categoryId)?.name || code;
+                })()}
                 onClick={() => {
                   if (isMultiSelect) {
                     if (isGroupMaster) {
@@ -1480,17 +1544,16 @@ export default function App() {
         <section className="space-y-3">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">主分類 *</h3>
-            <button onClick={quickAddCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {categories.map(cat => (
+            {dbCategories.map(cat => (
               <button 
-                key={cat.id}
-                onClick={() => { setAddCatId(cat.id); setAddSubId(null); }}
-                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.id ? 'bg-white/80 border-slate-800 text-slate-800 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                key={cat.code}
+                onClick={() => { setAddCatId(cat.code); setAddSubId(null); }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.code ? 'bg-white/80 border-slate-800 text-slate-800 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
               >
-                <span className="font-bold block text-sm">{cat.name}</span>
-                <span className="text-[9px] uppercase tracking-tighter opacity-60">Category</span>
+                <span className="font-bold block text-sm">{cat[appLang] || cat.zh}</span>
+                <span className="text-[9px] uppercase tracking-tighter opacity-60">{cat.en}</span>
               </button>
             ))}
           </div>
@@ -1641,7 +1704,7 @@ export default function App() {
       onConfirm: () => {
         setCategories(prev => prev.map(c => c.id === catId ? {
           ...c,
-          subcategories: c.subcategories.filter(s => s.id !== subId)
+          subcategories: (c.subcategories || []).filter(s => s.id !== subId)
         } : c));
         setPhotos(prev => prev.map(p => p.subcategoryId === subId ? { ...p, subcategoryId: null } : p));
       }
@@ -1676,7 +1739,7 @@ export default function App() {
         setTags(prev => prev.filter(t => t.id !== id));
         setPhotos(prev => prev.map(p => ({
           ...p,
-          tagIds: p.tagIds.filter(tid => tid !== id)
+          tagIds: (p.tagIds || []).filter(tid => tid !== id)
         })));
       }
     });
@@ -1699,7 +1762,7 @@ export default function App() {
       if (!newSubName.trim()) return;
       setCategories(prev => prev.map(c => c.id === catId ? {
         ...c,
-        subcategories: [...c.subcategories, {
+        subcategories: [...(c.subcategories || []), {
           id: crypto.randomUUID(),
           name: newSubName.trim(),
           aliases: [newSubName.trim()]
@@ -1883,10 +1946,13 @@ export default function App() {
         setSyncAction('push');
         setSyncPercent(0);
         try {
-          try {
-            await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
-          } catch (e) {
-            console.error("Photo sync error:", e);
+          await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+          // Fetch updated photos from cloud to get proper image URLs
+          const cloudPhotos = await loadPhotosFromCloud(user.id);
+          if (cloudPhotos) {
+            setPhotos(cloudPhotos);
+            setCloudCount(cloudPhotos.length);
+            await saveData('product_photos', cloudPhotos);
           }
           
           const now = Date.now();
@@ -1918,6 +1984,7 @@ export default function App() {
           
           if (cloudPhotos) {
             setPhotos(cloudPhotos);
+            setCloudCount(cloudPhotos.length);
             await saveData('product_photos', cloudPhotos);
           }
           
@@ -2056,7 +2123,7 @@ export default function App() {
                   <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2 text-center">
                     <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">雲端同步狀態</p>
                     <p className="text-[10px] text-slate-300 font-mono">
-                      {photos.length} 張照片 | {lastSyncTime ? (isNaN(new Date(Number(lastSyncTime) || lastSyncTime).getTime()) ? '時間未知' : new Date(Number(lastSyncTime) || lastSyncTime).toLocaleString('zh-TW')) : '尚未備份'}
+                      {cloudCount !== null ? cloudCount : '?'} 張照片 | {lastSyncTime ? (isNaN(new Date(Number(lastSyncTime) || lastSyncTime).getTime()) ? '時間未知' : new Date(Number(lastSyncTime) || lastSyncTime).toLocaleString('zh-TW')) : '尚未備份'}
                     </p>
                   </div>
                 </div>
@@ -2345,24 +2412,24 @@ export default function App() {
                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速標籤套用</p>
                            <div className="flex flex-wrap gap-1.5">
                              {tags.map(tag => {
-                               const isAllMatch = groupPhotos.every(p => p.tagIds.includes(tag.id));
+                               const isAllMatch = groupPhotos.every(p => (p.tagIds || []).includes(tag.id));
                                return (
                                  <button 
                                    key={tag.id}
                                    onClick={() => setPhotos(prev => {
                                      // Determine action: if not all have it, Add to all. 
                                      // If all have it, Remove from all.
-                                     const notAllHaveItByGroupId = photos.filter(ph => ph.groupId === activeGroupId).some(p => !p.tagIds.includes(tag.id));
+                                     const notAllHaveItByGroupId = photos.filter(ph => ph.groupId === activeGroupId).some(p => !(p.tagIds || []).includes(tag.id));
                                      return prev.map(p => {
                                        if (p.groupId !== activeGroupId) return p;
-                                       const hasIt = p.tagIds.includes(tag.id);
+                                       const hasIt = (p.tagIds || []).includes(tag.id);
                                        
                                        if (notAllHaveItByGroupId) {
                                          // Apply to all (if doesn't have it)
-                                         return hasIt ? p : { ...p, tagIds: [...p.tagIds, tag.id] };
+                                         return hasIt ? p : { ...p, tagIds: [...(p.tagIds || []), tag.id] };
                                        } else {
                                          // Remove from all
-                                         return { ...p, tagIds: p.tagIds.filter(id => id !== tag.id) };
+                                         return { ...p, tagIds: (p.tagIds || []).filter(id => id !== tag.id) };
                                        }
                                      });
                                    })}
@@ -2525,7 +2592,25 @@ export default function App() {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing...</p>
             </div>
           ) : (
-            activeScreen === 'home' && renderHomeView()
+            activeScreen === 'home' && (
+              viewMode === 'public' ? (
+                <PublicGallery 
+                  photos={publicPhotos} 
+                  dbCategories={dbCategories}
+                  showExit={!!user} 
+                  onExit={() => setViewMode('private')} 
+                  onLogin={async () => {
+                    try {
+                      await loginWithGoogle();
+                    } catch(e: any) {
+                      alert('登入失敗: ' + (e.message || JSON.stringify(e)));
+                    }
+                  }}
+                />
+              ) : (
+                renderHomeView()
+              )
+            )
           )}
         </div>
       </div>
@@ -2756,6 +2841,14 @@ export default function App() {
                   />
                </div>
             </div>
+            
+            <button 
+              onClick={() => { cancelBatchAiRef.current = true; }}
+              className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/20 transition-all shrink-0"
+              title="取消辨識"
+            >
+              <X size={16} />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

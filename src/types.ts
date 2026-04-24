@@ -3,6 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export interface DB_Category {
+  id: number;
+  code: string;
+  zh: string;
+  en: string;
+  ms: string;
+  sort_order: number;
+}
+
 export interface SubCategory {
   id: string;
   name: string;
