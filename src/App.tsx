@@ -368,10 +368,12 @@ export default function App() {
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
       try {
-                const savedPhotos = await loadData('product_photos');
-        const savedCats = await loadData('product_categories');
-        const savedTags = await loadData('product_tags');
-        const savedSyncTime = await loadData('last_sync_time');
+                const [savedPhotos, savedCats, savedTags, savedSyncTime] = await Promise.all([
+          loadData('product_photos'),
+          loadData('product_categories'),
+          loadData('product_tags'),
+          loadData('last_sync_time')
+        ]);
         
         let finalPhotos = savedPhotos;
         if ((!savedPhotos || savedPhotos.length === 0) && u) {
@@ -2732,18 +2734,10 @@ export default function App() {
       {showManageAccess && (
           <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4">
-              <h3 className="font-bold text-lg">登入管理</h3>
-              <button 
-                onClick={async () => {
-                  await loginWithGoogle();
-                  setShowManageAccess(false);
-                }}
-                className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold"
-              >
-                Google 登入
-              </button>
+              <h3 className="font-bold text-lg">登入</h3>
               <div className="relative">
                 <input 
+                  autoFocus
                   type="password" 
                   placeholder="輸入管理密碼" 
                   className="w-full border p-4 rounded-xl"
@@ -2760,6 +2754,16 @@ export default function App() {
                 />
               </div>
               <button onClick={() => setShowManageAccess(false)} className="w-full text-slate-500">取消</button>
+              
+              <button 
+                onClick={async () => {
+                  await loginWithGoogle();
+                  setShowManageAccess(false);
+                }}
+                className="w-full text-slate-400 text-sm hover:text-slate-600"
+              >
+                Google 登入
+              </button>
             </div>
           </div>
       )}

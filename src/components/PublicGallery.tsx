@@ -212,7 +212,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
               {lang === 'zh' ? '我的相库' : 'Back'}
             </button>
           )}
-          {(!isStaffMode) && (
+          {(!isStaffMode && !showExit) && (
           <div className="flex bg-white/40 backdrop-blur-md border border-white/50 rounded-xl overflow-hidden p-0.5 shadow-sm ml-1 shrink-0">
             {[
               { id: 'zh', label: '中文' },
