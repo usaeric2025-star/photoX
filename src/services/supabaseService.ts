@@ -75,7 +75,7 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
       }
 
       ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      resolve(canvas.toDataURL('image/webp', quality));
     };
     img.onerror = (err) => reject(err);
   });
@@ -108,15 +108,15 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
     const res = await fetch(finalData);
     const blob = await res.blob();
 
-    const fileName = `public/${photoId}.jpg`;
+    const fileName = `public/${photoId}.webp`;
     
     alert(`上傳路徑: ${fileName}\nBucket: ${BUCKET_NAME}`);
 
     const { error: storageError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(fileName, blob, {
-        contentType: 'image/jpeg',
-        upsert: false
+        contentType: 'image/webp',
+        upsert: true
       });
 
     if (storageError) {
@@ -266,7 +266,7 @@ export const deletePhotoFromCloud = async (userId: string, photoId: string) => {
 
   if (error) throw error;
   
-  await supabase.storage.from(BUCKET_NAME).remove([`public/${photoId}.jpg`]);
+  await supabase.storage.from(BUCKET_NAME).remove([`public/${photoId}.webp`]);
 };
 
 // --- Settings Sync ---
