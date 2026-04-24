@@ -82,6 +82,15 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
 };
 
 export const uploadImage = async (userId: string, photoId: string, base64Data: string): Promise<string> => {
+  // Debug: Check Session
+  const { data: { session } } = await supabase.auth.getSession();
+  alert('Storage Session狀態: ' + JSON.stringify(session?.user?.id));
+
+  if (!session?.user) {
+    alert('上傳失敗: Session 已失效，請重新登入');
+    throw new Error('No active session for storage');
+  }
+
   let finalData = base64Data;
   
   // Stricter compression: if over 2MB, compress. (base64 is ~1.37x larger than blob)
@@ -101,12 +110,6 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 
     const fileName = `public/${photoId}.jpg`;
     
-    // Explicitly confirm userId is passed
-    if (!userId) {
-      alert('上傳失敗: 未偵測到用戶登錄資訊');
-      throw new Error('User context missing');
-    }
-
     const { error: storageError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(fileName, blob, {
@@ -116,10 +119,8 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 
     if (storageError) {
       console.error("Supabase Storage Upload Error details:", storageError);
-      alert('Storage階段失敗: ' + JSON.stringify(storageError, null, 2));
+      alert('上傳失敗 (Storage 階段): ' + JSON.stringify(storageError, null, 2));
       throw storageError;
-    } else {
-      alert('Storage階段: 成功上傳');
     }
 
     const { data: { publicUrl } } = supabase.storage
@@ -158,11 +159,20 @@ export const checkImageHashExists = async (userId: string, hash: string): Promis
 };
 
 export const savePhotoToCloud = async (userId: string, photo: Photo) => {
+  // Debug: Check Session
+  const { data: { session } } = await supabase.auth.getSession();
+  alert('Database Session狀態: ' + JSON.stringify(session?.user?.id));
+
+  if (!session?.user) {
+    alert('寫入失敗: Session 已失效，請重新登入');
+    throw new Error('No active session for database');
+  }
+
   const { error: dbError } = await supabase
     .from(TABLE_NAME)
     .upsert({
       id: photo.id,
-      user_id: userId,
+      user_id: session.user.id, // Use ID from session directly for security
       item_code: photo.item_code,
       manual_code: photo.manual_code || '',
       image_hash: photo.image_hash,
@@ -189,8 +199,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
     };
     alert('Database階段失敗: ' + JSON.stringify(errorDetails, null, 2));
     throw dbError;
-  } else {
-    alert('Database階段: 成功記錄數據');
   }
 };
 
@@ -206,8 +214,10 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
       if (onProgress) onProgress((count / photos.length) * 100);
     } catch (err: any) {
       console.error(`Sync failed for photo ${photo.id}:`, err);
-      alert(`照片同步失敗 (ID: ${photo.id.substring(0, 8)}): ` + (err.message || JSON.stringify(err)));
-      // Continue with next photo or stop? Stopping is safer for error visibility.
+      // Detailed alert only if it's not already alerted internally
+      if (!err.message?.includes('階段失敗')) {
+        alert(`照片同步失敗: ` + (err.message || JSON.stringify(err)));
+      }
       throw err;
     }
   }
