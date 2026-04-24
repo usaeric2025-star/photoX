@@ -1077,7 +1077,7 @@ export default function App() {
             onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${viewMode === 'public' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-purple-50 text-purple-600 border-purple-200'}`}
           >
-            {viewMode === 'public' ? (appLang === 'zh' ? '我的相庫' : appLang === 'ms' ? 'Galeri Saya' : 'My Gallery') : (appLang === 'zh' ? '公開探索' : appLang === 'ms' ? 'Teroka' : 'Explore')}
+            {viewMode === 'public' ? (appLang === 'zh' ? '我的相庫' : appLang === 'ms' ? 'Galeri Saya' : 'My Gallery') : (appLang === 'zh' ? '公開' : appLang === 'ms' ? 'Teroka' : 'Explore')}
           </button>
         )}
 
@@ -2685,7 +2685,7 @@ export default function App() {
       </div>
 
       <div className="w-full max-w-[420px] h-[85vh] bg-white/40 backdrop-blur-2xl rounded-[48px] border border-white/50 shadow-2xl overflow-hidden flex flex-col relative z-10 animate-in fade-in zoom-in duration-700">
-        <div className="flex-1 overflow-y-auto no-scrollbar relative flex flex-col">
+        <div className={`flex-1 relative flex flex-col ${viewMode === 'public' ? 'overflow-hidden' : 'overflow-y-auto no-scrollbar'}`}>
           {isInitializing ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4">
               <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
@@ -2701,6 +2701,7 @@ export default function App() {
                   onExit={() => setViewMode('private')} 
                   internalPassword={internalPassword}
                   onLogin={() => setShowManageAccess(true)}
+                  settings={settings}
                 />
               ) : (
                 renderHomeView()

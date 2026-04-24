@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Photo, DB_Category } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, MapPin, MessageCircle, Share2, Layers } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, Pin, MessageCircle, Share2, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -10,6 +10,7 @@ interface PublicGalleryProps {
   showExit?: boolean;
   onLogin?: () => void;
   internalPassword?: string;
+  settings?: any;
 }
 
 const translations = {
@@ -51,7 +52,7 @@ const translations = {
   }
 };
 
-export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategories, onExit, showExit, onLogin, internalPassword }) => {
+export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategories, onExit, showExit, onLogin, internalPassword, settings }) => {
   const [lang, setLang] = useState<'zh' | 'en' | 'ms'>('zh');
   const t = translations[lang];
 
@@ -68,15 +69,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
-  const [pinnedPhotos, setPinnedPhotos] = useState<Set<string>>(new Set());
+  const [pinnedPhotos, setPinnedPhotos] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('pinned_photos_v1');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
+  const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [headerClickCount, setHeaderClickCount] = useState(0);
 
-  // Auto-exit selection mode if nothing is selected
   useEffect(() => {
-    if (selectionMode && selectedPhotos.size === 0) {
-      // Don't auto-close immediately, let user decide
-    }
-  }, [selectedPhotos.size, selectionMode]);
+    localStorage.setItem('pinned_photos_v1', JSON.stringify(Array.from(pinnedPhotos)));
+  }, [pinnedPhotos]);
 
   const togglePin = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -101,18 +104,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
 
   const displayPhotos = useMemo(() => {
     let filtered = photos;
+    if (showPinnedOnly) {
+      filtered = filtered.filter(p => pinnedPhotos.has(p.id));
+    }
     if (selectedCatCode) {
       filtered = filtered.filter(p => p.category === selectedCatCode);
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => {
-        // Build a searchable string from all possible fields and languages
         const searchableText = [
           p.name,
           p.description,
           ...(p.tags || []),
-          // Find category name(s)
           dbCategories.find(c => c.code === p.category)?.zh || '',
           dbCategories.find(c => c.code === p.category)?.en || '',
           dbCategories.find(c => c.code === p.category)?.ms || ''
@@ -121,8 +125,26 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
         return searchableText.includes(q);
       });
     }
-    return filtered;
-  }, [photos, selectedCatCode, searchQuery]);
+    // Apply sorting
+    let sorted = [...filtered].sort((a, b) => {
+      const aPinned = pinnedPhotos.has(a.id) ? 1 : 0;
+      const bPinned = pinnedPhotos.has(b.id) ? 1 : 0;
+      return bPinned - aPinned;
+    });
+
+    // Apply Grouping if enabled
+    if (showGroupsCollapsed) {
+      const groupsSeen = new Set<string>();
+      sorted = sorted.filter(p => {
+        if (!p.groupId) return true;
+        if (groupsSeen.has(p.groupId)) return false;
+        groupsSeen.add(p.groupId);
+        return true;
+      });
+    }
+    
+    return sorted;
+  }, [photos, selectedCatCode, searchQuery, pinnedPhotos, showPinnedOnly, showGroupsCollapsed]);
 
   const visiblePhotos = useMemo(() => displayPhotos.slice(0, visibleCount), [displayPhotos, visibleCount]);
 
@@ -244,11 +266,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   };
 
   return (
-    <div className="flex flex-col h-screen bg-bg w-full overflow-hidden text-text">
+    <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
       <header className="shrink-0 z-50 bg-bg/90 backdrop-blur-sm border-b border-text/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
-          <h1 className="text-xl font-bold tracking-tight truncate leading-tight cursor-pointer">公开</h1>
+          {settings?.logo_url ? (
+            <img src={settings.logo_url} alt="Logo" className="h-8 max-w-[120px] object-contain cursor-pointer" />
+          ) : (
+            <h1 className="text-xl font-bold tracking-tight truncate leading-tight cursor-pointer">Gallery</h1>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
            <div className="flex items-center gap-1 text-xs font-semibold">
@@ -276,8 +302,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
           </div>
           {/* Group Toggle */}
           <button
-              onClick={() => {}}
-              className="p-2 bg-white border border-text/10 rounded-lg text-text/60 hover:text-text"
+              onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
+              className={`p-2 rounded-xl transition-all border ${showGroupsCollapsed ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-text/10 text-text/40 hover:text-text'}`}
+              title={showGroupsCollapsed ? "Show All" : "Group Photos"}
           >
               <Layers size={18} />
           </button>
@@ -349,6 +376,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                   loading="lazy" 
                   className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(photo.id) ? 'scale-90' : 'group-hover:scale-105'}`}
                 />
+
+                {/* Pin button */}
+                <button 
+                  onClick={(e) => togglePin(photo.id, e)}
+                  className={`absolute top-2 left-2 p-1.5 rounded-full backdrop-blur-md transition-all z-10 ${pinnedPhotos.has(photo.id) ? 'bg-orange-500 text-white' : 'bg-black/20 text-white/50 opacity-0 group-hover:opacity-100'}`}
+                >
+                  <Pin size={12} className={pinnedPhotos.has(photo.id) ? 'fill-current' : ''} />
+                </button>
+
+                {photo.groupId && (
+                  <div className="absolute top-2 left-10 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-[4px] text-[7px] text-white font-bold flex items-center gap-1 border border-white/20">
+                    <Layers size={8} />
+                    {photo.groupId}
+                  </div>
+                )}
                 
                 {selectedPhotos.has(photo.id) && (
                   <div className="absolute top-2 right-2 bg-accent text-bg rounded-full p-1">
@@ -395,8 +437,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       {/* Floating Action Buttons (Normal Mode) */}
       {!selectionMode && (
         <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400]">
-            <button onClick={() => setSelectionMode(true)} className="bg-text text-bg p-4 rounded-full shadow-lg">
-              <MapPin size={24} />
+            <button 
+              onClick={() => setShowPinnedOnly(!showPinnedOnly)} 
+              className={`p-4 rounded-full shadow-lg transition-all ${showPinnedOnly ? 'bg-orange-500 text-white' : 'bg-text text-bg'}`}
+            >
+              <Pin size={24} className={showPinnedOnly ? 'fill-current' : ''} />
             </button>
             <button onClick={() => setSelectionMode(true)} className="bg-[#25D366] text-white p-4 rounded-full shadow-lg">
               <MessageCircle size={24} />
