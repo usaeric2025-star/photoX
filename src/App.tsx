@@ -680,96 +680,101 @@ export default function App() {
   const saveNewPhoto = async () => {
     if (!newPhotoData && !editPhotoId) return;
     
-    // Default to 'uncategorized' if user hasn't selected a category for an existing photo
-    const catId = addCatId || 'uncategorized';
-    const catName = categories.find(c => c.id === catId)?.name || '未分類';
-    const subName = categories.find(c => c.id === catId)?.subcategories.find(s => s.id === addSubId)?.name || '';
-    const tagNames = tags.filter(t => addTagIds.includes(t.id)).map(t => t.name);
-    
-    const compressedData = newPhotoData ? await compressImage(newPhotoData) : null;
-    const imgHash = compressedData ? calculateMD5(compressedData) : (editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_hash : '');
-    
-    if (editPhotoId) {
-      setPhotos(prev => prev.map(p => p.id === editPhotoId ? {
-        ...p,
-        ...(compressedData ? { uri: compressedData, image_hash: imgHash } : {}),
-        categoryId: catId,
-        subcategoryId: addSubId,
-        tagIds: addTagIds,
-        category: catName,
-        sub_category: subName,
-        tags: tagNames,
-        description: addNote,
-        manual_code: addManualCode,
-        dimensions: {
-          length: Number(addDimL) || 0,
-          width: Number(addDimW) || 0,
-          height: Number(addDimH) || 0,
-          unit: 'cm'
-        }
-      } : p));
-      setEditPhotoId(null);
-    } else {
-      // Check for local duplicates first
-      const isLocalDuplicate = photos.some(p => p.image_hash === imgHash);
-      if (isLocalDuplicate) {
-        // Just return silently as per user request to avoid too many alerts
-        return;
-      }
-
-      // Check for duplicates in Cloud if logged in
-      if (user && imgHash) {
-        const existingManualCode = await checkImageHashExists(user.id, imgHash);
-        if (existingManualCode) {
-          setAlertDialog({ 
-            title: '重複上傳', 
-            message: `此照片已錄入過！\n現有手動編號為：${existingManualCode}\n已自動取消添加以避免重複。` 
-          });
+    try {
+      // Default to 'uncategorized' if user hasn't selected a category for an existing photo
+      const catId = addCatId || 'uncategorized';
+      const catName = categories.find(c => c.id === catId)?.name || '未分類';
+      const subName = categories.find(c => c.id === catId)?.subcategories.find(s => s.id === addSubId)?.name || '';
+      const tagNames = tags.filter(t => addTagIds.includes(t.id)).map(t => t.name);
+      
+      const compressedData = newPhotoData ? await compressImage(newPhotoData) : null;
+      const imgHash = compressedData ? calculateMD5(compressedData) : (editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_hash : '');
+      
+      if (editPhotoId) {
+        setPhotos(prev => prev.map(p => p.id === editPhotoId ? {
+          ...p,
+          ...(compressedData ? { uri: compressedData, image_hash: imgHash } : {}),
+          categoryId: catId,
+          subcategoryId: addSubId,
+          tagIds: addTagIds,
+          category: catName,
+          sub_category: subName,
+          tags: tagNames,
+          description: addNote,
+          manual_code: addManualCode,
+          dimensions: {
+            length: Number(addDimL) || 0,
+            width: Number(addDimW) || 0,
+            height: Number(addDimH) || 0,
+            unit: 'cm'
+          }
+        } : p));
+        setEditPhotoId(null);
+      } else {
+        // Check for local duplicates first
+        const isLocalDuplicate = photos.some(p => p.image_hash === imgHash);
+        if (isLocalDuplicate) {
+          // Just return silently as per user request to avoid too many alerts
           return;
         }
-      }
 
-      const storageId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
-      const dbId = crypto.randomUUID();
-      let cloudUrl = '';
-      if (user && compressedData) {
-        cloudUrl = await uploadImage(user.id, storageId, compressedData);
-      }
-
-      const newPhoto: Photo = {
-        id: dbId,
-        storageId: storageId,
-        item_code: generateItemCode(),
-        manual_code: addManualCode,
-        image_hash: imgHash || '',
-        name: '新家具紀錄',
-        category: catName,
-        sub_category: subName,
-        tags: tagNames,
-        description: addNote,
-        image_url: cloudUrl,
-        uri: compressedData || '',
-        categoryId: catId,
-        subcategoryId: addSubId,
-        tagIds: addTagIds,
-        createdAt: new Date().toISOString(),
-        groupId: null,
-        dimensions: {
-          length: Number(addDimL) || 0,
-          width: Number(addDimW) || 0,
-          height: Number(addDimH) || 0,
-          unit: 'cm'
+        // Check for duplicates in Cloud if logged in
+        if (user && imgHash) {
+          const existingManualCode = await checkImageHashExists(user.id, imgHash);
+          if (existingManualCode) {
+            setAlertDialog({ 
+              title: '重複上傳', 
+              message: `此照片已錄入過！\n現有手動編號為：${existingManualCode}\n已自動取消添加以避免重複。` 
+            });
+            return;
+          }
         }
-      };
-      
-      if (user && cloudUrl) {
-        await savePhotoToCloud(user.id, newPhoto);
+
+        const storageId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+        const dbId = crypto.randomUUID();
+        let cloudUrl = '';
+        if (user && compressedData) {
+          cloudUrl = await uploadImage(user.id, storageId, compressedData);
+        }
+
+        const newPhoto: Photo = {
+          id: dbId,
+          storageId: storageId,
+          item_code: generateItemCode(),
+          manual_code: addManualCode,
+          image_hash: imgHash || '',
+          name: '新家具紀錄',
+          category: catName,
+          sub_category: subName,
+          tags: tagNames,
+          description: addNote,
+          image_url: cloudUrl,
+          uri: compressedData || '',
+          categoryId: catId,
+          subcategoryId: addSubId,
+          tagIds: addTagIds,
+          createdAt: new Date().toISOString(),
+          groupId: null,
+          dimensions: {
+            length: Number(addDimL) || 0,
+            width: Number(addDimW) || 0,
+            height: Number(addDimH) || 0,
+            unit: 'cm'
+          }
+        };
+        
+        if (user && cloudUrl) {
+          await savePhotoToCloud(user.id, newPhoto);
+        }
+        
+        setPhotos([newPhoto, ...photos]);
       }
-      
-      setPhotos([newPhoto, ...photos]);
+      resetAddState();
+      setActiveScreen('home');
+    } catch (err: any) {
+      console.error("Save failed:", err);
+      setAlertDialog({ title: '保存失敗', message: `無法保存資料：${err.message || '請檢查網路連線'}` });
     }
-    resetAddState();
-    setActiveScreen('home');
   };
 
   const resetAddState = () => {
@@ -1835,7 +1840,7 @@ export default function App() {
       if (!hasError) {
         setAlertDialog({ 
           title: '同步完成', 
-          message: `同步成功 ${results.success} 張，跳過重複 ${results.skipped} 張` 
+          message: `成功 ${results.success} 張，略過 ${results.skipped} 張` 
         });
       } else {
         setAlertDialog({ title: '同步中斷', message: '部分資料同步失敗，請檢查網路連線或 Supabase 設定。' });
@@ -2125,7 +2130,7 @@ export default function App() {
         {/* Version Info */}
         <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.0829</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1638 (KL)</p>
         </div>
       </div>
     </div>
@@ -2567,7 +2572,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-[1000] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
             onClick={() => setConfirmDialog(null)}
           >
             <motion.div 
@@ -2613,7 +2618,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-[1000] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
             onClick={() => setPromptDialog(null)}
           >
             <motion.div 
@@ -2670,7 +2675,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[150] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
+            className="fixed inset-0 z-[1000] bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6"
             onClick={() => setAlertDialog(null)}
           >
             <motion.div 
