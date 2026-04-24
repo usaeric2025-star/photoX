@@ -375,6 +375,7 @@ export const fetchSettings = async () => {
     const { data, error } = await supabase
         .from('settings')
         .select('*')
+        .eq('id', 1)
         .limit(1);
     
     if (error) {
@@ -422,46 +423,14 @@ export const saveSettings = async (settings: any) => {
         if (payload.categories_json) console.log("Categories string length:", payload.categories_json.length);
         if (payload.tags_json) console.log("Tags string length:", payload.tags_json.length);
 
-        // First, check if there's any row in settings
-        const { data: existingRows, error: fetchError } = await supabase
+        // Upsert into row with id: 1
+        const { error: upsertError } = await supabase
             .from('settings')
-            .select('*')
-            .limit(1);
-
-        if (fetchError) {
-            console.error("Error checking existing settings:", fetchError);
-            throw fetchError;
-        }
-
-        if (existingRows && existingRows.length > 0) {
-            // Row exists, try to update it
-            const existing = existingRows[0];
-            const updatePayload = { ...payload };
+            .upsert({ ...payload, id: 1 }, { onConflict: 'id' });
             
-            // Try updating using 'id' if it exists in the data we fetched
-            if (existing.id !== undefined) {
-                const { error: updateError } = await supabase
-                    .from('settings')
-                    .update(updatePayload)
-                    .eq('id', existing.id);
-                
-                if (updateError) throw updateError;
-            } else {
-                // If no 'id', try to update everything (risky if multiple rows, but likely there's only one)
-                // Use the first available column as a matcher if possible, or just upsert without onConflict
-                const { error: upsertError } = await supabase
-                    .from('settings')
-                    .upsert({ ...updatePayload, id: 1 }); // Still try id: 1 as fallback
-                
-                if (upsertError) throw upsertError;
-            }
-        } else {
-            // No row exists, insert as id: 1
-            const { error: insertError } = await supabase
-                .from('settings')
-                .insert({ ...payload, id: 1 });
-            
-            if (insertError) throw insertError;
+        if (upsertError) {
+            console.error("Error upserting settings:", upsertError);
+            throw upsertError;
         }
         
         return true;

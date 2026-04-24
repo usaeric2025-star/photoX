@@ -1883,6 +1883,15 @@ export default function App() {
     setSyncPercent(0);
     try {
       await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+      
+      // Sync master settings as well during manual sync
+      await saveSettings({
+        ...settings,
+        categories: categories,
+        tags: tags,
+        manufacturers: manufacturers
+      });
+
       const cloudPhotos = await loadPhotosFromCloud(user.id);
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
