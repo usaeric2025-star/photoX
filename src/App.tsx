@@ -723,8 +723,8 @@ export default function App() {
           const existingManualCode = await checkImageHashExists(user.id, imgHash);
           if (existingManualCode) {
             setAlertDialog({ 
-              title: '重複上傳', 
-              message: `此照片已錄入過！\n現有手動編號為：${existingManualCode}\n已自動取消添加以避免重複。` 
+              title: '提示', 
+              message: `照片已存在！\n編號：${existingManualCode}` 
             });
             return;
           }
@@ -773,7 +773,7 @@ export default function App() {
       setActiveScreen('home');
     } catch (err: any) {
       console.error("Save failed:", err);
-      setAlertDialog({ title: '保存失敗', message: `無法保存資料：${err.message || '請檢查網路連線'}` });
+      setAlertDialog({ title: '保存失敗', message: err.message || '請檢查網路' });
     }
   };
 
@@ -840,7 +840,7 @@ export default function App() {
 
   const handleGroupPhotos = () => {
     if (selectedIds.length < 2) {
-      setAlertDialog({ title: '系統提示', message: '請至少選取兩張照片來組成群組' });
+      setAlertDialog({ title: '提示', message: '請至少選取兩張照片。' });
       return;
     }
     const newGroupId = 'G' + Math.floor(1000 + Math.random() * 9000);
@@ -881,7 +881,7 @@ export default function App() {
       } 
       
       // Fallback: If share API fails or is not supported (WebView environment)
-      setAlertDialog({ title: '系統提示', message: '當前應用環境不支援原生分享，將自動為您下載圖片至手機中以便分享。' });
+      setAlertDialog({ title: '提示', message: '環境不支援分享，改為自動下載' });
       selectedPhotos.forEach((photo, index) => {
         // slight delay to prevent popup blockers for multiple downloads
         setTimeout(() => {
@@ -898,7 +898,7 @@ export default function App() {
       console.error('Share/Download error:', err);
       // Sometimes user cancelling share throws an error, we ignore it usually. If it fails, fallback to download.
       if (err instanceof Error && err.name !== 'AbortError') {
-        setAlertDialog({ title: '系統提示', message: '分享遭中斷，可嘗試直接備份下載。' });
+        setAlertDialog({ title: '提示', message: '分享或下載失敗' });
       }
     }
   };
@@ -1229,7 +1229,7 @@ export default function App() {
         <button 
           onClick={() => {
             if (!addCatId && addTagIds.length === 0) {
-              setAlertDialog({ title: '系統提示', message: "請至少選擇一個「主分類」或「統一標籤」才能進行套用。" });
+              setAlertDialog({ title: '提示', message: "請選取「主分類」或「標籤」" });
               return;
             }
             saveBatchEdit();
@@ -1243,7 +1243,7 @@ export default function App() {
       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-20">
         <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 mb-2">
           <p className="text-[11px] text-blue-600 font-bold leading-relaxed">
-            注意：這將會同時更新所有選中照片的分類與標籤。備註與編號等欄位將僅在您手動修改時套用。
+            注意：這會更新所有選中照片。僅手動修改的欄位會被套用。
           </p>
         </div>
 
@@ -1825,11 +1825,14 @@ export default function App() {
       let results = { success: 0, skipped: 0 };
       let hasError = false;
       
+      let errorMsg = '';
+      
       try {
         results = await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
-      } catch (e) {
+      } catch (e: any) {
         console.error("Photo sync error:", e);
         hasError = true;
+        errorMsg = e.message || '未知錯誤';
       }
 
       await syncCategoriesToCloud(user.id, categories);
@@ -1843,11 +1846,11 @@ export default function App() {
           message: `成功 ${results.success} 張，略過 ${results.skipped} 張` 
         });
       } else {
-        setAlertDialog({ title: '同步中斷', message: '部分資料同步失敗，請檢查網路連線或 Supabase 設定。' });
+        setAlertDialog({ title: '同步失敗', message: `部分資料同步失敗：${errorMsg}` });
       }
     } catch (e) {
       console.error(e);
-      setAlertDialog({ title: '同步失敗', message: '發生嚴重錯誤，無法完成同步。' });
+      setAlertDialog({ title: '錯誤', message: '發生嚴重錯誤，無法完成同步。' });
     } finally {
       setIsSyncing(false);
       setSyncAction('idle');
@@ -1858,7 +1861,7 @@ export default function App() {
   const performPullSync = async () => {
     if (!user) return;
     setConfirmDialog({
-      message: "警告：從雲端下載將會覆蓋您設備上目前的所有資料。如果您近期在本機有新增或刪除相片且「尚未上傳備份」，這些變更將會遺失。您確定要繼續下載嗎？",
+      message: "警告：下載會覆蓋目前資料。未上傳的變更將會遺失。確定繼續？",
       onConfirm: async () => {
         setIsSyncing(true);
         setSyncAction('pull');
@@ -1881,12 +1884,12 @@ export default function App() {
           setLastSyncTime(Date.now());
           setSyncPercent(100);
           setAlertDialog({ 
-            title: '系統提示', 
-            message: `已成功將雲端資料下載並覆蓋本地！\n\n同步成功，共載入：\n- ${cloudPhotos.length} 張照片\n- ${cloudCats.length} 個分類\n- ${cloudTags.length} 個標籤` 
+            title: '下載成功', 
+            message: `共載入：\n- ${cloudPhotos.length} 照片\n- ${cloudCats.length} 分類\n- ${cloudTags.length} 標籤` 
           });
-        } catch (e) {
+        } catch (e: any) {
           console.error(e);
-          setAlertDialog({ title: '系統提示', message: '下載失敗，請檢查網路連線。' });
+          setAlertDialog({ title: '提示', message: `下載失敗：${e.message || '請檢查網路'}` });
         } finally {
           setIsSyncing(false);
           setSyncAction('idle');
@@ -2114,9 +2117,9 @@ export default function App() {
                       if (json.photos) setPhotos(json.photos);
                       if (json.categories) setCategories(json.categories);
                       if (json.tags) setTags(json.tags);
-                      setAlertDialog({ title: '系統提示', message: '數據匯入成功！' });
+                      setAlertDialog({ title: '提示', message: '匯入成功' });
                     } catch (e) {
-                      setAlertDialog({ title: '系統提示', message: '檔案格式錯誤' });
+                      setAlertDialog({ title: '提示', message: '格式錯誤' });
                     }
                   };
                   reader.readAsText(file);
@@ -2130,7 +2133,7 @@ export default function App() {
         {/* Version Info */}
         <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1638 (KL)</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1638</p>
         </div>
       </div>
     </div>
@@ -2169,7 +2172,7 @@ export default function App() {
                       title: `照片組 ${activeGroupId}`,
                     });
                   } catch (err) {
-                    setAlertDialog({ title: '系統提示', message: '分享失敗，部分瀏覽器不支援多檔分享。' });
+                    setAlertDialog({ title: '提示', message: '部分瀏覽器不支援多檔分享。' });
                   }
                 }
               }}
@@ -2407,7 +2410,7 @@ export default function App() {
                        setActiveGroupId(null);
                        setFocusedGroupPhotoId(null);
                        setIsMultiSelect(true);
-                       setAlertDialog({ title: '系統提示', message: '請從主畫面選取要加入此組的照片' });
+                       setAlertDialog({ title: '提示', message: '請從主畫面選取照片' });
                     }}
                     className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
                   >
