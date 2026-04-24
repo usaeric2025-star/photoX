@@ -189,16 +189,7 @@ const PhotoCard = React.memo(({
         <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase mb-0.5">
           {categoryName}
         </p>
-        <div className="flex items-center justify-between gap-1">
-          <p className="text-[7px] text-white/60 font-black truncate flex-1">
-            {photo.item_code}
-          </p>
-          {photo.manual_code && (
-            <p className="text-[8px] text-yellow-400 font-bold bg-black/40 px-1 rounded">
-              {photo.manual_code}
-            </p>
-          )}
-        </div>
+        {/* Removed item_code and manual_code for a cleaner look as requested */}
       </div>
     </motion.div>
   );
