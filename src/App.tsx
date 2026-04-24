@@ -48,7 +48,12 @@ import {
   checkImageHashExists,
   uploadImage
 } from './services/supabaseService';
-import { User } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+
+interface User extends SupabaseUser {
+  displayName?: string;
+  avatarUrl?: string;
+}
 
 // Default Data for initial setup
 const DEFAULT_CATEGORIES: Category[] = [
@@ -270,6 +275,7 @@ export default function App() {
   const [addDimL, setAddDimL] = useState<string>('');
   const [addDimW, setAddDimW] = useState<string>('');
   const [addDimH, setAddDimH] = useState<string>('');
+  const [showOtherFields, setShowOtherFields] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isBatchAnalyzing, setIsBatchAnalyzing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -386,6 +392,11 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthChange(async (u) => {
       setUser(u);
+      
+      // Auto-jump to home if user is logged in and currently on home anyway or initializing
+      if (u) {
+        setActiveScreen('home');
+      }
       
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
@@ -581,11 +592,6 @@ export default function App() {
     setIsImporting(true);
     setActiveScreen('home');
 
-    // Only assign a batch ID if uploading MORE THAN one photo
-    const batchGroupId = fileArray.length > 1 
-      ? 'GRP-' + Date.now().toString() + Math.random().toString(36).substr(2, 4).toUpperCase()
-      : null;
-    
     const CHUNK_SIZE = 3;
     for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
       const chunk = fileArray.slice(i, i + CHUNK_SIZE);
@@ -643,7 +649,7 @@ export default function App() {
             subcategoryId: null,
             tagIds: [],
             createdAt: new Date().toISOString(),
-            groupId: batchGroupId,
+            groupId: null,
             isAnalyzing: !!useAi
           };
           
@@ -819,6 +825,7 @@ export default function App() {
     setAddDimL('');
     setAddDimW('');
     setAddDimH('');
+    setShowOtherFields(false);
   };
 
   const saveBatchEdit = () => {
@@ -1262,59 +1269,81 @@ export default function App() {
       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-20">
         <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 mb-2">
           <p className="text-[11px] text-blue-600 font-bold leading-relaxed">
-            注意：這將會同時更新所有選中照片的分類與標籤。備註欄位將保留原樣不進行批量覆蓋。
+            注意：這將會同時更新所有選中照片的分類與標籤。備註與編號等欄位將僅在您手動修改時套用。
           </p>
         </div>
 
         <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">手動編號 / 價格暗號</h3>
-          </div>
-          <input 
-            type="text" 
-            placeholder="輸入手動編號 (如：價格暗碼)..."
-            value={addManualCode}
-            onChange={(e) => setAddManualCode(e.target.value)}
-            className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
-          />
-        </section>
+          <button 
+            onClick={() => setShowOtherFields(!showOtherFields)}
+            className="w-full flex items-center justify-between p-4 bg-white/60 border border-white rounded-3xl text-sm font-bold text-slate-700 shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <ChevronRight size={18} className={`transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`} />
+              <span>其他資訊 (編號、尺寸)</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-normal">
+              {showOtherFields ? '收起' : '展開'}
+            </span>
+          </button>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-blue-500">批次修改家具尺寸 (長 x 寬 x 高) cm</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-             <div className="relative">
-                <input 
-                  type="number"
-                  placeholder="長"
-                  value={addDimL}
-                  onChange={(e) => setAddDimL(e.target.value)}
-                  className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                />
-                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
-             </div>
-             <div className="relative">
-                <input 
-                   type="number"
-                   placeholder="寬"
-                   value={addDimW}
-                   onChange={(e) => setAddDimW(e.target.value)}
-                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                />
-                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
-             </div>
-             <div className="relative">
-                <input 
-                   type="number"
-                   placeholder="高"
-                   value={addDimH}
-                   onChange={(e) => setAddDimH(e.target.value)}
-                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                />
-                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
-             </div>
-          </div>
+          <AnimatePresence>
+            {showOtherFields && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden space-y-4 pt-1"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">編號</h3>
+                  <input 
+                    type="text" 
+                    placeholder="輸入編號..."
+                    value={addManualCode}
+                    onChange={(e) => setAddManualCode(e.target.value)}
+                    className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具尺寸 (長 x 寬 x 高) cm</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="長"
+                        value={addDimL}
+                        onChange={(e) => setAddDimL(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="寬"
+                        value={addDimW}
+                        onChange={(e) => setAddDimW(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="高"
+                        value={addDimH}
+                        onChange={(e) => setAddDimH(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
 
         <section className="space-y-3">
@@ -1413,54 +1442,76 @@ export default function App() {
         </div>
 
         <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">手動編號 / 價格暗號</h3>
-          </div>
-          <input 
-            type="text" 
-            placeholder="輸入手動編號 (如：價格暗碼)..."
-            value={addManualCode}
-            onChange={(e) => setAddManualCode(e.target.value)}
-            className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
-          />
-        </section>
+          <button 
+            onClick={() => setShowOtherFields(!showOtherFields)}
+            className="w-full flex items-center justify-between p-4 bg-white/60 border border-white rounded-3xl text-sm font-bold text-slate-700 shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <ChevronRight size={18} className={`transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`} />
+              <span>其他資訊 (編號、尺寸)</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-normal">
+              {showOtherFields ? '收起' : '展開'}
+            </span>
+          </button>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-blue-500">家具尺寸 (長 x 寬 x 高) cm</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-             <div className="relative">
-                <input 
-                  type="number"
-                  placeholder="長"
-                  value={addDimL}
-                  onChange={(e) => setAddDimL(e.target.value)}
-                  className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                />
-                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
-             </div>
-             <div className="relative">
-                <input 
-                   type="number"
-                   placeholder="寬"
-                   value={addDimW}
-                   onChange={(e) => setAddDimW(e.target.value)}
-                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                />
-                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
-             </div>
-             <div className="relative">
-                <input 
-                   type="number"
-                   placeholder="高"
-                   value={addDimH}
-                   onChange={(e) => setAddDimH(e.target.value)}
-                   className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                />
-                <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
-             </div>
-          </div>
+          <AnimatePresence>
+            {showOtherFields && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden space-y-4 pt-1"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">編號</h3>
+                  <input 
+                    type="text" 
+                    placeholder="輸入編號..."
+                    value={addManualCode}
+                    onChange={(e) => setAddManualCode(e.target.value)}
+                    className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具尺寸 (長 x 寬 x 高) cm</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="長"
+                        value={addDimL}
+                        onChange={(e) => setAddDimL(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="寬"
+                        value={addDimW}
+                        onChange={(e) => setAddDimW(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="高"
+                        value={addDimH}
+                        onChange={(e) => setAddDimH(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
 
         <section className="space-y-3">
@@ -1906,16 +1957,31 @@ export default function App() {
           ) : (
             <div className="space-y-3">
               <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <img src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-white/20" alt="Avatar" />
-                  <div>
-                    <p className="text-white text-xs font-bold truncate max-w-[120px]">{user.displayName}</p>
-                    <p className="text-[9px] text-slate-500 truncate max-w-[120px]">{user.email}</p>
+                <div className="flex items-center gap-3 overflow-hidden">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm" alt="Avatar" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10">
+                      {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                    </div>
+                  )}
+                  <div className="overflow-hidden">
+                    <p className="text-white text-xs font-black truncate">{user.displayName || user.email}</p>
+                    <p className="text-[9px] text-slate-500 font-medium truncate">{user.email}</p>
                   </div>
                 </div>
                 <button 
-                  onClick={() => { logout(); setUser(null); }}
-                  className="bg-white/10 hover:bg-red-500/20 text-slate-400 hover:text-red-400 p-2 rounded-xl transition-all"
+                  onClick={() => { 
+                    setConfirmDialog({
+                      message: '確定要登出嗎？您的本地數據將會保留，但無法繼續自動同步。',
+                      onConfirm: () => {
+                        logout(); 
+                        setUser(null);
+                        setActiveScreen('home');
+                      }
+                    });
+                  }}
+                  className="bg-white/10 hover:bg-red-500/20 text-slate-400 hover:text-red-400 p-2.5 rounded-xl transition-all active:scale-90"
                 >
                   <LogOut size={16} />
                 </button>
@@ -2363,6 +2429,52 @@ export default function App() {
       </div>
     );
   };
+  
+  const renderLoginScreen = () => (
+    <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-10 text-center">
+      <div className="relative">
+        <div className="w-24 h-24 bg-blue-500 rounded-3xl rotate-12 flex items-center justify-center shadow-2xl shadow-blue-500/40 relative z-10">
+          <ImageIcon size={48} className="text-white -rotate-12" />
+        </div>
+        <div className="absolute inset-0 bg-purple-500 rounded-3xl -rotate-6 shadow-xl opacity-50"></div>
+      </div>
+      
+      <div className="space-y-3">
+        <h2 className="text-3xl font-black text-slate-800 tracking-tight">Furniture Album</h2>
+        <p className="text-sm text-slate-500 font-medium leading-relaxed px-4">
+          智能分類、標籤管理、雲端備份。<br/>
+          一站式管理您的家具產品資訊。
+        </p>
+      </div>
+
+      <div className="w-full space-y-4">
+        <button 
+          onClick={handleLogin}
+          className="w-full bg-slate-900 text-white py-5 rounded-[24px] text-sm font-bold flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] active:bg-black"
+        >
+          <LogIn size={20} /> 使用 Google 登入
+        </button>
+        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          登入以同步您的雲端相庫
+        </p>
+      </div>
+
+      <div className="pt-10 flex gap-6 grayscale opacity-50">
+        <div className="flex flex-col items-center gap-1">
+          <Sparkles size={16} className="text-purple-500" />
+          <span className="text-[10px] font-bold">AI 智慧</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Cloud size={16} className="text-blue-500" />
+          <span className="text-[10px] font-bold">雲端同步</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Layers size={16} className="text-indigo-500" />
+          <span className="text-[10px] font-bold">層次管理</span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="w-full h-full min-h-screen bg-transparent p-4 font-sans select-none flex items-center justify-center relative overflow-hidden">
@@ -2372,8 +2484,17 @@ export default function App() {
       </div>
 
       <div className="w-full max-w-[420px] h-[85vh] bg-white/40 backdrop-blur-2xl rounded-[48px] border border-white/50 shadow-2xl overflow-hidden flex flex-col relative z-10 animate-in fade-in zoom-in duration-700">
-        <div className="flex-1 overflow-y-auto no-scrollbar relative">
-          {activeScreen === 'home' && renderHomeView()}
+        <div className="flex-1 overflow-y-auto no-scrollbar relative flex flex-col">
+          {isInitializing ? (
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+              <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing...</p>
+            </div>
+          ) : !user ? (
+            renderLoginScreen()
+          ) : (
+            activeScreen === 'home' && renderHomeView()
+          )}
         </div>
       </div>
 

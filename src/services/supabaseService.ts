@@ -42,6 +42,7 @@ export const onAuthChange = (callback: (user: any) => void) => {
     const user = session?.user || null;
     if (user) {
       (user as any).displayName = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.displayName || user.email;
+      (user as any).avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
     }
     callback(user);
   });
@@ -68,7 +69,10 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
       upsert: true
     });
 
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase Storage Upload Error:", error.message, error);
+    throw error;
+  }
 
   const { data: { publicUrl } } = supabase.storage
     .from(BUCKET_NAME)
@@ -114,7 +118,10 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
       group_id: photo.groupId || null
     }, { onConflict: 'id' });
 
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase Database Insert Error:", error.message, error);
+    throw error;
+  }
 };
 
 export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgress?: (p: number) => void) => {
