@@ -412,6 +412,8 @@ export const saveSettings = async (settings: any) => {
         }
 
         console.log("Attempting to save settings to Supabase...", payload);
+        if (payload.categories_json) console.log("Categories string length:", payload.categories_json.length);
+        if (payload.tags_json) console.log("Tags string length:", payload.tags_json.length);
 
         // First, check if there's any row in settings
         const { data: existingRows, error: fetchError } = await supabase

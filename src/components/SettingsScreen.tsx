@@ -138,7 +138,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   return (
     <div className="fixed inset-0 z-[100] bg-[#FDFAF6] flex flex-col pt-safe">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-[#1D3557]/10 flex items-center gap-3 bg-[#FDFAF6] sticky top-0 z-10">
+      <div className="px-6 py-4 flex items-center gap-3 bg-[#FDFAF6] sticky top-0 z-10">
         <button 
           onClick={() => setActiveScreen('home')} 
           className="p-2 -ml-2 text-[#1D3557]/50 hover:text-[#1D3557] transition-colors rounded-full active:bg-[#1D3557]/5"
@@ -146,7 +146,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         >
           <ChevronLeft size={24} />
         </button>
-        <h2 className="font-black text-sm text-[#1D3557] uppercase tracking-widest flex-1 ml-1 leading-none">Settings & Management</h2>
+        <h2 className="font-black text-xs text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">Settings & Management</h2>
         <Settings2 size={20} className="text-[#1D3557]/20" />
       </div>
 
@@ -161,7 +161,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <div className="flex items-center gap-5">
                 <div className="relative group">
                   {settings?.logo_url ? (
-                      <img src={settings.logo_url} className="w-16 h-16 rounded-3xl object-cover shadow-md border-2 border-white" alt="Logo" />
+                      <img src={settings.logo_url} className="w-16 h-16 rounded-3xl object-cover shadow-md border-2 border-white p-1 bg-white" alt="Logo" />
                   ) : (
                       <div className="w-16 h-16 bg-[#1D3557]/5 rounded-3xl flex flex-col items-center justify-center text-[#1D3557]/20 shadow-inner border border-[#1D3557]/10 italic">
                         <ImageIcon size={20} className="mb-1" />

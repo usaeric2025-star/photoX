@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Photo, DB_Category, Category, Tag } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Grid3X3 } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Grid3X3, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -13,6 +13,8 @@ interface PublicGalleryProps {
   onLogin?: () => void;
   internalPassword?: string;
   settings?: any;
+  isRefreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 const translations = {
@@ -55,7 +57,7 @@ const translations = {
   }
 };
 
-export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories, tags, dbCategories, onExit, showExit, onLogin, internalPassword, settings }) => {
+export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories, tags, dbCategories, onExit, showExit, onLogin, internalPassword, settings, isRefreshing, onRefresh }) => {
   const [lang, setLang] = useState<'zh' | 'en' | 'ms'>('zh');
   const t = translations[lang];
 
@@ -64,13 +66,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
 
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
-  const [columnCount, setColumnCount] = useState(3);
-  const [visibleCount, setVisibleCount] = useState(12);
+  const columnCount = displayMode === 'grid' ? 3 : 1; 
+  const [visibleCount, setVisibleCount] = useState(15); 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
@@ -124,10 +127,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => {
+        // Map tagIds to names for searching
+        const mappedTagNames = (p.tagIds || []).map(tid => tags.find(t => t.id === tid)?.name).filter(Boolean);
+        
         const searchableText = [
           p.name,
           p.description,
           ...(p.tags || []),
+          ...mappedTagNames,
           dbCategories.find(c => c.code === p.category)?.zh || '',
           dbCategories.find(c => c.code === p.category)?.en || '',
           dbCategories.find(c => c.code === p.category)?.ms || ''
@@ -151,7 +158,41 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     return sorted;
   }, [photos, selectedCatCode, searchQuery, showGroupsCollapsed]);
 
-  const visiblePhotos = useMemo(() => displayPhotos.slice(0, visibleCount), [displayPhotos, visibleCount]);
+  const visiblePhotos = useMemo(() => {
+    if (displayPhotos.length === 0) return [];
+    
+    const result = [];
+    // Infinite loop: allow visibleCount to exceed displayPhotos.length by repeating
+    for (let i = 0; i < visibleCount; i++) {
+      const originalPhoto = displayPhotos[i % displayPhotos.length];
+      result.push({
+        ...originalPhoto,
+        // Use unique ID for each instance to satisfy React keys and prevent duplicate key warnings
+        id: `${originalPhoto.id}-loop-${i}`
+      });
+    }
+    return result;
+  }, [displayPhotos, visibleCount]);
+
+  const gridPhotos = useMemo(() => {
+    if (visiblePhotos.length === 0 || displayPhotos.length === 0) return visiblePhotos;
+    const remainder = visiblePhotos.length % columnCount;
+    if (remainder === 0) return visiblePhotos;
+    
+    // Fill the remainder of the last row with next items in sequence
+    const fillerCount = columnCount - remainder;
+    const result = [...visiblePhotos];
+    for (let i = 0; i < fillerCount; i++) {
+        const nextIndex = (visiblePhotos.length + i) % displayPhotos.length;
+        const p = displayPhotos[nextIndex];
+        if (p) {
+            result.push({ ...p, id: `${p.id}-filler-${visiblePhotos.length + i}` });
+        }
+    }
+    return result;
+  }, [visiblePhotos, columnCount, displayPhotos]);
+
+  const getRealId = (loopId: string) => loopId.split('-loop-')[0].split('-filler-')[0];
 
   // Observer for lazy loading
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -159,7 +200,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
-          setVisibleCount(prev => Math.min(prev + 12, displayPhotos.length));
+          // Keep increasing visibleCount to support infinite loop
+          setVisibleCount(prev => prev + 12);
         }
       },
       { threshold: 0.1 }
@@ -307,28 +349,35 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
       {lightboxIndex === null && (
-        <header className="shrink-0 z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-3 pb-3 flex items-center justify-between gap-4">
+        <header className="shrink-0 z-50 bg-[#FDFAF6] px-6 pt-3 pb-3 flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
             {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Logo" className="h-12 max-w-[200px] object-contain cursor-pointer" />
+              <img src={settings.logo_url} alt="Logo" className="h-10 max-w-[180px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
             ) : (
-              <h1 className="text-2xl font-black tracking-tight truncate leading-tight cursor-pointer text-[#1D3557]">Gallery</h1>
+              <h1 className="text-xl font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none">GALLERY</h1>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-             <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
-               {['zh', 'en', 'ms'].map(l => (
-                 <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95`}>
-                   {l}
-                 </button>
-               ))}
-             </div>
+              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
+                {['zh', 'en', 'ms'].map(l => (
+                  <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+              <button 
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                className={`p-2 rounded-xl bg-[#1D3557]/5 text-[#1D3557] hover:bg-[#1D3557]/10 transition-all ${isRefreshing ? 'animate-spin opacity-50' : 'active:scale-90'}`}
+              >
+                <RefreshCcw size={18} />
+              </button>
           </div>
         </header>
       )}
 
       {/* Filter & Search */}
-      <div className="shrink-0 p-4 z-40 bg-[#FDFAF6] border-b border-[#1D3557]/5 shadow-sm space-y-4">
+      <div className="shrink-0 p-4 z-40 bg-[#FDFAF6] space-y-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <input 
@@ -341,28 +390,23 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1D3557]/30" />
           </div>
           
-          <div className="flex bg-[#1D3557]/5 p-1 rounded-2xl border border-[#1D3557]/10">
-            {[2, 3, 5].map(cnt => (
-              <button
-                key={cnt}
-                onClick={() => setColumnCount(cnt)}
-                className={`w-9 h-9 rounded-xl transition-all flex items-center justify-center ${columnCount === cnt ? 'bg-[#1D3557] text-white shadow-sm' : 'text-[#1D3557]/40 hover:text-[#1D3557]'}`}
-              >
-                {cnt === 2 && <Columns size={16} />}
-                {cnt === 3 && <LayoutGrid size={16} />}
-                {cnt === 5 && <Grid3X3 size={16} />}
-              </button>
-            ))}
+          {/* Group & Layout Toggles */}
+          <div className="flex gap-2">
+            <button
+                onClick={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}
+                className="w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]"
+                title="Switch Layout"
+            >
+                {displayMode === 'grid' ? <LayoutGrid size={18} /> : <Grid3X3 size={18} />}
+            </button>
+            <button
+                onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
+                className={`w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
+                title={showGroupsCollapsed ? "Show All" : "Group Photos"}
+            >
+                <Layers size={18} />
+            </button>
           </div>
-
-          {/* Group Toggle */}
-          <button
-              onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-              className={`w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
-              title={showGroupsCollapsed ? "Show All" : "Group Photos"}
-          >
-              <Layers size={18} />
-          </button>
         </div>
 
         <div className="grid grid-cols-4 gap-2 px-1">
@@ -450,36 +494,30 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
           </div>
         ) : (
-          <div className={`grid gap-3 ${
-            columnCount === 2 ? 'grid-cols-2' : 
-            columnCount === 3 ? 'grid-cols-3' : 
-            'grid-cols-5'
-          }`}>
-            {visiblePhotos.map((photo, i) => (
+          <div className={`grid gap-3 ${displayMode === 'grid' ? 'grid-cols-3' : 'grid-cols-1'}`}>
+            {gridPhotos.map((photo, i) => (
               <motion.div 
                 key={photo.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: (i % 12) * 0.05 }}
+                transition={{ delay: (i % 15) * 0.03 }}
                 onClick={() => {
                   if (selectionMode) {
-                    toggleSelect(photo.id);
+                    toggleSelect(getRealId(photo.id));
                   } else {
-                    setLightboxIndex(i);
+                    // map grid index back to actual photo index in displayPhotos
+                    const photoId = getRealId(photo.id);
+                    const realIndex = displayPhotos.findIndex(p => p.id === photoId);
+                    if (realIndex !== -1) setLightboxIndex(realIndex);
                   }
                 }}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  if (!selectionMode) setSelectionMode(true);
-                  toggleSelect(photo.id);
-                }}
-                className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${selectedPhotos.has(photo.id) ? 'ring-2 ring-[#D4A853]' : ''}`}
+                className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${selectedPhotos.has(getRealId(photo.id)) ? 'ring-2 ring-[#D4A853]' : ''}`}
               >
                 <img 
                   src={photo.image_url || photo.uri} 
                   alt={photo.name}
                   loading="lazy" 
-                  className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(photo.id) ? 'scale-110 opacity-70' : 'group-hover:scale-105'}`}
+                  className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(getRealId(photo.id)) ? 'scale-110 opacity-70' : 'group-hover:scale-105'}`}
                 />
 
                 {photo.groupId && (
@@ -489,7 +527,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   </div>
                 )}
                 
-                {selectedPhotos.has(photo.id) && (
+                {selectedPhotos.has(getRealId(photo.id)) && (
                   <div className="absolute top-2 right-2 bg-[#1D3557] text-[#FDFAF6] rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                     <X size={12} strokeWidth={3} />
                   </div>
@@ -649,18 +687,34 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   </div>
                 )}
 
-                {displayPhotos[lightboxIndex].tags && displayPhotos[lightboxIndex].tags.length > 0 && (
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.tags}</h3>
-                    <div className="flex flex-wrap gap-1.5">
-                      {displayPhotos[lightboxIndex].tags.map((tag, idx) => (
-                        <span key={idx} className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded text-xs font-medium">
-                          #{tag}
-                        </span>
-                      ))}
+                {(() => {
+                  const photo = displayPhotos[lightboxIndex];
+                  // Use tagIds to find names from current cloud tags mapping
+                  let displayTags = [];
+                  if (photo.tagIds && photo.tagIds.length > 0 && tags.length > 0) {
+                    displayTags = tags.filter(t => photo.tagIds.includes(t.id)).map(t => t.name);
+                  }
+                  
+                  // Fallback to photo.tags if mapping failed but names exist
+                  if (displayTags.length === 0 && photo.tags && photo.tags.length > 0) {
+                    displayTags = photo.tags;
+                  }
+
+                  if (displayTags.length === 0) return null;
+
+                  return (
+                    <div>
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.tags}</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {displayTags.map((tagName, idx) => (
+                          <span key={idx} className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded text-xs font-medium">
+                            #{tagName}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
                 
                 <div className="pt-4 border-t border-slate-100">
                    <button 
