@@ -206,6 +206,8 @@ export default function App() {
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
+  const [isInitializing, setIsInitializing] = useState(true);
+
   const handleManageClick = () => {
     if (user) {
       setActiveScreen('manage');
@@ -366,12 +368,10 @@ export default function App() {
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
       try {
-        const [savedPhotos, savedCats, savedTags, savedSyncTime] = await Promise.all([
-          loadData('product_photos'),
-          loadData('product_categories'),
-          loadData('product_tags'),
-          loadData('last_sync_time')
-        ]);
+                const savedPhotos = await loadData('product_photos');
+        const savedCats = await loadData('product_categories');
+        const savedTags = await loadData('product_tags');
+        const savedSyncTime = await loadData('last_sync_time');
         
         let finalPhotos = savedPhotos;
         if ((!savedPhotos || savedPhotos.length === 0) && u) {
