@@ -46,7 +46,8 @@ import {
   calculateMD5,
   generateItemCode,
   checkImageHashExists,
-  uploadImage
+  uploadImage,
+  compressImage
 } from './services/supabaseService';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -76,37 +77,6 @@ const DEFAULT_TAGS: Tag[] = [
 ];
 
 // --- Utilities ---
-const compressImage = (base64Str: string, maxWidth = 1600, maxHeight = 1600, quality = 0.85): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.src = base64Str;
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
-
-      if (width > height) {
-        if (width > maxWidth) {
-          height *= maxWidth / width;
-          width = maxWidth;
-        }
-      } else {
-        if (height > maxHeight) {
-          width *= maxHeight / height;
-          height = maxHeight;
-        }
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx?.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-    };
-    img.onerror = () => resolve(base64Str); // Fallback to original if error
-  });
-};
-
 // Simple IndexedDB Wrapper
 const DB_NAME = 'ProductAlbumDB';
 const DB_VERSION = 1;
@@ -599,13 +569,19 @@ export default function App() {
       
       for (const file of chunk) {
         try {
-          const rawUri = await new Promise<string>((resolve) => {
+          const rawUri = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (event) => resolve(event.target?.result as string);
+            reader.onerror = () => reject(new Error('檔案讀取失敗'));
             reader.readAsDataURL(file);
           });
-          const compressedUri = await compressImage(rawUri);
           
+          if (!rawUri) {
+            console.warn("Raw photo URI is empty, skipping");
+            continue;
+          }
+
+          const compressedUri = await compressImage(rawUri);
           const imgHash = calculateMD5(compressedUri);
 
           const isLocalDuplicate = photosRef.current.some(p => p.image_hash === imgHash) || newPhotosDraft.some(p => p.image_hash === imgHash);
@@ -615,8 +591,8 @@ export default function App() {
             const existingManualCode = await checkImageHashExists(user.id, imgHash);
             if (existingManualCode) {
               setAlertDialog({ 
-                title: '重複上傳跳過', 
-                message: `照片「${file.name}」已錄入過！\n現有手動編號為：${existingManualCode}\n已自動跳過此照片。` 
+                title: '重複記錄跳過', 
+                message: `照片「${file.name}」以前已經錄入過。\n手動編號：${existingManualCode}\n系統已自動跳過此照片。` 
               });
               continue;
             }
@@ -628,8 +604,9 @@ export default function App() {
           if (user) {
              try {
                cloudUrl = await uploadImage(user.id, photoId, compressedUri);
-             } catch (upErr) {
+             } catch (upErr: any) {
                console.error("Cloud upload failed during import:", upErr);
+               // Continue locally anyway
              }
           }
 
@@ -660,10 +637,6 @@ export default function App() {
               try {
                 const result = await analyzeProductPhoto(targetPhoto.uri!, catsRef.current, tagsRef.current, geminiApiKey, aiProvider, customModel);
                 
-                // Sync logic for new cats/tags
-                const currentCats = catsRef.current;
-                const currentTags = tagsRef.current;
-                
                 let finalCatId = result.categoryId || null;
                 let finalSubId = result.subcategoryId || null;
                 let finalTagIds = result.tagIds || [];
@@ -692,32 +665,21 @@ export default function App() {
                   subcategoryId: finalSubId, 
                   tagIds: finalTagIds,
                   name: result.name || p.name,
-                  category: categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || p.category,
-                  sub_category: categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || p.sub_category,
-                  tags: tags.filter(t => finalTagIds.includes(t.id)).map(t => t.name),
+                  category: catsRef.current.find(c => c.id === finalCatId)?.name || result.newCategoryName || p.category,
+                  sub_category: catsRef.current.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || p.sub_category,
+                  tags: tagsRef.current.filter(t => finalTagIds.includes(t.id)).map(t => t.name),
                   dimensions: result.dimensions || p.dimensions,
                   isAnalyzing: false 
                 } : p));
               } catch (err: any) {
                 console.error("AI Analysis failed:", err);
-                const errorDetail = err.message || '未知錯誤';
-                
-                // Update photo state
-                setPhotos(prev => prev.map(p => p.id === photoId ? { 
-                  ...p, 
-                  isAnalyzing: false
-                } : p));
-                
-                // Notify user safely using custom dialog
-                setAlertDialog({
-                  title: '辨識提醒',
-                  message: `單張相片 AI 辨識失敗。\n\n錯誤原因: ${errorDetail}\n\n請檢查 API Key 是否正確、模型名稱是否支援圖片輸入，或嘗試更換模型。`
-                });
+                setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false } : p));
               }
-              })(newPhoto);
+            })(newPhoto);
           }
-        } catch (err) {
-          console.error("File processing error", err);
+        } catch (err: any) {
+          console.error("Import processing error for one file:", err);
+          alert(`照片「${file.name}」處理失敗：${err.message || '未知錯誤'}`);
         }
       }
       
@@ -1274,6 +1236,68 @@ export default function App() {
         </div>
 
         <section className="space-y-3">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標主分類 *</h3>
+            <button onClick={quickAddCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {categories.map(cat => (
+              <button 
+                key={cat.id}
+                onClick={() => { setAddCatId(cat.id); setAddSubId(null); }}
+                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.id ? 'bg-white/80 border-blue-500 text-blue-600 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+              >
+                <span className="font-bold block text-sm">{cat.name}</span>
+                <span className="text-[9px] uppercase tracking-tighter opacity-60">Category</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <AnimatePresence>
+          {addCatId && (
+            <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+              <div className="flex items-center justify-between pl-1">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標子分類</h3>
+                <button onClick={quickAddSubCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {categories.find(c => c.id === addCatId)?.subcategories.map(sub => (
+                  <button 
+                    key={sub.id}
+                    onClick={() => setAddSubId(sub.id)}
+                    className={`px-4 py-2 rounded-xl border text-xs font-semibold transition-all ${addSubId === sub.id ? 'bg-slate-700 border-slate-700 text-white shadow-lg' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一標籤</h3>
+            <button onClick={quickAddTag} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tags.map(tag => (
+              <button 
+                key={tag.id}
+                onClick={() => setAddTagIds(prev => prev.includes(tag.id) ? prev.filter(tid => tid !== tag.id) : [...prev, tag.id])}
+                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${addTagIds.includes(tag.id) ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+              >
+                #{tag.name}
+              </button>
+            ))}
+            <button onClick={quickAddTag} className="px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-1 font-semibold hover:border-slate-400 hover:text-slate-500 transition-colors">
+              <Plus size={14} /> 自定義
+            </button>
+          </div>
+        </section>
+
+        <section className="space-y-3">
           <button 
             onClick={() => setShowOtherFields(!showOtherFields)}
             className="w-full flex items-center justify-between p-4 bg-white/60 border border-white rounded-3xl text-sm font-bold text-slate-700 shadow-sm"
@@ -1344,68 +1368,6 @@ export default function App() {
               </motion.div>
             )}
           </AnimatePresence>
-        </section>
-
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目標主分類 *</h3>
-            <button onClick={quickAddCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {categories.map(cat => (
-              <button 
-                key={cat.id}
-                onClick={() => { setAddCatId(cat.id); setAddSubId(null); }}
-                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.id ? 'bg-white/80 border-blue-500 text-blue-600 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
-              >
-                <span className="font-bold block text-sm">{cat.name}</span>
-                <span className="text-[9px] uppercase tracking-tighter opacity-60">Category</span>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <AnimatePresence>
-          {addCatId && (
-            <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-              <div className="flex items-center justify-between pl-1">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目標子分類</h3>
-                <button onClick={quickAddSubCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {categories.find(c => c.id === addCatId)?.subcategories.map(sub => (
-                  <button 
-                    key={sub.id}
-                    onClick={() => setAddSubId(sub.id)}
-                    className={`px-4 py-2 rounded-xl border text-xs font-semibold transition-all ${addSubId === sub.id ? 'bg-slate-700 border-slate-700 text-white shadow-lg' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
-                  >
-                    {sub.name}
-                  </button>
-                ))}
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">統一標籤</h3>
-            <button onClick={quickAddTag} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {tags.map(tag => (
-              <button 
-                key={tag.id}
-                onClick={() => setAddTagIds(prev => prev.includes(tag.id) ? prev.filter(tid => tid !== tag.id) : [...prev, tag.id])}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${addTagIds.includes(tag.id) ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
-              >
-                #{tag.name}
-              </button>
-            ))}
-            <button onClick={quickAddTag} className="px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-1 font-semibold hover:border-slate-400 hover:text-slate-500 transition-colors">
-              <Plus size={14} /> 自定義
-            </button>
-          </div>
         </section>
       </div>
     </div>
@@ -1440,79 +1402,6 @@ export default function App() {
         <div className="aspect-[4/3] rounded-3xl overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border border-white/20">
           {newPhotoData && <img src={newPhotoData} className="max-w-full max-h-full object-contain" alt="New" />}
         </div>
-
-        <section className="space-y-3">
-          <button 
-            onClick={() => setShowOtherFields(!showOtherFields)}
-            className="w-full flex items-center justify-between p-4 bg-white/60 border border-white rounded-3xl text-sm font-bold text-slate-700 shadow-sm"
-          >
-            <div className="flex items-center gap-2">
-              <ChevronRight size={18} className={`transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`} />
-              <span>其他資訊 (編號、尺寸)</span>
-            </div>
-            <span className="text-[10px] text-slate-400 font-normal">
-              {showOtherFields ? '收起' : '展開'}
-            </span>
-          </button>
-
-          <AnimatePresence>
-            {showOtherFields && (
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden space-y-4 pt-1"
-              >
-                <div className="space-y-2">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">編號</h3>
-                  <input 
-                    type="text" 
-                    placeholder="輸入編號..."
-                    value={addManualCode}
-                    onChange={(e) => setAddManualCode(e.target.value)}
-                    className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具尺寸 (長 x 寬 x 高) cm</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="長"
-                        value={addDimL}
-                        onChange={(e) => setAddDimL(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="寬"
-                        value={addDimW}
-                        onChange={(e) => setAddDimW(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="高"
-                        value={addDimH}
-                        onChange={(e) => setAddDimH(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
 
         <section className="space-y-3">
           <div className="flex items-center justify-between pl-1">
@@ -1584,6 +1473,79 @@ export default function App() {
             value={addNote}
             onChange={(e) => setAddNote(e.target.value)}
           />
+        </section>
+
+        <section className="space-y-3">
+          <button 
+            onClick={() => setShowOtherFields(!showOtherFields)}
+            className="w-full flex items-center justify-between p-4 bg-white/60 border border-white rounded-3xl text-sm font-bold text-slate-700 shadow-sm"
+          >
+            <div className="flex items-center gap-2">
+              <ChevronRight size={18} className={`transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`} />
+              <span>其他資訊 (編號、尺寸)</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-normal">
+              {showOtherFields ? '收起' : '展開'}
+            </span>
+          </button>
+
+          <AnimatePresence>
+            {showOtherFields && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden space-y-4 pt-1"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">編號</h3>
+                  <input 
+                    type="text" 
+                    placeholder="輸入編號..."
+                    value={addManualCode}
+                    onChange={(e) => setAddManualCode(e.target.value)}
+                    className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具尺寸 (長 x 寬 x 高) cm</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="長"
+                        value={addDimL}
+                        onChange={(e) => setAddDimL(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="寬"
+                        value={addDimW}
+                        onChange={(e) => setAddDimW(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type="number"
+                        placeholder="高"
+                        value={addDimH}
+                        onChange={(e) => setAddDimH(e.target.value)}
+                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
+                      />
+                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </section>
       </div>
     </div>
@@ -2490,8 +2452,6 @@ export default function App() {
               <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Initializing...</p>
             </div>
-          ) : !user ? (
-            renderLoginScreen()
           ) : (
             activeScreen === 'home' && renderHomeView()
           )}

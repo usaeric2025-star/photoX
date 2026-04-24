@@ -51,50 +51,97 @@ export const onAuthChange = (callback: (user: any) => void) => {
 
 // --- Storage & DB Operations ---
 
+export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = base64Data;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = (err) => reject(err);
+  });
+};
+
 export const uploadImage = async (userId: string, photoId: string, base64Data: string): Promise<string> => {
-  const base64Content = base64Data.split(',')[1];
-  const byteCharacters = atob(base64Content);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  const blob = new Blob([byteArray], { type: 'image/jpeg' });
-
-  const fileName = `${userId}/${photoId}.jpg`;
-  const { error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(fileName, blob, {
-      contentType: 'image/jpeg',
-      upsert: true
-    });
-
-  if (error) {
-    console.error("Supabase Storage Upload Error:", error.message, error);
-    throw error;
+  let finalData = base64Data;
+  
+  // Compress if too large (approx check based on base64 string length)
+  if (base64Data.length > 5 * 1024 * 1024) {
+    try {
+      finalData = await compressImage(base64Data);
+    } catch (e) {
+      console.warn("Compression failed, uploading original:", e);
+    }
   }
 
-  const { data: { publicUrl } } = supabase.storage
-    .from(BUCKET_NAME)
-    .getPublicUrl(fileName);
+  try {
+    const res = await fetch(finalData);
+    const blob = await res.blob();
 
-  return publicUrl;
+    const fileName = `${userId}/${photoId}.jpg`;
+    const { error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(fileName, blob, {
+        contentType: 'image/jpeg',
+        upsert: true
+      });
+
+    if (error) {
+      console.error("Supabase Storage Upload Error details:", error);
+      alert('Storage 上傳失敗詳情: ' + JSON.stringify(error, null, 2));
+      throw error;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  } catch (err: any) {
+    console.error("Blob conversion or upload failed:", err);
+    alert('圖片處裡或上傳失敗: ' + (err.message || JSON.stringify(err)));
+    throw err;
+  }
 };
 
 /**
  * Returns the manual_code if image exists, otherwise null
  */
 export const checkImageHashExists = async (userId: string, hash: string): Promise<string | null> => {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select('manual_code')
-    .eq('image_hash', hash)
-    .eq('user_id', userId)
-    .limit(1)
-    .maybeSingle();
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('manual_code')
+      .eq('image_hash', hash)
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle();
 
-  if (error) throw error;
-  return data ? (data.manual_code || '無手動編號') : null;
+    if (error) throw error;
+    return data ? (data.manual_code || '無手動編號') : null;
+  } catch (err) {
+    console.error("Hash check failed:", err);
+    return null;
+  }
 };
 
 export const savePhotoToCloud = async (userId: string, photo: Photo) => {
@@ -113,13 +160,21 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
       description: photo.description || '',
       image_url: photo.image_url,
       dimensions: photo.dimensions || null,
-      exif_data: photo.exif_data || null,
       created_at: photo.createdAt,
       group_id: photo.groupId || null
     }, { onConflict: 'id' });
 
   if (error) {
-    console.error("Supabase Database Insert Error:", error.message, error);
+    console.error("Supabase Database Insert Error:", error);
+    const errorDetails = {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+      tableName: TABLE_NAME,
+      photoId: photo.id
+    };
+    alert('資料庫寫入失敗詳情: ' + JSON.stringify(errorDetails, null, 2));
     throw error;
   }
 };
@@ -127,12 +182,19 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
 export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgress?: (p: number) => void) => {
   let count = 0;
   for (const photo of photos) {
-    if (!photo.image_url && photo.uri) {
-      photo.image_url = await uploadImage(userId, photo.id, photo.uri);
+    try {
+      if (!photo.image_url && photo.uri) {
+        photo.image_url = await uploadImage(userId, photo.id, photo.uri);
+      }
+      await savePhotoToCloud(userId, photo);
+      count++;
+      if (onProgress) onProgress((count / photos.length) * 100);
+    } catch (err: any) {
+      console.error(`Sync failed for photo ${photo.id}:`, err);
+      alert(`照片同步失敗 (ID: ${photo.id.substring(0, 8)}): ` + (err.message || JSON.stringify(err)));
+      // Continue with next photo or stop? Stopping is safer for error visibility.
+      throw err;
     }
-    await savePhotoToCloud(userId, photo);
-    count++;
-    if (onProgress) onProgress((count / photos.length) * 100);
   }
 };
 
