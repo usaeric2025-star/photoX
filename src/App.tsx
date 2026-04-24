@@ -211,6 +211,9 @@ export default function App() {
   const [dbCategories, setDbCategories] = useState<DB_Category[]>([]);
   const appLang = 'zh';
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
+  const [publicCategories, setPublicCategories] = useState<Category[]>([]);
+  const [publicTags, setPublicTags] = useState<Tag[]>([]);
+  const [publicManufacturers, setPublicManufacturers] = useState<SubCategory[]>([]);
   const [viewMode, setViewMode] = useState<'public' | 'private'>('public');
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
@@ -225,7 +228,12 @@ export default function App() {
             const url = await uploadLogo(e.target.files[0]);
             const newSettings = { ...settings, logo_url: url };
             setSettings(newSettings);
-            await saveSettings(newSettings);
+            await saveSettings({
+              ...newSettings,
+              categories,
+              tags,
+              manufacturers
+            });
             setAlertDialog({ title: '上傳成功', message: '品牌 Logo 已更新' });
         } catch (err: any) {
             console.error("Logo upload failed:", err);
@@ -299,12 +307,15 @@ export default function App() {
   useEffect(() => {
     // Initial fast load from Local Storage
     const initFastLoad = async () => {
-      const [t, c, m, p, sp, st] = await Promise.all([
+      const [t, c, m, p, sp, sc, stg, sm, st] = await Promise.all([
         loadData('product_tags'),
         loadData('product_categories'),
         loadData('product_manufacturers'),
         loadData('product_photos'),
         loadData('public_photos'),
+        loadData('public_categories'),
+        loadData('public_tags'),
+        loadData('public_manufacturers'),
         loadData('last_sync_time')
       ]);
       if (t && t.length > 0) setTags(t);
@@ -312,6 +323,9 @@ export default function App() {
       if (m && m.length > 0) setManufacturers(m);
       if (p && p.length > 0) setPhotos(p);
       if (sp && sp.length > 0) setPublicPhotos(sp);
+      if (sc && sc.length > 0) setPublicCategories(sc);
+      if (stg && stg.length > 0) setPublicTags(stg);
+      if (sm && sm.length > 0) setPublicManufacturers(sm);
       if (st) setLastSyncTime(st);
       
       // After local load, sync with cloud
@@ -427,18 +441,22 @@ export default function App() {
         if (cloudSettings.primary_color) document.documentElement.style.setProperty('--custom-text', cloudSettings.primary_color);
         if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
         
-        // Strict mapping sync: treat cloud as source of truth as requested
-        const newCats = cloudSettings.categories || [];
-        setCategories(newCats);
-        saveData('product_categories', newCats);
+        // Strict mapping sync: treat cloud as source of truth for PUBLIC view
+        // Only overwrite public state
+        if (cloudSettings.categories !== undefined) {
+          setPublicCategories(cloudSettings.categories);
+          saveData('public_categories', cloudSettings.categories);
+        }
         
-        const newTags = cloudSettings.tags || [];
-        setTags(newTags);
-        saveData('product_tags', newTags);
+        if (cloudSettings.tags !== undefined) {
+          setPublicTags(cloudSettings.tags);
+          saveData('public_tags', cloudSettings.tags);
+        }
         
-        const newMans = cloudSettings.manufacturers || [];
-        setManufacturers(newMans);
-        saveData('product_manufacturers', newMans);
+        if (cloudSettings.manufacturers !== undefined) {
+          setPublicManufacturers(cloudSettings.manufacturers);
+          saveData('public_manufacturers', cloudSettings.manufacturers);
+        }
       }
 
       // 2. Fetch DB Categories (new flat table)
@@ -1875,8 +1893,9 @@ export default function App() {
       setLastSyncTime(now);
       await saveData('last_sync_time', now);
       alert('同步成功');
-    } catch (e) {
-      alert('同步失敗: ' + JSON.stringify(e));
+    } catch (e: any) {
+      const msg = e?.message || e?.details || JSON.stringify(e);
+      alert('同步失敗: ' + msg);
     } finally {
       setIsSyncing(false);
       setSyncPercent(0);
@@ -1914,9 +1933,10 @@ export default function App() {
           setLastSyncTime(now);
           await saveData('last_sync_time', now);
           alert('備份成功');
-        } catch (e) {
+        } catch (e: any) {
           console.error(e);
-          alert('同步發生錯誤: ' + JSON.stringify(e));
+          const msg = e?.message || e?.details || JSON.stringify(e);
+          alert('同步發生錯誤: ' + msg);
         } finally {
           setIsSyncing(false);
           setSyncAction('idle');
@@ -1964,13 +1984,38 @@ export default function App() {
           alert('下載並同步成功');
         } catch (e: any) {
           console.error(e);
-          alert(`下載失敗: ${JSON.stringify(e)}`);
+          const msg = e?.message || e?.details || JSON.stringify(e);
+          alert(`下載失敗: ${msg}`);
         } finally {
           setIsSyncing(false);
           setSyncAction('idle');
           setSyncPercent(0);
         }
       }
+    });
+  };
+
+  const handleSetTags = (val: React.SetStateAction<Tag[]>) => {
+    setTags(prev => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      saveData('product_tags', next);
+      return next;
+    });
+  };
+
+  const handleSetCategories = (val: React.SetStateAction<Category[]>) => {
+    setCategories(prev => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      saveData('product_categories', next);
+      return next;
+    });
+  };
+
+  const handleSetManufacturers = (val: React.SetStateAction<SubCategory[]>) => {
+    setManufacturers(prev => {
+      const next = typeof val === 'function' ? val(prev) : val;
+      saveData('product_manufacturers', next);
+      return next;
     });
   };
 
@@ -1983,9 +2028,9 @@ export default function App() {
         setSettings={setSettings}
         saveSettings={saveSettings}
         manufacturers={manufacturers}
-        setManufacturers={setManufacturers}
+        setManufacturers={handleSetManufacturers}
         tags={tags}
-        setTags={setTags}
+        setTags={handleSetTags}
         user={user}
         loginWithGoogle={loginWithGoogle}
         logout={logout}
@@ -1993,7 +2038,7 @@ export default function App() {
         isSyncing={isSyncing}
         syncPercent={syncPercent}
         handleLogoUpload={handleLogoUpload}
-        setCategories={setCategories}
+        setCategories={handleSetCategories}
         categories={categories}
         dbCategories={dbCategories}
         performPushSync={performPushSync}
@@ -2388,8 +2433,8 @@ export default function App() {
               viewMode === 'public' ? (
                 <PublicGallery 
                   photos={publicPhotos} 
-                  categories={categories}
-                  tags={tags}
+                  categories={publicCategories}
+                  tags={publicTags}
                   dbCategories={dbCategories}
                   showExit={!!user} 
                   onExit={() => setViewMode('private')} 

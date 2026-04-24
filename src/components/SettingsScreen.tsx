@@ -14,9 +14,9 @@ interface SettingsScreenProps {
   setSettings: (s: any) => void;
   saveSettings: (s: any) => Promise<boolean>;
   manufacturers: SubCategory[];
-  setManufacturers: (m: SubCategory[]) => void;
+  setManufacturers: React.Dispatch<React.SetStateAction<SubCategory[]>>;
   tags: Tag[];
-  setTags: (t: Tag[]) => void;
+  setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   user: any;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
@@ -113,18 +113,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       name: newTagName.trim(),
       aliases: [newTagName.trim()]
     };
-    setTags([...(tags || []), newTag]);
+    setTags(prev => [...(prev || []), newTag]);
     setNewTagName('');
   };
 
   const deleteTag = (id: string) => {
-    setTags(prev => prev.filter(t => t.id !== id));
+    setTags(prev => (prev || []).filter(t => t.id !== id));
   };
 
   const setSettingField = (field: string, value: any) => {
     const newSettings = { ...settings, [field]: value };
     setSettings(newSettings);
-    saveSettings(newSettings);
+    saveSettings({
+      ...newSettings,
+      categories,
+      tags,
+      manufacturers
+    });
   };
 
   // Consistent Button Classes

@@ -392,6 +392,9 @@ export const fetchSettings = async () => {
     if (settings.tags_json) {
       try { settings.tags = JSON.parse(settings.tags_json); } catch(e) { console.error(e); }
     }
+    if (settings.manufacturers_json) {
+      try { settings.manufacturers = JSON.parse(settings.manufacturers_json); } catch(e) { console.error(e); }
+    }
     
     return settings;
 };
@@ -409,6 +412,10 @@ export const saveSettings = async (settings: any) => {
         if (payload.tags) {
           payload.tags_json = JSON.stringify(payload.tags);
           delete payload.tags;
+        }
+        if (payload.manufacturers) {
+          payload.manufacturers_json = JSON.stringify(payload.manufacturers);
+          delete payload.manufacturers;
         }
 
         console.log("Attempting to save settings to Supabase...", payload);
@@ -464,7 +471,7 @@ export const saveSettings = async (settings: any) => {
         if (err.message && err.message.includes("column \"id\" of relation \"settings\" does not exist")) {
             console.error("MIGRATION REQUIRED: The 'settings' table is missing the 'id' column.");
         }
-        return false;
+        throw err;
     }
 };
 
