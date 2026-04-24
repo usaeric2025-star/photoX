@@ -110,6 +110,8 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 
     const fileName = `public/${photoId}.jpg`;
     
+    alert(`上傳路徑: ${fileName}\nBucket: ${BUCKET_NAME}`);
+
     const { error: storageError } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(fileName, blob, {
@@ -121,6 +123,8 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
       console.error("Supabase Storage Upload Error details:", storageError);
       alert('上傳失敗 (Storage 階段): ' + JSON.stringify(storageError, null, 2));
       throw storageError;
+    } else {
+      alert('Storage 階段: 成功上傳');
     }
 
     const { data: { publicUrl } } = supabase.storage
@@ -199,6 +203,8 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
     };
     alert('Database階段失敗: ' + JSON.stringify(errorDetails, null, 2));
     throw dbError;
+  } else {
+    alert('Database 階段: 成功記錄數據');
   }
 };
 

@@ -968,27 +968,12 @@ export default function App() {
         >
           {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
         </button>
-        {user ? (
-          <button 
-            onClick={() => setActiveScreen('settings')}
-            className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md active:scale-95 transition-all"
-          >
-            {user.avatarUrl ? (
-              <img src={user.avatarUrl} alt="User" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">
-                {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-              </div>
-            )}
-          </button>
-        ) : (
-          <button 
-            onClick={() => setActiveScreen('manage')}
-            className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
-          >
-            <Settings size={20} />
-          </button>
-        )}
+        <button 
+          onClick={() => setActiveScreen('manage')}
+          className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
+        >
+          <Settings size={20} />
+        </button>
         <label className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-md text-slate-800 transition-all active:scale-90 cursor-pointer">
           <Plus size={24} />
           <input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoImport} />
@@ -1938,7 +1923,7 @@ export default function App() {
           ) : (
             <div className="space-y-3">
               <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex items-center gap-3 overflow-hidden flex-1">
                   {user.avatarUrl ? (
                     <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm" alt="Avatar" />
                   ) : (
@@ -1962,9 +1947,9 @@ export default function App() {
                       }
                     });
                   }}
-                  className="bg-white/10 hover:bg-red-500/20 text-slate-400 hover:text-red-400 p-2.5 rounded-xl transition-all active:scale-90"
+                  className="bg-white/10 hover:bg-red-500/20 text-white px-4 py-2 rounded-xl transition-all active:scale-90 text-[10px] font-bold border border-white/10 flex items-center gap-2"
                 >
-                  <LogOut size={16} />
+                  <LogOut size={14} /> 登出雲端
                 </button>
               </div>
 
