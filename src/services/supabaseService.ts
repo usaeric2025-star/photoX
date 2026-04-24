@@ -116,6 +116,7 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 
     if (storageError) {
       console.error("Supabase Storage Upload Error details:", storageError);
+      alert('儲存空間上傳失敗: ' + storageError.message);
       throw storageError;
     }
 
@@ -126,6 +127,9 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
     return publicUrl;
   } catch (err: any) {
     console.error("Blob conversion or upload failed:", err);
+    if (!err.message?.includes('儲存空間')) {
+      alert('圖片處理異常: ' + (err.message || '請檢查網絡'));
+    }
     throw err;
   }
 };
@@ -183,6 +187,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
 
   if (dbError) {
     console.error("Supabase Database Insert Error:", dbError);
+    alert('數據備份失敗: ' + dbError.message);
     throw dbError;
   }
 };

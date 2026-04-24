@@ -396,9 +396,9 @@ export default function App() {
     }
   };
 
-  const removeItemFromCloud = async (photoId: string) => {
+  const removeItemFromCloud = async (photo: Photo) => {
     if (user) {
-      await deletePhotoFromCloud(user.id, photoId);
+      await deletePhotoFromCloud(user.id, photo);
     }
   };
 
@@ -576,7 +576,13 @@ export default function App() {
           const imgHash = calculateMD5(compressedUri);
 
           const isLocalDuplicate = photosRef.current.some(p => p.image_hash === imgHash) || newPhotosDraft.some(p => p.image_hash === imgHash);
-          if (isLocalDuplicate) continue;
+          if (isLocalDuplicate) {
+            setAlertDialog({
+              title: '重複記錄跳過',
+              message: `照片「${file.name}」在本地紀錄中已存在，系統已自動跳過。`
+            });
+            continue;
+          }
           
           if (user) {
             const existingManualCode = await checkImageHashExists(user.id, imgHash);
@@ -710,6 +716,16 @@ export default function App() {
       } : p));
       setEditPhotoId(null);
     } else {
+      // Check for local duplicates first
+      const isLocalDuplicate = photos.some(p => p.image_hash === imgHash);
+      if (isLocalDuplicate) {
+        setAlertDialog({
+          title: '重複記錄',
+          message: '此照片在本地紀錄中已存在，請勿重複添加。'
+        });
+        return;
+      }
+
       // Check for duplicates in Cloud if logged in
       if (user && imgHash) {
         const existingManualCode = await checkImageHashExists(user.id, imgHash);
@@ -907,12 +923,22 @@ export default function App() {
   };
 
   const deleteSelected = () => {
+    const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
     setConfirmDialog({
       message: `確定要刪除這 ${selectedIds.length} 張照片嗎？`,
-      onConfirm: () => {
+      onConfirm: async () => {
         setPhotos(prev => prev.filter(p => !selectedIds.includes(p.id)));
         setSelectedIds([]);
         setIsMultiSelect(false);
+        if (user) {
+          for (const photo of selectedPhotos) {
+            try {
+              await deletePhotoFromCloud(user.id, photo);
+            } catch (err) {
+              console.error("Cloud deletion error:", err);
+            }
+          }
+        }
       }
     });
   };
@@ -1800,14 +1826,32 @@ export default function App() {
     setSyncAction('push');
     setSyncPercent(0);
     try {
-      await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+      let successCount = 0;
+      let failCount = 0;
+      
+      // We manually iterate or use a modified sync function that reports results
+      // For simplicity and clarity, we'll keep the categories/tags simple but report photo progress
+      try {
+        await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+        successCount = photos.length;
+      } catch (e) {
+        console.error("Photo sync error:", e);
+        failCount = 1; // Generic fail indicator
+      }
+
       await syncCategoriesToCloud(user.id, categories);
       await syncTagsToCloud(user.id, tags);
+      
       setLastSyncTime(Date.now());
-      setAlertDialog({ title: '系統提示', message: `已成功將 ${photos.length} 筆本地資料上傳並同步至 Supabase 雲端！` });
+      
+      if (failCount === 0) {
+        setAlertDialog({ title: '同步完成', message: `已成功將 ${successCount} 筆資料同步至 Supabase 雲端！` });
+      } else {
+        setAlertDialog({ title: '同步中斷', message: '部分資料同步失敗，請檢查網路連线或 Supabase 設定。' });
+      }
     } catch (e) {
       console.error(e);
-      setAlertDialog({ title: '系統提示', message: '上傳失敗，請檢查網路連線或 Supabase 設定。' });
+      setAlertDialog({ title: '同步失敗', message: '發生嚴重錯誤，無法完成同步。' });
     } finally {
       setIsSyncing(false);
       setSyncAction('idle');
