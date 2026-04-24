@@ -597,7 +597,8 @@ export default function App() {
                cloudUrl = await uploadImage(user.id, photoId, compressedUri);
              } catch (upErr: any) {
                console.error("Cloud upload failed during import:", upErr);
-               // Continue locally anyway
+               // If storage fails, we might still want to add it locally, or stop.
+               // User wants "no silent failure", so we alerted in uploadImage already.
              }
           }
 
@@ -620,6 +621,15 @@ export default function App() {
             groupId: null,
             isAnalyzing: !!useAi
           };
+          
+          // Save to Database if logged in
+          if (user && cloudUrl) {
+            try {
+              await savePhotoToCloud(user.id, newPhoto);
+            } catch (dbErr: any) {
+              console.error("Database save failed during import:", dbErr);
+            }
+          }
           
           newPhotosDraft.push(newPhoto);
           
@@ -760,6 +770,11 @@ export default function App() {
           unit: 'cm'
         }
       };
+      
+      if (user && cloudUrl) {
+        await savePhotoToCloud(user.id, newPhoto);
+      }
+      
       setPhotos([newPhoto, ...photos]);
     }
     resetAddState();
@@ -953,12 +968,27 @@ export default function App() {
         >
           {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
         </button>
-        <button 
-          onClick={() => setActiveScreen('manage')}
-          className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
-        >
-          <Settings size={20} />
-        </button>
+        {user ? (
+          <button 
+            onClick={() => setActiveScreen('settings')}
+            className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-md active:scale-95 transition-all"
+          >
+            {user.avatarUrl ? (
+              <img src={user.avatarUrl} alt="User" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs">
+                {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+              </div>
+            )}
+          </button>
+        ) : (
+          <button 
+            onClick={() => setActiveScreen('manage')}
+            className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
+          >
+            <Settings size={20} />
+          </button>
+        )}
         <label className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-md text-slate-800 transition-all active:scale-90 cursor-pointer">
           <Plus size={24} />
           <input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoImport} />
@@ -1851,10 +1881,8 @@ export default function App() {
 
   const handleLogin = async () => {
     try {
-      const u = await loginWithGoogle();
-      if (u) {
-        setAlertDialog({ title: '系統提示', message: `歡迎回來, ${u.displayName}！已開啟雲端同步。` });
-      }
+      await loginWithGoogle();
+      // Redirect handled by onAuthChange effect
     } catch (e: any) {
       console.error('Login Error:', e);
       let errorMsg = '登入失敗，請稍後再試。';
