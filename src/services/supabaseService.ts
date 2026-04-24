@@ -253,6 +253,30 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   return { success: successCount, skipped: skippedCount };
 };
 
+export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+
+  return data.map(item => ({
+    id: item.id,
+    uri: item.image_url,
+    categoryId: item.categoryId || null,
+    subcategoryId: item.subcategoryId || null,
+    tagIds: item.tagIds || [],
+    analysis: item.analysis,
+    note: item.note || '',
+    itemCode: item.itemCode || '',
+    dimensions: item.dimensions || { l: '', w: '', h: '' },
+    isAnalyzing: false,
+    groupId: item.groupId || null,
+    createdAt: item.created_at
+  }));
+};
+
 export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
@@ -308,28 +332,4 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
 };
 
 // --- Settings Sync ---
-export const syncCategoriesToCloud = async (userId: string, categories: Category[]) => {
-  const { error } = await supabase
-    .from('categories')
-    .upsert(categories.map(c => ({ ...c, user_id: userId })), { onConflict: 'id' });
-  if (error) throw error;
-};
 
-export const syncTagsToCloud = async (userId: string, tags: Tag[]) => {
-  const { error } = await supabase
-    .from('tags')
-    .upsert(tags.map(t => ({ ...t, user_id: userId })), { onConflict: 'id' });
-  if (error) throw error;
-};
-
-export const loadCategoriesFromCloud = async (userId: string): Promise<Category[]> => {
-  const { data, error } = await supabase.from('categories').select('*').eq('user_id', userId);
-  if (error) throw error;
-  return data as Category[];
-};
-
-export const loadTagsFromCloud = async (userId: string): Promise<Tag[]> => {
-  const { data, error } = await supabase.from('tags').select('*').eq('user_id', userId);
-  if (error) throw error;
-  return data as Tag[];
-};

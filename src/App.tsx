@@ -38,13 +38,10 @@ import {
   loginWithGoogle, 
   logout, 
   loadPhotosFromCloud, 
-  loadCategoriesFromCloud, 
-  loadTagsFromCloud,
+  loadAllPhotosFromCloud,
   savePhotoToCloud,
   deletePhotoFromCloud,
   syncPhotosToCloud,
-  syncCategoriesToCloud,
-  syncTagsToCloud,
   calculateMD5,
   generateItemCode,
   checkImageHashExists,
@@ -200,6 +197,8 @@ const PhotoCard = React.memo(({
 export default function App() {
   // --- State ---
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
+  const [viewMode, setViewMode] = useState<'public' | 'private'>('public');
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [isInitializing, setIsInitializing] = useState(true);
@@ -355,6 +354,11 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthChange(async (u) => {
       setUser(u);
+      if (u) {
+        setViewMode('private');
+      } else {
+        setViewMode('public');
+      }
       
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
@@ -376,6 +380,20 @@ export default function App() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (viewMode === 'public') {
+      const fetchPublic = async () => {
+        try {
+          const publicData = await loadAllPhotosFromCloud();
+          setPublicPhotos(publicData);
+        } catch(e) {
+          console.error("Public load err:", e);
+        }
+      };
+      fetchPublic();
+    }
+  }, [viewMode]);
 
   useEffect(() => {
     if (isInitializing) return;
@@ -402,34 +420,48 @@ export default function App() {
   };
 
   // --- Derived Data ---
+  const activePhotosSource = viewMode === 'public' ? publicPhotos : photos;
+
   const filteredPhotos = useMemo(() => {
-    return photos.filter(p => {
-      // ... same logic
-      if (filterCatId && p.categoryId !== filterCatId) return false;
-      if (filterSubId && p.subcategoryId !== filterSubId) return false;
-      
-      if (filterTagIds.length > 0) {
-        if (!filterTagIds.every(tid => p.tagIds.includes(tid))) return false;
+    return activePhotosSource.filter(p => {
+      if (viewMode === 'private') {
+        if (filterCatId && p.categoryId !== filterCatId) return false;
+        if (filterSubId && p.subcategoryId !== filterSubId) return false;
+        
+        if (filterTagIds.length > 0) {
+          if (!filterTagIds.every(tid => p.tagIds.includes(tid))) return false;
+        }
       }
       
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim();
-        const cat = categories.find(c => c.id === p.categoryId);
-        const sub = cat?.subcategories.find(s => s.id === p.subcategoryId);
-        const pTags = tags.filter(t => p.tagIds.includes(t.id));
         
-        const matchesCat = cat?.name.toLowerCase().includes(query) || cat?.aliases.some(a => a.toLowerCase().includes(query));
-        const matchesSub = sub?.name.toLowerCase().includes(query) || sub?.aliases.some(a => a.toLowerCase().includes(query));
-        const matchesTags = pTags.some(t => t.name.toLowerCase().includes(query) || t.aliases.some(a => a.toLowerCase().includes(query)));
-        const matchesNote = (p.description || '').toLowerCase().includes(query) || (p.note || '').toLowerCase().includes(query);
-        const matchesGroupId = p.groupId?.toLowerCase().includes(query);
-        
-        if (!matchesCat && !matchesSub && !matchesTags && !matchesNote && !matchesGroupId) return false;
+        if (viewMode === 'private') {
+          const cat = categories.find(c => c.id === p.categoryId);
+          const sub = cat?.subcategories.find(s => s.id === p.subcategoryId);
+          const pTags = tags.filter(t => p.tagIds.includes(t.id));
+          
+          const matchesCat = cat?.name.toLowerCase().includes(query) || cat?.aliases.some(a => a.toLowerCase().includes(query));
+          const matchesSub = sub?.name.toLowerCase().includes(query) || sub?.aliases.some(a => a.toLowerCase().includes(query));
+          const matchesTags = pTags.some(t => t.name.toLowerCase().includes(query) || t.aliases.some(a => a.toLowerCase().includes(query)));
+          const matchesNote = (p.description || '').toLowerCase().includes(query) || (p.note || '').toLowerCase().includes(query);
+          const matchesGroupId = p.groupId?.toLowerCase().includes(query);
+          
+          if (!matchesCat && !matchesSub && !matchesTags && !matchesNote && !matchesGroupId) return false;
+        } else {
+          // Public mode: search against string fields directly
+          const matchesCat = (p.category || '').toLowerCase().includes(query);
+          const matchesSub = (p.sub_category || '').toLowerCase().includes(query);
+          const matchesTags = (p.tags || []).some(t => t.toLowerCase().includes(query));
+          const matchesNote = (p.description || '').toLowerCase().includes(query) || (p.note || '').toLowerCase().includes(query);
+          const matchesGroupId = p.groupId?.toLowerCase().includes(query);
+          if (!matchesCat && !matchesSub && !matchesTags && !matchesNote && !matchesGroupId) return false;
+        }
       }
       
       return true;
     });
-  }, [photos, filterCatId, filterSubId, filterTagIds, searchQuery, categories, tags]);
+  }, [activePhotosSource, filterCatId, filterSubId, filterTagIds, searchQuery, categories, tags, viewMode]);
 
   const displayPhotos = useMemo(() => {
     if (!showGroupsCollapsed) return filteredPhotos;
@@ -942,47 +974,77 @@ export default function App() {
   const renderMainHeader = () => (
     <header className="relative z-50 bg-white/10 border-b border-white/20 px-6 pt-10 pb-4 flex items-center justify-between">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">photoX</h1>
-        <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">已匯入 {photos.length} 張照片</p>
+        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+          {viewMode === 'public' ? 'Public Gallery' : 'photoX'}
+        </h1>
+        <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">
+          {viewMode === 'public' ? `共 ${publicPhotos.length} 張公開照片` : `已匯入 ${photos.length} 張照片`}
+        </p>
       </div>
       <div className="flex items-center gap-2 relative z-50">
-        <button 
-          onClick={handleBatchAiIdentify}
-          disabled={isBatchAnalyzing}
-          className={`cursor-pointer touch-manipulation relative z-50 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-1 shadow-sm ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white/60 border-white/50 text-purple-600 hover:bg-purple-50'}`}
-        >
-          {isBatchAnalyzing ? (
-             <><span className="animate-pulse">AI {batchProgress.current}/{batchProgress.total}</span></>
-          ) : (
-             <><Sparkles size={14} className="text-purple-500" /> AI</>
-          )}
-        </button>
-        <button 
-          onClick={() => {
-            if (isMultiSelect) {
-              if (selectedIds.length === filteredPhotos.length) {
-                setSelectedIds([]);
-              } else {
-                setSelectedIds(filteredPhotos.map(p => p.id));
+        {!user ? (
+          <button 
+            onClick={async () => {
+              try {
+                await loginWithGoogle();
+              } catch(e: any) {
+                alert('登入失敗: ' + (e.message || JSON.stringify(e)));
               }
-            } else {
-              setIsMultiSelect(true);
-            }
-          }}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
-        >
-          {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
-        </button>
-        <button 
-          onClick={() => setActiveScreen('manage')}
-          className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
-        >
-          <Settings size={20} />
-        </button>
-        <label className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-md text-slate-800 transition-all active:scale-90 cursor-pointer">
-          <Plus size={24} />
-          <input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoImport} />
-        </label>
+            }}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-800 shadow-sm border border-slate-200"
+          >
+            登入管理
+          </button>
+        ) : (
+          <button 
+            onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${viewMode === 'public' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-purple-50 text-purple-600 border-purple-200'}`}
+          >
+            {viewMode === 'public' ? '我的相庫' : '公開探索'}
+          </button>
+        )}
+
+        {viewMode === 'private' && (
+          <>
+            <button 
+              onClick={handleBatchAiIdentify}
+              disabled={isBatchAnalyzing}
+              className={`cursor-pointer touch-manipulation relative z-50 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-1 shadow-sm ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white/60 border-white/50 text-purple-600 hover:bg-purple-50'}`}
+            >
+              {isBatchAnalyzing ? (
+                 <><span className="animate-pulse">AI {batchProgress.current}/{batchProgress.total}</span></>
+              ) : (
+                 <><Sparkles size={14} className="text-purple-500" /> AI</>
+              )}
+            </button>
+            <button 
+              onClick={() => {
+                if (isMultiSelect) {
+                  if (selectedIds.length === filteredPhotos.length) {
+                    setSelectedIds([]);
+                  } else {
+                    setSelectedIds(filteredPhotos.map(p => p.id));
+                  }
+                } else {
+                  setIsMultiSelect(true);
+                }
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
+            >
+              {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
+            </button>
+            <button 
+              onClick={() => setActiveScreen('manage')}
+              className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
+            >
+              <Settings size={20} />
+            </button>
+            <label className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-md text-slate-800 transition-all active:scale-90 cursor-pointer">
+              <Plus size={24} />
+              <input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoImport} />
+            </label>
+          </>
+        )}
       </div>
     </header>
   );
@@ -1097,7 +1159,7 @@ export default function App() {
                 isSelected={isGroupSelected}
                 isGroupMaster={isGroupMaster}
                 groupCount={groupCount}
-                categoryName={categories.find(c => c.id === photo.categoryId)?.name}
+                categoryName={viewMode === 'public' ? photo.category : categories.find(c => c.id === photo.categoryId)?.name}
                 onClick={() => {
                   if (isMultiSelect) {
                     if (isGroupMaster) {
@@ -1122,6 +1184,7 @@ export default function App() {
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault();
+                  if (viewMode === 'public' || !user) return;
                   setEditPhotoId(photo.id);
                   setAddCatId(photo.categoryId);
                   setAddSubId(photo.subcategoryId);
@@ -1825,9 +1888,6 @@ export default function App() {
           } catch (e) {
             console.error("Photo sync error:", e);
           }
-
-          await syncCategoriesToCloud(user.id, categories);
-          await syncTagsToCloud(user.id, tags);
           
           const now = Date.now();
           setLastSyncTime(now);
@@ -1855,20 +1915,10 @@ export default function App() {
         setSyncPercent(0);
         try {
           const cloudPhotos = await loadPhotosFromCloud(user.id);
-          const cloudCats = await loadCategoriesFromCloud(user.id);
-          const cloudTags = await loadTagsFromCloud(user.id);
           
           if (cloudPhotos) {
             setPhotos(cloudPhotos);
             await saveData('product_photos', cloudPhotos);
-          }
-          if (cloudCats) {
-            setCategories(cloudCats);
-            await saveData('product_categories', cloudCats);
-          }
-          if (cloudTags) {
-            setTags(cloudTags);
-            await saveData('product_tags', cloudTags);
           }
           
           const now = Date.now();
@@ -2104,7 +2154,8 @@ export default function App() {
   };
 
   const renderGroupDetailScreen = () => {
-    const groupPhotos = photos.filter(p => p.groupId === activeGroupId);
+    const activePhotosSource = viewMode === 'public' ? publicPhotos : photos;
+    const groupPhotos = activePhotosSource.filter(p => p.groupId === activeGroupId);
     if (groupPhotos.length === 0) return null;
 
     const focusedPhoto = focusedGroupPhotoId ? groupPhotos.find(p => p.id === focusedGroupPhotoId) : null;
@@ -2183,27 +2234,29 @@ export default function App() {
                        </div>
                     </div>
 
-                    <div className="absolute top-4 left-4 flex gap-1">
-                      <button 
-                        onClick={() => {
-                          setEditPhotoId(focusedPhoto.id);
-                          setAddCatId(focusedPhoto.categoryId);
-                          setAddSubId(focusedPhoto.subcategoryId);
-                          setAddTagIds(focusedPhoto.tagIds);
-                          setAddNote(focusedPhoto.description || focusedPhoto.note || '');
-                          setAddManualCode(focusedPhoto.manual_code || '');
-                          setAddDimL(focusedPhoto.dimensions?.length?.toString() || '');
-                          setAddDimW(focusedPhoto.dimensions?.width?.toString() || '');
-                          setAddDimH(focusedPhoto.dimensions?.height?.toString() || '');
-                          setNewPhotoData(focusedPhoto.uri);
-                          setActiveScreen('add');
-                        }}
-                        className="bg-black/40 backdrop-blur-md p-2 rounded-xl text-white/80 hover:bg-blue-600 transition-colors shadow-lg border border-white/10"
-                        title="編輯此相片"
-                      >
-                        <Edit3 size={16} />
-                      </button>
-                    </div>
+                    {viewMode === 'private' && user && (
+                      <div className="absolute top-4 left-4 flex gap-1">
+                        <button 
+                          onClick={() => {
+                            setEditPhotoId(focusedPhoto.id);
+                            setAddCatId(focusedPhoto.categoryId);
+                            setAddSubId(focusedPhoto.subcategoryId);
+                            setAddTagIds(focusedPhoto.tagIds);
+                            setAddNote(focusedPhoto.description || focusedPhoto.note || '');
+                            setAddManualCode(focusedPhoto.manual_code || '');
+                            setAddDimL(focusedPhoto.dimensions?.length?.toString() || '');
+                            setAddDimW(focusedPhoto.dimensions?.width?.toString() || '');
+                            setAddDimH(focusedPhoto.dimensions?.height?.toString() || '');
+                            setNewPhotoData(focusedPhoto.uri);
+                            setActiveScreen('add');
+                          }}
+                          className="bg-black/40 backdrop-blur-md p-2 rounded-xl text-white/80 hover:bg-blue-600 transition-colors shadow-lg border border-white/10"
+                          title="編輯此相片"
+                        >
+                          <Edit3 size={16} />
+                        </button>
+                      </div>
+                    )}
 
                     <button 
                       onClick={() => setFocusedGroupPhotoId(null)}
@@ -2333,21 +2386,23 @@ export default function App() {
                     <div className="w-1 h-3 bg-slate-300 rounded-full"></div>
                     組內容 ({groupPhotos.length})
                   </h3>
-                  <button 
-                    onClick={() => {
-                      setConfirmDialog({
-                        message: `確定要將這 ${groupPhotos.length} 張照片解除同組嗎？`,
-                        onConfirm: () => {
-                          handleUngroup(activeGroupId);
-                          setActiveGroupId(null);
-                          setFocusedGroupPhotoId(null);
-                        }
-                      });
-                    }}
-                    className="text-[10px] text-red-500 font-bold flex items-center gap-1 active:scale-95 transition-all"
-                  >
-                    <X size={12} /> 解除群組
-                  </button>
+                  {viewMode === 'private' && user && (
+                    <button 
+                      onClick={() => {
+                        setConfirmDialog({
+                          message: `確定要將這 ${groupPhotos.length} 張照片解除同組嗎？`,
+                          onConfirm: () => {
+                            handleUngroup(activeGroupId);
+                            setActiveGroupId(null);
+                            setFocusedGroupPhotoId(null);
+                          }
+                        });
+                      }}
+                      className="text-[10px] text-red-500 font-bold flex items-center gap-1 active:scale-95 transition-all"
+                    >
+                      <X size={12} /> 解除群組
+                    </button>
+                  )}
                 </div>
                 
                 {/* Fixed Grid for Group Management */}
@@ -2369,18 +2424,20 @@ export default function App() {
                       )}
                     </motion.div>
                   ))}
-                  <button 
-                    onClick={() => {
-                       setActiveGroupId(null);
-                       setFocusedGroupPhotoId(null);
-                       setIsMultiSelect(true);
-                       setAlertDialog({ title: '提示', message: '請從主畫面選取照片' });
-                    }}
-                    className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
-                  >
-                    <Plus size={20} />
-                    <span className="text-[8px] font-bold mt-1 uppercase">新增</span>
-                  </button>
+                  {viewMode === 'private' && user && (
+                    <button 
+                      onClick={() => {
+                        setActiveGroupId(null);
+                        setFocusedGroupPhotoId(null);
+                        setIsMultiSelect(true);
+                        setAlertDialog({ title: '提示', message: '請從主畫面選取照片' });
+                      }}
+                      className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
+                    >
+                      <Plus size={20} />
+                      <span className="text-[8px] font-bold mt-1 uppercase">新增</span>
+                    </button>
+                  )}
                 </div>
               </div>
            </div>
