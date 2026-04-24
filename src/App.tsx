@@ -55,6 +55,7 @@ import {
 } from './services/supabaseService';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { PublicGallery } from './components/PublicGallery';
+import { SettingsScreen } from './components/SettingsScreen';
 import { Photo, Category, Tag, SubCategory, DB_Category } from './types';
 
 interface User extends SupabaseUser {
@@ -163,14 +164,14 @@ const PhotoCard = React.memo(({
       />
       
       {photo.groupId && (
-        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-[4px] text-[7px] text-white font-bold tracking-tighter flex items-center gap-1 border border-white/20">
+        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[7px] text-white font-bold tracking-tighter flex items-center gap-1 border border-white/20">
           <Layers size={8} />
           {photo.groupId}
         </div>
       )}
 
       {isGroupMaster && groupCount > 1 && (
-        <div className="absolute top-2 right-2 bg-blue-500 px-1.5 py-0.5 rounded-[4px] text-[7px] text-white font-bold shadow-lg ring-1 ring-white/30">
+        <div className="absolute top-2 right-2 bg-blue-500 px-2 py-0.5 rounded-lg text-[7px] text-white font-bold shadow-lg ring-1 ring-white/30">
           {groupCount}
         </div>
       )}
@@ -322,10 +323,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Manage Screen Internal States (Moved here to stabilize component)
-  const [newTagName, setNewTagName] = useState('');
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
-  const [newSubName, setNewSubName] = useState('');
 
   const quickAddSubCategory = () => {
     if (!addCatId) return;
@@ -1075,16 +1073,18 @@ export default function App() {
                 alert('登入失敗: ' + (e.message || JSON.stringify(e)));
               }
             }}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-800 shadow-sm border border-slate-200"
+            className="px-4 py-2 rounded-2xl text-xs font-bold bg-white text-slate-800 shadow-sm border border-slate-200 active:scale-95 transition-all flex items-center gap-2"
           >
+            <LogIn size={14} />
             登入管理
           </button>
         ) : (
           <button 
             onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${viewMode === 'public' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-purple-50 text-purple-600 border-purple-200'}`}
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all border shadow-sm active:scale-95 flex items-center gap-2 ${viewMode === 'public' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-purple-50 text-purple-600 border-purple-200'}`}
           >
-            {viewMode === 'public' ? (appLang === 'zh' ? '我的相庫' : appLang === 'ms' ? 'Galeri Saya' : 'My Gallery') : (appLang === 'zh' ? '公開' : appLang === 'ms' ? 'Teroka' : 'Explore')}
+            {viewMode === 'public' ? <ImageIcon size={14} /> : <Layers size={14} />}
+            {viewMode === 'public' ? (appLang === 'zh' ? '我的相庫' : 'My Gallery') : (appLang === 'zh' ? '查看公開' : 'Public View')}
           </button>
         )}
 
@@ -1093,12 +1093,13 @@ export default function App() {
             <button 
               onClick={handleBatchAiIdentify}
               disabled={isBatchAnalyzing}
-              className={`cursor-pointer touch-manipulation relative z-50 w-8 h-8 rounded-xl flex items-center justify-center transition-all border shadow-sm ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white/60 border-white/50 text-purple-600 hover:bg-purple-50'}`}
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border shadow-sm active:scale-90 ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white border-slate-200 text-purple-600 hover:bg-purple-50'}`}
+              title="AI 批量辨識"
             >
               {isBatchAnalyzing ? (
-                 <span className="animate-pulse text-[10px] font-bold">{batchProgress.current}/{batchProgress.total}</span>
+                 <span className="animate-pulse text-[9px] font-bold">{batchProgress.current}</span>
               ) : (
-                 <Sparkles size={16} className="text-purple-500" />
+                 <Sparkles size={18} />
               )}
             </button>
             <button 
@@ -1113,15 +1114,17 @@ export default function App() {
                   setIsMultiSelect(true);
                 }
               }}
-              className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-xl transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
+              className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shadow-sm active:scale-90 ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-slate-200 text-slate-600'}`}
+              title="多選模式"
             >
-              {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? <X size={16}/> : <CheckSquare size={16}/>) : <CheckSquare size={16}/>}
+              <CheckSquare size={18} />
             </button>
             <button 
               onClick={handleManageClick}
-              className="w-10 h-10 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-sm text-slate-500 transition-all active:scale-90"
+              className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm text-slate-600 transition-all active:scale-90 hover:bg-slate-50"
+              title="設定與管理"
             >
-              <Settings size={20} />
+              <Settings2 size={18} />
             </button>
           </>
         )}
@@ -1131,7 +1134,7 @@ export default function App() {
 
   const renderFloatingActionButton = () => (
     viewMode === 'private' && (
-      <label className="fixed bottom-6 right-6 w-16 h-16 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform z-[100] cursor-pointer">
+      <label className="fixed bottom-8 right-8 w-16 h-16 bg-slate-900 text-white rounded-3xl flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all z-[100] cursor-pointer">
         <Plus size={32} />
         <input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoImport} />
       </label>
@@ -1139,44 +1142,44 @@ export default function App() {
   );
 
   const renderSearchAndFilter = () => (
-    <div className="bg-transparent px-6 py-2 space-y-3">
+    <div className="bg-transparent px-6 py-2 space-y-4">
       <div className="flex items-center gap-2">
         <div className="relative flex-1 group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600 transition-colors" size={14} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600 transition-colors" size={16} />
           <input 
             type="text" 
-            placeholder="搜尋..."
-            className="w-full bg-white/40 border border-white/50 rounded-xl py-2 pl-9 pr-4 text-xs focus:bg-white/80 transition-all outline-none text-slate-800 placeholder-slate-400"
+            placeholder="搜尋產品..."
+            className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-sm focus:bg-white transition-all outline-none text-slate-800 placeholder-slate-400 shadow-sm focus:border-blue-500"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400">
-              <X size={14} />
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+              <X size={16} />
             </button>
           )}
         </div>
         <button 
           onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-          className={`p-2 rounded-xl border transition-all ${showGroupsCollapsed ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white/40 border-white/50 text-slate-500'}`}
+          className={`w-12 h-12 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-95 ${showGroupsCollapsed ? 'bg-blue-500 border-blue-500 text-white shadow-blue-500/20' : 'bg-white border-slate-200 text-slate-500'}`}
           title={showGroupsCollapsed ? "展開群組" : "合併群組"}
         >
-          <Layers size={16} />
+          <Layers size={20} />
         </button>
       </div>
 
-      <div className="flex overflow-x-auto pb-1 gap-1.5 no-scrollbar">
+      <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar px-1">
         <button 
           onClick={() => { setFilterCatId(null); setFilterSubId(null); }}
-          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-tight whitespace-nowrap transition-all border ${!filterCatId ? 'bg-slate-800 border-slate-800 text-white shadow-sm' : 'bg-white/40 border-white/40 text-slate-600'}`}
+          className={`px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all border shadow-sm ${!filterCatId ? 'bg-slate-800 border-slate-800 text-white shadow-slate-800/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
         >
-          全部
+          全部產品
         </button>
         {dbCategories.map(cat => (
           <button 
             key={cat.code}
             onClick={() => { setFilterCatId(cat.code); setFilterSubId(null); }}
-            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-tight whitespace-nowrap transition-all border ${filterCatId === cat.code ? 'bg-slate-800 border-slate-800 text-white shadow-sm' : 'bg-white/40 border-white/40 text-slate-600'}`}
+            className={`px-4 py-2 rounded-full text-[11px] font-bold tracking-wider whitespace-nowrap transition-all border shadow-sm ${filterCatId === cat.code ? 'bg-slate-800 border-slate-800 text-white shadow-slate-800/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
           >
             {cat[appLang] || cat.zh}
           </button>
@@ -1340,8 +1343,8 @@ export default function App() {
                   }}
                   className="flex flex-col items-center group disabled:opacity-30 disabled:pointer-events-none"
                 >
-                   <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 shadow-sm group-active:scale-90 transition-transform">
-                     <Settings2 size={18} />
+                   <div className="w-10 h-10 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600 shadow-sm group-active:scale-90 transition-transform">
+                     <Settings2 size={20} />
                    </div>
                    <span className="text-[9px] mt-1 text-indigo-600 font-bold">批量分類</span>
                 </button>
@@ -1387,12 +1390,12 @@ export default function App() {
   );
 
   const renderBatchEditScreen = () => (
-    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
-      <div className="px-6 py-4 border-b border-white/50 flex items-center justify-between">
-        <button onClick={resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
+    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
+      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
+        <button onClick={resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <X size={24} />
         </button>
-        <h2 className="font-bold text-lg text-slate-800">批量修改 ({batchEditIds?.length} 張)</h2>
+        <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight">批量修改 ({batchEditIds?.length})</h2>
         <button 
           onClick={() => {
             if (!addCatId && addTagIds.length === 0) {
@@ -1401,50 +1404,54 @@ export default function App() {
             }
             saveBatchEdit();
           }}
-          className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95"
+          className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95"
         >
-          套用
+          套用修改
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-20">
-        <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 mb-2">
-          <p className="text-[11px] text-blue-600 font-bold leading-relaxed">
-            注意：這會更新所有選中照片。僅手動修改的欄位會被套用。
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
+        <div className="bg-blue-50 border border-blue-100 p-4 rounded-3xl">
+          <p className="text-[11px] text-blue-700 font-medium leading-relaxed flex items-start gap-2">
+            <span className="shrink-0 w-1.5 h-1.5 bg-blue-500 rounded-full mt-1"></span>
+            注意：這會更新所有選中照片。僅手動修改的欄位會被套用至所有選取項目。
           </p>
         </div>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標主分類 *</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標主分類 *</h3>
+          <div className="grid grid-cols-2 gap-3">
             {dbCategories.map(cat => (
               <button 
                 key={cat.code}
                 onClick={() => { setAddCatId(cat.code); setAddSubId(null); }}
-                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.code ? 'bg-white/80 border-blue-500 text-blue-600 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${addCatId === cat.code ? 'bg-white border-blue-600 text-blue-600 shadow-xl shadow-blue-600/5' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
-                <span className="font-bold block text-sm">{cat[appLang] || cat.zh}</span>
-                <span className="text-[9px] uppercase tracking-tighter opacity-60">{cat.en}</span>
+                <span className="font-bold block text-sm tracking-tight">{cat[appLang] || cat.zh}</span>
+                <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono">{cat.en}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {addCatId && (
-            <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            <motion.section 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
               <div className="flex items-center justify-between pl-1">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標子分類</h3>
-                <button onClick={quickAddSubCategory} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
+                <button onClick={quickAddSubCategory} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 p-1">
                 {categories.find(c => c.id === addCatId)?.subcategories.map(sub => (
                   <button 
                     key={sub.id}
                     onClick={() => setAddSubId(sub.id)}
-                    className={`px-4 py-2 rounded-xl border text-xs font-semibold transition-all ${addSubId === sub.id ? 'bg-slate-700 border-slate-700 text-white shadow-lg' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                    className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
                   >
                     {sub.name}
                   </button>
@@ -1454,39 +1461,36 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <section className="space-y-3">
+        <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一標籤</h3>
-            <button onClick={quickAddTag} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
+            <button onClick={quickAddTag} className="text-[10px] text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 p-1">
             {tags.map(tag => (
               <button 
                 key={tag.id}
                 onClick={() => setAddTagIds(prev => prev.includes(tag.id) ? prev.filter(tid => tid !== tag.id) : [...prev, tag.id])}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${addTagIds.includes(tag.id) ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addTagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 #{tag.name}
               </button>
             ))}
-            <button onClick={quickAddTag} className="px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-1 font-semibold hover:border-slate-400 hover:text-slate-500 transition-colors">
-              <Plus size={14} /> 自定義
-            </button>
           </div>
         </section>
 
-        <section className="space-y-3">
+        <section className="space-y-4">
           <button 
             onClick={() => setShowOtherFields(!showOtherFields)}
-            className="w-full flex items-center justify-between p-4 bg-white/60 border border-white rounded-3xl text-sm font-bold text-slate-700 shadow-sm"
+            className="w-full flex items-center justify-between p-5 bg-white border border-slate-200 rounded-3xl text-sm font-bold text-slate-800 shadow-sm active:scale-[0.99] transition-all"
           >
-            <div className="flex items-center gap-2">
-              <ChevronRight size={18} className={`transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`} />
-              <span>其他資訊 (編號、尺寸)</span>
+            <div className="flex items-center gap-3">
+              <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`}>
+                <ChevronRight size={16} />
+              </div>
+              <span>其他詳細資訊 (編號、尺寸)</span>
             </div>
-            <span className="text-[10px] text-slate-400 font-normal">
-              {showOtherFields ? '收起' : '展開'}
-            </span>
+            <div className="w-2 h-2 rounded-full bg-slate-200"></div>
           </button>
 
           <AnimatePresence>
@@ -1495,52 +1499,43 @@ export default function App() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden space-y-4 pt-1"
+                className="overflow-hidden space-y-4 pt-2"
               >
                 <div className="space-y-2">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">編號</h3>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">統一產品編號</label>
                   <input 
                     type="text" 
-                    placeholder="輸入編號..."
+                    placeholder="輸入編號 (例如: SK-2024)..."
                     value={addManualCode}
                     onChange={(e) => setAddManualCode(e.target.value)}
-                    className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
+                    className="w-full bg-slate-100/50 border border-slate-200 p-4 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具尺寸 (長 x 寬 x 高) cm</h3>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">統一尺寸 (長 x 寬 x 高) cm</label>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="長"
-                        value={addDimL}
-                        onChange={(e) => setAddDimL(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="寬"
-                        value={addDimW}
-                        onChange={(e) => setAddDimW(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="高"
-                        value={addDimH}
-                        onChange={(e) => setAddDimH(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
-                    </div>
+                    <input 
+                      type="number"
+                      placeholder="長"
+                      value={addDimL}
+                      onChange={(e) => setAddDimL(e.target.value)}
+                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
+                    />
+                    <input 
+                      type="number"
+                      placeholder="寬"
+                      value={addDimW}
+                      onChange={(e) => setAddDimW(e.target.value)}
+                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
+                    />
+                    <input 
+                      type="number"
+                      placeholder="高"
+                      value={addDimH}
+                      onChange={(e) => setAddDimH(e.target.value)}
+                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
+                    />
                   </div>
                 </div>
               </motion.div>
@@ -1553,17 +1548,17 @@ export default function App() {
 
   const renderAddPhotoScreen = () => (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
-      <div className="px-6 py-3 border-b border-white/50 flex items-center justify-between bg-white/40">
-        <button onClick={() => { resetAddState(); setActiveScreen('home'); }} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
+      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
+        <button onClick={() => { resetAddState(); setActiveScreen('home'); }} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <X size={24} />
         </button>
-        <h2 className="font-bold text-base text-slate-800 truncate px-2">{editPhotoId ? '編輯產品資訊' : '分類產品照片'}</h2>
+        <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
         <div className="flex items-center gap-2">
           {!editPhotoId && newPhotoData && (
             <button 
               onClick={handleSingleAiAnalyze}
               disabled={isAnalyzing}
-              className={`p-2 rounded-xl border transition-all ${isAnalyzing ? 'bg-purple-100 border-purple-200' : 'bg-white border-slate-200 hover:bg-purple-50 text-purple-600'}`}
+              className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-90 ${isAnalyzing ? 'bg-purple-100 border-purple-200' : 'bg-white border-slate-200 hover:bg-purple-50 text-purple-600'}`}
               title="AI 辨識"
             >
               {isAnalyzing ? <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" /> : <Sparkles size={20} />}
@@ -1572,56 +1567,60 @@ export default function App() {
           {editPhotoId && (
             <button 
               onClick={() => deletePhoto(editPhotoId)}
-              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 transition-all active:scale-90"
+              title="刪除照片"
             >
               <Trash2 size={20} />
             </button>
           )}
           <button 
             onClick={saveNewPhoto}
-            className="bg-slate-800 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg transition-all active:scale-95"
+            className="bg-slate-800 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-slate-800/10 transition-all active:scale-95"
           >
-            儲存
+            完成儲存
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-20">
-        <div className="aspect-[4/3] rounded-3xl overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border border-white/20">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
+        <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white">
           {newPhotoData && <img src={newPhotoData} className="max-w-full max-h-full object-contain" alt="New" />}
         </div>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">主分類 *</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">選擇主分類 *</h3>
+          <div className="grid grid-cols-2 gap-3">
             {dbCategories.map(cat => (
               <button 
                 key={cat.code}
                 onClick={() => { setAddCatId(cat.code); setAddSubId(null); }}
-                className={`p-4 rounded-2xl border-2 text-left transition-all ${addCatId === cat.code ? 'bg-white/80 border-slate-800 text-slate-800 shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${addCatId === cat.code ? 'bg-white border-slate-800 text-slate-800 shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
-                <span className="font-bold block text-sm">{cat[appLang] || cat.zh}</span>
-                <span className="text-[9px] uppercase tracking-tighter opacity-60">{cat.en}</span>
+                <span className="font-bold block text-sm tracking-tight">{cat[appLang] || cat.zh}</span>
+                <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono">{cat.en}</span>
               </button>
             ))}
           </div>
         </section>
 
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {addCatId && (
-            <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+            <motion.section 
+              initial={{ opacity: 0, y: 10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-4"
+            >
               <div className="flex items-center justify-between pl-1">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">子分類</h3>
-                <button onClick={() => quickAddSubCategory()} className="text-[10px] text-blue-500 font-bold flex items-center gap-1 active:scale-95 transition-transform"><Plus size={12}/> 新增</button>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">細分子分類</h3>
+                <button onClick={() => quickAddSubCategory()} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 p-1">
                 {categories.find(c => c.id === addCatId)?.subcategories.map(sub => (
                   <button 
                     key={sub.id}
                     onClick={() => setAddSubId(sub.id)}
-                    className={`px-4 py-2 rounded-xl border text-xs font-semibold transition-all ${addSubId === sub.id ? 'bg-slate-700 border-slate-700 text-white shadow-lg' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                    className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
                   >
                     {sub.name}
                   </button>
@@ -1631,49 +1630,46 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <section className="space-y-3">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">標籤</h3>
-          <div className="flex flex-wrap gap-2">
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">風格標籤</h3>
+          <div className="flex flex-wrap gap-2 p-1">
             {tags.map(tag => (
               <button 
                 key={tag.id}
                 onClick={() => setAddTagIds(prev => prev.includes(tag.id) ? prev.filter(tid => tid !== tag.id) : [...prev, tag.id])}
-                className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${addTagIds.includes(tag.id) ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white/40 border-white/50 text-slate-500 hover:bg-white/60'}`}
+                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addTagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 #{tag.name}
               </button>
             ))}
-            <button onClick={quickAddTag} className="px-3 py-1.5 rounded-lg border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-1 font-semibold hover:border-slate-400 hover:text-slate-500 transition-colors">
-              <Plus size={14} /> 自定義
+            <button onClick={quickAddTag} className="px-4 py-2 rounded-full border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-2 font-bold hover:border-slate-400 hover:text-slate-600 active:scale-95 transition-all">
+              <Plus size={14} /> 新增自定義
             </button>
           </div>
         </section>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">備註</h3>
-          </div>
-          <textarea 
-            placeholder="輸入產品特色或注意事項..."
-            className="w-full rounded-2xl border border-white/50 p-4 text-sm bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800 placeholder-slate-400"
-            rows={4}
-            value={addNote}
-            onChange={(e) => setAddNote(e.target.value)}
-          />
+        <section className="space-y-2">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">產品備註</h3>
+            <textarea 
+              placeholder="輸入產品特色或注意事項..."
+              className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
+              value={addNote}
+              onChange={(e) => setAddNote(e.target.value)}
+            />
         </section>
 
-        <section className="space-y-3">
+        <section className="space-y-4">
           <button 
             onClick={() => setShowOtherFields(!showOtherFields)}
-            className="w-full flex items-center justify-between p-4 bg-white/60 border border-white rounded-3xl text-sm font-bold text-slate-700 shadow-sm"
+            className="w-full flex items-center justify-between p-5 bg-white border border-slate-200 rounded-3xl text-sm font-bold text-slate-800 shadow-sm active:scale-[0.99] transition-all"
           >
-            <div className="flex items-center gap-2">
-              <ChevronRight size={18} className={`transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`} />
-              <span>其他資訊 (編號、尺寸)</span>
+            <div className="flex items-center gap-3">
+              <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`}>
+                <ChevronRight size={16} />
+              </div>
+              <span>其他詳細資訊 (編號、尺寸)</span>
             </div>
-            <span className="text-[10px] text-slate-400 font-normal">
-              {showOtherFields ? '收起' : '展開'}
-            </span>
+            <div className="w-2 h-2 rounded-full bg-slate-200"></div>
           </button>
 
           <AnimatePresence>
@@ -1682,52 +1678,43 @@ export default function App() {
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden space-y-4 pt-1"
+                className="overflow-hidden space-y-4 pt-2"
               >
                 <div className="space-y-2">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">編號</h3>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">產品編號</label>
                   <input 
                     type="text" 
-                    placeholder="輸入編號..."
+                    placeholder="輸入編號 (例如: SK-2024)..."
                     value={addManualCode}
                     onChange={(e) => setAddManualCode(e.target.value)}
-                    className="w-full bg-white/60 border border-white p-4 rounded-3xl text-sm outline-none focus:bg-white transition-all shadow-sm font-medium"
+                    className="w-full bg-slate-100/50 border border-slate-200 p-4 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400"
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具尺寸 (長 x 寬 x 高) cm</h3>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">家具規格尺寸 (長 x 寬 x 高) cm</label>
                   <div className="grid grid-cols-3 gap-3">
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="長"
-                        value={addDimL}
-                        onChange={(e) => setAddDimL(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Length</span>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="寬"
-                        value={addDimW}
-                        onChange={(e) => setAddDimW(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Width</span>
-                    </div>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        placeholder="高"
-                        value={addDimH}
-                        onChange={(e) => setAddDimH(e.target.value)}
-                        className="w-full bg-white border border-slate-100 p-3 rounded-xl text-center text-sm font-bold shadow-sm"
-                      />
-                      <span className="absolute -top-2 left-2 px-1 bg-white text-[8px] text-slate-400 font-bold uppercase">Height</span>
-                    </div>
+                    <input 
+                      type="number"
+                      placeholder="長"
+                      value={addDimL}
+                      onChange={(e) => setAddDimL(e.target.value)}
+                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
+                    />
+                    <input 
+                      type="number"
+                      placeholder="寬"
+                      value={addDimW}
+                      onChange={(e) => setAddDimW(e.target.value)}
+                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
+                    />
+                    <input 
+                      type="number"
+                      placeholder="高"
+                      value={addDimH}
+                      onChange={(e) => setAddDimH(e.target.value)}
+                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
+                    />
                   </div>
                 </div>
               </motion.div>
@@ -1831,6 +1818,30 @@ export default function App() {
     return renderSettingsScreen();
   };
 
+  const triggerManualSync = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    setSyncPercent(0);
+    try {
+      await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+      const cloudPhotos = await loadPhotosFromCloud(user.id);
+      if (cloudPhotos) {
+        setPhotos(cloudPhotos);
+        setCloudCount(cloudPhotos.length);
+        await saveData('product_photos', cloudPhotos);
+      }
+      const now = Date.now();
+      setLastSyncTime(now);
+      await saveData('last_sync_time', now);
+      alert('同步成功');
+    } catch (e) {
+      alert('同步失敗: ' + JSON.stringify(e));
+    } finally {
+      setIsSyncing(false);
+      setSyncPercent(0);
+    }
+  };
+
   const performPushSync = async () => {
     if (!user) return;
     setConfirmDialog({
@@ -1900,389 +1911,40 @@ export default function App() {
   };
 
   const renderSettingsScreen = () => {
-    if (activeScreen !== 'settings') return null;
-
-    const addManufacturer = () => {
-      if (!newSubName.trim()) return;
-      const newMfrId = crypto.randomUUID();
-      const newMfr = {
-        id: newMfrId,
-        name: newSubName.trim(),
-        aliases: [newSubName.trim()]
-      };
-      setManufacturers([...manufacturers, newMfr]);
-      setNewSubName('');
-      setCategories(prev => prev.map(c => ({
-        ...c,
-        subcategories: [...(c.subcategories || []), { ...newMfr }]
-      })));
-    };
-
-    const deleteManufacturer = (id) => {
-      setManufacturers(prev => prev.filter(m => m.id !== id));
-      setCategories(prev => prev.map(c => ({
-        ...c,
-        subcategories: (c.subcategories || []).filter(sub => sub.id !== id)
-      })));
-    };
-
-    const addTag = () => {
-      if (!newTagName.trim()) return;
-      const newTag = {
-        id: crypto.randomUUID(),
-        name: newTagName.trim(),
-        aliases: [newTagName.trim()]
-      };
-      setTags([...tags, newTag]);
-      setNewTagName('');
-    };
-
-    const setSettingField = (field: string, value: any) => {
-      const newSettings = { ...settings, [field]: value };
-      setSettings(newSettings);
-      saveSettings(newSettings);
-    };
-
     return (
-      <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-3 bg-white shadow-sm">
-          <button onClick={() => setActiveScreen('home')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
-            <ChevronLeft size={24} />
-          </button>
-          <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1 tracking-tight">設定與管理</h2>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
-          
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
-              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                <div className="w-1.5 h-3.5 bg-orange-500 rounded-full"></div>
-                Logo 設定
-              </h4>
-              <div className="flex items-center gap-4">
-                  {settings?.logo_url ? (
-                      <img src={settings.logo_url} className="w-14 h-14 rounded-full object-cover shadow-sm border border-slate-100" alt="Company Logo" />
-                  ) : (
-                      <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 text-xs shadow-inner">No Logo</div>
-                  )}
-                  <div className="flex flex-col gap-1 flex-1">
-                    <input type="file" onChange={handleLogoUpload} className="text-[10px] text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 transition-all cursor-pointer" accept="image/*" />
-                    <p className="text-[9px] text-slate-400 font-medium leading-relaxed">選擇要顯示在公開相簿的專屬 Logo (建議正方形)</p>
-                  </div>
-              </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
-              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
-                WhatsApp 聯繫設定
-              </h4>
-              <p className="text-[10px] text-slate-400 leading-relaxed font-medium">請輸入完整的國際格式 (例: 60123456789)</p>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">主要號碼 (WhatsApp 1)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例如: 60123456789"
-                    className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs outline-none focus:border-[#25D366] focus:bg-white transition-all shadow-inner font-mono"
-                    value={settings?.whatsapp_1 || ''}
-                    onChange={(e) => setSettingField('whatsapp_1', e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">備用號碼 (WhatsApp 2)</label>
-                  <input 
-                    type="text" 
-                    placeholder="例如: 60123456789"
-                    className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs outline-none focus:border-[#25D366] focus:bg-white transition-all shadow-inner font-mono"
-                    value={settings?.whatsapp_2 || ''}
-                    onChange={(e) => setSettingField('whatsapp_2', e.target.value)}
-                  />
-                </div>
-              </div>
-          </div>
-
-          <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
-            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
-              統一廠商管理 (Manufacturers)
-            </h3>
-            <p className="text-[10px] text-slate-400 leading-relaxed font-medium mt-1">
-              建立的廠商會自動帶入每種目錄分類中，方便您在快速為不同類別的照片標記相同廠商。
-            </p>
-            <div className="flex gap-1.5 mt-2">
-              <input 
-                type="text" 
-                placeholder="新增廠商名稱..."
-                className="flex-1 bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner font-medium"
-                value={newSubName}
-                onChange={(e) => setNewSubName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addManufacturer()}
-              />
-              <button 
-                onClick={addManufacturer}
-                className="px-5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all"
-              >
-                新增
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner min-h-[40px]">
-              {manufacturers.map(sub => (
-                <div key={sub.id} className="bg-white border border-slate-200 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
-                  <span className="text-xs font-bold text-slate-700">{sub.name}</span>
-                  <button onClick={() => deleteManufacturer(sub.id)} className="text-slate-400 hover:text-red-500 cursor-pointer p-0.5 rounded-full hover:bg-red-50 transition-colors">
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-              {manufacturers.length === 0 && <span className="text-[10px] text-slate-400 mt-1 italic flex items-center ml-1">尚無資料，請在上方新增</span>}
-            </div>
-          </section>
-
-          <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
-            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-purple-500 rounded-full"></div>
-              標籤管理 (Tags)
-            </h3>
-            <div className="flex gap-1.5 mt-1">
-              <input 
-                type="text" 
-                placeholder="輸入新標籤..."
-                className="flex-1 bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner font-medium"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addTag()}
-              />
-              <button 
-                onClick={addTag}
-                className="px-5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all"
-              >
-                新增
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner min-h-[40px]">
-              {tags.map(tag => (
-                <div key={tag.id} className="bg-white border border-slate-200 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
-                  <span className="text-xs font-bold text-slate-700">#{tag.name}</span>
-                  <button onClick={() => deleteTag(tag.id)} className="text-slate-400 hover:text-red-500 p-0.5 rounded-full hover:bg-red-50 transition-colors cursor-pointer">
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 shadow-md border border-slate-700 space-y-4 relative overflow-hidden group mt-6">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
-            
-            <div className="flex items-center justify-between">
-              <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                <Cloud size={18} className={user ? 'text-blue-400' : 'text-slate-400'} />
-                雲端同步
-              </h4>
-              {user && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/20 rounded-full border border-blue-500/30">
-                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-[9px] font-bold text-blue-300 uppercase leading-none mt-[1px]">Connected</span>
-                </div>
-              )}
-            </div>
-
-            <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-              將您的家具照片、目錄分類及標籤備份至 Supabase 雲端。透過此功能，您可以在多台設備之間同步產品目錄。
-            </p>
-
-            {!user ? (
-              <button 
-                onClick={async () => {
-                  try {
-                    await loginWithGoogle();
-                  } catch(e) {
-                    alert('登入失敗: ' + JSON.stringify(e));
-                  }
-                }}
-                className="w-full bg-white hover:bg-slate-50 text-slate-900 py-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all mt-2"
-              >
-                <LogIn size={16} /> 連接雲端帳號
-              </button>
-            ) : (
-              <div className="space-y-4 mt-2">
-                <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between shadow-inner">
-                  <div className="flex items-center gap-3 overflow-hidden flex-1">
-                    {user?.avatarUrl ? (
-                      <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm object-cover" alt="Avatar" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10 uppercase">
-                        {String(user?.displayName || user?.email || 'U').charAt(0)}
-                      </div>
-                    )}
-                    <div className="overflow-hidden">
-                      <p className="text-white text-xs font-black truncate">{String(user?.displayName || user?.email || '')}</p>
-                      <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5">{String(user?.email || '')}</p>
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => { 
-                      setConfirmDialog({
-                        message: '確定要登出嗎？您的本地數據將會保留，但無法繼續自動同步。',
-                        onConfirm: () => {
-                          logout(); 
-                          setUser(null);
-                          setActiveScreen('home');
-                        }
-                      });
-                    }}
-                    className="bg-white/10 hover:bg-red-500/20 text-white px-3 py-2 rounded-xl transition-all active:scale-95 text-[10px] font-bold border border-white/10 flex items-center gap-1.5"
-                  >
-                    <LogOut size={14} /> 登出
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button 
-                    onClick={performPushSync}
-                    disabled={isSyncing}
-                    className="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 active:scale-95 transition-all disabled:opacity-50"
-                  >
-                    {isSyncing && syncAction === 'push' ? (
-                      <>
-                        <RefreshCcw size={14} className="animate-spin" />
-                        上傳中...
-                      </>
-                    ) : (
-                      <>
-                        <CloudUpload size={14} />
-                        上傳備份
-                      </>
-                    )}
-                  </button>
-                  <button 
-                    onClick={performPullSync}
-                    disabled={isSyncing}
-                    className="bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50"
-                  >
-                    {isSyncing && syncAction === 'pull' ? (
-                      <>
-                        <RefreshCcw size={14} className="animate-spin" />
-                        下載中...
-                      </>
-                    ) : (
-                      <>
-                        <CloudDownload size={14} />
-                        下載備份
-                      </>
-                    )}
-                  </button>
-                  <div className="col-span-2 bg-black/20 border border-white/5 flex items-center justify-center rounded-xl p-2.5 text-center mt-1 shadow-inner">
-                    <p className="text-[9px] text-slate-400 font-medium">
-                      雲端共有 <span className="text-white font-bold">{cloudCount !== null ? cloudCount : '?'}</span> 張照片 | 最新備份: {lastSyncTime ? (isNaN(new Date(Number(lastSyncTime) || lastSyncTime).getTime()) ? '未知' : new Date(Number(lastSyncTime) || lastSyncTime).toLocaleString('zh-TW')) : '尚未'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-              <Sparkles size={16} className="text-purple-500" />
-              AI 智能辨識與自動打標
-            </h4>
-            <div className="space-y-3">
-              <input 
-                type="password" 
-                placeholder="第三方 AI API Key (例如 Gemini)..."
-                className="font-mono w-full rounded-xl border border-slate-200 p-3 text-xs bg-slate-50 shadow-inner focus:bg-white focus:border-purple-400 transition-all outline-none text-slate-800"
-                value={geminiApiKey}
-                onChange={(e) => {
-                  setGeminiApiKey(e.target.value);
-                  localStorage.setItem('gemini_api_key_safe', obfuscateKey(e.target.value));
-                }}
-              />
-              <input 
-                type="text" 
-                placeholder="指定模型名稱 (選填，如: tencent/hy3-preview:free)"
-                className="font-mono w-full rounded-xl border border-slate-200 p-3 text-xs bg-slate-50 shadow-inner focus:bg-white focus:border-purple-400 transition-all outline-none text-slate-800"
-                value={customModel}
-                onChange={(e) => {
-                  setCustomModel(e.target.value);
-                  localStorage.setItem('ai_custom_model', e.target.value);
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-              <Lock size={16} className="text-orange-500" />
-              內部查詢密碼 (Staff Access)
-            </h4>
-            <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-              設定密碼後，員工可在公開介面輸入此密碼，解鎖查看「廠商資訊」與「手動編號」，但無編輯權限。
-            </p>
-            <input 
-              type="password" 
-              placeholder="設定密碼 (例如: 1234)..."
-              className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm outline-none focus:border-orange-500 transition-all shadow-inner font-mono tracking-widest"
-              value={internalPassword}
-              onChange={(e) => {
-                setInternalPassword(e.target.value);
-                localStorage.setItem('internal_password', e.target.value);
-              }}
-            />
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-              <CloudDownload size={16} className="text-slate-600" />
-              本地資料匯出導入
-            </h4>
-            <div className="flex gap-2.5">
-              <button 
-                onClick={() => {
-                  const data = JSON.stringify({ photos, categories, tags, manufacturers });
-                  const blob = new Blob([data], { type: 'application/json' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'product_album_backup.json';
-                  a.click();
-                }}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all"
-              >
-                匯出 JSON
-              </button>
-              <label className="flex-1 bg-white text-slate-700 text-center py-3 rounded-xl text-xs font-bold border border-slate-300 cursor-pointer shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept="application/json" 
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      try {
-                        const json = JSON.parse(event.target?.result as string);
-                        if (json.photos) setPhotos(json.photos);
-                        if (json.categories) setCategories(json.categories);
-                        if (json.tags) setTags(json.tags);
-                        if (json.manufacturers) setManufacturers(json.manufacturers);
-                        alert('匯入成功');
-                      } catch (err) {
-                        alert('匯入失敗，請檢查文件格式');
-                      }
-                    };
-                    reader.readAsText(file);
-                  }}
-                />
-                匯入 JSON
-              </label>
-            </div>
-          </div>
-
-        </div>
-      </div>
+      <SettingsScreen 
+        activeScreen={activeScreen}
+        setActiveScreen={setActiveScreen}
+        settings={settings}
+        setSettings={setSettings}
+        saveSettings={saveSettings}
+        manufacturers={manufacturers}
+        setManufacturers={setManufacturers}
+        tags={tags}
+        setTags={setTags}
+        user={user}
+        loginWithGoogle={loginWithGoogle}
+        logout={logout}
+        triggerManualSync={triggerManualSync}
+        isSyncing={isSyncing}
+        syncPercent={syncPercent}
+        handleLogoUpload={handleLogoUpload}
+        setCategories={setCategories}
+        categories={categories}
+        dbCategories={dbCategories}
+        performPushSync={performPushSync}
+        performPullSync={performPullSync}
+        cloudCount={cloudCount}
+        lastSyncTime={lastSyncTime}
+        geminiApiKey={geminiApiKey}
+        setGeminiApiKey={setGeminiApiKey}
+        customModel={customModel}
+        setCustomModel={setCustomModel}
+        internalPassword={internalPassword}
+        setInternalPassword={setInternalPassword}
+        photos={photos}
+        setPhotos={setPhotos}
+      />
     );
   };
 
