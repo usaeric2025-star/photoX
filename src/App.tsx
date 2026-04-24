@@ -84,7 +84,6 @@ const DEFAULT_TAGS: Tag[] = [
   { id: 't1', name: '新品', aliases: ['新品', 'new'] },
   { id: 't2', name: '熱銷', aliases: ['热销', '熱銷', 'popular', 'best seller'] },
   { id: 't3', name: '特價', aliases: ['特价', '特價', 'sale'] },
-  { id: 't4', name: '木質', aliases: ['木質', 'wood'] },
 ];
 
 // --- Utilities ---
