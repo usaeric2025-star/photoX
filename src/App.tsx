@@ -220,9 +220,11 @@ export default function App() {
     if (e.target.files && e.target.files[0]) {
         try {
             const url = await uploadLogo(e.target.files[0]);
-            setSettings({...settings, logo_url: url});
-        } catch (err) {
-            alert('Upload failed');
+            setSettings(prev => ({ ...prev, logo_url: url }));
+            setAlertDialog({ title: '上傳成功', message: '品牌 Logo 已更新' });
+        } catch (err: any) {
+            console.error("Logo upload failed:", err);
+            setAlertDialog({ title: '上傳失敗', message: err.message || '請檢查網路連線或儲存空間權限' });
         }
     }
   }
@@ -451,10 +453,16 @@ export default function App() {
   }, [viewMode]);
 
   useEffect(() => {
-    if (activeScreen === 'settings' && user) {
+    if ((activeScreen === 'settings' || activeScreen === 'manage') && user) {
+      console.log("Fetching cloud count for user:", user.id);
       loadPhotosFromCloud(user.id)
-        .then(data => setCloudCount(data ? data.length : 0))
-        .catch(err => console.error("Failed to fetch cloud count", err));
+        .then(data => {
+          setCloudCount(data ? data.length : 0);
+        })
+        .catch(err => {
+          console.error("Failed to fetch cloud count", err);
+          setCloudCount(null);
+        });
     }
   }, [activeScreen, user]);
 

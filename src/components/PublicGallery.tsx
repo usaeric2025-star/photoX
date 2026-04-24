@@ -657,7 +657,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                     className="w-full py-4 px-6 bg-[#25D366] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
                     <MessageCircle size={20} />
-                    聯繫號碼 1
+                    {settings.whatsapp_1_name || '聯繫號碼 1'}
                   </button>
                 )}
                 {settings?.whatsapp_2 && (
@@ -666,7 +666,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                     className="w-full py-4 px-6 bg-[#128C7E] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
                     <MessageCircle size={20} />
-                    聯繫號碼 2
+                    {settings.whatsapp_2_name || '聯繫號碼 2'}
                   </button>
                 )}
               </div>

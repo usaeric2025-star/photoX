@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { 
   ChevronLeft, X, Cloud, LogOut, RefreshCcw, 
   Trash2, Download, Upload, MessageCircle, 
-  Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload
+  Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
+  User, Heart, Smile, Layout, ChevronRight
 } from 'lucide-react';
-import { SubCategory, Tag } from '../types';
+import { SubCategory, Tag, DB_Category } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface SettingsScreenProps {
   setActiveScreen: (screen: 'home' | 'add' | 'manage' | 'settings') => void;
@@ -24,7 +26,7 @@ interface SettingsScreenProps {
   handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   setCategories: React.Dispatch<React.SetStateAction<any[]>>;
   categories: any[];
-  dbCategories: any[];
+  dbCategories: DB_Category[];
   performPushSync: () => Promise<void>;
   performPullSync: () => Promise<void>;
   cloudCount: number | null;
@@ -78,6 +80,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 }) => {
   const [newSubName, setNewSubName] = useState('');
   const [newTagName, setNewTagName] = useState('');
+  const [showCatOverview, setShowCatOverview] = useState(false);
 
   const addManufacturer = () => {
     if (!newSubName.trim()) return;
@@ -249,10 +252,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               </div>
 
               <div className="text-center p-2 bg-black/20 rounded-xl border border-white/5">
-                <p className="text-[9px] text-slate-400">
-                  雲端照片: <span className="text-white">{cloudCount || 0}</span> | 
-                  最後同步: <span className="text-white">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-TW', { hour12: false }) : '無'}</span>
+                <p className="text-[10px] text-slate-400">
+                  雲端備份: <span className="text-white font-bold">{cloudCount !== null ? cloudCount : '---'} 張</span> | 
+                  最後同步: <span className="text-white font-bold">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-TW', { hour12: false }) : '無'}</span>
                 </p>
+                {cloudCount === 0 && user && (
+                    <p className="text-[8px] text-orange-400 font-bold mt-1 animate-pulse">提示：雲端暫無資料，請點擊「上傳備份」</p>
+                )}
               </div>
             </div>
           )}
@@ -264,38 +270,98 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
               WhatsApp 聯繫設定
             </h4>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 flex items-center gap-2">
-                  <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                  主要號碼 (+60...)
-                </label>
+            <div className="space-y-6">
+              {/* WhatsApp 1 */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 pl-1">
+                    <User size={12} className="text-slate-400" />
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none pt-0.5">
+                        聯絡人 A <Heart size={10} className="inline-block text-red-400 animate-pulse" />
+                    </label>
+                </div>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="例如: 60123456789"
+                    placeholder="聯絡名字 (例如: 阿強)"
                     className={inputClass}
+                    value={settings?.whatsapp_1_name || ''}
+                    onChange={(e) => setSettingField('whatsapp_1_name', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="號碼: 60123456789"
+                    className={`${inputClass} flex-[1.5]`}
                     value={settings?.whatsapp_1 || ''}
                     onChange={(e) => setSettingField('whatsapp_1', e.target.value)}
                   />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 flex items-center gap-2">
-                  <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                  備用號碼
-                </label>
+
+              {/* WhatsApp 2 */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 pl-1">
+                    <User size={12} className="text-slate-400" />
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none pt-0.5">
+                        聯絡人 B <Smile size={10} className="inline-block text-orange-400" />
+                    </label>
+                </div>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="例如: 60123456789"
+                    placeholder="聯絡名字 (例如: 小美)"
                     className={inputClass}
+                    value={settings?.whatsapp_2_name || ''}
+                    onChange={(e) => setSettingField('whatsapp_2_name', e.target.value)}
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="號碼: 60123456789"
+                    className={`${inputClass} flex-[1.5]`}
                     value={settings?.whatsapp_2 || ''}
                     onChange={(e) => setSettingField('whatsapp_2', e.target.value)}
                   />
                 </div>
               </div>
             </div>
+        </div>
+
+        {/* Category Overview (Scale/Compact栏目) */}
+        <div className={cardClass} id="section-categories-view">
+            <button 
+                onClick={() => setShowCatOverview(!showCatOverview)}
+                className="w-full flex items-center justify-between group"
+            >
+                <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <Layout size={16} className="text-blue-500" />
+                    產品分類總覽
+                </h4>
+                <motion.div animate={{ rotate: showCatOverview ? 90 : 0 }}>
+                    <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+                </motion.div>
+            </button>
+            
+            <AnimatePresence>
+                {showCatOverview && (
+                    <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden space-y-3 pt-2"
+                    >
+                        <p className="text-[10px] text-slate-400 font-bold bg-slate-50 p-2 rounded-xl italic">
+                            註：分類結構來自雲端配置，目前為唯讀模式。
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {dbCategories.map(cat => (
+                                <div key={cat.code} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-blue-200 transition-all">
+                                    <p className="text-xs font-bold text-slate-800">{cat.zh}</p>
+                                    <p className="text-[8px] text-slate-400 font-mono uppercase truncate">{cat.code}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
 
         {/* AI & Password Container */}

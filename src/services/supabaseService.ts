@@ -297,13 +297,19 @@ export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
 };
 
 export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
+  console.log("Fetching cloud photos for user:", userId);
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase Fetch Error (cloud photos):", error);
+    throw error;
+  }
+
+  console.log(`Found ${data?.length || 0} photos in cloud for user ${userId}`);
 
   return (data || []).map(item => {
     // Extract storageId from image_url if possible
@@ -392,33 +398,40 @@ export const saveSettings = async (settings: any) => {
 };
 
 export const uploadLogo = async (file: File) => {
-    const bucketName = 'app-assets';
-    const fileName = `logo-${Date.now()}`;
+    // Using the same bucket as photos for better reliability
+    const bucketName = BUCKET_NAME; 
+    const fileName = `app/logo-${Date.now()}.webp`;
     
-    const { error: uploadError } = await supabase.storage
-        .from(bucketName)
-        .upload(fileName, file);
+    try {
+        const { error: uploadError } = await supabase.storage
+            .from(bucketName)
+            .upload(fileName, file, { upsert: true });
 
-    if (uploadError) {
-        console.error("Failed to upload logo:", uploadError);
-        throw uploadError;
+        if (uploadError) {
+            console.error("Supabase Logo Upload Error:", uploadError);
+            throw new Error(`Logo 上傳失敗: ${uploadError.message}`);
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from(bucketName)
+            .getPublicUrl(fileName);
+
+        console.log("Logo uploaded successfully, URL:", publicUrl);
+
+        // Update settings table with new logo_url
+        const { error: updateError } = await supabase
+            .from('settings')
+            .update({ logo_url: publicUrl })
+            .eq('id', 1);
+
+        if (updateError) {
+            console.error("Failed to update logo url in settings:", updateError);
+        }
+
+        return publicUrl;
+    } catch (err: any) {
+        console.error("Logo upload process error:", err);
+        throw err;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(fileName);
-
-    // Update settings table with new logo_url
-    const { error: updateError } = await supabase
-        .from('settings')
-        .update({ logo_url: publicUrl })
-        .eq('id', 1); // Assuming ID 1 for settings
-
-    if (updateError) {
-        console.error("Failed to update logo url in settings:", updateError);
-        throw updateError;
-    }
-
-    return publicUrl;
 };
 
