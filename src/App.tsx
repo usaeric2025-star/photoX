@@ -1943,12 +1943,12 @@ export default function App() {
                       <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm" alt="Avatar" />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10 uppercase">
-                        {(user?.displayName || user?.email || 'U').charAt(0)}
+                        {String(user?.displayName || user?.email || 'U').charAt(0)}
                       </div>
                     )}
                     <div className="overflow-hidden">
-                      <p className="text-white text-xs font-black truncate">{user?.displayName || user?.email}</p>
-                      <p className="text-[9px] text-slate-500 font-medium truncate">{user?.email}</p>
+                      <p className="text-white text-xs font-black truncate">{String(user?.displayName || user?.email || '')}</p>
+                      <p className="text-[9px] text-slate-500 font-medium truncate">{String(user?.email || '')}</p>
                     </div>
                   </div>
                   <button 
@@ -2006,7 +2006,7 @@ export default function App() {
                   <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2 text-center">
                     <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">雲端同步狀態</p>
                     <p className="text-[10px] text-slate-300 font-mono">
-                      {photos.length} 張照片 | {lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-TW') : '尚未備份'}
+                      {photos.length} 張照片 | {lastSyncTime ? (isNaN(new Date(Number(lastSyncTime) || lastSyncTime).getTime()) ? '時間未知' : new Date(Number(lastSyncTime) || lastSyncTime).toLocaleString('zh-TW')) : '尚未備份'}
                     </p>
                   </div>
                 </div>
