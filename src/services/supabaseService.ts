@@ -155,18 +155,19 @@ export const checkImageHashExists = async (userId: string, hash: string): Promis
   }
 };
 
-export const savePhotoToCloud = async (userId: string, photo: Photo) => {
+export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<boolean> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
     throw new Error('No active session for database');
   }
 
-  // Ensure ID is UUID format as requested
+  // Ensure ID is UUID format
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
   const newId = isUUID ? photo.id : crypto.randomUUID();
 
-  const { error: dbError } = await supabase
+  // Upsert on item_code as requested, ignoring duplicates
+  const { data, error: dbError } = await supabase
     .from(TABLE_NAME)
     .upsert({
       id: newId,
@@ -183,36 +184,49 @@ export const savePhotoToCloud = async (userId: string, photo: Photo) => {
       dimensions: photo.dimensions || null,
       created_at: photo.createdAt,
       group_id: photo.groupId || null
-    }, { onConflict: 'id' });
+    }, { 
+      onConflict: 'item_code',
+      ignoreDuplicates: true 
+    })
+    .select('id');
 
   if (dbError) {
-    console.error("Supabase Database Insert Error:", dbError);
-    alert('數據備份失敗: ' + dbError.message);
+    console.error("Supabase Database Upsert Error:", dbError);
+    // Only alert if it's not a generic error that might be caught at higher level
+    // but the user wants errors to alert, so we keep it but throw
+    alert('數據同步失敗: ' + dbError.message);
     throw dbError;
   }
+
+  // If ignoreDuplicates is true, data will be empty if it was a duplicate
+  return data && data.length > 0;
 };
 
-export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgress?: (p: number) => void) => {
-  let count = 0;
+export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgress?: (p: number) => void): Promise<{success: number, skipped: number}> => {
+  let successCount = 0;
+  let skippedCount = 0;
+  
   for (const photo of photos) {
     try {
       if (!photo.image_url && photo.uri) {
-        // Use storageId if available, fallback to id
         const filename = photo.storageId || photo.id;
         photo.image_url = await uploadImage(userId, filename, photo.uri);
       }
-      await savePhotoToCloud(userId, photo);
-      count++;
-      if (onProgress) onProgress((count / photos.length) * 100);
+      const wasSaved = await savePhotoToCloud(userId, photo);
+      if (wasSaved) {
+        successCount++;
+      } else {
+        skippedCount++;
+      }
+      
+      if (onProgress) onProgress(((successCount + skippedCount) / photos.length) * 100);
     } catch (err: any) {
       console.error(`Sync failed for photo ${photo.id}:`, err);
       throw err;
     }
   }
   
-  if (photos.length > 0) {
-    alert('同步成功');
-  }
+  return { success: successCount, skipped: skippedCount };
 };
 
 export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {

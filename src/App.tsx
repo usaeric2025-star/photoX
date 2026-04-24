@@ -1817,17 +1817,14 @@ export default function App() {
     setSyncAction('push');
     setSyncPercent(0);
     try {
-      let successCount = 0;
-      let failCount = 0;
+      let results = { success: 0, skipped: 0 };
+      let hasError = false;
       
-      // We manually iterate or use a modified sync function that reports results
-      // For simplicity and clarity, we'll keep the categories/tags simple but report photo progress
       try {
-        await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
-        successCount = photos.length;
+        results = await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
       } catch (e) {
         console.error("Photo sync error:", e);
-        failCount = 1; // Generic fail indicator
+        hasError = true;
       }
 
       await syncCategoriesToCloud(user.id, categories);
@@ -1835,10 +1832,13 @@ export default function App() {
       
       setLastSyncTime(Date.now());
       
-      if (failCount === 0) {
-        setAlertDialog({ title: '同步完成', message: `已成功將 ${successCount} 筆資料同步至 Supabase 雲端！` });
+      if (!hasError) {
+        setAlertDialog({ 
+          title: '同步完成', 
+          message: `同步成功 ${results.success} 張，跳過重複 ${results.skipped} 張` 
+        });
       } else {
-        setAlertDialog({ title: '同步中斷', message: '部分資料同步失敗，請檢查網路連线或 Supabase 設定。' });
+        setAlertDialog({ title: '同步中斷', message: '部分資料同步失敗，請檢查網路連線或 Supabase 設定。' });
       }
     } catch (e) {
       console.error(e);
@@ -2120,6 +2120,12 @@ export default function App() {
               匯入備份
             </label>
           </div>
+        </div>
+
+        {/* Version Info */}
+        <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.0829</p>
         </div>
       </div>
     </div>
