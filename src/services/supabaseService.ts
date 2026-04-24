@@ -116,7 +116,7 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
       .from(BUCKET_NAME)
       .upload(fileName, blob, {
         contentType: 'image/jpeg',
-        upsert: true
+        upsert: false
       });
 
     if (storageError) {
