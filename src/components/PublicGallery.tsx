@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Photo, DB_Category } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -63,8 +63,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
   
+  const [columnCount, setColumnCount] = useState(3);
   const [visibleCount, setVisibleCount] = useState(12);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
 
   const displayPhotos = useMemo(() => {
     let filtered = photos;
@@ -112,7 +115,38 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
     };
   }, [displayPhotos.length, visibleCount]);
 
-  // Lightbox navigation
+  const toggleSelect = (id: string) => {
+    setSelectedPhotos(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const shareSelected = async () => {
+    const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
+    const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
+    console.log(`Share text: ${text}`);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Furniture',
+          text: `你好，我对以下家具有兴趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`,
+        });
+      } catch (e) {
+        console.error('Share err:', e);
+      }
+    }
+  };
+
+  const contactWhatsApp = () => {
+    const number = import.meta.env.VITE_WHATSAPP_NUMBER || '';
+    const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
+    const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
+    const msg = `你好，我对以下家具有兴趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`;
+    window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (lightboxIndex !== null && lightboxIndex > 0) {
@@ -177,139 +211,130 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   };
 
   return (
-    <div className="flex flex-col h-screen bg-transparent w-full overflow-hidden">
+    <div className="flex flex-col h-screen bg-bg w-full overflow-hidden text-text">
       {/* Header */}
-      <header className="shrink-0 relative z-50 bg-white/10 border-b border-white/20 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
+      <header className="shrink-0 z-50 bg-bg/90 backdrop-blur-sm border-b border-text/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight truncate leading-tight">{t.galleryName}</h1>
-          <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider truncate">
-            {t.gallerySub(photos.length)}
-          </p>
+          <h1 className="text-xl font-bold tracking-tight truncate leading-tight">Photo Gallery</h1>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          {internalPassword && (
-            <button 
-              onClick={() => isStaffMode ? setIsStaffMode(false) : setShowPassPrompt(true)}
-              className={`p-2 rounded-xl border transition-all ${isStaffMode ? 'bg-orange-50 border-orange-200 text-orange-600 shadow-inner' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'}`}
-              title={isStaffMode ? '退出員工模式' : '員工模式登入'}
-            >
-              {isStaffMode ? <Unlock size={18} /> : <Lock size={18} />}
-            </button>
-          )}
-          {!showExit && onLogin && (
-            <button 
-              onClick={onLogin}
-              className="px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border bg-white text-slate-800 shadow-sm border-slate-200 whitespace-nowrap"
-            >
-              {lang === 'zh' ? '登入管理' : 'Login'}
-            </button>
-          )}
-          {showExit && onExit && (
-            <button 
-              onClick={onExit}
-              className="px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border bg-blue-50 text-blue-600 border-blue-200 whitespace-nowrap"
-            >
-              {lang === 'zh' ? '我的相库' : 'Back'}
-            </button>
-          )}
-          {(!isStaffMode && !showExit) && (
-          <div className="flex bg-white/40 backdrop-blur-md border border-white/50 rounded-xl overflow-hidden p-0.5 shadow-sm ml-1 shrink-0">
-            {[
-              { id: 'zh', label: '中文' },
-              { id: 'en', label: 'EN' },
-              { id: 'ms', label: 'BM' }
-            ].map(l => (
-              <button
-                key={l.id}
-                onClick={() => setLang(l.id as any)}
-                className={`w-9 py-1 text-[10px] font-black tracking-wider transition-all rounded-[9px] flex items-center justify-center shrink-0 ${lang === l.id ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
-        )}
+           <div className="flex items-center gap-1 text-xs font-semibold">
+             {['zh', 'en', 'ms'].map(l => (
+               <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-accent text-bg' : 'bg-text/10 text-text/60'} px-2.5 py-1 rounded-md transition-colors`}>
+                 {l.toUpperCase()}
+               </button>
+             ))}
+           </div>
         </div>
       </header>
 
       {/* Filter & Search */}
-      <div className="shrink-0 p-6 z-40 bg-white/40 backdrop-blur-xl border-b border-white/50 space-y-4 shadow-sm">
-        <div className="relative">
-          <input 
-            type="text" 
-            placeholder={t.search}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-10 pr-4 text-sm font-medium text-slate-700 shadow-inner placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          />
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-              <X size={16} />
-            </button>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2 pb-1 -mx-2 px-2">
+      <div className="shrink-0 p-4 z-40 bg-bg border-b border-text/10 shadow-sm">
+        <div className="flex gap-2 mb-3">
+          <div className="relative flex-1">
+            <input 
+              type="text" 
+              placeholder={t.search}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white border border-text/10 rounded-lg py-2 pl-10 pr-4 text-sm text-text placeholder-text/30 focus:outline-none"
+            />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
+          </div>
+          {/* Column Toggle */}
           <button 
-            onClick={() => setSelectedCatCode(null)}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${!selectedCatCode ? 'bg-slate-800 text-white shadow-md' : 'bg-white/60 border-white text-slate-600 hover:bg-white'}`}
+            onClick={() => setColumnCount(prev => prev === 3 ? 2 : 3)}
+            className="p-2 bg-white border border-text/10 rounded-lg text-text/60 hover:text-text"
           >
-            {t.allCats}
+            {columnCount === 3 ? <Columns size={18} /> : <LayoutGrid size={18} />}
           </button>
-          {dbCategories.map(cat => (
-            <button 
-              key={cat.code}
-              onClick={() => setSelectedCatCode(cat.code)}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors ${selectedCatCode === cat.code ? 'bg-slate-800 text-white shadow-md' : 'bg-white/60 border-white text-slate-600 hover:bg-white'}`}
-            >
-              {cat[lang] || cat.en}
-            </button>
-          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {selectionMode ? (
+            <div className="flex justify-between w-full items-center">
+               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-sm font-semibold">Cancel</button>
+               <span className="text-sm">{selectedPhotos.size} selected</span>
+               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-sm font-semibold">Done</button>
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => setSelectedCatCode(null)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${!selectedCatCode ? 'bg-text text-bg' : 'bg-text/10 text-text/70'}`}
+              >
+                {t.allCats}
+              </button>
+              {dbCategories.map(cat => (
+                <button 
+                  key={cat.code}
+                  onClick={() => setSelectedCatCode(cat.code)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${selectedCatCode === cat.code ? 'bg-text text-bg' : 'bg-text/10 text-text/70'}`}
+                >
+                  {cat[lang] || cat.en}
+                </button>
+              ))}
+            </>
+          )}
         </div>
       </div>
 
       {/* Grid - Scrollable area */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-6">
+      <div className="flex-1 overflow-y-auto no-scrollbar p-4">
         {displayPhotos.length === 0 ? (                
-          photos.length === 0 ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 animate-pulse">
-                {Array.from({ length: 15 }).map((_, i) => (
-                    <div key={i} className="aspect-square bg-slate-100 rounded-2xl" />
-                ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-              <ImageIcon size={48} className="mb-4 opacity-50" />
-              <p className="font-medium text-sm">{t.empty}</p>
-            </div>
-          )
+          <div className="flex flex-col items-center justify-center py-20 text-text/40">
+            <p className="text-sm">{t.empty}</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          <div className={`grid gap-3 ${columnCount === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             {visiblePhotos.map((photo, i) => (
               <div 
                 key={photo.id}
-                onClick={() => setLightboxIndex(i)}
-                className="aspect-square bg-slate-200 rounded-2xl overflow-hidden cursor-pointer relative group"
+                onClick={() => {
+                  if (selectionMode) {
+                    toggleSelect(photo.id);
+                  } else {
+                    setLightboxIndex(i);
+                  }
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  if (!selectionMode) setSelectionMode(true);
+                  toggleSelect(photo.id);
+                }}
+                className={`aspect-square bg-white rounded-3xl overflow-hidden cursor-pointer relative shadow-sm group ${selectedPhotos.has(photo.id) ? 'ring-4 ring-accent' : ''}`}
               >
                 <img 
                   src={photo.image_url || photo.uri} 
                   alt={photo.name}
                   loading="lazy" 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(photo.id) ? 'scale-90' : 'group-hover:scale-105'}`}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 md:p-3">
-                  <p className="text-white text-[10px] md:text-xs font-bold truncate">{photo.name}</p>
+                
+                {selectedPhotos.has(photo.id) && (
+                  <div className="absolute top-2 right-2 bg-accent text-bg rounded-full p-1">
+                    <X size={12} />
+                  </div>
+                )}
+                
+                <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-text/50 to-transparent">
+                  <p className="text-bg text-[10px] font-semibold truncate">
+                    {dbCategories.find(c => c.code === photo.category)?.[lang] || photo.category}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
         )}
-        <div ref={observerTarget} className="h-20 mt-4 flex items-center justify-center">
-            {visibleCount < displayPhotos.length && (
-              <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-500 justify-center rounded-full animate-spin"></div>
-            )}
-        </div>
+        <div ref={observerTarget} className="h-10"></div>
       </div>
+
+      {/* Selection Footer */}
+      {selectionMode && selectedPhotos.size > 0 && (
+         <div className="fixed bottom-0 left-0 w-full bg-bg border-t border-text/10 p-4 flex gap-4 shadow-lg z-[300]">
+             <button onClick={shareSelected} className="flex-1 bg-text text-bg py-3 rounded-lg text-sm font-semibold">Share</button>
+             <button onClick={contactWhatsApp} className="flex-1 bg-[#25D366] text-white py-3 rounded-lg text-sm font-semibold">WhatsApp</button>
+         </div>
+      )}
 
       {/* Lightbox */}
       <AnimatePresence>

@@ -365,3 +365,47 @@ export const loadCategoriesFromCloud = async (): Promise<DB_Category[]> => {
   return data || [];
 };
 
+export const fetchSettings = async () => {
+    const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .single();
+    
+    if (error) {
+        console.error("Failed to fetch settings:", error);
+        return null;
+    }
+    return data;
+};
+
+export const uploadLogo = async (file: File) => {
+    const bucketName = 'app-assets';
+    const fileName = `logo-${Date.now()}`;
+    
+    const { error: uploadError } = await supabase.storage
+        .from(bucketName)
+        .upload(fileName, file);
+
+    if (uploadError) {
+        console.error("Failed to upload logo:", uploadError);
+        throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(fileName);
+
+    // Update settings table with new logo_url
+    const { error: updateError } = await supabase
+        .from('settings')
+        .update({ logo_url: publicUrl })
+        .eq('id', 1); // Assuming ID 1 for settings
+
+    if (updateError) {
+        console.error("Failed to update logo url in settings:", updateError);
+        throw updateError;
+    }
+
+    return publicUrl;
+};
+

@@ -46,7 +46,9 @@ import {
   checkImageHashExists,
   uploadImage,
   compressImage,
-  loadCategoriesFromCloud
+  loadCategoriesFromCloud,
+  fetchSettings,
+  uploadLogo
 } from './services/supabaseService';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { PublicGallery } from './components/PublicGallery';
@@ -207,6 +209,18 @@ export default function App() {
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [settings, setSettings] = useState<any>(null);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+        try {
+            const url = await uploadLogo(e.target.files[0]);
+            setSettings({...settings, logo_url: url});
+        } catch (err) {
+            alert('Upload failed');
+        }
+    }
+  }
 
   const handleManageClick = () => {
     if (user) {
@@ -270,6 +284,15 @@ export default function App() {
   const [promptValue, setPromptValue] = useState('');
 
   useEffect(() => {
+    fetchSettings().then(s => {
+      setSettings(s);
+      if (s) {
+        document.documentElement.style.setProperty('--custom-bg', s.background_color);
+        document.documentElement.style.setProperty('--custom-text', s.primary_color);
+        document.documentElement.style.setProperty('--custom-accent', s.accent_color);
+      }
+    });
+
     loadCategoriesFromCloud().then(setDbCategories);
   }, []);
 
@@ -1020,13 +1043,20 @@ export default function App() {
   // --- UI Render Functions (Defined as functions to prevent remounting) ---
   const renderMainHeader = () => (
     <header className="relative z-50 bg-white/10 border-b border-white/20 px-6 pt-10 pb-4 flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight shrink-0">
-          {viewMode === 'public' ? 'Gallery' : 'photoX'}
-        </h1>
-        <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">
-          {viewMode === 'public' ? `共 ${publicPhotos.length} 張公開照片` : `已匯入 ${photos.length} 張照片`}
-        </p>
+      <div className="flex items-center gap-4">
+        {settings?.logo_url ? (
+            <img src={settings.logo_url} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
+        ) : (
+            <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-xs text-slate-500 font-bold">LOGO</div>
+        )}
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight shrink-0">
+            {viewMode === 'public' ? 'Gallery' : (settings?.app_name || 'photoX')}
+          </h1>
+          <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">
+            {viewMode === 'public' ? `共 ${publicPhotos.length} 張公開照片` : `已匯入 ${photos.length} 張照片`}
+          </p>
+        </div>
       </div>
       <div className="flex items-center gap-2 relative z-50 shrink-0">
         {!user ? (
@@ -1086,14 +1116,19 @@ export default function App() {
             >
               <Settings size={20} />
             </button>
-            <label className="w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-white shadow-md text-slate-800 transition-all active:scale-90 cursor-pointer">
-              <Plus size={24} />
-              <input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoImport} />
-            </label>
           </>
         )}
       </div>
     </header>
+  );
+
+  const renderFloatingActionButton = () => (
+    viewMode === 'private' && (
+      <label className="fixed bottom-6 right-6 w-16 h-16 bg-black text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform z-[100] cursor-pointer">
+        <Plus size={32} />
+        <input type="file" multiple accept="image/*" className="hidden" onChange={handlePhotoImport} />
+      </label>
+    )
   );
 
   const renderSearchAndFilter = () => (
@@ -2050,6 +2085,19 @@ export default function App() {
         </div>
 
         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-20">
+          {/* Logo Settings */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+              <h4 className="font-bold text-slate-800 text-sm">App Logo</h4>
+              <div className="flex items-center gap-4">
+                  {settings?.logo_url ? (
+                      <img src={settings.logo_url} className="w-16 h-16 rounded-full object-cover" alt="Company Logo" />
+                  ) : (
+                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 text-xs">No Logo</div>
+                  )}
+                  <input type="file" onChange={handleLogoUpload} className="text-xs" accept="image/*" />
+              </div>
+          </div>
+
           {/* Supabase Cloud Sync Section */}
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 shadow-xl border border-white/10 space-y-4 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
@@ -2756,6 +2804,7 @@ export default function App() {
                 onClick={async () => {
                   await loginWithGoogle();
                   setShowManageAccess(false);
+                  setActiveScreen('manage');
                 }}
                 className="w-full text-slate-400 text-sm hover:text-slate-600"
               >
@@ -2996,6 +3045,7 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      {renderFloatingActionButton()}
     </div>
   );
 }
