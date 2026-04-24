@@ -366,29 +366,6 @@ export default function App() {
         if (savedCats && savedCats.length > 0) setCategories(savedCats);
         if (savedTags && savedTags.length > 0) setTags(savedTags);
         if (savedSyncTime) setLastSyncTime(savedSyncTime);
-        
-        // Auto-fetch from cloud if user is logged in but has no local data
-        // Only do this if locally empty to avoid overwriting or race conditions
-        if (u && (!savedPhotos || savedPhotos.length === 0)) {
-          const cloudPhotos = await loadPhotosFromCloud(u.id);
-          if (cloudPhotos && cloudPhotos.length > 0) {
-            setPhotos(cloudPhotos);
-            await saveData('product_photos', cloudPhotos);
-          }
-          const cloudCats = await loadCategoriesFromCloud(u.id);
-          if (cloudCats && cloudCats.length > 0) {
-            setCategories(cloudCats);
-            await saveData('product_categories', cloudCats);
-          }
-          const cloudTags = await loadTagsFromCloud(u.id);
-          if (cloudTags && cloudTags.length > 0) {
-            setTags(cloudTags);
-            await saveData('product_tags', cloudTags);
-          }
-          const now = Date.now();
-          setLastSyncTime(now);
-          await saveData('last_sync_time', now);
-        }
       } catch (e) {
         console.error("Data load failed:", e);
       } finally {
@@ -2147,7 +2124,7 @@ export default function App() {
         {/* Version Info */}
         <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1711</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1714</p>
         </div>
       </div>
     </div>
