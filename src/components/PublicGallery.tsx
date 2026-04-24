@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Photo, DB_Category } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers } from 'lucide-react';
+import { Photo, DB_Category, Category, Tag } from '../types';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Grid3X3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -307,16 +307,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
       {lightboxIndex === null && (
-        <header className="shrink-0 z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
+        <header className="shrink-0 z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-3 pb-3 flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
             {settings?.logo_url ? (
-              <img src={settings.logo_url} alt="Logo" className="h-14 max-w-[200px] object-contain cursor-pointer" />
+              <img src={settings.logo_url} alt="Logo" className="h-12 max-w-[200px] object-contain cursor-pointer" />
             ) : (
               <h1 className="text-2xl font-black tracking-tight truncate leading-tight cursor-pointer text-[#1D3557]">Gallery</h1>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-             <div className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest">
+             <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
                {['zh', 'en', 'ms'].map(l => (
                  <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95`}>
                    {l}
@@ -340,6 +340,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             />
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1D3557]/30" />
           </div>
+          
+          <div className="flex bg-[#1D3557]/5 p-1 rounded-2xl border border-[#1D3557]/10">
+            {[2, 3, 5].map(cnt => (
+              <button
+                key={cnt}
+                onClick={() => setColumnCount(cnt)}
+                className={`w-9 h-9 rounded-xl transition-all flex items-center justify-center ${columnCount === cnt ? 'bg-[#1D3557] text-white shadow-sm' : 'text-[#1D3557]/40 hover:text-[#1D3557]'}`}
+              >
+                {cnt === 2 && <Columns size={16} />}
+                {cnt === 3 && <LayoutGrid size={16} />}
+                {cnt === 5 && <Grid3X3 size={16} />}
+              </button>
+            ))}
+          </div>
+
           {/* Group Toggle */}
           <button
               onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
@@ -435,7 +450,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3">
+          <div className={`grid gap-3 ${
+            columnCount === 2 ? 'grid-cols-2' : 
+            columnCount === 3 ? 'grid-cols-3' : 
+            'grid-cols-5'
+          }`}>
             {visiblePhotos.map((photo, i) => (
               <motion.div 
                 key={photo.id}
@@ -517,7 +536,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
         <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400]">
             <button 
               onClick={scrollToTop} 
-              className="bg-text text-bg p-4 rounded-full shadow-lg transition-all active:scale-95"
+              className="bg-[#1D3557] text-[#FDFAF6] p-4 rounded-full shadow-lg transition-all active:scale-95 border border-[#1D3557]/10"
             >
               <ArrowUpToLine size={24} />
             </button>

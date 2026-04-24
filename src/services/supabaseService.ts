@@ -375,22 +375,25 @@ export const fetchSettings = async () => {
     const { data, error } = await supabase
         .from('settings')
         .select('*')
-        .single();
+        .limit(1);
     
     if (error) {
         console.error("Failed to fetch settings:", error);
         return null;
     }
     
+    const settings = data && data.length > 0 ? data[0] : null;
+    if (!settings) return null;
+    
     // Parse JSON data if it exists
-    if (data.categories_json) {
-      try { data.categories = JSON.parse(data.categories_json); } catch(e) { console.error(e); }
+    if (settings.categories_json) {
+      try { settings.categories = JSON.parse(settings.categories_json); } catch(e) { console.error(e); }
     }
-    if (data.tags_json) {
-      try { data.tags = JSON.parse(data.tags_json); } catch(e) { console.error(e); }
+    if (settings.tags_json) {
+      try { settings.tags = JSON.parse(settings.tags_json); } catch(e) { console.error(e); }
     }
     
-    return data;
+    return settings;
 };
 
 export const saveSettings = async (settings: any) => {

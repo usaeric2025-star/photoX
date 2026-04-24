@@ -128,42 +128,42 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   // Consistent Button Classes
-  const primaryBtnClass = "px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
-  const secondaryBtnClass = "px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-2xl text-xs font-bold shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
-  const accentBtnClass = "px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
+  const primaryBtnClass = "px-5 py-2.5 bg-[#1D3557] hover:bg-[#1D3557]/90 text-[#FDFAF6] rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
+  const secondaryBtnClass = "px-5 py-2.5 bg-[#FDFAF6] border border-[#1D3557]/20 hover:bg-[#1D3557]/5 text-[#1D3557] rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
+  const accentBtnClass = "px-5 py-2.5 bg-[#D4A853] hover:bg-[#D4A853]/90 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
   
-  const inputClass = "flex-1 bg-slate-50 border border-slate-200 p-3 rounded-2xl text-xs outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner font-medium placeholder:text-slate-400";
-  const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-slate-200 space-y-4";
+  const inputClass = "flex-1 bg-[#1D3557]/5 border border-[#1D3557]/10 p-3 rounded-2xl text-[11px] outline-none focus:border-[#D4A853] focus:bg-white transition-all shadow-inner font-bold tracking-tight placeholder:text-[#1D3557]/30 text-[#1D3557]";
+  const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-[#1D3557]/10 space-y-4";
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
+    <div className="fixed inset-0 z-[100] bg-[#FDFAF6] flex flex-col pt-safe">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-3 bg-white shadow-sm">
+      <div className="px-6 py-4 border-b border-[#1D3557]/10 flex items-center gap-3 bg-[#FDFAF6] sticky top-0 z-10">
         <button 
           onClick={() => setActiveScreen('home')} 
-          className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100"
+          className="p-2 -ml-2 text-[#1D3557]/50 hover:text-[#1D3557] transition-colors rounded-full active:bg-[#1D3557]/5"
           id="btn-settings-back"
         >
           <ChevronLeft size={24} />
         </button>
-        <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1 tracking-tight">設定與管理</h2>
-        <Settings2 size={20} className="text-slate-300" />
+        <h2 className="font-black text-sm text-[#1D3557] uppercase tracking-widest flex-1 ml-1 leading-none">Settings & Management</h2>
+        <Settings2 size={20} className="text-[#1D3557]/20" />
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-scrollbar pb-32">
         
         {/* Logo Section */}
         <div className={cardClass} id="section-logo">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-orange-500 rounded-full"></div>
-              品牌 Logo 設定
+            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
+              Logo Setting
             </h4>
             <div className="flex items-center gap-5">
                 <div className="relative group">
                   {settings?.logo_url ? (
                       <img src={settings.logo_url} className="w-16 h-16 rounded-3xl object-cover shadow-md border-2 border-white" alt="Logo" />
                   ) : (
-                      <div className="w-16 h-16 bg-slate-50 rounded-3xl flex flex-col items-center justify-center text-slate-300 shadow-inner border border-slate-100 italic">
+                      <div className="w-16 h-16 bg-[#1D3557]/5 rounded-3xl flex flex-col items-center justify-center text-[#1D3557]/20 shadow-inner border border-[#1D3557]/10 italic">
                         <ImageIcon size={20} className="mb-1" />
                         <span className="text-[8px]">No Logo</span>
                       </div>
@@ -172,7 +172,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <div className="flex flex-col gap-2 flex-1">
                   <label className="relative overflow-hidden block">
                     <span className={secondaryBtnClass}>
-                      <Upload size={14} /> 選擇圖片
+                      <Upload size={14} /> Upload Logo
                     </span>
                     <input 
                       type="file" 
@@ -181,24 +181,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                       accept="image/*" 
                     />
                   </label>
-                  <p className="text-[9px] text-slate-400 font-medium leading-relaxed px-1">建議比例 1:1，將顯示於相簿頂端</p>
+                  <p className="text-[9px] text-[#1D3557]/40 font-black uppercase tracking-tighter leading-relaxed px-1">Ratio 1:1 recommended</p>
                 </div>
             </div>
         </div>
 
         {/* Sync Section Refined */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-[32px] p-6 shadow-xl border border-slate-700 space-y-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
+        <div className="bg-[#1D3557] rounded-[32px] p-6 shadow-xl border border-white/5 space-y-4 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A853]/10 blur-3xl -mr-10 -mt-10 group-hover:bg-[#D4A853]/20 transition-all duration-700"></div>
           
           <div className="flex items-center justify-between">
-            <h4 className="font-bold text-white text-sm flex items-center gap-2">
-              <Cloud size={18} className={user ? 'text-blue-400' : 'text-slate-400'} />
-              雲端同步管理
+            <h4 className="font-black text-white text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <Cloud size={18} className={user ? 'text-[#D4A853]' : 'text-white/30'} />
+              Cloud Storage Management
             </h4>
             {user && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/20 rounded-full border border-blue-500/30">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider">已連接</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-[#D4A853]/20 rounded-full border border-[#D4A853]/30">
+                <div className="w-1.5 h-1.5 bg-[#D4A853] rounded-full animate-pulse"></div>
+                <span className="text-[10px] font-black text-[#D4A853] uppercase tracking-wider">Connected</span>
               </div>
             )}
           </div>
@@ -206,10 +206,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           {!user ? (
             <button 
               onClick={loginWithGoogle}
-              className="w-full py-4 bg-white hover:bg-slate-50 text-slate-900 rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
+              className="w-full py-4 bg-white hover:bg-[#FDFAF6] text-[#1D3557] rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
             >
               <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-              使用 Google 登入帳號
+              Sign in with Google
             </button>
           ) : (
             <div className="space-y-4 pt-1">
@@ -217,18 +217,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20" alt="Avatar" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold border border-blue-500/20">
+                  <div className="w-10 h-10 rounded-full bg-[#D4A853]/20 flex items-center justify-center text-[#D4A853] font-black border border-[#D4A853]/20">
                     {String(user?.displayName || 'U').charAt(0)}
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-xs font-bold truncate">{user?.displayName}</p>
-                  <p className="text-[9px] text-slate-500 truncate">{user?.email}</p>
+                  <p className="text-white text-xs font-black truncate uppercase tracking-tight">{user?.displayName}</p>
+                  <p className="text-[9px] text-white/40 truncate font-bold tracking-tighter">{user?.email}</p>
                 </div>
                 <button 
                   onClick={logout}
-                  className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-                  title="登出"
+                  className="p-2 text-white/30 hover:text-[#D4A853] transition-colors"
+                  title="Logout"
                 >
                   <LogOut size={18} />
                 </button>
@@ -238,27 +238,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 <button 
                   onClick={performPushSync}
                   disabled={isSyncing}
-                  className="bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+                  className="bg-[#D4A853] hover:bg-[#D4A853]/90 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
                 >
-                  <CloudUpload size={16} /> 上傳備份
+                  <CloudUpload size={16} /> Backup
                 </button>
                 <button 
                   onClick={performPullSync}
                   disabled={isSyncing}
-                  className="bg-slate-700 hover:bg-slate-600 text-white py-3.5 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+                  className="bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all placeholder:border-white/20"
                 >
-                  <CloudDownload size={16} /> 下載數據
+                  <CloudDownload size={16} /> Restore
                 </button>
               </div>
 
               <div className="text-center p-2 bg-black/20 rounded-xl border border-white/5">
-                <p className="text-[10px] text-slate-400">
-                  雲端備份: <span className="text-white font-bold">{cloudCount !== null ? cloudCount : '---'} 張</span> | 
-                  最後同步: <span className="text-white font-bold">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-TW', { hour12: false }) : '無'}</span>
+                <p className="text-[10px] text-white/40 uppercase tracking-widest leading-loose">
+                  Cloud: <span className="text-white font-black">{cloudCount !== null ? cloudCount : '---'} Pcs</span> | 
+                  Sync: <span className="text-white font-black">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('en-US', { hour12: false }) : 'N/A'}</span>
                 </p>
-                {cloudCount === 0 && user && (
-                    <p className="text-[8px] text-orange-400 font-bold mt-1 animate-pulse">提示：雲端暫無資料，請點擊「上傳備份」</p>
-                )}
               </div>
             </div>
           )}
@@ -266,30 +263,30 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {/* WhatsApp Section */}
         <div className={cardClass} id="section-whatsapp">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
               <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
-              WhatsApp 聯繫設定
+              WhatsApp Contacts
             </h4>
             <div className="space-y-6">
               {/* WhatsApp 1 */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2 pl-1">
-                    <User size={12} className="text-slate-400" />
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none pt-0.5">
-                        聯絡人 A <Heart size={10} className="inline-block text-red-400 animate-pulse" />
+                    <User size={12} className="text-[#1D3557]/30" />
+                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
+                        Contact Person A <Heart size={10} className="inline-block text-red-400 animate-pulse" />
                     </label>
                 </div>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="聯絡名字 (例如: 阿強)"
+                    placeholder="Name (e.g. John)"
                     className={inputClass}
                     value={settings?.whatsapp_1_name || ''}
                     onChange={(e) => setSettingField('whatsapp_1_name', e.target.value)}
                   />
                   <input 
                     type="text" 
-                    placeholder="號碼: 60123456789"
+                    placeholder="Number: 60123456789"
                     className={`${inputClass} flex-[1.5]`}
                     value={settings?.whatsapp_1 || ''}
                     onChange={(e) => setSettingField('whatsapp_1', e.target.value)}
@@ -301,21 +298,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center gap-2 pl-1">
                     <User size={12} className="text-slate-400" />
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none pt-0.5">
-                        聯絡人 B <Smile size={10} className="inline-block text-orange-400" />
+                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
+                        Contact Person B <Smile size={10} className="inline-block text-[#D4A853]" />
                     </label>
                 </div>
                 <div className="flex gap-2">
                   <input 
                     type="text" 
-                    placeholder="聯絡名字 (例如: 小美)"
+                    placeholder="Name (e.g. Mary)"
                     className={inputClass}
                     value={settings?.whatsapp_2_name || ''}
                     onChange={(e) => setSettingField('whatsapp_2_name', e.target.value)}
                   />
                   <input 
                     type="text" 
-                    placeholder="號碼: 60123456789"
+                    placeholder="Number: 60123456789"
                     className={`${inputClass} flex-[1.5]`}
                     value={settings?.whatsapp_2 || ''}
                     onChange={(e) => setSettingField('whatsapp_2', e.target.value)}
@@ -325,18 +322,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             </div>
         </div>
 
-        {/* Category Overview (Scale/Compact栏目) */}
+        {/* Category Overview */}
         <div className={cardClass} id="section-categories-view">
             <button 
                 onClick={() => setShowCatOverview(!showCatOverview)}
                 className="w-full flex items-center justify-between group"
             >
-                <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                    <Layout size={16} className="text-blue-500" />
-                    產品分類總覽
+                <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+                    <Layout size={16} className="text-[#1D3557]" />
+                    Category Overview
                 </h4>
                 <motion.div animate={{ rotate: showCatOverview ? 90 : 0 }}>
-                    <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-500 transition-colors" />
+                    <ChevronRight size={18} className="text-[#1D3557]/20 group-hover:text-[#1D3557] transition-colors" />
                 </motion.div>
             </button>
             
@@ -348,14 +345,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden space-y-3 pt-2"
                     >
-                        <p className="text-[10px] text-slate-400 font-bold bg-slate-50 p-2 rounded-xl italic">
-                            註：分類結構來自雲端配置，目前為唯讀模式。
+                        <p className="text-[10px] text-[#1D3557]/40 font-black uppercase tracking-tight bg-[#1D3557]/5 p-2 rounded-xl italic">
+                            Structure is derived from cloud configuration (Read-only).
                         </p>
                         <div className="grid grid-cols-2 gap-2">
                             {dbCategories.map(cat => (
-                                <div key={cat.code} className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-blue-200 transition-all">
-                                    <p className="text-xs font-bold text-slate-800">{cat.zh}</p>
-                                    <p className="text-[8px] text-slate-400 font-mono uppercase truncate">{cat.code}</p>
+                                <div key={cat.code} className="p-3 bg-[#FDFAF6] border border-[#1D3557]/10 rounded-2xl shadow-sm hover:border-[#D4A853] transition-all">
+                                    <p className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{cat.zh}</p>
+                                    <p className="text-[8px] text-[#1D3557]/40 font-black uppercase truncate tracking-widest">{cat.code}</p>
                                 </div>
                             ))}
                         </div>
@@ -367,13 +364,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* AI & Password Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className={cardClass} id="section-ai">
-              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                <Sparkles size={16} className="text-purple-500" />
-                AI 智能設定
+              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+                <Sparkles size={16} className="text-[#D4A853]" />
+                AI Smart Setup
               </h4>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase ml-1">Gemini API Key</p>
+                  <p className="text-[9px] font-black text-[#1D3557]/40 uppercase ml-1 tracking-widest">Gemini API Key</p>
                   <input 
                     type="password" 
                     placeholder="Enter API Key..."
@@ -386,10 +383,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[9px] font-bold text-slate-400 uppercase ml-1">自定義模型名稱</p>
+                  <p className="text-[9px] font-black text-[#1D3557]/40 uppercase ml-1 tracking-widest">Custom Model</p>
                   <input 
                     type="text" 
-                    placeholder="指定模型 (選填)"
+                    placeholder="e.g. gemini-2.0-flash"
                     className={`${inputClass} font-mono`}
                     value={customModel}
                     onChange={(e) => {
@@ -402,16 +399,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </div>
 
           <div className={cardClass} id="section-password">
-              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                <Lock size={16} className="text-orange-500" />
-                Staff 密碼
+              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+                <Lock size={16} className="text-[#D4A853]" />
+                Staff Password
               </h4>
-              <p className="text-[10px] text-slate-400 leading-relaxed font-bold">
-                解鎖查看內部隱密資訊。
+              <p className="text-[10px] text-[#1D3557]/40 font-black uppercase tracking-tight leading-relaxed">
+                Required for internal visibility actions.
               </p>
               <input 
                 type="password" 
-                placeholder="設定密碼..."
+                placeholder="Set password..."
                 className={`${inputClass} font-mono tracking-widest`}
                 value={internalPassword}
                 onChange={(e) => {
@@ -425,16 +422,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* Manufacturers Section */}
         <section className={cardClass} id="section-manufacturers">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
-              廠商名單管理
+            <h3 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-[#1D3557] rounded-full"></div>
+              Manufacturers
             </h3>
-            <span className="text-[10px] text-slate-400 font-bold">{(manufacturers || []).length} 筆</span>
+            <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(manufacturers || []).length} Items</span>
           </div>
           <div className="flex gap-2">
             <input 
               type="text" 
-              placeholder="新增廠商..."
+              placeholder="Add Manufacturer..."
               className={inputClass}
               value={newSubName}
               onChange={(e) => setNewSubName(e.target.value)}
@@ -444,11 +441,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               <Plus size={16} />
             </button>
           </div>
-          <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-[28px] border border-slate-100 shadow-inner min-h-[48px]">
+          <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
             {(manufacturers || []).map(sub => (
-              <div key={sub.id} className="bg-white border border-slate-200 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
-                <span className="text-[11px] font-bold text-slate-700">{sub.name}</span>
-                <button onClick={() => deleteManufacturer(sub.id)} className="text-slate-300 hover:text-red-500 p-1 rounded-full"><X size={14} /></button>
+              <div key={sub.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
+                <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{sub.name}</span>
+                <button onClick={() => deleteManufacturer(sub.id)} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
           </div>
@@ -457,30 +454,30 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         {/* Tags Section */}
         <section className={cardClass} id="section-tags">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-purple-500 rounded-full"></div>
-              風格標籤管理
+            <h3 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
+              Common Tags
             </h3>
-            <span className="text-[10px] text-slate-400 font-bold">{(tags || []).length} 筆</span>
+            <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(tags || []).length} Items</span>
           </div>
           <div className="flex gap-2">
             <input 
               type="text" 
-              placeholder="輸入標籤..."
+              placeholder="Add Tag (e.g. Clear Stock)..."
               className={inputClass}
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addTag()}
             />
-            <button onClick={addTag} className={primaryBtnClass}>
+            <button onClick={addTag} className={accentBtnClass}>
               <Plus size={16} />
             </button>
           </div>
-          <div className="flex flex-wrap gap-2 p-3 bg-slate-50 rounded-[28px] border border-slate-100 shadow-inner min-h-[48px]">
+          <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
             {(tags || []).map(tag => (
-              <div key={tag.id} className="bg-white border border-slate-200 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
-                <span className="text-[11px] font-bold text-slate-700">#{tag.name}</span>
-                <button onClick={() => deleteTag(tag.id)} className="text-slate-300 hover:text-red-500 p-1 rounded-full"><X size={14} /></button>
+              <div key={tag.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
+                <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{tag.name}</span>
+                <button onClick={() => deleteTag(tag.id)} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
           </div>
@@ -488,11 +485,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         {/* Export Data */}
         <div className={cardClass}>
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <Download size={16} className="text-slate-600" />
-              本地數據備份匯出
+            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <Download size={16} className="text-[#1D3557]" />
+              Data Backup & Restore
             </h4>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button 
                 onClick={() => {
                   const data = JSON.stringify({ photos, categories, tags, manufacturers });
@@ -503,11 +500,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   a.download = `furniture_backup_${new Date().toISOString().split('T')[0]}.json`;
                   a.click();
                 }}
-                className={primaryBtnClass + " flex-1"}
+                className={primaryBtnClass}
               >
-                匯出 JSON 檔案
+                Export JSON
               </button>
-              <label className={secondaryBtnClass + " flex-1 cursor-pointer"}>
+              <label className={secondaryBtnClass + " cursor-pointer"}>
                 <input 
                   type="file" 
                   className="hidden" 
@@ -522,15 +519,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                         if (json.photos) setPhotos(json.photos);
                         if (json.tags) setTags(json.tags);
                         if (json.manufacturers) setManufacturers(json.manufacturers);
-                        alert('數據已匯入成功！');
+                        alert('Data imported successfully!');
                       } catch (err) {
-                        alert('匯入失敗，格式錯誤');
+                        alert('Import failed, incorrect format');
                       }
                     };
                     reader.readAsText(file);
                   }}
                 />
-                導入備份 JSON
+                Import JSON
               </label>
             </div>
         </div>
