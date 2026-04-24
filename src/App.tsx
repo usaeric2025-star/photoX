@@ -929,7 +929,7 @@ export default function App() {
         // Check for local duplicates first
         const isLocalDuplicate = photos.some(p => p.image_hash === imgHash);
         if (isLocalDuplicate) {
-          // Just return silently as per user request to avoid too many alerts
+          setIsSyncing(false);
           return;
         }
 
@@ -941,6 +941,7 @@ export default function App() {
               title: '提示', 
               message: `照片已存在！\n編號：${existingInfo.manual_code || '無'}` 
             });
+            setIsSyncing(false);
             return;
           }
         }
@@ -1013,9 +1014,7 @@ export default function App() {
 
   const saveBatchEdit = async () => {
     if (!batchEditIds) return;
-    // Allow saving if either a category is selected OR at least one tag is selected OR a manual code is set OR dimensions OR note
-    if (!addCatId && addTagIds.length === 0 && !addManualCode && !addNote && !addDimL && !addDimW && !addDimH) return;
-
+    
     setIsSyncing(true);
     setSyncPercent(20);
 
@@ -1552,13 +1551,9 @@ export default function App() {
         <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight">批量修改 ({batchEditIds?.length})</h2>
         <button 
           onClick={() => {
-            if (!addCatId && addTagIds.length === 0 && !addManualCode && !addNote && !addDimL && !addDimW && !addDimH) {
-              setAlertDialog({ title: '提示', message: "請輸入或修改任一欄位內容" });
-              return;
-            }
             saveBatchEdit();
           }}
-          className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+          className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
         >
           {isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : null}
           套用修改
@@ -1983,12 +1978,6 @@ export default function App() {
       }
 
       if (result.tagIds) setAddTagIds(result.tagIds);
-      if (result.name) {
-        setAddName(result.name);
-      }
-      if (result.description) {
-        setAddNote(result.description);
-      }
       if (result.newTagName) {
         const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
         const newTagsToAdd: Tag[] = [];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Photo, DB_Category, Category, Tag } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Grid3X3, RefreshCcw } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -248,17 +248,32 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
 
   const openWhatsApp = (num: string, singlePhotoId?: string) => {
     let msg = '';
+    const isEn = lang === 'en';
+    
+    const getPhotoDisplayName = (p: Photo) => {
+      const isPlaceholder = !p.name || p.name === '家具紀錄' || p.name === 'Furniture Record' || p.name === '未命名產品';
+      if (!isPlaceholder) return p.name;
+      const cat = dbCategories.find(c => c.code === p.category);
+      if (cat) return cat[lang] || cat.zh;
+      return isEn ? 'Furniture' : '家具';
+    };
+
     if (singlePhotoId) {
       const p = photos.find(ph => ph.id === singlePhotoId);
       if (p) {
-        msg = `你好，我对这个家具有兴趣：\n\n${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
+        const displayName = getPhotoDisplayName(p);
+        msg = isEn 
+          ? `Hello, I'm interested in this furniture:\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\nView more: photo-x-one.vercel.app`
+          : `你好，我對這個家具有興趣：\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
       }
     } else if (selectedPhotos.size > 0) {
       const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
-      const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
-      msg = `你好，我对以下家具有兴趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`;
+      const text = selected.map((p, i) => `${i + 1}. ${getPhotoDisplayName(p)} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
+      msg = isEn
+        ? `Hello, I'm interested in these furniture items:\n\n${text}\n\nView more: photo-x-one.vercel.app`
+        : `你好，我對以下家具有興趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`;
     } else {
-      msg = `你好，我想諮詢家具資訊。`;
+      msg = isEn ? `Hello, I'd like to inquire about furniture.` : `你好，我想諮詢家具資訊。`;
     }
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
     setShowWhatsAppChoice(false);
@@ -664,10 +679,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               <div className="flex flex-col gap-6">
                 <div>
                    <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight mb-1">
-                     {displayPhotos[lightboxIndex].name || '家具紀錄'}
+                     {(() => {
+                        const code = displayPhotos[lightboxIndex].category;
+                        const cat = dbCategories.find(c => c.code === code);
+                        return cat ? (cat[lang] || cat.zh) : (displayPhotos[lightboxIndex].name || (lang === 'en' ? 'Furniture' : '家具紀錄'));
+                     })()}
                    </h1>
-                   {(isStaffMode || showExit) && displayPhotos[lightboxIndex].item_code && (
-                     <p className="text-[10px] font-mono text-slate-400">ID: {displayPhotos[lightboxIndex].item_code}</p>
+                   {(isStaffMode || showExit) && (displayPhotos[lightboxIndex].item_code || displayPhotos[lightboxIndex].name) && (
+                     <div className="space-y-0.5">
+                       {displayPhotos[lightboxIndex].item_code && <p className="text-[10px] font-mono text-slate-400">ID: {displayPhotos[lightboxIndex].item_code}</p>}
+                       {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具紀錄' && (
+                         <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{displayPhotos[lightboxIndex].name}</p>
+                       )}
+                     </div>
                    )}
                 </div>
 
@@ -722,12 +746,28 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   </div>
                 )}
 
-                {displayPhotos[lightboxIndex].description && (
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.description}</h3>
-                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                      {displayPhotos[lightboxIndex].description}
-                    </p>
+                {displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0) && (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Maximize size={10} /> 尺寸資訊 (Dimensions)
+                    </h3>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">長 (L)</span>
+                        <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.length}</span>
+                        <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">寬 (W)</span>
+                        <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.width}</span>
+                        <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                      </div>
+                      <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">高 (H)</span>
+                        <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.height}</span>
+                        <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                      </div>
+                    </div>
                   </div>
                 )}
 
