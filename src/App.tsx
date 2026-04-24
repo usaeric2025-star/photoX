@@ -29,7 +29,8 @@ import {
   CloudUpload,
   CloudDownload,
   Lock,
-  CheckSquare
+  CheckSquare,
+  Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeProductPhoto } from './services/geminiService';
@@ -152,7 +153,7 @@ const PhotoCard = React.memo(({
       initial={false}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`relative aspect-square rounded-2xl overflow-hidden group shadow-sm active:scale-95 transition-all ring-offset-2 will-change-transform ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      className={`relative aspect-square rounded-[32px] overflow-hidden group shadow-md active:scale-95 transition-all ring-offset-2 will-change-transform ${isSelected ? 'ring-2 ring-[#D4A853]' : 'border-4 border-white shadow-xl shadow-[#1D3557]/5'}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
     >
@@ -164,39 +165,38 @@ const PhotoCard = React.memo(({
       />
       
       {photo.groupId && (
-        <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg text-[7px] text-white font-bold tracking-tighter flex items-center gap-1 border border-white/20">
-          <Layers size={8} />
+        <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md px-2 py-1 rounded-xl text-[8px] text-white font-black tracking-widest flex items-center gap-1 border border-white/20 uppercase">
+          <Layers size={10} />
           {photo.groupId}
         </div>
       )}
 
       {isGroupMaster && groupCount > 1 && (
-        <div className="absolute top-2 right-2 bg-blue-500 px-2 py-0.5 rounded-lg text-[7px] text-white font-bold shadow-lg ring-1 ring-white/30">
+        <div className="absolute top-3 right-3 bg-[#D4A853] px-2 py-1 rounded-xl text-[10px] text-white font-black shadow-lg ring-1 ring-white/30">
           {groupCount}
         </div>
       )}
 
       {isMultiSelect && !isGroupMaster && (
-        <div className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center shadow-md transition-all ${isSelected ? 'bg-blue-500 text-white' : 'bg-white/60 backdrop-blur-sm border border-white/50'}`}>
-          {isSelected && <Check size={12} strokeWidth={4} />}
+        <div className={`absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center shadow-md transition-all ${isSelected ? 'bg-[#1D3557] text-white' : 'bg-white/40 backdrop-blur-sm border border-white/50'}`}>
+          {isSelected && <Check size={14} strokeWidth={4} />}
         </div>
       )}
       
       {photo.isAnalyzing && (
         <div 
           onClick={(e) => e.stopPropagation()}
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col justify-center items-center cursor-default"
+          className="absolute inset-0 bg-[#FDFAF6]/60 backdrop-blur-sm flex flex-col justify-center items-center cursor-default"
         >
-          <div className="w-5 h-5 border-2 border-white/80 border-t-transparent rounded-full animate-spin mb-1"></div>
-          <span className="text-[8px] text-white font-bold tracking-wider">AI</span>
+          <div className="w-6 h-6 border-2 border-[#1D3557]/20 border-t-[#1D3557] rounded-full animate-spin mb-1"></div>
+          <span className="text-[9px] text-[#1D3557] font-black tracking-widest uppercase opacity-40">Recognizing</span>
         </div>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
-        <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase mb-0.5">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent pt-8 pb-3 px-4 translate-y-2 group-hover:translate-y-0 transition-transform">
+        <p className="text-[10px] text-white font-black tracking-[0.1em] truncate uppercase shadow-sm">
           {categoryName}
         </p>
-        {/* Removed item_code and manual_code for a cleaner look as requested */}
       </div>
     </motion.div>
   );
@@ -1055,23 +1055,19 @@ export default function App() {
 
   // --- UI Render Functions (Defined as functions to prevent remounting) ---
   const renderMainHeader = () => (
-    <header className="relative z-50 bg-white/10 border-b border-white/20 px-6 pt-10 pb-4 flex items-center justify-between">
-      <div className="flex items-center gap-4">
+    <header className="relative z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-10 pb-4 flex items-center justify-between">
+      <div className="flex items-center gap-3">
         {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
+            <img src={settings.logo_url} alt="Logo" className="w-10 h-10 rounded-2xl object-cover shadow-sm border border-white" />
         ) : (
-            <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-xs text-slate-500 font-bold">LOGO</div>
+            <div className="w-10 h-10 bg-[#1D3557]/5 rounded-2xl flex items-center justify-center text-xs text-[#1D3557] font-bold border border-[#1D3557]/10">PPPT</div>
         )}
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight shrink-0">
-            {viewMode === 'public' ? 'Gallery' : (settings?.app_name || 'photoX')}
-          </h1>
-          <p className="text-[10px] text-slate-600 font-medium font-mono uppercase tracking-wider">
-            {viewMode === 'public' ? `${publicPhotos.length} 張` : `${photos.length} 張`}
-          </p>
-        </div>
+        <h1 className="text-xl font-black text-[#1D3557] tracking-tighter">
+          {settings?.company_name || settings?.app_name || '新一PPPT'}
+        </h1>
       </div>
-      <div className="flex items-center gap-2 relative z-50 shrink-0">
+
+      <div className="flex items-center gap-2">
         {!user ? (
           <button 
             onClick={async () => {
@@ -1081,60 +1077,64 @@ export default function App() {
                 alert('登入失敗: ' + (e.message || JSON.stringify(e)));
               }
             }}
-            className="px-4 py-2 rounded-2xl text-xs font-bold bg-white text-slate-800 shadow-sm border border-slate-200 active:scale-95 transition-all flex items-center gap-2"
+            className="px-4 py-2 rounded-2xl text-xs font-bold bg-[#1D3557] text-[#FDFAF6] shadow-sm active:scale-95 transition-all flex items-center gap-2"
           >
             <LogIn size={14} />
-            登入管理
+            登入
           </button>
         ) : (
-          <button 
-            onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
-            className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all border shadow-sm active:scale-95 flex items-center gap-2 ${viewMode === 'public' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-purple-50 text-purple-600 border-purple-200'}`}
-          >
-            {viewMode === 'public' ? <ImageIcon size={14} /> : <Layers size={14} />}
-            {viewMode === 'public' ? (appLang === 'zh' ? '我的相庫' : 'My Gallery') : (appLang === 'zh' ? '查看公開' : 'Public View')}
-          </button>
-        )}
+          <div className="flex items-center gap-1.5">
+            <button 
+              onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
+              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border shadow-sm active:scale-90 ${viewMode === 'public' ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white border-[#1D3557]/10 text-[#1D3557]'}`}
+              title="切換公開頁面"
+            >
+              <Globe size={18} />
+            </button>
 
-        {viewMode === 'private' && (
-          <>
-            <button 
-              onClick={handleBatchAiIdentify}
-              disabled={isBatchAnalyzing}
-              className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border shadow-sm active:scale-90 ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white border-slate-200 text-purple-600 hover:bg-purple-50'}`}
-              title="AI 批量辨識"
-            >
-              {isBatchAnalyzing ? (
-                 <span className="animate-pulse text-[9px] font-bold">{batchProgress.current}</span>
-              ) : (
-                 <Sparkles size={18} />
-              )}
-            </button>
-            <button 
-              onClick={() => {
-                if (isMultiSelect) {
-                  if (selectedIds.length === filteredPhotos.length) {
-                    setSelectedIds([]);
-                  } else {
-                    setSelectedIds(filteredPhotos.map(p => p.id));
-                  }
-                } else {
-                  setIsMultiSelect(true);
-                }
-              }}
-              className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shadow-sm active:scale-90 ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-slate-200 text-slate-600'}`}
-              title="多選模式"
-            >
-              <CheckSquare size={18} />
-            </button>
-            <button 
-              onClick={handleManageClick}
-              className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm text-slate-600 transition-all active:scale-90 hover:bg-slate-50"
-              title="設定與管理"
-            >
-              <Settings2 size={18} />
-            </button>
-          </>
+            {viewMode === 'private' && (
+              <>
+                <button 
+                  onClick={handleBatchAiIdentify}
+                  disabled={isBatchAnalyzing}
+                  className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all border shadow-sm active:scale-90 ${isBatchAnalyzing ? 'bg-[#1D3557] text-white' : 'bg-white border-[#1D3557]/10 text-purple-600 hover:bg-purple-50'}`}
+                  title="AI 批量辨識"
+                >
+                  {isBatchAnalyzing ? (
+                    <span className="animate-pulse text-[9px] font-bold">{batchProgress.current}</span>
+                  ) : (
+                    <Sparkles size={18} />
+                  )}
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    if (isMultiSelect) {
+                      if (selectedIds.length === filteredPhotos.length) {
+                        setSelectedIds([]);
+                      } else {
+                        setSelectedIds(filteredPhotos.map(p => p.id));
+                      }
+                    } else {
+                      setIsMultiSelect(true);
+                    }
+                  }}
+                  className={`w-10 h-10 flex items-center justify-center rounded-2xl transition-all border shadow-sm active:scale-90 ${isMultiSelect ? 'bg-[#1D3557] border-[#1D3557] text-white' : 'bg-white border-[#1D3557]/10 text-[#1D3557]'}`}
+                  title="多選模式"
+                >
+                  <CheckSquare size={18} />
+                </button>
+
+                <button 
+                  onClick={handleManageClick}
+                  className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center border border-[#1D3557]/10 shadow-sm text-[#1D3557] transition-all active:scale-90 hover:bg-slate-50"
+                  title="設定與管理"
+                >
+                  <Settings2 size={18} />
+                </button>
+              </>
+            )}
+          </div>
         )}
       </div>
     </header>
@@ -1153,23 +1153,23 @@ export default function App() {
     <div className="bg-transparent px-6 py-2 space-y-4">
       <div className="flex items-center gap-2">
         <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-600 transition-colors" size={16} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1D3557]/40 group-focus-within:text-[#1D3557]/60 transition-colors" size={16} />
           <input 
             type="text" 
             placeholder="搜尋產品..."
-            className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-11 pr-4 text-sm focus:bg-white transition-all outline-none text-slate-800 placeholder-slate-400 shadow-sm focus:border-blue-500"
+            className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-3 pl-11 pr-4 text-sm focus:bg-white transition-all outline-none text-[#1D3557] placeholder-[#1D3557]/30 shadow-sm focus:border-[#D4A853]/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1D3557]/40 hover:text-[#1D3557]/60 p-1">
               <X size={16} />
             </button>
           )}
         </div>
         <button 
           onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-          className={`w-12 h-12 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-95 ${showGroupsCollapsed ? 'bg-blue-500 border-blue-500 text-white shadow-blue-500/20' : 'bg-white border-slate-200 text-slate-500'}`}
+          className={`w-12 h-12 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-95 ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-white' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/50'}`}
           title={showGroupsCollapsed ? "展開群組" : "合併群組"}
         >
           <Layers size={20} />
@@ -1179,7 +1179,7 @@ export default function App() {
       <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar px-1">
         <button 
           onClick={() => { setFilterCatId(null); setFilterSubId(null); }}
-          className={`px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all border shadow-sm ${!filterCatId ? 'bg-slate-800 border-slate-800 text-white shadow-slate-800/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+          className={`px-5 py-2.5 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all border shadow-sm ${!filterCatId ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60 hover:bg-white'}`}
         >
           全部產品
         </button>
@@ -1187,7 +1187,7 @@ export default function App() {
           <button 
             key={cat.code}
             onClick={() => { setFilterCatId(cat.code); setFilterSubId(null); }}
-            className={`px-4 py-2 rounded-full text-[11px] font-bold tracking-wider whitespace-nowrap transition-all border shadow-sm ${filterCatId === cat.code ? 'bg-slate-800 border-slate-800 text-white shadow-slate-800/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+            className={`px-5 py-2.5 rounded-full text-[11px] font-bold tracking-wider whitespace-nowrap transition-all border shadow-sm ${filterCatId === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60 hover:bg-white'}`}
           >
             {cat[appLang] || cat.zh}
           </button>
@@ -1200,13 +1200,13 @@ export default function App() {
             initial={{ opacity: 0, height: 0 }} 
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="space-y-2 overflow-hidden"
+            className="space-y-3 overflow-hidden"
           >
             {filterCatId && (
               <div className="flex overflow-x-auto pb-1 gap-1.5 no-scrollbar">
                 <button 
                   onClick={() => setFilterSubId(null)}
-                  className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tighter whitespace-nowrap border transition-all ${!filterSubId ? 'bg-slate-600 border-slate-600 text-white' : 'bg-white/40 border-white/20 text-slate-500'}`}
+                  className={`px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest whitespace-nowrap border transition-all ${!filterSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                 >
                   ALL
                 </button>
@@ -1214,19 +1214,19 @@ export default function App() {
                   <button 
                     key={sub.id}
                     onClick={() => setFilterSubId(sub.id)}
-                    className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tighter whitespace-nowrap border transition-all ${filterSubId === sub.id ? 'bg-slate-600 border-slate-600 text-white' : 'bg-white/40 border-white/20 text-slate-500'}`}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-bold tracking-widest whitespace-nowrap border transition-all ${filterSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                   >
                     {sub.name}
                   </button>
                 ))}
               </div>
             )}
-            <div className="flex overflow-x-auto pb-1 gap-1.5 no-scrollbar">
+            <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth">
               {tags.map(tag => (
                 <button 
                   key={tag.id}
                   onClick={() => setFilterTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
-                  className={`px-2 py-0.5 rounded-md text-[9px] font-bold whitespace-nowrap transition-all border ${filterTagIds.includes(tag.id) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-slate-100/40 border-slate-200/40 text-slate-500'}`}
+                  className={`px-4 py-2 rounded-full text-[10px] font-bold whitespace-nowrap transition-all border shadow-sm ${filterTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/60 border-[#1D3557]/5 text-[#1D3557]/50'}`}
                 >
                   #{tag.name}
                 </button>

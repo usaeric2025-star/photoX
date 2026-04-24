@@ -272,19 +272,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
-      <header className="shrink-0 z-50 bg-bg/90 backdrop-blur-sm border-b border-text/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
+      <header className="shrink-0 z-50 bg-[#FDFAF6] border-b border-[#1D3557]/10 px-6 pt-10 pb-4 flex items-center justify-between gap-4">
         <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-8 max-w-[120px] object-contain cursor-pointer" />
+            <img src={settings.logo_url} alt="Logo" className="w-10 h-10 rounded-2xl object-cover shadow-sm border border-white cursor-pointer" />
           ) : (
-            <h1 className="text-xl font-bold tracking-tight truncate leading-tight cursor-pointer">Gallery</h1>
+            <div className="flex items-center gap-2 cursor-pointer">
+              <div className="w-8 h-8 bg-[#1D3557]/5 rounded-xl border border-[#1D3557]/10 flex items-center justify-center font-black text-[#1D3557] text-xs">P</div>
+              <h1 className="text-lg font-black tracking-tight truncate leading-tight text-[#1D3557] uppercase">新一PPPT</h1>
+            </div>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-           <div className="flex items-center gap-1 text-xs font-semibold">
+           <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest">
              {['zh', 'en', 'ms'].map(l => (
-               <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-accent text-bg' : 'bg-text/10 text-text/60'} px-2.5 py-1 rounded-md transition-colors`}>
-                 {l.toUpperCase()}
+               <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-2.5 py-1 rounded-xl transition-all shadow-sm`}>
+                 {l}
                </button>
              ))}
            </div>
@@ -292,46 +295,40 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       </header>
 
       {/* Filter & Search */}
-      <div className="shrink-0 p-4 z-40 bg-bg border-b border-text/10 shadow-sm">
-        <div className="flex gap-2 mb-3">
+      <div className="shrink-0 p-4 z-40 bg-[#FDFAF6] border-b border-[#1D3557]/5 shadow-sm space-y-4">
+        <div className="flex gap-2">
           <div className="relative flex-1">
             <input 
               type="text" 
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-text/10 rounded-lg py-2 pl-10 pr-4 text-sm text-text placeholder-text/30 focus:outline-none"
+              className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-3 pl-11 pr-4 text-sm text-[#1D3557] placeholder-[#1D3557]/30 focus:outline-none focus:bg-white transition-all shadow-inner"
             />
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text/40" />
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1D3557]/30" />
           </div>
           {/* Group Toggle */}
           <button
               onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-              className={`p-2 rounded-xl transition-all border ${showGroupsCollapsed ? 'bg-orange-500 border-orange-500 text-white shadow-md' : 'bg-white border-text/10 text-text/40 hover:text-text'}`}
+              className={`w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
               title={showGroupsCollapsed ? "Show All" : "Group Photos"}
           >
               <Layers size={18} />
           </button>
-          {/* Column Toggle */}
-          <button 
-            onClick={() => setColumnCount(prev => prev === 3 ? 2 : 3)}
-            className="p-2 bg-white border border-text/10 rounded-lg text-text/60 hover:text-text"
-          >
-            {columnCount === 3 ? <Columns size={18} /> : <LayoutGrid size={18} />}
-          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        <div className="flex overflow-x-auto gap-2 no-scrollbar scroll-smooth px-1">
           {selectionMode ? (
-            <div className="flex justify-between w-full items-center">
-               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-sm font-semibold">Cancel</button>
-               <span className="text-sm">{selectedPhotos.size} selected</span>
-               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-sm font-semibold">Done</button>
+            <div className="flex justify-between w-full items-center p-1">
+               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-xs font-black text-[#1D3557]/50 uppercase tracking-widest">Cancel</button>
+               <span className="text-[10px] font-black text-[#1D3557] uppercase tracking-[0.2em]">{selectedPhotos.size} selected</span>
+               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-xs font-black text-[#D4A853] uppercase tracking-widest">Done</button>
             </div>
           ) : (
             <>
               <button 
                 onClick={() => setSelectedCatCode(null)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${!selectedCatCode ? 'bg-text text-bg' : 'bg-text/10 text-text/70'}`}
+                className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all shadow-sm border whitespace-nowrap ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
               >
                 {t.allCats}
               </button>
@@ -339,7 +336,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                 <button 
                   key={cat.code}
                   onClick={() => setSelectedCatCode(cat.code)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors ${selectedCatCode === cat.code ? 'bg-text text-bg' : 'bg-text/10 text-text/70'}`}
+                  className={`px-5 py-2.5 rounded-full text-[11px] font-black uppercase tracking-[0.1em] transition-all shadow-sm border whitespace-nowrap ${selectedCatCode === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                 >
                   {cat[lang] || cat.en}
                 </button>
@@ -350,16 +347,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       </div>
 
       {/* Grid - Scrollable area */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 pb-40">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-6 pb-40 bg-[#FDFAF6]">
         {displayPhotos.length === 0 ? (                
-          <div className="flex flex-col items-center justify-center py-20 text-text/40">
-            <p className="text-sm">{t.empty}</p>
+          <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
+            <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
+                <ImageIcon size={32} className="opacity-20" />
+            </div>
+            <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
           </div>
         ) : (
-          <div className={`grid gap-3 ${columnCount === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className="grid grid-cols-3 gap-3">
             {visiblePhotos.map((photo, i) => (
-              <div 
+              <motion.div 
                 key={photo.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: (i % 12) * 0.05 }}
                 onClick={() => {
                   if (selectionMode) {
                     toggleSelect(photo.id);
@@ -372,25 +375,25 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                   if (!selectionMode) setSelectionMode(true);
                   toggleSelect(photo.id);
                 }}
-                className={`aspect-square bg-white rounded-3xl overflow-hidden cursor-pointer relative shadow-sm group ${selectedPhotos.has(photo.id) ? 'ring-4 ring-accent' : ''}`}
+                className={`aspect-square bg-white rounded-[32px] overflow-hidden cursor-pointer relative shadow-xl shadow-[#1D3557]/5 border-4 border-white transition-all active:scale-[0.98] group ${selectedPhotos.has(photo.id) ? 'ring-2 ring-[#D4A853]' : ''}`}
               >
                 <img 
                   src={photo.image_url || photo.uri} 
                   alt={photo.name}
                   loading="lazy" 
-                  className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(photo.id) ? 'scale-90' : 'group-hover:scale-105'}`}
+                  className={`w-full h-full object-cover transition-transform duration-700 ${selectedPhotos.has(photo.id) ? 'scale-110 opacity-70' : 'group-hover:scale-110'}`}
                 />
 
                 {photo.groupId && (
-                  <div className="absolute top-2 left-10 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-[4px] text-[7px] text-white font-bold flex items-center gap-1 border border-white/20">
-                    <Layers size={8} />
+                  <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[7px] text-white font-black tracking-widest flex items-center gap-1 border border-white/20 uppercase">
+                    <Layers size={9} />
                     {photo.groupId}
                   </div>
                 )}
                 
                 {selectedPhotos.has(photo.id) && (
-                  <div className="absolute top-2 right-2 bg-accent text-bg rounded-full p-1">
-                    <X size={12} />
+                  <div className="absolute top-3 right-3 bg-[#1D3557] text-[#FDFAF6] rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                    <X size={14} strokeWidth={3} />
                   </div>
                 )}
                 
@@ -404,14 +407,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                   if (isUncategorized) return null;
                   
                   return (
-                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-text/50 to-transparent">
-                      <p className="text-bg text-[10px] font-semibold truncate">
+                    <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/60 to-transparent pt-8 translate-y-2 group-hover:translate-y-0 transition-transform">
+                      <p className="text-white text-[10px] font-black uppercase tracking-widest truncate shadow-sm">
                         {catName}
                       </p>
                     </div>
                   );
                 })()}
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
