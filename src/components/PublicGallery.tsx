@@ -156,7 +156,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
     });
   };
 
+  const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);
+
   const shareSelected = async () => {
+    if (selectedPhotos.size === 0) {
+      alert('請至少選擇一張照片進行分享');
+      return;
+    }
     const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
     const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
     console.log(`Share text: ${text}`);
@@ -172,12 +178,33 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
     }
   };
 
-  const contactWhatsApp = () => {
-    const number = import.meta.env.VITE_WHATSAPP_NUMBER || '';
+  const openWhatsApp = (num: string) => {
     const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
-    const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
-    const msg = `你好，我对以下家具有兴趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`;
-    window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`, '_blank');
+    let msg = '';
+    if (selected.length > 0) {
+      const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
+      msg = `你好，我对以下家具有兴趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`;
+    } else {
+      msg = `你好，我想諮詢家具資訊。`;
+    }
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+    setShowWhatsAppChoice(false);
+  };
+
+  const contactWhatsApp = () => {
+    const num1 = settings?.whatsapp_1;
+    const num2 = settings?.whatsapp_2;
+
+    if (num1 && num2) {
+      setShowWhatsAppChoice(true);
+    } else if (num1 || num2) {
+      openWhatsApp(num1 || num2);
+    } else {
+      // Fallback to VITE_WHATSAPP_NUMBER or alert
+      const fallback = (import.meta as any).env.VITE_WHATSAPP_NUMBER;
+      if (fallback) openWhatsApp(fallback);
+      else alert('未設定聯繫號碼');
+    }
   };
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -600,6 +627,48 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                     解鎖
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showWhatsAppChoice && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[500] bg-black/60 backdrop-blur-md flex items-end justify-center p-6"
+            onClick={() => setShowWhatsAppChoice(false)}
+          >
+            <motion.div 
+              initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }}
+              className="w-full max-w-sm bg-white rounded-t-[32px] p-6 pb-12 shadow-2xl space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-bold text-slate-800">選擇聯繫號碼</h3>
+                <button onClick={() => setShowWhatsAppChoice(false)} className="p-1 hover:bg-slate-100 rounded-full">
+                  <X size={20} className="text-slate-400" />
+                </button>
+              </div>
+              <div className="space-y-3">
+                {settings?.whatsapp_1 && (
+                  <button 
+                    onClick={() => openWhatsApp(settings.whatsapp_1)}
+                    className="w-full py-4 px-6 bg-[#25D366] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
+                  >
+                    <MessageCircle size={20} />
+                    聯繫號碼 1
+                  </button>
+                )}
+                {settings?.whatsapp_2 && (
+                  <button 
+                    onClick={() => openWhatsApp(settings.whatsapp_2)}
+                    className="w-full py-4 px-6 bg-[#128C7E] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
+                  >
+                    <MessageCircle size={20} />
+                    聯繫號碼 2
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>

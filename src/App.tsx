@@ -28,7 +28,8 @@ import {
   Edit3,
   CloudUpload,
   CloudDownload,
-  Lock
+  Lock,
+  CheckSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeProductPhoto } from './services/geminiService';
@@ -49,6 +50,7 @@ import {
   compressImage,
   loadCategoriesFromCloud,
   fetchSettings,
+  saveSettings,
   uploadLogo
 } from './services/supabaseService';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -208,6 +210,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<'public' | 'private'>('public');
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [manufacturers, setManufacturers] = useState<SubCategory[]>([]);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [isInitializing, setIsInitializing] = useState(true);
   const [settings, setSettings] = useState<any>(null);
@@ -392,12 +395,13 @@ export default function App() {
       // Always load from local on start to prevent overwriting recent offline changes
       // or bringing back deleted items unexpectedly. Let user manually pull from cloud.
       try {
-                const [savedPhotos, savedCats, savedTags, savedSyncTime, savedPublicPhotos] = await Promise.all([
+                const [savedPhotos, savedCats, savedTags, savedSyncTime, savedPublicPhotos, savedManufacturers] = await Promise.all([
           loadData('product_photos'),
           loadData('product_categories'),
           loadData('product_tags'),
           loadData('last_sync_time'),
-          loadData('public_photos')
+          loadData('public_photos'),
+          loadData('product_manufacturers')
         ]);
         
         let finalPhotos = savedPhotos;
@@ -420,6 +424,7 @@ export default function App() {
         if (savedPublicPhotos && savedPublicPhotos.length > 0) setPublicPhotos(savedPublicPhotos);
         if (savedCats && savedCats.length > 0) setCategories(savedCats);
         if (savedTags && savedTags.length > 0) setTags(savedTags);
+        if (savedManufacturers && savedManufacturers.length > 0) setManufacturers(savedManufacturers);
         if (savedSyncTime && (!finalPhotos || finalPhotos === savedPhotos)) {
            setLastSyncTime(savedSyncTime);
         }
@@ -462,9 +467,10 @@ export default function App() {
       await saveData('product_photos', photos);
       await saveData('product_categories', categories);
       await saveData('product_tags', tags);
+      await saveData('product_manufacturers', manufacturers);
     };
     persist();
-  }, [photos, categories, tags, isInitializing, user]);
+  }, [photos, categories, tags, manufacturers, isInitializing, user]);
 
   // Specific save/delete handlers for cloud performance
   const syncItemToCloud = async (photo: Photo) => {
@@ -1054,8 +1060,8 @@ export default function App() {
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight shrink-0">
             {viewMode === 'public' ? 'Gallery' : (settings?.app_name || 'photoX')}
           </h1>
-          <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">
-            {viewMode === 'public' ? `共 ${publicPhotos.length} 張公開照片` : `已匯入 ${photos.length} 張照片`}
+          <p className="text-[10px] text-slate-600 font-medium font-mono uppercase tracking-wider">
+            {viewMode === 'public' ? `${publicPhotos.length} 張` : `${photos.length} 張`}
           </p>
         </div>
       </div>
@@ -1087,12 +1093,12 @@ export default function App() {
             <button 
               onClick={handleBatchAiIdentify}
               disabled={isBatchAnalyzing}
-              className={`cursor-pointer touch-manipulation relative z-50 px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all border flex items-center gap-1 shadow-sm ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white/60 border-white/50 text-purple-600 hover:bg-purple-50'}`}
+              className={`cursor-pointer touch-manipulation relative z-50 w-8 h-8 rounded-xl flex items-center justify-center transition-all border shadow-sm ${isBatchAnalyzing ? 'bg-purple-600 text-white' : 'bg-white/60 border-white/50 text-purple-600 hover:bg-purple-50'}`}
             >
               {isBatchAnalyzing ? (
-                 <><span className="animate-pulse">AI {batchProgress.current}/{batchProgress.total}</span></>
+                 <span className="animate-pulse text-[10px] font-bold">{batchProgress.current}/{batchProgress.total}</span>
               ) : (
-                 <><Sparkles size={14} className="text-purple-500" /> AI</>
+                 <Sparkles size={16} className="text-purple-500" />
               )}
             </button>
             <button 
@@ -1107,9 +1113,9 @@ export default function App() {
                   setIsMultiSelect(true);
                 }
               }}
-              className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
+              className={`shrink-0 w-8 h-8 flex items-center justify-center rounded-xl transition-all border ${isMultiSelect ? 'bg-blue-500 border-blue-500 text-white shadow-lg' : 'bg-white/60 border-white/50 text-slate-600'}`}
             >
-              {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? '✕' : '全選') : '選擇'}
+              {isMultiSelect ? (selectedIds.length === filteredPhotos.length ? <X size={16}/> : <CheckSquare size={16}/>) : <CheckSquare size={16}/>}
             </button>
             <button 
               onClick={handleManageClick}
@@ -1822,187 +1828,7 @@ export default function App() {
   };
 
   const renderManageScreen = () => {
-    const addSubCategory = (catId: string) => {
-      if (!newSubName.trim()) return;
-      const exists = categories.find(c => c.id === catId);
-      if (!exists) {
-        // Create matching local category if it doesn't exist
-        const dbCat = dbCategories.find(c => c.code === catId);
-        const newCat: Category = {
-          id: catId,
-          name: dbCat ? (dbCat[appLang] || dbCat.zh) : catId,
-          aliases: [],
-          subcategories: [{
-            id: crypto.randomUUID(),
-            name: newSubName.trim(),
-            aliases: [newSubName.trim()]
-          }]
-        };
-        setCategories([...categories, newCat]);
-      } else {
-        setCategories(prev => prev.map(c => c.id === catId ? {
-          ...c,
-          subcategories: [...(c.subcategories || []), {
-            id: crypto.randomUUID(),
-            name: newSubName.trim(),
-            aliases: [newSubName.trim()]
-          }]
-        } : c));
-      }
-      setNewSubName('');
-    };
-
-    const addTag = () => {
-      if (!newTagName.trim()) return;
-      const newTag: Tag = {
-        id: crypto.randomUUID(),
-        name: newTagName.trim(),
-        aliases: [newTagName.trim()]
-      };
-      setTags([...tags, newTag]);
-      setNewTagName('');
-    };
-
-    return (
-      <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
-        <div className="px-6 py-4 border-b border-white/50 flex items-center gap-3 bg-white/40 pt-safe">
-          <button onClick={() => setActiveScreen('home')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
-            <ChevronLeft size={24} />
-          </button>
-          <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1">目錄與標籤管理</h2>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar pb-32">
-      {/* Categories & Manufacturers Management */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between pl-1">
-              <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2">
-                <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
-                厂商管理 (按分类)
-              </h3>
-            </div>
-            
-            <div className="space-y-1.5">
-              {dbCategories.map(cat => {
-                // Find local manufacturers for this category code
-                const localCat = categories.find(c => c.id === cat.code);
-                const manufacturers = localCat?.subcategories || [];
-
-                return (
-                  <div key={cat.code} className="bg-white/40 border border-white rounded-xl overflow-hidden shadow-sm">
-                    <div className="p-2.5 flex items-center justify-between">
-                      <button 
-                        onClick={() => setExpandedCat(expandedCat === cat.code ? null : cat.code)}
-                        className="flex-1 text-left flex items-center gap-2 group"
-                      >
-                        <ChevronRight 
-                          size={16} 
-                          className={`text-slate-400 transition-transform ${expandedCat === cat.code ? 'rotate-90 text-blue-500' : ''}`} 
-                        />
-                        <span className="font-bold text-slate-700 text-sm">{cat[appLang] || cat.zh}</span>
-                        <span className="text-[9px] text-slate-400 font-medium">({manufacturers.length})</span>
-                      </button>
-                    </div>
-                    
-                    {expandedCat === cat.code && (
-                      <motion.div 
-                        initial={{ height: 0 }} 
-                        animate={{ height: 'auto' }}
-                        className="bg-slate-50/30 border-t border-white px-3 py-2.5 space-y-2.5"
-                      >
-                        <div className="flex gap-1.5">
-                          <input 
-                            type="text" 
-                            placeholder="新增厂商..."
-                            className="flex-1 bg-white border border-slate-100 p-1.5 rounded-lg text-[11px] outline-none"
-                            value={newSubName}
-                            onChange={(e) => setNewSubName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && addSubCategory(cat.code)}
-                          />
-                          <button 
-                            onClick={() => addSubCategory(cat.code)}
-                            className="px-2.5 bg-blue-500 text-white rounded-lg text-[10px] font-bold"
-                          >
-                            添加
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {manufacturers.map(sub => (
-                            <div key={sub.id} className="bg-white border border-slate-200 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                              <span className="text-[10px] font-medium text-slate-600">{sub.name}</span>
-                              <button onClick={() => deleteSubCategory(cat.code, sub.id)} className="text-slate-300 hover:text-red-500">
-                                <X size={10} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* Tags Section */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between pl-1">
-              <h3 className="text-xs font-bold text-slate-800 flex items-center gap-2">
-                <div className="w-1.5 h-3.5 bg-purple-500 rounded-full"></div>
-                標籤管理
-              </h3>
-            </div>
-            <div className="space-y-3 bg-white/40 p-3 rounded-xl border border-white shadow-sm">
-              <div className="flex gap-1.5">
-                <input 
-                  type="text" 
-                  placeholder="輸入新標籤..."
-                  className="flex-1 bg-white border border-slate-100 p-1.5 rounded-lg text-[11px] outline-none"
-                  value={newTagName}
-                  onChange={(e) => setNewTagName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addTag()}
-                />
-                <button 
-                  onClick={addTag}
-                  className="px-2.5 bg-slate-800 text-white rounded-lg text-[10px] font-bold"
-                >
-                  添加
-                </button>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {tags.map(tag => (
-                  <div key={tag.id} className="bg-white border border-slate-200 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                    <span className="text-[10px] font-medium text-slate-600">#{tag.name}</span>
-                    <button onClick={() => deleteTag(tag.id)} className="text-slate-300 hover:text-red-500">
-                      <X size={10} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Advanced Settings */}
-          <section className="pt-4">
-             <button 
-              onClick={() => setActiveScreen('settings')}
-              className="w-full bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between shadow-sm active:bg-slate-50 transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
-                  <Settings size={20} />
-                </div>
-                <div className="text-left">
-                  <p className="font-bold text-sm text-slate-800">其他設定</p>
-                  <p className="text-[10px] text-slate-400 font-medium">AI 智能辨識金鑰、數據備份與還原</p>
-                </div>
-              </div>
-              <ChevronRight size={20} className="text-slate-300" />
-            </button>
-          </section>
-        </div>
-      </div>
-    );
+    return renderSettingsScreen();
   };
 
   const performPushSync = async () => {
@@ -2076,48 +1902,194 @@ export default function App() {
   const renderSettingsScreen = () => {
     if (activeScreen !== 'settings') return null;
 
+    const addManufacturer = () => {
+      if (!newSubName.trim()) return;
+      const newMfrId = crypto.randomUUID();
+      const newMfr = {
+        id: newMfrId,
+        name: newSubName.trim(),
+        aliases: [newSubName.trim()]
+      };
+      setManufacturers([...manufacturers, newMfr]);
+      setNewSubName('');
+      setCategories(prev => prev.map(c => ({
+        ...c,
+        subcategories: [...(c.subcategories || []), { ...newMfr }]
+      })));
+    };
+
+    const deleteManufacturer = (id) => {
+      setManufacturers(prev => prev.filter(m => m.id !== id));
+      setCategories(prev => prev.map(c => ({
+        ...c,
+        subcategories: (c.subcategories || []).filter(sub => sub.id !== id)
+      })));
+    };
+
+    const addTag = () => {
+      if (!newTagName.trim()) return;
+      const newTag = {
+        id: crypto.randomUUID(),
+        name: newTagName.trim(),
+        aliases: [newTagName.trim()]
+      };
+      setTags([...tags, newTag]);
+      setNewTagName('');
+    };
+
+    const setSettingField = (field: string, value: any) => {
+      const newSettings = { ...settings, [field]: value };
+      setSettings(newSettings);
+      saveSettings(newSettings);
+    };
+
     return (
-      <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
-        <div className="px-6 py-4 border-b border-white/50 flex items-center gap-3 pt-safe">
-          <button onClick={() => setActiveScreen('manage')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
+      <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center gap-3 bg-white shadow-sm">
+          <button onClick={() => setActiveScreen('home')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
             <ChevronLeft size={24} />
           </button>
-          <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1">其他設定</h2>
+          <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1 tracking-tight">設定與管理</h2>
         </div>
 
-        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-20">
-          {/* Logo Settings */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
-              <h4 className="font-bold text-slate-800 text-sm">App Logo</h4>
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
+          
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <div className="w-1.5 h-3.5 bg-orange-500 rounded-full"></div>
+                Logo 設定
+              </h4>
               <div className="flex items-center gap-4">
                   {settings?.logo_url ? (
-                      <img src={settings.logo_url} className="w-16 h-16 rounded-full object-cover" alt="Company Logo" />
+                      <img src={settings.logo_url} className="w-14 h-14 rounded-full object-cover shadow-sm border border-slate-100" alt="Company Logo" />
                   ) : (
-                      <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 text-xs">No Logo</div>
+                      <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 text-xs shadow-inner">No Logo</div>
                   )}
-                  <input type="file" onChange={handleLogoUpload} className="text-xs" accept="image/*" />
+                  <div className="flex flex-col gap-1 flex-1">
+                    <input type="file" onChange={handleLogoUpload} className="text-[10px] text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100 transition-all cursor-pointer" accept="image/*" />
+                    <p className="text-[9px] text-slate-400 font-medium leading-relaxed">選擇要顯示在公開相簿的專屬 Logo (建議正方形)</p>
+                  </div>
               </div>
           </div>
 
-          {/* Supabase Cloud Sync Section */}
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 shadow-xl border border-white/10 space-y-4 relative overflow-hidden group">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+              <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
+                WhatsApp 聯繫設定
+              </h4>
+              <p className="text-[10px] text-slate-400 leading-relaxed font-medium">請輸入完整的國際格式 (例: 60123456789)</p>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">主要號碼 (WhatsApp 1)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例如: 60123456789"
+                    className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs outline-none focus:border-[#25D366] focus:bg-white transition-all shadow-inner font-mono"
+                    value={settings?.whatsapp_1 || ''}
+                    onChange={(e) => setSettingField('whatsapp_1', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest pl-1">備用號碼 (WhatsApp 2)</label>
+                  <input 
+                    type="text" 
+                    placeholder="例如: 60123456789"
+                    className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-xs outline-none focus:border-[#25D366] focus:bg-white transition-all shadow-inner font-mono"
+                    value={settings?.whatsapp_2 || ''}
+                    onChange={(e) => setSettingField('whatsapp_2', e.target.value)}
+                  />
+                </div>
+              </div>
+          </div>
+
+          <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
+              統一廠商管理 (Manufacturers)
+            </h3>
+            <p className="text-[10px] text-slate-400 leading-relaxed font-medium mt-1">
+              建立的廠商會自動帶入每種目錄分類中，方便您在快速為不同類別的照片標記相同廠商。
+            </p>
+            <div className="flex gap-1.5 mt-2">
+              <input 
+                type="text" 
+                placeholder="新增廠商名稱..."
+                className="flex-1 bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs outline-none focus:border-blue-500 focus:bg-white transition-all shadow-inner font-medium"
+                value={newSubName}
+                onChange={(e) => setNewSubName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addManufacturer()}
+              />
+              <button 
+                onClick={addManufacturer}
+                className="px-5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all"
+              >
+                新增
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner min-h-[40px]">
+              {manufacturers.map(sub => (
+                <div key={sub.id} className="bg-white border border-slate-200 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+                  <span className="text-xs font-bold text-slate-700">{sub.name}</span>
+                  <button onClick={() => deleteManufacturer(sub.id)} className="text-slate-400 hover:text-red-500 cursor-pointer p-0.5 rounded-full hover:bg-red-50 transition-colors">
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+              {manufacturers.length === 0 && <span className="text-[10px] text-slate-400 mt-1 italic flex items-center ml-1">尚無資料，請在上方新增</span>}
+            </div>
+          </section>
+
+          <section className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-purple-500 rounded-full"></div>
+              標籤管理 (Tags)
+            </h3>
+            <div className="flex gap-1.5 mt-1">
+              <input 
+                type="text" 
+                placeholder="輸入新標籤..."
+                className="flex-1 bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner font-medium"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addTag()}
+              />
+              <button 
+                onClick={addTag}
+                className="px-5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all"
+              >
+                新增
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 shadow-inner min-h-[40px]">
+              {tags.map(tag => (
+                <div key={tag.id} className="bg-white border border-slate-200 px-3 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+                  <span className="text-xs font-bold text-slate-700">#{tag.name}</span>
+                  <button onClick={() => deleteTag(tag.id)} className="text-slate-400 hover:text-red-500 p-0.5 rounded-full hover:bg-red-50 transition-colors cursor-pointer">
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 shadow-md border border-slate-700 space-y-4 relative overflow-hidden group mt-6">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
             
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-white text-sm flex items-center gap-2">
-                <Cloud size={18} className={user ? 'text-blue-400' : 'text-slate-500'} />
-                雲端同步中心
+                <Cloud size={18} className={user ? 'text-blue-400' : 'text-slate-400'} />
+                雲端同步
               </h4>
               {user && (
                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/20 rounded-full border border-blue-500/30">
                   <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-[9px] font-bold text-blue-300 uppercase leading-none">Connected</span>
+                  <span className="text-[9px] font-bold text-blue-300 uppercase leading-none mt-[1px]">Connected</span>
                 </div>
               )}
             </div>
 
-            <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-              將您的家具照片、目錄分類及標籤備份至 Supabase 雲端。透過此功能，您可以在多台設備（iOS、Android、網頁）之間同步產品目錄，且照片會自動壓縮轉換為 webp 格式以節省雲端空間。
+            <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
+              將您的家具照片、目錄分類及標籤備份至 Supabase 雲端。透過此功能，您可以在多台設備之間同步產品目錄。
             </p>
 
             {!user ? (
@@ -2129,16 +2101,16 @@ export default function App() {
                     alert('登入失敗: ' + JSON.stringify(e));
                   }
                 }}
-                className="w-full bg-white text-slate-900 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+                className="w-full bg-white hover:bg-slate-50 text-slate-900 py-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all mt-2"
               >
-                <LogIn size={16} /> 使用 Google 登入
+                <LogIn size={16} /> 連接雲端帳號
               </button>
             ) : (
-              <div className="space-y-3">
-                <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
+              <div className="space-y-4 mt-2">
+                <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between shadow-inner">
                   <div className="flex items-center gap-3 overflow-hidden flex-1">
                     {user?.avatarUrl ? (
-                      <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm" alt="Avatar" />
+                      <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm object-cover" alt="Avatar" />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10 uppercase">
                         {String(user?.displayName || user?.email || 'U').charAt(0)}
@@ -2146,7 +2118,7 @@ export default function App() {
                     )}
                     <div className="overflow-hidden">
                       <p className="text-white text-xs font-black truncate">{String(user?.displayName || user?.email || '')}</p>
-                      <p className="text-[9px] text-slate-500 font-medium truncate">{String(user?.email || '')}</p>
+                      <p className="text-[9px] text-slate-500 font-medium truncate mt-0.5">{String(user?.email || '')}</p>
                     </div>
                   </div>
                   <button 
@@ -2160,9 +2132,9 @@ export default function App() {
                         }
                       });
                     }}
-                    className="bg-white/10 hover:bg-red-500/20 text-white px-4 py-2 rounded-xl transition-all active:scale-90 text-[10px] font-bold border border-white/10 flex items-center gap-2"
+                    className="bg-white/10 hover:bg-red-500/20 text-white px-3 py-2 rounded-xl transition-all active:scale-95 text-[10px] font-bold border border-white/10 flex items-center gap-1.5"
                   >
-                    <LogOut size={14} /> 登出雲端
+                    <LogOut size={14} /> 登出
                   </button>
                 </div>
 
@@ -2170,16 +2142,16 @@ export default function App() {
                   <button 
                     onClick={performPushSync}
                     disabled={isSyncing}
-                    className="bg-blue-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+                    className="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 active:scale-95 transition-all disabled:opacity-50"
                   >
                     {isSyncing && syncAction === 'push' ? (
                       <>
-                        <RefreshCcw size={16} className="animate-spin" />
+                        <RefreshCcw size={14} className="animate-spin" />
                         上傳中...
                       </>
                     ) : (
                       <>
-                        <CloudUpload size={16} />
+                        <CloudUpload size={14} />
                         上傳備份
                       </>
                     )}
@@ -2187,24 +2159,23 @@ export default function App() {
                   <button 
                     onClick={performPullSync}
                     disabled={isSyncing}
-                    className="bg-red-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95 transition-all disabled:opacity-50"
+                    className="bg-slate-700 hover:bg-slate-600 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all disabled:opacity-50"
                   >
                     {isSyncing && syncAction === 'pull' ? (
                       <>
-                        <RefreshCcw size={16} className="animate-spin" />
+                        <RefreshCcw size={14} className="animate-spin" />
                         下載中...
                       </>
                     ) : (
                       <>
-                        <CloudDownload size={16} />
+                        <CloudDownload size={14} />
                         下載備份
                       </>
                     )}
                   </button>
-                  <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2 text-center">
-                    <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">雲端同步狀態</p>
-                    <p className="text-[10px] text-slate-300 font-mono">
-                      {cloudCount !== null ? cloudCount : '?'} 張照片 | {lastSyncTime ? (isNaN(new Date(Number(lastSyncTime) || lastSyncTime).getTime()) ? '時間未知' : new Date(Number(lastSyncTime) || lastSyncTime).toLocaleString('zh-TW')) : '尚未備份'}
+                  <div className="col-span-2 bg-black/20 border border-white/5 flex items-center justify-center rounded-xl p-2.5 text-center mt-1 shadow-inner">
+                    <p className="text-[9px] text-slate-400 font-medium">
+                      雲端共有 <span className="text-white font-bold">{cloudCount !== null ? cloudCount : '?'}</span> 張照片 | 最新備份: {lastSyncTime ? (isNaN(new Date(Number(lastSyncTime) || lastSyncTime).getTime()) ? '未知' : new Date(Number(lastSyncTime) || lastSyncTime).toLocaleString('zh-TW')) : '尚未'}
                     </p>
                   </div>
                 </div>
@@ -2212,17 +2183,16 @@ export default function App() {
             )}
           </div>
 
-          <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 shadow-sm border border-white/50 space-y-4">
-            <h4 className="font-bold text-slate-800 text-sm">✨ AI 智慧辨識切換器</h4>
-            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-              您的應用程式已升級「通用 AI 引擎」。您可以貼上支援平台的 API Key 啟用極速辨識通道：
-            </p>
-            
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+              <Sparkles size={16} className="text-purple-500" />
+              AI 智能辨識與自動打標
+            </h4>
             <div className="space-y-3">
               <input 
                 type="password" 
-                placeholder="請貼上您申請的 API Key..."
-                className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
+                placeholder="第三方 AI API Key (例如 Gemini)..."
+                className="font-mono w-full rounded-xl border border-slate-200 p-3 text-xs bg-slate-50 shadow-inner focus:bg-white focus:border-purple-400 transition-all outline-none text-slate-800"
                 value={geminiApiKey}
                 onChange={(e) => {
                   setGeminiApiKey(e.target.value);
@@ -2231,8 +2201,8 @@ export default function App() {
               />
               <input 
                 type="text" 
-                placeholder="指定特定模型 (選填，如: tencent/hy3-preview:free)"
-                className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
+                placeholder="指定模型名稱 (選填，如: tencent/hy3-preview:free)"
+                className="font-mono w-full rounded-xl border border-slate-200 p-3 text-xs bg-slate-50 shadow-inner focus:bg-white focus:border-purple-400 transition-all outline-none text-slate-800"
                 value={customModel}
                 onChange={(e) => {
                   setCustomModel(e.target.value);
@@ -2242,18 +2212,18 @@ export default function App() {
             </div>
           </div>
 
-          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4">
-            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
               <Lock size={16} className="text-orange-500" />
-              員工訪問密鑰 (Staff Access)
+              內部查詢密碼 (Staff Access)
             </h4>
-            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-              設定密鑰後，員工可在公開相簿透過解鎖查看「廠商資訊」與「手動編號」，但無編輯權限。
+            <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+              設定密碼後，員工可在公開介面輸入此密碼，解鎖查看「廠商資訊」與「手動編號」，但無編輯權限。
             </p>
             <input 
               type="password" 
-              placeholder="設定密鑰 (例如: 1234)..."
-              className="w-full bg-white border border-slate-100 p-3 rounded-xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm"
+              placeholder="設定密碼 (例如: 1234)..."
+              className="w-full bg-slate-50 border border-slate-200 p-3 rounded-xl text-sm outline-none focus:border-orange-500 transition-all shadow-inner font-mono tracking-widest"
               value={internalPassword}
               onChange={(e) => {
                 setInternalPassword(e.target.value);
@@ -2262,16 +2232,15 @@ export default function App() {
             />
           </div>
 
-          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4">
-            <h4 className="font-bold text-slate-800 text-sm">數據管理</h4>
-            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-              您的產品目錄均儲存在手機本機。建議定期匯出備份，避免數據意外遺失。
-            </p>
-            
-            <div className="flex gap-3 pt-2">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4">
+            <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+              <CloudDownload size={16} className="text-slate-600" />
+              本地資料匯出導入
+            </h4>
+            <div className="flex gap-2.5">
               <button 
                 onClick={() => {
-                  const data = JSON.stringify({ photos, categories, tags });
+                  const data = JSON.stringify({ photos, categories, tags, manufacturers });
                   const blob = new Blob([data], { type: 'application/json' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
@@ -2279,11 +2248,11 @@ export default function App() {
                   a.download = 'product_album_backup.json';
                   a.click();
                 }}
-                className="flex-1 bg-slate-800 text-white py-3 rounded-2xl text-xs font-bold shadow-lg"
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all"
               >
-                匯出備份
+                匯出 JSON
               </button>
-              <label className="flex-1 bg-white text-slate-800 text-center py-3 rounded-2xl text-xs font-bold border border-slate-200 cursor-pointer shadow-sm">
+              <label className="flex-1 bg-white text-slate-700 text-center py-3 rounded-xl text-xs font-bold border border-slate-300 cursor-pointer shadow-sm hover:bg-slate-50 active:scale-95 transition-all">
                 <input 
                   type="file" 
                   className="hidden" 
@@ -2298,6 +2267,7 @@ export default function App() {
                         if (json.photos) setPhotos(json.photos);
                         if (json.categories) setCategories(json.categories);
                         if (json.tags) setTags(json.tags);
+                        if (json.manufacturers) setManufacturers(json.manufacturers);
                         alert('匯入成功');
                       } catch (err) {
                         alert('匯入失敗，請檢查文件格式');
@@ -2306,16 +2276,11 @@ export default function App() {
                     reader.readAsText(file);
                   }}
                 />
-                匯入備份
+                匯入 JSON
               </label>
             </div>
           </div>
 
-          {/* Version Info */}
-          <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-            <p className="text-[10px] font-mono text-slate-400">2026.04.24.1724</p>
-          </div>
         </div>
       </div>
     );

@@ -378,6 +378,19 @@ export const fetchSettings = async () => {
     return data;
 };
 
+export const saveSettings = async (settings: any) => {
+    const { error } = await supabase
+        .from('settings')
+        .update(settings)
+        .eq('id', 1);
+    
+    if (error) {
+        console.error("Failed to save settings:", error);
+        throw error;
+    }
+    return true;
+};
+
 export const uploadLogo = async (file: File) => {
     const bucketName = 'app-assets';
     const fileName = `logo-${Date.now()}`;
