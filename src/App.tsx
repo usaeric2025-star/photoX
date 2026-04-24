@@ -47,6 +47,7 @@ import {
   deletePhotoFromCloud,
   syncPhotosToCloud,
   calculateMD5,
+  calculateMD5FromArrayBuffer,
   generateItemCode,
   checkImageHashExists,
   uploadImage,
@@ -80,11 +81,7 @@ const DEFAULT_CATEGORIES: Category[] = [
   ]},
 ];
 
-const DEFAULT_TAGS: Tag[] = [
-  { id: 't1', name: '新品', aliases: ['新品', 'new'] },
-  { id: 't2', name: '熱銷', aliases: ['热销', '熱銷', 'popular', 'best seller'] },
-  { id: 't3', name: '特價', aliases: ['特价', '特價', 'sale'] },
-];
+const DEFAULT_TAGS: Tag[] = [];
 
 // --- Utilities ---
 // Simple IndexedDB Wrapper
@@ -647,9 +644,20 @@ export default function App() {
           }
           
           if (result.newTagName) {
-            const newTagId = crypto.randomUUID();
-            setTags(prev => [...prev, { id: newTagId, name: result.newTagName, aliases: [] }]);
-            finalTagIds.push(newTagId);
+            const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+            const newTagsToAdd: Tag[] = [];
+            const newTagIds: string[] = [];
+            
+            newNames.forEach((name: string) => {
+              const id = crypto.randomUUID();
+              newTagsToAdd.push({ id, name, aliases: [] });
+              newTagIds.push(id);
+            });
+            
+            if (newTagsToAdd.length > 0) {
+              setTags(prev => [...prev, ...newTagsToAdd]);
+              finalTagIds = Array.from(new Set([...finalTagIds, ...newTagIds]));
+            }
           }
 
           setPhotos(prev => prev.map(p => p.id === photo.id ? { 
@@ -703,6 +711,9 @@ export default function App() {
     setIsImporting(true);
     setActiveScreen('home');
 
+    // Local set to track hashes in this session to prevent duplicates between chunks
+    const sessionHashes = new Set<string>();
+
     const CHUNK_SIZE = 3;
     for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
       const chunk = fileArray.slice(i, i + CHUNK_SIZE);
@@ -722,22 +733,44 @@ export default function App() {
             continue;
           }
 
+          // Check raw Hash first using ArrayBuffer (robust & fast)
+          const arrayBuffer = await file.arrayBuffer();
+          const rawHash = calculateMD5FromArrayBuffer(arrayBuffer);
+          
+          const isLocalRawDuplicate = photosRef.current.some(p => p.image_hash === rawHash) || 
+                                     sessionHashes.has(rawHash);
+          
+          if (isLocalRawDuplicate) {
+            console.log(`Skipping duplicate (raw hash match): ${file.name}`);
+            continue;
+          }
+
           const compressedUri = await compressImage(rawUri);
           const imgHash = calculateMD5(compressedUri);
 
-          const isLocalDuplicate = photosRef.current.some(p => p.image_hash === imgHash) || newPhotosDraft.some(p => p.image_hash === imgHash);
-          if (isLocalDuplicate) continue;
+          const isLocalDuplicate = photosRef.current.some(p => p.image_hash === imgHash) || 
+                                   sessionHashes.has(imgHash);
+
+          if (isLocalDuplicate) {
+            console.log(`Skipping duplicate (compressed hash match): ${file.name}`);
+            continue;
+          }
           
           if (user) {
-            const existingManualCode = await checkImageHashExists(user.id, imgHash);
-            if (existingManualCode) {
+            // Updated signature: only takes hash
+            const existingInfo = await checkImageHashExists(imgHash);
+            if (existingInfo) {
               setAlertDialog({ 
-                title: '重複記錄跳過', 
-                message: `照片「${file.name}」以前已經錄入過。\n手動編號：${existingManualCode}\n系統已自動跳過此照片。` 
+                title: '圖片重複', 
+                message: `照片「${file.name}」在雲端已存在相同內容（編號：${existingInfo.manual_code || '無'}），系統已自動跳過此照片以節省空間。` 
               });
               continue;
             }
           }
+
+          // Mark as processed in this session
+          sessionHashes.add(rawHash);
+          sessionHashes.add(imgHash);
 
           const storageId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
           const dbId = crypto.randomUUID();
@@ -787,9 +820,20 @@ export default function App() {
                 }
                 
                 if (result.newTagName) {
-                  const newTagId = crypto.randomUUID();
-                  setTags(prev => [...prev, { id: newTagId, name: result.newTagName, aliases: [] }]);
-                  finalTagIds.push(newTagId);
+                  const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+                  const newTagsToAdd: Tag[] = [];
+                  const newTagIds: string[] = [];
+                  
+                  newNames.forEach((name: string) => {
+                    const id = crypto.randomUUID();
+                    newTagsToAdd.push({ id, name, aliases: [] });
+                    newTagIds.push(id);
+                  });
+                  
+                  if (newTagsToAdd.length > 0) {
+                    setTags(prev => [...prev, ...newTagsToAdd]);
+                    finalTagIds = Array.from(new Set([...finalTagIds, ...newTagIds]));
+                  }
                 }
                 
                 setPhotos(prev => prev.map(p => p.id === dbId ? { 
@@ -818,7 +862,11 @@ export default function App() {
       
       // Update photos state with the processed chunk
       if (newPhotosDraft.length > 0) {
-        setPhotos(prev => [...newPhotosDraft, ...prev]);
+        setPhotos(prev => {
+          const next = [...newPhotosDraft, ...prev];
+          photosRef.current = next;
+          return next;
+        });
         // Small delay to allow UI to render and JS engine to breathe
         await new Promise(resolve => setTimeout(resolve, 50));
       }
@@ -871,11 +919,11 @@ export default function App() {
 
         // Check for duplicates in Cloud if logged in
         if (user && imgHash) {
-          const existingManualCode = await checkImageHashExists(user.id, imgHash);
-          if (existingManualCode) {
+          const existingInfo = await checkImageHashExists(imgHash);
+          if (existingInfo) {
             setAlertDialog({ 
               title: '提示', 
-              message: `照片已存在！\n編號：${existingManualCode}` 
+              message: `照片已存在！\n編號：${existingInfo.manual_code || '無'}` 
             });
             return;
           }
@@ -985,11 +1033,9 @@ export default function App() {
   };
 
   const togglePhotoSelection = (id: string) => {
-    setSelectedIds(prev => {
-      const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
-      if (next.length === 0) setIsMultiSelect(false);
-      return next;
-    });
+    const next = selectedIds.includes(id) ? selectedIds.filter(i => i !== id) : [...selectedIds, id];
+    if (next.length === 0) setIsMultiSelect(false);
+    setSelectedIds(next);
   };
 
   const handleGroupPhotos = () => {
@@ -1838,10 +1884,20 @@ export default function App() {
         // Maybe update note with dimensions if name is used
       }
       if (result.newTagName) {
-        const newTagId = crypto.randomUUID();
-        const newTagArr = [...tags, { id: newTagId, name: result.newTagName, aliases: [] }];
-        setTags(newTagArr);
-        setAddTagIds(prev => Array.from(new Set([...prev, newTagId])));
+        const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+        const newTagsToAdd: Tag[] = [];
+        const newTagIds: string[] = [];
+        
+        newNames.forEach((name: string) => {
+          const id = crypto.randomUUID();
+          newTagsToAdd.push({ id, name, aliases: [] });
+          newTagIds.push(id);
+        });
+        
+        if (newTagsToAdd.length > 0) {
+          setTags(prev => [...prev, ...newTagsToAdd]);
+          setAddTagIds(prev => Array.from(new Set([...prev, ...newTagIds])));
+        }
       }
       
       // Auto-set additional fields if they are empty
@@ -1928,6 +1984,14 @@ export default function App() {
             tags: tags,
             manufacturers: manufacturers
           });
+
+          // NEW: Performing deduplication per user as requested
+          console.log("Running deduplication...");
+          const { deduplicatePhotos } = await import('./services/supabaseService');
+          const dedupResult = await deduplicatePhotos(user.id);
+          if (dedupResult.removed > 0) {
+            console.log(`Deduplication removed ${dedupResult.removed} duplicate records for user.`);
+          }
 
           // Fetch updated photos from cloud to get proper image URLs
           const cloudPhotos = await loadPhotosFromCloud(user.id);

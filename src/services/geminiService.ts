@@ -43,19 +43,17 @@ export const analyzeProductPhoto = async (
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
 
   const promptText = `
-  你是一位家具型錄專家。請分析這張照片並提供家具的分類與標籤資訊。
+  你是一位家具專業分析師。請分析這張照片並提供以下精確資訊：
   
-  關鍵規則：
-  1. 主分類與子分類：從「現有分類」中選擇最合適的一個。如果都不適合，請在 newCategoryName 中建議一個新分類名。
-  2. 標籤 (Tags)：這非常重要。除了主要分類，請添加描述產品屬性的標籤（例如材質、風格，或與其他產品的搭配性）。
-     - 最多回傳 2 個標籤。
-     - 優先從「現有標籤」中選擇。如果不夠，可在 newTagName 中建議 1 個新標籤名。
-  3. 家具名稱 (name)：根據圖片生成一個優雅簡短的家具名稱。
-  4. 尺寸 (dimensions)：估算大約尺寸 (長、寬、高，單位：cm)。
+  1. 分類 (Classification)：從「現有分類」中選擇最合適的一個。這是首要任務，請務必精準匹配。如果產品類型完全不在現有清單中，才在 newCategoryName 中建議一個新分類名。
+  2. 標籤 (Tags)：請提供「至少 2 個且剛好 2 個」最能描述該家具產品的標籤。
+     - 優先從「現有標籤」中挑選符合的標籤。
+     - 若現有標籤不足以描述產品特色，請在 newTagName 中建議新的標籤（最多建議 2 個，以逗號隔開）。
   
-  注意：
-  - 不要生成家具描述 (description)，該欄位保留給用戶手動輸入。
-  - 專注於分類與標籤的精確度。
+  重要原則：
+  - 嚴禁「亂選」：如果現有分類或標籤不匹配，請給予 newCategoryName 或 newTagName，而不是強迫選一個不相關的。
+  - 標籤數量：請確保回傳內容總共包含 2 個標籤（現有標籤 + 建議標籤 = 2）。
+  - 同時也請提供一個準確的「家具名稱 (name)」以及估計的「尺寸 (dimensions)」。
   
   現有分類：
   ${JSON.stringify(categoriesJson)}
@@ -66,12 +64,11 @@ export const analyzeProductPhoto = async (
   請回傳 JSON 格式：
   {
     "name": "家具名稱",
-    "categoryId": "string or null",
-    "newCategoryName": "string or null",
+    "categoryId": "string (若匹配現有分類) 或 null",
+    "newCategoryName": "string (若無匹配現有分類則填寫建議名稱) 或 null",
     "subcategoryId": "string or null",
-    "newSubCategoryName": "string or null",
-    "tagIds": ["string array, max 2 items"],
-    "newTagName": "string or null",
+    "tagIds": ["string array, 現有標籤 ID"],
+    "newTagName": "建議的新標籤名 (若現有標籤不足 2 個則提供建議，以逗號隔開) 或 null",
     "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" }
   }
   `;
@@ -134,12 +131,20 @@ export const analyzeProductPhoto = async (
     const jsonStr = textOutput.substring(startIndex, endIndex + 1);
     const parsedData = JSON.parse(jsonStr);
     
-    // Failsafe restrictions: enforce limits even if AI disobeys
-    if (Array.isArray(parsedData.tagIds) && parsedData.tagIds.length > 2) {
-      parsedData.tagIds = parsedData.tagIds.slice(0, 2); // force keep only 2
-    }
-    if (Array.isArray(parsedData.tagIds) && parsedData.tagIds.length > 0) {
-      parsedData.newTagName = null; // if existing tags are selected, prefer them
+    // Total tags enforcement: Ensure we have exactly 2 tags (ID or New Name)
+    let currentTagCount = (parsedData.tagIds || []).length;
+    let newTagList = parsedData.newTagName ? parsedData.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    
+    // If we have more than 2 total, trim them down
+    if (currentTagCount + newTagList.length > 2) {
+      if (currentTagCount >= 2) {
+        parsedData.tagIds = parsedData.tagIds.slice(0, 2);
+        parsedData.newTagName = null;
+      } else {
+        // currentTagCount is 0 or 1
+        const needed = 2 - currentTagCount;
+        parsedData.newTagName = newTagList.slice(0, needed).join(', ');
+      }
     }
     
     // Attach the model info so the UI can log/show it

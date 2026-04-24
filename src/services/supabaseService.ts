@@ -12,8 +12,17 @@ const TABLE_NAME = 'furniture_items';
 
 // --- Utils ---
 export const calculateMD5 = (base64Data: string): string => {
-  const base64Content = base64Data.split(',')[1];
-  return SparkMD5.hashBinary(atob(base64Content));
+  try {
+    const base64Content = base64Data.split(',')[1];
+    return SparkMD5.hashBinary(atob(base64Content));
+  } catch (e) {
+    console.error("MD5 calculation error:", e);
+    return `ERR-${Date.now()}`;
+  }
+};
+
+export const calculateMD5FromArrayBuffer = (buffer: ArrayBuffer): string => {
+  return SparkMD5.ArrayBuffer.hash(buffer);
 };
 
 export const generateItemCode = (): string => {
@@ -134,23 +143,95 @@ export const uploadImage = async (userId: string, photoId: string, base64Data: s
 };
 
 /**
- * Returns the manual_code if image exists, otherwise null
+ * Returns existing photo info if a photo with the same hash exists, otherwise null
  */
-export const checkImageHashExists = async (userId: string, hash: string): Promise<string | null> => {
+export const checkImageHashExists = async (hash: string): Promise<{image_url: string, manual_code: string} | null> => {
   try {
     const { data, error } = await supabase
       .from(TABLE_NAME)
-      .select('manual_code')
+      .select('image_url, manual_code')
       .eq('image_hash', hash)
-      .eq('user_id', userId)
+      .not('image_url', 'is', null)
       .limit(1)
       .maybeSingle();
 
     if (error) throw error;
-    return data ? (data.manual_code || '無手動編號') : null;
+    return data ? { image_url: data.image_url, manual_code: data.manual_code } : null;
   } catch (err) {
     console.error("Hash check failed:", err);
     return null;
+  }
+};
+
+/**
+ * Clean up duplicate photos based on hash.
+ * This runs per user to prevent one user's data from being deleted by another user's duplicate.
+ * Keeps the oldest record and removes others.
+ */
+export const deduplicatePhotos = async (userId?: string): Promise<{removed: number}> => {
+  try {
+    // 1. Get all photos and group them by user and hash
+    let query = supabase
+      .from(TABLE_NAME)
+      .select('id, image_hash, created_at, storageId, image_url, user_id')
+      .order('created_at', { ascending: true });
+
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    if (!data) return { removed: 0 };
+
+    // Group by userId + hash
+    const groups: Record<string, typeof data> = {};
+    data.forEach(item => {
+      if (!item.image_hash) return;
+      const key = `${item.user_id}_${item.image_hash}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+
+    let removedCount = 0;
+    for (const key in groups) {
+      const group = groups[key];
+      if (group.length > 1) {
+        // Keep the first (oldest) one, delete the rest
+        const [original, ...duplicates] = group;
+        const [uid] = key.split('_');
+        console.log(`User ${uid} has ${group.length} occurrences for hash ${key.split('_')[1]}. Keeping ${original.id}.`);
+
+        for (const duplicate of duplicates) {
+          try {
+            await supabase.from(TABLE_NAME).delete().eq('id', duplicate.id);
+            
+            // Only remove from storage if it's NOT the same physical file as the original
+            // AND no other record (from any user) is using this file
+            if (duplicate.image_url && duplicate.image_url !== original.image_url) {
+                // Check if any other record still uses this URL
+                const { count } = await supabase
+                    .from(TABLE_NAME)
+                    .select('*', { count: 'exact', head: true })
+                    .eq('image_url', duplicate.image_url);
+                
+                if (count === 0) {
+                    const filename = duplicate.storageId || duplicate.id;
+                    await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`]);
+                }
+            }
+            removedCount++;
+          } catch (e) {
+            console.error(`Failed to remove duplicate ${duplicate.id}:`, e);
+          }
+        }
+      }
+    }
+    return { removed: removedCount };
+  } catch (err) {
+    console.error("Deduplication failed:", err);
+    return { removed: 0 };
   }
 };
 
@@ -233,8 +314,20 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   for (const photo of photos) {
     try {
       if (!photo.image_url && photo.uri) {
-        const filename = photo.storageId || photo.id;
-        photo.image_url = await uploadImage(userId, filename, photo.uri);
+        // Check if hash exists globally before uploading
+        if (photo.image_hash) {
+          const existingInfo = await checkImageHashExists(photo.image_hash);
+          if (existingInfo) {
+            console.log(`Found existing image for hash ${photo.image_hash}, skipping upload.`);
+            photo.image_url = existingInfo.image_url;
+          }
+        }
+
+        // If still no url, then upload
+        if (!photo.image_url) {
+          const filename = photo.storageId || photo.id;
+          photo.image_url = await uploadImage(userId, filename, photo.uri);
+        }
       }
       const wasSaved = await savePhotoToCloud(userId, photo);
       if (wasSaved) {

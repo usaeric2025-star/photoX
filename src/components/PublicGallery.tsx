@@ -66,13 +66,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
 
-  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   
-  const columnCount = displayMode === 'grid' ? 3 : 1; 
+  const columnCount = columns; 
   const [visibleCount, setVisibleCount] = useState(15); 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -86,14 +86,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   };
 
   const handleHeaderClick = () => {
-    setHeaderClickCount(prev => {
-        const next = prev + 1;
-        if (next >= 3) {
-            onLogin && onLogin();
-            return 0;
-        }
-        return next;
-    });
+    const next = headerClickCount + 1;
+    if (next >= 3) {
+        setShowPassPrompt(true);
+        setHeaderClickCount(0);
+    } else {
+        setHeaderClickCount(next);
+    }
   }
 
   const displayPhotos = useMemo(() => {
@@ -156,7 +155,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     }
     
     return sorted;
-  }, [photos, selectedCatCode, searchQuery, showGroupsCollapsed]);
+  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, showGroupsCollapsed]);
 
   const visiblePhotos = useMemo(() => {
     if (displayPhotos.length === 0) return [];
@@ -215,15 +214,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   }, [displayPhotos.length, visibleCount]);
 
   const toggleSelect = (id: string) => {
-    setSelectedPhotos(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      
-      // Auto-exit if nothing selected
-      if (next.size === 0) setSelectionMode(false);
-      return next;
-    });
+    const next = new Set(selectedPhotos);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    
+    // Auto-exit if nothing selected
+    if (next.size === 0) setSelectionMode(false);
+    
+    setSelectedPhotos(next);
   };
 
   const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);
@@ -390,14 +388,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1D3557]/30" />
           </div>
           
-          {/* Group & Layout Toggles */}
+          {/* Column Toggle */}
           <div className="flex gap-2">
             <button
-                onClick={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}
-                className="w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]"
-                title="Switch Layout"
+                onClick={() => {
+                  if (columns === 2) setColumns(3);
+                  else if (columns === 3) setColumns(5);
+                  else setColumns(2);
+                }}
+                className="px-4 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557] gap-2"
+                title={`Switch layout`}
             >
-                {displayMode === 'grid' ? <LayoutGrid size={18} /> : <Grid3X3 size={18} />}
+                <LayoutGrid size={16} className="opacity-40" />
+                <span className="font-black text-xs">{columns}</span>
             </button>
             <button
                 onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
@@ -494,7 +497,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
           </div>
         ) : (
-          <div className={`grid gap-3 ${displayMode === 'grid' ? 'grid-cols-3' : 'grid-cols-1'}`}>
+          <div className={`grid gap-3 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}>
             {gridPhotos.map((photo, i) => (
               <motion.div 
                 key={photo.id}
@@ -540,13 +543,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   const isUncategorized = !catName || 
                     ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
                   
-                  if (isUncategorized) return null;
-                  
                   return (
                     <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent translate-y-1 group-hover:translate-y-0 transition-transform">
-                      <p className="text-white text-[9px] font-bold truncate uppercase tracking-wider">
-                        {catName}
-                      </p>
+                      {!isUncategorized && (
+                        <p className="text-white text-[9px] font-bold truncate uppercase tracking-wider">
+                          {catName}
+                        </p>
+                      )}
                     </div>
                   );
                 })()}
@@ -637,27 +640,38 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               className="w-full md:w-[350px] lg:w-[400px] bg-white text-slate-800 p-6 md:p-8 flex flex-col h-[50vh] md:h-full overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="text-2xl font-bold mb-4">{displayPhotos[lightboxIndex].name || '未命名家具'}</h2>
-              
-              <div className="space-y-6">
-                {(() => {
-                  const code = displayPhotos[lightboxIndex].category;
-                  const cat = dbCategories.find(c => c.code === code);
-                  const catName = cat ? (cat[lang] || cat.en) : code;
-                  const isUncategorized = !catName || ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
-                  const subCat = (isStaffMode || showExit) ? displayPhotos[lightboxIndex].sub_category : null;
+              <div className="flex flex-col gap-6">
+                {(isStaffMode || showExit) && (displayPhotos[lightboxIndex].sub_category || displayPhotos[lightboxIndex].manual_code) && (
+                  <div className="flex flex-col gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    {displayPhotos[lightboxIndex].sub_category && (
+                      <div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">厂商 (Manufacturer)</h3>
+                        <p className="text-slate-700 font-bold">{displayPhotos[lightboxIndex].sub_category}</p>
+                      </div>
+                    )}
+                    {displayPhotos[lightboxIndex].manual_code && (
+                      <div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">手动编号 (Manual ID)</h3>
+                        <p className="text-[#D4A853] font-mono font-black tracking-wider text-sm">{displayPhotos[lightboxIndex].manual_code}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                  if (isUncategorized && !subCat) return null;
+                 {(() => {
+                   const code = displayPhotos[lightboxIndex].category;
+                   const cat = dbCategories.find(c => c.code === code);
+                   const catName = cat ? (cat[lang] || cat.en) : code;
+                   const isUncategorized = !catName || ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
+                  const subCat = (!isStaffMode && !showExit) ? displayPhotos[lightboxIndex].sub_category : null;
 
                   return (
                     <div>
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.category}</h3>
                       <div className="flex flex-wrap gap-2">
-                        {!isUncategorized && (
-                          <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">
-                            {catName}
-                          </span>
-                        )}
+                        <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">
+                          {catName}
+                        </span>
                         {subCat && (
                           <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-sm font-bold border border-orange-200 flex items-center gap-1.5 shadow-sm">
                             <Key size={12} />
@@ -669,7 +683,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   );
                 })()}
 
-                {(isStaffMode || showExit) && displayPhotos[lightboxIndex].manual_code && (
+                {displayPhotos[lightboxIndex].manual_code && (
                   <div>
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">手動編號 (Manual ID)</h3>
                     <p className="inline-block bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-mono tracking-wider shadow-md">
@@ -748,7 +762,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               <h3 className="font-bold text-slate-800 text-xl mb-2">員工解鎖</h3>
               <p className="text-sm text-slate-500 mb-6">請輸入員工訪問密鑰以查看內部資訊</p>
               
-              <div className="space-y-4">
+              <form 
+                className="space-y-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (passInput === internalPassword) {
+                    setIsStaffMode(true);
+                    setShowPassPrompt(false);
+                    setPassInput('');
+                  } else {
+                    setPassError(true);
+                  }
+                }}
+              >
                 <input 
                   type="password" 
                   autoFocus
@@ -756,43 +782,25 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   className={`w-full bg-slate-50 border p-4 rounded-2xl text-center text-lg font-bold outline-none transition-all ${passError ? 'border-red-500 bg-red-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 shadow-sm'}`}
                   value={passInput}
                   onChange={(e) => { setPassInput(e.target.value); setPassError(false); }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      if (passInput === internalPassword) {
-                        setIsStaffMode(true);
-                        setShowPassPrompt(false);
-                        setPassInput('');
-                      } else {
-                        setPassError(true);
-                      }
-                    }
-                  }}
                 />
                 {passError && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest animate-bounce">密鑰錯誤</p>}
                 
                 <div className="flex gap-2">
                   <button 
+                    type="button"
                     onClick={() => { setShowPassPrompt(false); setPassInput(''); setPassError(false); }}
                     className="flex-1 py-4 px-4 rounded-2xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
                   >
                     取消
                   </button>
                   <button 
-                    onClick={() => {
-                      if (passInput === internalPassword) {
-                        setIsStaffMode(true);
-                        setShowPassPrompt(false);
-                        setPassInput('');
-                      } else {
-                        setPassError(true);
-                      }
-                    }}
+                    type="submit"
                     className="flex-1 py-4 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
                   >
                     解鎖
                   </button>
                 </div>
-              </div>
+              </form>
             </motion.div>
           </motion.div>
         )}
