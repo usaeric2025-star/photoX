@@ -20,15 +20,15 @@ interface PublicGalleryProps {
 const translations = {
   zh: {
     galleryName: 'Gallery',
-    gallerySub: (count: number) => `共 ${count} 张照片`,
-    search: '在此搜寻...',
+    gallerySub: (count: number) => `共 ${count} 張照片`,
+    search: '在此搜尋...',
     allCats: '全部',
-    name: '名称',
-    category: '分类',
-    description: '描述',
-    tags: '标签',
-    close: '关闭',
-    empty: '没有找到匹配的照片',
+    name: '產品名稱',
+    category: '分類',
+    description: '產品說明',
+    tags: '標籤',
+    close: '關閉',
+    empty: '沒有找到匹配的照片',
     whatsAppInquiry: 'WhatsApp 諮詢'
   },
   en: {
@@ -504,6 +504,27 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: (i % 15) * 0.03 }}
+                onPointerDown={(e) => {
+                  const timer = setTimeout(() => {
+                    if (!selectionMode) {
+                      setSelectionMode(true);
+                      toggleSelect(getRealId(photo.id));
+                      // Haptic feedback if available
+                      if ('vibrate' in navigator) navigator.vibrate(50);
+                    }
+                  }, 600);
+                  (e.currentTarget as any)._longPressTimer = timer;
+                }}
+                onPointerUp={(e) => {
+                  if ((e.currentTarget as any)._longPressTimer) {
+                    clearTimeout((e.currentTarget as any)._longPressTimer);
+                  }
+                }}
+                onPointerLeave={(e) => {
+                  if ((e.currentTarget as any)._longPressTimer) {
+                    clearTimeout((e.currentTarget as any)._longPressTimer);
+                  }
+                }}
                 onClick={() => {
                   if (selectionMode) {
                     toggleSelect(getRealId(photo.id));
@@ -641,6 +662,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-6">
+                <div>
+                   <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight mb-1">
+                     {displayPhotos[lightboxIndex].name || '家具紀錄'}
+                   </h1>
+                   {(isStaffMode || showExit) && displayPhotos[lightboxIndex].item_code && (
+                     <p className="text-[10px] font-mono text-slate-400">ID: {displayPhotos[lightboxIndex].item_code}</p>
+                   )}
+                </div>
+
                 {(isStaffMode || showExit) && (displayPhotos[lightboxIndex].sub_category || displayPhotos[lightboxIndex].manual_code) && (
                   <div className="flex flex-col gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     {displayPhotos[lightboxIndex].sub_category && (
@@ -658,7 +688,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   </div>
                 )}
 
-                 {(() => {
+                {(() => {
                    const code = displayPhotos[lightboxIndex].category;
                    const cat = dbCategories.find(c => c.code === code);
                    const catName = cat ? (cat[lang] || cat.en) : code;
@@ -829,8 +859,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     onClick={() => openWhatsApp(settings.whatsapp_1, (window as any)._pendingPhotoId)}
                     className="w-full py-4 px-6 bg-[#25D366] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
-                    <MessageCircle size={20} />
-                    {settings.whatsapp_1_name || '聯繫號碼 1'}
+                    <span className="text-xl">👵</span>
+                    <div className="flex-1 flex flex-col items-start px-2">
+                      <span className="text-[10px] opacity-70 uppercase tracking-widest">WhatsApp 01</span>
+                      <span className="leading-tight truncate w-full text-left">{settings.whatsapp_1_name || '聯繫號碼 1'}</span>
+                    </div>
+                    <MessageCircle size={20} className="shrink-0" />
                   </button>
                 )}
                 {settings?.whatsapp_2 && (
@@ -838,8 +872,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     onClick={() => openWhatsApp(settings.whatsapp_2, (window as any)._pendingPhotoId)}
                     className="w-full py-4 px-6 bg-[#128C7E] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
-                    <MessageCircle size={20} />
-                    {settings.whatsapp_2_name || '聯繫號碼 2'}
+                    <span className="text-xl">🏢</span>
+                    <div className="flex-1 flex flex-col items-start px-2">
+                      <span className="text-[10px] opacity-70 uppercase tracking-widest">WhatsApp 02</span>
+                      <span className="leading-tight truncate w-full text-left">{settings.whatsapp_2_name || '聯繫號碼 2'}</span>
+                    </div>
+                    <MessageCircle size={20} className="shrink-0" />
                   </button>
                 )}
               </div>

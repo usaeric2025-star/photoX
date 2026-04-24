@@ -54,6 +54,7 @@ export const analyzeProductPhoto = async (
   - 嚴禁「亂選」：如果現有分類或標籤不匹配，請給予 newCategoryName 或 newTagName，而不是強迫選一個不相關的。
   - 標籤數量：請確保回傳內容總共包含 2 個標籤（現有標籤 + 建議標籤 = 2）。
   - 同時也請提供一個準確的「家具名稱 (name)」以及估計的「尺寸 (dimensions)」。
+  - 請額外生成一段簡短且吸引人的「中文產品說明 (description)」，描述產品特色、材質或適合的空間。
   
   現有分類：
   ${JSON.stringify(categoriesJson)}
@@ -64,6 +65,7 @@ export const analyzeProductPhoto = async (
   請回傳 JSON 格式：
   {
     "name": "家具名稱",
+    "description": "中文產品說明",
     "categoryId": "string (若匹配現有分類) 或 null",
     "newCategoryName": "string (若無匹配現有分類則填寫建議名稱) 或 null",
     "subcategoryId": "string or null",

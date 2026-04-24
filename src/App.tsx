@@ -281,6 +281,7 @@ export default function App() {
   const [addSubId, setAddSubId] = useState<string | null>(null);
   const [addTagIds, setAddTagIds] = useState<string[]>([]);
   const [addNote, setAddNote] = useState('');
+  const [addName, setAddName] = useState('');
   const [addManualCode, setAddManualCode] = useState('');
   const [addDimL, setAddDimL] = useState<string>('');
   const [addDimW, setAddDimW] = useState<string>('');
@@ -878,21 +879,30 @@ export default function App() {
   const saveNewPhoto = async () => {
     if (!newPhotoData && !editPhotoId) return;
     
+    setIsSyncing(true); // Reuse sync state as general loading indicator
+    setSyncAction('idle');
+    setSyncPercent(30);
+
     try {
       const selectedDbCat = dbCategories.find(c => c.code === addCatId);
       const catCode = selectedDbCat?.code || addCatId || 'others';
-      const catName = selectedDbCat ? (selectedDbCat[appLang] || selectedDbCat.zh) : (categories.find(c => c.id === addCatId)?.name || '未分類');
       
       const subName = categories.find(c => c.id === addCatId)?.subcategories.find(s => s.id === addSubId)?.name || '';
       const tagNames = tags.filter(t => addTagIds.includes(t.id)).map(t => t.name);
       
-      const compressedData = newPhotoData ? await compressImage(newPhotoData) : null;
-      const imgHash = compressedData ? calculateMD5(compressedData) : (editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_hash : '');
+      const currentPhoto = editPhotoId ? photos.find(p => p.id === editPhotoId) : null;
+      // Only compress if it's a NEW photo or the photo data changed from the original uri
+      const isPhotoChanged = newPhotoData && (!currentPhoto || newPhotoData !== currentPhoto.uri);
       
-      if (editPhotoId) {
-        setPhotos(prev => prev.map(p => p.id === editPhotoId ? {
-          ...p,
+      setSyncPercent(60);
+      const compressedData = isPhotoChanged ? await compressImage(newPhotoData!) : null;
+      const imgHash = compressedData ? calculateMD5(compressedData) : (currentPhoto?.image_hash || '');
+      
+      if (editPhotoId && currentPhoto) {
+        const updatedPhoto: Photo = {
+          ...currentPhoto,
           ...(compressedData ? { uri: compressedData, image_hash: imgHash } : {}),
+          name: addName || currentPhoto.name || '家具紀錄',
           categoryId: addCatId,
           subcategoryId: addSubId,
           tagIds: addTagIds,
@@ -907,7 +917,13 @@ export default function App() {
             height: Number(addDimH) || 0,
             unit: 'cm'
           }
-        } : p));
+        };
+
+        setPhotos(prev => prev.map(p => p.id === editPhotoId ? updatedPhoto : p));
+        
+        if (user) {
+          await savePhotoToCloud(user.id, updatedPhoto);
+        }
         setEditPhotoId(null);
       } else {
         // Check for local duplicates first
@@ -942,7 +958,7 @@ export default function App() {
           item_code: generateItemCode(),
           manual_code: addManualCode,
           image_hash: imgHash || '',
-          name: '新家具紀錄',
+          name: addName || '新家具紀錄',
           category: catCode,
           sub_category: subName,
           tags: tagNames,
@@ -973,6 +989,9 @@ export default function App() {
     } catch (err: any) {
       console.error("Save failed:", err);
       setAlertDialog({ title: '保存失敗', message: err.message || '請檢查網路' });
+    } finally {
+      setIsSyncing(false);
+      setSyncPercent(0);
     }
   };
 
@@ -984,6 +1003,7 @@ export default function App() {
     setAddSubId(null);
     setAddTagIds([]);
     setAddNote('');
+    setAddName('');
     setAddManualCode('');
     setAddDimL('');
     setAddDimW('');
@@ -991,45 +1011,70 @@ export default function App() {
     setShowOtherFields(false);
   };
 
-  const saveBatchEdit = () => {
+  const saveBatchEdit = async () => {
     if (!batchEditIds) return;
-    // Allow saving if either a category is selected OR at least one tag is selected OR a manual code is set
-    if (!addCatId && addTagIds.length === 0 && !addManualCode) return;
+    // Allow saving if either a category is selected OR at least one tag is selected OR a manual code is set OR dimensions OR note
+    if (!addCatId && addTagIds.length === 0 && !addManualCode && !addNote && !addDimL && !addDimW && !addDimH) return;
 
-    setPhotos(prev => prev.map(p => {
-      if (!batchEditIds.includes(p.id)) return p;
-      
-      const newCatId = addCatId || p.categoryId;
-      const newSubId = addSubId || p.subcategoryId;
-      const newTagIds = addTagIds.length > 0 ? addTagIds : p.tagIds;
-      
-      const dbCat = dbCategories.find(c => c.code === newCatId);
-      const catCode = dbCat?.code || newCatId || 'others';
-      const catName = dbCat ? (dbCat[appLang] || dbCat.zh) : (categories.find(c => c.id === newCatId)?.name || p.category || '未分類');
-      
-      const subName = categories.find(c => c.id === newCatId)?.subcategories.find(s => s.id === newSubId)?.name || (newSubId === p.subcategoryId ? p.sub_category : '');
-      const tagNames = tags.filter(t => newTagIds.includes(t.id)).map(t => t.name);
+    setIsSyncing(true);
+    setSyncPercent(20);
 
-      return {
-        ...p,
-        categoryId: newCatId,
-        subcategoryId: newSubId,
-        tagIds: newTagIds,
-        category: catCode,
-        sub_category: subName,
-        tags: tagNames,
-        manual_code: addManualCode || p.manual_code,
-        dimensions: (addDimL || addDimW || addDimH) ? {
-          length: Number(addDimL) || p.dimensions?.length || 0,
-          width: Number(addDimW) || p.dimensions?.width || 0,
-          height: Number(addDimH) || p.dimensions?.height || 0,
-          unit: 'cm'
-        } : p.dimensions
-      };
-    }));
-    resetAddState();
-    setIsMultiSelect(false);
-    setSelectedIds([]);
+    try {
+      const updatedPhotos: Photo[] = [];
+      const newPhotosList = photos.map(p => {
+        if (!batchEditIds.includes(p.id)) return p;
+        
+        const newCatId = addCatId || p.categoryId;
+        const newSubId = addSubId || p.subcategoryId;
+        const newTagIds = (addTagIds && addTagIds.length > 0) ? addTagIds : (p.tagIds || []);
+        
+        const dbCat = dbCategories.find(c => c.code === newCatId);
+        const catCode = dbCat?.code || newCatId || 'others';
+        
+        const subName = categories.find(c => c.id === newCatId)?.subcategories.find(s => s.id === newSubId)?.name || (newSubId === p.subcategoryId ? p.sub_category : '');
+        const tagNames = tags.filter(t => newTagIds.includes(t.id)).map(t => t.name);
+
+        const updated: Photo = {
+          ...p,
+          categoryId: newCatId,
+          subcategoryId: newSubId,
+          tagIds: newTagIds,
+          category: catCode,
+          sub_category: subName,
+          tags: tagNames,
+          description: addNote || p.description,
+          manual_code: addManualCode || p.manual_code,
+          dimensions: (addDimL || addDimW || addDimH) ? {
+            length: Number(addDimL) || p.dimensions?.length || 0,
+            width: Number(addDimW) || p.dimensions?.width || 0,
+            height: Number(addDimH) || p.dimensions?.height || 0,
+            unit: 'cm'
+          } : p.dimensions
+        };
+        updatedPhotos.push(updated);
+        return updated;
+      });
+
+      setPhotos(newPhotosList);
+      
+      if (user) {
+        // Sync one by one or chunked
+        for (let i = 0; i < updatedPhotos.length; i++) {
+          setSyncPercent(20 + Math.round((i / updatedPhotos.length) * 80));
+          await savePhotoToCloud(user.id, updatedPhotos[i]);
+        }
+      }
+      
+      resetAddState();
+      setIsMultiSelect(false);
+      setSelectedIds([]);
+    } catch (err: any) {
+      console.error("Batch save failed:", err);
+      setAlertDialog({ title: '保存失敗', message: err.message || '請檢查網路' });
+    } finally {
+      setIsSyncing(false);
+      setSyncPercent(0);
+    }
   };
 
   const togglePhotoSelection = (id: string) => {
@@ -1400,8 +1445,13 @@ export default function App() {
                   setEditPhotoId(photo.id);
                   setAddCatId(photo.categoryId);
                   setAddSubId(photo.subcategoryId);
-                  setAddTagIds(photo.tagIds);
-                  setAddNote(photo.note);
+                  setAddTagIds(photo.tagIds || []);
+                  setAddNote(photo.description || '');
+                  setAddName(photo.name || '');
+                  setAddManualCode(photo.manual_code || '');
+                  setAddDimL(photo.dimensions?.length?.toString() || '');
+                  setAddDimW(photo.dimensions?.width?.toString() || '');
+                  setAddDimH(photo.dimensions?.height?.toString() || '');
                   setNewPhotoData(photo.uri);
                 }}
               />
@@ -1502,14 +1552,15 @@ export default function App() {
         <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight">批量修改 ({batchEditIds?.length})</h2>
         <button 
           onClick={() => {
-            if (!addCatId && addTagIds.length === 0) {
-              setAlertDialog({ title: '提示', message: "請選取「主分類」或「標籤」" });
+            if (!addCatId && addTagIds.length === 0 && !addManualCode && !addNote && !addDimL && !addDimW && !addDimH) {
+              setAlertDialog({ title: '提示', message: "請輸入或修改任一欄位內容" });
               return;
             }
             saveBatchEdit();
           }}
-          className="bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95"
+          className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95 flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
         >
+          {isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : null}
           套用修改
         </button>
       </div>
@@ -1567,7 +1618,7 @@ export default function App() {
 
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一標籤</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一風格標籤</h3>
             <button onClick={quickAddTag} className="text-[10px] text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
@@ -1581,6 +1632,16 @@ export default function App() {
               </button>
             ))}
           </div>
+        </section>
+
+        <section className="space-y-2">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一產品備註</h3>
+            <textarea 
+              placeholder="輸入統一修改的備註內容..."
+              className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium min-h-[100px]"
+              value={addNote}
+              onChange={(e) => setAddNote(e.target.value)}
+            />
         </section>
 
         <section className="space-y-4">
@@ -1679,8 +1740,10 @@ export default function App() {
           )}
           <button 
             onClick={saveNewPhoto}
-            className="bg-slate-800 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-slate-800/10 transition-all active:scale-95"
+            disabled={isSyncing}
+            className={`bg-slate-800 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-slate-800/10 transition-all active:scale-95 flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
           >
+            {isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : null}
             完成儲存
           </button>
         </div>
@@ -1690,6 +1753,17 @@ export default function App() {
         <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white">
           {newPhotoData && <img src={newPhotoData} className="max-w-full max-h-full object-contain" alt="New" />}
         </div>
+
+        <section className="space-y-2">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具名稱 (AI 自動或手寫)</h3>
+            <input 
+              type="text" 
+              placeholder="輸入家具名稱..."
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              value={addName}
+              onChange={(e) => setAddName(e.target.value)}
+            />
+        </section>
 
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">選擇主分類 *</h3>
@@ -1753,9 +1827,9 @@ export default function App() {
         </section>
 
         <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">產品備註</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">產品說明 / 備註</h3>
             <textarea 
-              placeholder="輸入產品特色或注意事項..."
+              placeholder="輸入產品特色、說明或注意事項..."
               className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
               value={addNote}
               onChange={(e) => setAddNote(e.target.value)}
@@ -1879,9 +1953,41 @@ export default function App() {
       
       if (result.categoryId) setAddCatId(result.categoryId);
       if (result.subcategoryId) setAddSubId(result.subcategoryId);
+      
+      if (result.newCategoryName) {
+        const catName = result.newCategoryName.trim();
+        const existingCat = categories.find(c => c.name === catName);
+        if (existingCat) {
+          setAddCatId(existingCat.id);
+        } else {
+          const newId = crypto.randomUUID();
+          const newCat: Category = {
+            id: newId,
+            name: catName,
+            aliases: [catName],
+            subcategories: []
+          };
+          const updatedCats = [...categories, newCat];
+          setCategories(updatedCats);
+          setAddCatId(newId);
+          
+          if (user) {
+            saveSettings({
+              ...settings,
+              categories: updatedCats,
+              tags,
+              manufacturers
+            });
+          }
+        }
+      }
+
       if (result.tagIds) setAddTagIds(result.tagIds);
       if (result.name) {
-        // Maybe update note with dimensions if name is used
+        setAddName(result.name);
+      }
+      if (result.description) {
+        setAddNote(result.description);
       }
       if (result.newTagName) {
         const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
@@ -1895,8 +2001,18 @@ export default function App() {
         });
         
         if (newTagsToAdd.length > 0) {
-          setTags(prev => [...prev, ...newTagsToAdd]);
+          const updatedTags = [...tags, ...newTagsToAdd];
+          setTags(updatedTags);
           setAddTagIds(prev => Array.from(new Set([...prev, ...newTagIds])));
+          
+          if (user) {
+            saveSettings({
+              ...settings,
+              categories,
+              tags: updatedTags,
+              manufacturers
+            });
+          }
         }
       }
       
