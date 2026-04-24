@@ -1822,35 +1822,18 @@ export default function App() {
     setSyncAction('push');
     setSyncPercent(0);
     try {
-      let results = { success: 0, skipped: 0 };
-      let hasError = false;
-      
-      let errorMsg = '';
-      
       try {
-        results = await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
-      } catch (e: any) {
+        await syncPhotosToCloud(user.id, photos, (p) => setSyncPercent(Math.round(p)));
+      } catch (e) {
         console.error("Photo sync error:", e);
-        hasError = true;
-        errorMsg = e.message || '未知錯誤';
       }
 
       await syncCategoriesToCloud(user.id, categories);
       await syncTagsToCloud(user.id, tags);
       
       setLastSyncTime(Date.now());
-      
-      if (!hasError) {
-        setAlertDialog({ 
-          title: '同步完成', 
-          message: `成功 ${results.success} 張，略過 ${results.skipped} 張` 
-        });
-      } else {
-        setAlertDialog({ title: '同步失敗', message: `部分資料同步失敗：${errorMsg}` });
-      }
     } catch (e) {
       console.error(e);
-      setAlertDialog({ title: '錯誤', message: '發生嚴重錯誤，無法完成同步。' });
     } finally {
       setIsSyncing(false);
       setSyncAction('idle');
@@ -1883,13 +1866,10 @@ export default function App() {
 
           setLastSyncTime(Date.now());
           setSyncPercent(100);
-          setAlertDialog({ 
-            title: '下載成功', 
-            message: `共載入：\n- ${cloudPhotos.length} 照片\n- ${cloudCats.length} 分類\n- ${cloudTags.length} 標籤` 
-          });
+          alert('同步成功');
         } catch (e: any) {
           console.error(e);
-          setAlertDialog({ title: '提示', message: `下載失敗：${e.message || '請檢查網路'}` });
+          alert(`下載失敗: ${e.message || '請檢查網路'}`);
         } finally {
           setIsSyncing(false);
           setSyncAction('idle');
@@ -2133,7 +2113,7 @@ export default function App() {
         {/* Version Info */}
         <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1646</p>
+          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1648</p>
         </div>
       </div>
     </div>
