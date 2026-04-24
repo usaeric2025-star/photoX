@@ -27,7 +27,8 @@ import {
   RefreshCcw,
   Edit3,
   CloudUpload,
-  CloudDownload
+  CloudDownload,
+  Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeProductPhoto } from './services/geminiService';

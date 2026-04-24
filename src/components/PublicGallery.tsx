@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Photo, DB_Category } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, Pin, MessageCircle, Share2, Layers } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -69,27 +69,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
-  const [pinnedPhotos, setPinnedPhotos] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('pinned_photos_v1');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
-  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [headerClickCount, setHeaderClickCount] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    localStorage.setItem('pinned_photos_v1', JSON.stringify(Array.from(pinnedPhotos)));
-  }, [pinnedPhotos]);
-
-  const togglePin = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setPinnedPhotos(prev => {
-        const next = new Set(prev);
-        if (next.has(id)) next.delete(id);
-        else next.add(id);
-        return next;
-    });
-  }
+  const scrollToTop = () => {
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleHeaderClick = () => {
     setHeaderClickCount(prev => {
@@ -104,9 +90,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
 
   const displayPhotos = useMemo(() => {
     let filtered = photos;
-    if (showPinnedOnly) {
-      filtered = filtered.filter(p => pinnedPhotos.has(p.id));
-    }
     if (selectedCatCode) {
       filtered = filtered.filter(p => p.category === selectedCatCode);
     }
@@ -125,14 +108,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
         return searchableText.includes(q);
       });
     }
-    // Apply sorting
-    let sorted = [...filtered].sort((a, b) => {
-      const aPinned = pinnedPhotos.has(a.id) ? 1 : 0;
-      const bPinned = pinnedPhotos.has(b.id) ? 1 : 0;
-      return bPinned - aPinned;
-    });
-
     // Apply Grouping if enabled
+    let sorted = [...filtered];
     if (showGroupsCollapsed) {
       const groupsSeen = new Set<string>();
       sorted = sorted.filter(p => {
@@ -144,7 +121,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
     }
     
     return sorted;
-  }, [photos, selectedCatCode, searchQuery, pinnedPhotos, showPinnedOnly, showGroupsCollapsed]);
+  }, [photos, selectedCatCode, searchQuery, showGroupsCollapsed]);
 
   const visiblePhotos = useMemo(() => displayPhotos.slice(0, visibleCount), [displayPhotos, visibleCount]);
 
@@ -346,7 +323,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       </div>
 
       {/* Grid - Scrollable area */}
-      <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-40">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-4 pb-40">
         {displayPhotos.length === 0 ? (                
           <div className="flex flex-col items-center justify-center py-20 text-text/40">
             <p className="text-sm">{t.empty}</p>
@@ -376,14 +353,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
                   loading="lazy" 
                   className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(photo.id) ? 'scale-90' : 'group-hover:scale-105'}`}
                 />
-
-                {/* Pin button */}
-                <button 
-                  onClick={(e) => togglePin(photo.id, e)}
-                  className={`absolute top-2 left-2 p-1.5 rounded-full backdrop-blur-md transition-all z-10 ${pinnedPhotos.has(photo.id) ? 'bg-orange-500 text-white' : 'bg-black/20 text-white/50 opacity-0 group-hover:opacity-100'}`}
-                >
-                  <Pin size={12} className={pinnedPhotos.has(photo.id) ? 'fill-current' : ''} />
-                </button>
 
                 {photo.groupId && (
                   <div className="absolute top-2 left-10 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-[4px] text-[7px] text-white font-bold flex items-center gap-1 border border-white/20">
@@ -438,10 +407,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, dbCategori
       {!selectionMode && (
         <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400]">
             <button 
-              onClick={() => setShowPinnedOnly(!showPinnedOnly)} 
-              className={`p-4 rounded-full shadow-lg transition-all ${showPinnedOnly ? 'bg-orange-500 text-white' : 'bg-text text-bg'}`}
+              onClick={scrollToTop} 
+              className="bg-text text-bg p-4 rounded-full shadow-lg transition-all active:scale-95"
             >
-              <Pin size={24} className={showPinnedOnly ? 'fill-current' : ''} />
+              <ArrowUpToLine size={24} />
             </button>
             <button onClick={() => setSelectionMode(true)} className="bg-[#25D366] text-white p-4 rounded-full shadow-lg">
               <MessageCircle size={24} />
