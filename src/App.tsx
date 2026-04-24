@@ -25,7 +25,9 @@ import {
   Cloud,
   CloudOff,
   RefreshCcw,
-  Edit3
+  Edit3,
+  CloudUpload,
+  CloudDownload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Photo, Category, Tag, SubCategory } from './types';
@@ -1809,10 +1811,6 @@ export default function App() {
     );
   };
 
-  const handleCloudSync = () => {                
-    if (!user) return;
-  };
-
   const performPushSync = async () => {
     if (!user) return;
     setConfirmDialog({
@@ -1854,27 +1852,29 @@ export default function App() {
       onConfirm: async () => {
         setIsSyncing(true);
         setSyncAction('pull');
-        setSyncPercent(20);
+        setSyncPercent(0);
         try {
           const cloudPhotos = await loadPhotosFromCloud(user.id);
-          setSyncPercent(50);
           const cloudCats = await loadCategoriesFromCloud(user.id);
-          setSyncPercent(75);
           const cloudTags = await loadTagsFromCloud(user.id);
           
-          setPhotos(cloudPhotos);
-          setCategories(cloudCats);
-          setTags(cloudTags);
+          if (cloudPhotos) {
+            setPhotos(cloudPhotos);
+            await saveData('product_photos', cloudPhotos);
+          }
+          if (cloudCats) {
+            setCategories(cloudCats);
+            await saveData('product_categories', cloudCats);
+          }
+          if (cloudTags) {
+            setTags(cloudTags);
+            await saveData('product_tags', cloudTags);
+          }
           
-          await saveData('product_photos', cloudPhotos);
-          await saveData('product_categories', cloudCats);
-          await saveData('product_tags', cloudTags);
-
           const now = Date.now();
           setLastSyncTime(now);
           await saveData('last_sync_time', now);
           
-          setSyncPercent(100);
           alert('下載並同步成功');
         } catch (e: any) {
           console.error(e);
@@ -1888,247 +1888,220 @@ export default function App() {
     });
   };
 
-  const handleLogin = async () => {
-    try {
-      await loginWithGoogle();
-      // Redirect handled by onAuthChange effect
-    } catch (e: any) {
-      console.error('Login Error:', e);
-      let errorMsg = '登入失敗，請稍後再試。';
-      
-      if (e.message && e.message.includes('popup')) {
-        errorMsg = '登入失敗：彈出視窗被瀏覽器攔截，請允許彈出視窗後再試。';
-      } else if (e.message) {
-        errorMsg = `登入失敗: ${e.message}`;
-      }
-      
-      setAlertDialog({ title: '登入錯誤', message: errorMsg });
-    }
-  };
+  const renderSettingsScreen = () => {
+    if (activeScreen !== 'settings') return null;
 
-  const renderSettingsScreen = () => (
-    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
-      <div className="px-6 py-4 border-b border-white/50 flex items-center gap-3">
-        <button onClick={() => setActiveScreen('manage')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
-          <ChevronLeft size={24} />
-        </button>
-        <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1">其他設定</h2>
-      </div>
+    return (
+      <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col">
+        <div className="px-6 py-4 border-b border-white/50 flex items-center gap-3 pt-safe">
+          <button onClick={() => setActiveScreen('manage')} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+          <h2 className="font-bold text-lg text-slate-800 flex-1 ml-1">其他設定</h2>
+        </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-20">
-        {/* Firebase Cloud Sync Section */}
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 shadow-xl border border-white/10 space-y-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
-          
-          <div className="flex items-center justify-between">
-            <h4 className="font-bold text-white text-sm flex items-center gap-2">
-              <Cloud size={18} className={user ? 'text-blue-400' : 'text-slate-500'} />
-              雲端同步中心
-            </h4>
-            {user && (
-              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/20 rounded-full border border-blue-500/30">
-                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
-                <span className="text-[9px] font-bold text-blue-300 uppercase leading-none">Connected</span>
-              </div>
-            )}
-          </div>
-
-          <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-            將您的家具照片、目錄分類及標籤備份至 Supabase 雲端。透過此功能，您可以在多台設備（iOS、Android、網頁）之間同步產品目錄，且照片會自動壓縮轉換為 webp 格式以節省雲端空間。
-          </p>
-
-          {!user ? (
-            <button 
-              onClick={handleLogin}
-              className="w-full bg-white text-slate-900 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
-            >
-              <LogIn size={16} /> 使用 Google 登入
-            </button>
-          ) : (
-            <div className="space-y-3">
-              <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
-                <div className="flex items-center gap-3 overflow-hidden flex-1">
-                  {user.avatarUrl ? (
-                    <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm" alt="Avatar" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10 uppercase">
-                      {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                    </div>
-                  )}
-                  <div className="overflow-hidden">
-                    <p className="text-white text-xs font-black truncate">{user.displayName || user.email}</p>
-                    <p className="text-[9px] text-slate-500 font-medium truncate">{user.email}</p>
-                  </div>
+        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-20">
+          {/* Supabase Cloud Sync Section */}
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-6 shadow-xl border border-white/10 space-y-4 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 group-hover:bg-blue-500/20 transition-all duration-700"></div>
+            
+            <div className="flex items-center justify-between">
+              <h4 className="font-bold text-white text-sm flex items-center gap-2">
+                <Cloud size={18} className={user ? 'text-blue-400' : 'text-slate-500'} />
+                雲端同步中心
+              </h4>
+              {user && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/20 rounded-full border border-blue-500/30">
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-[9px] font-bold text-blue-300 uppercase leading-none">Connected</span>
                 </div>
-                <button 
-                  onClick={() => { 
-                    setConfirmDialog({
-                      message: '確定要登出嗎？您的本地數據將會保留，但無法繼續自動同步。',
-                      onConfirm: () => {
-                        logout(); 
-                        setUser(null);
-                        setActiveScreen('home');
-                      }
-                    });
-                  }}
-                  className="bg-white/10 hover:bg-red-500/20 text-white px-4 py-2 rounded-xl transition-all active:scale-90 text-[10px] font-bold border border-white/10 flex items-center gap-2"
-                >
-                  <LogOut size={14} /> 登出雲端
-                </button>
-              </div>
+              )}
+            </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={performPushSync}
-                  disabled={isSyncing}
-                  className="bg-blue-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {isSyncing && syncAction === 'push' ? (
-                    <>
-                      <RefreshCcw size={16} className="animate-spin" />
-                      上傳中...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowUpCloud size={16} />
-                      上傳備份
-                    </>
-                  )}
-                </button>
-                <button 
-                  onClick={performPullSync}
-                  disabled={isSyncing}
-                  className="bg-red-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {isSyncing && syncAction === 'pull' ? (
-                    <>
-                      <RefreshCcw size={16} className="animate-spin" />
-                      下載中...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowDownCloud size={16} />
-                      下載備份
-                    </>
-                  )}
-                </button>
-                <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2 text-center">
+            <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
+              將您的家具照片、目錄分類及標籤備份至 Supabase 雲端。透過此功能，您可以在多台設備（iOS、Android、網頁）之間同步產品目錄，且照片會自動壓縮轉換為 webp 格式以節省雲端空間。
+            </p>
+
+            {!user ? (
+              <button 
+                onClick={async () => {
+                  try {
+                    await loginWithGoogle();
+                  } catch(e) {
+                    alert('登入失敗: ' + JSON.stringify(e));
+                  }
+                }}
+                className="w-full bg-white text-slate-900 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+              >
+                <LogIn size={16} /> 使用 Google 登入
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="bg-white/5 border border-white/10 p-3 rounded-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3 overflow-hidden flex-1">
+                    {user?.avatarUrl ? (
+                      <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20 shadow-sm" alt="Avatar" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-blue-500/30 flex items-center justify-center text-blue-300 font-bold border border-white/10 uppercase">
+                        {(user?.displayName || user?.email || 'U').charAt(0)}
+                      </div>
+                    )}
+                    <div className="overflow-hidden">
+                      <p className="text-white text-xs font-black truncate">{user?.displayName || user?.email}</p>
+                      <p className="text-[9px] text-slate-500 font-medium truncate">{user?.email}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => { 
+                      setConfirmDialog({
+                        message: '確定要登出嗎？您的本地數據將會保留，但無法繼續自動同步。',
+                        onConfirm: () => {
+                          logout(); 
+                          setUser(null);
+                          setActiveScreen('home');
+                        }
+                      });
+                    }}
+                    className="bg-white/10 hover:bg-red-500/20 text-white px-4 py-2 rounded-xl transition-all active:scale-90 text-[10px] font-bold border border-white/10 flex items-center gap-2"
+                  >
+                    <LogOut size={14} /> 登出雲端
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button 
+                    onClick={performPushSync}
+                    disabled={isSyncing}
+                    className="bg-blue-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {isSyncing && syncAction === 'push' ? (
+                      <>
+                        <RefreshCcw size={16} className="animate-spin" />
+                        上傳中...
+                      </>
+                    ) : (
+                      <>
+                        <CloudUpload size={16} />
+                        上傳備份
+                      </>
+                    )}
+                  </button>
+                  <button 
+                    onClick={performPullSync}
+                    disabled={isSyncing}
+                    className="bg-red-500 text-white py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {isSyncing && syncAction === 'pull' ? (
+                      <>
+                        <RefreshCcw size={16} className="animate-spin" />
+                        下載中...
+                      </>
+                    ) : (
+                      <>
+                        <CloudDownload size={16} />
+                        下載備份
+                      </>
+                    )}
+                  </button>
+                  <div className="col-span-2 bg-white/5 border border-white/10 flex flex-col items-center justify-center rounded-2xl p-2 text-center">
                     <p className="text-[8px] text-slate-500 uppercase font-bold tracking-tighter">雲端同步狀態</p>
                     <p className="text-[10px] text-slate-300 font-mono">
                       {photos.length} 張照片 | {lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-TW') : '尚未備份'}
                     </p>
                   </div>
-              </div>
-            </div>)}
-        </div>
-
-        <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 shadow-sm border border-white/50 space-y-4">
-          <h4 className="font-bold text-slate-800 text-sm">✨ AI 智慧辨識切換器 (多平台體驗)</h4>
-          <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-            您的應用程式已升級「通用 AI 引擎」。您可以貼上支援平台的 API Key 啟用極速辨識通道 (不再塞車)：
-          </p>
-          
-          <div className="space-y-3">
-            <input 
-              type="password" 
-              placeholder="請貼上您申請的 API Key..."
-              className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
-              value={geminiApiKey}
-              onChange={(e) => {
-                setGeminiApiKey(e.target.value);
-                localStorage.setItem('gemini_api_key_safe', obfuscateKey(e.target.value));
-              }}
-            />
-            <input 
-              type="text" 
-              placeholder="指定特定模型 (選填，如: tencent/hy3-preview:free)"
-              className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
-              value={customModel}
-              onChange={(e) => {
-                setCustomModel(e.target.value);
-                localStorage.setItem('ai_custom_model', e.target.value);
-              }}
-            />
-            {geminiApiKey && (
-              <div className="mt-2 text-[10px] font-bold text-slate-500 bg-white/40 p-3 rounded-lg border border-white/60 flex flex-col gap-2 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <span>當前生效通道</span>
-                  <span className="text-purple-600 bg-purple-100/50 px-2 py-1 rounded-md">{
-                    (geminiApiKey.startsWith('AIza')) ? '✨ Google Gemini API' :
-                    (aiProvider === 'openrouter' || (aiProvider === 'auto' && geminiApiKey.startsWith('sk-or-'))) ? '🌐 OpenRouter' :
-                    (aiProvider === 'github' || (aiProvider === 'auto' && geminiApiKey.startsWith('ghp_'))) ? '🐙 GitHub Models' :
-                    (aiProvider === 'groq' || (aiProvider === 'auto' && geminiApiKey.startsWith('gsk_'))) ? '🚀 Groq' :
-                    '🚀 Groq (目前預設)'
-                  }</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>實際使用模型</span>
-                  <span className="text-slate-700 bg-white/50 px-2 py-1 rounded-md border border-slate-200">
-                    {customModel || '預設模型'}
-                  </span>
                 </div>
               </div>
             )}
           </div>
-        </div>
 
-        <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4">
-          <h4 className="font-bold text-slate-800 text-sm">數據管理</h4>
-          <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-            您的產品目錄（包含分類、標籤與相片紀錄）均儲存在手機本機。建議定期匯出備份，避免數據意外遺失。
-          </p>
-          
-          <div className="flex gap-3 pt-2">
-            <button 
-              onClick={() => {
-                const data = JSON.stringify({ photos, categories, tags });
-                const blob = new Blob([data], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'product_album_backup.json';
-                a.click();
-              }}
-              className="flex-1 bg-slate-800 text-white py-3 rounded-2xl text-xs font-bold shadow-lg"
-            >
-              匯出完整備份 (JSON)
-            </button>
-            <label className="flex-1 bg-white text-slate-800 text-center py-3 rounded-2xl text-xs font-bold border border-slate-200 cursor-pointer shadow-sm">
+          <div className="bg-white/50 backdrop-blur-sm rounded-3xl p-6 shadow-sm border border-white/50 space-y-4">
+            <h4 className="font-bold text-slate-800 text-sm">✨ AI 智慧辨識切換器</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+              您的應用程式已升級「通用 AI 引擎」。您可以貼上支援平台的 API Key 啟用極速辨識通道：
+            </p>
+            
+            <div className="space-y-3">
               <input 
-                type="file" 
-                className="hidden" 
-                accept="application/json" 
+                type="password" 
+                placeholder="請貼上您申請的 API Key..."
+                className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
+                value={geminiApiKey}
                 onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  const reader = new FileReader();
-                  reader.onload = (event) => {
-                    try {
-                      const json = JSON.parse(event.target?.result as string);
-                      if (json.photos) setPhotos(json.photos);
-                      if (json.categories) setCategories(json.categories);
-                      if (json.tags) setTags(json.tags);
-                      setAlertDialog({ title: '提示', message: '匯入成功' });
-                    } catch (e) {
-                      setAlertDialog({ title: '提示', message: '格式錯誤' });
-                    }
-                  };
-                  reader.readAsText(file);
+                  setGeminiApiKey(e.target.value);
+                  localStorage.setItem('gemini_api_key_safe', obfuscateKey(e.target.value));
                 }}
               />
-              匯入備份
-            </label>
+              <input 
+                type="text" 
+                placeholder="指定特定模型 (選填，如: tencent/hy3-preview:free)"
+                className="font-mono w-full rounded-xl border border-white/50 p-3 text-xs bg-white/50 shadow-inner focus:bg-white/80 transition-all outline-none text-slate-800"
+                value={customModel}
+                onChange={(e) => {
+                  setCustomModel(e.target.value);
+                  localStorage.setItem('ai_custom_model', e.target.value);
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 space-y-4">
+            <h4 className="font-bold text-slate-800 text-sm">數據管理</h4>
+            <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+              您的產品目錄均儲存在手機本機。建議定期匯出備份，避免數據意外遺失。
+            </p>
+            
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={() => {
+                  const data = JSON.stringify({ photos, categories, tags });
+                  const blob = new Blob([data], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'product_album_backup.json';
+                  a.click();
+                }}
+                className="flex-1 bg-slate-800 text-white py-3 rounded-2xl text-xs font-bold shadow-lg"
+              >
+                匯出備份
+              </button>
+              <label className="flex-1 bg-white text-slate-800 text-center py-3 rounded-2xl text-xs font-bold border border-slate-200 cursor-pointer shadow-sm">
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="application/json" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      try {
+                        const json = JSON.parse(event.target?.result as string);
+                        if (json.photos) setPhotos(json.photos);
+                        if (json.categories) setCategories(json.categories);
+                        if (json.tags) setTags(json.tags);
+                        alert('匯入成功');
+                      } catch (err) {
+                        alert('匯入失敗，請檢查文件格式');
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                />
+                匯入備份
+              </label>
+            </div>
+          </div>
+
+          {/* Version Info */}
+          <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
+            <p className="text-[10px] font-mono text-slate-400">2026.04.24.1724</p>
           </div>
         </div>
-
-        {/* Version Info */}
-        <div className="pt-8 pb-4 flex flex-col items-center justify-center space-y-1 opacity-30">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Build Version</p>
-          <p className="text-[10px] font-mono text-slate-400">2026.04.24.1714</p>
-        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderGroupDetailScreen = () => {
     const groupPhotos = photos.filter(p => p.groupId === activeGroupId);
@@ -2447,7 +2420,13 @@ export default function App() {
 
       <div className="w-full space-y-4">
         <button 
-          onClick={handleLogin}
+          onClick={async () => {
+            try {
+              await loginWithGoogle();
+            } catch(e: any) {
+              alert('登入失敗: ' + (e.message || JSON.stringify(e)));
+            }
+          }}
           className="w-full bg-slate-900 text-white py-5 rounded-[24px] text-sm font-bold flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] active:bg-black"
         >
           <LogIn size={20} /> 使用 Google 登入
