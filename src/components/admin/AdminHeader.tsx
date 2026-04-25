@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, CheckSquare, Settings2, Globe, LogIn } from 'lucide-react';
+import { Sparkles, CheckSquare, Settings2, Globe, LogIn, Plus } from 'lucide-react';
 
 interface Props {
   settings: any;
@@ -17,9 +17,16 @@ interface Props {
   handleBatchAiIdentifyTrigger: () => void;
   handleManageClick: () => void;
   loginWithGoogle: () => void;
+  onAddPhoto?: () => void;
 }
 
-export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setViewMode, isBatchAnalyzing, batchProgress, activeScreen, isMultiSelect, selectedIds, filteredPhotos, setSelectedIds, setIsMultiSelect, handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle }) => (
+export const AdminHeader: React.FC<Props> = ({ 
+  settings, user, viewMode, setViewMode, isBatchAnalyzing, 
+  batchProgress, activeScreen, isMultiSelect, selectedIds, 
+  filteredPhotos, setSelectedIds, setIsMultiSelect, 
+  handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
+  onAddPhoto
+}) => (
   <header className="shrink-0 z-50 bg-[#FDFAF6] px-6 py-4 flex items-center justify-between gap-4 sticky top-0 pt-safe">
     <div className="flex-1 min-w-0">
       {settings?.logo_url ? (
@@ -66,6 +73,16 @@ export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setView
           >
             <Globe size={18} />
           </button>
+
+          {onAddPhoto && (
+            <button 
+              onClick={onAddPhoto}
+              className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-md hover:bg-blue-700 active:scale-95"
+              title="新增照片"
+            >
+              <Plus size={18} />
+            </button>
+          )}
 
           {viewMode === 'private' && (
             <>

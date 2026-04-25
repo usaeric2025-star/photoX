@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Photo, DB_Category, Category, Tag } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2, LogIn, Globe } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2, LogIn, Globe, Plus, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useGallery } from '../hooks/useGallery';
+import { translations, LanguageCode } from '../lib/translations';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -32,10 +34,6 @@ interface PublicGalleryProps {
   columns?: 2 | 3 | 5;
   setColumns?: (val: 2 | 3 | 5) => void;
 }
-
-import { useGallery } from '../hooks/useGallery';
-import { translations, LanguageCode } from '../lib/translations';
-import { Trash2 } from 'lucide-react';
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
   photos, categories, tags, dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, 
@@ -483,11 +481,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   e.preventDefault();
                   shareSinglePhoto(photo);
                   if ('vibrate' in navigator) navigator.vibrate(50);
-                }}
-                onLongPress={(e) => {
-                  if (isAdminMode && onToggleSelection) {
-                    onToggleSelection(photo.id);
-                  }
                 }}
                 onClick={() => {
                   if (isAdminMode && onToggleSelection) {
