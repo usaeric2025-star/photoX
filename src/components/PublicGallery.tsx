@@ -801,86 +801,92 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex flex-col gap-6">
-                <div>
-                   <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight mb-1">
-                     {(() => {
-                        const code = (displayPhotos[lightboxIndex].category || '').trim().toLowerCase();
-                        const cat = dbCategories.find(c => 
-                          (c.code || '').trim().toLowerCase() === code || 
-                          (c.zh || '').trim().toLowerCase() === code || 
-                          (c.en || '').trim().toLowerCase() === code || 
-                          (c.ms || '').trim().toLowerCase() === code
-                        );
-                        const fallbackName = lang === 'ms' ? 'Perabot' : (lang === 'en' ? 'Furniture' : '家具记录');
-                        return cat ? (cat[lang as keyof DB_Category] || cat.zh) : (displayPhotos[lightboxIndex].name || fallbackName);
-                     })()}
-                   </h1>
-                   {(isStaffMode || showExit) && (displayPhotos[lightboxIndex].item_code || displayPhotos[lightboxIndex].name) && (
-                     <div className="space-y-0.5">
-                       {displayPhotos[lightboxIndex].item_code && <p className="text-[10px] font-mono text-slate-400">ID: {displayPhotos[lightboxIndex].item_code}</p>}
-                       {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具记录' && (
-                         <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{displayPhotos[lightboxIndex].name}</p>
-                       )}
-                     </div>
-                   )}
-                </div>
 
-                {(isStaffMode || showExit) && (displayPhotos[lightboxIndex].sub_category || displayPhotos[lightboxIndex].manual_code) && (
-                  <div className="flex flex-col gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    {displayPhotos[lightboxIndex].sub_category && (
-                      <div>
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer}</h3>
-                        <p className="text-slate-700 font-bold">{displayPhotos[lightboxIndex].sub_category}</p>
-                      </div>
+                {/* 1. 编号 (Item Code / Manual Code) */}
+                <div>
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manualId} / 编号</h3>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {displayPhotos[lightboxIndex].manual_code ? (
+                      <span className="text-xl font-black text-[#D4A853] tracking-widest leading-none">
+                        {displayPhotos[lightboxIndex].manual_code}
+                      </span>
+                    ) : (
+                      <span className="text-xl font-bold text-slate-300 italic align-middle leading-none">No Code</span>
                     )}
-                    {displayPhotos[lightboxIndex].manual_code && (
-                      <div>
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manualId}</h3>
-                        <p className="text-[#D4A853] font-mono font-black tracking-wider text-sm">{displayPhotos[lightboxIndex].manual_code}</p>
-                      </div>
+                    {displayPhotos[lightboxIndex].item_code && (
+                      <span className="ml-auto text-[10px] bg-slate-100 text-slate-400 px-2 py-1 flex items-center rounded font-mono border border-slate-200">SYS: {displayPhotos[lightboxIndex].item_code}</span>
                     )}
                   </div>
-                )}
+                </div>
 
+                {/* 2. 名称 (Product Name) */}
+                <div>
+                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.searchPlaceholder /* using for "产品名称" */} / 名字</h3>
+                   <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">
+                     {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具记录' 
+                       ? displayPhotos[lightboxIndex].name 
+                       : (lang === 'ms' ? 'Perabot' : (lang === 'en' ? 'Furniture' : '名称未定 (Unnamed)'))}
+                   </h1>
+                </div>
+
+                {/* 3. 目录 (Category) */}
                 {(() => {
-                   const code = (displayPhotos[lightboxIndex].category || '').trim().toLowerCase();
+                   const code = (displayPhotos[lightboxIndex].categoryId || displayPhotos[lightboxIndex].category || '').trim().toLowerCase();
                    const cat = dbCategories.find(c => 
                      (c.code || '').trim().toLowerCase() === code || 
                      (c.zh || '').trim().toLowerCase() === code || 
                      (c.en || '').trim().toLowerCase() === code || 
                      (c.ms || '').trim().toLowerCase() === code
                    );
-                   const catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (displayPhotos[lightboxIndex].category || '');
-                   const isUncategorized = !catName || ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
-                  const subCat = (!isStaffMode && !showExit) ? displayPhotos[lightboxIndex].sub_category : null;
+                   const catName = cat ? (cat[lang as keyof DB_Category] || cat.zh) : (displayPhotos[lightboxIndex].category || '未分类');
+                   return (
+                     <div>
+                       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.category} / 目录</h3>
+                       <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-bold inline-block border border-slate-200">
+                         {catName}
+                       </span>
+                     </div>
+                   );
+                })()}
+
+                {/* 4. 厂商 (Manufacturer) (Only if staff/admin/showExit) */}
+                {(isStaffMode || showExit) && displayPhotos[lightboxIndex].sub_category && (
+                  <div>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer} / 厂商</h3>
+                    <span className="bg-orange-50 text-orange-600 px-3 py-1 border border-orange-200 rounded-full text-sm font-bold inline-block shadow-sm">
+                      <Key size={12} className="inline-block mr-1.5 -translate-y-[1px]" />
+                      {displayPhotos[lightboxIndex].sub_category}
+                    </span>
+                  </div>
+                )}
+
+                {/* 5. 标签 (Tags) */}
+                {(() => {
+                  const photo = displayPhotos[lightboxIndex];
+                  let displayTags = [];
+                  if (photo.tagIds && photo.tagIds.length > 0 && tags.length > 0) {
+                    displayTags = tags.filter(t => photo.tagIds.includes(t.id)).map(t => t.name);
+                  }
+                  if (displayTags.length === 0 && photo.tags && photo.tags.length > 0) {
+                    displayTags = photo.tags;
+                  }
+                  if (displayTags.length === 0) return null;
 
                   return (
                     <div>
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.category}</h3>
-                      <div className="flex flex-wrap gap-2">
-                        <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-medium">
-                          {catName}
-                        </span>
-                        {subCat && (
-                          <span className="bg-orange-50 text-orange-600 px-3 py-1 rounded-full text-sm font-bold border border-orange-200 flex items-center gap-1.5 shadow-sm">
-                            <Key size={12} />
-                            {subCat}
+                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.tags} / 标签</h3>
+                      <div className="flex flex-wrap gap-1.5">
+                        {displayTags.map((tagName, idx) => (
+                          <span key={idx} className="bg-slate-800 text-white px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider shadow-sm">
+                            #{tagName}
                           </span>
-                        )}
+                        ))}
                       </div>
                     </div>
                   );
                 })()}
 
-                {displayPhotos[lightboxIndex].manual_code && (
-                  <div>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.manualId}</h3>
-                    <p className="inline-block bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-mono tracking-wider shadow-md">
-                      {displayPhotos[lightboxIndex].manual_code}
-                    </p>
-                  </div>
-                )}
-
+                {/* 6. 其他 (尺寸/备注) */}
                 {displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0) && (
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
@@ -905,37 +911,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     </div>
                   </div>
                 )}
-
-                {(() => {
-                  const photo = displayPhotos[lightboxIndex];
-                  // Use tagIds to find names from current cloud tags mapping
-                  let displayTags = [];
-                  if (photo.tagIds && photo.tagIds.length > 0 && tags.length > 0) {
-                    displayTags = tags.filter(t => photo.tagIds.includes(t.id)).map(t => t.name);
-                  }
-                  
-                  // Fallback to photo.tags if mapping failed but names exist
-                  if (displayTags.length === 0 && photo.tags && photo.tags.length > 0) {
-                    displayTags = photo.tags;
-                  }
-
-                  if (displayTags.length === 0) return null;
-
-                  return (
-                    <div>
-                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.tags}</h3>
-                      <div className="flex flex-wrap gap-1.5">
-                        {displayTags.map((tagName, idx) => (
-                          <span key={idx} className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded text-xs font-medium">
-                            #{tagName}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
                 
-                <div className="pt-4 border-t border-slate-100">
+                <div className="pt-4 border-t border-slate-100 mt-2">
                    <button 
                     onClick={() => contactWhatsApp(displayPhotos[lightboxIndex!].id)}
                     className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"

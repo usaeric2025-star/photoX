@@ -132,7 +132,7 @@ export default function AdminView() {
     isAnalyzing, setIsAnalyzing,
     isBatchAnalyzing, batchProgress,
     isImporting, importProgress, importTotal,
-    aiDebugInfo,
+    aiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto

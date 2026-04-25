@@ -126,7 +126,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </div>
 
         <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品编号 (Item Code)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Item Code</h3>
             <input 
               type="text" 
               placeholder="输入产品编号 (如: SK-2024)..."
@@ -137,7 +137,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </section>
 
         <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 (Product Name)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">名称 / Product Name</h3>
             <input 
               type="text" 
               placeholder="输入产品名称..."
@@ -148,7 +148,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </section>
 
         <section className="space-y-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品目录 (Category) *</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
           <div className="grid grid-cols-2 gap-3">
             {dbCategories.map(cat => (
               <button 
@@ -165,7 +165,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
 
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商名称 (Manufacturer)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 / Manufacturer</h3>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
             {manufacturers?.map(mfr => (
@@ -184,7 +184,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </section>
 
         <section className="space-y-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品标签 (Tags)</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
           <div className="flex flex-wrap gap-2 p-1">
             {tags.map(tag => (
               <button 
@@ -210,7 +210,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`}>
                 <ChevronRight size={16} />
               </div>
-              <span>其他信息 (尺寸、说明、备注)</span>
+              <span>其他 / Others (尺寸、说明、备注)</span>
             </div>
             <div className="w-2 h-2 rounded-full bg-slate-200"></div>
           </button>

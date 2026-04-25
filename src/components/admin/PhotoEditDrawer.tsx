@@ -96,17 +96,17 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         )}
 
         <section className="space-y-3">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品编号 (Item Code)</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Item Code</h3>
           <input type="text" placeholder="输入产品编号 (如: SK-2024)..." value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 (Product Name)</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">名称 / Product Name</h3>
           <input type="text" placeholder="输入产品名称..." value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
         </section>
         
         <div className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品目录 (Category) *</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
             <div className="grid grid-cols-2 gap-3">
             {props.dbCategories.map(cat => (
                 <button 
@@ -123,7 +123,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商名称 (Manufacturer)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 / Manufacturer</h3>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
             {props.manufacturers.map((mfr: any) => (
@@ -140,7 +140,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </section>
 
           <section className="space-y-4">
-             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品标签 (Tags)</h3>
+             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
              <div className="flex flex-wrap gap-2 p-1">
                 {props.tags.map(tag => (
                   <button 
@@ -160,7 +160,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                onClick={() => props.setShowOtherFields(!props.showOtherFields)}
                className="w-full flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 active:scale-[0.98] transition-all"
              >
-               <span>其他详细信息 (尺寸、备注、手动ID)</span>
+               <span>其他 / Others (尺寸、说明、备注)</span>
                <div className={`transition-transform ${props.showOtherFields ? 'rotate-90' : ''}`}>
                   <ChevronRight size={16} />
                </div>
