@@ -12,7 +12,7 @@ import {
   loadAllPhotosFromCloud
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
-import { loadData } from '../utils/indexedDB';
+import { loadData, saveData } from '../utils/indexedDB';
 
 export const useAdminPhotos = (
   user: any, 
@@ -35,34 +35,33 @@ export const useAdminPhotos = (
   
   const photosRef = useRef(photos);
   
+  const [isInitializing, setIsInitializing] = useState(true);
+
   useEffect(() => {
     photosRef.current = photos;
-  }, [photos]);
+    if (!isInitializing) {
+      saveData('photos', photos);
+    }
+  }, [photos, isInitializing]);
   
   useEffect(() => {
     const initPhotos = async () => {
       // 優先載入本地 IndexedDB 照片
-      const localPhotos = await loadData('photos');
-      if (localPhotos && localPhotos.length > 0) {
-        setPhotos(localPhotos);
-      }
-      
-      if (user || sessionStorage.getItem('isStaffMode') === 'true') {
-        // 從雲端讀取照片並與本地合併
-        try {
+      try {
+        const localPhotos = await loadData('photos');
+        if (localPhotos && localPhotos.length > 0) {
+          setPhotos(localPhotos);
+        } else if (user) {
+          // Only if local is empty and user is logged in, attempt a first-time pull
           const cloudPhotos = await loadAllPhotosFromCloud();
-          setPhotos(prev => {
-            const merged = [...prev];
-            cloudPhotos.forEach(cp => {
-              if (!merged.find(p => p.id === cp.id)) {
-                merged.push(cp);
-              }
-            });
-            return merged;
-          });
-        } catch (e) {
-          console.error(e);
+          if (cloudPhotos && cloudPhotos.length > 0) {
+            setPhotos(cloudPhotos);
+          }
         }
+      } catch (e) {
+        console.error('Init photos failed:', e);
+      } finally {
+        setIsInitializing(false);
       }
     };
     initPhotos();
@@ -288,14 +287,14 @@ export const useAdminPhotos = (
             item_code: generateItemCode(),
             manual_code: '',
             image_hash: hash,
-            name: file.name.split('.')[0] || '未命名家具', // Keep original name
-            category: '未分類',
+            name: file.name.split('.')[0] || 'Furniture', // Keep original name
+            category: 'Uncategorized',
             sub_category: '',
             tags: [],
             description: '',
             image_url: '',
             uri: compressedUri,
-            categoryId: null,
+            categoryId: 'uncategorized',
             subcategoryId: null,
             tagIds: [],
             createdAt: new Date().toISOString(),

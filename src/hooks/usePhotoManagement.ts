@@ -101,9 +101,12 @@ export const usePhotoManagement = (
 
           setPhotos(prev => (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p));
           
+          /* 
+          Removing automatic cloud sync on every save to favor manual control as requested.
           if (user) {
              await savePhotoToCloud(user.id, updatedPhoto);
           }
+          */
        } else if (newPhotoData) {
           // Creating a new photo item from base64 data
           const dbId = crypto.randomUUID();
@@ -135,9 +138,12 @@ export const usePhotoManagement = (
 
           setPhotos(prev => [newPhoto, ...(prev as Photo[])]);
           
+          /* 
+          Removing automatic cloud sync on every save to favor manual control as requested.
           if (user) {
             await savePhotoToCloud(user.id, newPhoto);
           }
+          */
        }
        
        resetAddState();
@@ -177,12 +183,15 @@ export const usePhotoManagement = (
 
         setPhotos(updatedPhotos);
         
+        /* 
+        Removing automatic cloud sync on every save to favor manual control as requested.
         if (user) {
            for (const id of batchEditIds) {
               const photo = updatedPhotos.find(p => p.id === id);
               if (photo) await savePhotoToCloud(user.id, photo);
            }
         }
+        */
         
         resetAddState();
         setActiveScreen('home');

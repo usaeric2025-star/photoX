@@ -87,7 +87,9 @@ export default function AdminView() {
   const [filterCatId, setFilterCatId] = useState<string | null>(null);
   const [filterSubId, setFilterSubId] = useState<string | null>(null);
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
-  const [appLang, setAppLang] = useState('zh');
+  const [appLang, setAppLang] = useState(() => {
+    return localStorage.getItem('appLang') || 'zh';
+  });
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
@@ -133,28 +135,7 @@ export default function AdminView() {
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
   } = useAdminPhotos(user, geminiApiKey, aiProvider, customModel, categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
 
-  useEffect(() => {
-    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
-      refreshCloudData(
-        user,
-        categories,
-        tags,
-        manufacturers,
-        setSettings,
-        setPublicCategories,
-        setPublicTags,
-        setPublicManufacturers,
-        setDbCategories,
-        setCategories,
-        setTags,
-        setManufacturers,
-        setPublicPhotos,
-        setCloudCount,
-        false
-      );
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  // Removed automatic cloud sync on user change to favor manual control as requested.
 
   const { 
     newPhotoData, setNewPhotoData,
@@ -205,7 +186,6 @@ export default function AdminView() {
   const [syncPercent, setSyncPercent] = useState(0);
   const [cloudCount, setCloudCount] = useState(0);
   const [syncAction, setSyncAction] = useState('idle');
-  const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -215,12 +195,7 @@ export default function AdminView() {
     setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, groupId } : p));
   };
 
-  // Re-enable photo loading
-  useEffect(() => {
-    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
-      loadAllPhotosFromCloud().then(setPhotos).catch(console.error);
-    }
-  }, [user]);
+  // Removed automatic cloud loading on user change to favor manual control as requested.
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -316,33 +291,28 @@ export default function AdminView() {
 
   const saveSettings = async (s: any) => { 
     setSettings(s); 
-    await saveSettingsCloud(s); 
-  };
-
-  const triggerManualSync = async () => {
-    if (!user) return;
-    setIsSyncing(true);
-    try {
-      const result = await syncPhotosToCloudService(user.id, photos, setSyncPercent);
-      setAlertDialog({ 
-        title: '同步成功', 
-        message: `所有数据已成功备份至云端。${result.skipped > 0 ? `\n(跳过 ${result.skipped} 张重复照片，节省流量)` : ''}` 
-      });
-    } catch (err: any) {
-      setAlertDialog({ title: '同步失败', message: err.message || '请检查网络连接' });
-    } finally {
-      setIsSyncing(false);
-    }
+    // Save to local storage for persistence across reloads
+    await saveData('public_settings', s);
+    // Removed automatic cloud save to respect 'no auto-backup' request
   };
 
   const performPushSync = async () => {
     if (!user) return;
     setIsSyncing(true);
     try {
+      // 1. First backup settings (categories, tags, etc.)
+      await saveSettingsCloud({
+        ...settings,
+        categories,
+        tags,
+        manufacturers
+      });
+
+      // 2. Then backup photos
       const result = await syncPhotosToCloudService(user.id, photos, setSyncPercent);
       setAlertDialog({ 
         title: '推送成功', 
-        message: `本地照片已上传至云端。${result.skipped > 0 ? `\n(已跳过 ${result.skipped} 张重复照片)` : ''}` 
+        message: `本地配置与照片已上传至云端。${result.skipped > 0 ? `\n(已跳过 ${result.skipped} 张重复照片)` : ''}` 
       });
     } catch (err: any) {
       setAlertDialog({ title: '推送失败', message: err.message });
@@ -351,13 +321,15 @@ export default function AdminView() {
     }
   };
 
+  const triggerManualSync = performPushSync;
+
   const performPullSync = async () => {
     setIsSyncing(true);
     try {
       await refreshCloudData(
         user, categories, tags, manufacturers, setSettings, 
         setPublicCategories, setPublicTags, setPublicManufacturers, 
-        setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
+        setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
       );
       setAlertDialog({ title: '获取成功', message: '云端数据已同步至本地' });
     } catch (err: any) {
@@ -458,6 +430,7 @@ export default function AdminView() {
               isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
               quickAddSubCategory={quickAddSubCategory} quickAddTag={quickAddTag} tags={tags}
               newPhotoData={newPhotoData} manufacturers={manufacturers}
+              editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
           />
         </ErrorBoundary>
      );
@@ -634,6 +607,7 @@ export default function AdminView() {
               photosCount={filteredPhotos.length}
               totalPhotosCount={photos.length}
               cloudCount={cloudCount}
+              appLang={appLang}
            />
            <div className="flex-1 min-h-0 relative">
              <PublicGallery 

@@ -26,6 +26,12 @@ export const translations = {
     share: 'Share',
     all: 'ALL',
     uncategorized: 'Uncategorized',
+    login: 'Login',
+    addPhoto: 'Add Photo',
+    batchAi: 'Batch AI',
+    selectMode: 'Select Mode',
+    cancelSelect: 'Cancel Select',
+    settings: 'Settings',
     shareTitle: 'Furniture List',
     sharePrompt: 'Hello, I\'m interested in these furniture items:'
   },
@@ -56,6 +62,12 @@ export const translations = {
     share: '分享',
     all: 'ALL',
     uncategorized: '未分类',
+    login: '登录',
+    addPhoto: '新增照片',
+    batchAi: 'AI批量辨识',
+    selectMode: '选择模式',
+    cancelSelect: '取消选择',
+    settings: '设置',
     shareTitle: '家具列表',
     sharePrompt: '您好，我对这些家具感兴趣：'
   },
@@ -86,6 +98,12 @@ export const translations = {
     share: 'Kongsi',
     all: 'ALL',
     uncategorized: 'Tiada Kategori',
+    login: 'Log Masuk',
+    addPhoto: 'Tambah Foto',
+    batchAi: 'AI Batch',
+    selectMode: 'Mod Pilih',
+    cancelSelect: 'Batal Pilih',
+    settings: 'Tetapan',
     shareTitle: 'Senarai Perabot',
     sharePrompt: 'Halo, saya berminat dengan item perabot ini:'
   }

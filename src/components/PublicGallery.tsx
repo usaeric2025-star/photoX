@@ -47,8 +47,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   cloudCount,
   hideHeader
 }) => {
-  const [lang, setLang] = useState<LanguageCode>('en');
-  const t = translations[lang] || translations['zh'];
+  const [lang, setLang] = useState<LanguageCode>(() => {
+    return (localStorage.getItem('appLang') as LanguageCode) || 'en';
+  });
+  const t = translations[lang] || translations['en'];
+  
+  useEffect(() => {
+    localStorage.setItem('appLang', lang);
+  }, [lang]);
   const navigate = useNavigate();
 
   const [isStaffMode, setIsStaffMode] = useState(() => {
@@ -506,6 +512,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 transition={{ delay: (i % 15) * 0.03 }}
                 onContextMenu={(e) => {
                   e.preventDefault();
+                  if (isAdminMode) return;
                   shareSinglePhoto(photo);
                   if ('vibrate' in navigator) navigator.vibrate(50);
                 }}

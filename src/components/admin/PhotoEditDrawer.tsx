@@ -35,6 +35,7 @@ interface Props {
   quickAddTag: () => void;
   tags: any[];
   manufacturers: any[];
+  editPhotoPreview?: string | null;
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
@@ -55,9 +56,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
       </div>
 
        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
-        {props.newPhotoData && (
+        {(props.newPhotoData || props.editPhotoPreview) && (
           <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white mb-6">
-            <img src={props.newPhotoData} className="max-w-full max-h-full object-contain" alt="Preview" />
+            <img src={props.newPhotoData || props.editPhotoPreview || ''} className="max-w-full max-h-full object-contain" alt="Preview" />
           </div>
         )}
         
