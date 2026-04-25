@@ -180,6 +180,18 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                   >
                     <div className="px-6 pb-6 space-y-4 pt-1 border-t border-white/40">
                       <div className="space-y-2">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">統一描述 (Description)</p>
+                        <textarea 
+                          className="w-full px-4 py-3 rounded-2xl border border-slate-100 text-sm focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+                          rows={3}
+                          placeholder="在此統一修改所有照片的描述..."
+                          onChange={(e) => {
+                            const text = e.target.value;
+                            setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, description: text } : p));
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速分類套用</p>
                         <div className="flex flex-wrap gap-2">
                           {dbCategories.map(cat => {

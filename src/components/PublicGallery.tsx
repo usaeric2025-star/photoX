@@ -416,7 +416,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           {/* Action Buttons */}
           <div className="flex gap-1 sm:gap-2 shrink-0">
             <button 
-              onClick={toggleSortOrder}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSortOrder();
+              }}
               className="w-10 sm:w-11 h-11 bg-white border border-[#1D3557]/10 text-[#1D3557] rounded-2xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 transition-all"
               title={sortOrder === 'desc' ? '改为正序(最旧在前)' : '改为倒序(最新在前)'}
             >
@@ -570,14 +573,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     <X size={12} className="rotate-45" />
                   </div>
                 )}
-                
-                {photo.groupId && (
-                  <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[7px] text-white font-bold flex items-center gap-1 border border-white/20 uppercase">
-                    <Layers size={9} />
-                    {photo.groupId.slice(-4)}
-                  </div>
-                )}
-                
                 {/* Category label */}
                 {(() => {
                   const catCodeOrId = (photo.categoryId || photo.category || '').trim();
