@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Photo } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
 import { 

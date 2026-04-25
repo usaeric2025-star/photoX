@@ -50,7 +50,19 @@ export default function AdminView() {
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
   const navigate = useNavigate();
   
-  if (authChecked && !user) {
+  if (!authChecked) {
+    return (
+       <div className="w-full h-full min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
+           <div className="w-8 h-8 relative animate-spin">
+              <div className="absolute inset-0 bg-[#D4A853] rounded-full opacity-20"></div>
+              <div className="absolute inset-0 border-t-2 border-[#D4A853] rounded-full"></div>
+           </div>
+           <p className="text-[10px] uppercase font-black tracking-widest text-[#1D3557]/40 mt-4">Verifying session...</p>
+       </div>
+    );
+  }
+
+  if (!user) {
     return (
        <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
           <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
@@ -81,7 +93,7 @@ export default function AdminView() {
        </div>
     );
   }
-  
+
   const [activeScreen, setActiveScreen] = useState('home');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isMultiSelect, setIsMultiSelect] = useState(false);
@@ -114,10 +126,34 @@ export default function AdminView() {
     }
   }, [user, viewMode, setViewMode]);
   
+  useEffect(() => {
+    if (user) {
+      refreshCloudData(
+        user,
+        categories,
+        tags,
+        manufacturers,
+        setSettings,
+        setPublicCategories,
+        setPublicTags,
+        setPublicManufacturers,
+        setDbCategories,
+        setPublicPhotos,
+        setCloudCount,
+        false
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+  
   const { 
     categories, setCategories,
     tags, setTags,
     dbCategories, setDbCategories,
+    manufacturers, setManufacturers,
+    publicCategories, setPublicCategories,
+    publicTags, setPublicTags,
+    publicManufacturers, setPublicManufacturers
   } = useAdminCategory();
   
   const { 
@@ -143,23 +179,43 @@ export default function AdminView() {
     resetAddState,
     saveNewPhoto,
     saveBatchEdit,
-    handleGroupPhotos,
   } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, setAlertDialog, setIsSyncing, setActiveScreen);
 
-  const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]); // simplified
+  const handleGroupPhotos = () => {
+      // Grouping logic 
+      if (selectedIds.length < 2) return;
+      const groupId = crypto.randomUUID();
+      setPhotos(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, groupId } : p));
+      setSelectedIds([]);
+      setIsMultiSelect(false);
+  };
+
+  const filteredPhotos = useMemo(() => {
+    let result = photos;
+    if (searchQuery) {
+      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    if (filterCatId) {
+      result = result.filter(p => p.categoryId === filterCatId);
+    }
+    if (filterSubId) {
+      result = result.filter(p => p.subcategoryId === filterSubId);
+    }
+    if (filterTagIds.length > 0) {
+      result = result.filter(p => p.tagIds?.some(id => filterTagIds.includes(id)));
+    }
+    return result;
+  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [aiProvider, setAiProvider] = useState('gemini');
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');
   const [internalPassword, setInternalPassword] = useState('');
-  const [manufacturers, setManufacturers] = useState<SubCategory[]>([]);
   const [syncPercent, setSyncPercent] = useState(0);
   const [cloudCount, setCloudCount] = useState(0);
   const [syncAction, setSyncAction] = useState('idle');
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
-  const [publicCategories, setPublicCategories] = useState<Category[]>([]);
-  const [publicTags, setPublicTags] = useState<Tag[]>([]);
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
@@ -209,6 +265,24 @@ export default function AdminView() {
   }, []);
 
   const displayPhotos = filteredPhotos.slice(0, visibleCount);
+
+  const triggerManualSync = async () => {
+    if (!user) return;
+    await syncPhotosToCloud(user.id, photos, setSyncPercent);
+    refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true);
+  };
+  const performPushSync = async () => {
+    if (!user) return;
+    setAlertDialog({ title: '備份中', message: '正在將資料備份到雲端...' });
+    await syncPhotosToCloud(user.id, photos, setSyncPercent);
+    setAlertDialog({ title: '備份完成', message: '所有資料已成功備份到雲端。' });
+  };
+  const performPullSync = async () => {
+    if (!user) return;
+    setAlertDialog({ title: '恢復中', message: '正在從雲端還原資料...' });
+    await refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true);
+    setAlertDialog({ title: '恢復完成', message: '所有設定和類別已經就緒！照片也正在背景讀取。' });
+  };
 
   const handleManageClick = () => setActiveScreen('manage');
 
@@ -329,9 +403,6 @@ export default function AdminView() {
     });
   };
 
-  const triggerManualSync = async () => { /* Logic simplified for restoration */ };
-  const performPushSync = async () => { /* Logic simplified for restoration */ };
-  const performPullSync = async () => { /* Logic simplified for restoration */ };
   const handleSetTags = (val: React.SetStateAction<Tag[]>) => { setTags(val); };
   const handleSetCategories = (val: React.SetStateAction<Category[]>) => { setCategories(val); };
   const handleSetManufacturers = (val: React.SetStateAction<SubCategory[]>) => { /* handleSetManufacturers logic */ };

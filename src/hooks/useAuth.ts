@@ -10,7 +10,14 @@ export const useAuth = () => {
             setUser(u);
             setAuthChecked(true);
         });
-        return () => unsubscribe();
+        
+        // Safety fallback in case Supabase anon key is misconfigured
+        const timer = setTimeout(() => setAuthChecked(true), 2500);
+        
+        return () => {
+            unsubscribe();
+            clearTimeout(timer);
+        };
     }, []);
 
     return { user, authChecked, loginWithGoogle, logout };
