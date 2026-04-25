@@ -85,7 +85,17 @@ export const useAdminPhotos = (
           loadAllPhotosFromCloud()
             .then(cloudPhotos => {
               if (cloudPhotos && cloudPhotos.length > 0) {
-                setPhotos(cloudPhotos);
+                setPhotos(prevPhotos => {
+                  const newMap = new Map();
+                  prevPhotos.forEach(p => newMap.set(p.id, p));
+                  cloudPhotos.forEach(cp => {
+                     // Keep existing local if it's more specific? Or just replace?
+                     // Merging:
+                     const existing = newMap.get(cp.id);
+                     newMap.set(cp.id, { ...existing, ...cp });
+                  });
+                  return Array.from(newMap.values());
+                });
                 saveData('product_photos', cloudPhotos);
               }
             })
