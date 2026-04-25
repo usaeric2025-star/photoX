@@ -82,15 +82,17 @@ export const useAdminPhotos = (
         }
         
         if (user) {
-          // Always try to pull cloud photos to stay up-to-date
-          loadPhotosFromCloud(user.id)
-            .then(cloudPhotos => {
-              if (cloudPhotos) {
-                setPhotos(cloudPhotos);
-                saveData('product_photos', cloudPhotos);
-              }
-            })
-            .catch(e => console.error('Cloud pull during init failed:', e));
+          // Always try to pull cloud photos ONLY IF local storage is empty
+          if (!localPhotos || localPhotos.length === 0) {
+            loadPhotosFromCloud(user.id)
+                .then(cloudPhotos => {
+                  if (cloudPhotos && cloudPhotos.length > 0) {
+                    setPhotos(cloudPhotos);
+                    saveData('product_photos', cloudPhotos);
+                  }
+                })
+                .catch(e => console.error('Cloud pull during init failed:', e));
+          }
         }
       } catch (e) {
         console.error('Init photos failed:', e);

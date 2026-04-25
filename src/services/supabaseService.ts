@@ -513,15 +513,21 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
 };
 
 export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
+  console.log(`Attempting to delete photo ${photo.id} for user ${userId} from cloud...`);
   const { error } = await supabase
     .from(TABLE_NAME)
     .delete()
     .match({ id: photo.id, user_id: userId });
 
-  if (error) throw error;
+  if (error) {
+    console.error(`Supabase deletion error for photo ${photo.id}:`, error);
+    throw error;
+  }
   
+  console.log(`Successfully deleted record ${photo.id} from database. Now removing file from storage...`);
   const filename = photo.storageId || photo.id;
   await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`]);
+  console.log(`Storage deletion complete for ${filename}.`);
 };
 
 // --- Settings Sync ---
