@@ -26,6 +26,7 @@ import {
   deletePhotoFromCloud
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Modals } from '../components/admin/Modals';
 import { ProductGrid } from '../components/admin/ProductGrid';
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
@@ -77,7 +78,7 @@ export default function AdminView() {
 
   if (!authChecked) {
     return (
-       <>
+       <ErrorBoundary>
         {errorContent}
         <div className="w-full h-full min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
            <div className="w-8 h-8 relative animate-spin">
@@ -86,13 +87,13 @@ export default function AdminView() {
            </div>
            <p className="text-[10px] uppercase font-black tracking-widest text-[#1D3557]/40 mt-4">Verifying session...</p>
         </div>
-       </>
+       </ErrorBoundary>
     );
   }
 
   if (!user && sessionStorage.getItem('isStaffMode') !== 'true') {
     return (
-       <>
+       <ErrorBoundary>
         {errorContent}
         <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
            <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
@@ -135,7 +136,7 @@ export default function AdminView() {
               </button>
            </div>
         </div>
-       </>
+       </ErrorBoundary>
     );
   }
 
@@ -344,30 +345,32 @@ export default function AdminView() {
 
   if (viewMode === 'public') {
     return (
-      <div className="w-full h-full min-h-screen">
-        <PublicGallery 
-          photos={photos} 
-          categories={categories}
-          tags={tags}
-          dbCategories={dbCategories}
-          showExit={true}
-          onExit={() => setViewMode('private')}
-          user={user}
-          settings={settings}
-          isRefreshing={false}
-          onRefresh={() => refreshCloudData(
-            user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true
-          )}
-        />
-        <div className="fixed bottom-6 right-[88px] z-50">
-           <button 
-             onClick={() => setViewMode('private')}
-             className="bg-[#1D3557] text-[#FDFAF6] px-4 py-3 rounded-full shadow-lg font-black uppercase tracking-widest text-[10px] flex items-center gap-2 active:scale-95 transition-all outline-none"
-           >
-             <Settings2 size={16} /> 進入管理模式
-           </button>
+      <ErrorBoundary>
+        <div className="w-full h-full min-h-screen">
+          <PublicGallery 
+            photos={photos} 
+            categories={categories}
+            tags={tags}
+            dbCategories={dbCategories}
+            showExit={true}
+            onExit={() => setViewMode('private')}
+            user={user}
+            settings={settings}
+            isRefreshing={false}
+            onRefresh={() => refreshCloudData(
+              user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true
+            )}
+          />
+          <div className="fixed bottom-6 right-[88px] z-50">
+             <button 
+               onClick={() => setViewMode('private')}
+               className="bg-[#1D3557] text-[#FDFAF6] px-4 py-3 rounded-full shadow-lg font-black uppercase tracking-widest text-[10px] flex items-center gap-2 active:scale-95 transition-all outline-none"
+             >
+               <Settings2 size={16} /> 進入管理模式
+             </button>
+          </div>
         </div>
-      </div>
+      </ErrorBoundary>
     );
   }
 
@@ -375,53 +378,57 @@ export default function AdminView() {
 
   if (activeScreen === 'manage') {
     return (
-       <SettingsScreen 
-         setActiveScreen={setActiveScreen}
-         settings={settings}
-         setSettings={setSettings}
-         saveSettings={saveSettings}
-         manufacturers={manufacturers}
-         setManufacturers={setManufacturers}
-         tags={tags}
-         setTags={setTags}
-         user={user}
-         loginWithGoogle={loginWithGoogle}
-         logout={logout}
-         triggerManualSync={triggerManualSync}
-         isSyncing={isSyncing}
-         syncPercent={syncPercent}
-         handleLogoUpload={handleLogoUpload}
-         setCategories={setCategories}
-         categories={categories}
-         dbCategories={dbCategories}
-         performPushSync={performPushSync}
-         performPullSync={performPullSync}
-         cloudCount={cloudCount}
-         lastSyncTime={lastSyncTime}
-         geminiApiKey={geminiApiKey}
-         setGeminiApiKey={setGeminiApiKey}
-         customModel={customModel}
-         setCustomModel={setCustomModel}
-         internalPassword={internalPassword}
-         setInternalPassword={setInternalPassword}
-         photos={photos}
-         setPhotos={setPhotos}
-       />
+       <ErrorBoundary>
+         <SettingsScreen 
+           setActiveScreen={setActiveScreen}
+           settings={settings}
+           setSettings={setSettings}
+           saveSettings={saveSettings}
+           manufacturers={manufacturers}
+           setManufacturers={setManufacturers}
+           tags={tags}
+           setTags={setTags}
+           user={user}
+           loginWithGoogle={loginWithGoogle}
+           logout={logout}
+           triggerManualSync={triggerManualSync}
+           isSyncing={isSyncing}
+           syncPercent={syncPercent}
+           handleLogoUpload={handleLogoUpload}
+           setCategories={setCategories}
+           categories={categories}
+           dbCategories={dbCategories}
+           performPushSync={performPushSync}
+           performPullSync={performPullSync}
+           cloudCount={cloudCount}
+           lastSyncTime={lastSyncTime}
+           geminiApiKey={geminiApiKey}
+           setGeminiApiKey={setGeminiApiKey}
+           customModel={customModel}
+           setCustomModel={setCustomModel}
+           internalPassword={internalPassword}
+           setInternalPassword={setInternalPassword}
+           photos={photos}
+           setPhotos={setPhotos}
+         />
+       </ErrorBoundary>
     );
   }
 
   if (editPhotoId || newPhotoData) {
      return (
-        <PhotoEditDrawer 
-            editPhotoId={editPhotoId} resetAddState={resetAddState} saveNewPhoto={saveNewPhoto}
-            addName={addName} setAddName={setAddName} addCatId={addCatId} setAddCatId={setAddCatId}
-            addSubId={addSubId} setAddSubId={setAddSubId} addTagIds={addTagIds} setAddTagIds={setAddTagIds}
-            addNote={addNote} setAddNote={setAddNote} addManualCode={addManualCode} setAddManualCode={setAddManualCode}
-            addDimL={addDimL} setAddDimL={setAddDimL} addDimW={addDimW} setAddDimW={setAddDimW}
-            addDimH={addDimH} setAddDimH={setAddDimH} showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
-            isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
-            quickAddSubCategory={() => {}} quickAddTag={() => {}} tags={tags}
-        />
+        <ErrorBoundary>
+          <PhotoEditDrawer 
+              editPhotoId={editPhotoId} resetAddState={resetAddState} saveNewPhoto={saveNewPhoto}
+              addName={addName} setAddName={setAddName} addCatId={addCatId} setAddCatId={setAddCatId}
+              addSubId={addSubId} setAddSubId={setAddSubId} addTagIds={addTagIds} setAddTagIds={setAddTagIds}
+              addNote={addNote} setAddNote={setAddNote} addManualCode={addManualCode} setAddManualCode={setAddManualCode}
+              addDimL={addDimL} setAddDimL={setAddDimL} addDimW={addDimW} setAddDimW={setAddDimW}
+              addDimH={addDimH} setAddDimH={setAddDimH} showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
+              isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
+              quickAddSubCategory={() => {}} quickAddTag={() => {}} tags={tags}
+          />
+        </ErrorBoundary>
      );
   }
 
@@ -497,7 +504,7 @@ export default function AdminView() {
   const handleAddPhotoToGroup = () => { /* logic */ };
 
   return (
-    <>
+    <ErrorBoundary>
       {batchEditIds && (
         <BatchEditScreen 
           resetAddState={resetAddState}
@@ -607,6 +614,6 @@ export default function AdminView() {
           />
           <div ref={observerTarget} className="h-20" />
       </div>
-    </>
+    </ErrorBoundary>
   );
 }
