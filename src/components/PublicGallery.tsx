@@ -33,6 +33,8 @@ interface PublicGalleryProps {
   onToggleMultiSelect?: () => void;
   columns?: 2 | 3 | 5;
   setColumns?: (val: 2 | 3 | 5) => void;
+  cloudCount?: number | null;
+  hideHeader?: boolean;
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
@@ -41,7 +43,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onOpenSettings, onAddPhoto,
   selectedIds = [], onToggleSelection, onClearSelection,
   isMultiSelect, onToggleMultiSelect,
-  columns: propColumns, setColumns: propSetColumns
+  columns: propColumns, setColumns: propSetColumns,
+  cloudCount,
+  hideHeader
 }) => {
   const [lang, setLang] = useState<LanguageCode>('en');
   const t = translations[lang] || translations['zh'];
@@ -73,6 +77,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     visibleCount, setVisibleCount,
     lightboxIndex, setLightboxIndex,
     displayPhotos, gridPhotos,
+    totalPhotoCount,
     getRealId, observerTarget
   } = useGallery({ photos, categories, tags, dbCategories, columns });
 
@@ -270,7 +275,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
-      {lightboxIndex === null && (
+      {lightboxIndex === null && !hideHeader && (
         <header className="shrink-0 z-50 bg-[#FDFAF6] px-6 pt-3 pb-3 flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0" onClick={handleHeaderClick}>
             {settings?.logo_url ? (
@@ -278,8 +283,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             ) : (
               <div>
                 <h1 className="text-xl font-black tracking-tighter text-[#1D3557] italic leading-none">GALLERY</h1>
-                <p className="text-[10px] font-black text-[#1D3557]/30 uppercase tracking-widest mt-0.5 ml-0.5">
-                  {t.gallerySub(displayPhotos.length)}
+                <p className="text-[10px] font-black text-[#1D3557]/30 uppercase tracking-widest mt-0.5 ml-0.5 flex items-center gap-1">
+                  {totalPhotoCount < photos.length ? `${totalPhotoCount} / ${photos.length}` : t.gallerySub(photos.length)}
+                  {cloudCount !== undefined && cloudCount !== null && (
+                    <span className="opacity-50">· Cloud: {cloudCount}</span>
+                  )}
                 </p>
               </div>
             )}

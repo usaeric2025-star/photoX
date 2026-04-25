@@ -398,31 +398,6 @@ export default function AdminView() {
     });
   };
 
-  if (viewMode === 'public') {
-    return (
-      <ErrorBoundary>
-        <div className="w-full h-full min-h-screen">
-          <PublicGallery 
-            photos={photos} 
-            categories={categories}
-            tags={tags}
-            dbCategories={dbCategories}
-            showExit={true}
-            onExit={() => navigate('/')}
-            user={user}
-            settings={settings}
-            isRefreshing={false}
-            onRefresh={() => refreshCloudData(
-              user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
-            )}
-            columns={columns}
-            setColumns={setColumns}
-          />
-        </div>
-      </ErrorBoundary>
-    );
-  }
-
   const handleManageClick = () => setActiveScreen('manage');
 
   if (activeScreen === 'manage') {
@@ -597,7 +572,7 @@ export default function AdminView() {
           focusedGroupPhotoId={focusedGroupPhotoId}
           setFocusedGroupPhotoId={setFocusedGroupPhotoId}
           viewMode={viewMode}
-          publicPhotos={publicPhotos}
+          publicPhotos={photos}
           photos={photos}
           setPhotos={setPhotos} // Fix: use setPhotos directly
           setPreviewUri={setPreviewUri}
@@ -626,43 +601,22 @@ export default function AdminView() {
       )}
 
       <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
-           <PublicGallery 
-              photos={photos}
-              categories={categories}
-              tags={tags}
-              dbCategories={dbCategories}
-              onExit={() => setViewMode('public')}
-              showExit={true}
-              user={user}
+           <AdminHeader 
               settings={settings}
-              isAdminMode={true}
+              user={user}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              isBatchAnalyzing={isBatchAnalyzing}
+              batchProgress={batchProgress}
+              activeScreen={activeScreen}
               isMultiSelect={isMultiSelect}
-              onToggleMultiSelect={() => {
-                if (isMultiSelect) {
-                  setSelectedIds([]);
-                  setIsMultiSelect(false);
-                } else {
-                  setIsMultiSelect(true);
-                }
-              }}
               selectedIds={selectedIds}
-              onToggleSelection={(id) => {
-                if (!isMultiSelect) return;
-                setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-              }}
-              onClearSelection={() => setSelectedIds([])}
-              onEditPhoto={setEditPhotoId}
-              onDeletePhotos={(ids) => {
-                setConfirmDialog({
-                  message: `确定要删除这 ${ids.length} 张照片吗？`,
-                  onConfirm: async () => {
-                    await deletePhoto(ids);
-                    setSelectedIds([]);
-                  }
-                });
-              }}
-              onGroupPhotos={(ids) => handleGroupPhotos(ids)}
-              onOpenSettings={handleManageClick}
+              filteredPhotos={filteredPhotos}
+              setSelectedIds={setSelectedIds}
+              setIsMultiSelect={setIsMultiSelect}
+              handleBatchAiIdentifyTrigger={handleBatchAiIdentify}
+              handleManageClick={handleManageClick}
+              loginWithGoogle={loginWithGoogle}
               onAddPhoto={() => {
                 const input = document.createElement('input');
                 input.type = 'file';
@@ -671,12 +625,65 @@ export default function AdminView() {
                 input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                 input.click();
               }}
-              onRefresh={() => refreshCloudData(
-                  user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
-              )}
-              columns={columns}
-              setColumns={setColumns}
+              photosCount={filteredPhotos.length}
+              totalPhotosCount={photos.length}
+              cloudCount={cloudCount}
            />
+           <div className="flex-1 min-h-0 relative">
+             <PublicGallery 
+                photos={photos}
+                categories={categories}
+                tags={tags}
+                dbCategories={dbCategories}
+                onExit={() => setViewMode('public')}
+                showExit={true}
+                user={user}
+                settings={settings}
+                isAdminMode={true}
+                isMultiSelect={isMultiSelect}
+                onToggleMultiSelect={() => {
+                  if (isMultiSelect) {
+                    setSelectedIds([]);
+                    setIsMultiSelect(false);
+                  } else {
+                    setIsMultiSelect(true);
+                  }
+                }}
+                selectedIds={selectedIds}
+                onToggleSelection={(id) => {
+                  if (!isMultiSelect) return;
+                  setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+                }}
+                onClearSelection={() => setSelectedIds([])}
+                onEditPhoto={setEditPhotoId}
+                onDeletePhotos={(ids) => {
+                  setConfirmDialog({
+                    message: `确定要删除这 ${ids.length} 张照片吗？`,
+                    onConfirm: async () => {
+                      await deletePhoto(ids);
+                      setSelectedIds([]);
+                    }
+                  });
+                }}
+                onGroupPhotos={(ids) => handleGroupPhotos(ids)}
+                onOpenSettings={handleManageClick}
+                onAddPhoto={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.multiple = true;
+                  input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                  input.click();
+                }}
+                onRefresh={() => refreshCloudData(
+                    user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
+                )}
+                columns={columns}
+                setColumns={setColumns}
+                cloudCount={cloudCount}
+                hideHeader={true}
+             />
+           </div>
            <Modals 
               confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog}
               alertDialog={alertDialog} setAlertDialog={setAlertDialog}

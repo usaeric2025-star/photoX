@@ -84,7 +84,13 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
       });
     }
 
-    let sorted = [...filtered];
+    return filtered;
+  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, dbCategories, categories, tags]);
+
+  const totalPhotoCount = displayPhotos.length;
+
+  const aggregatedPhotos = useMemo(() => {
+    let sorted = [...displayPhotos];
     if (showGroupsCollapsed) {
       const groupsSeen = new Set<string>();
       sorted = sorted.filter(p => {
@@ -94,26 +100,25 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
         return true;
       });
     }
-    
     return sorted;
-  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, showGroupsCollapsed, dbCategories, categories, tags]);
+  }, [displayPhotos, showGroupsCollapsed]);
 
   const visiblePhotos = useMemo(() => {
-    if (displayPhotos.length === 0) return [];
+    if (aggregatedPhotos.length === 0) return [];
     
     // Cap visible count to avoid excessive memory usage if it keeps increasing
-    const count = Math.min(visibleCount, displayPhotos.length);
-    return displayPhotos.slice(0, count);
-  }, [displayPhotos, visibleCount]);
+    const count = Math.min(visibleCount, aggregatedPhotos.length);
+    return aggregatedPhotos.slice(0, count);
+  }, [aggregatedPhotos, visibleCount]);
 
   const gridPhotos = useMemo(() => {
-    if (visiblePhotos.length === 0 || displayPhotos.length === 0) return visiblePhotos;
+    if (visiblePhotos.length === 0 || aggregatedPhotos.length === 0) return visiblePhotos;
     const remainder = visiblePhotos.length % columns;
     if (remainder === 0) return visiblePhotos;
     
     // In normal gallery we don't necessarily need fillers, but let's keep it clean
     return visiblePhotos;
-  }, [visiblePhotos, columns, displayPhotos]);
+  }, [visiblePhotos, columns, aggregatedPhotos]);
 
   const getRealId = (loopId: string) => loopId.split('-loop-')[0].split('-filler-')[0];
 
@@ -121,7 +126,7 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && visibleCount < displayPhotos.length) {
+        if (entries[0].isIntersecting && visibleCount < aggregatedPhotos.length) {
           setVisibleCount(prev => prev + 12);
         }
       },
@@ -133,7 +138,7 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
     return () => {
       if (observerTarget.current) observer.unobserve(observerTarget.current);
     };
-  }, [displayPhotos.length, visibleCount]);
+  }, [aggregatedPhotos.length, visibleCount]);
 
   return {
     searchQuery, setSearchQuery: setSearchQueryAndReset,
@@ -143,7 +148,9 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
     lightboxIndex, setLightboxIndex,
-    displayPhotos, visiblePhotos, gridPhotos,
+    displayPhotos: aggregatedPhotos, // For lightbox indexed access
+    totalPhotoCount, // Added this
+    visiblePhotos, gridPhotos,
     getRealId, observerTarget
   };
 };
