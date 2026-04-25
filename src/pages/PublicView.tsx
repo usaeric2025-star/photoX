@@ -89,7 +89,7 @@ export default function PublicView() {
               categories={categories}
               tags={publicTags}
               dbCategories={dbCategories}
-              onExit={() => {}}
+              onExit={() => navigate('/admin')}
               showExit={false}
               onLogin={() => navigate('/admin')}
               loginWithGoogle={loginWithGoogle}

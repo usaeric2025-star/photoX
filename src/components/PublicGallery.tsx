@@ -636,7 +636,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 {displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0) && (
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Maximize size={10} /> {t.dimensions}
+                       {t.dimensions}
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">

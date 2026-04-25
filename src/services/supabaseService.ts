@@ -487,6 +487,11 @@ export const fetchSettings = async () => {
     if (settings.manufacturers_json) {
       try { settings.manufacturers = JSON.parse(settings.manufacturers_json); } catch(e) { console.error(e); }
     }
+
+    // Decode AI settings if they are "encrypted" (simple base64 for now as per user request)
+    if (settings.gemini_api_key) {
+        try { settings.gemini_api_key = atob(settings.gemini_api_key); } catch(e) {}
+    }
     
     return settings;
 };
@@ -496,6 +501,11 @@ export const saveSettings = async (settings: any) => {
         // Prepare the payload
         const payload = { ...settings };
         
+        // Simple "encryption" (obfuscation) for keys as requested
+        if (payload.gemini_api_key) {
+            payload.gemini_api_key = btoa(payload.gemini_api_key);
+        }
+
         // Clean up temporary UI fields before saving
         if (payload.categories) {
           payload.categories_json = JSON.stringify(payload.categories);
