@@ -301,15 +301,39 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   // 1. Get current cloud state (hashes specifically for better matching)
   const { data: cloudItems, error: fetchError } = await supabase
     .from(TABLE_NAME)
-    .select('id, storageId, image_hash')
+    .select('id, storageId, image_hash, image_url, thumb_url')
     .eq('user_id', userId);
   
   if (fetchError) {
     console.error("Failed to fetch cloud items for comparison:", fetchError);
   }
 
-  const cloudHashes = new Set((cloudItems || []).map(item => item.image_hash).filter(Boolean));
   const cloudIds = new Set((cloudItems || []).map(item => item.id));
+  
+  // Cache for local and cloud hash-to-url mapping
+  const hashUrlMap = new Map<string, {imageUrl: string, thumbUrl?: string}>();
+  
+  // Populate cache from existing cloud items
+  if (cloudItems) {
+    cloudItems.forEach(item => {
+      if (item.image_hash && item.image_url) {
+        hashUrlMap.set(item.image_hash, {
+          imageUrl: item.image_url,
+          thumbUrl: item.thumb_url || undefined
+        });
+      }
+    });
+  }
+
+  // Populate cache from local photos that already have an image_url
+  photos.forEach(p => {
+    if (p.image_hash && p.image_url) {
+      hashUrlMap.set(p.image_hash, {
+        imageUrl: p.image_url,
+        thumbUrl: p.thumb_url || undefined
+      });
+    }
+  });
 
   // 2. Identify cloud items that are NOT in the local list (Cleanup)
   if (!fetchError) {
@@ -333,28 +357,33 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   // 3. Process uploads
   for (const photo of photos) {
     try {
-      // Rule: skip if Cloud already has this exact hash (Duplicate skip logic)
-      if (photo.image_hash && cloudHashes.has(photo.image_hash) && !cloudIds.has(photo.id)) {
-        console.log(`Cloud already has hash ${photo.image_hash}, skipping sync for local ID ${photo.id}`);
-        skippedCount++;
-        continue;
+      if (!photo.image_url && photo.uri && photo.image_hash) {
+        // 1st Local check: Do we already have the URL for this hash?
+        const cachedUrls = hashUrlMap.get(photo.image_hash);
+        if (cachedUrls) {
+          console.log(`Found locally cached URL for hash ${photo.image_hash}, reusing.`);
+          photo.image_url = cachedUrls.imageUrl;
+          photo.thumb_url = cachedUrls.thumbUrl;
+        } else {
+          // 2nd fallback Global check if not found locally (optional, but good for total dedup)
+          const existingInfo = await checkImageHashExists(photo.image_hash);
+          if (existingInfo && !cloudIds.has(photo.id)) {
+              console.log(`Found existing image globally for hash ${photo.image_hash}, reuse URL.`);
+              photo.image_url = existingInfo.image_url;
+              hashUrlMap.set(photo.image_hash, { imageUrl: existingInfo.image_url });
+          }
+        }
       }
 
       if (!photo.image_url && photo.uri) {
-        // Double check global duplicate even if not in my cloud account (Deduplication across users if desired, or just safety)
-        const existingInfo = await checkImageHashExists(photo.image_hash || '');
-        if (existingInfo && !cloudIds.has(photo.id)) {
-            console.log(`Found existing image for hash ${photo.image_hash}, reuse URL.`);
-            photo.image_url = existingInfo.image_url;
-            // Note: we still might need the thumb_url if it exists
-        }
-
         // If still no url, then upload
-        if (!photo.image_url) {
-          const filename = photo.storageId || photo.id;
-          const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
-          photo.image_url = imageUrl;
-          photo.thumb_url = thumbUrl;
+        const filename = photo.storageId || photo.id;
+        const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
+        photo.image_url = imageUrl;
+        photo.thumb_url = thumbUrl;
+        
+        if (photo.image_hash) {
+          hashUrlMap.set(photo.image_hash, { imageUrl, thumbUrl });
         }
       }
       
