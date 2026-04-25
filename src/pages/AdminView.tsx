@@ -50,6 +50,8 @@ export default function AdminView() {
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
   const navigate = useNavigate();
   
+  console.log('AdminView Debug:', { authChecked, user, isStaffMode: sessionStorage.getItem('isStaffMode') });
+
   if (!authChecked) {
     return (
        <div className="w-full h-full min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
