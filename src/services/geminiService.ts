@@ -154,7 +154,7 @@ export const analyzeProductPhoto = async (
       } catch (e) {
         errorData = await fetchResponse.text();
       }
-      throw { status: fetchResponse.status, url: fetchUrl, response: { data: errorData } };
+      throw { status: fetchResponse.status, url: fetchUrl, response: { data: errorData }, message: JSON.stringify(errorData) };
     }
 
     const data = await fetchResponse.json();
@@ -232,14 +232,12 @@ export const analyzeProductPhoto = async (
     }
 
     // Safely extract the most descriptive error message possible
-    let errorMsg = `API 請求發送失敗 (status: ${status}, url: ${url})。詳細錯誤: ${errorDetail}`;
+    let errorMsg = error.message || `API 請求發送失敗 (status: ${status}, url: ${url})。詳細錯誤: ${errorDetail}`;
     
     if (error.response?.data?.error?.message) {
         errorMsg = error.response.data.error.message;
     } else if (error.error?.message) {
         errorMsg = error.error.message;
-    } else if (error.message) {
-        errorMsg = error.message;
     }
     
     // Check if body is plain text or json
