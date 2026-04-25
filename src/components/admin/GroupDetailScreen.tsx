@@ -234,20 +234,27 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速標籤套用</p>
                          <div className="flex flex-wrap gap-1.5">
                            {tags?.map(tag => {
-                             const isAllMatch = groupPhotos.every(p => (p.tagIds || []).includes(tag.id));
+                             const isAllMatch = groupPhotos.every(p => {
+                                 const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+                                 return rawTagIds.includes(tag.id);
+                             });
                              return (
                                <button 
                                  key={tag.id}
                                  onClick={() => setPhotos(prev => {
-                                   const notAllHaveItByGroupId = prev.filter(ph => ph.groupId === activeGroupId).some(p => !(p.tagIds || []).includes(tag.id));
+                                   const notAllHaveItByGroupId = prev.filter(ph => ph.groupId === activeGroupId).some(p => {
+                                       const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+                                       return !rawTagIds.includes(tag.id);
+                                   });
                                    return prev.map(p => {
                                      if (p.groupId !== activeGroupId) return p;
-                                     const hasIt = (p.tagIds || []).includes(tag.id);
+                                     const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+                                     const hasIt = rawTagIds.includes(tag.id);
                                      
                                      if (notAllHaveItByGroupId) {
-                                       return hasIt ? p : { ...p, tagIds: [...(p.tagIds || []), tag.id] };
+                                       return hasIt ? p : { ...p, tagIds: [...rawTagIds, tag.id] };
                                      } else {
-                                       return { ...p, tagIds: (p.tagIds || []).filter(id => id !== tag.id) };
+                                       return { ...p, tagIds: rawTagIds.filter(id => id !== tag.id) };
                                      }
                                    });
                                  })}

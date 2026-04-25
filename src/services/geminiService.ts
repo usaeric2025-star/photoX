@@ -140,27 +140,45 @@ export const analyzeProductPhoto = async (
     const jsonStr = textOutput.substring(startIndex, endIndex + 1);
     const parsedData = JSON.parse(jsonStr);
     
+    // Normalize tagIds to always be an array of strings
+    let safeTagIds: string[] = [];
+    if (Array.isArray(parsedData.tagIds)) {
+      safeTagIds = parsedData.tagIds.map(String);
+    } else if (typeof parsedData.tagIds === 'string') {
+      safeTagIds = parsedData.tagIds.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+    parsedData.tagIds = safeTagIds;
+
+    // Normalize newTagName to always be an array of strings initially
+    let newTagList: string[] = [];
+    if (Array.isArray(parsedData.newTagName)) {
+      newTagList = parsedData.newTagName.map(s => String(s).trim()).filter(Boolean);
+    } else if (typeof parsedData.newTagName === 'string') {
+      newTagList = parsedData.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+
     // Total tags enforcement: Ensure we have exactly 2 tags (ID or New Name)
-    let currentTagCount = (parsedData.tagIds || []).length;
-    let newTagList = parsedData.newTagName ? parsedData.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    let currentTagCount = parsedData.tagIds.length;
     
     // If we have more than 2 total, trim them down
     if (currentTagCount + newTagList.length > 2) {
       if (currentTagCount >= 2) {
         parsedData.tagIds = parsedData.tagIds.slice(0, 2);
-        parsedData.newTagName = null;
+        newTagList = [];
       } else {
         // currentTagCount is 0 or 1
         const needed = 2 - currentTagCount;
-        parsedData.newTagName = newTagList.slice(0, needed).join(', ');
+        newTagList = newTagList.slice(0, needed);
       }
     }
     
     // De-duplicate tags by name if possible (though we handle IDs and names separately)
     // For now, let's just make sure we don't have the same name twice in newTagName
-    if (parsedData.newTagName) {
-       const uniqueNewTags = Array.from(new Set(parsedData.newTagName.split(',').map((s: string) => s.trim())));
+    if (newTagList.length > 0) {
+       const uniqueNewTags = Array.from(new Set(newTagList));
        parsedData.newTagName = uniqueNewTags.join(', ');
+    } else {
+       parsedData.newTagName = null;
     }
     
     // Attach the model info so the UI can log/show it

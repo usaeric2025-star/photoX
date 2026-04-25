@@ -84,7 +84,10 @@ export const useAdminPhotos = (
       cancelBatchAiRef: React.MutableRefObject<boolean>
   ) => {
     const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
-    const unProcessed = photos.filter(p => (!p.categoryId || !p.subcategoryId || !p.tagIds || p.tagIds.length < 2 || !p.name) && !p.isAnalyzing);
+    const unProcessed = photos.filter(p => {
+       const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+       return (!p.categoryId || !p.subcategoryId || rawTagIds.length < 2 || !p.name) && !p.isAnalyzing;
+    });
     
     if (unProcessed.length === 0) {
       setAlertDialog({ title: '提示', message: '所有照片都已經具備名稱、分類和 2 個標籤了，無需重複識別。' });

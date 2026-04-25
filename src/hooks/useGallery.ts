@@ -64,8 +64,8 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns, is
 
     if (selectedTagIds.length > 0) {
       filtered = filtered.filter(p => {
-        const pTags = p.tags || [];
-        const pTagIds = p.tagIds || [];
+        const pTags = Array.isArray(p.tags) ? p.tags : [];
+        const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
         return selectedTagIds.every(tid => {
           const tagName = tags.find(t => t.id === tid)?.name;
           return pTagIds.includes(tid) || (tagName && pTags.includes(tagName));
@@ -76,12 +76,13 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns, is
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => {
-        const mappedTagNames = (p.tagIds || []).map(tid => tags.find(t => t.id === tid)?.name).filter(Boolean);
+        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        const mappedTagNames = rawTagIds.map(tid => tags.find(t => t.id === tid)?.name).filter(Boolean);
         
         const searchableText = [
           p.name,
           p.description,
-          ...(p.tags || []),
+          ...(Array.isArray(p.tags) ? p.tags : []),
           ...mappedTagNames,
           dbCategories.find(c => c.code === p.category)?.zh || '',
           dbCategories.find(c => c.code === p.category)?.en || '',

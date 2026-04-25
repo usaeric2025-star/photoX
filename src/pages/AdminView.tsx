@@ -185,7 +185,10 @@ export default function AdminView() {
       result = result.filter(p => p.subcategoryId === filterSubId);
     }
     if (filterTagIds.length > 0) {
-      result = result.filter(p => p.tagIds?.some(id => filterTagIds.includes(id)));
+      result = result.filter(p => {
+        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        return rawTagIds.some(id => filterTagIds.includes(id));
+      });
     }
     return result;
   }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);

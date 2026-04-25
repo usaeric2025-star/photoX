@@ -37,7 +37,8 @@ export const usePhotoManagement = (
         setAddName(photo.name || '');
         setAddCatId(photo.categoryId || null);
         setAddSubId(photo.subcategoryId || null);
-        setAddTagIds(photo.tagIds || []);
+        const rawTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
+        setAddTagIds(rawTagIds);
         setAddNote(photo.description || '');
         setAddManualCode(photo.manual_code || '');
         setAddDimL(photo.dimensions?.length?.toString() || '');
