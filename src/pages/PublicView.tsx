@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadAllPhotosFromCloud, loadCategoriesFromCloud, fetchSettings } from '../services/supabaseService';
+import { loadAllPhotosFromCloud, loadCategoriesFromCloud, fetchSettings, loginWithGoogle } from '../services/supabaseService';
 import { PublicGallery } from '../components/PublicGallery';
 import { Photo, Category, Tag, SubCategory, DB_Category } from '../types';
 import { loadData, saveData } from '../utils/indexedDB';
 
+import { useAuth } from '../hooks/useAuth';
+import { loadData, saveData } from '../utils/indexedDB';
+
 export default function PublicView() {
+  const { user, authChecked } = useAuth();
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
   const [dbCategories, setDbCategories] = useState<DB_Category[]>([]);
   const [publicTags, setPublicTags] = useState<Tag[]>([]);
@@ -83,6 +87,8 @@ export default function PublicView() {
               onExit={() => {}}
               showExit={false}
               onLogin={() => navigate('/admin')}
+              loginWithGoogle={loginWithGoogle}
+              user={user}
               internalPassword=""
               settings={settings}
               isRefreshing={isRefreshing}

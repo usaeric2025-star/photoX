@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Photo, DB_Category, Category, Tag } from '../types';
 import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -11,18 +12,21 @@ interface PublicGalleryProps {
   onExit?: () => void;
   showExit?: boolean;
   onLogin?: () => void;
+  loginWithGoogle?: () => Promise<void>;
   internalPassword?: string;
   settings?: any;
   isRefreshing?: boolean;
   onRefresh?: () => void;
+  user?: any;
 }
 
 import { useGallery } from '../hooks/useGallery';
 import { translations, LanguageCode } from '../lib/translations';
 
-export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories, tags, dbCategories, onExit, showExit, onLogin, internalPassword, settings, isRefreshing, onRefresh }) => {
+export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories, tags, dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, internalPassword, settings, isRefreshing, onRefresh }) => {
   const [lang, setLang] = useState<LanguageCode>('en');
   const t = translations[lang] || translations['zh'];
+  const navigate = useNavigate();
 
   const [isStaffMode, setIsStaffMode] = useState(false);
   const [showPassPrompt, setShowPassPrompt] = useState(false);
@@ -215,6 +219,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
+              {user && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-sm hover:bg-blue-700 active:scale-95"
+                >
+                  管理
+                </button>
+              )}
               <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
                 {[
                   { code: 'zh', label: '中文' },
@@ -689,18 +701,34 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     解鎖
                   </button>
                 </div>
-                {onLogin && (
-                  <div className="pt-4 border-t border-slate-100 mt-4">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPassPrompt(false);
-                        onLogin();
-                      }}
-                      className="w-full py-3 px-4 rounded-2xl font-bold text-slate-400 bg-transparent hover:bg-slate-50 hover:text-slate-600 transition-all text-sm flex items-center justify-center gap-2"
-                    >
-                      <Settings2 size={16} />前往管理後台
-                    </button>
+                {(onLogin || loginWithGoogle) && (
+                  <div className="pt-4 border-t border-slate-100 mt-4 flex flex-col gap-2">
+                    {loginWithGoogle && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setShowPassPrompt(false);
+                          try {
+                            await loginWithGoogle();
+                          } catch (e: any) { alert('登入失敗'); }
+                        }}
+                        className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"
+                      >
+                         <LogIn size={16} /> Google 安全登入
+                      </button>
+                    )}
+                    {onLogin && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowPassPrompt(false);
+                          onLogin();
+                        }}
+                        className="w-full py-3 px-4 rounded-2xl font-bold text-slate-400 bg-transparent hover:bg-slate-50 hover:text-slate-600 transition-all text-sm flex items-center justify-center gap-2"
+                      >
+                        <Settings2 size={16} />前往管理後台
+                      </button>
+                    )}
                   </div>
                 )}
               </form>

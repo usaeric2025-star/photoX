@@ -152,7 +152,25 @@ export default function AdminView() {
   const handleUngroup = (groupId: string) => { }; // simplified
   const analyzeProductPhoto = async (uri: string, cats: Category[], tags: Tag[], key: string, provider: string, model: string) => { return {}; }; // simplified
   
-  const displayPhotos = filteredPhotos;
+  const [visibleCount, setVisibleCount] = useState(15);
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+            setVisibleCount(prev => prev + 15);
+        }
+      },
+      { threshold: 1 }
+    );
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
+  const displayPhotos = filteredPhotos.slice(0, visibleCount);
 
   const handleManageClick = () => setActiveScreen('manage');
 
@@ -360,6 +378,7 @@ export default function AdminView() {
               promptDialog={promptDialog} setPromptDialog={setPromptDialog}
               promptValue={promptValue} setPromptValue={setPromptValue}
           />
+          <div ref={observerTarget} className="h-20" />
       </div>
     </>
   );
