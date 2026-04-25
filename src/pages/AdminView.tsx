@@ -366,6 +366,20 @@ export default function AdminView() {
       }
     });
   };
+  const quickAddTag = () => {
+    setPromptValue('');
+    setPromptDialog({
+      title: '自定义标签',
+      placeholder: '输入新标签名称',
+      onSubmit: async (val: string) => {
+        const newTagId = crypto.randomUUID();
+        const nextTags = [...tags, { id: newTagId, name: val.trim(), aliases: [] }];
+        setTags(nextTags);
+        setAddTagIds(prev => [...prev, newTagId]);
+        await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
+      }
+    });
+  };
   const quickAddManufacturer = () => {
     setPromptValue('');
     setPromptDialog({
@@ -554,6 +568,7 @@ export default function AdminView() {
           quickAddSubCategory={quickAddSubCategory}
           tags={tags}
           quickAddTag={quickAddTag}
+          quickAddManufacturer={quickAddManufacturer}
           addTagIds={addTagIds}
           setAddTagIds={setAddTagIds}
           addNote={addNote}
@@ -608,6 +623,7 @@ export default function AdminView() {
           tags={tags}
           quickAddSubCategory={quickAddSubCategory}
           quickAddTag={quickAddTag}
+          quickAddManufacturer={quickAddManufacturer}
           manufacturers={manufacturers}
         />
       )}

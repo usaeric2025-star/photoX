@@ -17,6 +17,7 @@ export const BatchEditScreen = ({
   quickAddSubCategory,
   tags,
   quickAddTag,
+  quickAddManufacturer,
   addTagIds,
   setAddTagIds,
   addNote,
@@ -76,6 +77,7 @@ export const BatchEditScreen = ({
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">廠商 (Manufacturer)</h3>
+            <button onClick={quickAddManufacturer} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
             {manufacturers?.map((mfr: any) => (

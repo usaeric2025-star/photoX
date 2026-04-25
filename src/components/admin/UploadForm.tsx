@@ -38,6 +38,7 @@ interface UploadFormProps {
   tags: Tag[];
   quickAddSubCategory: () => void;
   quickAddTag: () => void;
+  quickAddManufacturer: () => void;
   manufacturers: any[];
 }
 
@@ -47,7 +48,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   addSubId, setAddSubId, addTagIds, setAddTagIds, addNote, setAddNote,
   addManualCode, setAddManualCode, showOtherFields, setShowOtherFields,
   addDimL, setAddDimL, addDimW, setAddDimW, addDimH, setAddDimH,
-  dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, manufacturers
+  dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers
 }) => {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -133,6 +134,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                 {mfr.name}
               </button>
             ))}
+            <button onClick={quickAddManufacturer} className="px-4 py-2 rounded-full border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-2 font-bold hover:border-slate-400 hover:text-slate-600 active:scale-95 transition-all">
+              <Plus size={14} /> 新增
+            </button>
           </div>
         </section>
 
