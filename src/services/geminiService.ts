@@ -114,6 +114,13 @@ export const analyzeProductPhoto = async (
         }
     }
 
+    
+    // Debug image
+    const isDataUri = base64Image.startsWith('data:');
+    const commaIndex = base64Image.indexOf(',');
+    const prefix = isDataUri ? base64Image.substring(0, commaIndex) : 'NO_PREFIX';
+    alert(`Debug Image Info:\nPrefix: ${prefix}\nTotal Length: ${base64Image.length}\nFirst 50 chars: ${base64Image.substring(0, 50)}...`);
+
     const requestBody = {
       model: modelName.replace('openrouter/', ''),
       messages: [
