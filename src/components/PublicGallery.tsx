@@ -24,6 +24,7 @@ interface PublicGalleryProps {
   onEditPhoto?: (id: string) => void;
   onDeletePhotos?: (ids: string[]) => void;
   onGroupPhotos?: (ids: string[]) => void;
+  onGroupClick?: (groupId: string) => void;
   onOpenSettings?: () => void;
   onAddPhoto?: () => void;
   selectedIds?: string[];
@@ -40,7 +41,7 @@ interface PublicGalleryProps {
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
   photos, categories, tags, dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, 
   internalPassword, settings, isRefreshing, onRefresh,
-  isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onOpenSettings, onAddPhoto,
+  isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onGroupClick, onOpenSettings, onAddPhoto,
   selectedIds = [], onToggleSelection, onClearSelection,
   isMultiSelect, onToggleMultiSelect,
   columns: propColumns, setColumns: propSetColumns,
@@ -400,8 +401,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
       {/* Filter & Search */}
       <div className="shrink-0 p-4 z-40 bg-[#FDFAF6] space-y-4">
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative w-full sm:flex-1">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
             <input 
               type="text" 
               placeholder={t.search}
@@ -413,10 +414,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           </div>
           
           {/* Action Buttons */}
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex gap-1 sm:gap-2 shrink-0">
             <button 
               onClick={toggleSortOrder}
-              className="flex-1 sm:w-11 h-11 bg-white border border-[#1D3557]/10 text-[#1D3557] rounded-2xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 transition-all"
+              className="w-10 sm:w-11 h-11 bg-white border border-[#1D3557]/10 text-[#1D3557] rounded-2xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 transition-all"
               title={sortOrder === 'desc' ? '改为正序(最旧在前)' : '改为倒序(最新在前)'}
             >
               {sortOrder === 'desc' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
@@ -427,15 +428,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   else if (columns === 3) setColumns(5);
                   else setColumns(2);
                 }}
-                className="flex-[2] sm:flex-none sm:px-4 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557] gap-2"
+                className="w-12 sm:w-auto px-2 sm:px-4 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557] gap-1 sm:gap-2"
                 title={`Switch layout`}
             >
                 <LayoutGrid size={16} className="opacity-40" />
-                <span className="font-black text-xs">{columns}</span>
+                <span className="font-black text-xs hidden sm:inline">{columns}</span>
             </button>
             <button
                 onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-                className={`flex-1 sm:w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
+                className={`w-10 sm:w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
                 title={showGroupsCollapsed ? "Show All" : "Group Photos"}
             >
                 <Layers size={18} />
@@ -538,12 +539,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   if (longPressTimer) {
                     endLongPress();
                   }
-                  if (isAdminMode && onToggleSelection) {
+                  if (isAdminMode && onToggleSelection && isMultiSelect) {
                     onToggleSelection(photo.id);
                     return;
                   }
                   if (photo.groupId && showGroupsCollapsed) {
-                    setActiveGroupId(photo.groupId);
+                    if (onGroupClick) {
+                      onGroupClick(photo.groupId);
+                    } else {
+                      setActiveGroupId(photo.groupId);
+                    }
                   } else {
                     // map grid index back to actual photo index in displayPhotos
                     const photoId = getRealId(photo.id);
