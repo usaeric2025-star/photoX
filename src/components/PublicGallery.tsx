@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Photo, DB_Category, Category, Tag } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2, LogIn } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2, LogIn, Globe } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -27,6 +27,10 @@ interface PublicGalleryProps {
   selectedIds?: string[];
   onToggleSelection?: (id: string) => void;
   onClearSelection?: () => void;
+  isMultiSelect?: boolean;
+  onToggleMultiSelect?: () => void;
+  columns?: 2 | 3 | 5;
+  setColumns?: (val: 2 | 3 | 5) => void;
 }
 
 import { useGallery } from '../hooks/useGallery';
@@ -37,7 +41,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   photos, categories, tags, dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, 
   internalPassword, settings, isRefreshing, onRefresh,
   isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onOpenSettings, onAddPhoto,
-  selectedIds = [], onToggleSelection, onClearSelection
+  selectedIds = [], onToggleSelection, onClearSelection,
+  isMultiSelect, onToggleMultiSelect,
+  columns: propColumns, setColumns: propSetColumns
 }) => {
   const [lang, setLang] = useState<LanguageCode>('en');
   const t = translations[lang] || translations['zh'];
@@ -54,7 +60,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
 
-  const [columns, setColumns] = useState<2 | 3 | 5>(3);
+  const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(3);
+  const columns = propColumns || internalColumns;
+  const setColumns = propSetColumns || setInternalColumns;
   const [headerClickCount, setHeaderClickCount] = useState(0);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
@@ -172,23 +180,39 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   };
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (lightboxIndex !== null && lightboxIndex > 0) {
-      setLightboxIndex(lightboxIndex - 1);
+    if (lightboxIndex !== null) {
+      if (lightboxIndex > 0) {
+        setLightboxIndex(lightboxIndex - 1);
+      } else {
+        setLightboxIndex(displayPhotos.length - 1);
+      }
     }
   };
   const nextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (lightboxIndex !== null && lightboxIndex < displayPhotos.length - 1) {
-      setLightboxIndex(lightboxIndex + 1);
+    if (lightboxIndex !== null) {
+      if (lightboxIndex < displayPhotos.length - 1) {
+        setLightboxIndex(lightboxIndex + 1);
+      } else {
+        setLightboxIndex(0);
+      }
     }
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (lightboxIndex === null) return;
     if (e.key === 'ArrowLeft') {
-      if (lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1);
+      if (lightboxIndex > 0) {
+        setLightboxIndex(lightboxIndex - 1);
+      } else {
+        setLightboxIndex(displayPhotos.length - 1);
+      }
     } else if (e.key === 'ArrowRight') {
-      if (lightboxIndex < displayPhotos.length - 1) setLightboxIndex(lightboxIndex + 1);
+      if (lightboxIndex < displayPhotos.length - 1) {
+        setLightboxIndex(lightboxIndex + 1);
+      } else {
+        setLightboxIndex(0);
+      }
     } else if (e.key === 'Escape') {
       setLightboxIndex(null);
     }
@@ -221,14 +245,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     
     // Swipe left (next photo)
     if (diff > 30) {
-      if (lightboxIndex !== null && lightboxIndex < displayPhotos.length - 1) {
-        setLightboxIndex(lightboxIndex + 1);
+      if (lightboxIndex !== null) {
+        if (lightboxIndex < displayPhotos.length - 1) {
+          setLightboxIndex(lightboxIndex + 1);
+        } else {
+          setLightboxIndex(0);
+        }
       }
     } 
     // Swipe right (prev photo)
     else if (diff < -30) {
-      if (lightboxIndex !== null && lightboxIndex > 0) {
-        setLightboxIndex(lightboxIndex - 1);
+      if (lightboxIndex !== null) {
+        if (lightboxIndex > 0) {
+          setLightboxIndex(lightboxIndex - 1);
+        } else {
+          setLightboxIndex(displayPhotos.length - 1);
+        }
       }
     }
     
@@ -246,31 +278,45 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             {settings?.logo_url ? (
               <img src={settings.logo_url} alt="Logo" className="h-10 max-w-[180px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
             ) : (
-              <h1 className="text-xl font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none">GALLERY</h1>
+              <div>
+                <h1 className="text-xl font-black tracking-tighter text-[#1D3557] italic leading-none">GALLERY</h1>
+                <p className="text-[10px] font-black text-[#1D3557]/30 uppercase tracking-widest mt-0.5 ml-0.5">
+                  {t.gallerySub(displayPhotos.length)}
+                </p>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
               {isAdminMode && (
                 <div className="flex items-center gap-2 mr-2">
                   <button 
-                    onClick={onOpenSettings}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95 flex items-center gap-1.5 text-nowrap"
+                    onClick={onToggleMultiSelect}
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}
+                    title="选择模式"
                   >
-                    <Settings2 size={12} />
-                    <span>设置</span>
+                    <Grid3X3 size={20} />
+                  </button>
+                  <button 
+                    onClick={onOpenSettings}
+                    className="w-10 h-10 rounded-2xl bg-slate-800 text-white flex items-center justify-center transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95"
+                    title="设置"
+                  >
+                    <Settings2 size={18} />
                   </button>
                   <button 
                     onClick={onAddPhoto}
-                    className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg hover:bg-blue-700 active:scale-95 text-nowrap"
+                    className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-lg hover:bg-blue-700 active:scale-95"
+                    title="新增"
                   >
-                    新增
+                    <Plus size={20} />
                   </button>
                   {onExit && (
                     <button 
                       onClick={onExit}
-                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm hover:bg-slate-50 active:scale-95 text-nowrap"
+                      className="w-10 h-10 bg-white border border-slate-200 text-slate-500 rounded-2xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95"
+                      title="退出模式"
                     >
-                      退出模式
+                      <Globe size={18} />
                     </button>
                   )}
                 </div>
@@ -278,9 +324,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               {user && !isAdminMode && (
                 <button
                   onClick={() => onExit ? onExit() : navigate('/admin')}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-sm hover:bg-blue-700 active:scale-95 mr-2"
+                  className="w-10 h-10 bg-blue-600 text-[#FDFAF6] rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all mr-2"
+                  title="管理"
                 >
-                  进入管理
+                  <Globe size={20} />
                 </button>
               )}
               {showExit && !isAdminMode && onExit && (

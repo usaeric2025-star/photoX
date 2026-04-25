@@ -23,6 +23,7 @@ interface GroupDetailScreenProps {
   tags: Tag[];
   handleUngroup: (groupId: string) => void;
   onAddPhotoToGroup: () => void;
+  manufacturers: any[];
 }
 
 export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
@@ -44,7 +45,8 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   categories,
   tags,
   handleUngroup,
-  onAddPhotoToGroup
+  onAddPhotoToGroup,
+  manufacturers
 }) => {
   const [isUnifiedEditing, setIsUnifiedEditing] = useState(false);
 
@@ -195,28 +197,26 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                         </div>
                       </div>
 
-                      {groupPhotos.length > 0 && groupPhotos.every(p => p.category === groupPhotos[0].category) && groupPhotos[0].category && (
-                        <motion.div 
-                          initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
-                          className="space-y-2"
-                        >
-                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">子分類套用</p>
-                          <div className="flex flex-wrap gap-2">
-                            {categories.find(c => c.id === groupPhotos[0].category)?.subcategories.map(sub => {
-                              const isAllMatch = groupPhotos.every(p => p.subcategoryId === sub.id);
-                              return (
-                                <button 
-                                  key={sub.id}
-                                  onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: sub.id, sub_category: sub.name } : p))}
-                                  className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
-                                >
-                                  {sub.name}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </motion.div>
-                      )}
+                      <motion.div 
+                        initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                        className="space-y-2"
+                      >
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">廠商套用</p>
+                        <div className="flex flex-wrap gap-2">
+                          {manufacturers.map(mfr => {
+                            const isAllMatch = groupPhotos.every(p => p.subcategoryId === mfr.id);
+                            return (
+                              <button 
+                                key={mfr.id}
+                                onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: mfr.id, sub_category: mfr.name } : p))}
+                                className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
+                              >
+                                {mfr.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
 
                        <div className="space-y-2">
                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速標籤套用</p>

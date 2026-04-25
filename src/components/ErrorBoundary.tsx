@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -10,7 +10,7 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-export class ErrorBoundary extends React.Component<Props, State> {
+export class ErrorBoundary extends (React.Component as any) {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -30,17 +30,18 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public render() {
-    if (this.state.hasError) {
+    const { hasError, error, errorInfo } = (this as any).state;
+    if (hasError) {
       return (
         <div className="fixed inset-0 z-[9999] bg-red-600 text-white p-6 overflow-auto">
-          <h1 className="text-2xl font-bold mb-4">Something went wrong.</h1>
-          <pre className="text-sm border p-4 bg-red-700">
-            {this.state.error && this.state.error.toString()}
+          <h1 className="text-2xl font-bold mb-4 whitespace-normal">Something went wrong.</h1>
+          <div className="text-sm border p-4 bg-red-700 font-mono break-all whitespace-pre-wrap">
+            {error?.toString()}
             <br />
-            {this.state.errorInfo && this.state.errorInfo.componentStack}
-          </pre>
+            {errorInfo?.componentStack}
+          </div>
           <button 
-            className="mt-4 p-2 bg-white text-red-600 font-bold rounded"
+            className="mt-4 px-6 py-3 bg-white text-red-600 font-bold rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer"
             onClick={() => window.location.reload()}
           >
             Reload Page
@@ -49,6 +50,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return (this as any).props.children;
   }
 }

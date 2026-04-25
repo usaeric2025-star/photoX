@@ -31,6 +31,7 @@ export const BatchEditScreen = ({
   setAddDimW,
   addDimH,
   setAddDimH,
+  manufacturers,
 }: any) => {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -62,7 +63,7 @@ export const BatchEditScreen = ({
             {dbCategories.map((cat: any) => (
               <button 
                 key={cat.code}
-                onClick={() => { setAddCatId(cat.code); setAddSubId(null); }}
+                onClick={() => { setAddCatId(cat.code); }}
                 className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${addCatId === cat.code ? 'bg-white border-blue-600 text-blue-600 shadow-xl shadow-blue-600/5' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
                 <span className="font-bold block text-sm tracking-tight">{cat[appLang] || cat.zh}</span>
@@ -72,32 +73,22 @@ export const BatchEditScreen = ({
           </div>
         </section>
 
-        <AnimatePresence mode="wait">
-          {addCatId && (
-            <motion.section 
-              initial={{ opacity: 0, y: 10 }} 
-              animate={{ opacity: 1, y: 0 }} 
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center justify-between pl-1">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標子分類</h3>
-                <button onClick={quickAddSubCategory} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
-              </div>
-              <div className="flex flex-wrap gap-2 p-1">
-                {categories.find((c: any) => c.id === addCatId)?.subcategories.map((sub: any) => (
-                  <button 
-                    key={sub.id}
-                    onClick={() => setAddSubId(sub.id)}
-                    className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
-                  >
-                    {sub.name}
-                  </button>
-                ))}
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">廠商 (Manufacturer)</h3>
+          </div>
+          <div className="flex flex-wrap gap-2 p-1">
+            {manufacturers?.map((mfr: any) => (
+              <button 
+                key={mfr.id}
+                onClick={() => setAddSubId(mfr.id)}
+                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addSubId === mfr.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+              >
+                {mfr.name}
+              </button>
+            ))}
+          </div>
+        </section>
 
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">

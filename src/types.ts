@@ -54,6 +54,7 @@ export interface Photo {
   } | null;
   exif_data?: any | null;
   createdAt: string;
+  updatedAt?: string;
   groupId?: string | null;
   isAnalyzing?: boolean;
   userId?: string;

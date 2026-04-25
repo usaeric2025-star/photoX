@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, RefreshCcw } from 'lucide-react';
+import { X, Save, RefreshCcw, ChevronRight } from 'lucide-react';
 import { Photo } from '../../types';
 
 interface Props {
@@ -34,6 +34,7 @@ interface Props {
   quickAddSubCategory: () => void;
   quickAddTag: () => void;
   tags: any[];
+  manufacturers: any[];
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
@@ -66,7 +67,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             {props.dbCategories.map(cat => (
                 <button 
                 key={cat.code}
-                onClick={() => { props.setAddCatId(cat.code); props.setAddSubId(null); }}
+                onClick={() => { props.setAddCatId(cat.code); }}
                 className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${props.addCatId === cat.code ? 'bg-white border-blue-600 text-blue-600 shadow-xl shadow-blue-600/5' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
                 >
                 <span className="font-bold block text-sm tracking-tight">{cat[props.appLang] || cat.zh}</span>
@@ -76,28 +77,25 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             </div>
         </div>
         
-        {props.addCatId && (
-            <section className="space-y-4">
-              <div className="flex items-center justify-between pl-1">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">子分类</h3>
-                <button onClick={props.quickAddSubCategory} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
-              </div>
-              <div className="flex flex-wrap gap-2 p-1">
-                {props.categories.find(c => c.id === props.addCatId)?.subcategories.map((sub: any) => (
-                  <button 
-                    key={sub.id}
-                    onClick={() => props.setAddSubId(sub.id)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${props.addSubId === sub.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-200'}`}
-                  >
-                    {sub.name}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 (Manufacturer)</h3>
+          </div>
+          <div className="flex flex-wrap gap-2 p-1">
+            {props.manufacturers.map((mfr: any) => (
+              <button 
+                key={mfr.id}
+                onClick={() => props.setAddSubId(mfr.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${props.addSubId === mfr.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-200'}`}
+              >
+                {mfr.name}
+              </button>
+            ))}
+          </div>
+        </section>
 
           <section className="space-y-4">
-             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签</h3>
+             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">標籤 (Tags)</h3>
              <div className="flex flex-wrap gap-2 p-1">
                 {props.tags.map(tag => (
                   <button 
@@ -113,14 +111,32 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           </section>
 
           <section className="space-y-3">
-             <input type="text" placeholder="产品名称" value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
-             <input type="text" placeholder="手动 ID" value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
+             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">基本信息</h3>
+             <input type="text" placeholder="产品名称 (英文/马來文)" value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
              <textarea placeholder="备注" value={props.addNote} onChange={e => props.setAddNote(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
-             <div className="grid grid-cols-3 gap-2">
-                <input type="number" placeholder="长 cm" value={props.addDimL} onChange={e => props.setAddDimL(e.target.value)} className="p-3 rounded-xl border border-slate-200" />
-                <input type="number" placeholder="宽 cm" value={props.addDimW} onChange={e => props.setAddDimW(e.target.value)} className="p-3 rounded-xl border border-slate-200" />
-                <input type="number" placeholder="高 cm" value={props.addDimH} onChange={e => props.setAddDimH(e.target.value)} className="p-3 rounded-xl border border-slate-200" />
-             </div>
+          </section>
+
+          <section className="space-y-3">
+             <button 
+               onClick={() => props.setShowOtherFields(!props.showOtherFields)}
+               className="w-full flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 active:scale-[0.98] transition-all"
+             >
+               <span>其他详细信息 (尺寸、手动ID)</span>
+               <div className={`transition-transform ${props.showOtherFields ? 'rotate-90' : ''}`}>
+                  <ChevronRight size={16} />
+               </div>
+             </button>
+             
+             {props.showOtherFields && (
+               <div className="space-y-3 pt-2">
+                  <input type="text" placeholder="手动 ID (例如: SK-2024)" value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 bg-white" />
+                  <div className="grid grid-cols-3 gap-2">
+                    <input type="number" placeholder="长 cm" value={props.addDimL} onChange={e => props.setAddDimL(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white" />
+                    <input type="number" placeholder="宽 cm" value={props.addDimW} onChange={e => props.setAddDimW(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white" />
+                    <input type="number" placeholder="高 cm" value={props.addDimH} onChange={e => props.setAddDimH(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white" />
+                  </div>
+               </div>
+             )}
           </section>
        </div>
     </div>

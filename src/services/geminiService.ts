@@ -6,7 +6,8 @@ export const analyzeProductPhoto = async (
   tags: Tag[],
   customApiKey?: string,
   provider: string = 'auto',
-  customModel?: string
+  customModel?: string,
+  targetCategoryId?: string | null
 ) => {
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -42,16 +43,23 @@ export const analyzeProductPhoto = async (
   }));
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
 
+  const categoryContext = targetCategoryId 
+    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.id === targetCategoryId)?.name} (ID: ${targetCategoryId})。請在此分類下進行識別並找出最合適的子分類。` 
+    : `請從以下分類中選擇最合適的一個。`;
+
   const promptText = `
   你是一位家具專業分析師。請分析這張照片並提供以下精確資訊：
   
-  1. 分類 (Classification)：從「現有分類」中選擇最合適的一個。這是首要任務，請務必精準匹配。如果產品類型完全不在現有清單中，才在 newCategoryName 中建議一個新分類名。
-  2. 標籤 (Tags)：請提供「至少 2 個且剛好 2 個」最能描述該家具產品的標籤。
+  ${categoryContext}
+  
+  1. 分類 (Classification)：從「現有分類」中選擇最合適的一個。${targetCategoryId ? '請務必選擇 ID 為 ' + targetCategoryId + ' 的分類。' : '這是首要任務，請務必精準匹配。如果產品類型完全不在現有清單中，才在 newCategoryName 中建議一個新分類名。'}
+  2. 標籤 (Tags)：請提供「剛好 2 個」最能描述該家具產品的標籤。請務必提供，不能少於 2 個。
      - 優先從「現有標籤」中挑選符合的標籤。
-     - 若現有標籤不足以描述產品特色，請在 newTagName 中建議新的標籤（最多建議 2 個，以逗號隔開）。
-  3. 產品名稱 (Name)：請識別照片中的家具並為其取一個合適的產品名稱。請務必提供名稱，且「僅能使用英文 (English) 或 馬來文 (Malay)」。絕對不要使用中文字符。如果圖片中沒有明確名稱，請根據家具的特徵（例如：Modern Wood Dining Table）自動生成一個描述性的名稱。
+     - 若現有標籤不足以描述產品特色，請在 newTagName 中建議新的標籤（總數湊齊 2 個，以逗號隔開）。請確保建議的標籤名稱不與現有標籤重複。
+  3. 產品名稱 (Name)：請識別照片中的家具並為其取一個合適的產品名稱。請務必提供名稱，且「僅能使用英文 (English)」。絕對不要使用中文字符。如果圖片中沒有明確名稱，請根據家具的特徵（例如：Modern Wood Dining Table）自動生成一個描述性的名稱。
   
   重要原則：
+  - 完整性要求：產品名稱、分類、以及 2 個標籤都是「強制性」的。如果缺乏其中任何一項，將被視為無效回傳。
   - 嚴禁「亂選」：如果現有分類或標籤不匹配，請給予 newCategoryName 或 newTagName，而不是強迫選一個不相關的。
   - 標籤數量：請確保回傳內容總共包含 2 個標籤（現有標籤 + 建議標籤 = 2）。
   - 若無法準確判斷家具尺寸，請「不要」隨意猜測，直接省略或回傳 null 即可。只有在非常明顯且有參照物的情況下才提供尺寸預估。
@@ -64,7 +72,7 @@ export const analyzeProductPhoto = async (
   
   請回傳 JSON 格式：
   {
-    "name": "Product Name (Only English or Malay)",
+    "name": "Product Name (Only English)",
     "categoryId": "string (若匹配現有分類) 或 null",
     "newCategoryName": "string (若無匹配現有分類則填寫建議名稱) 或 null",
     "subcategoryId": "string or null",
@@ -146,6 +154,13 @@ export const analyzeProductPhoto = async (
         const needed = 2 - currentTagCount;
         parsedData.newTagName = newTagList.slice(0, needed).join(', ');
       }
+    }
+    
+    // De-duplicate tags by name if possible (though we handle IDs and names separately)
+    // For now, let's just make sure we don't have the same name twice in newTagName
+    if (parsedData.newTagName) {
+       const uniqueNewTags = Array.from(new Set(parsedData.newTagName.split(',').map((s: string) => s.trim())));
+       parsedData.newTagName = uniqueNewTags.join(', ');
     }
     
     // Attach the model info so the UI can log/show it

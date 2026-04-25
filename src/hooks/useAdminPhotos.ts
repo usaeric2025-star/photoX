@@ -73,10 +73,10 @@ export const useAdminPhotos = (
       cancelBatchAiRef: React.MutableRefObject<boolean>
   ) => {
     const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
-    const unProcessed = photos.filter(p => (!p.categoryId || !p.tagIds || p.tagIds.length === 0) && !p.isAnalyzing);
+    const unProcessed = photos.filter(p => (!p.categoryId || !p.subcategoryId || !p.tagIds || p.tagIds.length < 2 || !p.name) && !p.isAnalyzing);
     
     if (unProcessed.length === 0) {
-      setAlertDialog({ title: '提示', message: '所有照片都已經有分類和標籤了，無需重複識別。' });
+      setAlertDialog({ title: '提示', message: '所有照片都已經具備名稱、分類和 2 個標籤了，無需重複識別。' });
       return;
     }
     
@@ -124,15 +124,24 @@ export const useAdminPhotos = (
             const newTagIds: string[] = [];
             
             newNames.forEach((name: string) => {
-              const id = crypto.randomUUID();
-              newTagsToAdd.push({ id, name, aliases: [] });
-              newTagIds.push(id);
+              // Check if tag with same name already exists in current tags
+              const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
+              if (existingTag) {
+                newTagIds.push(existingTag.id);
+              } else {
+                const id = crypto.randomUUID();
+                newTagsToAdd.push({ id, name, aliases: [] });
+                newTagIds.push(id);
+              }
             });
             
             if (newTagsToAdd.length > 0) {
-              setTags(prev => [...prev, ...newTagsToAdd]);
-              finalTagIds = Array.from(new Set([...finalTagIds, ...newTagIds]));
+              setTags(prev => {
+                const filtered = newTagsToAdd.filter(nt => !prev.some(p => p.name.toLowerCase() === nt.name.toLowerCase()));
+                return [...prev, ...filtered];
+              });
             }
+            finalTagIds = Array.from(new Set([...finalTagIds, ...newTagIds]));
           }
 
           setPhotos(prev => prev.map(p => p.id === photo.id ? { 
@@ -160,6 +169,20 @@ export const useAdminPhotos = (
     } finally {
       setIsBatchAnalyzing(false);
       setBatchProgress({ current: 0, total: 0 });
+    }
+  };
+
+  const handleSingleAiAnalyze = async (imageData: string | null, catId?: string) => {
+    if (!imageData) return;
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeProductPhoto(imageData, categories, tags, geminiApiKey, aiProvider, customModel, catId);
+      return result;
+    } catch (err: any) {
+      console.error("Single AI analysis failed:", err);
+      setAlertDialog({ title: 'AI 识别失败', message: err.message || '识别过程出现问题' });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -270,11 +293,17 @@ export const useAdminPhotos = (
     setIsImporting(false);
   };
   
-  const deletePhoto = async (id: string, photo: Photo) => {
-      setPhotos(prev => prev.filter(p => p.id !== id));
-      if (user && photo) {
+  const deletePhoto = async (idOrIds: string | string[]) => {
+      const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+      const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
+      
+      setPhotos(prev => prev.filter(p => !ids.includes(p.id)));
+      
+      if (user) {
         try {
-          await deletePhotoFromCloud(user.id, photo);
+          for (const photo of photosToDelete) {
+             await deletePhotoFromCloud(user.id, photo);
+          }
         } catch (err) {
           console.error("Cloud deletion failed:", err);
         }
@@ -283,8 +312,9 @@ export const useAdminPhotos = (
 
   return {
     photos, setPhotos,
-    isAnalyzing, isBatchAnalyzing, isImporting, batchProgress,
+    isAnalyzing, setIsAnalyzing, isBatchAnalyzing, isImporting, batchProgress,
     cloudCount, setCloudCount,
+    handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
   };
 };

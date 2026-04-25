@@ -85,17 +85,14 @@ export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setView
               <button 
                 onClick={() => {
                   if (isMultiSelect) {
-                    if (selectedIds.length === filteredPhotos.length) {
-                      setSelectedIds([]);
-                    } else {
-                      setSelectedIds(filteredPhotos.map(p => p.id));
-                    }
+                    setIsMultiSelect(false);
+                    setSelectedIds([]);
                   } else {
                     setIsMultiSelect(true);
                   }
                 }}
                 className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-[#1D3557] text-white shadow-md' : 'text-[#1D3557]/40 hover:text-[#1D3557]'}`}
-                title="多選模式"
+                title={isMultiSelect ? "取消選擇" : "進入選擇模式"}
               >
                 <CheckSquare size={18} />
               </button>

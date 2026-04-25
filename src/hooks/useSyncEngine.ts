@@ -45,6 +45,7 @@ export const useSyncEngine = () => {
         force = false
     ) => {
         setIsSyncing(true);
+        console.log("SyncEngine: Refreshing data (Force:", force, ")...");
         try {
             const cloudSettings = await fetchSettings();
             if (cloudSettings) {
@@ -58,29 +59,34 @@ export const useSyncEngine = () => {
                 if (cloudSettings.categories !== undefined) {
                     setPublicCategories(cloudSettings.categories);
                     setCategories(cloudSettings.categories);
-                    saveData('public_categories', cloudSettings.categories);
+                    await saveData('public_categories', cloudSettings.categories);
                 }
                 
                 if (cloudSettings.tags !== undefined) {
                     setPublicTags(cloudSettings.tags);
                     setTags(cloudSettings.tags);
-                    saveData('public_tags', cloudSettings.tags);
+                    await saveData('public_tags', cloudSettings.tags);
                 }
                 
                 if (cloudSettings.manufacturers !== undefined) {
                     setPublicManufacturers(cloudSettings.manufacturers);
                     setManufacturers(cloudSettings.manufacturers);
-                    saveData('public_manufacturers', cloudSettings.manufacturers);
+                    await saveData('public_manufacturers', cloudSettings.manufacturers);
                 }
             }
 
             const cloudDbCats = await loadCategoriesFromCloud();
-            if (cloudDbCats) setDbCategories(cloudDbCats);
+            if (cloudDbCats && cloudDbCats.length > 0) {
+                setDbCategories(cloudDbCats);
+                await saveData('db_categories', cloudDbCats);
+            }
 
             const cloudPublicPhotos = await loadAllPhotosFromCloud();
             if (cloudPublicPhotos) {
+                // We set the photos list directly. Browser handles image caching for the URIs.
                 setPublicPhotos(cloudPublicPhotos);
                 await saveData('public_photos', cloudPublicPhotos);
+                console.log(`SyncEngine: Total photos sync'd: ${cloudPublicPhotos.length}`);
             }
 
             if (user) {
@@ -88,8 +94,9 @@ export const useSyncEngine = () => {
                 if (cloudPhotos) setCloudCount(cloudPhotos.length);
             }
             
-            setLastSyncTime(Date.now());
-            await saveData('last_sync_time', Date.now());
+            const now = Date.now();
+            setLastSyncTime(now);
+            await saveData('last_sync_time', now);
         } catch (err) {
             console.error("Cloud synchronization failed:", err);
         } finally {

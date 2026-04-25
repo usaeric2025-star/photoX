@@ -13,7 +13,7 @@ import {
   Globe,
   ImageIcon
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   onAuthChange, 
   loginWithGoogle, 
@@ -89,7 +89,12 @@ export default function AdminView() {
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
   const [appLang, setAppLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+  const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [aiProvider, setAiProvider] = useState('gemini');
+  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
   const cancelBatchAiRef = useRef<boolean>(false);
   
   const { 
@@ -105,16 +110,11 @@ export default function AdminView() {
     if (settings?.lang) {
       setAppLang(settings.lang);
     }
+    if (settings?.gemini_api_key) {
+      setGeminiApiKey(settings.gemini_api_key);
+    }
   }, [settings]);
 
-  /* 
-  useEffect(() => {
-    if ((user || getSafeSessionStorage('isStaffMode') === 'true') && viewMode === 'public') {
-      setViewMode('private');
-    }
-  }, [user, viewMode, setViewMode]);
-  */
-  
   const { 
     categories, setCategories,
     tags, setTags,
@@ -127,9 +127,11 @@ export default function AdminView() {
   
   const { 
     photos, setPhotos,
+    isAnalyzing, setIsAnalyzing,
     isBatchAnalyzing, batchProgress,
+    handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
-  } = useAdminPhotos(user, '', 'auto', '', categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
+  } = useAdminPhotos(user, geminiApiKey, aiProvider, customModel, categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
 
   useEffect(() => {
     if (user || getSafeSessionStorage('isStaffMode') === 'true') {
@@ -171,7 +173,11 @@ export default function AdminView() {
     resetAddState,
     saveNewPhoto,
     saveBatchEdit,
-  } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, setAlertDialog, setIsSyncing, setActiveScreen);
+  } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, manufacturers, setAlertDialog, setIsSyncing, setActiveScreen);
+
+  const handleUngroup = (groupId: string) => {
+    setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
+  };
 
   const [visibleCount, setVisibleCount] = useState(15);
   const observerTarget = useRef(null);
@@ -195,18 +201,19 @@ export default function AdminView() {
   
   const displayPhotos = filteredPhotos.slice(0, visibleCount);
   
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [aiProvider, setAiProvider] = useState('gemini');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
   const [internalPassword, setInternalPassword] = useState('');
   const [syncPercent, setSyncPercent] = useState(0);
   const [cloudCount, setCloudCount] = useState(0);
   const [syncAction, setSyncAction] = useState('idle');
-  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleGroupPhotos = (ids: string[]) => {
+    if (ids.length < 2) return;
+    const groupId = `group-${Date.now()}`;
+    setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, groupId } : p));
+  };
 
   // Re-enable photo loading
   useEffect(() => {
@@ -354,14 +361,10 @@ export default function AdminView() {
     }
   };
 
-  const handleGroupPhotos = () => {
-      // Grouping logic 
-      if (selectedIds.length < 2) return;
-      const groupId = crypto.randomUUID();
-      setPhotos(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, groupId } : p));
-      setSelectedIds([]);
-      setIsMultiSelect(false);
+  const handleGroupPhotos_Internal = (ids: string[]) => {
+    // Hidden internal implementation to avoid conflict
   };
+
   const quickAddSubCategory = () => {
     if (!addCatId) return;
     setPromptValue('');
@@ -412,6 +415,8 @@ export default function AdminView() {
             onRefresh={() => refreshCloudData(
               user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
             )}
+            columns={columns}
+            setColumns={setColumns}
           />
         </div>
       </ErrorBoundary>
@@ -471,7 +476,7 @@ export default function AdminView() {
               addDimH={addDimH} setAddDimH={setAddDimH} showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
               isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
               quickAddSubCategory={quickAddSubCategory} quickAddTag={quickAddTag} tags={tags}
-              newPhotoData={newPhotoData}
+              newPhotoData={newPhotoData} manufacturers={manufacturers}
           />
         </ErrorBoundary>
      );
@@ -490,19 +495,6 @@ export default function AdminView() {
         await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
       }
     });
-  };
-
-  const handleSingleAiAnalyze = async () => {
-    if (!newPhotoData) return;
-    setIsAnalyzing(true);
-    try {
-      // Logic restored placeholder.
-      console.log("Analyzing...");
-    } catch (err: any) {
-      console.error("AI error:", err);
-    } finally {
-      setIsAnalyzing(false);
-    }
   };
 
   const deleteTag = (id: string) => {
@@ -554,6 +546,7 @@ export default function AdminView() {
           setAddDimW={setAddDimW}
           addDimH={addDimH}
           setAddDimH={setAddDimH}
+          manufacturers={manufacturers}
         />
       )}
       
@@ -562,8 +555,8 @@ export default function AdminView() {
           onClose={() => { resetAddState(); setActiveScreen('home'); }}
           editPhotoId={editPhotoId}
           newPhotoData={newPhotoData}
-          isAnalyzing={false} // Placeholder, need to fix hook if needed
-          handleSingleAiAnalyze={async () => {}} // Placeholder
+          isAnalyzing={isAnalyzing}
+          handleSingleAiAnalyze={() => handleSingleAiAnalyze(newPhotoData, addCatId || undefined)}
           deletePhoto={deletePhoto}
           saveNewPhoto={saveNewPhoto}
           isSyncing={isSyncing}
@@ -593,10 +586,46 @@ export default function AdminView() {
           tags={tags}
           quickAddSubCategory={quickAddSubCategory}
           quickAddTag={quickAddTag}
+          manufacturers={manufacturers}
         />
       )}
 
-      <div className="flex flex-col h-screen bg-[#FDFAF6]">
+      {activeGroupId && (
+        <GroupDetailScreen
+          activeGroupId={activeGroupId}
+          setActiveGroupId={setActiveGroupId}
+          focusedGroupPhotoId={focusedGroupPhotoId}
+          setFocusedGroupPhotoId={setFocusedGroupPhotoId}
+          viewMode={viewMode}
+          publicPhotos={publicPhotos}
+          photos={photos}
+          setPhotos={setPhotos} // Fix: use setPhotos directly
+          setPreviewUri={setPreviewUri}
+          setAlertDialog={setAlertDialog}
+          setConfirmDialog={setConfirmDialog}
+          user={user}
+          onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
+          dbCategories={dbCategories}
+          appLang={appLang}
+          categories={categories}
+          tags={tags}
+          handleUngroup={handleUngroup}
+          onAddPhotoToGroup={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.multiple = true;
+            input.onchange = (e) => handlePhotoImport(e as any, false, (screen) => {
+              if (screen === 'addPhoto') {
+                // handle manual addition to this specific group
+              }
+            });
+            input.click();
+          }}
+        />
+      )}
+
+      <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
            <PublicGallery 
               photos={photos}
               categories={categories}
@@ -607,11 +636,31 @@ export default function AdminView() {
               user={user}
               settings={settings}
               isAdminMode={true}
+              isMultiSelect={isMultiSelect}
+              onToggleMultiSelect={() => {
+                if (isMultiSelect) {
+                  setSelectedIds([]);
+                  setIsMultiSelect(false);
+                } else {
+                  setIsMultiSelect(true);
+                }
+              }}
               selectedIds={selectedIds}
-              onToggleSelection={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])}
+              onToggleSelection={(id) => {
+                if (!isMultiSelect) return;
+                setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+              }}
               onClearSelection={() => setSelectedIds([])}
               onEditPhoto={setEditPhotoId}
-              onDeletePhotos={(ids) => deletePhoto(ids)}
+              onDeletePhotos={(ids) => {
+                setConfirmDialog({
+                  message: `确定要删除这 ${ids.length} 张照片吗？`,
+                  onConfirm: async () => {
+                    await deletePhoto(ids);
+                    setSelectedIds([]);
+                  }
+                });
+              }}
               onGroupPhotos={(ids) => handleGroupPhotos(ids)}
               onOpenSettings={handleManageClick}
               onAddPhoto={() => {
@@ -619,12 +668,14 @@ export default function AdminView() {
                 input.type = 'file';
                 input.accept = 'image/*';
                 input.multiple = true;
-                input.onchange = (e) => handlePhotoUpload(e as any);
+                input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                 input.click();
               }}
               onRefresh={() => refreshCloudData(
                   user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
               )}
+              columns={columns}
+              setColumns={setColumns}
            />
            <Modals 
               confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog}

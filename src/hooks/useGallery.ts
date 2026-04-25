@@ -101,15 +101,9 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
   const visiblePhotos = useMemo(() => {
     if (displayPhotos.length === 0) return [];
     
-    const result = [];
-    for (let i = 0; i < visibleCount; i++) {
-       const originalPhoto = displayPhotos[i % displayPhotos.length];
-       result.push({
-         ...originalPhoto,
-         id: `${originalPhoto.id}-loop-${i}`
-       });
-    }
-    return result;
+    // Cap visible count to avoid excessive memory usage if it keeps increasing
+    const count = Math.min(visibleCount, displayPhotos.length);
+    return displayPhotos.slice(0, count);
   }, [displayPhotos, visibleCount]);
 
   const gridPhotos = useMemo(() => {
@@ -117,16 +111,8 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
     const remainder = visiblePhotos.length % columns;
     if (remainder === 0) return visiblePhotos;
     
-    const fillerCount = columns - remainder;
-    const result = [...visiblePhotos];
-    for (let i = 0; i < fillerCount; i++) {
-       const nextIndex = (visiblePhotos.length + i) % displayPhotos.length;
-       const p = displayPhotos[nextIndex];
-       if (p) {
-          result.push({ ...p, id: `${p.id}-filler-${visiblePhotos.length + i}` });
-       }
-    }
-    return result;
+    // In normal gallery we don't necessarily need fillers, but let's keep it clean
+    return visiblePhotos;
   }, [visiblePhotos, columns, displayPhotos]);
 
   const getRealId = (loopId: string) => loopId.split('-loop-')[0].split('-filler-')[0];
@@ -135,7 +121,7 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && visibleCount < displayPhotos.length) {
           setVisibleCount(prev => prev + 12);
         }
       },

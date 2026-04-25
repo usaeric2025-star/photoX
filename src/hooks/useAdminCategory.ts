@@ -13,7 +13,6 @@ export const useAdminCategory = () => {
   const [publicManufacturers, setPublicManufacturers] = useState<SubCategory[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  /* 
   useEffect(() => {
     const loadInit = async () => {
       const storedCats = await loadData('product_categories');
@@ -37,7 +36,6 @@ export const useAdminCategory = () => {
     };
     persist();
   }, [categories, tags, manufacturers, isLoaded]);
-  */
 
   return {
     categories, setCategories,
