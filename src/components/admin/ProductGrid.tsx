@@ -152,7 +152,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white/50 shadow-sm">
             <ImageIcon size={32} className="opacity-40" />
           </div>
-          <p className="text-xs font-medium">找不到符合條件的照片</p>
+          <p className="text-xs font-medium">找不到符合条件的照片</p>
         </div>
       )}
       
@@ -172,7 +172,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                 onClick={() => { setIsMultiSelect(false); setSelectedIds([]); }}
                 className="text-[10px] text-slate-400 font-medium hover:text-slate-600"
               >
-                結束選擇
+                结束选择
               </button>
             </div>
             <div className="flex gap-4 items-center justify-center">
@@ -210,7 +210,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                    <div className="w-8 h-8 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shadow-sm group-active:scale-90 transition-transform">
                      <Layers size={18} />
                    </div>
-                   <span className="text-[9px] mt-1 text-purple-600 font-bold">設為同組</span>
+                   <span className="text-[9px] mt-1 text-purple-600 font-bold">设为同组</span>
                 </button>
 
                 {selectedIds.length > 0 && (
@@ -221,7 +221,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
                      <div className="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center shadow-sm group-active:scale-90 transition-transform">
                        <Trash2 size={18} />
                      </div>
-                     <span className="text-[9px] mt-1 font-bold">刪除</span>
+                     <span className="text-[9px] mt-1 font-bold">删除</span>
                   </button>
                 )}
             </div>

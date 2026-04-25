@@ -48,9 +48,7 @@ import { GroupDetailScreen } from '../components/admin/GroupDetailScreen';
 import { PublicGallery } from '../components/PublicGallery';
 
 export default function AdminView() {
-  console.log('>>> AdminView Component Executing');
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
-  console.log('>>> useAuth completed');
   const navigate = useNavigate();
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -278,21 +276,21 @@ export default function AdminView() {
                 }}
                 className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
               >
-                Google 安全登入
+                Google 安全登录
               </button>
               <button
                 onClick={() => {
-                  const pass = prompt('請輸入您的本地管理密碼:');
+                  const pass = prompt('请输入您的本地管理密码:');
                   if (pass === getSafeLocalStorage('internal_password')) {
     try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
                     window.location.reload();
                   } else if (pass) {
-                    alert('密碼錯誤');
+                    alert('密码错误');
                   }
                 }}
                 className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all mb-4 text-sm"
               >
-                使用本地密碼登入
+                使用本地密码登录
               </button>
               <button
                 onClick={() => {
@@ -301,7 +299,7 @@ export default function AdminView() {
                 }}
                 className="text-sm text-slate-400 hover:text-slate-600 font-medium"
               >
-                返回展示館
+                返回展示馆
               </button>
            </div>
         </div>
@@ -319,9 +317,9 @@ export default function AdminView() {
     setIsSyncing(true);
     try {
       await syncPhotosToCloudService(user.id, photos, setSyncPercent);
-      setAlertDialog({ title: '同步成功', message: '所有數據已成功備份至雲端' });
+      setAlertDialog({ title: '同步成功', message: '所有数据已成功备份至云端' });
     } catch (err: any) {
-      setAlertDialog({ title: '同步失敗', message: err.message || '請檢查網路連線' });
+      setAlertDialog({ title: '同步失败', message: err.message || '请检查网络连接' });
     } finally {
       setIsSyncing(false);
     }
@@ -332,9 +330,9 @@ export default function AdminView() {
     setIsSyncing(true);
     try {
       await syncPhotosToCloudService(user.id, photos, setSyncPercent);
-      setAlertDialog({ title: '推送成功', message: '本地照片已上傳至雲端' });
+      setAlertDialog({ title: '推送成功', message: '本地照片已上传至云端' });
     } catch (err: any) {
-      setAlertDialog({ title: '推送失敗', message: err.message });
+      setAlertDialog({ title: '推送失败', message: err.message });
     } finally {
       setIsSyncing(false);
     }
@@ -348,9 +346,9 @@ export default function AdminView() {
         setPublicCategories, setPublicTags, setPublicManufacturers, 
         setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
       );
-      setAlertDialog({ title: '拉取成功', message: '雲端數據已同步至本地' });
+      setAlertDialog({ title: '获取成功', message: '云端数据已同步至本地' });
     } catch (err: any) {
-      setAlertDialog({ title: '拉取失敗', message: err.message });
+      setAlertDialog({ title: '获取失败', message: err.message });
     } finally {
       setIsSyncing(false);
     }
@@ -368,8 +366,8 @@ export default function AdminView() {
     if (!addCatId) return;
     setPromptValue('');
     setPromptDialog({
-      title: '新增子分類',
-      placeholder: '輸入新子分類名稱',
+      title: '新增子分类',
+      placeholder: '输入新子分类名称',
       onSubmit: async (val: string) => {
         const newSubId = crypto.randomUUID();
         const nextCats = categories.map(c => c.id === addCatId ? {
@@ -385,8 +383,8 @@ export default function AdminView() {
   const quickAddTag = () => {
     setPromptValue('');
     setPromptDialog({
-      title: '自定義標籤',
-      placeholder: '輸入新標籤名稱',
+      title: '自定义标签',
+      placeholder: '输入新标签名称',
       onSubmit: async (val: string) => {
         const newTagId = crypto.randomUUID();
         const nextTags = [...tags, { id: newTagId, name: val.trim(), aliases: [] }];
@@ -415,14 +413,6 @@ export default function AdminView() {
               user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
             )}
           />
-          <div className="fixed bottom-6 right-[88px] z-50">
-             <button 
-               onClick={() => setViewMode('private')}
-               className="bg-[#1D3557] text-[#FDFAF6] px-4 py-3 rounded-full shadow-lg font-black uppercase tracking-widest text-[10px] flex items-center gap-2 active:scale-95 transition-all outline-none"
-             >
-               <Settings2 size={16} /> 進入管理模式
-             </button>
-          </div>
         </div>
       </ErrorBoundary>
     );
@@ -489,7 +479,7 @@ export default function AdminView() {
 
   const deleteSubCategory = (catId: string, subId: string) => {
     setConfirmDialog({
-      message: '確定要刪除此子分類嗎？',
+      message: '确定要删除此子分类吗？',
       onConfirm: async () => {
         const nextCats = categories.map(c => c.id === catId ? {
           ...c,
@@ -517,7 +507,7 @@ export default function AdminView() {
 
   const deleteTag = (id: string) => {
     setConfirmDialog({
-      message: '確定要刪除此標籤嗎？',
+      message: '确定要删除此标签吗？',
       onConfirm: async () => {
         const nextTags = tags.filter(t => t.id !== id);
         setTags(nextTags);

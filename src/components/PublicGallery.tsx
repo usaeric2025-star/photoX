@@ -123,7 +123,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
         } else if (lang === 'en') {
           msg = `Hello, I'm interested in this furniture:\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\nView more: photo-x-one.vercel.app`;
         } else {
-          msg = `你好，我對這個家具有興趣：\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
+          msg = `你好，我对这个家具有兴趣：\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
         }
       }
     } else {
@@ -132,7 +132,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
       } else if (lang === 'en') {
         msg = `Hello, I'd like to inquire about furniture information.`;
       } else {
-        msg = `你好，我想諮詢家具資訊。`;
+        msg = `你好，我想咨询家具信息。`;
       }
     }
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -152,7 +152,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     } else {
       const fallback = (import.meta as any).env.VITE_WHATSAPP_NUMBER;
       if (fallback) openWhatsApp(fallback, photoId);
-      else alert('未設定聯繫號碼');
+      else alert('未设置联系号码');
     }
   };
   const prevPhoto = (e: React.MouseEvent) => {
@@ -563,14 +563,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                           (c.en || '').trim().toLowerCase() === code || 
                           (c.ms || '').trim().toLowerCase() === code
                         );
-                        const fallbackName = lang === 'ms' ? 'Perabot' : (lang === 'en' ? 'Furniture' : '家具紀錄');
+                        const fallbackName = lang === 'ms' ? 'Perabot' : (lang === 'en' ? 'Furniture' : '家具记录');
                         return cat ? (cat[lang as keyof DB_Category] || cat.zh) : (displayPhotos[lightboxIndex].name || fallbackName);
                      })()}
                    </h1>
                    {(isStaffMode || showExit) && (displayPhotos[lightboxIndex].item_code || displayPhotos[lightboxIndex].name) && (
                      <div className="space-y-0.5">
                        {displayPhotos[lightboxIndex].item_code && <p className="text-[10px] font-mono text-slate-400">ID: {displayPhotos[lightboxIndex].item_code}</p>}
-                       {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具紀錄' && (
+                       {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具记录' && (
                          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">{displayPhotos[lightboxIndex].name}</p>
                        )}
                      </div>
@@ -735,12 +735,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 <input 
                   type="password" 
                   autoFocus
-                  placeholder="密鑰..."
+                  placeholder="密钥..."
                   className={`w-full bg-slate-50 border p-4 rounded-2xl text-center text-lg font-bold outline-none transition-all ${passError ? 'border-red-500 bg-red-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 shadow-sm'}`}
                   value={passInput}
                   onChange={(e) => { setPassInput(e.target.value); setPassError(false); }}
                 />
-                {passError && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest animate-bounce">密鑰錯誤</p>}
+                {passError && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest animate-bounce">密钥错误</p>}
                 
                 <div className="flex gap-2">
                   <button 
@@ -754,7 +754,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     type="submit"
                     className="flex-1 py-4 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
                   >
-                    解鎖
+                    解锁
                   </button>
                 </div>
                 {(onLogin || loginWithGoogle) && (
@@ -766,11 +766,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                           setShowPassPrompt(false);
                           try {
                             await loginWithGoogle();
-                          } catch (e: any) { alert('登入失敗'); }
+                          } catch (e: any) { alert('登录失败'); }
                         }}
                         className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"
                       >
-                         <LogIn size={16} /> Google 安全登入
+                         <LogIn size={16} /> Google 安全登录
                       </button>
                     )}
                   </div>
@@ -793,7 +793,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold text-slate-800">選擇聯繫號碼</h3>
+                <h3 className="font-bold text-slate-800">选择联系号码</h3>
                 <button onClick={() => setShowWhatsAppChoice(false)} className="p-1 hover:bg-slate-100 rounded-full">
                   <X size={20} className="text-slate-400" />
                 </button>

@@ -25,7 +25,7 @@ export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setView
       {settings?.logo_url ? (
         <img src={settings.logo_url} alt="Logo" className="h-10 max-w-[180px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
       ) : (
-        <h1 className="text-xl font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none">MANAGEMENT</h1>
+        <h1 className="text-xl font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none">管理界面</h1>
       )}
     </div>
 
@@ -42,7 +42,7 @@ export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setView
           className="px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-[#1D3557] text-[#FDFAF6] shadow-sm active:scale-95 transition-all flex items-center gap-2"
         >
           <LogIn size={14} />
-          LOGIN
+          登录
         </button>
       ) : (
         <div className="flex items-center gap-2">

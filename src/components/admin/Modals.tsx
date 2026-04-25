@@ -59,7 +59,7 @@ export const Modals = ({
                   }}
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-md shadow-red-500/20 transition-colors"
                 >
-                  確認刪除
+                  确认删除
                 </button>
               </div>
             </motion.div>
@@ -115,7 +115,7 @@ export const Modals = ({
                   disabled={!promptValue.trim()}
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  確認
+                  确认
                 </button>
               </div>
             </motion.div>
@@ -147,7 +147,7 @@ export const Modals = ({
                 onClick={() => setAlertDialog(null)}
                 className="w-full py-3 px-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-colors"
               >
-                確定
+                确定
               </button>
             </motion.div>
           </motion.div>

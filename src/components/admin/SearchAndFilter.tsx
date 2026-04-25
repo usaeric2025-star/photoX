@@ -33,7 +33,7 @@ export const SearchAndFilter: React.FC<Props> = ({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#1D3557]/30 transition-colors" size={14} />
           <input 
             type="text" 
-            placeholder="搜尋產品..."
+            placeholder="搜索产品..."
             className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-2.5 pl-10 pr-4 text-xs focus:bg-white transition-all outline-none text-[#1D3557] placeholder-[#1D3557]/30 shadow-inner"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -47,14 +47,14 @@ export const SearchAndFilter: React.FC<Props> = ({
         <button 
           onClick={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}
           className="w-10 h-10 rounded-2xl border transition-all flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557] shadow-sm active:scale-95"
-          title={displayMode === 'grid' ? "切換至大圖" : "切換至網格"}
+          title={displayMode === 'grid' ? "切换至列表" : "切换至网格"}
         >
           {displayMode === 'grid' ? <LayoutGrid size={18} /> : <Grid3X3 size={18} />}
         </button>
         <button 
           onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
           className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-95 ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-white' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/50 hover:text-[#1D3557]'}`}
-          title={showGroupsCollapsed ? "展开群组" : "合併群組"}
+          title={showGroupsCollapsed ? "展开群组" : "合并群组"}
         >
           <Layers size={18} />
         </button>
@@ -101,7 +101,7 @@ export const SearchAndFilter: React.FC<Props> = ({
                   onClick={() => setFilterSubId(null)}
                   className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${!filterSubId ? 'bg-[#D4A853] border-[#D4A853] text-white shadow-md' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                 >
-                  ALL
+                  全部
                 </button>
                 {(() => {
                   const legacyMatchedCat = categories.find(c => c.name === (dbCategories || []).find(dc => dc.code === filterCatId)?.zh || c.id === filterCatId);

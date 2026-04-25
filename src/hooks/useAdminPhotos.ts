@@ -149,13 +149,13 @@ export const useAdminPhotos = (
           } : p));
           successCount++;
         } catch (err: any) {
-          setAlertDialog({ title: '辨識失敗', message: `AI 辨識失敗。\n\n照片 ID: ${photo.id}\n錯誤原因: ${err.message || '未知錯誤'}` });
+          setAlertDialog({ title: '识别失败', message: `AI 识别失败。\n\n照片 ID: ${photo.id}\n错误原因: ${err.message || '未知错误'}` });
           setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
           break;
         }
       }
       if (successCount > 0) {
-        setAlertDialog({ title: '處理完成', message: `處理終止或完成！成功辨識了 ${successCount} 張照片。` });
+        setAlertDialog({ title: '处理完成', message: `处理终止或完成！成功识别了 ${successCount} 张照片。` });
       }
     } finally {
       setIsBatchAnalyzing(false);
@@ -188,7 +188,7 @@ export const useAdminPhotos = (
           const rawUri = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (event) => resolve(event.target?.result as string);
-            reader.onerror = () => reject(new Error('檔案讀取失敗'));
+            reader.onerror = () => reject(new Error('文件读取失败'));
             reader.readAsDataURL(file);
           });
           
@@ -208,8 +208,8 @@ export const useAdminPhotos = (
             const existingInfo = await checkImageHashExists(imgHash);
             if (existingInfo) {
               setAlertDialog({ 
-                title: '圖片重複', 
-                message: `照片「${file.name}」在雲端已存在相同內容`
+                title: '图片重复', 
+                message: `照片「${file.name}」在云端已存在相同内容`
               });
               continue;
             }
