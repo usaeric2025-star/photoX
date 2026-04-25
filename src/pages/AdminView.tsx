@@ -163,6 +163,9 @@ export default function AdminView() {
     saveBatchEdit,
   } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, setAlertDialog, setIsSyncing, setActiveScreen);
 
+  const [visibleCount, setVisibleCount] = useState(15);
+  const observerTarget = useRef(null);
+
   const filteredPhotos = useMemo(() => {
     let result = photos;
     if (searchQuery) {
@@ -179,7 +182,7 @@ export default function AdminView() {
     }
     return result;
   }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
-
+  
   const displayPhotos = filteredPhotos.slice(0, visibleCount);
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -194,8 +197,6 @@ export default function AdminView() {
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(15);
-  const observerTarget = useRef(null);
 
   // Re-enable photo loading
   useEffect(() => {
