@@ -32,6 +32,10 @@ export const BatchEditScreen = ({
   setAddDimW,
   addDimH,
   setAddDimH,
+  addIsHidden,
+  setAddIsHidden,
+  batchIsHiddenApplied,
+  setBatchIsHiddenApplied,
   manufacturers,
 }: any) => {
   return (
@@ -40,9 +44,21 @@ export const BatchEditScreen = ({
         <button onClick={resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <X size={24} />
         </button>
-        <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight">批量修改 ({batchEditIds?.length})</h2>
+        <div className="flex flex-col items-center">
+            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">批量修改 ({batchEditIds?.length})</h2>
+            <div 
+              onClick={() => {
+                setBatchIsHiddenApplied(true);
+                setAddIsHidden(!addIsHidden);
+              }}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${batchIsHiddenApplied ? (addIsHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600') : 'bg-slate-50 border-slate-200 text-slate-400'}`}
+            >
+              {!batchIsHiddenApplied ? <div className="w-2 h-2 rounded-full bg-slate-300" /> : (addIsHidden ? <EyeOff size={10} /> : <Eye size={10} />)}
+              <span className="text-[8px] font-bold uppercase tracking-widest">{!batchIsHiddenApplied ? '未套用公開狀態' : (addIsHidden ? '設為屏蔽' : '設為公開')}</span>
+            </div>
+        </div>
         <button 
-          onClick={saveBatchEdit}
+          onClick={() => saveBatchEdit(batchIsHiddenApplied)}
           className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
         >
           {isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : null}

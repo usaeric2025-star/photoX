@@ -36,30 +36,28 @@ export const AdminHeader: React.FC<Props> = ({
   const t = translations[appLang as LanguageCode] || translations['zh'];
 
   return (
-    <header className="shrink-0 z-50 bg-[#FDFAF6] px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 border-b border-[#1D3557]/5">
-      <div className="flex items-center justify-between w-full sm:w-auto gap-2 sm:gap-4 min-w-0">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-7 sm:h-10 max-w-[100px] sm:max-w-[180px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
-          ) : (
-            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none shrink-0">Admin</h1>
-          )}
-          
-          {photosCount !== undefined && (
-            <div className="flex items-center gap-1 bg-[#1D3557]/5 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-xl border border-[#1D3557]/10">
-              <span className="text-[10px] sm:text-sm font-black text-[#1D3557] italic">
-                {photosCount}
-              </span>
-              <span className="text-[10px] sm:text-xs font-black text-[#1D3557]/20 italic">/</span>
-              <span className="text-[10px] sm:text-sm font-black text-blue-600 italic">
-                {cloudCount || 0}
-              </span>
-            </div>
-          )}
-        </div>
+    <header className="shrink-0 z-50 bg-[#FDFAF6] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        {settings?.logo_url ? (
+          <img src={settings.logo_url} alt="Logo" className="h-12 sm:h-14 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
+        ) : (
+          <h1 className="text-sm sm:text-lg font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none shrink-0">Admin</h1>
+        )}
+        
+        {photosCount !== undefined && (
+          <div className="flex items-center gap-1 bg-[#1D3557]/5 px-2 py-0.5 rounded-full border border-[#1D3557]/10 shrink-0">
+            <span className="text-[8px] sm:text-[9px] font-black text-[#1D3557]/60 italic">
+              {photosCount}
+            </span>
+            <span className="text-[8px] sm:text-[9px] font-black text-[#1D3557]/20 italic">/</span>
+            <span className="text-[8px] sm:text-[9px] font-black text-blue-600/60 italic">
+              {cloudCount || 0}
+            </span>
+          </div>
+        )}
       </div>
 
-    <div className="flex items-center justify-end w-full sm:w-auto gap-1.5 sm:gap-2 shrink-0">
+    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
       {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
         <button 
           onClick={async () => {

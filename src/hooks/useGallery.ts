@@ -7,9 +7,10 @@ interface UseGalleryProps {
   tags: Tag[];
   dbCategories: DB_Category[];
   columns: 2 | 3 | 5;
+  isAdminMode?: boolean;
 }
 
-export const useGallery = ({ photos, categories, tags, dbCategories, columns }: UseGalleryProps) => {
+export const useGallery = ({ photos, categories, tags, dbCategories, columns, isAdminMode = false }: UseGalleryProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
@@ -39,7 +40,8 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns }: 
   };
 
   const displayPhotos = useMemo(() => {
-    let filtered = photos;
+    let filtered = isAdminMode ? photos : photos.filter(p => !p.isHidden);
+    
     if (selectedCatCode) {
       const activeCat = dbCategories.find(c => c.code === selectedCatCode);
       filtered = filtered.filter(p => 

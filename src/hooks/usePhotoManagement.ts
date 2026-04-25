@@ -27,6 +27,7 @@ export const usePhotoManagement = (
   const [addDimL, setAddDimL] = useState<string>('');
   const [addDimW, setAddDimW] = useState<string>('');
   const [addDimH, setAddDimH] = useState<string>('');
+  const [addIsHidden, setAddIsHidden] = useState(false);
   const [showOtherFields, setShowOtherFields] = useState(false);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export const usePhotoManagement = (
         setAddDimL(photo.dimensions?.length?.toString() || '');
         setAddDimW(photo.dimensions?.width?.toString() || '');
         setAddDimH(photo.dimensions?.height?.toString() || '');
+        setAddIsHidden(!!photo.isHidden);
       }
     }
   }, [editPhotoId, photos]);
@@ -59,6 +61,7 @@ export const usePhotoManagement = (
     setAddDimL('');
     setAddDimW('');
     setAddDimH('');
+    setAddIsHidden(false);
     setShowOtherFields(false);
   };
 
@@ -90,6 +93,7 @@ export const usePhotoManagement = (
             tags: finalTags,
             description: addNote,
             manual_code: addManualCode,
+            isHidden: addIsHidden,
             dimensions: {
               length: parseFloat(addDimL) || 0,
               width: parseFloat(addDimW) || 0,
@@ -126,6 +130,7 @@ export const usePhotoManagement = (
             categoryId: addCatId,
             subcategoryId: addSubId,
             tagIds: addTagIds,
+            isHidden: addIsHidden,
             dimensions: {
               length: parseFloat(addDimL) || 0,
               width: parseFloat(addDimW) || 0,
@@ -155,7 +160,7 @@ export const usePhotoManagement = (
     }
   };
 
-  const saveBatchEdit = async () => {
+  const saveBatchEdit = async (batchIsHiddenApplied: boolean = false) => {
      if (!batchEditIds) return;
      setIsSyncing(true);
      try {
@@ -175,6 +180,7 @@ export const usePhotoManagement = (
                tags: finalTags.length > 0 ? finalTags : p.tags,
                description: addNote || p.description,
                manual_code: addManualCode || p.manual_code,
+               isHidden: batchIsHiddenApplied ? addIsHidden : p.isHidden,
                updatedAt: new Date().toISOString()
              };
           }
@@ -215,6 +221,7 @@ export const usePhotoManagement = (
     addDimL, setAddDimL,
     addDimW, setAddDimW,
     addDimH, setAddDimH,
+    addIsHidden, setAddIsHidden,
     showOtherFields, setShowOtherFields,
     resetAddState,
     saveNewPhoto,

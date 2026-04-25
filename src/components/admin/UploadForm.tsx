@@ -32,6 +32,8 @@ interface UploadFormProps {
   setAddDimW: (val: string) => void;
   addDimH: string;
   setAddDimH: (val: string) => void;
+  addIsHidden: boolean;
+  setAddIsHidden: (h: boolean) => void;
   dbCategories: DB_Category[];
   appLang: string;
   categories: Category[];
@@ -48,6 +50,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   addSubId, setAddSubId, addTagIds, setAddTagIds, addNote, setAddNote,
   addManualCode, setAddManualCode, showOtherFields, setShowOtherFields,
   addDimL, setAddDimL, addDimW, setAddDimW, addDimH, setAddDimH,
+  addIsHidden, setAddIsHidden,
   dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers
 }) => {
   return (
@@ -56,7 +59,16 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <button onClick={onClose} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <X size={24} />
         </button>
-        <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
+        <div className="flex flex-col items-center">
+            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
+            <div 
+              onClick={() => setAddIsHidden(!addIsHidden)}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${addIsHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+            >
+              {addIsHidden ? <EyeOff size={10} /> : <Eye size={10} />}
+              <span className="text-[8px] font-bold uppercase tracking-widest">{addIsHidden ? '公开屏蔽中' : '公开显示中'}</span>
+            </div>
+        </div>
         <div className="flex items-center gap-2">
           {!editPhotoId && newPhotoData && (
             <button 

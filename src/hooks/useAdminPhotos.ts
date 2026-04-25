@@ -30,6 +30,8 @@ export const useAdminPhotos = (
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isBatchAnalyzing, setIsBatchAnalyzing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importTotal, setImportTotal] = useState(0);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   
@@ -232,18 +234,24 @@ export const useAdminPhotos = (
     
     setIsImporting(true);
     setIsSyncing(true); // Global loading overlay
+    setImportTotal(fileArray.length);
+    setImportProgress(0);
     setActiveScreen('home');
 
     const sessionHashes = new Set<string>();
     let successCount = 0;
+    let duplicateCount = 0;
     let failCount = 0;
 
-    const CHUNK_SIZE = 3;
+    const CHUNK_SIZE = 1; // Drop to 1 to save memory on mobile mapping
+    let processed = 0;
     for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
       const chunk = fileArray.slice(i, i + CHUNK_SIZE);
       const newPhotosDraft: Photo[] = [];
       
       for (const file of chunk) {
+        processed++;
+        setImportProgress(processed);
         try {
           // 1. Calculate MD5 from file directly as requested
           const hash = await (async () => {
@@ -255,19 +263,15 @@ export const useAdminPhotos = (
              }
           })();
 
-          // 2. Check local duplicates
+          // 2. Check local duplicates (session and existing)
           const duplicate = photosRef.current.find(p => p.image_hash === hash);
           if (duplicate || sessionHashes.has(hash)) {
+            duplicateCount++;
             continue;
           }
 
-          // 3. Check cloud duplicates if logged in
-          if (user) {
-            const existingInfo = await checkImageHashExists(hash);
-            if (existingInfo) {
-              continue;
-            }
-          }
+          // Note: Cloud duplicate check removed from import stage to improve performance and prevent rate limiting.
+          // It will be handled during the syncPush stage instead.
 
           // 4. Processing
           const rawUri = await new Promise<string>((resolve, reject) => {
@@ -338,13 +342,15 @@ export const useAdminPhotos = (
     setIsSyncing(false);
     setIsImporting(false);
     
-    if (successCount > 0) {
+    if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
+       let msg = `成功處理了 ${successCount} 張照片。`;
+       if (duplicateCount > 0) msg += `\n跳過了 ${duplicateCount} 張重複照片。`;
+       if (failCount > 0) msg += `\n有 ${failCount} 張失敗。`;
+       
        setAlertDialog({ 
-         title: '上传完成', 
-         message: `成功处理了 ${successCount} 张照片。${failCount > 0 ? `有 ${failCount} 张失败。` : ''}` 
+         title: '上傳完成', 
+         message: msg
        });
-    } else if (failCount > 0) {
-       setAlertDialog({ title: '上传失败', message: '照片处理过程中出现错误。' });
     }
   };
   
@@ -367,7 +373,7 @@ export const useAdminPhotos = (
 
   return {
     photos, setPhotos,
-    isAnalyzing, setIsAnalyzing, isBatchAnalyzing, isImporting, batchProgress,
+    isAnalyzing, setIsAnalyzing, isBatchAnalyzing, isImporting, importProgress, importTotal, batchProgress,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto

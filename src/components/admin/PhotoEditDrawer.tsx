@@ -25,6 +25,8 @@ interface Props {
   setAddDimW: (w: string) => void;
   addDimH: string;
   setAddDimH: (h: string) => void;
+  addIsHidden: boolean;
+  setAddIsHidden: (h: boolean) => void;
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
   isSyncing: boolean;
@@ -48,7 +50,16 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <button onClick={props.resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <X size={24} />
         </button>
-        <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
+        <div className="flex flex-col items-center">
+            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
+            <div 
+              onClick={() => props.setAddIsHidden(!props.addIsHidden)}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${props.addIsHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+            >
+              {props.addIsHidden ? <EyeOff size={10} /> : <Eye size={10} />}
+              <span className="text-[8px] font-bold uppercase tracking-widest">{props.addIsHidden ? '公开屏蔽中' : '公开显示中'}</span>
+            </div>
+        </div>
         <button 
           onClick={props.saveNewPhoto}
           className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-2 ${props.isSyncing ? 'opacity-50 pointer-events-none' : ''}`}

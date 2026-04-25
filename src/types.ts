@@ -57,6 +57,7 @@ export interface Photo {
   updatedAt?: string;
   groupId?: string | null;
   isAnalyzing?: boolean;
+  isHidden?: boolean;
   userId?: string;
   // UI legacy fields mapping if needed
   uri?: string; // For local preview

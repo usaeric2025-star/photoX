@@ -129,6 +129,7 @@ export default function AdminView() {
     photos, setPhotos,
     isAnalyzing, setIsAnalyzing,
     isBatchAnalyzing, batchProgress,
+    isImporting, importProgress, importTotal,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
@@ -193,6 +194,7 @@ export default function AdminView() {
   const [syncAction, setSyncAction] = useState('idle');
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
 
   const handleGroupPhotos = (ids: string[]) => {
     if (ids.length < 2) return;
@@ -296,9 +298,17 @@ export default function AdminView() {
 
   const saveSettings = async (s: any) => { 
     setSettings(s); 
-    // Save to local storage for persistence across reloads
     await saveData('product_settings', s);
-    // Removed automatic cloud save to respect 'no auto-backup' request
+    if (user) {
+      setTimeout(() => {
+        saveSettingsCloud({
+          ...s,
+          categories,
+          tags,
+          manufacturers
+        }).catch(console.error);
+      }, 0);
+    }
   };
 
   const performPushSync = async () => {
@@ -440,6 +450,7 @@ export default function AdminView() {
               addName={addName} setAddName={setAddName} addCatId={addCatId} setAddCatId={setAddCatId}
               addSubId={addSubId} setAddSubId={setAddSubId} addTagIds={addTagIds} setAddTagIds={setAddTagIds}
               addNote={addNote} setAddNote={setAddNote} addManualCode={addManualCode} setAddManualCode={setAddManualCode}
+              addIsHidden={addIsHidden} setAddIsHidden={setAddIsHidden}
               addDimL={addDimL} setAddDimL={setAddDimL} addDimW={addDimW} setAddDimW={setAddDimW}
               addDimH={addDimH} setAddDimH={setAddDimH} showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
               isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
@@ -554,7 +565,7 @@ export default function AdminView() {
       {errorContent}
       {batchEditIds && (
         <BatchEditScreen 
-          resetAddState={resetAddState}
+          resetAddState={() => { resetAddState(); setBatchIsHiddenApplied(false); }}
           isSyncing={isSyncing}
           saveBatchEdit={saveBatchEdit}
           batchEditIds={batchEditIds}
@@ -573,6 +584,10 @@ export default function AdminView() {
           setAddTagIds={setAddTagIds}
           addNote={addNote}
           setAddNote={setAddNote}
+          addIsHidden={addIsHidden}
+          setAddIsHidden={setAddIsHidden}
+          batchIsHiddenApplied={batchIsHiddenApplied}
+          setBatchIsHiddenApplied={setBatchIsHiddenApplied}
           showOtherFields={showOtherFields}
           setShowOtherFields={setShowOtherFields}
           addManualCode={addManualCode}
@@ -617,6 +632,8 @@ export default function AdminView() {
           setAddDimW={setAddDimW}
           addDimH={addDimH}
           setAddDimH={setAddDimH}
+          addIsHidden={addIsHidden}
+          setAddIsHidden={setAddIsHidden}
           dbCategories={dbCategories}
           appLang={appLang}
           categories={categories}
@@ -671,14 +688,33 @@ export default function AdminView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2000] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center"
+            className="fixed inset-0 z-[2000] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center p-6"
           >
             <div className="w-12 h-12 relative">
                <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
                <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin"></div>
             </div>
-            <p className="mt-6 text-sm font-bold text-slate-800 tracking-tight">正在处理中...</p>
-            <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">请勿关闭页面</p>
+            
+            {isImporting && importTotal > 0 ? (
+              <div className="w-full max-w-xs mt-8">
+                <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
+                  <span>上传进度</span>
+                  <span>{importProgress} / {importTotal}</span>
+                </div>
+                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-600 transition-all duration-300 ease-out" 
+                    style={{ width: `${Math.round((importProgress / importTotal) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 text-center">
+                <p className="text-sm font-bold text-slate-800 tracking-tight">正在处理中...</p>
+                <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">请勿关闭页面</p>
+              </div>
+            )}
+            
           </motion.div>
         )}
       </AnimatePresence>
