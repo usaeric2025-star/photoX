@@ -114,7 +114,16 @@ export const analyzeProductPhoto = async (
       max_tokens: 300,
     };
 
-    const fetchResponse = await fetch(`${baseURL}${baseURL.endsWith('/') ? '' : '/'}chat/completions`, {
+    const fetchUrl = `${baseURL}${baseURL.endsWith('/') ? '' : '/'}chat/completions`;
+    
+    console.log("DEBUG: Sending AI Request", {
+        url: fetchUrl,
+        model: modelName,
+        headers: Object.keys(headers),
+        imageSize: base64Image.length
+    });
+
+    const fetchResponse = await fetch(fetchUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(requestBody)
@@ -127,14 +136,14 @@ export const analyzeProductPhoto = async (
       } catch (e) {
         errorData = await fetchResponse.text();
       }
-      throw { status: fetchResponse.status, response: { data: errorData } };
+      throw { status: fetchResponse.status, url: fetchUrl, response: { data: errorData } };
     }
 
     const data = await fetchResponse.json();
     const textOutput = data.choices[0]?.message?.content;
     
     if (!textOutput) {
-      throw new Error('AI 未回傳分析結果');
+      throw new Error(`AI 未回傳分析結果 (URL: ${fetchUrl})`);
     }
 
     // Safely extract JSON in case the model wraps it in markdown blocks
@@ -194,6 +203,7 @@ export const analyzeProductPhoto = async (
   } catch (error: any) {
     console.error("GeminiService API Error:", error);
     const status = error.status || error.response?.status || 500;
+    const url = error.url || 'unknown';
     
     // Attempt to stringify the error object if it's not just a string, to give more context
     let errorDetail = '';
@@ -204,7 +214,7 @@ export const analyzeProductPhoto = async (
     }
 
     // Safely extract the most descriptive error message possible
-    let errorMsg = `API 請求發送失敗 (status: ${status})。詳細錯誤: ${errorDetail}`;
+    let errorMsg = `API 請求發送失敗 (status: ${status}, url: ${url})。詳細錯誤: ${errorDetail}`;
     
     if (error.response?.data?.error?.message) {
         errorMsg = error.response.data.error.message;
