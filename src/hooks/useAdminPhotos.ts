@@ -39,10 +39,22 @@ export const useAdminPhotos = (
   
   const [isInitializing, setIsInitializing] = useState(true);
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
+  const currentAnalysisController = useRef<AbortController | null>(null);
+
+  const abortAnalysis = () => {
+    if (currentAnalysisController.current) {
+      currentAnalysisController.current.abort();
+      currentAnalysisController.current = null;
+      setAiDebugInfo({ step: '已取消', message: '用戶中斷了 AI 識別任务' });
+      setTimeout(() => setAiDebugInfo(null), 3000);
+      setIsAnalyzing(false);
+    }
+  };
 
   useEffect(() => {
     photosRef.current = photos;
     if (!isInitializing) {
+      console.log("DEBUG: Saving to IndexedDB, photo count:", photos.length);
       saveData('product_photos', photos);
     }
   }, [photos, isInitializing]);
@@ -140,22 +152,17 @@ export const useAdminPhotos = (
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-          const result = await analyzeProductPhoto(photo.uri!, categories, tags, effectiveKey, aiProvider, customModel);
+          const result = await analyzeProductPhoto(photo.uri!, dbCategories, tags, manufacturers, effectiveKey, aiProvider, customModel);
           
           let finalCatId = result.categoryId || null;
           let finalSubId = result.subcategoryId || null;
           let finalTagIds = result.tagIds || [];
           
-          if (result.newCategoryName && !result.categoryId) {
-            const newCat = { id: crypto.randomUUID(), name: result.newCategoryName, aliases: [], subcategories: [] };
-            setCategories(prev => [...prev, newCat]);
-            finalCatId = newCat.id;
-          } else if (result.newSubCategoryName && !result.subcategoryId && finalCatId) {
-             const newSubId = crypto.randomUUID();
-             setCategories(prev => prev.map(c => c.id === finalCatId ? {
-               ...c, subcategories: [...c.subcategories, { id: newSubId, name: result.newSubCategoryName, aliases: []}]
-             } : c));
-             finalSubId = newSubId;
+          if (result.newSubCategoryName && !result.subcategoryId) {
+             const newMfrId = crypto.randomUUID();
+             const newMfr = { id: newMfrId, name: result.newSubCategoryName, aliases: [] };
+             setManufacturers(prev => [...prev, newMfr]);
+             finalSubId = newMfrId;
           }
           
           if (result.newTagName) {
@@ -184,25 +191,39 @@ export const useAdminPhotos = (
             finalTagIds = Array.from(new Set([...finalTagIds, ...newTagIds]));
           }
 
-          setPhotos(prev => prev.map(p => {
-            if (p.id !== photo.id) return p;
+          setPhotos(prev => {
+            const next = prev.map(p => {
+              if (p.id !== photo.id) return p;
 
-            const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-            const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
+              const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+              const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
 
-            return { 
-              ...p, 
-              categoryId: p.categoryId || finalCatId, 
-              subcategoryId: p.subcategoryId || finalSubId, 
-              tagIds: mergedTagIds,
-              name: p.name || result.name || null,
-              category: p.category || categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || null,
-              sub_category: p.sub_category || categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || null,
-              tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
-              dimensions: p.dimensions || result.dimensions || null,
-              isAnalyzing: false 
-            };
-          }));
+              const dbCatObj = dbCategories.find(c => c.code === finalCatId);
+
+              // Use newCategoryName directly as category if no code matches
+              const updatedPhoto: Photo = { 
+                ...p, 
+                categoryId: p.categoryId && p.categoryId !== 'uncategorized' ? p.categoryId : finalCatId, 
+                subcategoryId: p.subcategoryId || finalSubId, 
+                tagIds: mergedTagIds,
+                name: p.name && p.name !== 'Furniture' ? p.name : (result.name || null),
+                category: p.category && p.category !== 'Uncategorized' ? p.category : (dbCatObj?.zh || result.newCategoryName || null),
+                sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
+                tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
+                dimensions: p.dimensions || result.dimensions || null,
+                isAnalyzing: false 
+              };
+
+              // Backup to cloud immediately
+              if (user) {
+                savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Batch backup failed for photo:", p.id, e));
+              }
+
+              return updatedPhoto;
+            });
+            photosRef.current = next;
+            return next;
+          });
           successCount++;
         } catch (err: any) {
           setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
@@ -230,6 +251,10 @@ export const useAdminPhotos = (
     setIsAnalyzing(true);
     setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
     
+    const controller = new AbortController();
+    currentAnalysisController.current = controller;
+    const signal = controller.signal;
+    
     try {
       const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
       setAiDebugInfo({ step: '检查金钥', message: `Key 读取: ${apiKey ? apiKey.substring(0, 5) + '...' : '空'}` });
@@ -237,10 +262,50 @@ export const useAdminPhotos = (
 
       setAiDebugInfo({ step: '发送请求', message: `图片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
       
-      const result = await analyzeProductPhoto(imageData, categories, tags, geminiApiKey, aiProvider, customModel, catId);
+      const result = await analyzeProductPhoto(imageData, dbCategories, tags, manufacturers, geminiApiKey, aiProvider, customModel, catId, signal);
       
+      if (signal.aborted) throw new Error('Aborted');
+
       setAiDebugInfo({ step: '完成', message: 'AI 识别成功' });
-      setTimeout(() => setAiDebugInfo(null), 3000);
+      setTimeout(() => {
+        if (currentAnalysisController.current === controller) {
+          setAiDebugInfo(null);
+          currentAnalysisController.current = null;
+        }
+      }, 3000);
+
+      // Same manufacturer/tag ID creation logic as batch if new ones are suggested
+      if (result.newSubCategoryName && !result.subcategoryId) {
+        const newMfrId = crypto.randomUUID();
+        setManufacturers(prev => [...prev, { id: newMfrId, name: result.newSubCategoryName, aliases: [] }]);
+        result.subcategoryId = newMfrId;
+      }
+      
+      let finalTagIdsFromAi = result.tagIds || [];
+      if (result.newTagName) {
+        const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+        const newTagsToAdd: Tag[] = [];
+        const newTagIds: string[] = [];
+        
+        newNames.forEach((name: string) => {
+          const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
+          if (existingTag) {
+            newTagIds.push(existingTag.id);
+          } else {
+            const id = crypto.randomUUID();
+            newTagsToAdd.push({ id, name, aliases: [] });
+            newTagIds.push(id);
+          }
+        });
+        
+        if (newTagsToAdd.length > 0) {
+          setTags(prev => {
+            const filtered = newTagsToAdd.filter(nt => !prev.some(p => p.name.toLowerCase() === nt.name.toLowerCase()));
+            return [...prev, ...filtered];
+          });
+        }
+        finalTagIdsFromAi = Array.from(new Set([...finalTagIdsFromAi, ...newTagIds]));
+      }
 
       if (editPhotoId) {
         setPhotos(prev => prev.map(p => {
@@ -250,22 +315,32 @@ export const useAdminPhotos = (
           let finalSubId = result.subcategoryId || p.subcategoryId;
           
           const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-          const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...(result.tagIds || [])]));
+          const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
 
-          return { 
+          const dbCatObj = dbCategories.find(c => c.code === finalCatId);
+
+          const updatedPhoto = { 
             ...p, 
             categoryId: finalCatId,
             subcategoryId: finalSubId,
             tagIds: mergedTagIds,
             name: p.name || result.name || null,
-            category: p.category || categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || null,
-            sub_category: p.sub_category || categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || null,
+            category: p.category || dbCatObj?.zh || result.newCategoryName || null,
+            sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
             tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
             dimensions: p.dimensions || result.dimensions || null,
             isAnalyzing: false 
           };
+          
+          if (user) {
+            savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Immediate backup failed:", e));
+          }
+          
+          return updatedPhoto;
         }));
       }
+      // Populate form state properties to return them
+      result.tagIds = finalTagIdsFromAi;
       return result;
     } catch (err: any) {
       console.error("Single AI analysis failed:", err);
@@ -349,14 +424,14 @@ export const useAdminPhotos = (
             item_code: generateItemCode(),
             manual_code: '',
             image_hash: hash,
-            name: file.name.split('.')[0] || 'Furniture',
-            category: 'Uncategorized',
+            name: file.name.split('.')[0] || '未命名产品',
+            category: '未分类',
             sub_category: '',
             tags: [],
             description: '',
             image_url: '',
             uri: compressedUri,
-            categoryId: 'uncategorized',
+            categoryId: null,
             subcategoryId: null,
             tagIds: [],
             createdAt: new Date().toISOString(),
@@ -370,8 +445,36 @@ export const useAdminPhotos = (
           if (useAi) {
             (async (targetPhoto: Photo) => {
               try {
-                const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, geminiApiKey, aiProvider, customModel);
-                setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false, ...result } : p));
+                const result = await analyzeProductPhoto(targetPhoto.uri!, dbCategories, tags, manufacturers, geminiApiKey, aiProvider, customModel);
+                
+                let finalCatId = result.categoryId || null;
+                let finalSubId = result.subcategoryId || null;
+                
+                // For simplicity in background processing, new tags/categories are skipped here if they lack IDs
+                // Or we can just populate the text directly.
+
+                const dbCatObj = dbCategories.find(c => c.code === finalCatId);
+
+                setPhotos(prev => prev.map(p => {
+                   if (p.id !== photoId) return p;
+                   const updatedPhoto = {
+                     ...p,
+                     isAnalyzing: false,
+                     name: result.name || p.name,
+                     categoryId: finalCatId,
+                     subcategoryId: finalSubId,
+                     tagIds: result.tagIds || [],
+                     category: dbCatObj?.zh || result.newCategoryName || '未分类',
+                     sub_category: manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || '',
+                     dimensions: result.dimensions || p.dimensions
+                   };
+                   
+                   if (user) {
+                     savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Process queue backup failed:", e));
+                   }
+                   
+                   return updatedPhoto;
+                }));
               } catch (err: any) {
                 setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false } : p));
               }
@@ -428,7 +531,7 @@ export const useAdminPhotos = (
   return {
     photos, setPhotos,
     isAnalyzing, setIsAnalyzing, isBatchAnalyzing, isImporting, importProgress, importTotal, batchProgress,
-    aiDebugInfo,
+    aiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto

@@ -100,7 +100,7 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
       }
 
       ctx.drawImage(img, 0, 0, width, height);
-      const result = canvas.toDataURL('image/webp', quality);
+      const result = canvas.toDataURL('image/jpeg', quality);
       
       // Free memory
       canvas.width = 0;
@@ -133,7 +133,7 @@ export const uploadImages = async (userId: string, photoId: string, base64Data: 
       const { error: storageError } = await supabase.storage
         .from(BUCKET_NAME)
         .upload(fileName, blob, {
-          contentType: 'image/webp',
+          contentType: 'image/jpeg',
           upsert: true
         });
 

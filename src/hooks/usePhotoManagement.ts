@@ -67,7 +67,6 @@ export const usePhotoManagement = (
   };
 
   const saveNewPhoto = async () => {
-    // Basic validation only for new photos without any info
     if (!addCatId && !addName && !editPhotoId && !newPhotoData) {
        setAlertDialog({ title: '提示', message: '請填寫基本資訊或選擇分類' });
        return;
@@ -106,14 +105,10 @@ export const usePhotoManagement = (
 
           setPhotos(prev => (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p));
           
-          /* 
-          Removing automatic cloud sync on every save to favor manual control as requested.
           if (user) {
-             await savePhotoToCloud(user.id, updatedPhoto);
+             savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Update sync failed:", e));
           }
-          */
        } else if (newPhotoData) {
-          // Creating a new photo item from base64 data
           const dbId = crypto.randomUUID();
           const newPhoto: Photo = {
             id: dbId,
@@ -121,8 +116,8 @@ export const usePhotoManagement = (
             item_code: generateItemCode(),
             manual_code: addManualCode,
             image_hash: calculateMD5(newPhotoData),
-            name: addName || '未命名家具',
-            category: categoryName || '未分類',
+            name: addName || '未命名产品',
+            category: categoryName || '未分类',
             sub_category: manufacturerName,
             tags: finalTags,
             description: addNote,
@@ -144,12 +139,9 @@ export const usePhotoManagement = (
 
           setPhotos(prev => [newPhoto, ...(prev as Photo[])]);
           
-          /* 
-          Removing automatic cloud sync on every save to favor manual control as requested.
           if (user) {
-            await savePhotoToCloud(user.id, newPhoto);
+            savePhotoToCloud(user.id, newPhoto).catch(e => console.error("New photo sync failed:", e));
           }
-          */
        }
        
        resetAddState();
@@ -169,36 +161,36 @@ export const usePhotoManagement = (
         const categoryName = dbCategories.find(c => c.code === addCatId)?.zh || '';
         const manufacturerName = manufacturers.find(m => m.id === addSubId)?.name || '';
 
-        const updatedPhotos = photos.map(p => {
-          if (batchEditIds.includes(p.id)) {
-             return {
-               ...p,
-               categoryId: addCatId || p.categoryId,
-               subcategoryId: addSubId || p.subcategoryId,
-               tagIds: addTagIds.length > 0 ? addTagIds : p.tagIds,
-               category: categoryName || p.category,
-               sub_category: manufacturerName || p.sub_category,
-               tags: finalTags.length > 0 ? finalTags : p.tags,
-               description: addNote || p.description,
-               manual_code: addManualCode || p.manual_code,
-               isHidden: batchIsHiddenApplied ? addIsHidden : p.isHidden,
-               updatedAt: new Date().toISOString()
-             };
-          }
-          return p;
+        const updatedPhotosList: Photo[] = [];
+        setPhotos(prev => {
+          const next = prev.map(p => {
+            if (batchEditIds.includes(p.id)) {
+               const updated = {
+                 ...p,
+                 categoryId: addCatId || p.categoryId,
+                 subcategoryId: addSubId || p.subcategoryId,
+                 tagIds: addTagIds.length > 0 ? addTagIds : p.tagIds,
+                 category: categoryName || p.category,
+                 sub_category: manufacturerName || p.sub_category,
+                 tags: finalTags.length > 0 ? finalTags : p.tags,
+                 description: addNote || p.description,
+                 manual_code: addManualCode || p.manual_code,
+                 isHidden: batchIsHiddenApplied ? addIsHidden : p.isHidden,
+                 updatedAt: new Date().toISOString()
+               };
+               updatedPhotosList.push(updated);
+               return updated;
+            }
+            return p;
+          });
+          return next;
         });
-
-        setPhotos(updatedPhotos);
         
-        /* 
-        Removing automatic cloud sync on every save to favor manual control as requested.
         if (user) {
-           for (const id of batchEditIds) {
-              const photo = updatedPhotos.find(p => p.id === id);
-              if (photo) await savePhotoToCloud(user.id, photo);
+           for (const photo of updatedPhotosList) {
+              savePhotoToCloud(user.id, photo).catch(e => console.error("Batch sync failed for", photo.id, e));
            }
         }
-        */
         
         resetAddState();
         setActiveScreen('home');

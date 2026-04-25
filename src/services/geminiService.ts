@@ -1,50 +1,87 @@
 import { Category, Tag } from '../types';
 
-const resizeBase64Image = async (base64Str: string, maxWidth: number, maxHeight: number): Promise<string> => {
-  // Use a Blob/OffscreenCanvas approach or simply fetch the data if it is a URL.
-  // Since we already have a data URL, we can attempt to fetch it and turn it into a Blob if needed.
-  // Actually, for simplicity and to avoid Canvas, let's bypass resizing if it's already a data: URL, 
-  // or use the browser's native image loading with crossOrigin if URL.
-  
-  // Revised approach: Bypass canvas if not strictly required, or assume the source is OK.
-  // If it's still failing, it's likely the canvas.toDataURL call itself. 
-  // For now, let's just return the original base64 to fix the AI_FAIL|500 error first.
-  return base64Str;
+const convertToJpegAndResize = async (base64Str: string, maxWidth: number = 1000): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    // If it's not a data URL, we can't easily canvas-convert it without fetching, assume it's a valid remote URL
+    if (!base64Str.startsWith('data:')) {
+      resolve(base64Str);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(base64Str); // Fallback
+        return;
+      }
+      // Fill white background in case of transparency
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Force JPEG conversion
+      const jpegBase64 = canvas.toDataURL('image/jpeg', 0.85);
+      resolve(jpegBase64);
+    };
+    img.onerror = () => reject(new Error('Image conversion failed'));
+    img.src = base64Str;
+  });
 };
 
 export const analyzeProductPhoto = async (
   base64Image: string,
-  categories: Category[],
+  categories: any[], // Now taking dbCategories
   tags: Tag[],
+  manufacturers: any[], // New parameter
   customApiKey?: string,
   provider: string = 'auto',
   customModel?: string,
-  targetCategoryId?: string | null
+  targetCategoryId?: string | null,
+  signal?: AbortSignal
 ) => {
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
-  console.log("DEBUG: API Key verification (first 5 chars):", apiKey ? apiKey.substring(0, 5) : "UNDEFINED");
   if (!apiKey) {
     throw new Error('請先在管理設定中設定 API 金鑰');
   }
 
-  // Pre-process image: Resize if too large
-  let processedBase64Image = base64Image;
-  // Canvas-based resizing is removed to avoid cross-origin issues.
-  
   // Use OpenRouter endpoint
   const baseURL = 'https://openrouter.ai/api/v1';
   let modelName = customModel || 'google/gemini-2.5-flash-lite-preview-09-2025';
+  
+  // Ensure the model name includes the provider prefix if needed, openrouter models usually look like google/gemini-...
+  if (!modelName.includes('/')) {
+     modelName = 'google/' + modelName;
+  }
+  
+  // Convert WebP / large images to optimal JPEG
+  let processedBase64Image = base64Image;
+  try {
+     processedBase64Image = await convertToJpegAndResize(base64Image, 1000);
+  } catch (e) {
+     console.warn('Image conversion failed, falling back to original image', e);
+  }
 
 
   const categoriesJson = categories.map(c => ({
-    id: c.id,
-    name: c.name,
-    subcategories: (c.subcategories || []).map(s => ({ id: s.id, name: s.name }))
+    id: c.code, // dbCategories use .code
+    name: c.zh, // Use chinese mapping
+    enName: c.en
   }));
+  const manufacturersJson = manufacturers.map(m => ({ id: m.id, name: m.name }));
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
 
   const categoryContext = targetCategoryId 
-    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.id === targetCategoryId)?.name} (ID: ${targetCategoryId}。請在此分類下進行識別並找出最合適的子分類。` 
+    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.code === targetCategoryId)?.zh} (ID: ${targetCategoryId}。請在此分類下進行識別。` 
     : `請從以下分類中選擇最合適的一個。`;
 
   const promptText = `
@@ -52,11 +89,12 @@ export const analyzeProductPhoto = async (
   
   ${categoryContext}
   
-  1. 分類 (Classification)：從「現有分類」中選擇最合適的一個。${targetCategoryId ? '請務必選擇 ID 為 ' + targetCategoryId + ' 的分類。' : '這是首要任務，請務必精準匹配。如果產品類型完全不在現有清單中，才在 newCategoryName 中建議一個新分類名。'}
-  2. 標籤 (Tags)：請提供「剛好 2 個」最能描述該家具產品的標籤。請務必提供，不能少於 2 個。
+  1. 分類 (Category)：從「現有分類」中選擇最合適的一個，回傳其 ID (即 code)。${targetCategoryId ? '請務必選擇 ID 為 ' + targetCategoryId + ' 的分類。' : '這是首要任務，請務必精準匹配。如果完全不符合，再到 newCategoryName 建議。'}
+  2. 廠商 (Manufacturer/SubCategory)：從「現有廠商」中選擇最合適的，回傳其 ID 放入 subcategoryId。若無，給 null。
+  3. 標籤 (Tags)：請提供「剛好 2 個」最能描述該家具產品的標籤。請務必提供，不能少於 2 個。
      - 優先從「現有標籤」中挑選符合的標籤。
      - 若現有標籤不足以描述產品特色，請在 newTagName 中建議新的標籤（總數湊齊 2 個，以逗號隔開）。請確保建議的標籤名稱不與現有標籤重複。
-  3. 產品名稱 (Name)：請識別照片中的家具並為其取一個合適的產品名稱。請務必提供名稱，且「僅能使用英文 (English)」。絕對不要使用中文字符。如果圖片中沒有明確名稱，請根據家具的特徵（例如：Modern Wood Dining Table）自動生成一個描述性的名稱。
+  4. 產品名稱 (Name)：請識別照片中的家具並為其取一個合適的產品名稱。請務必提供名稱，且「僅能使用英文 (English)」。絕對不要使用中文字符。如果圖片中沒有明確名稱，請根據家具的特徵（例如：Modern Wood Dining Table）自動生成一個描述性的名稱。
   
   重要原則：
   - 完整性要求：產品名稱、分類、以及 2 個標籤都是「強制性」的。如果缺乏其中任何一項，將被視為無效回傳。
@@ -67,18 +105,22 @@ export const analyzeProductPhoto = async (
   現有分類：
   ${JSON.stringify(categoriesJson)}
   
+  現有廠商：
+  ${JSON.stringify(manufacturersJson)}
+  
   現有標籤：
   ${JSON.stringify(tagsJson)}
   
-  請回傳 JSON 格式：
+  請嚴格按照以下 JSON 格式回傳，不要包含任何 markdown 語法 (不要加 \`\`\`json)：
   {
     "name": "Product Name (Only English)",
-    "categoryId": "string (若匹配現有分類) 或 null",
-    "newCategoryName": "string (若無匹配現有分類則填寫建議名稱) 或 null",
-    "subcategoryId": "string or null",
+    "categoryId": "string (即符合的分類 ID/code) 或 null",
+    "subcategoryId": "string (符合的廠商 ID) 或 null",
     "tagIds": ["string array, 現有標籤 ID"],
     "newTagName": "建議的新標籤名 (若現有標籤不足 2 個則提供建議，以逗號隔開) 或 null",
-    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" } // 未知尺寸時回傳 null
+    "newCategoryName": "string (若無匹配現有分類則填寫建議名稱) 或 null",
+    "newSubCategoryName": null,
+    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" }
   }
   `;
 
@@ -116,7 +158,9 @@ export const analyzeProductPhoto = async (
     };
 
 
-    const fetchUrl = `${baseURL}${baseURL.endsWith('/') ? '' : '/'}chat/completions`;
+    const fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    
+    console.log("DEBUG: Final fetch URL is:", fetchUrl);
     
     console.log("DEBUG: Sending AI Request", {
         url: fetchUrl,
@@ -128,7 +172,8 @@ export const analyzeProductPhoto = async (
     const fetchResponse = await fetch(fetchUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
+      signal
     });
 
     if (!fetchResponse.ok) {
@@ -245,6 +290,7 @@ export const testAiConnection = async (apiKey: string, provider: string, customM
     // Very minimal payload to test the key
     await analyzeProductPhoto(
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAAAgAB35oT2AAAAABJRU5ErkJggg==',
+      [],
       [],
       [],
       apiKey,

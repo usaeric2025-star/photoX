@@ -474,6 +474,7 @@ export default function AdminView() {
                 });
               }}
               editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
+              abortAnalysis={abortAnalysis}
           />
       )}
       
@@ -683,6 +684,7 @@ export default function AdminView() {
           quickAddTag={quickAddTag}
           quickAddManufacturer={quickAddManufacturer}
           manufacturers={manufacturers}
+          abortAnalysis={abortAnalysis}
         />
       )}
 

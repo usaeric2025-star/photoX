@@ -42,6 +42,8 @@ interface Props {
   onDelete?: (id: string) => void;
   newPhotoData?: string | null;
   aiDebugInfo: { step: string; message: string; error?: string } | null;
+  isAnalyzing?: boolean;
+  abortAnalysis?: () => void;
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
@@ -52,9 +54,17 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           <X size={24} />
         </button>
         {props.aiDebugInfo && (
-          <div className="bg-yellow-200 text-black p-4 rounded-xl text-xs font-mono">
+          <div className="bg-yellow-50 border border-yellow-200 text-black p-4 rounded-xl text-xs font-mono relative">
             <p><strong>[{props.aiDebugInfo.step}]</strong> {props.aiDebugInfo.message}</p>
             {props.aiDebugInfo.error && <p className="text-red-700">错误: {props.aiDebugInfo.error}</p>}
+            {props.isAnalyzing && props.abortAnalysis && (
+              <button 
+                onClick={props.abortAnalysis}
+                className="mt-2 text-[8px] bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold uppercase tracking-widest hover:bg-red-200 transition-colors"
+              >
+                取消识别 (Cancel)
+              </button>
+            )}
           </div>
         )}
         <div className="flex flex-col items-center">
@@ -84,9 +94,19 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             </div>
           </div>
         )}
+
+        <section className="space-y-3">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品编号 (Item Code)</h3>
+          <input type="text" placeholder="输入产品编号 (如: SK-2024)..." value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 (Product Name)</h3>
+          <input type="text" placeholder="输入产品名称..." value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
+        </section>
         
         <div className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">主分类 *</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品目录 (Category) *</h3>
             <div className="grid grid-cols-2 gap-3">
             {props.dbCategories.map(cat => (
                 <button 
@@ -103,7 +123,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 (Manufacturer)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商名称 (Manufacturer)</h3>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
             {props.manufacturers.map((mfr: any) => (
@@ -120,7 +140,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </section>
 
           <section className="space-y-4">
-             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">標籤 (Tags)</h3>
+             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品标签 (Tags)</h3>
              <div className="flex flex-wrap gap-2 p-1">
                 {props.tags.map(tag => (
                   <button 
@@ -136,17 +156,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           </section>
 
           <section className="space-y-3">
-             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">基本信息</h3>
-             <input type="text" placeholder="产品名称 (英文/马來文)" value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
-             <textarea placeholder="备注" value={props.addNote} onChange={e => props.setAddNote(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
-          </section>
-
-          <section className="space-y-3">
              <button 
                onClick={() => props.setShowOtherFields(!props.showOtherFields)}
                className="w-full flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-700 active:scale-[0.98] transition-all"
              >
-               <span>其他详细信息 (尺寸、手动ID)</span>
+               <span>其他详细信息 (尺寸、备注、手动ID)</span>
                <div className={`transition-transform ${props.showOtherFields ? 'rotate-90' : ''}`}>
                   <ChevronRight size={16} />
                </div>
@@ -154,12 +168,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
              
              {props.showOtherFields && (
                <div className="space-y-3 pt-2">
-                  <input type="text" placeholder="手动 ID (例如: SK-2024)" value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 bg-white" />
                   <div className="grid grid-cols-3 gap-2">
-                    <input type="number" placeholder="长 cm" value={props.addDimL} onChange={e => props.setAddDimL(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white" />
-                    <input type="number" placeholder="宽 cm" value={props.addDimW} onChange={e => props.setAddDimW(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white" />
-                    <input type="number" placeholder="高 cm" value={props.addDimH} onChange={e => props.setAddDimH(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white" />
+                    <input type="number" placeholder="长 cm" value={props.addDimL} onChange={e => props.setAddDimL(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
+                    <input type="number" placeholder="宽 cm" value={props.addDimW} onChange={e => props.setAddDimW(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
+                    <input type="number" placeholder="高 cm" value={props.addDimH} onChange={e => props.setAddDimH(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
                   </div>
+                  <textarea placeholder="备注信息..." value={props.addNote} onChange={e => props.setAddNote(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
                </div>
              )}
           </section>

@@ -42,6 +42,8 @@ interface UploadFormProps {
   quickAddTag: () => void;
   quickAddManufacturer: () => void;
   manufacturers: any[];
+  aiDebugInfo: { step: string; message: string; error?: string } | null;
+  abortAnalysis?: () => void;
 }
 
 export const UploadForm: React.FC<UploadFormProps> = ({
@@ -51,7 +53,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   addManualCode, setAddManualCode, showOtherFields, setShowOtherFields,
   addDimL, setAddDimL, addDimW, setAddDimW, addDimH, setAddDimH,
   addIsHidden, setAddIsHidden,
-  dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers
+  dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
+  aiDebugInfo, abortAnalysis
 }) => {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -103,13 +106,41 @@ export const UploadForm: React.FC<UploadFormProps> = ({
       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
         <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white">
           {newPhotoData && <img src={newPhotoData} className="max-w-full max-h-full object-contain" alt="New" />}
+          {isAnalyzing && (
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-20 rounded-[36px]">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-center px-4">
+                <p className="text-white font-bold text-sm">正在识别中 (AI Analyzing)...</p>
+                {aiDebugInfo && <p className="text-blue-300 text-[10px] mt-1 uppercase tracking-widest">{aiDebugInfo.step}: {aiDebugInfo.message}</p>}
+              </div>
+              {abortAnalysis && (
+                <button 
+                  onClick={abortAnalysis}
+                  className="mt-2 px-6 py-2 bg-red-500 text-white text-[10px] font-bold rounded-full hover:bg-red-600 transition-all uppercase tracking-widest shadow-lg"
+                >
+                  取消识别 (Skip/Cancel)
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">家具名稱 (AI 自動或手寫)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品编号 (Item Code)</h3>
             <input 
               type="text" 
-              placeholder="輸入家具名稱..."
+              placeholder="输入产品编号 (如: SK-2024)..."
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              value={addManualCode}
+              onChange={(e) => setAddManualCode(e.target.value)}
+            />
+        </section>
+
+        <section className="space-y-2">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 (Product Name)</h3>
+            <input 
+              type="text" 
+              placeholder="输入产品名称..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
               value={addName}
               onChange={(e) => setAddName(e.target.value)}
@@ -117,7 +148,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </section>
 
         <section className="space-y-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">選擇主分類 *</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品目录 (Category) *</h3>
           <div className="grid grid-cols-2 gap-3">
             {dbCategories.map(cat => (
               <button 
@@ -134,7 +165,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
 
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">廠商 (Manufacturer)</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商名称 (Manufacturer)</h3>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
             {manufacturers?.map(mfr => (
@@ -153,7 +184,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </section>
 
         <section className="space-y-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">風格標籤</h3>
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品标签 (Tags)</h3>
           <div className="flex flex-wrap gap-2 p-1">
             {tags.map(tag => (
               <button 
@@ -165,19 +196,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               </button>
             ))}
             <button onClick={quickAddTag} className="px-4 py-2 rounded-full border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-2 font-bold hover:border-slate-400 hover:text-slate-600 active:scale-95 transition-all">
-              <Plus size={14} /> 新增自定義
+              <Plus size={14} /> 新增
             </button>
           </div>
-        </section>
-
-        <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">產品說明 / 備註</h3>
-            <textarea 
-              placeholder="輸入產品特色、說明或注意事項..."
-              className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
-              value={addNote}
-              onChange={(e) => setAddNote(e.target.value)}
-            />
         </section>
 
         <section className="space-y-4">
@@ -189,7 +210,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`}>
                 <ChevronRight size={16} />
               </div>
-              <span>其他詳細資訊 (編號、尺寸)</span>
+              <span>其他信息 (尺寸、说明、备注)</span>
             </div>
             <div className="w-2 h-2 rounded-full bg-slate-200"></div>
           </button>
@@ -202,19 +223,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden space-y-4 pt-2"
               >
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">產品編號</label>
-                  <input 
-                    type="text" 
-                    placeholder="輸入編號 (例如: SK-2024)..."
-                    value={addManualCode}
-                    onChange={(e) => setAddManualCode(e.target.value)}
-                    className="w-full bg-slate-100/50 border border-slate-200 p-4 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400"
-                  />
-                </div>
-
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">家具規格尺寸 (長 x 寬 x 高) cm</label>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">产品尺寸 (长 x 宽 x 高) cm</label>
                   <div className="grid grid-cols-3 gap-3">
                     <input 
                       type="number"
@@ -238,6 +248,16 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                       className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品说明 / 备註</label>
+                    <textarea 
+                      placeholder="输入产品特色、说明回其他备注..."
+                      className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
+                      value={addNote}
+                      onChange={(e) => setAddNote(e.target.value)}
+                    />
                 </div>
               </motion.div>
             )}
