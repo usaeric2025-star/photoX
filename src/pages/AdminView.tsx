@@ -493,7 +493,14 @@ export default function AdminView() {
                 filteredPhotos={filteredPhotos}
                 setSelectedIds={setSelectedIds}
                 setIsMultiSelect={setIsMultiSelect}
-                handleBatchAiIdentifyTrigger={handleBatchAiIdentify}
+                handleBatchAiIdentifyTrigger={() => {
+                  if (isBatchAnalyzing) {
+                    cancelBatchAiRef.current = true;
+                  } else {
+                    cancelBatchAiRef.current = false;
+                    handleBatchAiIdentify(filteredPhotos, dbCategories, cancelBatchAiRef);
+                  }
+                }}
                 handleManageClick={handleManageClick}
                 loginWithGoogle={loginWithGoogle}
                 onAddPhoto={() => {
@@ -618,7 +625,26 @@ export default function AdminView() {
           editPhotoId={editPhotoId}
           newPhotoData={newPhotoData}
           isAnalyzing={isAnalyzing}
-          handleSingleAiAnalyze={(data, catId) => handleSingleAiAnalyze(data, catId)}
+          handleSingleAiAnalyze={async (data, catId) => {
+            const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
+            if (result && !editPhotoId) {
+              if (result.name) setAddName(result.name);
+              if (result.newCategoryName && !catId) {
+                // If the model gave a string, we set addCatId to what we can find, else ignore
+                const foundCat = categories.find(c => c.name === result.newCategoryName);
+                if (foundCat) setAddCatId(foundCat.id);
+              }
+              if (result.tagIds) {
+                const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
+                setAddTagIds(rawTagIds);
+              }
+              if (result.dimensions) {
+                if (result.dimensions.length) setAddDimL(result.dimensions.length.toString());
+                if (result.dimensions.width) setAddDimW(result.dimensions.width.toString());
+                if (result.dimensions.height) setAddDimH(result.dimensions.height.toString());
+              }
+            }
+          }}
           deletePhoto={deletePhoto}
           saveNewPhoto={saveNewPhoto}
           isSyncing={isSyncing}

@@ -211,12 +211,14 @@ export const useAdminPhotos = (
     }
   };
 
-  const handleSingleAiAnalyze = async (imageData: string | null, catId?: string) => {
+  const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
     if (!imageData) return;
     setIsAnalyzing(true);
     try {
       const result = await analyzeProductPhoto(imageData, categories, tags, geminiApiKey, aiProvider, customModel, catId);
-      setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false, ...result } : p));
+      if (editPhotoId) {
+        setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false, ...result } : p));
+      }
       return result;
     } catch (err: any) {
       console.error("Single AI analysis failed:", err);

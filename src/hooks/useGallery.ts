@@ -95,8 +95,8 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns, is
 
     filtered.sort((a, b) => {
       // Safely parse timestamps or fallback
-      const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
-      const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
+      const timeA = new Date(a.createdAt || (a as any).created_at || 0).getTime();
+      const timeB = new Date(b.createdAt || (b as any).created_at || 0).getTime();
       return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
     });
 
