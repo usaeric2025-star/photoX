@@ -8,9 +8,10 @@ import {
   calculateMD5FromArrayBuffer,
   generateItemCode,
   checkImageHashExists,
-  loadPhotosFromCloud
+  loadAllPhotosFromCloud
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
+import { loadData } from '../utils/indexedDB';
 
 export const useAdminPhotos = (
   user: any, 
@@ -38,9 +39,32 @@ export const useAdminPhotos = (
   }, [photos]);
   
   useEffect(() => {
-    if (user) {
-      loadPhotosFromCloud(user.id).then(setPhotos).catch(console.error);
-    }
+    const initPhotos = async () => {
+      // 優先載入本地 IndexedDB 照片
+      const localPhotos = await loadData('photos');
+      if (localPhotos && localPhotos.length > 0) {
+        setPhotos(localPhotos);
+      }
+      
+      if (user || sessionStorage.getItem('isStaffMode') === 'true') {
+        // 從雲端讀取照片並與本地合併
+        try {
+          const cloudPhotos = await loadAllPhotosFromCloud();
+          setPhotos(prev => {
+            const merged = [...prev];
+            cloudPhotos.forEach(cp => {
+              if (!merged.find(p => p.id === cp.id)) {
+                merged.push(cp);
+              }
+            });
+            return merged;
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    };
+    initPhotos();
   }, [user]);
 
   const handleBatchAiIdentify = async (

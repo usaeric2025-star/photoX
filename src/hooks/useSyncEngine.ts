@@ -18,6 +18,13 @@ export const useSyncEngine = () => {
     const [settings, setSettings] = useState<any>(null);
     const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
 
+    React.useEffect(() => {
+        loadData('public_settings').then(s => {
+            if (s && !settings) setSettings(s);
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const refreshCloudData = async (
         user: any,
         categories: any[],

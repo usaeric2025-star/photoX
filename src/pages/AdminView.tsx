@@ -18,7 +18,7 @@ import {
   onAuthChange, 
   loginWithGoogle, 
   loadCategoriesFromCloud, 
-  loadPhotosFromCloud, 
+  loadAllPhotosFromCloud, 
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
   fetchSettings as fetchSettingsCloud,
@@ -62,12 +62,12 @@ export default function AdminView() {
     );
   }
 
-  if (!user) {
+  if (!user && sessionStorage.getItem('isStaffMode') !== 'true') {
     return (
        <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
           <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
              <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">管理中心</h2>
-             <p className="text-sm text-slate-500 mb-8">請登入您的授權帳戶</p>
+             <p className="text-sm text-slate-500 mb-8">請登入您的授權帳戶，或使用本地驗證</p>
              <button 
                 onClick={async () => {
                   try {
@@ -79,6 +79,20 @@ export default function AdminView() {
                 className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
              >
                 Google 安全登入
+             </button>
+             <button
+                onClick={() => {
+                  const pass = prompt('請輸入您的本地管理密碼:');
+                  if (pass === localStorage.getItem('internal_password')) {
+                    sessionStorage.setItem('isStaffMode', 'true');
+                    window.location.reload();
+                  } else if (pass) {
+                    alert('密碼錯誤');
+                  }
+                }}
+                className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all mb-4 text-sm"
+             >
+                使用本地密碼登入
              </button>
              <button
                 onClick={() => {
@@ -121,13 +135,7 @@ export default function AdminView() {
   } = useSyncEngine();
 
   useEffect(() => {
-    if (user && viewMode === 'public') {
-      setViewMode('private');
-    }
-  }, [user, viewMode, setViewMode]);
-  
-  useEffect(() => {
-    if (user) {
+    if (user || sessionStorage.getItem('isStaffMode') === 'true') {
       refreshCloudData(
         user,
         categories,
@@ -221,14 +229,19 @@ export default function AdminView() {
   
   // Re-enable photo loading
   useEffect(() => {
-    if (user) {
-      loadPhotosFromCloud(user.id).then(setPhotos).catch(console.error);
+    if (user || sessionStorage.getItem('isStaffMode') === 'true') {
+      loadAllPhotosFromCloud().then(setPhotos).catch(console.error);
     }
   }, [user]);
 
   const saveSettings = async (s: any) => { setSettings(s); await saveSettingsCloud(s); };
   const deletePhotoFromHook = async (id: string, photo: Photo) => { await deletePhotoFromCloud(user.id, photo); setPhotos(prev => prev.filter(p => p.id !== id)); };
-  const handleLogoUpload = async (file: File) => { const url = await uploadLogo(file); setSettings((prev: any) => ({ ...prev, logo_url: url })); };
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadLogo(file);
+    setSettings((prev: any) => ({ ...prev, logo_url: url }));
+  };
   
   const syncPhotosToCloud = async (uid: string, photos: Photo[], onProgress: (p: number) => void) => { 
       // This is used by SyncPanel, should be restored to connect to services
@@ -283,6 +296,35 @@ export default function AdminView() {
     await refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true);
     setAlertDialog({ title: '恢復完成', message: '所有設定和類別已經就緒！照片也正在背景讀取。' });
   };
+
+  if (viewMode === 'public') {
+    return (
+      <div className="w-full h-full min-h-screen">
+        <PublicGallery 
+          photos={photos} 
+          categories={categories}
+          tags={tags}
+          dbCategories={dbCategories}
+          showExit={true}
+          onExit={() => setViewMode('private')}
+          user={user}
+          settings={settings}
+          isRefreshing={false}
+          onRefresh={() => refreshCloudData(
+            user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true
+          )}
+        />
+        <div className="fixed bottom-6 right-[88px] z-50">
+           <button 
+             onClick={() => setViewMode('private')}
+             className="bg-[#1D3557] text-[#FDFAF6] px-4 py-3 rounded-full shadow-lg font-black uppercase tracking-widest text-[10px] flex items-center gap-2 active:scale-95 transition-all outline-none"
+           >
+             <Settings2 size={16} /> 進入管理模式
+           </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleManageClick = () => setActiveScreen('manage');
 

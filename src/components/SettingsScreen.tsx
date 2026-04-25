@@ -354,7 +354,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                             Structure is derived from cloud configuration (Read-only).
                         </p>
                         <div className="grid grid-cols-2 gap-2">
-                            {dbCategories.map(cat => (
+                            {(dbCategories || []).map(cat => (
                                 <div key={cat.code} className="p-3 bg-[#FDFAF6] border border-[#1D3557]/10 rounded-2xl shadow-sm hover:border-[#D4A853] transition-all">
                                     <p className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{cat.zh}</p>
                                     <p className="text-[8px] text-[#1D3557]/40 font-black uppercase truncate tracking-widest">{cat.code}</p>

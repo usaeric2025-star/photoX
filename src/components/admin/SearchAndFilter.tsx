@@ -67,7 +67,16 @@ export const SearchAndFilter: React.FC<Props> = ({
         >
           全部产品
         </button>
-        {dbCategories.map(cat => (
+        {categories.map(cat => (
+          <button 
+            key={cat.id}
+            onClick={() => { setFilterCatId(cat.id); setFilterSubId(null); }}
+            className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${filterCatId === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+          >
+            {cat.name}
+          </button>
+        ))}
+        {(dbCategories || []).filter(dbc => !categories.some(c => c.name === dbc.zh)).map(cat => (
           <button 
             key={cat.code}
             onClick={() => { setFilterCatId(cat.code); setFilterSubId(null); }}
@@ -95,7 +104,7 @@ export const SearchAndFilter: React.FC<Props> = ({
                   ALL
                 </button>
                 {(() => {
-                  const legacyMatchedCat = categories.find(c => c.name === dbCategories.find(dc => dc.code === filterCatId)?.zh || c.id === filterCatId);
+                  const legacyMatchedCat = categories.find(c => c.name === (dbCategories || []).find(dc => dc.code === filterCatId)?.zh || c.id === filterCatId);
                   return legacyMatchedCat?.subcategories.map(sub => (
                     <button 
                       key={sub.id}

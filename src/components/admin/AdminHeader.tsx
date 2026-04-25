@@ -30,7 +30,7 @@ export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setView
     </div>
 
     <div className="flex items-center gap-2">
-      {!user ? (
+      {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
         <button 
           onClick={async () => {
             try {
@@ -45,8 +45,21 @@ export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setView
           LOGIN
         </button>
       ) : (
-        <div className="flex items-center gap-1.5 bg-[#1D3557]/5 p-1 rounded-2xl border border-[#1D3557]/10">
-          <button 
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 bg-[#1D3557]/5 py-1 px-3 rounded-2xl border border-[#1D3557]/10">
+             {user && user.avatarUrl ? (
+               <img src={user.avatarUrl} className="w-6 h-6 rounded-full" alt="Avatar" />
+             ) : (
+               <div className="w-6 h-6 rounded-full bg-[#1D3557] text-[#FDFAF6] flex items-center justify-center text-[10px] font-bold">
+                 {!user ? 'S' : (user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
+               </div>
+             )}
+             <span className="text-[10px] font-black text-[#1D3557] truncate max-w-[80px]">
+               {!user ? 'Staff(Local)' : (user?.displayName || user?.email?.split('@')[0])}
+             </span>
+          </div>
+          <div className="flex items-center gap-1.5 bg-[#1D3557]/5 p-1 rounded-2xl border border-[#1D3557]/10">
+            <button 
             onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
             className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-[#D4A853] text-white shadow-md' : 'text-[#1D3557]/40 hover:text-[#1D3557]'}`}
             title="切換公開頁面"
@@ -96,6 +109,7 @@ export const AdminHeader: React.FC<Props> = ({ settings, user, viewMode, setView
               </button>
             </>
           )}
+          </div>
         </div>
       )}
     </div>
