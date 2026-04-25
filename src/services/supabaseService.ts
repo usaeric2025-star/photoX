@@ -293,7 +293,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<bo
       group_id: photo.groupId || null
     }, { 
       onConflict: 'item_code',
-      ignoreDuplicates: true 
+      ignoreDuplicates: false 
     })
     .select('id');
 

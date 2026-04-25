@@ -227,16 +227,19 @@ export const useAdminPhotos = (
                 isAnalyzing: false 
               };
 
-              // Backup to cloud immediately
-              if (user) {
-                savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Batch backup failed for photo:", p.id, e));
-              }
-
               return updatedPhoto;
             });
             photosRef.current = next;
             return next;
           });
+
+          // Perform cloud update outside of state updater
+          if (user) {
+            const updatedPhoto = photosRef.current.find(p => p.id === photo.id);
+            if (updatedPhoto) {
+              await savePhotoToCloud(user.id, updatedPhoto);
+            }
+          }
           successCount++;
         } catch (err: any) {
           setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
@@ -346,12 +349,16 @@ export const useAdminPhotos = (
             isAnalyzing: false 
           };
           
-          if (user) {
-            savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Immediate backup failed:", e));
-          }
-          
           return updatedPhoto;
         }));
+        
+        // Backup to cloud outside state updater
+        if (user) {
+          const updatedPhoto = photosRef.current.find(p => p.id === editPhotoId);
+          if (updatedPhoto) {
+            await savePhotoToCloud(user.id, updatedPhoto);
+          }
+        }
       }
       // Populate form state properties to return them
       result.tagIds = finalTagIdsFromAi;
@@ -529,20 +536,15 @@ export const useAdminPhotos = (
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
       const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
       
-      // 1. Immediately update UI
+      // 1. Delete from Cloud
+      if (user) {
+        await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
+      }
+
+      // 2. Update UI and Local Storage
       const newPhotos = photosRef.current.filter(p => !ids.includes(p.id));
       setPhotos(newPhotos);
       saveData('product_photos', newPhotos);
-      
-      // 2. Immediately delete from Cloud
-      if (user) {
-        try {
-          await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
-        } catch (err) {
-          console.error("Cloud deletion failed:", err);
-          // Optional: Revert UI or alert user?
-        }
-      }
   };
 
   const updatePhoto = async (updatedPhoto: Photo) => {
