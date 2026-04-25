@@ -96,6 +96,12 @@ export default function AdminView() {
     lastSyncTime, setLastSyncTime,
     refreshCloudData
   } = useSyncEngine();
+
+  useEffect(() => {
+    if (user && viewMode === 'public') {
+      setViewMode('private');
+    }
+  }, [user, viewMode, setViewMode]);
   
   const { 
     categories, setCategories,
@@ -108,6 +114,11 @@ export default function AdminView() {
     isBatchAnalyzing, batchProgress,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
   } = useAdminPhotos(user, '', 'auto', '', categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
+
+  useEffect(() => {
+    console.log("AdminView: user =", user);
+    console.log("AdminView: photos =", photos);
+  }, [user, photos]);
 
   const { 
     newPhotoData, setNewPhotoData,
