@@ -478,7 +478,10 @@ export default function AdminView() {
                 settings={settings}
                 user={user}
                 viewMode={viewMode}
-                setViewMode={setViewMode}
+                setViewMode={(newMode) => {
+                  setViewMode(newMode);
+                  if (newMode === 'public') navigate('/');
+                }}
                 isBatchAnalyzing={isBatchAnalyzing}
                 batchProgress={batchProgress}
                 activeScreen={activeScreen}
@@ -540,6 +543,7 @@ export default function AdminView() {
                     });
                   }}
                   onGroupPhotos={(ids) => handleGroupPhotos(ids)}
+                  onGroupClick={(groupId) => setActiveGroupId(groupId)}
                   onOpenSettings={handleManageClick}
                   onAddPhoto={() => {
                     const input = document.createElement('input');
