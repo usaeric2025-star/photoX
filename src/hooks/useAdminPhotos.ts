@@ -3,7 +3,6 @@ import { Photo, Category, Tag } from '../types';
 import { 
   savePhotoToCloud, 
   deletePhotoFromCloud, 
-  compressImage, 
   calculateMD5,
   calculateMD5FromFile,
   calculateMD5FromArrayBuffer,
@@ -337,7 +336,7 @@ export const useAdminPhotos = (
           
           if (!rawUri) continue;
           
-          const compressedUri = await compressImage(rawUri);
+          const compressedUri = rawUri;
           sessionHashes.add(hash);
 
           // 5. Use crypto.randomUUID() for both photo ID and naming storage

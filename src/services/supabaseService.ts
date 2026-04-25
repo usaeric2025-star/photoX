@@ -77,43 +77,6 @@ export const onAuthChange = (callback: (user: any) => void) => {
 
 // --- Storage & DB Operations ---
 
-export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      let width = img.width;
-      let height = img.height;
-
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width);
-        width = maxWidth;
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
-        return;
-      }
-
-      ctx.drawImage(img, 0, 0, width, height);
-      const result = canvas.toDataURL('image/webp', quality);
-      
-      // Free memory
-      canvas.width = 0;
-      canvas.height = 0;
-      img.src = '';
-      
-      resolve(result);
-    };
-    img.onerror = (err) => reject(err);
-    img.src = base64Data;
-  });
-};
-
 export const uploadImages = async (userId: string, photoId: string, base64Data: string): Promise<{imageUrl: string, thumbUrl: string}> => {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -122,10 +85,6 @@ export const uploadImages = async (userId: string, photoId: string, base64Data: 
   }
 
   try {
-    // 1. Generate versions
-    const originalBase64 = await compressImage(base64Data, 1920, 0.7);
-    const thumbBase64 = await compressImage(base64Data, 300, 0.5);
-
     const uploadFile = async (base64: string, fileName: string) => {
       const res = await fetch(base64);
       const blob = await res.blob();
@@ -146,10 +105,9 @@ export const uploadImages = async (userId: string, photoId: string, base64Data: 
       return publicUrl;
     };
 
-    const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`);
-    const thumbUrl = await uploadFile(thumbBase64, `public/thumb_${photoId}.webp`);
-
-    return { imageUrl, thumbUrl };
+    const imageUrl = await uploadFile(base64Data, `public/${photoId}.webp`);
+    // Fallback: use imageUrl for thumbUrl as well, for performance
+    return { imageUrl, thumbUrl: imageUrl };
   } catch (err: any) {
     console.error("Image processing or upload failed:", err);
     throw new Error(`圖片處理異常: ${err.message || '請檢查網絡'}`);

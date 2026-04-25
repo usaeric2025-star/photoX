@@ -29,12 +29,8 @@ export const analyzeProductPhoto = async (
 
   // Pre-process image: Resize if too large
   let processedBase64Image = base64Image;
-  try {
-      processedBase64Image = await resizeBase64Image(base64Image, 640, 640);
-  } catch (e) {
-      console.error("Image resizing failed, using original", e);
-  }
-
+  // Canvas-based resizing is removed to avoid cross-origin issues.
+  
   let baseURL = 'https://api.groq.com/openai/v1';
   let modelName = customModel || 'llama-3.2-90b-vision-instruct'; // default to groq
 
