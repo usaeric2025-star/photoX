@@ -8,7 +8,7 @@ interface UploadFormProps {
   editPhotoId: string | null;
   newPhotoData: string | null;
   isAnalyzing: boolean;
-  handleSingleAiAnalyze: () => void;
+  handleSingleAiAnalyze: (imageData: string | null, catId?: string) => void;
   deletePhoto: (id: string) => void;
   saveNewPhoto: () => void;
   isSyncing: boolean;
@@ -72,7 +72,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <div className="flex items-center gap-2">
           {!editPhotoId && newPhotoData && (
             <button 
-              onClick={handleSingleAiAnalyze}
+              onClick={() => handleSingleAiAnalyze(newPhotoData, addCatId || undefined)}
               disabled={isAnalyzing}
               className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-90 ${isAnalyzing ? 'bg-purple-100 border-purple-200' : 'bg-white border-slate-200 hover:bg-purple-50 text-purple-600'}`}
               title="AI 辨識"

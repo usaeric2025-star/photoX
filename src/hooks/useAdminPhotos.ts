@@ -213,6 +213,7 @@ export const useAdminPhotos = (
     setIsAnalyzing(true);
     try {
       const result = await analyzeProductPhoto(imageData, categories, tags, geminiApiKey, aiProvider, customModel, catId);
+      setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false, ...result } : p));
       return result;
     } catch (err: any) {
       console.error("Single AI analysis failed:", err);

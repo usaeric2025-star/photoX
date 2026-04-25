@@ -215,7 +215,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                       >
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">廠商套用</p>
                         <div className="flex flex-wrap gap-2">
-                          {manufacturers.map(mfr => {
+                          {manufacturers?.map(mfr => {
                             const isAllMatch = groupPhotos.every(p => p.subcategoryId === mfr.id);
                             return (
                               <button 
@@ -233,7 +233,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                        <div className="space-y-2">
                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速標籤套用</p>
                          <div className="flex flex-wrap gap-1.5">
-                           {tags.map(tag => {
+                           {tags?.map(tag => {
                              const isAllMatch = groupPhotos.every(p => (p.tagIds || []).includes(tag.id));
                              return (
                                <button 

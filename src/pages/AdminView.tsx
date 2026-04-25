@@ -615,7 +615,7 @@ export default function AdminView() {
           editPhotoId={editPhotoId}
           newPhotoData={newPhotoData}
           isAnalyzing={isAnalyzing}
-          handleSingleAiAnalyze={() => handleSingleAiAnalyze(newPhotoData, addCatId || undefined)}
+          handleSingleAiAnalyze={(data, catId) => handleSingleAiAnalyze(data, catId)}
           deletePhoto={deletePhoto}
           saveNewPhoto={saveNewPhoto}
           isSyncing={isSyncing}
@@ -668,6 +668,7 @@ export default function AdminView() {
           user={user}
           onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
           dbCategories={dbCategories}
+          manufacturers={manufacturers}
           appLang={appLang}
           categories={categories}
           tags={tags}
