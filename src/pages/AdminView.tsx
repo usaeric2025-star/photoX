@@ -14,7 +14,18 @@ import {
   ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { onAuthChange, loginWithGoogle, loadCategoriesFromCloud, loadPhotosFromCloud } from '../services/supabaseService';
+import { 
+  onAuthChange, 
+  loginWithGoogle, 
+  loadCategoriesFromCloud, 
+  loadPhotosFromCloud, 
+  saveSettings as saveSettingsCloud, 
+  syncPhotosToCloud as syncPhotosToCloudService,
+  fetchSettings as fetchSettingsCloud,
+  uploadLogo,
+  deletePhotoFromCloud
+} from '../services/supabaseService';
+import { analyzeProductPhoto } from '../services/geminiService';
 import { Modals } from '../components/admin/Modals';
 import { ProductGrid } from '../components/admin/ProductGrid';
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
@@ -115,11 +126,6 @@ export default function AdminView() {
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
   } = useAdminPhotos(user, '', 'auto', '', categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
 
-  useEffect(() => {
-    console.log("AdminView: user =", user);
-    console.log("AdminView: photos =", photos);
-  }, [user, photos]);
-
   const { 
     newPhotoData, setNewPhotoData,
     editPhotoId, setEditPhotoId,
@@ -140,22 +146,7 @@ export default function AdminView() {
     handleGroupPhotos,
   } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, setAlertDialog, setIsSyncing, setActiveScreen);
 
-  const filteredPhotos = useMemo(() => {
-    let result = photos;
-    if (searchQuery) {
-      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    if (filterCatId) {
-      result = result.filter(p => p.categoryId === filterCatId);
-    }
-    if (filterSubId) {
-      result = result.filter(p => p.subcategoryId === filterSubId);
-    }
-    if (filterTagIds.length > 0) {
-      result = result.filter(p => p.tagIds?.some(id => filterTagIds.includes(id)));
-    }
-    return result;
-  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
+  const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]); // simplified
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [aiProvider, setAiProvider] = useState('gemini');
@@ -172,14 +163,32 @@ export default function AdminView() {
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  const saveSettings = async (s: any) => { setSettings(s); await saveData('settings', s); };
-  const deletePhotoFromHook = async (id: string, photo: Photo) => { await deletePhoto(id, photo); };
-  const handleLogoUpload = async (file: File) => { }; // simplified
+  // Re-enable photo loading
+  useEffect(() => {
+    if (user) {
+      loadPhotosFromCloud(user.id).then(setPhotos).catch(console.error);
+    }
+  }, [user]);
+
+  const saveSettings = async (s: any) => { setSettings(s); await saveSettingsCloud(s); };
+  const deletePhotoFromHook = async (id: string, photo: Photo) => { await deletePhotoFromCloud(user.id, photo); setPhotos(prev => prev.filter(p => p.id !== id)); };
+  const handleLogoUpload = async (file: File) => { const url = await uploadLogo(file); setSettings((prev: any) => ({ ...prev, logo_url: url })); };
   
-  const syncPhotosToCloud = async (uid: string, photos: Photo[], onProgress: (p: number) => void) => { }; // simplified
-  const fetchSettings = async () => { return settings; }; // simplified
-  const handleUngroup = (groupId: string) => { }; // simplified
-  const analyzeProductPhoto = async (uri: string, cats: Category[], tags: Tag[], key: string, provider: string, model: string) => { return {}; }; // simplified
+  const syncPhotosToCloud = async (uid: string, photos: Photo[], onProgress: (p: number) => void) => { 
+      // This is used by SyncPanel, should be restored to connect to services
+      await syncPhotosToCloudService(uid, photos, onProgress); 
+  };
+  const fetchSettings = async () => { 
+      const s = await fetchSettingsCloud(); 
+      if (s) setSettings(s);
+      return s;
+  };
+  const handleUngroup = (groupId: string) => { 
+      setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
+  };
+  const handleAnalyzePhoto = async (uri: string, cats: Category[], tags: Tag[], key: string, provider: string, model: string) => { 
+      return await analyzeProductPhoto(uri, cats, tags, key, provider, model);
+  };
   
   const [visibleCount, setVisibleCount] = useState(15);
   const observerTarget = useRef(null);
