@@ -94,7 +94,7 @@ export default function AdminView() {
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [aiProvider, setAiProvider] = useState('gemini');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
+  const [customModel, setCustomModel] = useState(getSafeLocalStorage('ai_custom_model') || 'gemini-1.5-flash');
   const cancelBatchAiRef = useRef<boolean>(false);
   
   const { 
@@ -107,11 +107,13 @@ export default function AdminView() {
   } = useSyncEngine();
 
   useEffect(() => {
-    if (settings?.gemini_api_key) {
-      setGeminiApiKey(settings.gemini_api_key);
-    }
-    if (settings?.internal_password) {
-      setInternalPassword(settings.internal_password);
+    if (settings) {
+      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
+      if (settings.internal_password) setInternalPassword(settings.internal_password);
+      if (settings.custom_model) {
+        setCustomModel(settings.custom_model);
+        localStorage.setItem('ai_custom_model', settings.custom_model);
+      }
     }
   }, [settings]);
 
