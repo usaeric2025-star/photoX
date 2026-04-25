@@ -132,6 +132,7 @@ export default function AdminView() {
     isAnalyzing, setIsAnalyzing,
     isBatchAnalyzing, batchProgress,
     isImporting, importProgress, importTotal,
+    aiDebugInfo,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
@@ -462,6 +463,7 @@ export default function AdminView() {
               isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
               quickAddSubCategory={quickAddSubCategory} quickAddTag={quickAddTag} quickAddManufacturer={quickAddManufacturer} tags={tags}
               newPhotoData={newPhotoData} manufacturers={manufacturers}
+              aiDebugInfo={aiDebugInfo}
               onDelete={(id) => {
                 setConfirmDialog({
                   message: '确定要删除这张照片吗？',

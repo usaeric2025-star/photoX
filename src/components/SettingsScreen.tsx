@@ -401,7 +401,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     value={geminiApiKey}
                     onChange={(e) => {
                       setGeminiApiKey(e.target.value);
-                      localStorage.setItem('gemini_api_key_safe', obfuscateKey(e.target.value));
+                      localStorage.setItem('gemini_api_key', e.target.value); // Plaintext
                     }}
                     onBlur={(e) => {
                       setSettingField('gemini_api_key', e.target.value);

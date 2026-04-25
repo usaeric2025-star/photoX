@@ -41,6 +41,7 @@ interface Props {
   editPhotoPreview?: string | null;
   onDelete?: (id: string) => void;
   newPhotoData?: string | null;
+  aiDebugInfo: { step: string; message: string; error?: string } | null;
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
@@ -50,6 +51,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <button onClick={props.resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <X size={24} />
         </button>
+        {props.aiDebugInfo && (
+          <div className="bg-yellow-200 text-black p-4 rounded-xl text-xs font-mono">
+            <p><strong>[{props.aiDebugInfo.step}]</strong> {props.aiDebugInfo.message}</p>
+            {props.aiDebugInfo.error && <p className="text-red-700">错误: {props.aiDebugInfo.error}</p>}
+          </div>
+        )}
         <div className="flex flex-col items-center">
             <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
             <div 

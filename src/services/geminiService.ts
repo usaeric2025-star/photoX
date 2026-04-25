@@ -43,6 +43,7 @@ export const analyzeProductPhoto = async (
   targetCategoryId?: string | null
 ) => {
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
+  console.log("DEBUG: API Key verification (first 5 chars):", apiKey ? apiKey.substring(0, 5) : "UNDEFINED");
   if (!apiKey) {
     throw new Error('請先在管理設定中設定 API 金鑰');
   }

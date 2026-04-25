@@ -38,6 +38,7 @@ export const useAdminPhotos = (
   const photosRef = useRef(photos);
   
   const [isInitializing, setIsInitializing] = useState(true);
+  const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
 
   useEffect(() => {
     photosRef.current = photos;
@@ -227,8 +228,20 @@ export const useAdminPhotos = (
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
     if (!imageData) return;
     setIsAnalyzing(true);
+    setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
+    
     try {
+      const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
+      setAiDebugInfo({ step: '检查金钥', message: `Key 读取: ${apiKey ? apiKey.substring(0, 5) + '...' : '空'}` });
+      if (!apiKey) throw new Error('API Key 为空');
+
+      setAiDebugInfo({ step: '发送请求', message: `图片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
+      
       const result = await analyzeProductPhoto(imageData, categories, tags, geminiApiKey, aiProvider, customModel, catId);
+      
+      setAiDebugInfo({ step: '完成', message: 'AI 识别成功' });
+      setTimeout(() => setAiDebugInfo(null), 3000);
+
       if (editPhotoId) {
         setPhotos(prev => prev.map(p => {
           if (p.id !== editPhotoId) return p;
@@ -256,6 +269,7 @@ export const useAdminPhotos = (
       return result;
     } catch (err: any) {
       console.error("Single AI analysis failed:", err);
+      setAiDebugInfo({ step: '错误', message: '识别失败', error: err.message });
       setAlertDialog({ title: 'AI 识别失败', message: err.message || '识别过程出现问题' });
     } finally {
       setIsAnalyzing(false);
@@ -414,6 +428,7 @@ export const useAdminPhotos = (
   return {
     photos, setPhotos,
     isAnalyzing, setIsAnalyzing, isBatchAnalyzing, isImporting, importProgress, importTotal, batchProgress,
+    aiDebugInfo,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
