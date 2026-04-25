@@ -85,10 +85,17 @@ export const analyzeProductPhoto = async (
   try {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': window.location.href,
-      'X-Title': 'Product Cataloger AI'
     };
+
+    if (provider === 'gemini' || (provider === 'auto' && apiKey.startsWith('AIza'))) {
+        headers['x-goog-api-key'] = apiKey;
+    } else {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+        if (baseURL.includes('openrouter.ai')) {
+          headers['HTTP-Referer'] = window.location.href;
+          headers['X-Title'] = 'Product Cataloger AI';
+        }
+    }
 
     const requestBody = {
       model: modelName,
