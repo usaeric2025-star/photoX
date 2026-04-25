@@ -90,20 +90,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       name: newSubName.trim(),
       aliases: [newSubName.trim()]
     };
-    setManufacturers([...(manufacturers || []), newMfr]);
+    const nextMfrs = [...(manufacturers || []), newMfr];
+    setManufacturers(nextMfrs);
     setNewSubName('');
-    setCategories(prev => prev.map(c => ({
+    const nextCats = categories.map(c => ({
       ...c,
       subcategories: [...(c.subcategories || []), { ...newMfr }]
-    })));
+    }));
+    setCategories(nextCats);
+    saveSettings({ ...settings, categories: nextCats, manufacturers: nextMfrs, tags });
   };
 
   const deleteManufacturer = (id: string) => {
-    setManufacturers(prev => prev.filter(m => m.id !== id));
-    setCategories(prev => prev.map(c => ({
+    const nextMfrs = manufacturers.filter(m => m.id !== id);
+    setManufacturers(nextMfrs);
+    const nextCats = categories.map(c => ({
       ...c,
       subcategories: (c.subcategories || []).filter(sub => sub.id !== id)
-    })));
+    }));
+    setCategories(nextCats);
+    saveSettings({ ...settings, categories: nextCats, manufacturers: nextMfrs, tags });
   };
 
   const addTag = () => {
@@ -113,12 +119,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       name: newTagName.trim(),
       aliases: [newTagName.trim()]
     };
-    setTags(prev => [...(prev || []), newTag]);
+    const nextTags = [...(tags || []), newTag];
+    setTags(nextTags);
     setNewTagName('');
+    saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
   };
 
   const deleteTag = (id: string) => {
-    setTags(prev => (prev || []).filter(t => t.id !== id));
+    const nextTags = (tags || []).filter(t => t.id !== id);
+    setTags(nextTags);
+    saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
   };
 
   const setSettingField = (field: string, value: any) => {

@@ -99,14 +99,17 @@ export default function AdminView() {
     viewMode, setViewMode,
     settings, setSettings,
     lastSyncTime, setLastSyncTime,
-    refreshCloudData
+    refreshCloudData,
+    handleLogoUpload
   } = useSyncEngine();
 
+  /* 
   useEffect(() => {
     if ((user || getSafeSessionStorage('isStaffMode') === 'true') && viewMode === 'public') {
       setViewMode('private');
     }
   }, [user, viewMode, setViewMode]);
+  */
   
   const { 
     categories, setCategories,
@@ -136,6 +139,9 @@ export default function AdminView() {
         setPublicTags,
         setPublicManufacturers,
         setDbCategories,
+        setCategories,
+        setTags,
+        setManufacturers,
         setPublicPhotos,
         setCloudCount,
         false
@@ -297,7 +303,53 @@ export default function AdminView() {
     );
   }
 
-  const saveSettings = async (s: any) => { setSettings(s); await saveSettingsCloud(s); };
+  const saveSettings = async (s: any) => { 
+    setSettings(s); 
+    await saveSettingsCloud(s); 
+  };
+
+  const triggerManualSync = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      await syncPhotosToCloudService(user.id, photos, setSyncPercent);
+      setAlertDialog({ title: '同步成功', message: '所有數據已成功備份至雲端' });
+    } catch (err: any) {
+      setAlertDialog({ title: '同步失敗', message: err.message || '請檢查網路連線' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const performPushSync = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      await syncPhotosToCloudService(user.id, photos, setSyncPercent);
+      setAlertDialog({ title: '推送成功', message: '本地照片已上傳至雲端' });
+    } catch (err: any) {
+      setAlertDialog({ title: '推送失敗', message: err.message });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const performPullSync = async () => {
+    setIsSyncing(true);
+    try {
+      await refreshCloudData(
+        user, categories, tags, manufacturers, setSettings, 
+        setPublicCategories, setPublicTags, setPublicManufacturers, 
+        setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
+      );
+      setAlertDialog({ title: '拉取成功', message: '雲端數據已同步至本地' });
+    } catch (err: any) {
+      setAlertDialog({ title: '拉取失敗', message: err.message });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleGroupPhotos = () => {
       // Grouping logic 
       if (selectedIds.length < 2) return;
@@ -312,13 +364,15 @@ export default function AdminView() {
     setPromptDialog({
       title: '新增子分類',
       placeholder: '輸入新子分類名稱',
-      onSubmit: (val: string) => {
+      onSubmit: async (val: string) => {
         const newSubId = crypto.randomUUID();
-        setCategories(prev => prev.map(c => c.id === addCatId ? {
+        const nextCats = categories.map(c => c.id === addCatId ? {
           ...c,
           subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
-        } : c));
+        } : c);
+        setCategories(nextCats);
         setAddSubId(newSubId);
+        await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
       }
     });
   };
@@ -327,10 +381,12 @@ export default function AdminView() {
     setPromptDialog({
       title: '自定義標籤',
       placeholder: '輸入新標籤名稱',
-      onSubmit: (val: string) => {
+      onSubmit: async (val: string) => {
         const newTagId = crypto.randomUUID();
-        setTags(prev => [...prev, { id: newTagId, name: val.trim(), aliases: [] }]);
+        const nextTags = [...tags, { id: newTagId, name: val.trim(), aliases: [] }];
+        setTags(nextTags);
         setAddTagIds(prev => [...prev, newTagId]);
+        await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
       }
     });
   };
@@ -350,7 +406,7 @@ export default function AdminView() {
             settings={settings}
             isRefreshing={false}
             onRefresh={() => refreshCloudData(
-              user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true
+              user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
             )}
           />
           <div className="fixed bottom-6 right-[88px] z-50">
@@ -427,12 +483,14 @@ export default function AdminView() {
   const deleteSubCategory = (catId: string, subId: string) => {
     setConfirmDialog({
       message: '確定要刪除此子分類嗎？',
-      onConfirm: () => {
-        setCategories(prev => prev.map(c => c.id === catId ? {
+      onConfirm: async () => {
+        const nextCats = categories.map(c => c.id === catId ? {
           ...c,
           subcategories: (c.subcategories || []).filter(s => s.id !== subId)
-        } : c));
+        } : c);
+        setCategories(nextCats);
         setPhotos(prev => prev.map(p => p.subcategoryId === subId ? { ...p, subcategoryId: null } : p));
+        await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
       }
     });
   };
@@ -453,8 +511,10 @@ export default function AdminView() {
   const deleteTag = (id: string) => {
     setConfirmDialog({
       message: '確定要刪除此標籤嗎？',
-      onConfirm: () => {
-        setTags(prev => prev.filter(t => t.id !== id));
+      onConfirm: async () => {
+        const nextTags = tags.filter(t => t.id !== id);
+        setTags(nextTags);
+        await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
       }
     });
   };

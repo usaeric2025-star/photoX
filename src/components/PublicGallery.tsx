@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Photo, DB_Category, Category, Tag } from '../types';
 import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2, LogIn } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -182,7 +182,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+  }, [lightboxIndex]); // Added dependencies to avoid unnecessary re-attachment while allowing cleanup
 
   // Swipe support for Lightbox
   const touchStartX = useRef<number | null>(null);
@@ -512,7 +512,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
 
             {/* Left Col: Image */}
             <div 
-              className="flex-1 relative flex items-center justify-center min-h-[50vh] md:min-h-screen p-4 md:p-12 touch-pan-y"
+              className="flex-1 relative flex items-center justify-center min-h-[50vh] md:min-h-screen p-4 md:p-12 touch-none"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}

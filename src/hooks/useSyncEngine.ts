@@ -18,12 +18,14 @@ export const useSyncEngine = () => {
     const [settings, setSettings] = useState<any>(null);
     const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
 
+    /* 
     React.useEffect(() => {
         loadData('public_settings').then(s => {
             if (s && !settings) setSettings(s);
         });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+    */
 
     const refreshCloudData = async (
         user: any,
@@ -35,6 +37,9 @@ export const useSyncEngine = () => {
         setPublicTags: (t: any) => void,
         setPublicManufacturers: (m: any) => void,
         setDbCategories: (c: any) => void,
+        setCategories: (c: any) => void,
+        setTags: (t: any) => void,
+        setManufacturers: (m: any) => void,
         setPublicPhotos: (p: any) => void,
         setCloudCount: (c: number | null) => void,
         force = false
@@ -52,16 +57,19 @@ export const useSyncEngine = () => {
 
                 if (cloudSettings.categories !== undefined) {
                     setPublicCategories(cloudSettings.categories);
+                    setCategories(cloudSettings.categories);
                     saveData('public_categories', cloudSettings.categories);
                 }
                 
                 if (cloudSettings.tags !== undefined) {
                     setPublicTags(cloudSettings.tags);
+                    setTags(cloudSettings.tags);
                     saveData('public_tags', cloudSettings.tags);
                 }
                 
                 if (cloudSettings.manufacturers !== undefined) {
                     setPublicManufacturers(cloudSettings.manufacturers);
+                    setManufacturers(cloudSettings.manufacturers);
                     saveData('public_manufacturers', cloudSettings.manufacturers);
                 }
             }
