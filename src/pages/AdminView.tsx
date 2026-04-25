@@ -48,6 +48,9 @@ import { GroupDetailScreen } from '../components/admin/GroupDetailScreen';
 import { PublicGallery } from '../components/PublicGallery';
 
 export default function AdminView() {
+  // 臨時測試
+  return <div style={{padding: 50, background: 'green', color: 'white', fontSize: 30}}>Admin 渲染成功！</div>;
+  
   console.log('>>> AdminView Component Executing');
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
   console.log('>>> useAuth completed');
