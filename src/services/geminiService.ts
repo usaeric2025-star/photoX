@@ -1,5 +1,38 @@
 import { Category, Tag } from '../types';
 
+const resizeBase64Image = async (base64Str: string, maxWidth: number, maxHeight: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth || height > maxHeight) {
+        if (width > height) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        } else {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = reject;
+  });
+};
+
 export const analyzeProductPhoto = async (
   base64Image: string,
   categories: Category[],
@@ -12,6 +45,14 @@ export const analyzeProductPhoto = async (
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error('請先在管理設定中設定 API 金鑰');
+  }
+
+  // Pre-process image: Resize if too large
+  let processedBase64Image = base64Image;
+  try {
+      processedBase64Image = await resizeBase64Image(base64Image, 640, 640);
+  } catch (e) {
+      console.error("Image resizing failed, using original", e);
   }
 
   let baseURL = 'https://api.groq.com/openai/v1';
@@ -33,7 +74,7 @@ export const analyzeProductPhoto = async (
     }
   } else if (provider === 'gemini' || (provider === 'auto' && apiKey.startsWith('AIza'))) {
     baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai/';
-    modelName = customModel || 'gemini-2.0-flash';
+    modelName = customModel || 'gemini-2.5-flash-lite-preview-09-2025';
   }
 
   const categoriesJson = categories.map(c => ({
@@ -44,7 +85,7 @@ export const analyzeProductPhoto = async (
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
 
   const categoryContext = targetCategoryId 
-    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.id === targetCategoryId)?.name} (ID: ${targetCategoryId})。請在此分類下進行識別並找出最合適的子分類。` 
+    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.id === targetCategoryId)?.name} (ID: ${targetCategoryId}。請在此分類下進行識別並找出最合適的子分類。` 
     : `請從以下分類中選擇最合適的一個。`;
 
   const promptText = `
@@ -106,13 +147,14 @@ export const analyzeProductPhoto = async (
             { type: "text", text: promptText },
             {
               type: "image_url",
-              image_url: { url: base64Image }
+              image_url: { url: processedBase64Image }
             }
           ]
         }
       ],
       max_tokens: 300,
     };
+
 
     const fetchUrl = `${baseURL}${baseURL.endsWith('/') ? '' : '/'}chat/completions`;
     
