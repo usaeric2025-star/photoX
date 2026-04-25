@@ -87,16 +87,21 @@ export const useAdminPhotos = (
               if (cloudPhotos && cloudPhotos.length > 0) {
                 setPhotos(prevPhotos => {
                   const newMap = new Map();
+                  // Load existing local photos first
                   prevPhotos.forEach(p => newMap.set(p.id, p));
+                  
+                  // Merge with cloud photos
                   cloudPhotos.forEach(cp => {
-                     // Keep existing local if it's more specific? Or just replace?
-                     // Merging:
-                     const existing = newMap.get(cp.id);
-                     newMap.set(cp.id, { ...existing, ...cp });
+                     const lp = newMap.get(cp.id);
+                     // If no local, or cloud is newer, take cloud.
+                     if (!lp || (cp.updatedAt && lp.updatedAt && new Date(cp.updatedAt) > new Date(lp.updatedAt))) {
+                       newMap.set(cp.id, cp);
+                     }
                   });
                   return Array.from(newMap.values());
                 });
-                saveData('product_photos', cloudPhotos);
+                // After merging, save to IndexedDB
+                saveData('product_photos', Array.from(new Map( (localPhotos || []).concat(cloudPhotos).map(p => [p.id, p]) ).values()));
               }
             })
             .catch(e => console.error('Cloud pull during init failed:', e));
@@ -171,7 +176,7 @@ export const useAdminPhotos = (
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-          const result = await analyzeProductPhoto(photo.uri!, dbCategories, tags, manufacturers, effectiveKey, aiProvider, customModel);
+          const result = await analyzeProductPhoto(photo.uri!, dbCategories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null);
           
           let finalCatId = result.categoryId || null;
           let finalSubId = result.subcategoryId || null;
@@ -534,7 +539,9 @@ export const useAdminPhotos = (
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
       const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
       
-      setPhotos(prev => prev.filter(p => !ids.includes(p.id)));
+      const newPhotos = photosRef.current.filter(p => !ids.includes(p.id));
+      setPhotos(newPhotos);
+      saveData('product_photos', newPhotos);
       
       if (user) {
         try {
