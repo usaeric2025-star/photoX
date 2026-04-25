@@ -311,7 +311,7 @@ export default function AdminView() {
     setPromptDialog({
       title: '新增子分類',
       placeholder: '輸入新子分類名稱',
-      onSubmit: (val) => {
+      onSubmit: (val: string) => {
         const newSubId = crypto.randomUUID();
         setCategories(prev => prev.map(c => c.id === addCatId ? {
           ...c,
@@ -326,7 +326,7 @@ export default function AdminView() {
     setPromptDialog({
       title: '自定義標籤',
       placeholder: '輸入新標籤名稱',
-      onSubmit: (val) => {
+      onSubmit: (val: string) => {
         const newTagId = crypto.randomUUID();
         setTags(prev => [...prev, { id: newTagId, name: val.trim(), aliases: [] }]);
         setAddTagIds(prev => [...prev, newTagId]);
@@ -417,7 +417,7 @@ export default function AdminView() {
               addDimL={addDimL} setAddDimL={setAddDimL} addDimW={addDimW} setAddDimW={setAddDimW}
               addDimH={addDimH} setAddDimH={setAddDimH} showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
               isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
-              quickAddSubCategory={() => {}} quickAddTag={() => {}} tags={tags}
+              quickAddSubCategory={quickAddSubCategory} quickAddTag={quickAddTag} tags={tags}
           />
         </ErrorBoundary>
      );
