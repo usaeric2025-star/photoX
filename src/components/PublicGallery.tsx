@@ -573,6 +573,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     <X size={12} className="rotate-45" />
                   </div>
                 )}
+                {photo.groupId && (
+                   <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[7px] text-white font-bold flex items-center gap-1 border border-white/20 uppercase">
+                     <Layers size={9} />
+                     {photo.groupId.slice(-4)}
+                   </div>
+                 )}
                 {/* Category label */}
                 {(() => {
                   const catCodeOrId = (photo.categoryId || photo.category || '').trim();

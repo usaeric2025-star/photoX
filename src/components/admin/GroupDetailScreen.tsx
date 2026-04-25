@@ -187,7 +187,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                           placeholder="在此統一修改所有照片的描述..."
                           onChange={(e) => {
                             const text = e.target.value;
-                            setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, description: text } : p));
+                            setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, description: p.description ?? text } : p));
                           }}
                         />
                       </div>
@@ -199,7 +199,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                             return (
                               <button 
                                 key={cat.code}
-                                onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, category: cat.code, categoryId: cat.code, subcategoryId: null, sub_category: '' } : p))}
+                                onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, category: cat.code, categoryId: cat.code } : p))}
                                 className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 active:bg-slate-50'}`}
                               >
                                 {cat[appLang as keyof DB_Category] || cat.zh}
