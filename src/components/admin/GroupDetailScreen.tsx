@@ -194,7 +194,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                       <div className="space-y-2">
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速分類套用</p>
                         <div className="flex flex-wrap gap-2">
-                          {dbCategories.map(cat => {
+                          {dbCategories?.map(cat => {
                             const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.category === cat.code);
                             return (
                               <button 
@@ -296,12 +296,24 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                     key={photo.id}
                     layoutId={`group-item-${photo.id}`}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setFocusedGroupPhotoId(photo.id)}
+                    onClick={() => {
+                        if(isUnifiedEditing) {
+                          setPhotos(prev => prev.map(p => {
+                            if (p.groupId === activeGroupId) {
+                              if (p.id === photo.id) return { ...p, isGroupCover: true };
+                              if (p.isGroupCover) return { ...p, isGroupCover: false };
+                            }
+                            return p;
+                          }));
+                        } else {
+                          setFocusedGroupPhotoId(photo.id);
+                        }
+                    }}
                     className={`relative aspect-square rounded-2xl overflow-hidden shadow-md border-2 transition-all ${focusedGroupPhotoId === photo.id ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50' : 'border-white'}`}
                   >
                     <img src={photo.uri} className="w-full h-full object-cover" alt={`Group index ${idx}`} />
                     <div className="absolute inset-0 bg-black/5" />
-                    {idx === 0 && (
+                    {(photo.isGroupCover || (groupPhotos.every(p => !p.isGroupCover) && idx === 0)) && (
                       <div className="absolute top-1.5 left-1.5 bg-black/40 backdrop-blur-sm text-white px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-tighter ring-1 ring-white/20">
                          封面
                       </div>

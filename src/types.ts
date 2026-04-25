@@ -56,6 +56,7 @@ export interface Photo {
   createdAt: string;
   updatedAt?: string;
   groupId?: string | null;
+  isGroupCover?: boolean; // New field
   isAnalyzing?: boolean;
   isHidden?: boolean;
   userId?: string;

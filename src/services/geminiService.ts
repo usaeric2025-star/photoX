@@ -39,7 +39,7 @@ export const analyzeProductPhoto = async (
   const categoriesJson = categories.map(c => ({
     id: c.id,
     name: c.name,
-    subcategories: c.subcategories.map(s => ({ id: s.id, name: s.name }))
+    subcategories: (c.subcategories || []).map(s => ({ id: s.id, name: s.name }))
   }));
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
 
