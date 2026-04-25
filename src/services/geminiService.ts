@@ -245,6 +245,13 @@ export const analyzeProductPhoto = async (
         errorMsg = "API Key 沒有權限、遭停權，或是此地區被封鎖: " + error.response.data;
     }
 
+    // Direct debug alerting as requested by user
+    alert('AI API 錯誤詳情:\n' + JSON.stringify({ 
+        status: status, 
+        message: errorMsg,
+        errorRaw: error 
+    }, null, 2));
+
     throw new Error(`AI_FAIL|${status}|${errorMsg}`);
   }
 };
