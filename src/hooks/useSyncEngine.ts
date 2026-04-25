@@ -14,7 +14,7 @@ import {
 
 export const useSyncEngine = () => {
     const [isSyncing, setIsSyncing] = useState(false);
-    const [viewMode, setViewMode] = useState<'public' | 'private'>('public');
+    const [viewMode, setViewMode] = useState<'public' | 'private'>('private');
     const [settings, setSettings] = useState<any>(null);
     const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
 

@@ -24,6 +24,19 @@ export const PhotoCard = React.memo(({
   onClick, 
   onContextMenu 
 }: PhotoCardProps) => {
+  const longPressTimer = React.useRef<any>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    longPressTimer.current = setTimeout(() => {
+      onContextMenu(e as any);
+      if ('vibrate' in navigator) navigator.vibrate(50);
+    }, 600);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  };
+
   return (
     <motion.div 
       initial={false}
@@ -32,6 +45,9 @@ export const PhotoCard = React.memo(({
       className={`relative aspect-square rounded-2xl overflow-hidden group shadow-sm active:scale-95 transition-all ring-offset-2 will-change-transform ${isSelected ? 'ring-2 ring-[#D4A853]' : 'bg-white'}`}
       onClick={onClick}
       onContextMenu={onContextMenu}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchEnd}
     >
       <img 
         src={photo.uri} 

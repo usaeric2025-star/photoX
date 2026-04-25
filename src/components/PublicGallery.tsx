@@ -197,17 +197,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   };
 
   const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
+    if (!touchStartX.current || !touchEndX.current) {
+      touchStartX.current = null;
+      touchEndX.current = null;
+      return;
+    }
     const diff = touchStartX.current - touchEndX.current;
     
     // Swipe left (next photo)
-    if (diff > 50) {
+    if (diff > 30) {
       if (lightboxIndex !== null && lightboxIndex < displayPhotos.length - 1) {
         setLightboxIndex(lightboxIndex + 1);
       }
     } 
     // Swipe right (prev photo)
-    else if (diff < -50) {
+    else if (diff < -30) {
       if (lightboxIndex !== null && lightboxIndex > 0) {
         setLightboxIndex(lightboxIndex - 1);
       }
@@ -233,7 +237,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
           <div className="flex items-center gap-2 shrink-0">
               {user && (
                 <button
-                  onClick={() => navigate('/admin')}
+                  onClick={() => onExit ? onExit() : navigate('/admin')}
                   className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-sm hover:bg-blue-700 active:scale-95"
                 >
                   管理
@@ -512,7 +516,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
 
             {/* Left Col: Image */}
             <div 
-              className="flex-1 relative flex items-center justify-center min-h-[50vh] md:min-h-screen p-4 md:p-12 touch-none"
+              className="flex-1 relative flex items-center justify-center min-h-[50vh] md:min-h-screen p-4 md:p-12 touch-pan-y"
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}

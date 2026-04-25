@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 export default function PublicView() {
   const { user, authChecked } = useAuth();
   const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [dbCategories, setDbCategories] = useState<DB_Category[]>([]);
   const [publicTags, setPublicTags] = useState<Tag[]>([]);
   const [settings, setSettings] = useState<any>(null);
@@ -17,16 +18,18 @@ export default function PublicView() {
   const navigate = useNavigate();
 
   const loadLocalData = async () => {
-    const [sp, sc, stg, s] = await Promise.all([
+    const [sp, sc, stg, s, lc] = await Promise.all([
       loadData('public_photos'),
       loadData('db_categories'),
       loadData('public_tags'),
-      loadData('public_settings')
+      loadData('public_settings'),
+      loadData('public_categories')
     ]);
     if (sp && sp.length > 0) setPublicPhotos(sp);
     if (sc && sc.length > 0) setDbCategories(sc);
     if (stg && stg.length > 0) setPublicTags(stg);
     if (s) setSettings(s);
+    if (lc && lc.length > 0) setCategories(lc);
   };
 
   const syncWithCloud = async (isBackground = false) => {
@@ -49,6 +52,10 @@ export default function PublicView() {
       }
       if (cloudSettings) {
         setSettings(cloudSettings);
+        if (cloudSettings.categories) {
+          setCategories(cloudSettings.categories);
+          saveData('public_categories', cloudSettings.categories);
+        }
         saveData('public_settings', cloudSettings);
       }
     } catch (e) {
@@ -79,7 +86,7 @@ export default function PublicView() {
           ) : (
             <PublicGallery 
               photos={publicPhotos} 
-              categories={[]}
+              categories={categories}
               tags={publicTags}
               dbCategories={dbCategories}
               onExit={() => {}}
