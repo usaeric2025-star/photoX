@@ -48,14 +48,14 @@ import { GroupDetailScreen } from '../components/admin/GroupDetailScreen';
 import { PublicGallery } from '../components/PublicGallery';
 
 export default function AdminView() {
-  // 臨時測試
-  return <div style={{padding: 50, background: 'green', color: 'white', fontSize: 30}}>Admin 渲染成功！</div>;
-  
   console.log('>>> AdminView Component Executing');
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
   console.log('>>> useAuth completed');
   const navigate = useNavigate();
   const [pageError, setPageError] = useState<string | null>(null);
+
+  const getSafeSessionStorage = (key: string) => { try { return sessionStorage.getItem(key); } catch { return null; } };
+  const getSafeLocalStorage = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
 
   useEffect(() => {
     const handleError = (e: ErrorEvent) => setPageError(e.message);
@@ -77,7 +77,7 @@ export default function AdminView() {
     </div>
   ) : null;
   
-  console.log('AdminView Debug:', { authChecked, user, isStaffMode: sessionStorage.getItem('isStaffMode') });
+  console.log('AdminView Debug:', { authChecked, user, isStaffMode: getSafeSessionStorage('isStaffMode') });
 
   if (!authChecked) {
     return (
@@ -94,7 +94,7 @@ export default function AdminView() {
     );
   }
 
-  if (!user && sessionStorage.getItem('isStaffMode') !== 'true') {
+  if (!user && getSafeSessionStorage('isStaffMode') !== 'true') {
     return (
        <ErrorBoundary>
         {errorContent}
@@ -117,8 +117,8 @@ export default function AdminView() {
               <button
                 onClick={() => {
                   const pass = prompt('請輸入您的本地管理密碼:');
-                  if (pass === localStorage.getItem('internal_password')) {
-                    sessionStorage.setItem('isStaffMode', 'true');
+                  if (pass === getSafeLocalStorage('internal_password')) {
+    try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
                     window.location.reload();
                   } else if (pass) {
                     alert('密碼錯誤');
@@ -130,7 +130,7 @@ export default function AdminView() {
               </button>
               <button
                 onClick={() => {
-                  sessionStorage.removeItem('isStaffMode');
+    try { sessionStorage.removeItem('isStaffMode'); } catch {}
                   navigate('/');
                 }}
                 className="text-sm text-slate-400 hover:text-slate-600 font-medium"
@@ -178,13 +178,13 @@ export default function AdminView() {
   } = useSyncEngine();
 
   useEffect(() => {
-    if ((user || sessionStorage.getItem('isStaffMode') === 'true') && viewMode === 'public') {
+    if ((user || getSafeSessionStorage('isStaffMode') === 'true') && viewMode === 'public') {
       setViewMode('private');
     }
   }, [user, viewMode, setViewMode]);
   
   useEffect(() => {
-    if (user || sessionStorage.getItem('isStaffMode') === 'true') {
+    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
       refreshCloudData(
         user,
         categories,
@@ -278,7 +278,7 @@ export default function AdminView() {
   
   // Re-enable photo loading
   useEffect(() => {
-    if (user || sessionStorage.getItem('isStaffMode') === 'true') {
+    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
       loadAllPhotosFromCloud().then(setPhotos).catch(console.error);
     }
   }, [user]);
