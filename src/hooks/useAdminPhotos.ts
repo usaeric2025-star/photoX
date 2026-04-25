@@ -9,7 +9,8 @@ import {
   calculateMD5FromArrayBuffer,
   generateItemCode,
   checkImageHashExists,
-  loadAllPhotosFromCloud
+  loadAllPhotosFromCloud,
+  loadPhotosFromCloud
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
@@ -82,26 +83,11 @@ export const useAdminPhotos = (
         
         if (user) {
           // Always try to pull cloud photos to stay up-to-date
-          loadAllPhotosFromCloud()
+          loadPhotosFromCloud(user.id)
             .then(cloudPhotos => {
-              if (cloudPhotos && cloudPhotos.length > 0) {
-                setPhotos(prevPhotos => {
-                  const newMap = new Map();
-                  // Load existing local photos first
-                  prevPhotos.forEach(p => newMap.set(p.id, p));
-                  
-                  // Merge with cloud photos
-                  cloudPhotos.forEach(cp => {
-                     const lp = newMap.get(cp.id);
-                     // If no local, or cloud is newer, take cloud.
-                     if (!lp || (cp.updatedAt && lp.updatedAt && new Date(cp.updatedAt) > new Date(lp.updatedAt))) {
-                       newMap.set(cp.id, cp);
-                     }
-                  });
-                  return Array.from(newMap.values());
-                });
-                // After merging, save to IndexedDB
-                saveData('product_photos', Array.from(new Map( (localPhotos || []).concat(cloudPhotos).map(p => [p.id, p]) ).values()));
+              if (cloudPhotos) {
+                setPhotos(cloudPhotos);
+                saveData('product_photos', cloudPhotos);
               }
             })
             .catch(e => console.error('Cloud pull during init failed:', e));
@@ -235,6 +221,7 @@ export const useAdminPhotos = (
                 sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
                 tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
                 dimensions: p.dimensions || result.dimensions || null,
+                updatedAt: new Date().toISOString(),
                 isAnalyzing: false 
               };
 
@@ -353,6 +340,7 @@ export const useAdminPhotos = (
             sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
             tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
             dimensions: p.dimensions || result.dimensions || null,
+            updatedAt: new Date().toISOString(),
             isAnalyzing: false 
           };
           
@@ -556,13 +544,14 @@ export const useAdminPhotos = (
   };
 
   const updatePhoto = async (updatedPhoto: Photo) => {
+    const photoWithTime = { ...updatedPhoto, updatedAt: new Date().toISOString() };
     // 1. Immediately update UI
-    setPhotos(prev => prev.map(p => p.id === updatedPhoto.id ? updatedPhoto : p));
-    saveData('product_photos', photosRef.current.filter(p => p.id !== updatedPhoto.id).concat(updatedPhoto));
+    setPhotos(prev => prev.map(p => p.id === photoWithTime.id ? photoWithTime : p));
+    saveData('product_photos', photosRef.current.filter(p => p.id !== photoWithTime.id).concat(photoWithTime));
     
     // 2. Immediately update cloud
     if (user) {
-       await savePhotoToCloud(user.id, updatedPhoto);
+       await savePhotoToCloud(user.id, photoWithTime);
     }
   };
 

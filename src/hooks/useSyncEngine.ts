@@ -90,11 +90,11 @@ export const useSyncEngine = () => {
                 await saveData('db_categories', cloudDbCats);
             }
 
-            const cloudPublicPhotos = await loadAllPhotosFromCloud();
-            if (cloudPublicPhotos) {
+            const cloudPhotos = user ? await loadPhotosFromCloud(user.id) : await loadAllPhotosFromCloud();
+            if (cloudPhotos) {
                 setPublicPhotos((prev: any[]) => {
                     const localMap = new Map((prev || []).map(p => [p.id, p]));
-                    const merged = cloudPublicPhotos.map(cp => {
+                    const merged = cloudPhotos.map(cp => {
                         const local = localMap.get(cp.id);
                         if (local) {
                             return {
@@ -110,7 +110,7 @@ export const useSyncEngine = () => {
                         return cp;
                     });
                     
-                    const cloudIds = new Set(cloudPublicPhotos.map(p => p.id));
+                    const cloudIds = new Set(cloudPhotos.map(p => p.id));
                     const localOnly = (prev || []).filter(p => !cloudIds.has(p.id)).map(p => ({ ...p, isAnalyzing: false }));
                     
                     const final = [...merged, ...localOnly];
