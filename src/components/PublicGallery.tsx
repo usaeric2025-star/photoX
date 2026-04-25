@@ -28,7 +28,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   const t = translations[lang] || translations['zh'];
   const navigate = useNavigate();
 
-  const [isStaffMode, setIsStaffMode] = useState(false);
+  const [isStaffMode, setIsStaffMode] = useState(() => {
+    return sessionStorage.getItem('isStaffMode') === 'true';
+  });
+  
+  useEffect(() => {
+    sessionStorage.setItem('isStaffMode', String(isStaffMode));
+  }, [isStaffMode]);
   const [showPassPrompt, setShowPassPrompt] = useState(false);
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);

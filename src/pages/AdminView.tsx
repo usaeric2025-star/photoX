@@ -58,7 +58,10 @@ export default function AdminView() {
                 Google 安全登入
              </button>
              <button
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  sessionStorage.removeItem('isStaffMode');
+                  navigate('/');
+                }}
                 className="text-sm text-slate-400 hover:text-slate-600 font-medium"
              >
                 返回展示館
