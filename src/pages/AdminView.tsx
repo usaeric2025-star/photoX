@@ -637,13 +637,13 @@ export default function AdminView() {
           isAnalyzing={isAnalyzing}
           handleSingleAiAnalyze={async (data, catId) => {
             const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
-            if (result && !editPhotoId) {
+            if (result) {
               if (result.name && !addName) setAddName(result.name);
               if (result.newCategoryName && !catId && !addCatId) {
                 const foundCat = categories.find(c => c.name === result.newCategoryName);
                 if (foundCat) setAddCatId(foundCat.id);
               }
-              if (result.tagIds && addTagIds.length === 0) {
+              if (result.tagIds) {
                 const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
                 setAddTagIds(rawTagIds);
               }

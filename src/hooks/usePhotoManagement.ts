@@ -106,7 +106,7 @@ export const usePhotoManagement = (
           setPhotos(prev => (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p));
           
           if (user) {
-             savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Update sync failed:", e));
+             await savePhotoToCloud(user.id, updatedPhoto);
           }
        } else if (newPhotoData) {
           const dbId = crypto.randomUUID();
@@ -140,7 +140,7 @@ export const usePhotoManagement = (
           setPhotos(prev => [newPhoto, ...(prev as Photo[])]);
           
           if (user) {
-            savePhotoToCloud(user.id, newPhoto).catch(e => console.error("New photo sync failed:", e));
+            await savePhotoToCloud(user.id, newPhoto);
           }
        }
        

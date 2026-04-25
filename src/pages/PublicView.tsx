@@ -17,21 +17,6 @@ export default function PublicView() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
 
-  const loadLocalData = async () => {
-    const [sp, sc, stg, s, lc] = await Promise.all([
-      loadData('public_photos'),
-      loadData('db_categories'),
-      loadData('public_tags'),
-      loadData('public_settings'),
-      loadData('public_categories')
-    ]);
-    if (sp && sp.length > 0) setPublicPhotos(sp.map((p: any) => ({ ...p, isAnalyzing: false })));
-    if (sc && sc.length > 0) setDbCategories(sc);
-    if (stg && stg.length > 0) setPublicTags(stg);
-    if (s) setSettings(s);
-    if (lc && lc.length > 0) setCategories(lc);
-  };
-
   const syncWithCloud = async (isBackground = false) => {
     if (!isBackground) setIsInitializing(true);
     else setIsRefreshing(true);
@@ -44,19 +29,15 @@ export default function PublicView() {
 
       if (cloudPhotos) {
         setPublicPhotos(cloudPhotos);
-        saveData('public_photos', cloudPhotos);
       }
       if (cloudCats) {
         setDbCategories(cloudCats);
-        saveData('db_categories', cloudCats);
       }
       if (cloudSettings) {
         setSettings(cloudSettings);
         if (cloudSettings.categories) {
           setCategories(cloudSettings.categories);
-          saveData('public_categories', cloudSettings.categories);
         }
-        saveData('public_settings', cloudSettings);
       }
     } catch (e) {
       console.error(e);
@@ -67,11 +48,7 @@ export default function PublicView() {
   };
 
   useEffect(() => {
-    const init = async () => {
-      await loadLocalData();
-      await syncWithCloud(true);
-    };
-    init();
+    syncWithCloud(false);
   }, []);
 
   return (

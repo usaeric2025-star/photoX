@@ -539,19 +539,31 @@ export const useAdminPhotos = (
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
       const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
       
+      // 1. Immediately update UI
       const newPhotos = photosRef.current.filter(p => !ids.includes(p.id));
       setPhotos(newPhotos);
       saveData('product_photos', newPhotos);
       
+      // 2. Immediately delete from Cloud
       if (user) {
         try {
-          for (const photo of photosToDelete) {
-             await deletePhotoFromCloud(user.id, photo);
-          }
+          await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
         } catch (err) {
           console.error("Cloud deletion failed:", err);
+          // Optional: Revert UI or alert user?
         }
       }
+  };
+
+  const updatePhoto = async (updatedPhoto: Photo) => {
+    // 1. Immediately update UI
+    setPhotos(prev => prev.map(p => p.id === updatedPhoto.id ? updatedPhoto : p));
+    saveData('product_photos', photosRef.current.filter(p => p.id !== updatedPhoto.id).concat(updatedPhoto));
+    
+    // 2. Immediately update cloud
+    if (user) {
+       await savePhotoToCloud(user.id, updatedPhoto);
+    }
   };
 
   return {
@@ -560,6 +572,6 @@ export const useAdminPhotos = (
     aiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
-    handleBatchAiIdentify, handlePhotoImport, deletePhoto
+    handleBatchAiIdentify, handlePhotoImport, deletePhoto, updatePhoto
   };
 };
