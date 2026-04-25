@@ -68,6 +68,156 @@ export default function AdminView() {
     };
   }, []);
 
+  const [activeScreen, setActiveScreen] = useState('home');
+
+  // Handle OAuth Hash Redirect
+  useEffect(() => {
+    if (window.location.hash.includes('access_token')) {
+        window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isMultiSelect, setIsMultiSelect] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<any>(null);
+  const [alertDialog, setAlertDialog] = useState<any>(null);
+  const [promptDialog, setPromptDialog] = useState<any>(null);
+  const [promptValue, setPromptValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
+  const [filterCatId, setFilterCatId] = useState<string | null>(null);
+  const [filterSubId, setFilterSubId] = useState<string | null>(null);
+  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+  const [appLang] = useState('zh');
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const cancelBatchAiRef = useRef<boolean>(false);
+  
+  const { 
+    isSyncing, setIsSyncing,
+    viewMode, setViewMode,
+    settings, setSettings,
+    lastSyncTime, setLastSyncTime,
+    refreshCloudData
+  } = useSyncEngine();
+
+  useEffect(() => {
+    if ((user || getSafeSessionStorage('isStaffMode') === 'true') && viewMode === 'public') {
+      setViewMode('private');
+    }
+  }, [user, viewMode, setViewMode]);
+  
+  const { 
+    categories, setCategories,
+    tags, setTags,
+    dbCategories, setDbCategories,
+    manufacturers, setManufacturers,
+    publicCategories, setPublicCategories,
+    publicTags, setPublicTags,
+    publicManufacturers, setPublicManufacturers
+  } = useAdminCategory();
+  
+  const { 
+    photos, setPhotos,
+    isBatchAnalyzing, batchProgress,
+    handleBatchAiIdentify, handlePhotoImport, deletePhoto
+  } = useAdminPhotos(user, '', 'auto', '', categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
+
+  useEffect(() => {
+    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
+      refreshCloudData(
+        user,
+        categories,
+        tags,
+        manufacturers,
+        setSettings,
+        setPublicCategories,
+        setPublicTags,
+        setPublicManufacturers,
+        setDbCategories,
+        setPublicPhotos,
+        setCloudCount,
+        false
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const { 
+    newPhotoData, setNewPhotoData,
+    editPhotoId, setEditPhotoId,
+    batchEditIds, setBatchEditIds,
+    addCatId, setAddCatId,
+    addSubId, setAddSubId,
+    addTagIds, setAddTagIds,
+    addNote, setAddNote,
+    addName, setAddName,
+    addManualCode, setAddManualCode,
+    addDimL, setAddDimL,
+    addDimW, setAddDimW,
+    addDimH, setAddDimH,
+    showOtherFields, setShowOtherFields,
+    resetAddState,
+    saveNewPhoto,
+    saveBatchEdit,
+  } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, setAlertDialog, setIsSyncing, setActiveScreen);
+
+  const filteredPhotos = useMemo(() => {
+    let result = photos;
+    if (searchQuery) {
+      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    if (filterCatId) {
+      result = result.filter(p => p.categoryId === filterCatId);
+    }
+    if (filterSubId) {
+      result = result.filter(p => p.subcategoryId === filterSubId);
+    }
+    if (filterTagIds.length > 0) {
+      result = result.filter(p => p.tagIds?.some(id => filterTagIds.includes(id)));
+    }
+    return result;
+  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
+  
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [aiProvider, setAiProvider] = useState('gemini');
+  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
+  const [internalPassword, setInternalPassword] = useState('');
+  const [syncPercent, setSyncPercent] = useState(0);
+  const [cloudCount, setCloudCount] = useState(0);
+  const [syncAction, setSyncAction] = useState('idle');
+  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+  const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
+  const [showManageAccess, setShowManageAccess] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(15);
+  const observerTarget = useRef(null);
+
+  // Re-enable photo loading
+  useEffect(() => {
+    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
+      loadAllPhotosFromCloud().then(setPhotos).catch(console.error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+            setVisibleCount(prev => prev + 15);
+        }
+      },
+      { threshold: 1 }
+    );
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+  
+  // Conditionally rendered content (error handling)
   const errorContent = pageError ? (
     <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white p-4 font-bold overflow-auto max-h-[30vh]">
       <div className="flex justify-between">
@@ -79,6 +229,7 @@ export default function AdminView() {
   
   console.log('AdminView Debug:', { authChecked, user, isStaffMode: getSafeSessionStorage('isStaffMode') });
 
+  // Early returns
   if (!authChecked) {
     return (
        <ErrorBoundary>
@@ -143,101 +294,7 @@ export default function AdminView() {
     );
   }
 
-  const [activeScreen, setActiveScreen] = useState('home');
-
-  // Handle OAuth Hash Redirect
-  useEffect(() => {
-    if (window.location.hash.includes('access_token')) {
-        window.history.replaceState(null, '', window.location.pathname);
-    }
-  }, []);
-
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isMultiSelect, setIsMultiSelect] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState<any>(null);
-  const [alertDialog, setAlertDialog] = useState<any>(null);
-  const [promptDialog, setPromptDialog] = useState<any>(null);
-  const [promptValue, setPromptValue] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
-  const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
-  const [filterCatId, setFilterCatId] = useState<string | null>(null);
-  const [filterSubId, setFilterSubId] = useState<string | null>(null);
-  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
-  const [appLang] = useState('zh');
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-  const [previewUri, setPreviewUri] = useState<string | null>(null);
-  const cancelBatchAiRef = useRef<boolean>(false);
-  
-  const { 
-    isSyncing, setIsSyncing,
-    viewMode, setViewMode,
-    settings, setSettings,
-    lastSyncTime, setLastSyncTime,
-    refreshCloudData
-  } = useSyncEngine();
-
-  useEffect(() => {
-    if ((user || getSafeSessionStorage('isStaffMode') === 'true') && viewMode === 'public') {
-      setViewMode('private');
-    }
-  }, [user, viewMode, setViewMode]);
-  
-  useEffect(() => {
-    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
-      refreshCloudData(
-        user,
-        categories,
-        tags,
-        manufacturers,
-        setSettings,
-        setPublicCategories,
-        setPublicTags,
-        setPublicManufacturers,
-        setDbCategories,
-        setPublicPhotos,
-        setCloudCount,
-        false
-      );
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-  
-  const { 
-    categories, setCategories,
-    tags, setTags,
-    dbCategories, setDbCategories,
-    manufacturers, setManufacturers,
-    publicCategories, setPublicCategories,
-    publicTags, setPublicTags,
-    publicManufacturers, setPublicManufacturers
-  } = useAdminCategory();
-  
-  const { 
-    photos, setPhotos,
-    isBatchAnalyzing, batchProgress,
-    handleBatchAiIdentify, handlePhotoImport, deletePhoto
-  } = useAdminPhotos(user, '', 'auto', '', categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
-
-  const { 
-    newPhotoData, setNewPhotoData,
-    editPhotoId, setEditPhotoId,
-    batchEditIds, setBatchEditIds,
-    addCatId, setAddCatId,
-    addSubId, setAddSubId,
-    addTagIds, setAddTagIds,
-    addNote, setAddNote,
-    addName, setAddName,
-    addManualCode, setAddManualCode,
-    addDimL, setAddDimL,
-    addDimW, setAddDimW,
-    addDimH, setAddDimH,
-    showOtherFields, setShowOtherFields,
-    resetAddState,
-    saveNewPhoto,
-    saveBatchEdit,
-  } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, setAlertDialog, setIsSyncing, setActiveScreen);
-
+  const saveSettings = async (s: any) => { setSettings(s); await saveSettingsCloud(s); };
   const handleGroupPhotos = () => {
       // Grouping logic 
       if (selectedIds.length < 2) return;
@@ -246,104 +303,33 @@ export default function AdminView() {
       setSelectedIds([]);
       setIsMultiSelect(false);
   };
-
-  const filteredPhotos = useMemo(() => {
-    let result = photos;
-    if (searchQuery) {
-      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    if (filterCatId) {
-      result = result.filter(p => p.categoryId === filterCatId);
-    }
-    if (filterSubId) {
-      result = result.filter(p => p.subcategoryId === filterSubId);
-    }
-    if (filterTagIds.length > 0) {
-      result = result.filter(p => p.tagIds?.some(id => filterTagIds.includes(id)));
-    }
-    return result;
-  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [aiProvider, setAiProvider] = useState('gemini');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
-  const [internalPassword, setInternalPassword] = useState('');
-  const [syncPercent, setSyncPercent] = useState(0);
-  const [cloudCount, setCloudCount] = useState(0);
-  const [syncAction, setSyncAction] = useState('idle');
-  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
-  const [publicPhotos, setPublicPhotos] = useState<Photo[]>([]);
-  const [showManageAccess, setShowManageAccess] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // Re-enable photo loading
-  useEffect(() => {
-    if (user || getSafeSessionStorage('isStaffMode') === 'true') {
-      loadAllPhotosFromCloud().then(setPhotos).catch(console.error);
-    }
-  }, [user]);
-
-  const saveSettings = async (s: any) => { setSettings(s); await saveSettingsCloud(s); };
-  const deletePhotoFromHook = async (id: string, photo: Photo) => { await deletePhotoFromCloud(user.id, photo); setPhotos(prev => prev.filter(p => p.id !== id)); };
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = await uploadLogo(file);
-    setSettings((prev: any) => ({ ...prev, logo_url: url }));
+  const quickAddSubCategory = () => {
+    if (!addCatId) return;
+    setPromptValue('');
+    setPromptDialog({
+      title: '新增子分類',
+      placeholder: '輸入新子分類名稱',
+      onSubmit: (val) => {
+        const newSubId = crypto.randomUUID();
+        setCategories(prev => prev.map(c => c.id === addCatId ? {
+          ...c,
+          subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
+        } : c));
+        setAddSubId(newSubId);
+      }
+    });
   };
-  
-  const syncPhotosToCloud = async (uid: string, photos: Photo[], onProgress: (p: number) => void) => { 
-      // This is used by SyncPanel, should be restored to connect to services
-      await syncPhotosToCloudService(uid, photos, onProgress); 
-  };
-  const fetchSettings = async () => { 
-      const s = await fetchSettingsCloud(); 
-      if (s) setSettings(s);
-      return s;
-  };
-  const handleUngroup = (groupId: string) => { 
-      setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
-  };
-  const handleAnalyzePhoto = async (uri: string, cats: Category[], tags: Tag[], key: string, provider: string, model: string) => { 
-      return await analyzeProductPhoto(uri, cats, tags, key, provider, model);
-  };
-  
-  const [visibleCount, setVisibleCount] = useState(15);
-  const observerTarget = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting) {
-            setVisibleCount(prev => prev + 15);
-        }
-      },
-      { threshold: 1 }
-    );
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-    return () => observer.disconnect();
-  }, []);
-
-  const displayPhotos = filteredPhotos.slice(0, visibleCount);
-
-  const triggerManualSync = async () => {
-    if (!user) return;
-    await syncPhotosToCloud(user.id, photos, setSyncPercent);
-    refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true);
-  };
-  const performPushSync = async () => {
-    if (!user) return;
-    setAlertDialog({ title: '備份中', message: '正在將資料備份到雲端...' });
-    await syncPhotosToCloud(user.id, photos, setSyncPercent);
-    setAlertDialog({ title: '備份完成', message: '所有資料已成功備份到雲端。' });
-  };
-  const performPullSync = async () => {
-    if (!user) return;
-    setAlertDialog({ title: '恢復中', message: '正在從雲端還原資料...' });
-    await refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setPublicPhotos, setCloudCount, true);
-    setAlertDialog({ title: '恢復完成', message: '所有設定和類別已經就緒！照片也正在背景讀取。' });
+  const quickAddTag = () => {
+    setPromptValue('');
+    setPromptDialog({
+      title: '自定義標籤',
+      placeholder: '輸入新標籤名稱',
+      onSubmit: (val) => {
+        const newTagId = crypto.randomUUID();
+        setTags(prev => [...prev, { id: newTagId, name: val.trim(), aliases: [] }]);
+        setAddTagIds(prev => [...prev, newTagId]);
+      }
+    });
   };
 
   if (viewMode === 'public') {
@@ -434,36 +420,6 @@ export default function AdminView() {
         </ErrorBoundary>
      );
   }
-
-  const quickAddSubCategory = () => {
-    if (!addCatId) return;
-    setPromptValue('');
-    setPromptDialog({
-      title: '新增子分類',
-      placeholder: '輸入新子分類名稱',
-      onSubmit: (val) => {
-        const newSubId = crypto.randomUUID();
-        setCategories(prev => prev.map(c => c.id === addCatId ? {
-          ...c,
-          subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
-        } : c));
-        setAddSubId(newSubId);
-      }
-    });
-  };
-
-  const quickAddTag = () => {
-    setPromptValue('');
-    setPromptDialog({
-      title: '自定義標籤',
-      placeholder: '輸入新標籤名稱',
-      onSubmit: (val) => {
-        const newTagId = crypto.randomUUID();
-        setTags(prev => [...prev, { id: newTagId, name: val.trim(), aliases: [] }]);
-        setAddTagIds(prev => [...prev, newTagId]);
-      }
-    });
-  };
 
   const deleteSubCategory = (catId: string, subId: string) => {
     setConfirmDialog({
