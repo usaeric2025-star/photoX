@@ -47,7 +47,9 @@ import { GroupDetailScreen } from '../components/admin/GroupDetailScreen';
 import { PublicGallery } from '../components/PublicGallery';
 
 export default function AdminView() {
+  console.log('>>> AdminView Component Executing');
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
+  console.log('>>> useAuth completed');
   const navigate = useNavigate();
   const [pageError, setPageError] = useState<string | null>(null);
 
