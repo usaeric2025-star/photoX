@@ -46,8 +46,11 @@ import { UploadForm } from '../components/admin/UploadForm';
 import { LoginScreen } from '../components/admin/LoginScreen';
 import { GroupDetailScreen } from '../components/admin/GroupDetailScreen';
 import { PublicGallery } from '../components/PublicGallery';
+import { translations, LanguageCode } from '../lib/translations';
 
 export default function AdminView() {
+  const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
+  const t = translations[lang] || translations['en'];
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
   const navigate = useNavigate();
   const [pageError, setPageError] = useState<string | null>(null);
