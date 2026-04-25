@@ -18,12 +18,27 @@ interface PublicGalleryProps {
   isRefreshing?: boolean;
   onRefresh?: () => void;
   user?: any;
+  isAdminMode?: boolean;
+  onEditPhoto?: (id: string) => void;
+  onDeletePhotos?: (ids: string[]) => void;
+  onGroupPhotos?: (ids: string[]) => void;
+  onOpenSettings?: () => void;
+  onAddPhoto?: () => void;
+  selectedIds?: string[];
+  onToggleSelection?: (id: string) => void;
+  onClearSelection?: () => void;
 }
 
 import { useGallery } from '../hooks/useGallery';
 import { translations, LanguageCode } from '../lib/translations';
+import { Trash2 } from 'lucide-react';
 
-export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories, tags, dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, internalPassword, settings, isRefreshing, onRefresh }) => {
+export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
+  photos, categories, tags, dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, 
+  internalPassword, settings, isRefreshing, onRefresh,
+  isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onOpenSettings, onAddPhoto,
+  selectedIds = [], onToggleSelection, onClearSelection
+}) => {
   const [lang, setLang] = useState<LanguageCode>('en');
   const t = translations[lang] || translations['zh'];
   const navigate = useNavigate();
@@ -235,12 +250,46 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-              {user && (
+              {isAdminMode && (
+                <div className="flex items-center gap-2 mr-2">
+                  <button 
+                    onClick={onOpenSettings}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95 flex items-center gap-1.5 text-nowrap"
+                  >
+                    <Settings2 size={12} />
+                    <span>设置</span>
+                  </button>
+                  <button 
+                    onClick={onAddPhoto}
+                    className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-lg hover:bg-blue-700 active:scale-95 text-nowrap"
+                  >
+                    新增
+                  </button>
+                  {onExit && (
+                    <button 
+                      onClick={onExit}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm hover:bg-slate-50 active:scale-95 text-nowrap"
+                    >
+                      退出模式
+                    </button>
+                  )}
+                </div>
+              )}
+              {user && !isAdminMode && (
                 <button
                   onClick={() => onExit ? onExit() : navigate('/admin')}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest transition-all shadow-sm hover:bg-blue-700 active:scale-95"
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest transition-all shadow-sm hover:bg-blue-700 active:scale-95 mr-2"
                 >
-                  管理
+                  进入管理
+                </button>
+              )}
+              {showExit && !isAdminMode && onExit && (
+                <button 
+                  onClick={onExit}
+                  className="w-10 h-10 bg-[#D4A853] text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all mr-2"
+                  title="返回"
+                >
+                  <X size={18} />
                 </button>
               )}
               <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
@@ -388,7 +437,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   shareSinglePhoto(photo);
                   if ('vibrate' in navigator) navigator.vibrate(50);
                 }}
+                onLongPress={(e) => {
+                  if (isAdminMode && onToggleSelection) {
+                    onToggleSelection(photo.id);
+                  }
+                }}
                 onClick={() => {
+                  if (isAdminMode && onToggleSelection) {
+                    onToggleSelection(photo.id);
+                    return;
+                  }
                   if (photo.groupId && showGroupsCollapsed) {
                     setActiveGroupId(photo.groupId);
                   } else {
@@ -398,7 +456,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     if (realIndex !== -1) setLightboxIndex(realIndex);
                   }
                 }}
-                className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group`}
+                className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${isAdminMode && selectedIds.includes(photo.id) ? 'ring-4 ring-blue-500 ring-offset-2 scale-[0.95]' : ''}`}
               >
                 <img 
                   src={photo.thumb_url || photo.image_url || photo.uri} 
@@ -407,6 +465,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105`}
                 />
 
+                {isAdminMode && selectedIds.includes(photo.id) && (
+                  <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full shadow-lg z-10">
+                    <X size={12} className="rotate-45" />
+                  </div>
+                )}
+                
                 {photo.groupId && (
                   <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[7px] text-white font-bold flex items-center gap-1 border border-white/20 uppercase">
                     <Layers size={9} />
@@ -445,7 +509,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
       </div>
 
       {/* Floating Action Buttons (Normal Mode) */}
-      {lightboxIndex === null && (
+      {lightboxIndex === null && !isAdminMode && (
         <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400]">
             <button 
               onClick={scrollToTop} 
@@ -456,6 +520,31 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             <button onClick={() => contactWhatsApp()} className="bg-[#25D366] text-white p-4 rounded-full shadow-lg">
               <MessageCircle size={24} />
             </button>
+        </div>
+      )}
+
+      {/* Admin Bulk Actions Bar */}
+      {isAdminMode && selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-2 bg-[#1D3557] px-6 py-3 rounded-full shadow-2xl border border-white/20 animate-in fade-in slide-in-from-bottom-5 duration-300">
+           <span className="text-[10px] font-black text-white/50 uppercase tracking-widest mr-2">已选 {selectedIds.length} 张</span>
+           <button 
+             onClick={() => onGroupPhotos?.(selectedIds)}
+             className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black text-white uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-white/10"
+           >
+             <Layers size={14} /> 合并
+           </button>
+           <button 
+             onClick={() => onDeletePhotos?.(selectedIds)}
+             className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-xl text-[10px] font-black text-red-400 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-red-500/20"
+           >
+             <Trash2 size={14} /> 删除
+           </button>
+           <button 
+             onClick={onClearSelection}
+             className="p-2 text-white/40 hover:text-white"
+           >
+             <X size={18} />
+           </button>
         </div>
       )}
 
@@ -505,14 +594,28 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
             className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm flex flex-col md:flex-row items-stretch"
             onClick={() => setLightboxIndex(null)}
           >
-            {/* Close */}
-            <button 
-              className="absolute top-4 right-4 md:top-6 md:right-6 z-[210] p-3 text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full transition-all"
-              onClick={() => setLightboxIndex(null)}
-              title={t.close}
-            >
-              <X size={24} />
-            </button>
+            {/* Close & Edit */}
+            <div className="absolute top-4 right-4 md:top-6 md:right-6 z-[210] flex gap-2">
+              {isAdminMode && (
+                <button
+                  className="p-3 bg-blue-600 text-white rounded-full shadow-lg active:scale-95 transition-all"
+                  onClick={() => {
+                    const photo = displayPhotos[lightboxIndex];
+                    if (onEditPhoto) onEditPhoto(photo.id);
+                  }}
+                  title="编辑"
+                >
+                  <Settings2 size={24} />
+                </button>
+              )}
+              <button 
+                className="p-3 text-white/50 hover:text-white bg-black/20 hover:bg-white/10 rounded-full transition-all"
+                onClick={() => setLightboxIndex(null)}
+                title={t.close}
+              >
+                <X size={24} />
+              </button>
+            </div>
 
             {/* Left Col: Image */}
             <div 

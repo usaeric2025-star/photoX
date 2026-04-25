@@ -405,7 +405,7 @@ export default function AdminView() {
             tags={tags}
             dbCategories={dbCategories}
             showExit={true}
-            onExit={() => setViewMode('private')}
+            onExit={() => navigate('/')}
             user={user}
             settings={settings}
             isRefreshing={false}
@@ -596,86 +596,43 @@ export default function AdminView() {
         />
       )}
 
-      <div className="flex flex-col h-screen bg-transparent">
-          <AdminHeader 
-              settings={settings} user={user} viewMode={viewMode} setViewMode={setViewMode}
-              isBatchAnalyzing={isBatchAnalyzing} batchProgress={batchProgress} activeScreen={activeScreen}
-              isMultiSelect={isMultiSelect} selectedIds={selectedIds} filteredPhotos={filteredPhotos}
-              setSelectedIds={setSelectedIds} setIsMultiSelect={setIsMultiSelect}
-              handleBatchAiIdentifyTrigger={() => handleBatchAiIdentify(photos, dbCategories, cancelBatchAiRef)}
-              handleManageClick={handleManageClick} loginWithGoogle={loginWithGoogle}
-          />
-          <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
-            <SearchAndFilter 
-                searchQuery={searchQuery} setSearchQuery={setSearchQuery} displayMode={displayMode} setDisplayMode={setDisplayMode}
-                showGroupsCollapsed={showGroupsCollapsed} setShowGroupsCollapsed={setShowGroupsCollapsed}
-                filterCatId={filterCatId} setFilterCatId={setFilterCatId} filterSubId={filterSubId} setFilterSubId={setFilterSubId}
-                filterTagIds={filterTagIds} setFilterTagIds={setFilterTagIds} dbCategories={dbCategories}
-                categories={categories} tags={tags} appLang={appLang}
-            />
-            <ProductGrid 
-                displayMode={displayMode} displayPhotos={displayPhotos} photos={photos}
-                selectedIds={selectedIds} showGroupsCollapsed={showGroupsCollapsed} dbCategories={dbCategories}
-                appLang={appLang} categories={categories} isMultiSelect={isMultiSelect}
-                togglePhotoSelection={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i!==id) : [...prev, id])}
-                setIsMultiSelect={setIsMultiSelect} setSelectedIds={setSelectedIds} setActiveGroupId={setActiveGroupId}
-                setPreviewUri={setPreviewUri} setEditPhotoId={setEditPhotoId} setAddCatId={setAddCatId}
-                setAddSubId={setAddSubId} setAddTagIds={setAddTagIds} setAddNote={setAddNote}
-                setAddName={setAddName} setAddManualCode={setAddManualCode} setAddDimL={setAddDimL}
-                setAddDimW={setAddDimW} setAddDimH={setAddDimH} setNewPhotoData={setNewPhotoData}
-                viewMode={viewMode} user={user} handleShare={() => {}} handleGroupPhotos={handleGroupPhotos}
-                deleteSelected={deletePhoto} setBatchEditIds={setBatchEditIds}
-            />
-            <div ref={observerTarget} className="h-20" />
-          </div>
-          <Modals 
+      <div className="flex flex-col h-screen bg-[#FDFAF6]">
+           <PublicGallery 
+              photos={photos}
+              categories={categories}
+              tags={tags}
+              dbCategories={dbCategories}
+              onExit={() => setViewMode('public')}
+              showExit={true}
+              user={user}
+              settings={settings}
+              isAdminMode={true}
+              selectedIds={selectedIds}
+              onToggleSelection={(id) => setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])}
+              onClearSelection={() => setSelectedIds([])}
+              onEditPhoto={setEditPhotoId}
+              onDeletePhotos={(ids) => deletePhoto(ids)}
+              onGroupPhotos={(ids) => handleGroupPhotos(ids)}
+              onOpenSettings={handleManageClick}
+              onAddPhoto={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.onchange = (e) => handlePhotoUpload(e as any);
+                input.click();
+              }}
+              onRefresh={() => refreshCloudData(
+                  user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPublicPhotos, setCloudCount, true
+              )}
+           />
+           <Modals 
               confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog}
               alertDialog={alertDialog} setAlertDialog={setAlertDialog}
               promptDialog={promptDialog} setPromptDialog={setPromptDialog}
               promptValue={promptValue} setPromptValue={setPromptValue}
-          />
+           />
       </div>
-
-      {previewUri && (
-        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex flex-col pt-safe">
-          <div className="p-6 flex items-center justify-between">
-            <h3 className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] italic">Photo Preview</h3>
-            <button 
-              onClick={() => setPreviewUri(null)}
-              className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white/50 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-          </div>
-          
-          <div className="flex-1 relative flex items-center justify-center overflow-hidden">
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={(_, info) => {
-                const threshold = 50;
-                const photoIndex = photos.findIndex(p => p.uri === previewUri);
-                if (info.offset.x > threshold && photoIndex > 0) {
-                  setPreviewUri(photos[photoIndex - 1].uri);
-                } else if (info.offset.x < -threshold && photoIndex < photos.length - 1) {
-                  setPreviewUri(photos[photoIndex + 1].uri);
-                }
-              }}
-              key={previewUri}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="w-full h-full p-4 flex items-center justify-center select-none"
-            >
-              <img 
-                src={previewUri} 
-                className="max-w-full max-h-full object-contain shadow-2xl pointer-events-none" 
-                alt="Preview" 
-              />
-            </motion.div>
-          </div>
-        </div>
-      )}
     </ErrorBoundary>
   );
 }
