@@ -179,6 +179,8 @@ export default function AdminView() {
     }
     return result;
   }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
+
+  const displayPhotos = filteredPhotos.slice(0, visibleCount);
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
