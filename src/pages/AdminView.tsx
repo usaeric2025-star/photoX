@@ -14,7 +14,7 @@ import {
   ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { onAuthChange, loginWithGoogle, loadCategoriesFromCloud } from '../services/supabaseService';
+import { onAuthChange, loginWithGoogle, loadCategoriesFromCloud, loadPhotosFromCloud } from '../services/supabaseService';
 import { Modals } from '../components/admin/Modals';
 import { ProductGrid } from '../components/admin/ProductGrid';
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
@@ -129,7 +129,22 @@ export default function AdminView() {
     handleGroupPhotos,
   } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, setAlertDialog, setIsSyncing, setActiveScreen);
 
-  const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]); // simplified
+  const filteredPhotos = useMemo(() => {
+    let result = photos;
+    if (searchQuery) {
+      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    if (filterCatId) {
+      result = result.filter(p => p.categoryId === filterCatId);
+    }
+    if (filterSubId) {
+      result = result.filter(p => p.subcategoryId === filterSubId);
+    }
+    if (filterTagIds.length > 0) {
+      result = result.filter(p => p.tagIds?.some(id => filterTagIds.includes(id)));
+    }
+    return result;
+  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [aiProvider, setAiProvider] = useState('gemini');
@@ -149,7 +164,7 @@ export default function AdminView() {
   const saveSettings = async (s: any) => { setSettings(s); await saveData('settings', s); };
   const deletePhotoFromHook = async (id: string, photo: Photo) => { await deletePhoto(id, photo); };
   const handleLogoUpload = async (file: File) => { }; // simplified
-  const loadPhotosFromCloud = async (uid: string) => { return []; }; // simplified
+  
   const syncPhotosToCloud = async (uid: string, photos: Photo[], onProgress: (p: number) => void) => { }; // simplified
   const fetchSettings = async () => { return settings; }; // simplified
   const handleUngroup = (groupId: string) => { }; // simplified

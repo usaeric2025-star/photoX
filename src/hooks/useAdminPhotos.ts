@@ -7,7 +7,8 @@ import {
   calculateMD5,
   calculateMD5FromArrayBuffer,
   generateItemCode,
-  checkImageHashExists
+  checkImageHashExists,
+  loadPhotosFromCloud
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
 
@@ -36,6 +37,12 @@ export const useAdminPhotos = (
     photosRef.current = photos;
   }, [photos]);
   
+  useEffect(() => {
+    if (user) {
+      loadPhotosFromCloud(user.id).then(setPhotos).catch(console.error);
+    }
+  }, [user]);
+
   const handleBatchAiIdentify = async (
       photos: Photo[], 
       dbCategories: any[], 
