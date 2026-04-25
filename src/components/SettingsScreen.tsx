@@ -394,6 +394,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     onChange={(e) => {
                       setGeminiApiKey(e.target.value);
                       localStorage.setItem('gemini_api_key_safe', obfuscateKey(e.target.value));
+                    }}
+                    onBlur={(e) => {
                       setSettingField('gemini_api_key', e.target.value);
                     }}
                   />
@@ -408,6 +410,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                     onChange={(e) => {
                       setCustomModel(e.target.value);
                       localStorage.setItem('ai_custom_model', e.target.value);
+                    }}
+                    onBlur={(e) => {
                       setSettingField('custom_model', e.target.value);
                     }}
                   />
@@ -431,6 +435,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 onChange={(e) => {
                   setInternalPassword(e.target.value);
                   localStorage.setItem('internal_password', e.target.value);
+                }}
+                onBlur={(e) => {
                   setSettingField('internal_password', e.target.value);
                 }}
               />

@@ -80,7 +80,6 @@ export const onAuthChange = (callback: (user: any) => void) => {
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.src = base64Data;
     img.onload = () => {
       const canvas = document.createElement('canvas');
       let width = img.width;
@@ -101,9 +100,17 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
       }
 
       ctx.drawImage(img, 0, 0, width, height);
-      resolve(canvas.toDataURL('image/webp', quality));
+      const result = canvas.toDataURL('image/webp', quality);
+      
+      // Free memory
+      canvas.width = 0;
+      canvas.height = 0;
+      img.src = '';
+      
+      resolve(result);
     };
     img.onerror = (err) => reject(err);
+    img.src = base64Data;
   });
 };
 
