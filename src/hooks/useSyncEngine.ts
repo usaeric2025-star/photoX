@@ -18,14 +18,22 @@ export const useSyncEngine = () => {
     const [settings, setSettings] = useState<any>(null);
     const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
 
-    /* 
     React.useEffect(() => {
-        loadData('public_settings').then(s => {
+        const initSettings = async () => {
+            let s = await loadData('product_settings');
+            if (!s) {
+                // Migrate from old key if exists
+                const oldS = await loadData('public_settings');
+                if (oldS) {
+                    s = oldS;
+                    await saveData('product_settings', oldS);
+                }
+            }
             if (s && !settings) setSettings(s);
-        });
+        };
+        initSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    */
 
     const refreshCloudData = async (
         user: any,
@@ -50,6 +58,7 @@ export const useSyncEngine = () => {
             const cloudSettings = await fetchSettings();
             if (cloudSettings) {
                 setSettings(cloudSettings);
+                await saveData('product_settings', cloudSettings);
                 
                 // Sync theme
                 if (cloudSettings.background_color) document.documentElement.style.setProperty('--custom-bg', cloudSettings.background_color);
@@ -59,19 +68,19 @@ export const useSyncEngine = () => {
                 if (cloudSettings.categories !== undefined) {
                     setPublicCategories(cloudSettings.categories);
                     setCategories(cloudSettings.categories);
-                    await saveData('public_categories', cloudSettings.categories);
+                    await saveData('product_categories', cloudSettings.categories);
                 }
                 
                 if (cloudSettings.tags !== undefined) {
                     setPublicTags(cloudSettings.tags);
                     setTags(cloudSettings.tags);
-                    await saveData('public_tags', cloudSettings.tags);
+                    await saveData('product_tags', cloudSettings.tags);
                 }
                 
                 if (cloudSettings.manufacturers !== undefined) {
                     setPublicManufacturers(cloudSettings.manufacturers);
                     setManufacturers(cloudSettings.manufacturers);
-                    await saveData('public_manufacturers', cloudSettings.manufacturers);
+                    await saveData('product_manufacturers', cloudSettings.manufacturers);
                 }
             }
 
@@ -105,7 +114,7 @@ export const useSyncEngine = () => {
                     const localOnly = (prev || []).filter(p => !cloudIds.has(p.id));
                     
                     const final = [...merged, ...localOnly];
-                    saveData('public_photos', final);
+                    saveData('product_photos', final);
                     return final;
                 });
             }
@@ -113,6 +122,9 @@ export const useSyncEngine = () => {
             if (user) {
                 const cloudPhotos = await loadPhotosFromCloud(user.id);
                 if (cloudPhotos) setCloudCount(cloudPhotos.length);
+            } else if (cloudPublicPhotos) {
+                // In staff mode/no user, show total public count
+                setCloudCount(cloudPublicPhotos.length);
             }
             
             const now = Date.now();

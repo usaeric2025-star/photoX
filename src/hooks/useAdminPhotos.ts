@@ -40,7 +40,7 @@ export const useAdminPhotos = (
   useEffect(() => {
     photosRef.current = photos;
     if (!isInitializing) {
-      saveData('photos', photos);
+      saveData('product_photos', photos);
     }
   }, [photos, isInitializing]);
   
@@ -48,7 +48,16 @@ export const useAdminPhotos = (
     const initPhotos = async () => {
       // 優先載入本地 IndexedDB 照片
       try {
-        const localPhotos = await loadData('photos');
+        let localPhotos = await loadData('product_photos');
+        if (!localPhotos || localPhotos.length === 0) {
+           // Try migrate from old key
+           const oldPhotos = await loadData('photos');
+           if (oldPhotos && oldPhotos.length > 0) {
+              localPhotos = oldPhotos;
+              await saveData('product_photos', oldPhotos);
+           }
+        }
+        
         if (localPhotos && localPhotos.length > 0) {
           setPhotos(localPhotos);
         } else if (user) {

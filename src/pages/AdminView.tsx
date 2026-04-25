@@ -129,11 +129,19 @@ export default function AdminView() {
     photos, setPhotos,
     isAnalyzing, setIsAnalyzing,
     isBatchAnalyzing, batchProgress,
+    cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
   } = useAdminPhotos(user, geminiApiKey, aiProvider, customModel, categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
 
-  // Removed automatic cloud sync on user change to favor manual control as requested.
+  // Auto refresh on mount if user exists
+  useEffect(() => {
+    if (authChecked && (user || getSafeSessionStorage('isStaffMode') === 'true')) {
+      refreshCloudData(
+        user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, false
+      );
+    }
+  }, [authChecked, user]);
 
   const { 
     newPhotoData, setNewPhotoData,
@@ -182,7 +190,6 @@ export default function AdminView() {
   
   const [internalPassword, setInternalPassword] = useState('');
   const [syncPercent, setSyncPercent] = useState(0);
-  const [cloudCount, setCloudCount] = useState(0);
   const [syncAction, setSyncAction] = useState('idle');
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -290,7 +297,7 @@ export default function AdminView() {
   const saveSettings = async (s: any) => { 
     setSettings(s); 
     // Save to local storage for persistence across reloads
-    await saveData('public_settings', s);
+    await saveData('product_settings', s);
     // Removed automatic cloud save to respect 'no auto-backup' request
   };
 
