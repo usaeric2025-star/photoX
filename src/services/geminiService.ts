@@ -31,27 +31,10 @@ export const analyzeProductPhoto = async (
   let processedBase64Image = base64Image;
   // Canvas-based resizing is removed to avoid cross-origin issues.
   
-  let baseURL = 'https://api.groq.com/openai/v1';
-  let modelName = customModel || 'llama-3.2-90b-vision-instruct'; // default to groq
+  // Use OpenRouter endpoint
+  const baseURL = 'https://openrouter.ai/api/v1';
+  let modelName = customModel || 'google/gemini-2.5-flash-lite-preview-09-2025';
 
-  // Auto-detect or forced selection
-  if (provider === 'openrouter' || (provider === 'auto' && apiKey.startsWith('sk-or-'))) {
-    baseURL = 'https://openrouter.ai/api/v1';
-    modelName = customModel || 'meta-llama/llama-3.2-11b-vision-instruct';
-  } else if (provider === 'github' || (provider === 'auto' && apiKey.startsWith('ghp_'))) {
-    baseURL = 'https://models.inference.ai.azure.com';
-    modelName = customModel || 'gpt-4o-mini';
-  } else if (provider === 'groq' || (provider === 'auto' && apiKey.startsWith('gsk_'))) {
-    baseURL = 'https://api.groq.com/openai/v1';
-    modelName = customModel || 'llama-3.2-90b-vision-instruct';
-    // Forward-compatibility for users with stuck localStorage configs
-    if (modelName === 'llama-3.2-11b-vision-preview' || modelName === 'llama-3.2-90b-vision-preview') {
-      modelName = 'llama-3.2-90b-vision-instruct';
-    }
-  } else if (provider === 'gemini' || (provider === 'auto' && apiKey.startsWith('AIza'))) {
-    baseURL = 'https://generativelanguage.googleapis.com/v1beta/openai/';
-    modelName = customModel || 'gemini-2.5-flash-lite-preview-09-2025';
-  }
 
   const categoriesJson = categories.map(c => ({
     id: c.id,
@@ -102,17 +85,11 @@ export const analyzeProductPhoto = async (
   try {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': window.location.href,
+      'X-Title': 'Product Cataloger AI',
     };
 
-    if (provider === 'gemini' || (provider === 'auto' && apiKey.startsWith('AIza'))) {
-        headers['x-goog-api-key'] = apiKey;
-    } else {
-        headers['Authorization'] = `Bearer ${apiKey}`;
-        if (baseURL.includes('openrouter.ai')) {
-          headers['HTTP-Referer'] = window.location.href;
-          headers['X-Title'] = 'Product Cataloger AI';
-        }
-    }
 
     
     // Debug image
