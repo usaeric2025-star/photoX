@@ -562,9 +562,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     (c.en || '').trim().toLowerCase() === safeCat || 
                     (c.ms || '').trim().toLowerCase() === safeCat
                   );
-                  const catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');
+                  
+                  let catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');
+                  
+                  // Translate "Uncategorized" if it's a known string and not already translated by cat record
+                  const uncategorizedStrings = ['未分类', '未分類', 'uncategorized', 'others', '其他'];
+                  if (!cat && uncategorizedStrings.includes(catName.toLowerCase())) {
+                    catName = t.uncategorized;
+                  }
+
                   const isUncategorized = !catName || 
-                    ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
+                    ['未分类', '未分類', 'uncategorized', 'others'].includes(catName.toLowerCase()) ||
+                    catName === t.uncategorized;
                   
                   return (
                     <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent translate-y-1 group-hover:translate-y-0 transition-transform">

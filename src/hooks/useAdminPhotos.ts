@@ -5,6 +5,7 @@ import {
   deletePhotoFromCloud, 
   compressImage, 
   calculateMD5,
+  calculateMD5FromFile,
   calculateMD5FromArrayBuffer,
   generateItemCode,
   checkImageHashExists,
@@ -94,9 +95,34 @@ export const useAdminPhotos = (
       for (let i = 0; i < unProcessed.length; i++) {
         if (cancelBatchAiRef.current) break;
         
-        const photo = unProcessed[i];
+        let photo = unProcessed[i];
         setBatchProgress(prev => ({ ...prev, current: i + 1 }));
         
+        // --- Duplicate check logic ---
+        if (photo.uri && !photo.image_hash) {
+          const hash = calculateMD5(photo.uri);
+          photo.image_hash = hash;
+          setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, image_hash: hash } : p));
+        }
+
+        if (photo.image_hash) {
+          const dupInLocal = photosRef.current.find(p => p.id !== photo.id && p.image_hash === photo.image_hash);
+          if (dupInLocal) {
+            console.log(`Removing duplicate ${photo.id} in favor of ${dupInLocal.id}`);
+            await deletePhoto(photo.id);
+            continue; // Skip AI for deleted duplicate
+          }
+
+          if (user) {
+            const dupInCloud = await checkImageHashExists(photo.image_hash);
+            // If in cloud and NOT this record (id check), then it's a duplicate
+            // However, cloud check doesn't return ID often.
+            // If we found something with DIFFERENT code/id in cloud, we might consider it duplicate.
+            // For now, let's stick to local duplicates during batch to avoid too many DB queries.
+          }
+        }
+        // ------------------------------
+
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
@@ -208,6 +234,39 @@ export const useAdminPhotos = (
       
       for (const file of chunk) {
         try {
+          // 1. Calculate MD5 from file directly as requested
+          const hash = await (async () => {
+            try {
+              return await calculateMD5FromFile(file);
+            } catch (e) {
+              const arrayBuffer = await file.arrayBuffer();
+              return calculateMD5FromArrayBuffer(arrayBuffer);
+            }
+          })();
+
+          // 2. Check local duplicates
+          const duplicate = photosRef.current.find(p => p.image_hash === hash);
+          if (duplicate || sessionHashes.has(hash)) {
+            setAlertDialog({ 
+              title: '照片已存在', 
+              message: `照片「${file.name}」已经存在本地库中${duplicate ? ` (名称: ${duplicate.name})` : ''}` 
+            });
+            continue;
+          }
+
+          // 3. Check cloud duplicates if logged in
+          if (user) {
+            const existingInfo = await checkImageHashExists(hash);
+            if (existingInfo) {
+              setAlertDialog({ 
+                title: '云端已存在', 
+                message: `照片「${file.name}」在云端数据库中已存在，将跳过重复上传。`
+              });
+              continue;
+            }
+          }
+
+          // 4. Processing
           const rawUri = await new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (event) => resolve(event.target?.result as string);
@@ -216,40 +275,20 @@ export const useAdminPhotos = (
           });
           
           if (!rawUri) continue;
-
-          const arrayBuffer = await file.arrayBuffer();
-          const rawHash = calculateMD5FromArrayBuffer(arrayBuffer);
-          
-          if (photosRef.current.some(p => p.image_hash === rawHash) || sessionHashes.has(rawHash)) continue;
           
           const compressedUri = await compressImage(rawUri);
-          const imgHash = calculateMD5(compressedUri);
+          sessionHashes.add(hash);
 
-          if (photosRef.current.some(p => p.image_hash === imgHash) || sessionHashes.has(imgHash)) continue;
-          
-          if (user) {
-            const existingInfo = await checkImageHashExists(imgHash);
-            if (existingInfo) {
-              setAlertDialog({ 
-                title: '图片重复', 
-                message: `照片「${file.name}」在云端已存在相同内容`
-              });
-              continue;
-            }
-          }
-
-          sessionHashes.add(rawHash);
-          sessionHashes.add(imgHash);
-
-          const dbId = crypto.randomUUID();
+          // 5. Use crypto.randomUUID() for both photo ID and naming storage
+          const photoId = crypto.randomUUID();
           
           const newPhoto: Photo = {
-            id: dbId,
-            storageId: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            id: photoId,
+            storageId: photoId, // Use UUID for storage path as requested
             item_code: generateItemCode(),
             manual_code: '',
-            image_hash: imgHash,
-            name: file.name.split('.')[0] || '未命名家具',
+            image_hash: hash,
+            name: file.name.split('.')[0] || '未命名家具', // Keep original name
             category: '未分類',
             sub_category: '',
             tags: [],
@@ -270,9 +309,9 @@ export const useAdminPhotos = (
             (async (targetPhoto: Photo) => {
               try {
                 const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, geminiApiKey, aiProvider, customModel);
-                setPhotos(prev => prev.map(p => p.id === dbId ? { ...p, isAnalyzing: false, ...result } : p));
+                setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false, ...result } : p));
               } catch (err: any) {
-                setPhotos(prev => prev.map(p => p.id === dbId ? { ...p, isAnalyzing: false } : p));
+                setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false } : p));
               }
             })(newPhoto);
           }

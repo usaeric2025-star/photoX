@@ -323,8 +323,11 @@ export default function AdminView() {
     if (!user) return;
     setIsSyncing(true);
     try {
-      await syncPhotosToCloudService(user.id, photos, setSyncPercent);
-      setAlertDialog({ title: '同步成功', message: '所有数据已成功备份至云端' });
+      const result = await syncPhotosToCloudService(user.id, photos, setSyncPercent);
+      setAlertDialog({ 
+        title: '同步成功', 
+        message: `所有数据已成功备份至云端。${result.skipped > 0 ? `\n(跳过 ${result.skipped} 张重复照片，节省流量)` : ''}` 
+      });
     } catch (err: any) {
       setAlertDialog({ title: '同步失败', message: err.message || '请检查网络连接' });
     } finally {
@@ -336,8 +339,11 @@ export default function AdminView() {
     if (!user) return;
     setIsSyncing(true);
     try {
-      await syncPhotosToCloudService(user.id, photos, setSyncPercent);
-      setAlertDialog({ title: '推送成功', message: '本地照片已上传至云端' });
+      const result = await syncPhotosToCloudService(user.id, photos, setSyncPercent);
+      setAlertDialog({ 
+        title: '推送成功', 
+        message: `本地照片已上传至云端。${result.skipped > 0 ? `\n(已跳过 ${result.skipped} 张重复照片)` : ''}` 
+      });
     } catch (err: any) {
       setAlertDialog({ title: '推送失败', message: err.message });
     } finally {

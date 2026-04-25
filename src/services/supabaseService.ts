@@ -21,6 +21,23 @@ export const calculateMD5 = (base64Data: string): string => {
   }
 };
 
+export const calculateMD5FromFile = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const spark = new SparkMD5.ArrayBuffer();
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result instanceof ArrayBuffer) {
+        spark.append(e.target.result);
+        resolve(spark.end());
+      } else {
+        reject(new Error('File read result is not ArrayBuffer'));
+      }
+    };
+    reader.onerror = (e) => reject(e);
+    reader.readAsArrayBuffer(file);
+  });
+};
+
 export const calculateMD5FromArrayBuffer = (buffer: ArrayBuffer): string => {
   return SparkMD5.ArrayBuffer.hash(buffer);
 };
@@ -274,16 +291,21 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   let successCount = 0;
   let skippedCount = 0;
   
-  // 1. Get current cloud state
+  // 1. Get current cloud state (hashes specifically for better matching)
   const { data: cloudItems, error: fetchError } = await supabase
     .from(TABLE_NAME)
-    .select('id, storageId')
+    .select('id, storageId, image_hash')
     .eq('user_id', userId);
   
   if (fetchError) {
     console.error("Failed to fetch cloud items for comparison:", fetchError);
-  } else {
-    // 2. Identify cloud items that are NOT in the local list
+  }
+
+  const cloudHashes = new Set((cloudItems || []).map(item => item.image_hash).filter(Boolean));
+  const cloudIds = new Set((cloudItems || []).map(item => item.id));
+
+  // 2. Identify cloud items that are NOT in the local list (Cleanup)
+  if (!fetchError) {
     const localIds = new Set(photos.map(p => p.id));
     const itemsToDelete = (cloudItems || []).filter(item => !localIds.has(item.id));
     
@@ -293,7 +315,7 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
         try {
           await supabase.from(TABLE_NAME).delete().match({ id: item.id, user_id: userId });
           const filename = item.storageId || item.id;
-          await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`]);
+          await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`, `public/thumb_${filename}.webp`]);
         } catch (e) {
           console.warn(`Failed to delete orphan ${item.id}:`, e);
         }
@@ -304,14 +326,20 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
   // 3. Process uploads
   for (const photo of photos) {
     try {
+      // Rule: skip if Cloud already has this exact hash (Duplicate skip logic)
+      if (photo.image_hash && cloudHashes.has(photo.image_hash) && !cloudIds.has(photo.id)) {
+        console.log(`Cloud already has hash ${photo.image_hash}, skipping sync for local ID ${photo.id}`);
+        skippedCount++;
+        continue;
+      }
+
       if (!photo.image_url && photo.uri) {
-        // Check if hash exists globally before uploading
-        if (photo.image_hash) {
-          const existingInfo = await checkImageHashExists(photo.image_hash);
-          if (existingInfo) {
-            console.log(`Found existing image for hash ${photo.image_hash}, skipping upload.`);
+        // Double check global duplicate even if not in my cloud account (Deduplication across users if desired, or just safety)
+        const existingInfo = await checkImageHashExists(photo.image_hash || '');
+        if (existingInfo && !cloudIds.has(photo.id)) {
+            console.log(`Found existing image for hash ${photo.image_hash}, reuse URL.`);
             photo.image_url = existingInfo.image_url;
-          }
+            // Note: we still might need the thumb_url if it exists
         }
 
         // If still no url, then upload
@@ -322,6 +350,7 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
           photo.thumb_url = thumbUrl;
         }
       }
+      
       const wasSaved = await savePhotoToCloud(userId, photo);
       if (wasSaved) {
         successCount++;
