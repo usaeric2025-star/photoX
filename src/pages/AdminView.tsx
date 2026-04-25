@@ -157,6 +157,7 @@ export default function AdminView() {
     addDimL, setAddDimL,
     addDimW, setAddDimW,
     addDimH, setAddDimH,
+    addIsHidden, setAddIsHidden,
     showOtherFields, setShowOtherFields,
     resetAddState,
     saveNewPhoto,
