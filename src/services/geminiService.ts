@@ -85,13 +85,10 @@ export const analyzeProductPhoto = async (
   try {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': window.location.href,
+      'X-Title': 'Product Cataloger AI'
     };
-
-    if (baseURL.includes('openrouter.ai')) {
-      headers['HTTP-Referer'] = window.location.href;
-      headers['X-Title'] = 'Product Cataloger AI';
-    }
 
     const requestBody = {
       model: modelName,
@@ -191,8 +188,17 @@ export const analyzeProductPhoto = async (
     console.error("GeminiService API Error:", error);
     const status = error.status || error.response?.status || 500;
     
+    // Attempt to stringify the error object if it's not just a string, to give more context
+    let errorDetail = '';
+    try {
+        errorDetail = typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error);
+    } catch {
+        errorDetail = String(error);
+    }
+
     // Safely extract the most descriptive error message possible
-    let errorMsg = '未知錯誤';
+    let errorMsg = `API 請求發送失敗 (status: ${status})。詳細錯誤: ${errorDetail}`;
+    
     if (error.response?.data?.error?.message) {
         errorMsg = error.response.data.error.message;
     } else if (error.error?.message) {
