@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Photo, DB_Category, Category, Tag } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -17,49 +17,12 @@ interface PublicGalleryProps {
   onRefresh?: () => void;
 }
 
-const translations = {
-  zh: {
-    galleryName: 'Gallery',
-    gallerySub: (count: number) => `共 ${count} 張照片`,
-    search: '在此搜尋...',
-    allCats: '全部',
-    name: '產品名稱',
-    category: '分類',
-    description: '產品說明',
-    tags: '標籤',
-    close: '關閉',
-    empty: '沒有找到匹配的照片',
-    whatsAppInquiry: 'WhatsApp 諮詢'
-  },
-  en: {
-    galleryName: 'Gallery',
-    gallerySub: (count: number) => `${count} photos`,
-    search: 'Search...',
-    allCats: 'All',
-    name: 'Name',
-    category: 'Category',
-    description: 'Description',
-    tags: 'Tags',
-    close: 'Close',
-    empty: 'No matching photos',
-  },
-  ms: {
-    galleryName: 'Gallery',
-    gallerySub: (count: number) => `Jumlah ${count} foto`,
-    search: 'Cari di sini...',
-    allCats: 'Semua',
-    name: 'Nama',
-    category: 'Kategori',
-    description: 'Penerangan',
-    tags: 'Tag',
-    close: 'Tutup',
-    empty: 'Tiada foto yang sepadan ditemui',
-  }
-};
+import { useGallery } from '../hooks/useGallery';
+import { translations, LanguageCode } from '../lib/translations';
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories, tags, dbCategories, onExit, showExit, onLogin, internalPassword, settings, isRefreshing, onRefresh }) => {
-  const [lang, setLang] = useState<'zh' | 'en' | 'ms'>('zh');
-  const t = translations[lang];
+  const [lang, setLang] = useState<LanguageCode>('en');
+  const t = translations[lang] || translations['zh'];
 
   const [isStaffMode, setIsStaffMode] = useState(false);
   const [showPassPrompt, setShowPassPrompt] = useState(false);
@@ -67,22 +30,26 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
   const [passError, setPassError] = useState(false);
 
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
-  const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  
-  const columnCount = columns; 
-  const [visibleCount, setVisibleCount] = useState(15); 
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
-  const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [headerClickCount, setHeaderClickCount] = useState(0);
+
+  const {
+    searchQuery, setSearchQuery,
+    selectedCatCode, setSelectedCatCode,
+    selectedSubId, setSelectedSubId,
+    selectedTagIds, setSelectedTagIds,
+    showGroupsCollapsed, setShowGroupsCollapsed,
+    visibleCount, setVisibleCount,
+    lightboxIndex, setLightboxIndex,
+    displayPhotos, gridPhotos,
+    getRealId, observerTarget
+  } = useGallery({ photos, categories, tags, dbCategories, columns });
+
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToTop = () => {
-    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+    // Reset visible count to free up DOM nodes when snapping to top
+    setVisibleCount(15);
   };
 
   const handleHeaderClick = () => {
@@ -95,185 +62,62 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
     }
   }
 
-  const displayPhotos = useMemo(() => {
-    let filtered = photos;
-    if (selectedCatCode) {
-      // Check both category name and code for public data consistency
-      const activeCat = dbCategories.find(c => c.code === selectedCatCode);
-      filtered = filtered.filter(p => 
-        p.category === selectedCatCode || 
-        p.category === activeCat?.zh || 
-        p.categoryId === selectedCatCode
-      );
-    }
-    
-    if (selectedSubId) {
-      const activeSub = categories.flatMap(c => c.subcategories).find(s => s.id === selectedSubId);
-      filtered = filtered.filter(p => p.subcategoryId === selectedSubId || p.sub_category === activeSub?.name);
-    }
-
-    if (selectedTagIds.length > 0) {
-      filtered = filtered.filter(p => {
-        const pTags = p.tags || [];
-        const pTagIds = p.tagIds || [];
-        return selectedTagIds.every(tid => {
-          const tagName = tags.find(t => t.id === tid)?.name;
-          return pTagIds.includes(tid) || (tagName && pTags.includes(tagName));
-        });
-      });
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => {
-        // Map tagIds to names for searching
-        const mappedTagNames = (p.tagIds || []).map(tid => tags.find(t => t.id === tid)?.name).filter(Boolean);
-        
-        const searchableText = [
-          p.name,
-          p.description,
-          ...(p.tags || []),
-          ...mappedTagNames,
-          dbCategories.find(c => c.code === p.category)?.zh || '',
-          dbCategories.find(c => c.code === p.category)?.en || '',
-          dbCategories.find(c => c.code === p.category)?.ms || ''
-        ].filter(Boolean).join(' ').toLowerCase();
-
-        return searchableText.includes(q);
-      });
-    }
-    // Apply Grouping if enabled
-    let sorted = [...filtered];
-    if (showGroupsCollapsed) {
-      const groupsSeen = new Set<string>();
-      sorted = sorted.filter(p => {
-        if (!p.groupId) return true;
-        if (groupsSeen.has(p.groupId)) return false;
-        groupsSeen.add(p.groupId);
-        return true;
-      });
-    }
-    
-    return sorted;
-  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, showGroupsCollapsed]);
-
-  const visiblePhotos = useMemo(() => {
-    if (displayPhotos.length === 0) return [];
-    
-    const result = [];
-    // Infinite loop: allow visibleCount to exceed displayPhotos.length by repeating
-    for (let i = 0; i < visibleCount; i++) {
-      const originalPhoto = displayPhotos[i % displayPhotos.length];
-      result.push({
-        ...originalPhoto,
-        // Use unique ID for each instance to satisfy React keys and prevent duplicate key warnings
-        id: `${originalPhoto.id}-loop-${i}`
-      });
-    }
-    return result;
-  }, [displayPhotos, visibleCount]);
-
-  const gridPhotos = useMemo(() => {
-    if (visiblePhotos.length === 0 || displayPhotos.length === 0) return visiblePhotos;
-    const remainder = visiblePhotos.length % columnCount;
-    if (remainder === 0) return visiblePhotos;
-    
-    // Fill the remainder of the last row with next items in sequence
-    const fillerCount = columnCount - remainder;
-    const result = [...visiblePhotos];
-    for (let i = 0; i < fillerCount; i++) {
-        const nextIndex = (visiblePhotos.length + i) % displayPhotos.length;
-        const p = displayPhotos[nextIndex];
-        if (p) {
-            result.push({ ...p, id: `${p.id}-filler-${visiblePhotos.length + i}` });
-        }
-    }
-    return result;
-  }, [visiblePhotos, columnCount, displayPhotos]);
-
-  const getRealId = (loopId: string) => loopId.split('-loop-')[0].split('-filler-')[0];
-
-  // Observer for lazy loading
-  const observerTarget = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          // Keep increasing visibleCount to support infinite loop
-          setVisibleCount(prev => prev + 12);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-    return () => {
-      if (observerTarget.current) observer.unobserve(observerTarget.current);
-    };
-  }, [displayPhotos.length, visibleCount]);
-
-  const toggleSelect = (id: string) => {
-    const next = new Set(selectedPhotos);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    
-    // Auto-exit if nothing selected
-    if (next.size === 0) setSelectionMode(false);
-    
-    setSelectedPhotos(next);
-  };
-
   const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);
 
-  const shareSelected = async () => {
-    if (selectedPhotos.size === 0) {
-      alert('請至少選擇一張照片進行分享');
-      return;
-    }
-    const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
-    const text = selected.map((p, i) => `${i + 1}. ${p.name} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
-    console.log(`Share text: ${text}`);
+  const shareSinglePhoto = async (photo: Photo) => {
+    const text = `${photo.name || ''} ${isStaffMode ? '[' + (photo.manual_code || '') + ']' : ''}`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Furniture',
-          text: `你好，我对以下家具有兴趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`,
+          title: t.shareTitle,
+          text: `${t.sharePrompt}\n\n${text}\n\nView more: photo-x-one.vercel.app`,
         });
-      } catch (e) {
-        console.error('Share err:', e);
+      } catch (e: any) {
+        if (e.name !== 'AbortError') {
+          console.error('Share err:', e);
+        }
       }
     }
   };
 
   const openWhatsApp = (num: string, singlePhotoId?: string) => {
     let msg = '';
-    const isEn = lang === 'en';
     
     const getPhotoDisplayName = (p: Photo) => {
       const isPlaceholder = !p.name || p.name === '家具紀錄' || p.name === 'Furniture Record' || p.name === '未命名產品';
       if (!isPlaceholder) return p.name;
-      const cat = dbCategories.find(c => c.code === p.category);
-      if (cat) return cat[lang] || cat.zh;
-      return isEn ? 'Furniture' : '家具';
+      const safeCat = (p.category || '').trim().toLowerCase();
+      const cat = dbCategories.find(c => 
+        (c.code || '').trim().toLowerCase() === safeCat || 
+        (c.zh || '').trim().toLowerCase() === safeCat || 
+        (c.en || '').trim().toLowerCase() === safeCat || 
+        (c.ms || '').trim().toLowerCase() === safeCat
+      );
+      if (cat) return cat[lang as keyof DB_Category] || cat.zh;
+      if (lang === 'ms') return 'Perabot';
+      return lang === 'en' ? 'Furniture' : '家具';
     };
 
     if (singlePhotoId) {
       const p = photos.find(ph => ph.id === singlePhotoId);
       if (p) {
         const displayName = getPhotoDisplayName(p);
-        msg = isEn 
-          ? `Hello, I'm interested in this furniture:\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\nView more: photo-x-one.vercel.app`
-          : `你好，我對這個家具有興趣：\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
+        if (lang === 'ms') {
+          msg = `Halo, saya berminat dengan perabot ini:\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\nLihat lagi: photo-x-one.vercel.app`;
+        } else if (lang === 'en') {
+          msg = `Hello, I'm interested in this furniture:\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\nView more: photo-x-one.vercel.app`;
+        } else {
+          msg = `你好，我對這個家具有興趣：\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
+        }
       }
-    } else if (selectedPhotos.size > 0) {
-      const selected = displayPhotos.filter(p => selectedPhotos.has(p.id));
-      const text = selected.map((p, i) => `${i + 1}. ${getPhotoDisplayName(p)} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}`).join('\n');
-      msg = isEn
-        ? `Hello, I'm interested in these furniture items:\n\n${text}\n\nView more: photo-x-one.vercel.app`
-        : `你好，我對以下家具有興趣：\n\n${text}\n\n查看更多：photo-x-one.vercel.app`;
     } else {
-      msg = isEn ? `Hello, I'd like to inquire about furniture.` : `你好，我想諮詢家具資訊。`;
+      if (lang === 'ms') {
+        msg = `Halo, saya ingin bertanya tentang maklumat perabot.`;
+      } else if (lang === 'en') {
+        msg = `Hello, I'd like to inquire about furniture information.`;
+      } else {
+        msg = `你好，我想諮詢家具資訊。`;
+      }
     }
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
     setShowWhatsAppChoice(false);
@@ -372,9 +216,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
           </div>
           <div className="flex items-center gap-2 shrink-0">
               <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
-                {['zh', 'en', 'ms'].map(l => (
-                  <button key={l} onClick={() => setLang(l as any)} className={`${lang === l ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95`}>
-                    {l}
+                {[
+                  { code: 'zh', label: '中文' },
+                  { code: 'en', label: 'EN' },
+                  { code: 'ms', label: 'BM' }
+                ].map(l => (
+                  <button key={l.code} onClick={() => setLang(l.code as any)} className={`${lang === l.code ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95`}>
+                    {l.label}
                   </button>
                 ))}
               </div>
@@ -428,14 +276,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
         </div>
 
         <div className="grid grid-cols-4 gap-2 px-1">
-          {selectionMode ? (
-            <div className="col-span-4 flex justify-between w-full items-center p-1">
-               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-xs font-black text-[#1D3557]/50 uppercase tracking-widest">Cancel</button>
-               <span className="text-[10px] font-black text-[#1D3557] uppercase tracking-[0.2em]">{selectedPhotos.size} selected</span>
-               <button onClick={() => { setSelectionMode(false); setSelectedPhotos(new Set()); }} className="text-xs font-black text-[#D4A853] uppercase tracking-widest">Done</button>
-            </div>
-          ) : (
-            <>
               <button 
                 onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); }}
                 className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
@@ -451,14 +291,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   {cat[lang] || cat.en}
                 </button>
               ))}
-            </>
-          )}
         </div>
 
-        {!selectionMode && (
-          <div className="space-y-3">
-            <AnimatePresence>
-              {selectedCatCode && (
+        <div className="space-y-3">
+          <AnimatePresence>
+            {selectedCatCode && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }} 
                   animate={{ opacity: 1, height: 'auto' }}
@@ -469,7 +306,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     onClick={() => setSelectedSubId(null)}
                     className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${!selectedSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                   >
-                    ALL
+                    {t.all}
                   </button>
                   {(() => {
                     const legacyMatchedCat = categories.find(c => c.name === dbCategories.find(dc => dc.code === selectedCatCode)?.zh || c.id === selectedCatCode);
@@ -499,7 +336,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               ))}
             </div>
           </div>
-        )}
       </div>
 
       {/* Grid - Scrollable area */}
@@ -519,44 +355,24 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: (i % 15) * 0.03 }}
-                onPointerDown={(e) => {
-                  const timer = setTimeout(() => {
-                    if (!selectionMode) {
-                      setSelectionMode(true);
-                      toggleSelect(getRealId(photo.id));
-                      // Haptic feedback if available
-                      if ('vibrate' in navigator) navigator.vibrate(50);
-                    }
-                  }, 600);
-                  (e.currentTarget as any)._longPressTimer = timer;
-                }}
-                onPointerUp={(e) => {
-                  if ((e.currentTarget as any)._longPressTimer) {
-                    clearTimeout((e.currentTarget as any)._longPressTimer);
-                  }
-                }}
-                onPointerLeave={(e) => {
-                  if ((e.currentTarget as any)._longPressTimer) {
-                    clearTimeout((e.currentTarget as any)._longPressTimer);
-                  }
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  shareSinglePhoto(photo);
+                  if ('vibrate' in navigator) navigator.vibrate(50);
                 }}
                 onClick={() => {
-                  if (selectionMode) {
-                    toggleSelect(getRealId(photo.id));
-                  } else {
-                    // map grid index back to actual photo index in displayPhotos
-                    const photoId = getRealId(photo.id);
-                    const realIndex = displayPhotos.findIndex(p => p.id === photoId);
-                    if (realIndex !== -1) setLightboxIndex(realIndex);
-                  }
+                  // map grid index back to actual photo index in displayPhotos
+                  const photoId = getRealId(photo.id);
+                  const realIndex = displayPhotos.findIndex(p => p.id === photoId);
+                  if (realIndex !== -1) setLightboxIndex(realIndex);
                 }}
-                className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${selectedPhotos.has(getRealId(photo.id)) ? 'ring-2 ring-[#D4A853]' : ''}`}
+                className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group`}
               >
                 <img 
-                  src={photo.image_url || photo.uri} 
+                  src={photo.thumb_url || photo.image_url || photo.uri} 
                   alt={photo.name}
                   loading="lazy" 
-                  className={`w-full h-full object-cover transition-transform duration-500 ${selectedPhotos.has(getRealId(photo.id)) ? 'scale-110 opacity-70' : 'group-hover:scale-105'}`}
+                  className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105`}
                 />
 
                 {photo.groupId && (
@@ -566,16 +382,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   </div>
                 )}
                 
-                {selectedPhotos.has(getRealId(photo.id)) && (
-                  <div className="absolute top-2 right-2 bg-[#1D3557] text-[#FDFAF6] rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
-                    <X size={12} strokeWidth={3} />
-                  </div>
-                )}
-                
                 {/* Category label */}
                 {(() => {
-                  const cat = dbCategories.find(c => c.code === photo.category);
-                  const catName = cat ? (cat[lang] || cat.en) : photo.category;
+                  const safeCat = (photo.category || '').trim().toLowerCase();
+                  const cat = dbCategories.find(c => 
+                    (c.code || '').trim().toLowerCase() === safeCat || 
+                    (c.zh || '').trim().toLowerCase() === safeCat || 
+                    (c.en || '').trim().toLowerCase() === safeCat || 
+                    (c.ms || '').trim().toLowerCase() === safeCat
+                  );
+                  const catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');
                   const isUncategorized = !catName || 
                     ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
                   
@@ -596,20 +412,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
         <div ref={observerTarget} className="h-40"></div>
       </div>
 
-      {/* Selection Footer */}
-      {selectionMode && lightboxIndex === null && (
-         <div className="fixed bottom-20 left-0 w-full bg-bg border-t border-text/10 p-4 flex gap-4 shadow-lg z-[300]">
-             <button onClick={shareSelected} className="flex-1 bg-text text-bg py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
-               <Share2 size={16} /> Share
-             </button>
-             <button onClick={() => contactWhatsApp()} className="flex-1 bg-[#25D366] text-white py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2">
-               <MessageCircle size={16} /> WhatsApp
-             </button>
-         </div>
-      )}
-
       {/* Floating Action Buttons (Normal Mode) */}
-      {!selectionMode && lightboxIndex === null && (
+      {lightboxIndex === null && (
         <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400]">
             <button 
               onClick={scrollToTop} 
@@ -659,9 +463,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               <img 
                 src={displayPhotos[lightboxIndex].image_url || displayPhotos[lightboxIndex].uri} 
                 alt={displayPhotos[lightboxIndex].name}
-                className="max-w-full max-h-full object-contain select-none"
+                className="max-w-full max-h-full object-contain select-none opacity-0 transition-opacity duration-300"
+                onLoad={(e) => (e.target as HTMLImageElement).style.opacity = '1'}
                 onClick={(e) => e.stopPropagation()}
               />
+              <div className="absolute inset-0 flex items-center justify-center -z-10">
+                 <RefreshCcw size={32} className="animate-spin text-white/20" />
+              </div>
               
               <button 
                 onClick={nextPhoto}
@@ -680,9 +488,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 <div>
                    <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight mb-1">
                      {(() => {
-                        const code = displayPhotos[lightboxIndex].category;
-                        const cat = dbCategories.find(c => c.code === code);
-                        return cat ? (cat[lang] || cat.zh) : (displayPhotos[lightboxIndex].name || (lang === 'en' ? 'Furniture' : '家具紀錄'));
+                        const code = (displayPhotos[lightboxIndex].category || '').trim().toLowerCase();
+                        const cat = dbCategories.find(c => 
+                          (c.code || '').trim().toLowerCase() === code || 
+                          (c.zh || '').trim().toLowerCase() === code || 
+                          (c.en || '').trim().toLowerCase() === code || 
+                          (c.ms || '').trim().toLowerCase() === code
+                        );
+                        const fallbackName = lang === 'ms' ? 'Perabot' : (lang === 'en' ? 'Furniture' : '家具紀錄');
+                        return cat ? (cat[lang as keyof DB_Category] || cat.zh) : (displayPhotos[lightboxIndex].name || fallbackName);
                      })()}
                    </h1>
                    {(isStaffMode || showExit) && (displayPhotos[lightboxIndex].item_code || displayPhotos[lightboxIndex].name) && (
@@ -699,13 +513,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                   <div className="flex flex-col gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     {displayPhotos[lightboxIndex].sub_category && (
                       <div>
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">厂商 (Manufacturer)</h3>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer}</h3>
                         <p className="text-slate-700 font-bold">{displayPhotos[lightboxIndex].sub_category}</p>
                       </div>
                     )}
                     {displayPhotos[lightboxIndex].manual_code && (
                       <div>
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">手动编号 (Manual ID)</h3>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manualId}</h3>
                         <p className="text-[#D4A853] font-mono font-black tracking-wider text-sm">{displayPhotos[lightboxIndex].manual_code}</p>
                       </div>
                     )}
@@ -713,9 +527,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 )}
 
                 {(() => {
-                   const code = displayPhotos[lightboxIndex].category;
-                   const cat = dbCategories.find(c => c.code === code);
-                   const catName = cat ? (cat[lang] || cat.en) : code;
+                   const code = (displayPhotos[lightboxIndex].category || '').trim().toLowerCase();
+                   const cat = dbCategories.find(c => 
+                     (c.code || '').trim().toLowerCase() === code || 
+                     (c.zh || '').trim().toLowerCase() === code || 
+                     (c.en || '').trim().toLowerCase() === code || 
+                     (c.ms || '').trim().toLowerCase() === code
+                   );
+                   const catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (displayPhotos[lightboxIndex].category || '');
                    const isUncategorized = !catName || ['未分类', '未分類', 'uncategorized', 'Uncategorized', 'others', 'Others'].includes(catName.toLowerCase());
                   const subCat = (!isStaffMode && !showExit) ? displayPhotos[lightboxIndex].sub_category : null;
 
@@ -739,7 +558,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
 
                 {displayPhotos[lightboxIndex].manual_code && (
                   <div>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">手動編號 (Manual ID)</h3>
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{t.manualId}</h3>
                     <p className="inline-block bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-mono tracking-wider shadow-md">
                       {displayPhotos[lightboxIndex].manual_code}
                     </p>
@@ -749,21 +568,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 {displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0) && (
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Maximize size={10} /> 尺寸資訊 (Dimensions)
+                      <Maximize size={10} /> {t.dimensions}
                     </h3>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">長 (L)</span>
+                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.length} (L)</span>
                         <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.length}</span>
                         <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
                       </div>
                       <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">寬 (W)</span>
+                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.width} (W)</span>
                         <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.width}</span>
                         <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
                       </div>
                       <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">高 (H)</span>
+                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.height} (H)</span>
                         <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.height}</span>
                         <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
                       </div>
@@ -829,8 +648,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
               <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-white">
                 <Lock size={32} />
               </div>
-              <h3 className="font-bold text-slate-800 text-xl mb-2">員工解鎖</h3>
-              <p className="text-sm text-slate-500 mb-6">請輸入員工訪問密鑰以查看內部資訊</p>
+              <h3 className="font-bold text-slate-800 text-xl mb-2">{t.staffUnlock}</h3>
+              <p className="text-sm text-slate-500 mb-6">{t.staffUnlockSub}</p>
               
               <form 
                 className="space-y-4"
@@ -870,6 +689,20 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                     解鎖
                   </button>
                 </div>
+                {onLogin && (
+                  <div className="pt-4 border-t border-slate-100 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPassPrompt(false);
+                        onLogin();
+                      }}
+                      className="w-full py-3 px-4 rounded-2xl font-bold text-slate-400 bg-transparent hover:bg-slate-50 hover:text-slate-600 transition-all text-sm flex items-center justify-center gap-2"
+                    >
+                      <Settings2 size={16} />前往管理後台
+                    </button>
+                  </div>
+                )}
               </form>
             </motion.div>
           </motion.div>

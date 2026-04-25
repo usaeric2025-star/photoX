@@ -90,55 +90,45 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
   });
 };
 
-export const uploadImage = async (userId: string, photoId: string, base64Data: string): Promise<string> => {
+export const uploadImages = async (userId: string, photoId: string, base64Data: string): Promise<{imageUrl: string, thumbUrl: string}> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
     throw new Error('No active session for storage');
   }
 
-  let finalData = base64Data;
-  
-  // Stricter compression: if over 2MB, compress. (base64 is ~1.37x larger than blob)
-  const estimatedSize = (base64Data.length * 3) / 4;
-  if (estimatedSize > 2 * 1024 * 1024) {
-    try {
-      finalData = await compressImage(base64Data, 1920, 0.7);
-      console.log("Image compressed due to size > 2MB");
-    } catch (e) {
-      console.warn("Compression failed, uploading original:", e);
-    }
-  }
-
   try {
-    const res = await fetch(finalData);
-    const blob = await res.blob();
+    // 1. Generate versions
+    const originalBase64 = await compressImage(base64Data, 1920, 0.7);
+    const thumbBase64 = await compressImage(base64Data, 300, 0.5);
 
-    const fileName = `public/${photoId}.webp`;
-    
-    const { error: storageError } = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(fileName, blob, {
-        contentType: 'image/webp',
-        upsert: true
-      });
+    const uploadFile = async (base64: string, fileName: string) => {
+      const res = await fetch(base64);
+      const blob = await res.blob();
+      
+      const { error: storageError } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, blob, {
+          contentType: 'image/webp',
+          upsert: true
+        });
 
-    if (storageError) {
-      console.error("Supabase Storage Upload Error details:", storageError);
-      throw new Error(`儲存空間上傳失敗: ${storageError.message}`);
-    }
+      if (storageError) throw storageError;
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl(fileName);
+      const { data: { publicUrl } } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName);
+      
+      return publicUrl;
+    };
 
-    return publicUrl;
+    const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`);
+    const thumbUrl = await uploadFile(thumbBase64, `public/thumb_${photoId}.webp`);
+
+    return { imageUrl, thumbUrl };
   } catch (err: any) {
-    console.error("Blob conversion or upload failed:", err);
-    if (!err.message?.includes('儲存空間')) {
-      throw new Error(`圖片處理異常: ${err.message || '請檢查網絡'}`);
-    }
-    throw err;
+    console.error("Image processing or upload failed:", err);
+    throw new Error(`圖片處理異常: ${err.message || '請檢查網絡'}`);
   }
 };
 
@@ -261,6 +251,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<bo
       tags: photo.tags || [],
       description: photo.description || '',
       image_url: photo.image_url,
+      thumb_url: photo.thumb_url || null,
       dimensions: photo.dimensions || null,
       created_at: photo.createdAt,
       group_id: photo.groupId || null
@@ -326,7 +317,9 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
         // If still no url, then upload
         if (!photo.image_url) {
           const filename = photo.storageId || photo.id;
-          photo.image_url = await uploadImage(userId, filename, photo.uri);
+          const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
+          photo.image_url = imageUrl;
+          photo.thumb_url = thumbUrl;
         }
       }
       const wasSaved = await savePhotoToCloud(userId, photo);

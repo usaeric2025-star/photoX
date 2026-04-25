@@ -1,0 +1,325 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronLeft, Share2, Edit3, Minimize2, Settings2, ChevronRight, X, Plus } from 'lucide-react';
+import { Photo, Category, Tag, DB_Category } from '../../types';
+
+interface GroupDetailScreenProps {
+  activeGroupId: string;
+  setActiveGroupId: (id: string | null) => void;
+  focusedGroupPhotoId: string | null;
+  setFocusedGroupPhotoId: (id: string | null) => void;
+  viewMode: 'public' | 'private';
+  publicPhotos: Photo[];
+  photos: Photo[];
+  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
+  setPreviewUri: (uri: string | null) => void;
+  setAlertDialog: (dialog: { title: string, message: string } | null) => void;
+  setConfirmDialog: (dialog: { message: string, onConfirm: () => void } | null) => void;
+  user: any | null;
+  onEditPhoto: (photo: Photo) => void;
+  dbCategories: DB_Category[];
+  appLang: 'zh' | 'en' | 'vi' | string;
+  categories: Category[];
+  tags: Tag[];
+  handleUngroup: (groupId: string) => void;
+  onAddPhotoToGroup: () => void;
+}
+
+export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
+  activeGroupId,
+  setActiveGroupId,
+  focusedGroupPhotoId,
+  setFocusedGroupPhotoId,
+  viewMode,
+  publicPhotos,
+  photos,
+  setPhotos,
+  setPreviewUri,
+  setAlertDialog,
+  setConfirmDialog,
+  user,
+  onEditPhoto,
+  dbCategories,
+  appLang,
+  categories,
+  tags,
+  handleUngroup,
+  onAddPhotoToGroup
+}) => {
+  const [isUnifiedEditing, setIsUnifiedEditing] = useState(false);
+
+  const activePhotosSource = viewMode === 'public' ? publicPhotos : photos;
+  const groupPhotos = activePhotosSource.filter(p => p.groupId === activeGroupId);
+  if (groupPhotos.length === 0) return null;
+
+  const focusedPhoto = focusedGroupPhotoId ? groupPhotos.find(p => p.id === focusedGroupPhotoId) : null;
+
+  return (
+    <div className="fixed inset-0 z-[110] bg-slate-50 flex flex-col">
+      <div className="px-6 py-4 border-b border-white/50 flex items-center justify-between bg-white/40 pt-safe">
+        <button onClick={() => { setActiveGroupId(null); setFocusedGroupPhotoId(null); }} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
+          <ChevronLeft size={24} />
+        </button>
+        <div className="flex-1 ml-1 text-center">
+           <h2 className="font-bold text-lg text-slate-800 leading-tight">同組照片</h2>
+           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Group {activeGroupId}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={async () => {
+              const files = await Promise.all(groupPhotos.map(async (p, i) => {
+                const res = await fetch(p.uri);
+                const blob = await res.blob();
+                return new File([blob], `group_${activeGroupId}_${i+1}.jpg`, { type: 'image/jpeg' });
+              }));
+
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    files: files,
+                    title: `照片組 ${activeGroupId}`,
+                  });
+                } catch (err) {
+                  setAlertDialog({ title: '提示', message: '部分瀏覽器不支援多檔分享。' });
+                }
+              }
+            }}
+            className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+            title="分享全組"
+          >
+            <Share2 size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+         <div className="p-6 space-y-6 pb-20">
+            <AnimatePresence>
+              {focusedPhoto && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="aspect-square bg-slate-900 rounded-[32px] overflow-hidden shadow-2xl relative group border border-white/20 mb-8"
+                >
+                  <img 
+                    src={focusedPhoto.uri} 
+                    className="w-full h-full object-contain" 
+                    onClick={() => setPreviewUri(focusedPhoto.uri)}
+                    alt="Focused Photo" 
+                  />
+                  
+                  <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
+                     <div className="bg-black/30 backdrop-blur-lg border border-white/20 p-3 rounded-2xl inline-block max-w-[85%] shadow-xl">
+                        <p className="text-white text-[10px] font-medium leading-relaxed line-clamp-2 opacity-90">
+                          {focusedPhoto.description || "點擊圖片查看大圖"}
+                        </p>
+                        {focusedPhoto.dimensions && (focusedPhoto.dimensions.length || focusedPhoto.dimensions.width || focusedPhoto.dimensions.height) && (
+                          <div className="flex gap-2 mt-1 px-1">
+                            <span className="text-[8px] font-black text-blue-300 uppercase tracking-widest bg-blue-500/20 px-1 rounded">
+                              {focusedPhoto.dimensions.length} x {focusedPhoto.dimensions.width} x {focusedPhoto.dimensions.height} {focusedPhoto.dimensions.unit || 'cm'}
+                            </span>
+                          </div>
+                        )}
+                     </div>
+                  </div>
+
+                  {viewMode === 'private' && user && (
+                    <div className="absolute top-4 left-4 flex gap-1">
+                      <button 
+                        onClick={() => onEditPhoto(focusedPhoto)}
+                        className="bg-black/40 backdrop-blur-md p-2 rounded-xl text-white/80 hover:bg-blue-600 transition-colors shadow-lg border border-white/10"
+                        title="編輯此相片"
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={() => setFocusedGroupPhotoId(null)}
+                    className="absolute top-4 right-4 bg-black/40 backdrop-blur-md p-2 rounded-full text-white/80 hover:bg-black/60 transition-colors"
+                  >
+                    <Minimize2 size={16} />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-white shadow-sm overflow-hidden">
+              <button 
+                onClick={() => setIsUnifiedEditing(!isUnifiedEditing)}
+                className="w-full px-6 py-4 flex items-center justify-between active:bg-white/40 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl transition-colors ${isUnifiedEditing ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                    <Settings2 size={16} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-xs font-bold text-slate-800">🛠️ 統一修改工具</h3>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Batch Tagging & Category</p>
+                  </div>
+                </div>
+                <motion.div
+                  animate={{ rotate: isUnifiedEditing ? 180 : 0 }}
+                  className="text-slate-400"
+                >
+                  <ChevronRight size={18} />
+                </motion.div>
+              </button>
+
+              <AnimatePresence>
+                {isUnifiedEditing && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-6 pb-6 space-y-4 pt-1 border-t border-white/40">
+                      <div className="space-y-2">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速分類套用</p>
+                        <div className="flex flex-wrap gap-2">
+                          {dbCategories.map(cat => {
+                            const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.category === cat.code);
+                            return (
+                              <button 
+                                key={cat.code}
+                                onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, category: cat.code, categoryId: cat.code, subcategoryId: null, sub_category: '' } : p))}
+                                className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 active:bg-slate-50'}`}
+                              >
+                                {cat[appLang as keyof DB_Category] || cat.zh}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {groupPhotos.length > 0 && groupPhotos.every(p => p.category === groupPhotos[0].category) && groupPhotos[0].category && (
+                        <motion.div 
+                          initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                          className="space-y-2"
+                        >
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">子分類套用</p>
+                          <div className="flex flex-wrap gap-2">
+                            {categories.find(c => c.id === groupPhotos[0].category)?.subcategories.map(sub => {
+                              const isAllMatch = groupPhotos.every(p => p.subcategoryId === sub.id);
+                              return (
+                                <button 
+                                  key={sub.id}
+                                  onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: sub.id, sub_category: sub.name } : p))}
+                                  className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
+                                >
+                                  {sub.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+
+                       <div className="space-y-2">
+                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速標籤套用</p>
+                         <div className="flex flex-wrap gap-1.5">
+                           {tags.map(tag => {
+                             const isAllMatch = groupPhotos.every(p => (p.tagIds || []).includes(tag.id));
+                             return (
+                               <button 
+                                 key={tag.id}
+                                 onClick={() => setPhotos(prev => {
+                                   const notAllHaveItByGroupId = prev.filter(ph => ph.groupId === activeGroupId).some(p => !(p.tagIds || []).includes(tag.id));
+                                   return prev.map(p => {
+                                     if (p.groupId !== activeGroupId) return p;
+                                     const hasIt = (p.tagIds || []).includes(tag.id);
+                                     
+                                     if (notAllHaveItByGroupId) {
+                                       return hasIt ? p : { ...p, tagIds: [...(p.tagIds || []), tag.id] };
+                                     } else {
+                                       return { ...p, tagIds: (p.tagIds || []).filter(id => id !== tag.id) };
+                                     }
+                                   });
+                                 })}
+                                 className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold transition-all ${isAllMatch ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
+                               >
+                                 #{tag.name}
+                               </button>
+                             );
+                           })}
+                         </div>
+                       </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center justify-between px-2">
+                <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1 h-3 bg-slate-300 rounded-full"></div>
+                  組內容 ({groupPhotos.length})
+                </h3>
+                {viewMode === 'private' && user && (
+                  <button 
+                    onClick={() => {
+                      setConfirmDialog({
+                        message: `確定要將這 ${groupPhotos.length} 張照片解除同組嗎？`,
+                        onConfirm: () => {
+                          handleUngroup(activeGroupId);
+                          setActiveGroupId(null);
+                          setFocusedGroupPhotoId(null);
+                        }
+                      });
+                    }}
+                    className="text-[10px] text-red-500 font-bold flex items-center gap-1 active:scale-95 transition-all"
+                  >
+                    <X size={12} /> 解除群組
+                  </button>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-3 gap-3">
+                {groupPhotos.map((photo, idx) => (
+                  <motion.div 
+                    key={photo.id}
+                    layoutId={`group-item-${photo.id}`}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setFocusedGroupPhotoId(photo.id)}
+                    className={`relative aspect-square rounded-2xl overflow-hidden shadow-md border-2 transition-all ${focusedGroupPhotoId === photo.id ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50' : 'border-white'}`}
+                  >
+                    <img src={photo.uri} className="w-full h-full object-cover" alt={`Group index ${idx}`} />
+                    <div className="absolute inset-0 bg-black/5" />
+                    {idx === 0 && (
+                      <div className="absolute top-1.5 left-1.5 bg-black/40 backdrop-blur-sm text-white px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-tighter ring-1 ring-white/20">
+                         封面
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+                {viewMode === 'private' && user && (
+                  <button 
+                    onClick={onAddPhotoToGroup}
+                    className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
+                  >
+                    <Plus size={20} />
+                    <span className="text-[8px] font-bold mt-1 uppercase">新增</span>
+                  </button>
+                )}
+              </div>
+            </div>
+         </div>
+      </div>
+
+      <div className="absolute bottom-10 right-8 z-[120]">
+         <motion.button
+           whileHover={{ scale: 1.1 }}
+           whileTap={{ scale: 0.9 }}
+           onClick={() => { setActiveGroupId(null); setFocusedGroupPhotoId(null); }}
+           className="w-14 h-14 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-2xl border border-white/20 active:bg-slate-900 transition-all group"
+         >
+           <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+         </motion.button>
+      </div>
+    </div>
+  );
+};

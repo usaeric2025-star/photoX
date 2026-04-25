@@ -45,6 +45,7 @@ export interface Photo {
   tags: string[]; // Tag array
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
+  thumb_url?: string; // Thumbnail URL in Storage
   dimensions?: {
     length?: number;
     width?: number;

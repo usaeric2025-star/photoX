@@ -49,11 +49,12 @@ export const analyzeProductPhoto = async (
   2. 標籤 (Tags)：請提供「至少 2 個且剛好 2 個」最能描述該家具產品的標籤。
      - 優先從「現有標籤」中挑選符合的標籤。
      - 若現有標籤不足以描述產品特色，請在 newTagName 中建議新的標籤（最多建議 2 個，以逗號隔開）。
+  3. 產品名稱 (Name)：請識別照片中的家具並為其取一個合適的產品名稱。請務必提供名稱，且「僅能使用英文 (English) 或 馬來文 (Malay)」。絕對不要使用中文字符。如果圖片中沒有明確名稱，請根據家具的特徵（例如：Modern Wood Dining Table）自動生成一個描述性的名稱。
   
   重要原則：
   - 嚴禁「亂選」：如果現有分類或標籤不匹配，請給予 newCategoryName 或 newTagName，而不是強迫選一個不相關的。
   - 標籤數量：請確保回傳內容總共包含 2 個標籤（現有標籤 + 建議標籤 = 2）。
-  - 同時也請提供一個估計的「尺寸 (dimensions)」。
+  - 若無法準確判斷家具尺寸，請「不要」隨意猜測，直接省略或回傳 null 即可。只有在非常明顯且有參照物的情況下才提供尺寸預估。
   
   現有分類：
   ${JSON.stringify(categoriesJson)}
@@ -63,12 +64,13 @@ export const analyzeProductPhoto = async (
   
   請回傳 JSON 格式：
   {
+    "name": "Product Name (Only English or Malay)",
     "categoryId": "string (若匹配現有分類) 或 null",
     "newCategoryName": "string (若無匹配現有分類則填寫建議名稱) 或 null",
     "subcategoryId": "string or null",
     "tagIds": ["string array, 現有標籤 ID"],
     "newTagName": "建議的新標籤名 (若現有標籤不足 2 個則提供建議，以逗號隔開) 或 null",
-    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" }
+    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" } // 未知尺寸時回傳 null
   }
   `;
 
