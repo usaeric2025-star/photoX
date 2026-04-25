@@ -381,6 +381,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                 onClick={() => {
                   // map grid index back to actual photo index in displayPhotos
                   const photoId = getRealId(photo.id);
+                  if (showGroupsCollapsed) setShowGroupsCollapsed(false);
                   const realIndex = displayPhotos.findIndex(p => p.id === photoId);
                   if (realIndex !== -1) setLightboxIndex(realIndex);
                 }}

@@ -109,6 +109,14 @@ export default function AdminView() {
   }
 
   const [activeScreen, setActiveScreen] = useState('home');
+
+  // Handle OAuth Hash Redirect
+  useEffect(() => {
+    if (window.location.hash.includes('access_token')) {
+        window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<any>(null);
@@ -134,6 +142,12 @@ export default function AdminView() {
     refreshCloudData
   } = useSyncEngine();
 
+  useEffect(() => {
+    if ((user || sessionStorage.getItem('isStaffMode') === 'true') && viewMode === 'public') {
+      setViewMode('private');
+    }
+  }, [user, viewMode, setViewMode]);
+  
   useEffect(() => {
     if (user || sessionStorage.getItem('isStaffMode') === 'true') {
       refreshCloudData(
