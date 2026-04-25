@@ -49,28 +49,54 @@ import { PublicGallery } from '../components/PublicGallery';
 export default function AdminView() {
   const { user, authChecked, loginWithGoogle, logout } = useAuth();
   const navigate = useNavigate();
+  const [pageError, setPageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleError = (e: ErrorEvent) => setPageError(e.message);
+    const handleRejection = (e: PromiseRejectionEvent) => setPageError(String(e.reason));
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
+  const errorContent = pageError ? (
+    <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white p-4 font-bold overflow-auto max-h-[30vh]">
+      <div className="flex justify-between">
+        <span>Error: {pageError}</span>
+        <button onClick={() => setPageError(null)} className="underline">Dismiss</button>
+      </div>
+    </div>
+  ) : null;
   
   console.log('AdminView Debug:', { authChecked, user, isStaffMode: sessionStorage.getItem('isStaffMode') });
 
   if (!authChecked) {
     return (
-       <div className="w-full h-full min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
+       <>
+        {errorContent}
+        <div className="w-full h-full min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
            <div className="w-8 h-8 relative animate-spin">
               <div className="absolute inset-0 bg-[#D4A853] rounded-full opacity-20"></div>
               <div className="absolute inset-0 border-t-2 border-[#D4A853] rounded-full"></div>
            </div>
            <p className="text-[10px] uppercase font-black tracking-widest text-[#1D3557]/40 mt-4">Verifying session...</p>
-       </div>
+        </div>
+       </>
     );
   }
 
   if (!user && sessionStorage.getItem('isStaffMode') !== 'true') {
     return (
-       <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
-          <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
-             <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">管理中心</h2>
-             <p className="text-sm text-slate-500 mb-8">請登入您的授權帳戶，或使用本地驗證</p>
-             <button 
+       <>
+        {errorContent}
+        <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
+           <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
+              <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">管理中心</h2>
+              <p className="text-sm text-slate-500 mb-8">請登入您的授權帳戶，或使用本地驗證</p>
+              <button 
                 onClick={async () => {
                   try {
                     await loginWithGoogle();
@@ -79,10 +105,10 @@ export default function AdminView() {
                   }
                 }}
                 className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
-             >
+              >
                 Google 安全登入
-             </button>
-             <button
+              </button>
+              <button
                 onClick={() => {
                   const pass = prompt('請輸入您的本地管理密碼:');
                   if (pass === localStorage.getItem('internal_password')) {
@@ -93,20 +119,21 @@ export default function AdminView() {
                   }
                 }}
                 className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all mb-4 text-sm"
-             >
+              >
                 使用本地密碼登入
-             </button>
-             <button
+              </button>
+              <button
                 onClick={() => {
                   sessionStorage.removeItem('isStaffMode');
                   navigate('/');
                 }}
                 className="text-sm text-slate-400 hover:text-slate-600 font-medium"
-             >
+              >
                 返回展示館
-             </button>
-          </div>
-       </div>
+              </button>
+           </div>
+        </div>
+       </>
     );
   }
 
