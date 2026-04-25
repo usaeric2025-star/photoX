@@ -3,10 +3,11 @@ import {
   ChevronLeft, X, Cloud, LogOut, RefreshCcw, 
   Trash2, Download, Upload, MessageCircle, 
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
-  User, Heart, Smile, Layout, ChevronRight
+  User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { SubCategory, Tag, DB_Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import { testAiConnection } from '../services/geminiService';
 
 interface SettingsScreenProps {
   setActiveScreen: (screen: 'home' | 'add' | 'manage' | 'settings') => void;
@@ -81,6 +82,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [newSubName, setNewSubName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [showCatOverview, setShowCatOverview] = useState(false);
+  const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
+
+  const testConnection = async () => {
+    setTestResult({ loading: true });
+    const result = await testAiConnection(geminiApiKey, settings.provider || 'auto', customModel);
+    setTestResult(result);
+  };
 
   const addManufacturer = () => {
     if (!newSubName.trim()) return;
@@ -415,6 +423,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                       setSettingField('custom_model', e.target.value);
                     }}
                   />
+                  <button 
+                    onClick={testConnection}
+                    disabled={testResult?.loading}
+                    className="w-full mt-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all active:scale-95"
+                  >
+                    {testResult?.loading ? '检测中...' : '测试 AI 连接'}
+                  </button>
+                  {testResult && (
+                    <div className={`mt-2 p-3 rounded-xl text-[10px] flex items-center gap-2 ${testResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      {testResult.success ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                      {testResult.success ? '连接成功！' : `连接失败: ${testResult.error}`}
+                    </div>
+                  )}
                 </div>
               </div>
           </div>

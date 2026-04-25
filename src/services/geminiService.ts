@@ -215,3 +215,20 @@ export const analyzeProductPhoto = async (
     throw new Error(`AI_FAIL|${status}|${errorMsg}`);
   }
 };
+
+export const testAiConnection = async (apiKey: string, provider: string, customModel?: string) => {
+  try {
+    // Very minimal payload to test the key
+    await analyzeProductPhoto(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNiAAAAAgAB35oT2AAAAABJRU5ErkJggg==',
+      [],
+      [],
+      apiKey,
+      provider,
+      customModel
+    );
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+};
