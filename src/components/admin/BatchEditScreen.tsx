@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, RefreshCcw, ChevronRight } from 'lucide-react';
+import { X, RefreshCcw, ChevronRight, EyeOff, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const BatchEditScreen = ({

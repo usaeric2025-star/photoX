@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight } from 'lucide-react';
+import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { Category, Tag, DB_Category } from '../../types';
 
 interface UploadFormProps {

@@ -532,15 +532,20 @@ export const fetchSettings = async () => {
         .from('settings')
         .select('*')
         .eq('id', 1)
-        .limit(1);
+        .single();
     
-    if (error) {
+    if (error && error.code !== 'PGRST116') { // Ignore "no rows returned" error
         console.error("Failed to fetch settings:", error);
         return null;
     }
     
-    const settings = data && data.length > 0 ? data[0] : null;
+    const settings = data || null;
     if (!settings) return null;
+    
+    // Map custom columns back to app expectations
+    if (settings.api_key) settings.gemini_api_key = settings.api_key;
+    if (settings.model_name) settings.custom_model = settings.model_name;
+    if (settings.access_passcode) settings.internal_password = settings.access_passcode;
     
     // Parse JSON data if it exists
     if (settings.categories_json) {
@@ -552,15 +557,6 @@ export const fetchSettings = async () => {
     if (settings.manufacturers_json) {
       try { settings.manufacturers = JSON.parse(settings.manufacturers_json); } catch(e) { console.error(e); }
     }
-
-    // Decode AI settings if they are "encrypted" (simple base64 for now as per user request)
-    if (settings.gemini_api_key) {
-        try { settings.gemini_api_key = atob(settings.gemini_api_key); } catch(e) {}
-    }
-
-    if (settings.internal_password) {
-        try { settings.internal_password = atob(settings.internal_password); } catch(e) {}
-    }
     
     return settings;
 };
@@ -570,12 +566,19 @@ export const saveSettings = async (settings: any) => {
         // Prepare the payload
         const payload = { ...settings };
         
-        // Simple "encryption" (obfuscation) for keys as requested
-        if (payload.gemini_api_key) {
-            payload.gemini_api_key = btoa(payload.gemini_api_key);
+        // Map fields to requested columns
+        if ('gemini_api_key' in payload) {
+            payload.api_key = payload.gemini_api_key;
+            delete payload.gemini_api_key;
         }
-        if (payload.internal_password) {
-            payload.internal_password = btoa(payload.internal_password);
+        if ('custom_model' in payload) {
+            payload.model_name = payload.custom_model;
+            delete payload.custom_model;
+        }
+        if ('internal_password' in payload) {
+            payload.access_passcode = payload.internal_password;
+            payload.passcode_enabled = !!payload.internal_password;
+            delete payload.internal_password;
         }
 
         // Clean up temporary UI fields before saving
@@ -593,8 +596,6 @@ export const saveSettings = async (settings: any) => {
         }
 
         console.log("Attempting to save settings to Supabase...", payload);
-        if (payload.categories_json) console.log("Categories string length:", payload.categories_json.length);
-        if (payload.tags_json) console.log("Tags string length:", payload.tags_json.length);
 
         // Upsert into row with id: 1
         const { error: upsertError } = await supabase
@@ -609,10 +610,6 @@ export const saveSettings = async (settings: any) => {
         return true;
     } catch (err: any) {
         console.error("Detailed error in saveSettings:", err);
-        // Provide the user with a specific message if columns/id are missing
-        if (err.message && err.message.includes("column \"id\" of relation \"settings\" does not exist")) {
-            console.error("MIGRATION REQUIRED: The 'settings' table is missing the 'id' column.");
-        }
         throw err;
     }
 };

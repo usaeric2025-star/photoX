@@ -18,6 +18,12 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns, is
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [visibleCount, setVisibleCount] = useState(15);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+    setVisibleCount(15);
+  };
 
   const setSearchQueryAndReset = (query: string) => {
     setSearchQuery(query);
@@ -86,8 +92,15 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns, is
       });
     }
 
+    filtered.sort((a, b) => {
+      // Safely parse timestamps or fallback
+      const timeA = new Date(a.createdAt || a.created_at || 0).getTime();
+      const timeB = new Date(b.createdAt || b.created_at || 0).getTime();
+      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+
     return filtered;
-  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, dbCategories, categories, tags]);
+  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, dbCategories, categories, tags, sortOrder, isAdminMode]);
 
   const totalPhotoCount = displayPhotos.length;
 
@@ -153,6 +166,7 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns, is
     displayPhotos: aggregatedPhotos, // For lightbox indexed access
     totalPhotoCount, // Added this
     visiblePhotos, gridPhotos,
-    getRealId, observerTarget
+    getRealId, observerTarget,
+    sortOrder, toggleSortOrder
   };
 };

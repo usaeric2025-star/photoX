@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, RefreshCcw, ChevronRight } from 'lucide-react';
+import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { Photo } from '../../types';
 
 interface Props {
