@@ -272,6 +272,25 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     touchEndX.current = null;
   };
 
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const startLongPress = (photoId: string) => {
+    if (!isAdminMode) return;
+    const timer = setTimeout(() => {
+      if (onEditPhoto) onEditPhoto(photoId);
+      if ('vibrate' in navigator) navigator.vibrate(50);
+      setLongPressTimer(null);
+    }, 600) as unknown as NodeJS.Timeout;
+    setLongPressTimer(timer);
+  };
+
+  const endLongPress = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
@@ -490,7 +509,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   shareSinglePhoto(photo);
                   if ('vibrate' in navigator) navigator.vibrate(50);
                 }}
-                onClick={() => {
+                onMouseDown={() => startLongPress(photo.id)}
+                onMouseUp={endLongPress}
+                onMouseLeave={endLongPress}
+                onTouchStart={() => startLongPress(photo.id)}
+                onTouchEnd={endLongPress}
+                onClick={(e) => {
+                  if (longPressTimer) {
+                    endLongPress();
+                  }
                   if (isAdminMode && onToggleSelection) {
                     onToggleSelection(photo.id);
                     return;
@@ -573,23 +600,58 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
       {/* Admin Bulk Actions Bar */}
       {isAdminMode && selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-2 bg-[#1D3557] px-6 py-3 rounded-full shadow-2xl border border-white/20 animate-in fade-in slide-in-from-bottom-5 duration-300">
-           <span className="text-[10px] font-black text-white/50 uppercase tracking-widest mr-2">已选 {selectedIds.length} 张</span>
-           <button 
-             onClick={() => onGroupPhotos?.(selectedIds)}
-             className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black text-white uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-white/10"
-           >
-             <Layers size={14} /> 合并
-           </button>
-           <button 
-             onClick={() => onDeletePhotos?.(selectedIds)}
-             className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-xl text-[10px] font-black text-red-400 uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border border-red-500/20"
-           >
-             <Trash2 size={14} /> 删除
-           </button>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-3 bg-[#1D3557] px-5 py-3 rounded-2xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300">
+           <div className="bg-white/10 px-2 py-1 rounded-lg">
+             <span className="text-xs font-black text-white">{selectedIds.length}</span>
+           </div>
+           
+           <div className="flex items-center gap-2">
+             <button 
+               onClick={() => onGroupPhotos?.(selectedIds)}
+               className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10"
+               title="合并"
+             >
+               <Layers size={18} />
+             </button>
+             
+             <button 
+               onClick={() => {
+                 if (window.confirm(`确定要删除这 ${selectedIds.length} 张照片吗？`)) {
+                   onDeletePhotos?.(selectedIds);
+                 }
+               }}
+               className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20"
+               title="删除"
+             >
+               <Trash2 size={18} />
+             </button>
+
+             <button 
+               onClick={() => {
+                 const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
+                 const text = selectedPhotos.map(p => p.name || '家具').join(', ');
+                 if (navigator.share) {
+                   navigator.share({
+                     title: '家具分享',
+                     text: `我选了 ${selectedIds.length} 张家具照片: ${text}`,
+                     url: window.location.origin
+                   });
+                 } else {
+                   alert('该浏览器不支持分享');
+                 }
+               }}
+               className="w-10 h-10 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl flex items-center justify-center text-blue-400 transition-all active:scale-95 border border-blue-500/20"
+               title="分享"
+             >
+               <Share2 size={18} />
+             </button>
+           </div>
+
+           <div className="w-px h-6 bg-white/10 mx-1" />
+
            <button 
              onClick={onClearSelection}
-             className="p-2 text-white/40 hover:text-white"
+             className="p-2 text-white/40 hover:text-white transition-colors"
            >
              <X size={18} />
            </button>

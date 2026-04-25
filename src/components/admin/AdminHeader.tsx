@@ -33,17 +33,17 @@ export const AdminHeader: React.FC<Props> = ({
   <header className="shrink-0 z-50 bg-[#FDFAF6] px-6 py-4 flex items-center justify-between gap-4 border-b border-[#1D3557]/5">
     <div className="flex-1 min-w-0">
       {settings?.logo_url ? (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <img src={settings.logo_url} alt="Logo" className="h-10 max-w-[180px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-[#1D3557] uppercase tracking-widest leading-none mb-1">Admin Panel</span>
+            <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-widest leading-none mb-1">Admin Panel</span>
             {photosCount !== undefined && (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100 italic">
+                <span className="text-sm font-black text-blue-600 italic">
                   {photosCount} / {totalPhotosCount || 0}
                 </span>
                 {cloudCount !== undefined && cloudCount !== null && (
-                  <span className="text-[10px] font-bold text-[#1D3557]/30 uppercase tracking-tighter">
+                  <span className="text-[10px] font-bold text-[#1D3557]/20 uppercase tracking-tighter">
                     Cloud: {cloudCount}
                   </span>
                 )}
@@ -53,14 +53,14 @@ export const AdminHeader: React.FC<Props> = ({
         </div>
       ) : (
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none shrink-0">管理界面</h1>
+          <h1 className="text-xl font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none shrink-0">Admin Panel</h1>
           {photosCount !== undefined && (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-xl border border-blue-100 italic shadow-sm">
+              <span className="text-lg font-black text-blue-600 italic">
                 {photosCount} / {totalPhotosCount || 0}
               </span>
               {cloudCount !== undefined && cloudCount !== null && (
-                <span className="text-[10px] font-bold text-[#1D3557]/30 uppercase tracking-widest bg-[#1D3557]/5 px-2 py-1 rounded-lg">
+                <span className="text-[10px] font-bold text-[#1D3557]/20 uppercase tracking-widest bg-[#1D3557]/5 px-2 py-1 rounded-lg">
                   Cloud: {cloudCount}
                 </span>
               )}
@@ -99,35 +99,28 @@ export const AdminHeader: React.FC<Props> = ({
                {!user ? 'Staff(Local)' : (user?.displayName || user?.email?.split('@')[0])}
              </span>
           </div>
-          <div className="flex items-center gap-1.5 bg-[#1D3557]/5 p-1 rounded-2xl border border-[#1D3557]/10">
-            <button 
-            onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-[#D4A853] text-white shadow-md' : 'text-[#1D3557]/40 hover:text-[#1D3557]'}`}
-            title="预览展示页"
-          >
-            {viewMode === 'public' ? <Eye size={18} /> : <EyeOff size={18} />}
-          </button>
-
+          <div className="flex items-center gap-2 bg-[#1D3557]/5 p-1 rounded-2xl border border-[#1D3557]/10">
+          
           {onAddPhoto && (
             <button 
               onClick={onAddPhoto}
-              className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-md hover:bg-blue-700 active:scale-95"
+              className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-md hover:bg-blue-700 active:scale-95"
               title="新增照片"
             >
-              <Plus size={18} />
+              <Plus size={20} />
             </button>
           )}
           
           <button 
             onClick={handleBatchAiIdentifyTrigger}
             disabled={isBatchAnalyzing}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isBatchAnalyzing ? 'bg-[#1D3557] text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 ring-1 ring-purple-600/10'}`}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isBatchAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
             title="AI 批量辨識"
           >
             {isBatchAnalyzing ? (
               <span className="animate-pulse text-[9px] font-bold">{batchProgress.current}</span>
             ) : (
-              <Sparkles size={18} />
+              <Sparkles size={20} />
             )}
           </button>
           
@@ -140,22 +133,23 @@ export const AdminHeader: React.FC<Props> = ({
                 setIsMultiSelect(true);
               }
             }}
-            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg scale-105' : 'text-[#1D3557]/40 hover:text-[#1D3557] ring-1 ring-[#1D3557]/10'}`}
+            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg scale-105' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
             title={isMultiSelect ? "取消选择" : "进入选择模式"}
           >
-            <CheckSquare size={18} />
+            <CheckSquare size={20} />
           </button>
 
           <button 
             onClick={handleManageClick}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${activeScreen === 'manage' ? 'bg-[#1D3557] text-white shadow-lg' : 'text-[#1D3557]/40 hover:text-[#1D3557]'}`}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeScreen === 'manage' ? 'bg-[#1D3557] text-white shadow-lg' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
             title="設定與管理"
           >
-            <Settings2 size={18} />
+            <Settings2 size={20} />
           </button>
           </div>
         </div>
       )}
+
     </div>
   </header>
 );
