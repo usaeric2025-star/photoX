@@ -222,9 +222,12 @@ export const useAdminPhotos = (
     const fileArray = Array.from(files) as File[];
     
     setIsImporting(true);
+    setIsSyncing(true); // Global loading overlay
     setActiveScreen('home');
 
     const sessionHashes = new Set<string>();
+    let successCount = 0;
+    let failCount = 0;
 
     const CHUNK_SIZE = 3;
     for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
@@ -235,21 +238,17 @@ export const useAdminPhotos = (
         try {
           // 1. Calculate MD5 from file directly as requested
           const hash = await (async () => {
-            try {
-              return await calculateMD5FromFile(file);
-            } catch (e) {
-              const arrayBuffer = await file.arrayBuffer();
-              return calculateMD5FromArrayBuffer(arrayBuffer);
-            }
+             try {
+               return await calculateMD5FromFile(file);
+             } catch (e) {
+               const arrayBuffer = await file.arrayBuffer();
+               return calculateMD5FromArrayBuffer(arrayBuffer);
+             }
           })();
 
           // 2. Check local duplicates
           const duplicate = photosRef.current.find(p => p.image_hash === hash);
           if (duplicate || sessionHashes.has(hash)) {
-            setAlertDialog({ 
-              title: '照片已存在', 
-              message: `照片「${file.name}」已经存在本地库中${duplicate ? ` (名称: ${duplicate.name})` : ''}` 
-            });
             continue;
           }
 
@@ -257,10 +256,6 @@ export const useAdminPhotos = (
           if (user) {
             const existingInfo = await checkImageHashExists(hash);
             if (existingInfo) {
-              setAlertDialog({ 
-                title: '云端已存在', 
-                message: `照片「${file.name}」在云端数据库中已存在，将跳过重复上传。`
-              });
               continue;
             }
           }
@@ -283,11 +278,11 @@ export const useAdminPhotos = (
           
           const newPhoto: Photo = {
             id: photoId,
-            storageId: photoId, // Use UUID for storage path as requested
+            storageId: photoId,
             item_code: generateItemCode(),
             manual_code: '',
             image_hash: hash,
-            name: file.name.split('.')[0] || 'Furniture', // Keep original name
+            name: file.name.split('.')[0] || 'Furniture',
             category: 'Uncategorized',
             sub_category: '',
             tags: [],
@@ -303,6 +298,7 @@ export const useAdminPhotos = (
           };
           
           newPhotosDraft.push(newPhoto);
+          successCount++;
           
           if (useAi) {
             (async (targetPhoto: Photo) => {
@@ -316,6 +312,7 @@ export const useAdminPhotos = (
           }
         } catch (err: any) {
           console.error("Import processing error", err);
+          failCount++;
         }
       }
       
@@ -328,7 +325,18 @@ export const useAdminPhotos = (
         await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
+    
+    setIsSyncing(false);
     setIsImporting(false);
+    
+    if (successCount > 0) {
+       setAlertDialog({ 
+         title: '上传完成', 
+         message: `成功处理了 ${successCount} 张照片。${failCount > 0 ? `有 ${failCount} 张失败。` : ''}` 
+       });
+    } else if (failCount > 0) {
+       setAlertDialog({ title: '上传失败', message: '照片处理过程中出现错误。' });
+    }
   };
   
   const deletePhoto = async (idOrIds: string | string[]) => {

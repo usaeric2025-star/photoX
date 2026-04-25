@@ -17,6 +17,8 @@ export const useAdminCategory = () => {
     const loadInit = async () => {
       const storedCats = await loadData('product_categories');
       if (storedCats && storedCats.length > 0) setCategories(storedCats);
+      const storedDbCats = await loadData('db_categories');
+      if (storedDbCats && storedDbCats.length > 0) setDbCategories(storedDbCats);
       const storedTags = await loadData('product_tags');
       if (storedTags && storedTags.length > 0) setTags(storedTags);
       const storedMfrs = await loadData('product_manufacturers');
@@ -31,11 +33,12 @@ export const useAdminCategory = () => {
     if (!isLoaded) return;
     const persist = async () => {
       await saveData('product_categories', categories);
+      await saveData('db_categories', dbCategories);
       await saveData('product_tags', tags);
       await saveData('product_manufacturers', manufacturers);
     };
     persist();
-  }, [categories, tags, manufacturers, isLoaded]);
+  }, [categories, tags, manufacturers, dbCategories, isLoaded]);
 
   return {
     categories, setCategories,

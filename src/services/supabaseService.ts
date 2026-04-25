@@ -521,6 +521,10 @@ export const fetchSettings = async () => {
     if (settings.gemini_api_key) {
         try { settings.gemini_api_key = atob(settings.gemini_api_key); } catch(e) {}
     }
+
+    if (settings.internal_password) {
+        try { settings.internal_password = atob(settings.internal_password); } catch(e) {}
+    }
     
     return settings;
 };
@@ -533,6 +537,9 @@ export const saveSettings = async (settings: any) => {
         // Simple "encryption" (obfuscation) for keys as requested
         if (payload.gemini_api_key) {
             payload.gemini_api_key = btoa(payload.gemini_api_key);
+        }
+        if (payload.internal_password) {
+            payload.internal_password = btoa(payload.internal_password);
         }
 
         // Clean up temporary UI fields before saving

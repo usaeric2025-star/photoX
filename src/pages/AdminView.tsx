@@ -87,9 +87,7 @@ export default function AdminView() {
   const [filterCatId, setFilterCatId] = useState<string | null>(null);
   const [filterSubId, setFilterSubId] = useState<string | null>(null);
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
-  const [appLang, setAppLang] = useState(() => {
-    return localStorage.getItem('appLang') || 'zh';
-  });
+  const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
@@ -109,11 +107,11 @@ export default function AdminView() {
   } = useSyncEngine();
 
   useEffect(() => {
-    if (settings?.lang) {
-      setAppLang(settings.lang);
-    }
     if (settings?.gemini_api_key) {
       setGeminiApiKey(settings.gemini_api_key);
+    }
+    if (settings?.internal_password) {
+      setInternalPassword(settings.internal_password);
     }
   }, [settings]);
 

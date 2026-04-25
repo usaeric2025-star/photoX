@@ -150,12 +150,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       const p = photos.find(ph => ph.id === singlePhotoId);
       if (p) {
         const displayName = getPhotoDisplayName(p);
+        const manualCodeStr = p.manual_code ? ` [${p.manual_code}]` : '';
         if (lang === 'ms') {
-          msg = `Halo, saya berminat dengan perabot ini:\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\nLihat lagi: photo-x-one.vercel.app`;
+          msg = `Halo, saya berminat dengan perabot ini:\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\nLihat lagi: photo-x-one.vercel.app`;
         } else if (lang === 'en') {
-          msg = `Hello, I'm interested in this furniture:\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\nView more: photo-x-one.vercel.app`;
+          msg = `Hello, I'm interested in this furniture:\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\nView more: photo-x-one.vercel.app`;
         } else {
-          msg = `你好，我对这个家具有兴趣：\n\n${displayName} ${isStaffMode ? '[' + (p.manual_code || '') + ']' : ''}\n\n查看更多：photo-x-one.vercel.app`;
+          msg = `你好，我对这个家具有兴趣：\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\n查看更多：photo-x-one.vercel.app`;
         }
       }
     } else {
@@ -309,10 +310,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               <div>
                 <h1 className="text-xl font-black tracking-tighter text-[#1D3557] italic leading-none">GALLERY</h1>
                 <p className="text-[10px] font-black text-[#1D3557]/30 uppercase tracking-widest mt-0.5 ml-0.5 flex items-center gap-1">
-                  {totalPhotoCount < photos.length ? `${totalPhotoCount} / ${photos.length}` : t.gallerySub(photos.length)}
-                  {cloudCount !== undefined && cloudCount !== null && (
-                    <span className="opacity-50">· Cloud: {cloudCount}</span>
-                  )}
+                  {photos.length} / {cloudCount !== null ? cloudCount : '---'}
                 </p>
               </div>
             )}
@@ -562,12 +560,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 
                 {/* Category label */}
                 {(() => {
-                  const safeCat = (photo.category || '').trim().toLowerCase();
+                  const catCodeOrId = (photo.categoryId || photo.category || '').trim();
                   const cat = dbCategories.find(c => 
-                    (c.code || '').trim().toLowerCase() === safeCat || 
-                    (c.zh || '').trim().toLowerCase() === safeCat || 
-                    (c.en || '').trim().toLowerCase() === safeCat || 
-                    (c.ms || '').trim().toLowerCase() === safeCat
+                    (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
+                    (c.zh || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
+                    (c.en || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
+                    (c.ms || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
                   );
                   
                   let catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');

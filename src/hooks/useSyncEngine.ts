@@ -83,10 +83,31 @@ export const useSyncEngine = () => {
 
             const cloudPublicPhotos = await loadAllPhotosFromCloud();
             if (cloudPublicPhotos) {
-                // We set the photos list directly. Browser handles image caching for the URIs.
-                setPublicPhotos(cloudPublicPhotos);
-                await saveData('public_photos', cloudPublicPhotos);
-                console.log(`SyncEngine: Total photos sync'd: ${cloudPublicPhotos.length}`);
+                setPublicPhotos((prev: any[]) => {
+                    const localMap = new Map((prev || []).map(p => [p.id, p]));
+                    const merged = cloudPublicPhotos.map(cp => {
+                        const local = localMap.get(cp.id);
+                        if (local) {
+                            return {
+                                ...cp,
+                                categoryId: local.categoryId || cp.categoryId,
+                                subcategoryId: local.subcategoryId || cp.subcategoryId,
+                                tagIds: (local.tagIds && local.tagIds.length > 0) ? local.tagIds : cp.tagIds,
+                                name: local.name || cp.name,
+                                manual_code: local.manual_code || cp.manual_code,
+                                description: local.description || cp.description
+                            };
+                        }
+                        return cp;
+                    });
+                    
+                    const cloudIds = new Set(cloudPublicPhotos.map(p => p.id));
+                    const localOnly = (prev || []).filter(p => !cloudIds.has(p.id));
+                    
+                    const final = [...merged, ...localOnly];
+                    saveData('public_photos', final);
+                    return final;
+                });
             }
 
             if (user) {
