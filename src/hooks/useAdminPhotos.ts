@@ -65,37 +65,33 @@ export const useAdminPhotos = (
   
   useEffect(() => {
     const initPhotos = async () => {
-      // 優先載入本地 IndexedDB 照片
+      setIsInitializing(true);
       try {
-        let localPhotos = await loadData('product_photos');
-        if (!localPhotos || localPhotos.length === 0) {
-           // Try migrate from old key
-           const oldPhotos = await loadData('photos');
-           if (oldPhotos && oldPhotos.length > 0) {
-              localPhotos = oldPhotos;
-              await saveData('product_photos', oldPhotos);
-           }
-        }
-        
-        if (localPhotos && localPhotos.length > 0) {
-          setPhotos(localPhotos.map((p: any) => ({ ...p, isAnalyzing: false })));
-        }
-        
         if (user) {
-          // Always try to pull cloud photos ONLY IF local storage is empty
-          if (!localPhotos || localPhotos.length === 0) {
-            loadPhotosFromCloud(user.id)
-                .then(cloudPhotos => {
-                  if (cloudPhotos && cloudPhotos.length > 0) {
-                    setPhotos(cloudPhotos);
-                    saveData('product_photos', cloudPhotos);
-                  }
-                })
-                .catch(e => console.error('Cloud pull during init failed:', e));
+          // ALWAYS fetch from cloud on init, as per requirement
+          const cloudPhotos = await loadPhotosFromCloud(user.id);
+          if (cloudPhotos) {
+            setPhotos(cloudPhotos);
+            // Overwrite local indexedDB
+            await saveData('product_photos', cloudPhotos);
+          } else {
+             // Fallback/sync from local if cloud failed or empty?
+             // User requested overwriting by cloud, if cloud is empty, local becomes empty.
+             // This might be harsh if cloud is empty due to temporary issue, 
+             // but it follows "Synchronize from cloud", "OverwriteIndexedDB".
+             setPhotos([]);
+             await saveData('product_photos', []);
           }
+        } else {
+          // Fallback local if user is not logged in
+          const localPhotos = await loadData('product_photos');
+          setPhotos(localPhotos || []);
         }
       } catch (e) {
         console.error('Init photos failed:', e);
+         // Fallback local if cloud fails
+         const localPhotos = await loadData('product_photos');
+         setPhotos(localPhotos || []);
       } finally {
         setIsInitializing(false);
       }
