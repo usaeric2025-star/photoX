@@ -33,9 +33,12 @@ interface Props {
   appLang: string;
   quickAddSubCategory: () => void;
   quickAddTag: () => void;
+  quickAddManufacturer: () => void;
   tags: any[];
   manufacturers: any[];
   editPhotoPreview?: string | null;
+  onDelete?: (id: string) => void;
+  newPhotoData?: string | null;
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
@@ -57,8 +60,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
         {(props.newPhotoData || props.editPhotoPreview) && (
-          <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white mb-6">
-            <img src={props.newPhotoData || props.editPhotoPreview || ''} className="max-w-full max-h-full object-contain" alt="Preview" />
+          <div className="relative group">
+            <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white mb-6">
+              <img src={props.newPhotoData || props.editPhotoPreview || ''} className="max-w-full max-h-full object-contain" alt="Preview" />
+            </div>
           </div>
         )}
         
@@ -92,6 +97,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 {mfr.name}
               </button>
             ))}
+            <button onClick={props.quickAddManufacturer} className="px-4 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100">+ 新增</button>
           </div>
         </section>
 
@@ -139,6 +145,17 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                </div>
              )}
           </section>
+
+          {props.editPhotoId && props.onDelete && (
+            <div className="pt-4 pb-8">
+              <button 
+                onClick={() => props.onDelete!(props.editPhotoId)}
+                className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
+              >
+                删除此照片
+              </button>
+            </div>
+          )}
        </div>
     </div>
   );
