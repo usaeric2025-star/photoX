@@ -214,7 +214,38 @@ export default function AdminView() {
 
   if (activeScreen === 'manage') {
     return (
-       <SettingsScreen onBack={() => setActiveScreen('home')} settings={settings} />
+       <SettingsScreen 
+         setActiveScreen={setActiveScreen}
+         settings={settings}
+         setSettings={setSettings}
+         saveSettings={saveSettings}
+         manufacturers={manufacturers}
+         setManufacturers={setManufacturers}
+         tags={tags}
+         setTags={setTags}
+         user={user}
+         loginWithGoogle={loginWithGoogle}
+         logout={logout}
+         triggerManualSync={triggerManualSync}
+         isSyncing={isSyncing}
+         syncPercent={syncPercent}
+         handleLogoUpload={handleLogoUpload}
+         setCategories={setCategories}
+         categories={categories}
+         dbCategories={dbCategories}
+         performPushSync={performPushSync}
+         performPullSync={performPullSync}
+         cloudCount={cloudCount}
+         lastSyncTime={lastSyncTime}
+         geminiApiKey={geminiApiKey}
+         setGeminiApiKey={setGeminiApiKey}
+         customModel={customModel}
+         setCustomModel={setCustomModel}
+         internalPassword={internalPassword}
+         setInternalPassword={setInternalPassword}
+         photos={photos}
+         setPhotos={setPhotos}
+       />
     );
   }
 
