@@ -4,9 +4,7 @@ import { loadAllPhotosFromCloud, loadCategoriesFromCloud, fetchSettings, loginWi
 import { PublicGallery } from '../components/PublicGallery';
 import { Photo, Category, Tag, SubCategory, DB_Category } from '../types';
 import { loadData, saveData } from '../utils/indexedDB';
-
 import { useAuth } from '../hooks/useAuth';
-import { loadData, saveData } from '../utils/indexedDB';
 
 export default function PublicView() {
   const { user, authChecked } = useAuth();

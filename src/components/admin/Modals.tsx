@@ -1,6 +1,4 @@
 import React from 'react';
-
-import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2 } from 'lucide-react';
 

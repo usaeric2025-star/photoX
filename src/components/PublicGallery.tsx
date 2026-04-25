@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Photo, DB_Category, Category, Tag } from '../types';
-import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2 } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Image as ImageIcon, Lock, Unlock, Key, LayoutGrid, Columns, ArrowUpToLine, MessageCircle, Share2, Layers, Maximize, Grid3X3, RefreshCcw, Settings2, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface PublicGalleryProps {
@@ -715,18 +715,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({ photos, categories
                         className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"
                       >
                          <LogIn size={16} /> Google 安全登入
-                      </button>
-                    )}
-                    {onLogin && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowPassPrompt(false);
-                          onLogin();
-                        }}
-                        className="w-full py-3 px-4 rounded-2xl font-bold text-slate-400 bg-transparent hover:bg-slate-50 hover:text-slate-600 transition-all text-sm flex items-center justify-center gap-2"
-                      >
-                        <Settings2 size={16} />前往管理後台
                       </button>
                     )}
                   </div>
