@@ -115,7 +115,7 @@ export const analyzeProductPhoto = async (
     }
 
     const requestBody = {
-      model: modelName,
+      model: modelName.replace('openrouter/', ''),
       messages: [
         {
           role: "user",
