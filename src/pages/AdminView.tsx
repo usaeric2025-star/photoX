@@ -498,7 +498,11 @@ export default function AdminView() {
                     cancelBatchAiRef.current = true;
                   } else {
                     cancelBatchAiRef.current = false;
-                    handleBatchAiIdentify(filteredPhotos, dbCategories, cancelBatchAiRef);
+                    let targetPhotos = filteredPhotos;
+                    if (selectedIds.length > 0) {
+                      targetPhotos = filteredPhotos.filter(p => selectedIds.includes(p.id));
+                    }
+                    handleBatchAiIdentify(targetPhotos, dbCategories, cancelBatchAiRef);
                   }
                 }}
                 handleManageClick={handleManageClick}
@@ -628,20 +632,19 @@ export default function AdminView() {
           handleSingleAiAnalyze={async (data, catId) => {
             const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
             if (result && !editPhotoId) {
-              if (result.name) setAddName(result.name);
-              if (result.newCategoryName && !catId) {
-                // If the model gave a string, we set addCatId to what we can find, else ignore
+              if (result.name && !addName) setAddName(result.name);
+              if (result.newCategoryName && !catId && !addCatId) {
                 const foundCat = categories.find(c => c.name === result.newCategoryName);
                 if (foundCat) setAddCatId(foundCat.id);
               }
-              if (result.tagIds) {
+              if (result.tagIds && addTagIds.length === 0) {
                 const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
                 setAddTagIds(rawTagIds);
               }
               if (result.dimensions) {
-                if (result.dimensions.length) setAddDimL(result.dimensions.length.toString());
-                if (result.dimensions.width) setAddDimW(result.dimensions.width.toString());
-                if (result.dimensions.height) setAddDimH(result.dimensions.height.toString());
+                if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
+                if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
+                if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
               }
             }
           }}

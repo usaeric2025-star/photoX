@@ -183,23 +183,36 @@ export const useAdminPhotos = (
             finalTagIds = Array.from(new Set([...finalTagIds, ...newTagIds]));
           }
 
-          setPhotos(prev => prev.map(p => p.id === photo.id ? { 
-            ...p, 
-            categoryId: finalCatId, 
-            subcategoryId: finalSubId, 
-            tagIds: finalTagIds,
-            name: result.name || p.name,
-            category: categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || p.category,
-            sub_category: categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || p.sub_category,
-            tags: tags.filter(t => finalTagIds.includes(t.id)).map(t => t.name),
-            dimensions: result.dimensions || p.dimensions,
-            isAnalyzing: false 
-          } : p));
+          setPhotos(prev => prev.map(p => {
+            if (p.id !== photo.id) return p;
+
+            const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+            const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
+
+            return { 
+              ...p, 
+              categoryId: p.categoryId || finalCatId, 
+              subcategoryId: p.subcategoryId || finalSubId, 
+              tagIds: mergedTagIds,
+              name: p.name || result.name || null,
+              category: p.category || categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || null,
+              sub_category: p.sub_category || categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || null,
+              tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
+              dimensions: p.dimensions || result.dimensions || null,
+              isAnalyzing: false 
+            };
+          }));
           successCount++;
         } catch (err: any) {
-          setAlertDialog({ title: '识别失败', message: `AI 识别失败。\n\n照片 ID: ${photo.id}\n错误原因: ${err.message || '未知错误'}` });
           setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
-          break;
+          const errMsg = err.message || '未知錯誤';
+          if (errMsg.includes('權限') || errMsg.includes('Failed to fetch') || errMsg.includes('401') || errMsg.includes('403')) {
+            setAlertDialog({ title: '识别失败', message: `AI 识别失败，可能金鑰無效或網路錯誤。\n\n照片 ID: ${photo.id}\n错误原因: ${errMsg}\n\n已終止後續任務。` });
+            break;
+          } else {
+            console.error("Skipping photo due to error:", errMsg);
+            continue;
+          }
         }
       }
       if (successCount > 0) {
@@ -217,7 +230,28 @@ export const useAdminPhotos = (
     try {
       const result = await analyzeProductPhoto(imageData, categories, tags, geminiApiKey, aiProvider, customModel, catId);
       if (editPhotoId) {
-        setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false, ...result } : p));
+        setPhotos(prev => prev.map(p => {
+          if (p.id !== editPhotoId) return p;
+          
+          let finalCatId = result.categoryId || p.categoryId;
+          let finalSubId = result.subcategoryId || p.subcategoryId;
+          
+          const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+          const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...(result.tagIds || [])]));
+
+          return { 
+            ...p, 
+            categoryId: finalCatId,
+            subcategoryId: finalSubId,
+            tagIds: mergedTagIds,
+            name: p.name || result.name || null,
+            category: p.category || categories.find(c => c.id === finalCatId)?.name || result.newCategoryName || null,
+            sub_category: p.sub_category || categories.find(c => c.id === finalCatId)?.subcategories.find(s => s.id === finalSubId)?.name || result.newSubCategoryName || null,
+            tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
+            dimensions: p.dimensions || result.dimensions || null,
+            isAnalyzing: false 
+          };
+        }));
       }
       return result;
     } catch (err: any) {
