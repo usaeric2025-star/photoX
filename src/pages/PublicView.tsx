@@ -25,7 +25,7 @@ export default function PublicView() {
       loadData('public_settings'),
       loadData('public_categories')
     ]);
-    if (sp && sp.length > 0) setPublicPhotos(sp);
+    if (sp && sp.length > 0) setPublicPhotos(sp.map((p: any) => ({ ...p, isAnalyzing: false })));
     if (sc && sc.length > 0) setDbCategories(sc);
     if (stg && stg.length > 0) setPublicTags(stg);
     if (s) setSettings(s);

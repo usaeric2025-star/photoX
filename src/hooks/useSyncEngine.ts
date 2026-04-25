@@ -111,7 +111,7 @@ export const useSyncEngine = () => {
                     });
                     
                     const cloudIds = new Set(cloudPublicPhotos.map(p => p.id));
-                    const localOnly = (prev || []).filter(p => !cloudIds.has(p.id));
+                    const localOnly = (prev || []).filter(p => !cloudIds.has(p.id)).map(p => ({ ...p, isAnalyzing: false }));
                     
                     const final = [...merged, ...localOnly];
                     saveData('product_photos', final);

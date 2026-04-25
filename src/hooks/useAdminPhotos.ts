@@ -77,13 +77,19 @@ export const useAdminPhotos = (
         }
         
         if (localPhotos && localPhotos.length > 0) {
-          setPhotos(localPhotos);
-        } else if (user) {
-          // Only if local is empty and user is logged in, attempt a first-time pull
-          const cloudPhotos = await loadAllPhotosFromCloud();
-          if (cloudPhotos && cloudPhotos.length > 0) {
-            setPhotos(cloudPhotos);
-          }
+          setPhotos(localPhotos.map((p: any) => ({ ...p, isAnalyzing: false })));
+        }
+        
+        if (user) {
+          // Always try to pull cloud photos to stay up-to-date
+          loadAllPhotosFromCloud()
+            .then(cloudPhotos => {
+              if (cloudPhotos && cloudPhotos.length > 0) {
+                setPhotos(cloudPhotos);
+                saveData('product_photos', cloudPhotos);
+              }
+            })
+            .catch(e => console.error('Cloud pull during init failed:', e));
         }
       } catch (e) {
         console.error('Init photos failed:', e);
