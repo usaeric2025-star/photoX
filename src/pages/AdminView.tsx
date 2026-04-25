@@ -136,7 +136,7 @@ export default function AdminView() {
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
-  } = useAdminPhotos(user, geminiApiKey, aiProvider, customModel, categories, setCategories, tags, setTags, setAlertDialog, setIsSyncing);
+  } = useAdminPhotos(user, geminiApiKey, aiProvider, customModel, categories, setCategories, tags, setTags, dbCategories, manufacturers, setManufacturers, setAlertDialog, setIsSyncing);
 
   // Auto refresh on mount if user exists
   useEffect(() => {
@@ -260,33 +260,33 @@ export default function AdminView() {
         {errorContent}
         <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
            <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
-              <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">管理中心</h2>
-              <p className="text-sm text-slate-500 mb-8">請登入您的授權帳戶，或使用本地驗證</p>
+              <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">{t.adminTitle}</h2>
+              <p className="text-sm text-slate-500 mb-8">{t.adminSub}</p>
               <button 
                 onClick={async () => {
                   try {
                     await loginWithGoogle();
                   } catch(e: any) {
-                    alert('登入失敗: ' + (e.message || JSON.stringify(e)));
+                    alert(`${t.loginFailedAlert} ${e.message || JSON.stringify(e)}`);
                   }
                 }}
                 className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
               >
-                Google 安全登录
+                {t.googleLoginBtn}
               </button>
               <button
                 onClick={() => {
-                  const pass = prompt('请输入您的本地管理密码:');
+                  const pass = prompt(t.localLoginPrompt);
                   if (pass === getSafeLocalStorage('internal_password')) {
     try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
                     window.location.reload();
                   } else if (pass) {
-                    alert('密码错误');
+                    alert(t.wrongPassword);
                   }
                 }}
                 className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all mb-4 text-sm"
               >
-                使用本地密码登录
+                {t.localLoginBtn}
               </button>
               <button
                 onClick={() => {
@@ -295,7 +295,7 @@ export default function AdminView() {
                 }}
                 className="text-sm text-slate-400 hover:text-slate-600 font-medium"
               >
-                返回展示馆
+                {t.backToGallery}
               </button>
            </div>
         </div>
@@ -333,11 +333,11 @@ export default function AdminView() {
       // 2. Then backup photos
       const result = await syncPhotosToCloudService(user.id, photos, setSyncPercent);
       setAlertDialog({ 
-        title: '推送成功', 
-        message: `本地配置与照片已上传至云端。${result.skipped > 0 ? `\n(已跳过 ${result.skipped} 张重复照片)` : ''}` 
+        title: t.pushSuccess, 
+        message: t.pushSuccessMsg(result.skipped) 
       });
     } catch (err: any) {
-      setAlertDialog({ title: '推送失败', message: err.message });
+      setAlertDialog({ title: t.pushFail, message: err.message });
     } finally {
       setIsSyncing(false);
     }
@@ -353,9 +353,9 @@ export default function AdminView() {
         setPublicCategories, setPublicTags, setPublicManufacturers, 
         setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
       );
-      setAlertDialog({ title: '获取成功', message: '云端数据已同步至本地' });
+      setAlertDialog({ title: t.pullSuccess, message: t.pullSuccessMsg });
     } catch (err: any) {
-      setAlertDialog({ title: '获取失败', message: err.message });
+      setAlertDialog({ title: t.pullFail, message: err.message });
     } finally {
       setIsSyncing(false);
     }
@@ -466,7 +466,7 @@ export default function AdminView() {
               aiDebugInfo={aiDebugInfo}
               onDelete={(id) => {
                 setConfirmDialog({
-                  message: '确定要删除这张照片吗？',
+                  message: t.confirmDeleteSingle,
                   onConfirm: async () => {
                     await deletePhoto(id);
                     resetAddState();
@@ -552,7 +552,7 @@ export default function AdminView() {
                   onEditPhoto={setEditPhotoId}
                   onDeletePhotos={(ids) => {
                     setConfirmDialog({
-                      message: `确定要删除这 ${ids.length} 张照片吗？`,
+                      message: t.confirmDelete(ids.length),
                       onConfirm: async () => {
                         await deletePhoto(ids);
                         setSelectedIds([]);
@@ -742,7 +742,7 @@ export default function AdminView() {
             {isImporting && importTotal > 0 ? (
               <div className="w-full max-w-xs mt-8">
                 <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
-                  <span>上传进度</span>
+                  <span>{t.uploadProgress}</span>
                   <span>{importProgress} / {importTotal}</span>
                 </div>
                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
@@ -754,8 +754,8 @@ export default function AdminView() {
               </div>
             ) : (
               <div className="mt-6 text-center">
-                <p className="text-sm font-bold text-slate-800 tracking-tight">正在处理中...</p>
-                <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">请勿关闭页面</p>
+                <p className="text-sm font-bold text-slate-800 tracking-tight">{t.processing}</p>
+                <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.doNotClose}</p>
               </div>
             )}
             

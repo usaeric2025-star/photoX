@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Photo, Category, Tag } from '../types';
+import { Photo, Category, Tag, DB_Category, SubCategory } from '../types';
 import { 
   savePhotoToCloud, 
   deletePhotoFromCloud, 
@@ -23,6 +23,9 @@ export const useAdminPhotos = (
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>,
   tags: Tag[],
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
+  dbCategories: DB_Category[],
+  manufacturers: any[],
+  setManufacturers: React.Dispatch<React.SetStateAction<any[]>>,
   setAlertDialog: (dialog: { title: string, message: string } | null) => void,
   setIsSyncing: (syncing: boolean) => void
 ) => {

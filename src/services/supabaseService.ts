@@ -256,6 +256,18 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<bo
     throw new Error('No active session for database');
   }
 
+  // Upload image if it doesn't have an image_url yet but has a uri
+  if (!photo.image_url && photo.uri) {
+    try {
+      const filename = photo.storageId || photo.id;
+      const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
+      photo.image_url = imageUrl;
+      photo.thumb_url = thumbUrl;
+    } catch (e) {
+      console.warn("Failed to upload image before auto-saving to DB:", e);
+    }
+  }
+
   // Ensure ID is UUID format
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
   const newId = isUUID ? photo.id : crypto.randomUUID();

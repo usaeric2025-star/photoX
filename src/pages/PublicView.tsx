@@ -75,33 +75,29 @@ export default function PublicView() {
   }, []);
 
   return (
-    <div className="w-full h-full min-h-screen bg-[#FDFBF7] font-sans select-none flex items-center justify-center relative overflow-hidden">
-      <div className="w-full max-w-[420px] h-[85vh] bg-white rounded-[48px] shadow-2xl overflow-hidden flex flex-col relative z-10">
-        <div className="flex-1 relative flex flex-col overflow-hidden">
-          {isInitializing && publicPhotos.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-              <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading Gallery...</p>
-            </div>
-          ) : (
-            <PublicGallery 
-              photos={publicPhotos} 
-              categories={categories}
-              tags={publicTags}
-              dbCategories={dbCategories}
-              onExit={() => navigate('/admin')}
-              showExit={false}
-              onLogin={() => navigate('/admin')}
-              loginWithGoogle={loginWithGoogle}
-              user={user}
-              internalPassword=""
-              settings={settings}
-              isRefreshing={isRefreshing}
-              onRefresh={() => syncWithCloud(true)}
-            />
-          )}
+    <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
+      {isInitializing && publicPhotos.length === 0 ? (
+        <div className="flex-1 flex flex-col items-center justify-center space-y-4">
+          <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading Gallery...</p>
         </div>
-      </div>
+      ) : (
+        <PublicGallery 
+          photos={publicPhotos} 
+          categories={categories}
+          tags={publicTags}
+          dbCategories={dbCategories}
+          onExit={() => navigate('/admin')}
+          showExit={false}
+          onLogin={() => navigate('/admin')}
+          loginWithGoogle={loginWithGoogle}
+          user={user}
+          internalPassword=""
+          settings={settings}
+          isRefreshing={isRefreshing}
+          onRefresh={() => syncWithCloud(true)}
+        />
+      )}
     </div>
   );
 }

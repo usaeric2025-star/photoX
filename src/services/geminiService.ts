@@ -1,14 +1,20 @@
 import { Category, Tag } from '../types';
 
-const convertToJpegAndResize = async (base64Str: string, maxWidth: number = 1000): Promise<string> => {
+const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000): Promise<string> => {
   return new Promise((resolve, reject) => {
-    // If it's not a data URL, we can't easily canvas-convert it without fetching, assume it's a valid remote URL
-    if (!base64Str.startsWith('data:')) {
-      resolve(base64Str);
+    // We can canvas-convert data:, blob:, or http(s): (if CORS allows).
+    // Let's at least try for anything that looks local.
+    if (!imageBase.startsWith('data:') && !imageBase.startsWith('blob:') && !imageBase.startsWith('http')) {
+      resolve(imageBase);
       return;
     }
 
     const img = new Image();
+    // To avoid tainted canvas, if it's external, we need crossOrigin.
+    if (imageBase.startsWith('http')) {
+        img.crossOrigin = 'Anonymous';
+    }
+    
     img.onload = () => {
       let width = img.width;
       let height = img.height;
@@ -21,7 +27,7 @@ const convertToJpegAndResize = async (base64Str: string, maxWidth: number = 1000
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        resolve(base64Str); // Fallback
+        resolve(imageBase); // Fallback
         return;
       }
       // Fill white background in case of transparency
@@ -29,12 +35,20 @@ const convertToJpegAndResize = async (base64Str: string, maxWidth: number = 1000
       ctx.fillRect(0, 0, width, height);
       ctx.drawImage(img, 0, 0, width, height);
       
-      // Force JPEG conversion
-      const jpegBase64 = canvas.toDataURL('image/jpeg', 0.85);
-      resolve(jpegBase64);
+      try {
+        // Force JPEG conversion
+        const jpegBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        resolve(jpegBase64);
+      } catch (e) {
+        console.warn('Canvas toDataURL failed (likely CORS taint):', e);
+        resolve(imageBase); // fallback
+      }
     };
-    img.onerror = () => reject(new Error('Image conversion failed'));
-    img.src = base64Str;
+    img.onerror = () => {
+        console.error('Image load failed for conversion.');
+        reject(new Error('Image conversion failed'));
+    };
+    img.src = imageBase;
   });
 };
 
@@ -138,7 +152,7 @@ export const analyzeProductPhoto = async (
     const isDataUri = base64Image.startsWith('data:');
     const commaIndex = base64Image.indexOf(',');
     const prefix = isDataUri ? base64Image.substring(0, commaIndex) : 'NO_PREFIX';
-    alert(`Debug Image Info:\nPrefix: ${prefix}\nTotal Length: ${base64Image.length}\nFirst 50 chars: ${base64Image.substring(0, 50)}...`);
+    console.log(`Debug Image Info:\nPrefix: ${prefix}\nTotal Length: ${base64Image.length}\nFirst 50 chars: ${base64Image.substring(0, 50)}...`);
 
     const requestBody = {
       model: modelName.replace('openrouter/', ''),
@@ -275,7 +289,7 @@ export const analyzeProductPhoto = async (
     }
 
     // Direct debug alerting as requested by user
-    alert('AI API 錯誤詳情:\n' + JSON.stringify({ 
+    console.error('AI API 錯誤詳情:\n' + JSON.stringify({ 
         status: status, 
         message: errorMsg,
         errorRaw: error 

@@ -127,19 +127,19 @@ export const AdminHeader: React.FC<Props> = ({
           </button>
 
           <button 
-            onClick={handleManageClick}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeScreen === 'manage' ? 'bg-[#1D3557] text-white shadow-lg' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
-            title={t.settings}
-          >
-            <Settings2 size={20} />
-          </button>
-
-          <button 
             onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
             className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
             title={viewMode === 'public' ? "退出访客视图" : "访客视图预览"}
           >
             <Globe size={20} />
+          </button>
+
+          <button 
+            onClick={handleManageClick}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeScreen === 'manage' ? 'bg-[#1D3557] text-white shadow-lg' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
+            title={t.settings}
+          >
+            <Settings2 size={20} />
           </button>
           </div>
         </div>

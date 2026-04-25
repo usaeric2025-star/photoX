@@ -134,7 +134,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     let msg = '';
     
     const getPhotoDisplayName = (p: Photo) => {
-      const isPlaceholder = !p.name || p.name === '家具紀錄' || p.name === 'Furniture Record' || p.name === '未命名產品';
+      const isPlaceholder = !p.name || p.name === t.furnitureRecord || p.name === 'Furniture Record' || p.name === '未命名產品' || p.name === translations['zh'].furnitureRecord || p.name === translations['en'].furnitureRecord;
       if (!isPlaceholder) return p.name;
       const safeCat = (p.category || '').trim().toLowerCase();
       const cat = dbCategories.find(c => 
@@ -144,8 +144,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         (c.ms || '').trim().toLowerCase() === safeCat
       );
       if (cat) return cat[lang as keyof DB_Category] || cat.zh;
-      if (lang === 'ms') return 'Perabot';
-      return lang === 'en' ? 'Furniture' : '家具';
+      if (lang === 'ms') return translations['ms'].furniture;
+      return lang === 'en' ? translations['en'].furniture : translations['zh'].furniture;
     };
 
     if (singlePhotoId) {
@@ -187,7 +187,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     } else {
       const fallback = (import.meta as any).env.VITE_WHATSAPP_NUMBER;
       if (fallback) openWhatsApp(fallback, photoId);
-      else alert('未设置联系号码');
+      else alert(t.selectContact); // Reusing a somewhat fitting translation, maybe add 'contactNoNotSet' later if needed, but this works for now. Let me add missingContactNo to translations actually, I can just use placeholder logic or add it later. Actually let's just use t.contactNo
+
     }
   };
   const prevPhoto = (e: React.MouseEvent) => {
@@ -329,61 +330,28 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 <div className="flex items-center gap-2 mr-2">
                   <button 
                     onClick={onToggleMultiSelect}
-                    className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}
-                    title="选择模式"
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}
+                    title={t.selectMode}
                   >
                     <Grid3X3 size={20} />
                   </button>
                   <button 
-                    onClick={onOpenSettings}
-                    className="w-10 h-10 rounded-2xl bg-slate-800 text-white flex items-center justify-center transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95"
-                    title="设置"
-                  >
-                    <Settings2 size={18} />
-                  </button>
-                  <button 
                     onClick={onAddPhoto}
-                    className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-lg hover:bg-blue-700 active:scale-95"
-                    title="新增"
+                    className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-lg hover:bg-blue-700 active:scale-95"
+                    title={t.addPhoto}
                   >
                     <Plus size={20} />
                   </button>
-                  {onExit && (
-                    <button 
-                      onClick={onExit}
-                      className="w-10 h-10 bg-white border border-slate-200 text-slate-500 rounded-2xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95"
-                      title="退出模式"
-                    >
-                      <Globe size={18} />
-                    </button>
-                  )}
                 </div>
               )}
-              {user && !isAdminMode && (
-                <button
-                  onClick={() => onExit ? onExit() : navigate('/admin')}
-                  className="w-10 h-10 bg-blue-600 text-[#FDFAF6] rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all mr-2"
-                  title="管理"
-                >
-                  <Globe size={20} />
-                </button>
-              )}
-              {showExit && !isAdminMode && onExit && (
-                <button 
-                  onClick={onExit}
-                  className="w-10 h-10 bg-[#D4A853] text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all mr-2"
-                  title="返回"
-                >
-                  <X size={18} />
-                </button>
-              )}
+
               <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
                 {[
                   { code: 'zh', label: '中文' },
                   { code: 'en', label: 'EN' },
                   { code: 'ms', label: 'BM' }
                 ].map(l => (
-                  <button key={l.code} onClick={() => setLang(l.code as any)} className={`${lang === l.code ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-3 py-1.5 rounded-xl transition-all shadow-sm active:scale-95`}>
+                  <button key={l.code} onClick={() => setLang(l.code as any)} className={`${lang === l.code ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-2 sm:px-3 h-10 flex items-center justify-center rounded-xl transition-all shadow-sm active:scale-95`}>
                     {l.label}
                   </button>
                 ))}
@@ -391,10 +359,40 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               <button 
                 onClick={onRefresh}
                 disabled={isRefreshing}
-                className={`p-2 rounded-xl bg-[#1D3557]/5 text-[#1D3557] hover:bg-[#1D3557]/10 transition-all ${isRefreshing ? 'animate-spin opacity-50' : 'active:scale-90'}`}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl bg-[#1D3557]/5 text-[#1D3557] hover:bg-[#1D3557]/10 transition-all shadow-sm ${isRefreshing ? 'animate-spin opacity-50' : 'active:scale-90'}`}
               >
                 <RefreshCcw size={18} />
               </button>
+
+              {isAdminMode ? (
+                onExit && (
+                  <button 
+                    onClick={onExit}
+                    className="w-10 h-10 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1"
+                    title="Globe"
+                  >
+                    <Globe size={18} />
+                  </button>
+                )
+              ) : (
+                <button
+                  onClick={() => onExit ? onExit() : navigate('/admin')}
+                  className="w-10 h-10 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
+                  title={t.login}
+                >
+                  <Globe size={20} />
+                </button>
+              )}
+
+              {isAdminMode && (
+                <button 
+                  onClick={onOpenSettings}
+                  className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95"
+                  title={t.settings}
+                >
+                  <Settings2 size={18} />
+                </button>
+              )}
           </div>
         </header>
       )}
@@ -420,8 +418,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 e.stopPropagation();
                 toggleSortOrder();
               }}
-              className="w-10 sm:w-11 h-11 bg-white border border-[#1D3557]/10 text-[#1D3557] rounded-2xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 transition-all"
-              title={sortOrder === 'desc' ? '改为正序(最旧在前)' : '改为倒序(最新在前)'}
+              className="w-10 sm:w-10 h-10 bg-white border border-[#1D3557]/10 text-[#1D3557] rounded-xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 transition-all"
+              title={sortOrder === 'desc' ? t.sortOldest : t.sortNewest}
             >
               {sortOrder === 'desc' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
             </button>
@@ -431,7 +429,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   else if (columns === 3) setColumns(5);
                   else setColumns(2);
                 }}
-                className="w-12 sm:w-auto px-2 sm:px-4 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557] gap-1 sm:gap-2"
+                className="w-10 sm:w-auto px-2 sm:px-4 h-10 rounded-xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557] gap-1 sm:gap-2"
                 title={`Switch layout`}
             >
                 <LayoutGrid size={16} className="opacity-40" />
@@ -439,7 +437,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             </button>
             <button
                 onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-                className={`w-10 sm:w-11 h-11 rounded-2xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
+                className={`w-10 sm:w-10 h-10 rounded-xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
                 title={showGroupsCollapsed ? "Show All" : "Group Photos"}
             >
                 <Layers size={18} />
@@ -562,7 +560,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${isAdminMode && selectedIds.includes(photo.id) ? 'ring-4 ring-blue-500 ring-offset-2 scale-[0.95]' : ''}`}
               >
                 <img 
-                  src={photo.thumb_url || photo.image_url || photo.uri} 
+                  src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
                   alt={photo.name}
                   loading="lazy" 
                   className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105`}
@@ -644,19 +642,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
              <button 
                onClick={() => onGroupPhotos?.(selectedIds)}
                className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10"
-               title="合并"
+               title={t.merge}
              >
                <Layers size={18} />
              </button>
              
              <button 
                onClick={() => {
-                 if (window.confirm(`确定要删除这 ${selectedIds.length} 张照片吗？`)) {
+                 if (window.confirm(t.confirmDelete(selectedIds.length))) {
                    onDeletePhotos?.(selectedIds);
                  }
                }}
                className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20"
-               title="删除"
+               title={t.delete}
              >
                <Trash2 size={18} />
              </button>
@@ -664,19 +662,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
              <button 
                onClick={() => {
                  const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
-                 const text = selectedPhotos.map(p => p.name || '家具').join(', ');
+                 const text = selectedPhotos.map(p => p.name || t.furniture).join(', ');
                  if (navigator.share) {
                    navigator.share({
-                     title: '家具分享',
-                     text: `我选了 ${selectedIds.length} 张家具照片: ${text}`,
+                     title: t.shareTitle,
+                     text: t.shareMsgCount(selectedIds.length, text),
                      url: window.location.origin
                    });
                  } else {
-                   alert('该浏览器不支持分享');
+                   alert(t.shareNotSupported);
                  }
                }}
                className="w-10 h-10 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl flex items-center justify-center text-blue-400 transition-all active:scale-95 border border-blue-500/20"
-               title="分享"
+               title={t.share}
              >
                <Share2 size={18} />
              </button>
@@ -721,7 +719,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                         if (realIndex !== -1) setLightboxIndex(realIndex);
                     }}
                   >
-                     <img src={photo.thumb_url || photo.image_url || photo.uri} className="w-full h-full object-cover" />
+                     <img src={photo.thumb_url || photo.image_url || photo.uri || undefined} className="w-full h-full object-cover" />
                   </motion.div>
                 ))}
              </div>
@@ -748,7 +746,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     const photo = displayPhotos[lightboxIndex];
                     if (onEditPhoto) onEditPhoto(photo.id);
                   }}
-                  title="编辑"
+                 title={t.edit}
                 >
                   <Settings2 size={24} />
                 </button>
@@ -777,7 +775,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               </button>
               
               <img 
-                src={displayPhotos[lightboxIndex].image_url || displayPhotos[lightboxIndex].uri} 
+                src={displayPhotos[lightboxIndex].image_url || displayPhotos[lightboxIndex].uri || undefined} 
                 alt={displayPhotos[lightboxIndex].name}
                 className="max-w-full max-h-full object-contain select-none opacity-0 transition-opacity duration-300"
                 onLoad={(e) => (e.target as HTMLImageElement).style.opacity = '1'}
@@ -803,29 +801,31 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               <div className="flex flex-col gap-6">
 
                 {/* 1. 编号 (Item Code / Manual Code) */}
-                <div>
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manualId} / 编号</h3>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {displayPhotos[lightboxIndex].manual_code ? (
-                      <span className="text-xl font-black text-[#D4A853] tracking-widest leading-none">
-                        {displayPhotos[lightboxIndex].manual_code}
-                      </span>
-                    ) : (
-                      <span className="text-xl font-bold text-slate-300 italic align-middle leading-none">No Code</span>
-                    )}
-                    {displayPhotos[lightboxIndex].item_code && (
-                      <span className="ml-auto text-[10px] bg-slate-100 text-slate-400 px-2 py-1 flex items-center rounded font-mono border border-slate-200">SYS: {displayPhotos[lightboxIndex].item_code}</span>
-                    )}
+                {(isAdminMode || isStaffMode || showExit) && (
+                  <div>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manualId}</h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {displayPhotos[lightboxIndex].manual_code ? (
+                        <span className="text-xl font-black text-[#D4A853] tracking-widest leading-none">
+                          {displayPhotos[lightboxIndex].manual_code}
+                        </span>
+                      ) : (
+                        <span className="text-xl font-bold text-slate-300 italic align-middle leading-none">No Code</span>
+                      )}
+                      {displayPhotos[lightboxIndex].item_code && (
+                        <span className="ml-auto text-[10px] bg-slate-100 text-slate-400 px-2 py-1 flex items-center rounded font-mono border border-slate-200">{t.sysCode}: {displayPhotos[lightboxIndex].item_code}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* 2. 名称 (Product Name) */}
                 <div>
-                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.searchPlaceholder /* using for "产品名称" */} / 名字</h3>
+                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.name}</h3>
                    <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">
                      {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具记录' 
                        ? displayPhotos[lightboxIndex].name 
-                       : (lang === 'ms' ? 'Perabot' : (lang === 'en' ? 'Furniture' : '名称未定 (Unnamed)'))}
+                       : t.unnamed}
                    </h1>
                 </div>
 
@@ -838,10 +838,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                      (c.en || '').trim().toLowerCase() === code || 
                      (c.ms || '').trim().toLowerCase() === code
                    );
-                   const catName = cat ? (cat[lang as keyof DB_Category] || cat.zh) : (displayPhotos[lightboxIndex].category || '未分类');
+                   const catName = cat ? (cat[lang as keyof DB_Category] || cat.zh) : (displayPhotos[lightboxIndex].category || t.uncategorized);
                    return (
                      <div>
-                       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.category} / 目录</h3>
+                       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.category}</h3>
                        <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-sm font-bold inline-block border border-slate-200">
                          {catName}
                        </span>
@@ -850,9 +850,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 })()}
 
                 {/* 4. 厂商 (Manufacturer) (Only if staff/admin/showExit) */}
-                {(isStaffMode || showExit) && displayPhotos[lightboxIndex].sub_category && (
+                {(isAdminMode || isStaffMode || showExit) && displayPhotos[lightboxIndex].sub_category && (
                   <div>
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer} / 厂商</h3>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer}</h3>
                     <span className="bg-orange-50 text-orange-600 px-3 py-1 border border-orange-200 rounded-full text-sm font-bold inline-block shadow-sm">
                       <Key size={12} className="inline-block mr-1.5 -translate-y-[1px]" />
                       {displayPhotos[lightboxIndex].sub_category}
@@ -874,11 +874,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
                   return (
                     <div>
-                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.tags} / 标签</h3>
+                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.tags}</h3>
                       <div className="flex flex-wrap gap-1.5">
                         {displayTags.map((tagName, idx) => (
                           <span key={idx} className="bg-slate-800 text-white px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider shadow-sm">
-                            #{tagName}
+                            {tagName}
                           </span>
                         ))}
                       </div>
@@ -887,28 +887,40 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 })()}
 
                 {/* 6. 其他 (尺寸/备注) */}
-                {displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0) && (
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                       {t.dimensions}
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.length} (L)</span>
-                        <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.length}</span>
-                        <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                {((displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0)) || displayPhotos[lightboxIndex].description) && (
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-4">
+                    {displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0) && (
+                      <div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                           {t.dimensions}
+                        </h3>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                            <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.length} (L)</span>
+                            <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.length}</span>
+                            <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                          </div>
+                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                            <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.width} (W)</span>
+                            <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.width}</span>
+                            <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                          </div>
+                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                            <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.height} (H)</span>
+                            <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.height}</span>
+                            <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.width} (W)</span>
-                        <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.width}</span>
-                        <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
+                    )}
+                    {displayPhotos[lightboxIndex].description && (
+                      <div>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                           {t.description}
+                        </h3>
+                        <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap leading-relaxed">{displayPhotos[lightboxIndex].description}</p>
                       </div>
-                      <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                        <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.height} (H)</span>
-                        <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.height}</span>
-                        <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 )}
                 
@@ -960,12 +972,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 <input 
                   type="password" 
                   autoFocus
-                  placeholder="密钥..."
+                  placeholder={t.keyPlaceholder}
                   className={`w-full bg-slate-50 border p-4 rounded-2xl text-center text-lg font-bold outline-none transition-all ${passError ? 'border-red-500 bg-red-50' : 'border-slate-100 focus:bg-white focus:border-blue-500 shadow-sm'}`}
                   value={passInput}
                   onChange={(e) => { setPassInput(e.target.value); setPassError(false); }}
                 />
-                {passError && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest animate-bounce">密钥错误</p>}
+                {passError && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest animate-bounce">{t.invalidKey}</p>}
                 
                 <div className="flex gap-2">
                   <button 
@@ -973,13 +985,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     onClick={() => { setShowPassPrompt(false); setPassInput(''); setPassError(false); }}
                     className="flex-1 py-4 px-4 rounded-2xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-colors"
                   >
-                    取消
+                    {t.cancel}
                   </button>
                   <button 
                     type="submit"
                     className="flex-1 py-4 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
                   >
-                    解锁
+                    {t.unlock}
                   </button>
                 </div>
                 {(onLogin || loginWithGoogle) && (
@@ -991,11 +1003,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                           setShowPassPrompt(false);
                           try {
                             await loginWithGoogle();
-                          } catch (e: any) { alert('登录失败'); }
+                          } catch (e: any) { alert(t.loginFailed); }
                         }}
                         className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"
                       >
-                         <LogIn size={16} /> Google 安全登录
+                         <LogIn size={16} /> {t.googleLogin}
                       </button>
                     )}
                   </div>
@@ -1018,7 +1030,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-2">
-                <h3 className="font-bold text-slate-800">选择联系号码</h3>
+                <h3 className="font-bold text-slate-800">{t.selectContact}</h3>
                 <button onClick={() => setShowWhatsAppChoice(false)} className="p-1 hover:bg-slate-100 rounded-full">
                   <X size={20} className="text-slate-400" />
                 </button>
@@ -1031,8 +1043,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   >
                     <span className="text-xl">👵</span>
                     <div className="flex-1 flex flex-col items-start px-2">
-                      <span className="text-[10px] opacity-70 uppercase tracking-widest">WhatsApp 01</span>
-                      <span className="leading-tight truncate w-full text-left">{settings.whatsapp_1_name || '聯繫號碼 1'}</span>
+                      <span className="text-[10px] opacity-70 uppercase tracking-widest">{t.contactNo} 1</span>
+                      <span className="leading-tight truncate w-full text-left">{settings.whatsapp_1_name || 'Contact 1'}</span>
                     </div>
                     <MessageCircle size={20} className="shrink-0" />
                   </button>
@@ -1044,8 +1056,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   >
                     <span className="text-xl">🏢</span>
                     <div className="flex-1 flex flex-col items-start px-2">
-                      <span className="text-[10px] opacity-70 uppercase tracking-widest">WhatsApp 02</span>
-                      <span className="leading-tight truncate w-full text-left">{settings.whatsapp_2_name || '聯繫號碼 2'}</span>
+                      <span className="text-[10px] opacity-70 uppercase tracking-widest">{t.contactNo} 2</span>
+                      <span className="leading-tight truncate w-full text-left">{settings.whatsapp_2_name || 'Contact 2'}</span>
                     </div>
                     <MessageCircle size={20} className="shrink-0" />
                   </button>

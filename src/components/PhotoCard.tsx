@@ -3,6 +3,8 @@ import { Layers, Check, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Photo } from '../types';
 
+import { translations, LanguageCode } from '../lib/translations';
+
 export interface PhotoCardProps {
   photo: Photo;
   isMultiSelect: boolean;
@@ -24,6 +26,9 @@ export const PhotoCard = React.memo(({
   onClick, 
   onContextMenu 
 }: PhotoCardProps) => {
+  const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
+  const t = translations[lang] || translations['en'];
+
   const longPressTimer = React.useRef<any>(null);
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -89,7 +94,7 @@ export const PhotoCard = React.memo(({
           className="absolute inset-0 bg-[#FDFAF6]/60 backdrop-blur-sm flex flex-col justify-center items-center cursor-default"
         >
           <div className="w-6 h-6 border-2 border-[#1D3557]/20 border-t-[#1D3557] rounded-full animate-spin mb-1"></div>
-          <span className="text-[9px] text-[#1D3557] font-black tracking-widest uppercase opacity-40">AI 辨識中</span>
+          <span className="text-[9px] text-[#1D3557] font-black tracking-widest uppercase opacity-40">{t.aiAnalyzing}</span>
         </div>
       )}
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Share2, Edit3, Minimize2, Settings2, ChevronRight, X, Plus } from 'lucide-react';
 import { Photo, Category, Tag, DB_Category } from '../../types';
+import { savePhotoToCloud } from '../../services/supabaseService';
 
 interface GroupDetailScreenProps {
   activeGroupId: string;
@@ -52,6 +53,22 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
 
   const activePhotosSource = viewMode === 'public' ? publicPhotos : photos;
   const groupPhotos = activePhotosSource.filter(p => p.groupId === activeGroupId);
+  
+  const updateGroupPhotos = (updater: (prev: Photo[]) => Photo[]) => {
+    setPhotos(prev => {
+      const next = updater(prev);
+      if (user) {
+        next.filter(p => p.groupId === activeGroupId).forEach(p => {
+          const oldP = prev.find(old => old.id === p.id);
+          if (oldP && JSON.stringify(oldP) !== JSON.stringify(p)) {
+            savePhotoToCloud(user.id, p).catch(e => console.error("Auto backup failed:", e));
+          }
+        });
+      }
+      return next;
+    });
+  };
+
   if (groupPhotos.length === 0) return null;
 
   const focusedPhoto = focusedGroupPhotoId ? groupPhotos.find(p => p.id === focusedGroupPhotoId) : null;
@@ -187,7 +204,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                           placeholder="在此統一修改所有照片的描述..."
                           onChange={(e) => {
                             const text = e.target.value;
-                            setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, description: p.description ?? text } : p));
+                            updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, description: p.description ?? text } : p));
                           }}
                         />
                       </div>
@@ -199,7 +216,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                             return (
                               <button 
                                 key={cat.code}
-                                onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, category: cat.code, categoryId: cat.code } : p))}
+                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, category: cat.code, categoryId: cat.code } : p))}
                                 className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 active:bg-slate-50'}`}
                               >
                                 {cat[appLang as keyof DB_Category] || cat.zh}
@@ -220,7 +237,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                             return (
                               <button 
                                 key={mfr.id}
-                                onClick={() => setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: mfr.id, sub_category: mfr.name } : p))}
+                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: mfr.id, sub_category: mfr.name } : p))}
                                 className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
                               >
                                 {mfr.name}
@@ -241,7 +258,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                              return (
                                <button 
                                  key={tag.id}
-                                 onClick={() => setPhotos(prev => {
+                                 onClick={() => updateGroupPhotos(prev => {
                                    const notAllHaveItByGroupId = prev.filter(ph => ph.groupId === activeGroupId).some(p => {
                                        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
                                        return !rawTagIds.includes(tag.id);
@@ -305,7 +322,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                     whileTap={{ scale: 0.95 }}
                     onClick={() => {
                         if(isUnifiedEditing) {
-                          setPhotos(prev => prev.map(p => {
+                          updateGroupPhotos(prev => prev.map(p => {
                             if (p.groupId === activeGroupId) {
                               if (p.id === photo.id) return { ...p, isGroupCover: true };
                               if (p.isGroupCover) return { ...p, isGroupCover: false };

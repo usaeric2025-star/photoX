@@ -90,7 +90,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         {(props.newPhotoData || props.editPhotoPreview) && (
           <div className="relative group">
             <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white mb-6">
-              <img src={props.newPhotoData || props.editPhotoPreview || ''} className="max-w-full max-h-full object-contain" alt="Preview" />
+              { (props.newPhotoData || props.editPhotoPreview) && (
+                <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="max-w-full max-h-full object-contain" alt="Preview" />
+              )}
             </div>
           </div>
         )}
