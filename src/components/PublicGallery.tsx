@@ -324,13 +324,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              <button 
-                onClick={toggleSortOrder}
-                className="w-10 h-10 bg-white border border-[#1D3557]/10 text-[#1D3557] rounded-2xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 mr-0 sm:mr-2 transition-all"
-                title={sortOrder === 'desc' ? '改为空序' : '改为倒序'}
-              >
-                {sortOrder === 'desc' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
-              </button>
               {isAdminMode && (
                 <div className="flex items-center gap-2 mr-2">
                   <button 
@@ -421,6 +414,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           
           {/* Column Toggle */}
           <div className="flex gap-2">
+            <button 
+              onClick={toggleSortOrder}
+              className="w-11 h-11 bg-white border border-[#1D3557]/10 text-[#1D3557] rounded-2xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 transition-all"
+              title={sortOrder === 'desc' ? '改为正序(最旧在前)' : '改为倒序(最新在前)'}
+            >
+              {sortOrder === 'desc' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
+            </button>
             <button
                 onClick={() => {
                   if (columns === 2) setColumns(3);
