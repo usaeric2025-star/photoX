@@ -467,7 +467,10 @@ export default function AdminView() {
               addModelNumber={addModelNumber} setAddModelNumber={setAddModelNumber}
               addIsHidden={addIsHidden} setAddIsHidden={setAddIsHidden}
               addDimL={addDimL} setAddDimL={setAddDimL} addDimW={addDimW} setAddDimW={setAddDimW}
-              addDimH={addDimH} setAddDimH={setAddDimH} showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
+              addDimH={addDimH} setAddDimH={setAddDimH}
+              addDimensions={addDimensions} setAddDimensions={setAddDimensions}
+              showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
+
               isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
               quickAddSubCategory={quickAddSubCategory} quickAddTag={quickAddTag} quickAddManufacturer={quickAddManufacturer} tags={tags}
               newPhotoData={newPhotoData} manufacturers={manufacturers}
@@ -491,10 +494,22 @@ export default function AdminView() {
                     setAddTagIds(rawTagIds);
                   }
                   if (result.dimensions) {
-                    if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
-                    if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
-                    if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
+                    if (Array.isArray(result.dimensions)) {
+                       setAddDimensions(result.dimensions);
+                       if (result.dimensions.length > 0) {
+                          const first = result.dimensions[0];
+                          if (first.length && !addDimL) setAddDimL(first.length.toString());
+                          if (first.width && !addDimW) setAddDimW(first.width.toString());
+                          if (first.height && !addDimH) setAddDimH(first.height.toString());
+                       }
+                    } else if (typeof result.dimensions === 'object') {
+                       if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
+                       if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
+                       if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
+                       setAddDimensions([result.dimensions]);
+                    }
                   }
+
                   if (result.modelNumber && !addModelNumber) {
                     setAddModelNumber(result.modelNumber);
                   }
@@ -689,10 +704,22 @@ export default function AdminView() {
                 setAddTagIds(rawTagIds);
               }
               if (result.dimensions) {
-                if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
-                if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
-                if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
+                if (Array.isArray(result.dimensions)) {
+                   setAddDimensions(result.dimensions);
+                   if (result.dimensions.length > 0) {
+                      const first = result.dimensions[0];
+                      if (first.length && !addDimL) setAddDimL(first.length.toString());
+                      if (first.width && !addDimW) setAddDimW(first.width.toString());
+                      if (first.height && !addDimH) setAddDimH(first.height.toString());
+                   }
+                } else if (typeof result.dimensions === 'object') {
+                   if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
+                   if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
+                   if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
+                   setAddDimensions([result.dimensions]);
+                }
               }
+
               // Explicitly sync model number from AI
               if (result.modelNumber && !addModelNumber) {
                 setAddModelNumber(result.modelNumber);
@@ -724,7 +751,10 @@ export default function AdminView() {
           setAddDimW={setAddDimW}
           addDimH={addDimH}
           setAddDimH={setAddDimH}
+          addDimensions={addDimensions}
+          setAddDimensions={setAddDimensions}
           addIsHidden={addIsHidden}
+
           setAddIsHidden={setAddIsHidden}
           dbCategories={dbCategories}
           appLang={appLang}

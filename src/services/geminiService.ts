@@ -102,24 +102,30 @@ export const analyzeProductPhoto = async (
 
   【優先級 1：圖片文字識別】
   - 請仔細觀察照片中是否有任何標籤、吊牌、包裝盒上的文字。
-  - **如果識別到產品名稱、系列名或品牌名，請直接填入 "name" 欄位。**
+  - **如果識別到產品名稱、系列名或品牌名，請優先填入 "name" 欄位。**
   - **識別標價牌或標籤上的手寫/列印代號，填入 "manualCode"。**
   - **識別規格標籤上的產品型號 (Model No/SKU)，填入 "modelNumber"。**
-  - **識別尺寸信息 (H/W/L)，填入 "dimensions"。**
+  - **識別尺寸信息 (H/W/L)，如有測量標註，請識別。**
 
   【優先級 2：外觀特徵分析】
-  - 如果圖中沒有明確名稱，請根據家具的樣式、材質、顏色給出一個專業的英文名稱。例如 "Modern Grey Marble Coffee Table" 而非簡單的 "Table"。
-  - 若原名稱 "${originalName || '無'}" 就是專業名稱且與照片符合，請保留。但若原名稱為純數字、"未命名" 或空值，則必須更新為專業名稱。
+  - 如果圖中沒有明確名稱，請根據家具樣式給出一個專業的 **英文名稱**。
+  - 若原名稱 "${originalName || '無'}" 為純數字或 "未命名"，則必須更新為專業名稱。
 
-  【核心規則 - 禁止事項】
-  - **廠商 (subcategoryId)：禁止識別或修改。回傳值必須為 null。**
-  - **分類 (categoryId)：必須從清單中選擇代碼。**
-  - **輸出格式：僅回傳 JSON。禁止 Markdown、禁止換行、禁止在字串內使用未轉義的引號。**
-
-  分類代碼清單: ${JSON.stringify(categoriesJson)}
+  【核心規則 - 必須遵守】
+  1. **標籤 (Tags)**：
+     - **優先從現有標籤中選擇**：${JSON.stringify(tagsJson)}。
+     - 如果現有不符，請建議 **1 到 2 個新的英文單字**。
+     - **規則：標籤必須是單個英文單詞 (Single English word)，禁止使用中文，禁止使用片語。**
+  2. **尺寸 (Dimensions)**：
+     - **如果你識別出照片中有不同的規格或多組尺寸，請全部列出**。
+     - 每组尺寸必须包含 "label" (規格名稱, 例如 '3-Seater', '2-Seater', 'Package'), "length", "width", "height", "unit"。
+     - **單位識別**：請仔細辨認是 cm 還是 inch。如果無法確定，默認使用 cm。
+  3. **廠商 (subcategoryId)**：禁止識別或修改。回傳值必須為 null。
+  4. **分類 (categoryId)**：必須從代碼清單中選擇：${JSON.stringify(categoriesJson)}。
+  5. **輸出格式**：僅回傳一個合法、壓縮的 JSON 物件。禁止 Markdown。
 
   【JSON 範例格式】
-  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTagName":"tag1, tag2","newCategoryName":null,"newSubCategoryName":null,"dimensions":{"length":0,"width":0,"height":0,"unit":"cm"},"manualCode":null,"modelNumber":null,"note":null}
+  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTagName":"Modern, Velvet","dimensions":[{"label":"Package","length":100,"width":80,"height":50,"unit":"cm"}],"manualCode":null,"modelNumber":null,"note":null}
   `;
 
   try {
@@ -224,6 +230,15 @@ export const analyzeProductPhoto = async (
       }
     }
     
+    // Normalize dimensions: Always an array
+    let safeDims: any[] = [];
+    if (Array.isArray(parsedData.dimensions)) {
+      safeDims = parsedData.dimensions;
+    } else if (parsedData.dimensions && typeof parsedData.dimensions === 'object') {
+      safeDims = [parsedData.dimensions];
+    }
+    parsedData.dimensions = safeDims;
+
     // Normalize tagIds to always be an array of strings
     let safeTagIds: string[] = [];
     if (Array.isArray(parsedData.tagIds)) {

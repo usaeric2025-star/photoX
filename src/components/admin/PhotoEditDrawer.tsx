@@ -27,7 +27,10 @@ interface Props {
   setAddDimW: (w: string) => void;
   addDimH: string;
   setAddDimH: (h: string) => void;
+  addDimensions: any[];
+  setAddDimensions: (dims: any[]) => void;
   addIsHidden: boolean;
+
   setAddIsHidden: (h: boolean) => void;
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
@@ -54,25 +57,37 @@ interface Props {
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [managingTag, setManagingTag] = useState<any | null>(null);
+  const [isLongPress, setIsLongPress] = useState(false);
 
   const sortedTags = useMemo(() => {
     return [...props.tags];
   }, [props.tags]);
   
   const handleMouseDown = (tag: any) => {
+    setIsLongPress(false);
+    if (longPressTimer) clearTimeout(longPressTimer);
+    
     setLongPressTimer(setTimeout(() => {
-        const newName = prompt("请输入新标签名称 (留空删除)", tag.name);
-        if (newName === "") {
-            props.deleteTag(tag.id);
-        } else if (newName && newName !== tag.name) {
-            props.updateTag(tag.id, newName);
-        }
-    }, 500));
+        setIsLongPress(true);
+        setManagingTag(tag);
+    }, 600));
   };
   
-  const handleMouseUp = () => {
+  const handleMouseUp = (tag: any) => {
     if (longPressTimer) clearTimeout(longPressTimer);
+    if (!isLongPress) {
+        // Normal click logic
+        if (props.addTagIds.includes(tag.id)) {
+            props.setAddTagIds(props.addTagIds.filter(id => id !== tag.id));
+        } else if (props.addTagIds.length < 3) {
+            props.setAddTagIds([...props.addTagIds, tag.id]);
+        }
+    }
+    // Reset after a short delay to avoid double triggering if events bubble
+    setTimeout(() => setIsLongPress(false), 50);
   };
+
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
@@ -176,28 +191,79 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">标签 / Tags</h3>
                 <button onClick={props.quickAddTag} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
             </div>
-             <div className="flex flex-wrap gap-1.5 pb-1 max-h-24 overflow-y-auto content-start">
+             <div className="flex flex-wrap gap-1.5 pb-1 max-h-32 overflow-y-auto content-start">
                 {sortedTags.map(tag => (
                   <button 
                     key={tag.id}
-                    onClick={() => {
-                        if (props.addTagIds.includes(tag.id)) {
-                            props.setAddTagIds(props.addTagIds.filter(id => id !== tag.id));
-                        } else if (props.addTagIds.length < 3) {
-                            props.setAddTagIds([...props.addTagIds, tag.id]);
-                        }
-                    }}
-                    onMouseDown={() => handleMouseDown(tag)}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                    onTouchStart={() => handleMouseDown(tag)}
-                    onTouchEnd={handleMouseUp}
+                    onPointerDown={() => handleMouseDown(tag)}
+                    onPointerUp={() => handleMouseUp(tag)}
+                    onPointerCancel={() => { if (longPressTimer) clearTimeout(longPressTimer); }}
+                    onContextMenu={(e) => e.preventDefault()}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${props.addTagIds.includes(tag.id) ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-600'}`}
+
                   >
                     #{tag.name}
                   </button>
                 ))}
+
              </div>
+
+             <AnimatePresence>
+                {managingTag && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-6 backdrop-blur-sm"
+                        onClick={() => setManagingTag(null)}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="p-8 space-y-6 text-center">
+                                <div className="space-y-1">
+                                    <h3 className="text-xl font-black text-slate-800">管理标签 / Manage</h3>
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">#{managingTag.name}</p>
+                                </div>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <button 
+                                        onClick={() => {
+                                            const newName = prompt("输入新名称:", managingTag.name);
+                                            if (newName && newName !== managingTag.name) {
+                                                props.updateTag(managingTag.id, newName);
+                                            }
+                                            setManagingTag(null);
+                                        }}
+                                        className="w-full py-4 bg-blue-50 text-blue-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                                    >
+                                        修改名称 (Edit Name)
+                                    </button>
+                                    <button 
+                                        onClick={() => {
+                                            if (confirm(`确定删除标签 #${managingTag.name}?`)) {
+                                                props.deleteTag(managingTag.id);
+                                            }
+                                            setManagingTag(null);
+                                        }}
+                                        className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                                    >
+                                        立即删除 (Delete Tag)
+                                    </button>
+                                    <button 
+                                        onClick={() => setManagingTag(null)}
+                                        className="w-full py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold transition-colors"
+                                    >
+                                        取消 (Cancel)
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+             </AnimatePresence>
           </section>
 
         <section className="space-y-2">
@@ -232,23 +298,116 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
              {props.showOtherFields && (
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between pl-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">产品尺寸 / DIMENSIONS (长 x 宽 x 高) cm</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">产品尺寸 / DIMENSIONS</span>
+                    <button 
+                      onClick={() => {
+                        const newDims = [...(props.addDimensions || [])];
+                        newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
+                        props.setAddDimensions(newDims);
+                      }}
+                      className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
+                    >
+                      + 增加规格 / ADD SIZE
+                    </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-1">
-                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">长 / L</span>
-                       <input type="number" placeholder="L cm" value={props.addDimL} onChange={e => props.setAddDimL(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
-                    </div>
-                    <div className="space-y-1">
-                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">宽 / W</span>
-                       <input type="number" placeholder="W cm" value={props.addDimW} onChange={e => props.setAddDimW(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
-                    </div>
-                    <div className="space-y-1">
-                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">高 / H</span>
-                       <input type="number" placeholder="H cm" value={props.addDimH} onChange={e => props.setAddDimH(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
-                    </div>
+
+                  <div className="space-y-3">
+                    {(props.addDimensions && props.addDimensions.length > 0 ? props.addDimensions : [{ label: '', length: parseFloat(props.addDimL)||0, width: parseFloat(props.addDimW)||0, height: parseFloat(props.addDimH)||0, unit: 'cm' }]).map((dim, idx) => (
+                      <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
+                        { (props.addDimensions && props.addDimensions.length > 1) && (
+                          <button 
+                            onClick={() => {
+                              props.setAddDimensions(props.addDimensions.filter((_, i) => i !== idx));
+                            }}
+                            className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                        <div className="grid grid-cols-2 gap-2">
+                           <div className="space-y-1">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">规格名称 / Label</span>
+                              <input 
+                                type="text" 
+                                placeholder="如: 3-Seater" 
+                                value={dim.label || ''} 
+                                onChange={e => {
+                                  const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                  newDims[idx].label = e.target.value;
+                                  props.setAddDimensions(newDims);
+                                }}
+                                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold" 
+                              />
+                           </div>
+                           <div className="space-y-1">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
+                              <div className="flex gap-1">
+                                {['cm', 'inch'].map(u => (
+                                  <button 
+                                    key={u}
+                                    onClick={() => {
+                                      const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                      newDims[idx].unit = u;
+                                      props.setAddDimensions(newDims);
+                                    }}
+                                    className={`flex-1 p-2 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}
+                                  >
+                                    {u}
+                                  </button>
+                                ))}
+                              </div>
+                           </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="space-y-1">
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">长 / L</span>
+                             <input 
+                               type="number" 
+                               value={dim.length || ''} 
+                               onChange={e => {
+                                 const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                 newDims[idx].length = parseFloat(e.target.value) || 0;
+                                 props.setAddDimensions(newDims);
+                                 if (idx === 0) props.setAddDimL(e.target.value);
+                               }}
+                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
+                             />
+                          </div>
+                          <div className="space-y-1">
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">宽 / W</span>
+                             <input 
+                               type="number" 
+                               value={dim.width || ''} 
+                               onChange={e => {
+                                 const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                 newDims[idx].width = parseFloat(e.target.value) || 0;
+                                 props.setAddDimensions(newDims);
+                                 if (idx === 0) props.setAddDimW(e.target.value);
+                               }}
+                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
+                             />
+                          </div>
+                          <div className="space-y-1">
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">高 / H</span>
+                             <input 
+                               type="number" 
+                               value={dim.height || ''} 
+                               onChange={e => {
+                                 const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                 newDims[idx].height = parseFloat(e.target.value) || 0;
+                                 props.setAddDimensions(newDims);
+                                 if (idx === 0) props.setAddDimH(e.target.value);
+                               }}
+                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
+                             />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
+
                   <textarea placeholder="备注信息..." value={props.addNote} onChange={e => props.setAddNote(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
+
                </div>
              )}
           </section>

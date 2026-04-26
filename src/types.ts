@@ -52,7 +52,8 @@ export interface Photo {
     width?: number;
     height?: number;
     unit?: string;
-  } | null;
+    label?: string;
+  }[] | null;
   exif_data?: any | null;
   createdAt: string;
   updatedAt?: string;

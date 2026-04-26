@@ -34,7 +34,10 @@ interface UploadFormProps {
   setAddDimW: (val: string) => void;
   addDimH: string;
   setAddDimH: (val: string) => void;
+  addDimensions: any[];
+  setAddDimensions: (dims: any[]) => void;
   addIsHidden: boolean;
+
   setAddIsHidden: (h: boolean) => void;
   dbCategories: DB_Category[];
   appLang: string;
@@ -54,7 +57,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   addSubId, setAddSubId, addTagIds, setAddTagIds, addNote, setAddNote,
   addManualCode, setAddManualCode, addModelNumber, setAddModelNumber, showOtherFields, setShowOtherFields,
   addDimL, setAddDimL, addDimW, setAddDimW, addDimH, setAddDimH,
+  addDimensions, setAddDimensions,
   addIsHidden, setAddIsHidden,
+
   dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
   aiDebugInfo, abortAnalysis
 }) => {
@@ -251,33 +256,118 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                 className="overflow-hidden space-y-4 pt-2"
               >
                 <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">产品尺寸 (长 x 宽 x 高) cm</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <input 
-                      type="number"
-                      placeholder="長"
-                      value={addDimL}
-                      onChange={(e) => setAddDimL(e.target.value)}
-                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
-                    />
-                    <input 
-                      type="number"
-                      placeholder="寬"
-                      value={addDimW}
-                      onChange={(e) => setAddDimW(e.target.value)}
-                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
-                    />
-                    <input 
-                      type="number"
-                      placeholder="高"
-                      value={addDimH}
-                      onChange={(e) => setAddDimH(e.target.value)}
-                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
-                    />
+                  <div className="flex items-center justify-between pl-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">产品尺寸 / DIMENSIONS</label>
+                    <button 
+                      onClick={() => {
+                        const newDims = [...(addDimensions || [])];
+                        newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
+                        setAddDimensions(newDims);
+                      }}
+                      className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
+                    >
+                      + 增加规格
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {(addDimensions && addDimensions.length > 0 ? addDimensions : [{ label: '', length: parseFloat(addDimL)||0, width: parseFloat(addDimW)||0, height: parseFloat(addDimH)||0, unit: 'cm' }]).map((dim, idx) => (
+                      <div key={idx} className="bg-slate-100/30 p-4 rounded-3xl border border-slate-100 space-y-3 relative">
+                        { (addDimensions && addDimensions.length > 1) && (
+                          <button 
+                            onClick={() => {
+                              setAddDimensions(addDimensions.filter((_, i) => i !== idx));
+                            }}
+                            className="absolute top-3 right-3 p-1 text-slate-300 hover:text-red-500 transition-colors"
+                          >
+                            <X size={16} />
+                          </button>
+                        )}
+                        <div className="grid grid-cols-2 gap-3">
+                           <div className="space-y-1">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">规格名称 / Label</span>
+                              <input 
+                                type="text" 
+                                placeholder="如: 3-Seater" 
+                                value={dim.label || ''} 
+                                onChange={e => {
+                                  const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                  newDims[idx].label = e.target.value;
+                                  setAddDimensions(newDims);
+                                }}
+                                className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-xs font-bold outline-none focus:border-blue-500" 
+                              />
+                           </div>
+                           <div className="space-y-1">
+                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
+                              <div className="flex gap-1 h-[38px]">
+                                {['cm', 'inch'].map(u => (
+                                  <button 
+                                    key={u}
+                                    onClick={() => {
+                                      const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                      newDims[idx].unit = u;
+                                      setAddDimensions(newDims);
+                                    }}
+                                    className={`flex-1 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200'}`}
+                                  >
+                                    {u}
+                                  </button>
+                                ))}
+                              </div>
+                           </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">长 / L</span>
+                             <input 
+                               type="number" 
+                               value={dim.length || ''} 
+                               onChange={e => {
+                                 const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                 newDims[idx].length = parseFloat(e.target.value) || 0;
+                                 setAddDimensions(newDims);
+                                 if (idx === 0) setAddDimL(e.target.value);
+                               }}
+                               className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
+                             />
+                          </div>
+                          <div className="space-y-1">
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">宽 / W</span>
+                             <input 
+                               type="number" 
+                               value={dim.width || ''} 
+                               onChange={e => {
+                                 const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                 newDims[idx].width = parseFloat(e.target.value) || 0;
+                                 setAddDimensions(newDims);
+                                 if (idx === 0) setAddDimW(e.target.value);
+                               }}
+                               className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
+                             />
+                          </div>
+                          <div className="space-y-1">
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">高 / H</span>
+                             <input 
+                               type="number" 
+                               value={dim.height || ''} 
+                               onChange={e => {
+                                 const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                 newDims[idx].height = parseFloat(e.target.value) || 0;
+                                 setAddDimensions(newDims);
+                                 if (idx === 0) setAddDimH(e.target.value);
+                               }}
+                               className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
+                             />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 <div className="space-y-2">
+
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品说明 / 备註</label>
                     <textarea 
                       placeholder="输入产品特色、说明回其他备注..."

@@ -28,6 +28,7 @@ export const usePhotoManagement = (
   const [addDimL, setAddDimL] = useState<string>('');
   const [addDimW, setAddDimW] = useState<string>('');
   const [addDimH, setAddDimH] = useState<string>('');
+  const [addDimensions, setAddDimensions] = useState<{label?: string, length?: number, width?: number, height?: number, unit?: string}[]>([]);
   const [addIsHidden, setAddIsHidden] = useState(false);
   const [showOtherFields, setShowOtherFields] = useState(false);
 
@@ -44,9 +45,19 @@ export const usePhotoManagement = (
         setAddNote(photo.description || '');
         setAddManualCode(photo.manual_code || '');
         setAddModelNumber(photo.model_number || '');
-        setAddDimL(photo.dimensions?.length?.toString() || '');
-        setAddDimW(photo.dimensions?.width?.toString() || '');
-        setAddDimH(photo.dimensions?.height?.toString() || '');
+        
+        if (Array.isArray(photo.dimensions) && photo.dimensions.length > 0) {
+            setAddDimensions(photo.dimensions);
+            setAddDimL(photo.dimensions[0].length?.toString() || '');
+            setAddDimW(photo.dimensions[0].width?.toString() || '');
+            setAddDimH(photo.dimensions[0].height?.toString() || '');
+        } else {
+            setAddDimensions([]);
+            setAddDimL('');
+            setAddDimW('');
+            setAddDimH('');
+        }
+        
         setAddIsHidden(!!photo.isHidden);
       }
     }
@@ -66,6 +77,7 @@ export const usePhotoManagement = (
     setAddDimL('');
     setAddDimW('');
     setAddDimH('');
+    setAddDimensions([]);
     setAddIsHidden(false);
     setShowOtherFields(false);
   };
@@ -86,6 +98,13 @@ export const usePhotoManagement = (
           const original = photos.find(p => p.id === editPhotoId);
           if (!original) throw new Error('Photo not found');
 
+          const finalDimensions = addDimensions.length > 0 ? addDimensions : [{
+            length: parseFloat(addDimL) || 0,
+            width: parseFloat(addDimW) || 0,
+            height: parseFloat(addDimH) || 0,
+            unit: 'cm'
+          }];
+
           const updatedPhoto: Photo = {
             ...original,
             name: addName || original.name,
@@ -99,14 +118,10 @@ export const usePhotoManagement = (
             manual_code: addManualCode,
             model_number: addModelNumber,
             isHidden: addIsHidden,
-            dimensions: {
-              length: parseFloat(addDimL) || 0,
-              width: parseFloat(addDimW) || 0,
-              height: parseFloat(addDimH) || 0,
-              unit: 'cm'
-            },
+            dimensions: finalDimensions,
             updatedAt: new Date().toISOString()
           };
+
 
           setPhotos(prev => (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p));
           
@@ -115,6 +130,13 @@ export const usePhotoManagement = (
           }
        } else if (newPhotoData) {
           const dbId = crypto.randomUUID();
+          const finalDimensions = addDimensions.length > 0 ? addDimensions : [{
+            length: parseFloat(addDimL) || 0,
+            width: parseFloat(addDimW) || 0,
+            height: parseFloat(addDimH) || 0,
+            unit: 'cm'
+          }];
+
           const newPhoto: Photo = {
             id: dbId,
             storageId: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -133,15 +155,11 @@ export const usePhotoManagement = (
             subcategoryId: addSubId,
             tagIds: addTagIds,
             isHidden: addIsHidden,
-            dimensions: {
-              length: parseFloat(addDimL) || 0,
-              width: parseFloat(addDimW) || 0,
-              height: parseFloat(addDimH) || 0,
-              unit: 'cm'
-            },
+            dimensions: finalDimensions,
             createdAt: new Date().toISOString(),
             groupId: null
           };
+
 
           setPhotos(prev => [newPhoto, ...(prev as Photo[])]);
           
@@ -222,7 +240,9 @@ export const usePhotoManagement = (
     addDimL, setAddDimL,
     addDimW, setAddDimW,
     addDimH, setAddDimH,
+    addDimensions, setAddDimensions,
     addIsHidden, setAddIsHidden,
+
     showOtherFields, setShowOtherFields,
     resetAddState,
     saveNewPhoto,

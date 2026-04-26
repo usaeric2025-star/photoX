@@ -929,29 +929,40 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 })()}
 
                 {/* 6. 其他 (尺寸/备注) */}
-                {((displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0)) || displayPhotos[lightboxIndex].description) && (
+                {((Array.isArray(displayPhotos[lightboxIndex].dimensions) && displayPhotos[lightboxIndex].dimensions.length > 0) || displayPhotos[lightboxIndex].description) && (
                   <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-4">
-                    {displayPhotos[lightboxIndex].dimensions && (displayPhotos[lightboxIndex].dimensions.length > 0 || displayPhotos[lightboxIndex].dimensions.width > 0 || displayPhotos[lightboxIndex].dimensions.height > 0) && (
-                      <div>
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    {Array.isArray(displayPhotos[lightboxIndex].dimensions) && displayPhotos[lightboxIndex].dimensions.length > 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                            {t.dimensions}
                         </h3>
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                            <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.length} (L)</span>
-                            <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.length}</span>
-                            <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
-                          </div>
-                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                            <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.width} (W)</span>
-                            <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.width}</span>
-                            <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
-                          </div>
-                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                            <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.height} (H)</span>
-                            <span className="text-lg font-black text-slate-800">{displayPhotos[lightboxIndex].dimensions.height}</span>
-                            <span className="text-[9px] text-slate-400 ml-1 font-bold">CM</span>
-                          </div>
+                        <div className="space-y-4">
+                          {displayPhotos[lightboxIndex].dimensions.map((dim, dIdx) => (
+                            <div key={dIdx} className="space-y-2">
+                              {dim.label && (
+                                <span className="inline-block px-2 py-1 bg-slate-200 text-slate-700 text-[10px] font-black rounded text-xs uppercase tracking-tight">
+                                  {dim.label}
+                                </span>
+                              )}
+                              <div className="grid grid-cols-3 gap-3">
+                                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                                  <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.length} (L)</span>
+                                  <span className="text-lg font-black text-slate-800">{dim.length}</span>
+                                  <span className="text-[9px] text-slate-400 ml-1 font-bold uppercase">{dim.unit || 'cm'}</span>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                                  <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.width} (W)</span>
+                                  <span className="text-lg font-black text-slate-800">{dim.width}</span>
+                                  <span className="text-[9px] text-slate-400 ml-1 font-bold uppercase">{dim.unit || 'cm'}</span>
+                                </div>
+                                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
+                                  <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.height} (H)</span>
+                                  <span className="text-lg font-black text-slate-800">{dim.height}</span>
+                                  <span className="text-[9px] text-slate-400 ml-1 font-bold uppercase">{dim.unit || 'cm'}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
