@@ -101,6 +101,7 @@ export const useAdminViewActions = (
         }
         
         updateForm(updates);
+        setAlertDialog({ title: 'AI 分析成功', message: `已成功更新: ${Object.keys(updates).join(', ')}` });
       } else {
         setAlertDialog({ title: 'AI 分析', message: '未能从图片分析出有效数据。' });
       }

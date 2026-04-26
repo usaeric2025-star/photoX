@@ -107,7 +107,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-8">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-4">
         <div className="flex gap-4 items-start">
           {(props.newPhotoData || props.editPhotoPreview) && (
             <div className="w-1/3 shrink-0">
@@ -142,9 +142,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
             <div className="grid grid-cols-4 gap-1.5">
                 {(props.dbCategories || []).map(cat => {
-                    // Normalize to string to compare safely
-                    const isSelected = formState.categoryId != null && String(formState.categoryId) === String(cat.code);
-                    console.log(`Debug Category: formState.categoryId='${formState.categoryId}' (type: ${typeof formState.categoryId}), cat.code='${cat.code}' (type: ${typeof cat.code}), isSelected=${isSelected}`);
+                    const isSelected = String(formState.categoryId || '') === String(cat.code || '');
                     return (
                   <button 
                     key={cat.code}
@@ -325,7 +323,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           </section>
 
            {props.editPhotoId && props.onDelete && (
-            <div className="pt-2 pb-2">
+            <div className="pt-2 pb-6">
               <button 
                 onClick={() => props.onDelete!(props.editPhotoId!)}
                 className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
