@@ -55,13 +55,22 @@ interface Props {
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    props.photos.forEach(p => {
+      const ids = Array.isArray(p.tagIds) ? p.tagIds : [];
+      ids.forEach(id => {
+        counts[id] = (counts[id] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [props.photos]);
+
   const sortedTags = useMemo(() => {
     return [...props.tags].sort((a,b) => {
-      const bCount = props.photos.filter(p => p.tagIds?.includes(b.id)).length;
-      const aCount = props.photos.filter(p => p.tagIds?.includes(a.id)).length;
-      return bCount - aCount;
+      return (tagCounts[b.id] || 0) - (tagCounts[a.id] || 0);
     });
-  }, [props.tags, props.photos]);
+  }, [props.tags, tagCounts]);
   
   const handleMouseDown = (tag: any) => {
     setLongPressTimer(setTimeout(() => {
@@ -133,110 +142,105 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
       </div>
 
-       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
-        {(props.newPhotoData || props.editPhotoPreview) && (
-          <div className="relative group">
-            <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white mb-6">
-              { (props.newPhotoData || props.editPhotoPreview) && (
-                <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="max-w-full max-h-full object-contain" alt="Preview" />
-              )}
+       <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-32">
+        <div className="flex gap-4 items-start">
+          {(props.newPhotoData || props.editPhotoPreview) && (
+            <div className="w-1/3 shrink-0">
+               <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white">
+                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="w-full h-full object-contain" alt="Preview" />
+               </div>
             </div>
+          )}
+          <div className="flex-1 space-y-3">
+             <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Code</h3>
+                  <input type="text" placeholder="编号..." value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model</h3>
+                  <input type="text" placeholder="型号..." value={props.addModelNumber} onChange={e => props.setAddModelNumber(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm" />
+                </div>
+             </div>
+             <div className="space-y-1">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
+                <input type="text" placeholder="输入名称..." value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
+             </div>
           </div>
-        )}
+        </div>
 
-        <section className="space-y-3">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">手动编号 / Manual Code</h3>
-          <input type="text" placeholder="输入手动编号 (如: SK-2024)..." value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
-        </section>
-
-        <section className="space-y-3">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model Number</h3>
-          <input type="text" placeholder="输入型号编号 (如: MOD-123)..." value={props.addModelNumber} onChange={e => props.setAddModelNumber(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
-        </section>
-
-        <section className="space-y-3">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">名称 / Product Name</h3>
-          <input type="text" placeholder="输入产品名称..." value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
-        </section>
-        
-        <div className="space-y-4">
+        <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
-            <div className="flex flex-col gap-2">
-              <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
                 {props.dbCategories.slice(0, 4).map(cat => (
                   <button 
                     key={cat.code}
                     onClick={() => { props.setAddCatId(cat.code); }}
-                    className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-500 shadow-md shadow-blue-500/10' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-[11px] leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
-                    <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${props.addCatId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
+                    <span className={`font-black text-[10px] leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
+                    <span className={`text-[6px] uppercase tracking-tighter mt-0.5 font-bold ${props.addCatId === cat.code ? 'text-blue-400' : 'text-slate-300'}`}>{cat.en}</span>
                   </button>
                 ))}
-              </div>
-              <div className="grid grid-cols-3 gap-2 px-6">
                 {props.dbCategories.slice(4, 7).map(cat => (
                   <button 
                     key={cat.code}
                     onClick={() => { props.setAddCatId(cat.code); }}
-                    className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-500 shadow-md shadow-blue-500/10' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-[11px] leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
-                    <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${props.addCatId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
+                    <span className={`font-black text-[10px] leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
+                    <span className={`text-[6px] uppercase tracking-tighter mt-0.5 font-bold ${props.addCatId === cat.code ? 'text-blue-400' : 'text-slate-300'}`}>{cat.en}</span>
                   </button>
                 ))}
-              </div>
             </div>
         </div>
-        
-        <section className="space-y-4">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 / Manufacturer</h3>
-          </div>
-          <div className="flex flex-wrap gap-2 p-1">
-            {props.manufacturers.map((mfr: any) => (
-              <button 
-                key={mfr.id}
-                onClick={() => props.setAddSubId(mfr.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${props.addSubId === mfr.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border border-slate-200 text-slate-600 hover:border-blue-200'}`}
-              >
-                {mfr.name}
-              </button>
-            ))}
-            <button onClick={props.quickAddManufacturer} className="px-4 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100">+ 新增</button>
-          </div>
-        </section>
 
-          <section className="space-y-4">
-             <div className="flex items-center justify-between pl-1">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
-              <div className="flex gap-1.5 -mt-2">
-                <button onClick={() => {
-                  const query = prompt("请输入标签关键词搜索:");
-                  console.log("Searching tag:", query);
-                }} className="p-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100"><Search size={14} /></button>
-                <button onClick={props.quickAddTag} className="px-3 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 flex items-center gap-1">+ 新增</button>
-              </div>
+        <section className="space-y-2">
+            <div className="flex items-center justify-between pl-1">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">标签 / Tags</h3>
+                <button onClick={props.quickAddTag} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
             </div>
-             <div className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-2 h-24 items-center">
+             <div className="flex flex-wrap gap-1.5 pb-1 max-h-24 overflow-y-auto content-start">
                 {sortedTags.map(tag => (
                   <button 
                     key={tag.id}
                     onClick={() => {
                         if (props.addTagIds.includes(tag.id)) {
                             props.setAddTagIds(props.addTagIds.filter(id => id !== tag.id));
-                        } else if (props.addTagIds.length < 2) {
+                        } else if (props.addTagIds.length < 3) {
                             props.setAddTagIds([...props.addTagIds, tag.id]);
                         }
                     }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${props.addTagIds.includes(tag.id) ? 'bg-slate-800 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}
+                    onMouseDown={() => handleMouseDown(tag)}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onTouchStart={() => handleMouseDown(tag)}
+                    onTouchEnd={handleMouseUp}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${props.addTagIds.includes(tag.id) ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-600'}`}
                   >
                     #{tag.name}
                   </button>
                 ))}
-                <button onClick={props.quickAddTag} className="px-4 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 whitespace-nowrap">+ 新增</button>
              </div>
           </section>
+
+        <section className="space-y-2">
+          <div className="flex items-center justify-between pl-1">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">厂商 / Manufacturer</h3>
+            <button onClick={props.quickAddManufacturer} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增</button>
+          </div>
+          <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto content-start">
+            {props.manufacturers.map((mfr: any) => (
+              <button 
+                key={mfr.id}
+                onClick={() => props.setAddSubId(mfr.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${props.addSubId === mfr.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600'}`}
+              >
+                {mfr.name}
+              </button>
+            ))}
+          </div>
+        </section>
 
           <section className="space-y-3">
              <button 

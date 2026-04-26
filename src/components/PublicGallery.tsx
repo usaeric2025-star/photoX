@@ -75,13 +75,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const [headerClickCount, setHeaderClickCount] = useState(0);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    photos.forEach(p => {
+      const ids = Array.isArray(p.tagIds) ? p.tagIds : [];
+      ids.forEach(id => {
+        counts[id] = (counts[id] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [photos]);
+
   const sortedTags = useMemo(() => {
     return [...tags].sort((a, b) => {
-      const bCount = photos.filter(p => p.tagIds?.includes(b.id)).length;
-      const aCount = photos.filter(p => p.tagIds?.includes(a.id)).length;
-      return bCount - aCount;
+      return (tagCounts[b.id] || 0) - (tagCounts[a.id] || 0);
     });
-  }, [tags, photos]);
+  }, [tags, tagCounts]);
 
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};

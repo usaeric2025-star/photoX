@@ -98,38 +98,36 @@ export const analyzeProductPhoto = async (
     : `【強制要求】請從現有分類中選擇最合適的一個。`;
 
   const promptText = `
-  你是一位家具專業分析師。請分析這張照片並提供資訊。
+  你是一位家具專業分析師。請分析照片中的家具，並嚴格按照以下規則提取資訊：
 
-  強制性要求：
-  1. 分類 (CategoryId)：必須從以下「現有分類」清單中選擇一個代碼 (code)。絕對不要自己創造新分類，必須選，不可為 null。
-     分類清單: ${JSON.stringify(categoriesJson)}
+  【核心規則 - 必須遵守】
+  1. 輸出格式：必須僅回傳一個合法、可解析的 JSON 物件。禁止包含任何 Markdown 語法（如 \`\`\`json）、禁止包含換行符號在字串中、禁止包含額外解釋。
+  2. 類別 (CategoryId)：
+     - 若系統已提供預設類別 (targetCategoryId is ${targetCategoryId || 'null'})，請優先符合該類別。
+     - 若未提供，請從以下代碼清單中選擇一個代碼 (code)。禁止創造新代碼。
+     - 分類代碼清單: ${JSON.stringify(categoriesJson)}
+  3. 廠商 (Manufacturer)：禁止識別或修改廠商。回傳的 subcategoryId 必須為 null。
+  4. 產品名稱 (Name)：請根據照片識別家具。若原名稱 "${originalName || '無'}" 無意義（如純數字或 "未命名"），請提供一個專業的英文名稱（如 "Modern Velvet Sofa"）；否則保留原名稱。
 
-  2. 產品名稱 (Name)：請識別照片中的家具並提供一個清晰、描述性的英文名稱。目前產品名稱為: "${originalName || '無'}"。請根據家具外觀，若原名稱不貼切（如純數字或過於簡略），請提供一個更好的描述性英文名稱，否則保留原名稱。
-  3. 廠商 (Manufacturer)：禁止修改廠商資訊。請保持原樣。
+  【資訊提取優先權】
+  5. 型號 (Model Number)：請仔細識別照片中（如標籤、包裝）上的製造商型號、SKU 或系列號。
+  6. 手動編號 (Manual Code)：識別照片中手寫或標價牌上的代號。
+  7. 尺寸 (Dimensions)：識別照片中提及的長、寬、高（單位預設為 cm）。
+  8. 標籤 (Tags)：提供 1 到 2 個最貼切的英文標籤，例如 "Sofa", "Luxury", "Minimalist"。請僅回傳標籤名稱。
 
-  可選資訊：
-  4. 標籤 (Tags)：提供 1 到 2 個最貼切的標籤。名稱僅限英文單字，禁止使用中文。若現有標籤不足，建議新標籤。
-  5. 尺寸 (Dimensions)：若明顯，請填寫，否則 null。                
-  6. 手動編號 (Manual Code)：識別照片中的家具編號或價格標籤上的代號，若有請填寫，否則 null。
-  7. 型號 (Model Number)：識別照片中產品具體的製造商型號 (如 SKU, Model No.)，若有請填寫，否則 null。
-  8. 備註 (Note)：識別照片中的家具備註，若有請說明，否則 null。
-
-  現有標籤：${JSON.stringify(tagsJson)}                
-  現有名稱: ${originalName || '無'}
-
-  請按照以下 JSON 格式回傳，不要包含 markdown：
+  【JSON 範例格式】
   {
-    "name": "English Name",
-    "categoryId": "string (必須是分類清單中的 code)",
+    "name": "Product Name",
+    "categoryId": "category_code",
     "subcategoryId": null,
-    "tagIds": ["string"],
-    "newTagName": "string or null",
-    "newCategoryName": "string or null",
+    "tagIds": [],
+    "newTagName": "tag1, tag2",
+    "newCategoryName": null,
     "newSubCategoryName": null,
     "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" },
-    "manualCode": "string or null (e.g. Price code)",
-    "modelNumber": "string or null (e.g. Manufacturer SKU/Model)",
-    "note": "string or null"
+    "manualCode": "ABC-123",
+    "modelNumber": "SKU-999",
+    "note": "Short description"
   }
   `;
 
@@ -210,7 +208,20 @@ export const analyzeProductPhoto = async (
     }
     
     const jsonStr = textOutput.substring(startIndex, endIndex + 1);
-    const parsedData = JSON.parse(jsonStr);
+    
+    // Improved sanitize: remove control characters and handle potential trailing commas or minor syntax errors
+    const saferJson = jsonStr
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // Replace control characters with space
+      .replace(/,\s*([}\]])/g, "$1") // Remove trailing commas
+      .replace(/\r?\n|\r/g, " "); // Replace line breaks with spaces inside strings
+
+    let parsedData;
+    try {
+      parsedData = JSON.parse(saferJson);
+    } catch (parseErr) {
+      console.error("Initial JSON parse failed. URL:", fetchUrl, "Raw:", textOutput);
+      throw parseErr;
+    }
     
     // Normalize tagIds to always be an array of strings
     let safeTagIds: string[] = [];
