@@ -27,10 +27,8 @@ export default function AdminView() {
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] || translations['en'];
   const { user, authChecked, logout } = useAuth();
-  const { photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories, manufacturers, setManufacturers, displayPhotos, gridPhotos, visibleCount, setVisibleCount } = useGalleryContext();
+  const { photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories, manufacturers, setManufacturers, displayPhotos, gridPhotos, visibleCount, setVisibleCount, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryContext();
   
-  const [isMultiSelect, setIsMultiSelect] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const cancelBatchAiRef = useRef(false);
   
   // Need setters to be defined or from context

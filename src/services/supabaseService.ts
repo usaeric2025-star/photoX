@@ -454,9 +454,7 @@ export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
       image_hash: item.image_hash,
       name: item.name,
       category: item.category,
-      categoryId: item.category,
       sub_category: item.sub_category,
-      subcategoryId: item.sub_category,
       tags: item.tags,
       description: item.description,
       image_url: item.image_url,
@@ -466,8 +464,7 @@ export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
       groupId: item.group_id,
       userId: item.user_id,
       // Local fallbacks
-      uri: item.image_url, 
-      tagIds: item.tags || []
+      uri: item.image_url 
     };
   });
 };
@@ -506,11 +503,8 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
       image_hash: item.image_hash,
       name: item.name,
       category: item.category,
-      categoryId: item.category, // Map accurately for UI
       sub_category: item.sub_category,
-      subcategoryId: item.sub_category, // Map accurately for UI
       tags: item.tags,
-      tagIds: item.tags, // Map accurately for UI
       description: item.description,
       image_url: item.image_url,
       dimensions: item.dimensions,

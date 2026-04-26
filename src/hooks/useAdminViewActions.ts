@@ -101,7 +101,19 @@ export const useAdminViewActions = (
         }
         
         updateForm(updates);
-        setAlertDialog({ title: 'AI 分析成功', message: `已成功更新: ${Object.keys(updates).join(', ')}` });
+        
+        const updateMessages: string[] = [];
+        if ('name' in updates) updateMessages.push('商品名称');
+        if ('categoryId' in updates) updateMessages.push('目录分类');
+        if ('tagIds' in updates) updateMessages.push('商品标签');
+        if ('dimL' in updates || 'dimW' in updates || 'dimH' in updates || 'dimensions' in updates) updateMessages.push('尺寸信息');
+        if ('model_number' in updates) updateMessages.push('型号');
+        
+        const msg = updateMessages.length > 0 
+          ? `AI 已帮您自动填入：${updateMessages.join('，')}。` 
+          : 'AI 识别完成，但没有需要更新的空白字段 (或未能识别到额外信息)。';
+          
+        setAlertDialog({ title: 'AI 分析结果', message: msg });
       } else {
         setAlertDialog({ title: 'AI 分析', message: '未能从图片分析出有效数据。' });
       }
