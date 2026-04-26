@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff, Search, Sparkles } from 'lucide-react';
 import { Photo } from '../../types';
@@ -54,6 +54,14 @@ interface Props {
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+
+  const sortedTags = useMemo(() => {
+    return [...props.tags].sort((a,b) => {
+      const bCount = props.photos.filter(p => p.tagIds?.includes(b.id)).length;
+      const aCount = props.photos.filter(p => p.tagIds?.includes(a.id)).length;
+      return bCount - aCount;
+    });
+  }, [props.tags, props.photos]);
   
   const handleMouseDown = (tag: any) => {
     setLongPressTimer(setTimeout(() => {
@@ -75,18 +83,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <button onClick={props.resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <X size={24} />
         </button>
-        {props.aiDebugInfo && (
-          <div className="bg-yellow-50 border border-yellow-200 text-black p-4 rounded-xl text-xs font-mono relative">
-            <p><strong>[{props.aiDebugInfo.step}]</strong> {props.aiDebugInfo.message}</p>
-            {props.aiDebugInfo.error && <p className="text-red-700">错误: {props.aiDebugInfo.error}</p>}
-            {props.isAnalyzing && props.abortAnalysis && (
-              <button 
-                onClick={props.abortAnalysis}
-                className="mt-2 text-[8px] bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold uppercase tracking-widest hover:bg-red-200 transition-colors"
-              >
-                取消识别 (Cancel)
-              </button>
-            )}
+        {props.aiDebugInfo?.error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-[10px] font-bold max-w-[50%] animate-pulse">
+            AI 错误: {props.aiDebugInfo.error}
           </div>
         )}
         <div className="flex flex-col items-center">
@@ -101,16 +100,28 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
         <div className="flex items-center gap-2">
             {props.handleSingleAiAnalyze && (
-              <button 
-                onClick={() => {
-                  const data = props.newPhotoData || props.editPhotoPreview;
-                  if (data) props.handleSingleAiAnalyze!(data, props.addCatId || undefined);
-                }}
-                disabled={props.isAnalyzing}
-                className="p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shadow-sm active:scale-95 disabled:opacity-50"
-              >
-                {props.isAnalyzing ? <RefreshCcw size={18} className="animate-spin" /> : <Sparkles size={18} />}
-              </button>
+              <div className="flex items-center gap-2">
+                {props.isAnalyzing && props.abortAnalysis && (
+                  <button 
+                    onClick={props.abortAnalysis}
+                    className="p-2.5 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 shadow-sm active:scale-95"
+                    title="取消识别"
+                  >
+                    <X size={18} />
+                  </button>
+                )}
+                <button 
+                  onClick={() => {
+                    if (props.isAnalyzing) return;
+                    const data = props.newPhotoData || props.editPhotoPreview;
+                    if (data) props.handleSingleAiAnalyze!(data, props.addCatId || undefined);
+                  }}
+                  disabled={props.isAnalyzing && !props.abortAnalysis}
+                  className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-95 ${props.isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
+                >
+                  {props.isAnalyzing ? <RefreshCcw size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                </button>
+              </div>
             )}
             <button 
               onClick={props.saveNewPhoto}
@@ -208,7 +219,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
               </div>
             </div>
              <div className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-2 h-24 items-center">
-                {[...props.tags].sort((a,b) => props.photos.filter(p => p.tagIds?.includes(b.id)).length - props.photos.filter(p => p.tagIds?.includes(a.id)).length).map(tag => (
+                {sortedTags.map(tag => (
                   <button 
                     key={tag.id}
                     onClick={() => {

@@ -76,14 +76,28 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </div>
         <div className="flex items-center gap-2">
           {!editPhotoId && newPhotoData && (
-            <button 
-              onClick={() => handleSingleAiAnalyze(newPhotoData, addCatId || undefined)}
-              disabled={isAnalyzing}
-              className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-90 ${isAnalyzing ? 'bg-purple-100 border-purple-200' : 'bg-white border-slate-200 hover:bg-purple-50 text-purple-600'}`}
-              title="AI 辨識"
-            >
-              {isAnalyzing ? <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" /> : <Sparkles size={20} />}
-            </button>
+            <div className="flex items-center gap-2">
+              {isAnalyzing && abortAnalysis && (
+                <button 
+                  onClick={abortAnalysis}
+                  className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center shadow-sm active:scale-90"
+                  title="取消识别"
+                >
+                  <X size={20} />
+                </button>
+              )}
+              <button 
+                onClick={() => {
+                  if (isAnalyzing) return;
+                  handleSingleAiAnalyze(newPhotoData, addCatId || undefined);
+                }}
+                disabled={isAnalyzing && !abortAnalysis}
+                className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-90 ${isAnalyzing ? 'bg-slate-50 border-slate-100 text-slate-400' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-100'}`}
+                title="AI 辨識"
+              >
+                {isAnalyzing ? <RefreshCcw size={20} className="animate-spin" /> : <Sparkles size={20} />}
+              </button>
+            </div>
           )}
           {editPhotoId && (
             <button 

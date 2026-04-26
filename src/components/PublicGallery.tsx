@@ -75,6 +75,20 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const [headerClickCount, setHeaderClickCount] = useState(0);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
+  const sortedTags = useMemo(() => {
+    return [...tags].sort((a, b) => {
+      const bCount = photos.filter(p => p.tagIds?.includes(b.id)).length;
+      const aCount = photos.filter(p => p.tagIds?.includes(a.id)).length;
+      return bCount - aCount;
+    });
+  }, [tags, photos]);
+
+  const tagMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    tags.forEach(t => { map[t.id] = t.name; });
+    return map;
+  }, [tags]);
+
   const {
     searchQuery, setSearchQuery,
     selectedCatCode, setSelectedCatCode,
@@ -476,7 +490,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             </AnimatePresence>
 
             <div className="flex flex-wrap gap-1.5 items-center max-h-16 overflow-y-hidden overflow-x-auto flex-nowrap pb-2">
-              {[...tags].sort((a,b) => photos.filter(p => p.tagIds?.includes(b.id)).length - photos.filter(p => p.tagIds?.includes(a.id)).length).map(tag => (
+              {sortedTags.map(tag => (
                 <button 
                   key={tag.id}
                   onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
@@ -579,8 +593,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   const isUncategorized = catName === t.uncategorized || uncatValues.includes(catName.toLowerCase());
                   
                   let photoTags = [];
-                  if (photo.tagIds && photo.tagIds.length > 0 && tags.length > 0) {
-                    photoTags = tags.filter(t => photo.tagIds!.includes(t.id)).map(t => t.name);
+                  if (photo.tagIds && photo.tagIds.length > 0) {
+                    photoTags = photo.tagIds.map(tid => tagMap[tid]).filter(Boolean);
                   }
                   if (photoTags.length === 0 && photo.tags && photo.tags.length > 0) {
                     photoTags = photo.tags || [];
