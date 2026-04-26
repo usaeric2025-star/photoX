@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, LayoutGrid, Grid3X3, Layers } from 'lucide-react';
+import { Search, X, LayoutGrid, Grid3X3, Layers, ArrowDown, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
@@ -15,6 +15,8 @@ interface Props {
   setFilterSubId: (id: string | null) => void;
   filterTagIds: string[];
   setFilterTagIds: React.Dispatch<React.SetStateAction<string[]>>;
+  sortOrder: 'asc' | 'desc';
+  setSortOrder: (o: 'asc' | 'desc') => void;
   dbCategories: any[];
   categories: any[];
   tags: any[];
@@ -25,6 +27,7 @@ export const SearchAndFilter: React.FC<Props> = ({
     searchQuery, setSearchQuery, displayMode, setDisplayMode, 
     showGroupsCollapsed, setShowGroupsCollapsed, filterCatId, setFilterCatId, 
     filterSubId, setFilterSubId, filterTagIds, setFilterTagIds, 
+    sortOrder, setSortOrder,
     dbCategories, categories, tags, appLang 
 }) => (
     <div className="bg-[#FDFAF6] border-b border-[#1D3557]/5 px-6 py-4 space-y-3 shadow-sm">
@@ -44,6 +47,13 @@ export const SearchAndFilter: React.FC<Props> = ({
             </button>
           )}
         </div>
+        <button 
+          onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+          className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-95 ${sortOrder === 'asc' ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/50'}`}
+          title={sortOrder === 'desc' ? "按时间正序" : "按时间倒序"}
+        >
+          {sortOrder === 'desc' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
+        </button>
         <button 
           onClick={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}
           className="w-10 h-10 rounded-2xl border transition-all flex items-center justify-center bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557] shadow-sm active:scale-95"

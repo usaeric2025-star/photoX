@@ -133,10 +133,10 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                         <p className="text-white text-[10px] font-medium leading-relaxed line-clamp-2 opacity-90">
                           {focusedPhoto.description || "點擊圖片查看大圖"}
                         </p>
-                        {focusedPhoto.dimensions &&focusedPhoto.dimensions.length > 0 && Array.isArray(focusedPhoto.dimensions) && (
-                          <div className="flex gap-2 mt-1 px-1">
-                             {focusedPhoto.dimensions.map((dim, idx) => (
-                                <span key={idx} className="text-[8px] font-black text-blue-300 uppercase tracking-widest bg-blue-500/20 px-2 py-1 rounded">
+                        {focusedPhoto.dimensions && Array.isArray(focusedPhoto.dimensions) && focusedPhoto.dimensions.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2 px-1">
+                             {focusedPhoto.dimensions.map((dim: any, idx: number) => (
+                                <span key={idx} className="text-[9px] font-black text-blue-300 uppercase tracking-widest bg-blue-500/20 px-2 py-1 rounded-lg border border-blue-400/20">
                                   {dim.label ? `${dim.label}: ` : ''}{dim.length}x{dim.width}x{dim.height} {dim.unit || 'cm'}
                                 </span>
                              ))}

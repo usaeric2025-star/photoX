@@ -51,7 +51,7 @@ import { translations, LanguageCode } from '../lib/translations';
 export default function AdminView() {
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] || translations['en'];
-  const { user, authChecked, loginWithGoogle, logout } = useAuth();
+  const { user, authChecked, logout } = useAuth();
   const navigate = useNavigate();
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -96,6 +96,7 @@ export default function AdminView() {
   const [filterCatId, setFilterCatId] = useState<string | null>(null);
   const [filterSubId, setFilterSubId] = useState<string | null>(null);
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
@@ -219,8 +220,6 @@ export default function AdminView() {
     setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, groupId } : p));
   };
 
-  // Removed automatic cloud loading on user change to favor manual control as requested.
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
@@ -236,7 +235,6 @@ export default function AdminView() {
     return () => observer.disconnect();
   }, []);
   
-  // Conditionally rendered content (error handling)
   const errorContent = pageError ? (
     <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white p-4 font-bold overflow-auto max-h-[30vh]">
       <div className="flex justify-between">
@@ -246,9 +244,6 @@ export default function AdminView() {
     </div>
   ) : null;
   
-  console.log('AdminView Debug:', { authChecked, user, isStaffMode: getSafeSessionStorage('isStaffMode') });
-
-  // Early returns
   if (!authChecked) {
     return (
        <ErrorBoundary>
@@ -269,7 +264,7 @@ export default function AdminView() {
        <ErrorBoundary>
         {errorContent}
         <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
-           <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-100">
+           <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-sm text-center border border-slate-100">
               <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">{t.adminTitle}</h2>
               <p className="text-sm text-slate-500 mb-8">{t.adminSub}</p>
               <button 
@@ -332,15 +327,12 @@ export default function AdminView() {
     if (!user) return;
     setIsSyncing(true);
     try {
-      // 1. First backup settings (categories, tags, etc.)
       await saveSettingsCloud({
         ...settings,
         categories,
         tags,
         manufacturers
       });
-
-      // 2. Then backup photos
       const result = await syncPhotosToCloudService(user.id, photos, setSyncPercent);
       setAlertDialog({ 
         title: t.pushSuccess, 
@@ -352,8 +344,6 @@ export default function AdminView() {
       setIsSyncing(false);
     }
   };
-
-  const triggerManualSync = performPushSync;
 
   const performPullSync = async () => {
     setIsSyncing(true);
@@ -369,10 +359,6 @@ export default function AdminView() {
     } finally {
       setIsSyncing(false);
     }
-  };
-
-  const handleGroupPhotos_Internal = (ids: string[]) => {
-    // Hidden internal implementation to avoid conflict
   };
 
   const quickAddSubCategory = () => {
@@ -439,7 +425,7 @@ export default function AdminView() {
            user={user}
            loginWithGoogle={loginWithGoogle}
            logout={logout}
-           triggerManualSync={triggerManualSync}
+           triggerManualSync={performPushSync}
            isSyncing={isSyncing}
            syncPercent={syncPercent}
            handleLogoUpload={handleLogoUpload}
@@ -481,7 +467,6 @@ export default function AdminView() {
                   const updates: Partial<any> = {};
                   if (result.name && !formState.name) updates.name = result.name;
                   
-                  // Correct category matching
                   if (result.categoryId && !catId && !formState.categoryId) {
                     updates.categoryId = result.categoryId;
                   } else if (result.newCategoryName && !catId && !formState.categoryId) {
@@ -502,9 +487,9 @@ export default function AdminView() {
                           if (first.height && !formState.dimH) updates.dimH = first.height.toString();
                        }
                     } else if (typeof result.dimensions === 'object') {
-                       if (result.dimensions.length && !formState.dimL) updates.dimL = result.dimensions.length.toString();
-                       if (result.dimensions.width && !formState.dimW) updates.dimW = result.dimensions.width.toString();
-                       if (result.dimensions.height && !formState.dimH) updates.dimH = result.dimensions.height.toString();
+                       if ((result.dimensions as any).length && !formState.dimL) updates.dimL = (result.dimensions as any).length.toString();
+                       if ((result.dimensions as any).width && !formState.dimW) updates.dimW = (result.dimensions as any).width.toString();
+                       if ((result.dimensions as any).height && !formState.dimH) updates.dimH = (result.dimensions as any).height.toString();
                        updates.dimensions = [result.dimensions];
                     }
                   }
@@ -577,60 +562,70 @@ export default function AdminView() {
                 appLang={appLang}
              />
              <div className="flex-1 min-h-0 relative">
-               <PublicGallery 
-                  photos={photos}
-                  categories={categories}
-                  tags={tags}
-                  dbCategories={dbCategories}
-                  onExit={() => setViewMode('public')}
-                  showExit={true}
-                  user={user}
-                  settings={settings}
-                  isAdminMode={true}
-                  isMultiSelect={isMultiSelect}
-                  onToggleMultiSelect={() => {
-                    if (isMultiSelect) {
-                      setSelectedIds([]);
-                      setIsMultiSelect(false);
-                    } else {
-                      setIsMultiSelect(true);
-                    }
-                  }}
-                  selectedIds={selectedIds}
-                  onToggleSelection={(id) => {
-                    if (!isMultiSelect) return;
-                    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-                  }}
-                  onClearSelection={() => setSelectedIds([])}
-                  onEditPhoto={setEditPhotoId}
-                  onDeletePhotos={(ids) => {
-                    setConfirmDialog({
-                      message: t.confirmDelete(ids.length),
-                      onConfirm: async () => {
-                        await deletePhoto(ids);
-                        setSelectedIds([]);
-                      }
-                    });
-                  }}
-                  onGroupPhotos={(ids) => handleGroupPhotos(ids)}
-                  onGroupClick={(groupId) => setActiveGroupId(groupId)}
-                  onOpenSettings={handleManageClick}
-                  onAddPhoto={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = 'image/*';
-                    input.multiple = true;
-                    input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
-                    input.click();
-                  }}
-                  onRefresh={() => refreshCloudData(
-                      user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
-                  )}
-                  columns={columns}
-                  setColumns={setColumns}
-                  cloudCount={cloudCount}
-                  hideHeader={true}
-               />
+                <PublicGallery 
+                   photos={photos}
+                   categories={categories}
+                   tags={tags}
+                   dbCategories={dbCategories}
+                   onExit={() => setViewMode('public')}
+                   showExit={true}
+                   user={user}
+                   settings={settings}
+                   isAdminMode={true}
+                   isMultiSelect={isMultiSelect}
+                   onToggleMultiSelect={() => {
+                     if (isMultiSelect) {
+                       setSelectedIds([]);
+                       setIsMultiSelect(false);
+                     } else {
+                       setIsMultiSelect(true);
+                     }
+                   }}
+                   selectedIds={selectedIds}
+                   onToggleSelection={(id) => {
+                     if (!isMultiSelect) return;
+                     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+                   }}
+                   onClearSelection={() => setSelectedIds([])}
+                   onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
+                   onDeletePhotos={(ids) => {
+                     setConfirmDialog({
+                       message: t.confirmDelete(ids.length),
+                       onConfirm: async () => {
+                         await deletePhoto(ids);
+                         setSelectedIds([]);
+                       }
+                     });
+                   }}
+                   onGroupPhotos={(ids) => handleGroupPhotos(ids)}
+                   onGroupClick={(groupId) => setActiveGroupId(groupId)}
+                   onOpenSettings={handleManageClick}
+                   onAddPhoto={() => {
+                     const input = document.createElement('input');
+                     input.type = 'file';
+                     input.accept = 'image/*';
+                     input.multiple = true;
+                     input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                     input.click();
+                   }}
+                   hideHeader={true}
+                   sortOrder={sortOrder}
+                   onToggleSortOrder={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+                   searchQuery={searchQuery}
+                   onSearchQueryChange={setSearchQuery}
+                   filterCatId={filterCatId}
+                   onFilterCatIdChange={setFilterCatId}
+                   filterSubId={filterSubId}
+                   onFilterSubIdChange={setFilterSubId}
+                   filterTagIds={filterTagIds}
+                   onFilterTagIdsChange={setFilterTagIds}
+                   onRefresh={() => refreshCloudData(
+                       user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
+                   )}
+                   columns={columns}
+                   setColumns={setColumns}
+                   cloudCount={cloudCount}
+                />
              </div>
         </div>
       )}
@@ -678,8 +673,6 @@ export default function AdminView() {
         />
       )}
       
-      {/* Removed redundant UploadForm to unify UI and avoid double save buttons */}
-      
       {activeGroupId && (
         <GroupDetailScreen
           activeGroupId={activeGroupId}
@@ -689,7 +682,7 @@ export default function AdminView() {
           viewMode={viewMode}
           publicPhotos={photos}
           photos={photos}
-          setPhotos={setPhotos} // Fix: use setPhotos directly
+          setPhotos={setPhotos}
           setPreviewUri={setPreviewUri}
           setAlertDialog={setAlertDialog}
           setConfirmDialog={setConfirmDialog}
@@ -706,11 +699,7 @@ export default function AdminView() {
             input.type = 'file';
             input.accept = 'image/*';
             input.multiple = true;
-            input.onchange = (e) => handlePhotoImport(e as any, false, (screen) => {
-              if (screen === 'addPhoto') {
-                // handle manual addition to this specific group
-              }
-            });
+            input.onchange = (e) => handlePhotoImport(e as any, false, (screen) => {});
             input.click();
           }}
         />
@@ -734,8 +723,8 @@ export default function AdminView() {
             {isImporting && importTotal > 0 ? (
               <div className="w-full max-w-xs mt-8">
                 <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
-                  <span>{t.uploadProgress}</span>
-                  <span>{importProgress} / {importTotal}</span>
+                   <span>{t.uploadProgress}</span>
+                   <span>{importProgress} / {importTotal}</span>
                 </div>
                 <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
                   <div 

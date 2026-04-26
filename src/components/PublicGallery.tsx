@@ -36,6 +36,16 @@ interface PublicGalleryProps {
   setColumns?: (val: 2 | 3 | 5) => void;
   cloudCount?: number | null;
   hideHeader?: boolean;
+  sortOrder?: 'asc' | 'desc';
+  onToggleSortOrder?: () => void;
+  searchQuery?: string;
+  onSearchQueryChange?: (q: string) => void;
+  filterCatId?: string | null;
+  onFilterCatIdChange?: (id: string | null) => void;
+  filterSubId?: string | null;
+  onFilterSubIdChange?: (id: string | null) => void;
+  filterTagIds?: string[];
+  onFilterTagIdsChange?: (ids: string[] | ((prev: string[]) => string[])) => void;
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
@@ -46,7 +56,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   isMultiSelect, onToggleMultiSelect,
   columns: propColumns, setColumns: propSetColumns,
   cloudCount,
-  hideHeader
+  hideHeader,
+  sortOrder: propSortOrder,
+  onToggleSortOrder,
+  searchQuery: propSearchQuery,
+  onSearchQueryChange,
+  filterCatId: propFilterCatId,
+  onFilterCatIdChange,
+  filterSubId: propFilterSubId,
+  onFilterSubIdChange,
+  filterTagIds: propFilterTagIds,
+  onFilterTagIdsChange
 }) => {
   const [lang, setLang] = useState<LanguageCode>(() => {
     return (localStorage.getItem('appLang') as LanguageCode) || 'en';
@@ -99,18 +119,45 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [tags]);
 
   const {
-    searchQuery, setSearchQuery,
-    selectedCatCode, setSelectedCatCode,
-    selectedSubId, setSelectedSubId,
-    selectedTagIds, setSelectedTagIds,
+    searchQuery: gallerySearch, setSearchQuery: setGallerySearch,
+    selectedCatCode: galleryCat, setSelectedCatCode: setGalleryCat,
+    selectedSubId: gallerySub, setSelectedSubId: setGallerySub,
+    selectedTagIds: galleryTags, setSelectedTagIds: setGalleryTags,
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
     lightboxIndex, setLightboxIndex,
     displayPhotos, gridPhotos,
     totalPhotoCount,
     getRealId, observerTarget,
-    sortOrder, toggleSortOrder
-  } = useGallery({ photos, categories, tags, dbCategories, columns, isAdminMode });
+    sortOrder: internalSortOrder, toggleSortOrder: internalToggleSortOrder
+  } = useGallery({ 
+    photos, 
+    categories, 
+    tags, 
+    dbCategories, 
+    columns, 
+    isAdminMode,
+    externalSortOrder: propSortOrder,
+    externalSearchQuery: propSearchQuery,
+    externalSelectedCatCode: propFilterCatId,
+    externalSelectedSubId: propFilterSubId,
+    externalSelectedTagIds: propFilterTagIds
+  });
+
+  const sortOrder = propSortOrder || internalSortOrder;
+  const toggleSortOrder = onToggleSortOrder || internalToggleSortOrder;
+
+  const searchQuery = propSearchQuery !== undefined ? propSearchQuery : gallerySearch;
+  const setSearchQuery = onSearchQueryChange || setGallerySearch;
+
+  const selectedCatCode = propFilterCatId !== undefined ? propFilterCatId : galleryCat;
+  const setSelectedCatCode = onFilterCatIdChange || setGalleryCat;
+
+  const selectedSubId = propFilterSubId !== undefined ? propFilterSubId : gallerySub;
+  const setSelectedSubId = onFilterSubIdChange || setGallerySub;
+
+  const selectedTagIds = propFilterTagIds !== undefined ? propFilterTagIds : galleryTags;
+  const setSelectedTagIds = onFilterTagIdsChange || setGalleryTags;
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
@@ -954,38 +1001,36 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                            {t.dimensions}
                         </h3>
-                        <div className="space-y-4">
-                          {displayPhotos[lightboxIndex].dimensions.map((dim, dIdx) => (
-                            <div key={dIdx} className="space-y-2">
+                        <div className="space-y-3">
+                          {displayPhotos[lightboxIndex].dimensions.map((dim: any, dIdx: number) => (
+                            <div key={dIdx} className="bg-white/60 p-3 rounded-2xl border border-white shadow-sm space-y-3">
                               <div className="flex items-center justify-between">
-                                {dim.label ? (
-                                  <span className="inline-block px-2 py-1 bg-slate-200 text-slate-700 text-[10px] font-black rounded text-xs uppercase tracking-tight">
+                                {dim.label && (
+                                  <span className="inline-block px-1.5 py-0.5 bg-slate-200 text-slate-600 text-[8px] font-black rounded uppercase tracking-tight">
                                     {dim.label}
                                   </span>
-                                ) : (
-                                  <div></div>
                                 )}
                                 {dim.isAI && (
-                                  <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-widest">
+                                  <span className="text-[7px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-widest">
                                     AI
                                   </span>
                                 )}
                               </div>
                               <div className="grid grid-cols-3 gap-3">
-                                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                                  <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.length} (L)</span>
-                                  <span className="text-lg font-black text-slate-800">{dim.length}</span>
-                                  <span className="text-[9px] text-slate-400 ml-1 font-bold uppercase">{dim.unit || 'cm'}</span>
+                                <div className="text-center">
+                                  <span className="block text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">{t.length} (L)</span>
+                                  <span className="text-sm font-black text-slate-800">{dim.length}</span>
+                                  <span className="text-[8px] text-slate-400 ml-0.5 font-bold uppercase">{dim.unit || 'cm'}</span>
                                 </div>
-                                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                                  <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.width} (W)</span>
-                                  <span className="text-lg font-black text-slate-800">{dim.width}</span>
-                                  <span className="text-[9px] text-slate-400 ml-1 font-bold uppercase">{dim.unit || 'cm'}</span>
+                                <div className="text-center border-x border-slate-100">
+                                  <span className="block text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">{t.width} (W)</span>
+                                  <span className="text-sm font-black text-slate-800">{dim.width}</span>
+                                  <span className="text-[8px] text-slate-400 ml-0.5 font-bold uppercase">{dim.unit || 'cm'}</span>
                                 </div>
-                                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
-                                  <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.height} (H)</span>
-                                  <span className="text-lg font-black text-slate-800">{dim.height}</span>
-                                  <span className="text-[9px] text-slate-400 ml-1 font-bold uppercase">{dim.unit || 'cm'}</span>
+                                <div className="text-center">
+                                  <span className="block text-[7px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">{t.height} (H)</span>
+                                  <span className="text-sm font-black text-slate-800">{dim.height}</span>
+                                  <span className="text-[8px] text-slate-400 ml-0.5 font-bold uppercase">{dim.unit || 'cm'}</span>
                                 </div>
                               </div>
                             </div>
@@ -994,11 +1039,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       </div>
                     )}
                     {displayPhotos[lightboxIndex].description && (
-                      <div>
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                           {t.description}
-                        </h3>
-                        <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap leading-relaxed">{displayPhotos[lightboxIndex].description}</p>
+                      <div className="pt-2 border-t border-slate-200/50">
+                        <p className="text-xs font-medium text-slate-700 whitespace-pre-wrap leading-relaxed italic opacity-80">{displayPhotos[lightboxIndex].description}</p>
                       </div>
                     )}
                   </div>

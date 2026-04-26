@@ -8,40 +8,59 @@ interface UseGalleryProps {
   dbCategories: DB_Category[];
   columns: 2 | 3 | 5;
   isAdminMode?: boolean;
+  externalSortOrder?: 'asc' | 'desc';
+  externalSearchQuery?: string;
+  externalSelectedCatCode?: string | null;
+  externalSelectedSubId?: string | null;
+  externalSelectedTagIds?: string[];
 }
 
-export const useGallery = ({ photos, categories, tags, dbCategories, columns, isAdminMode = false }: UseGalleryProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCatCode, setSelectedCatCode] = useState<string | null>(null);
-  const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+export const useGallery = ({ 
+  photos, categories, tags, dbCategories, columns, isAdminMode = false, 
+  externalSortOrder, externalSearchQuery, 
+  externalSelectedCatCode, externalSelectedSubId, externalSelectedTagIds 
+}: UseGalleryProps) => {
+  const [internalSearchQuery, setInternalSearchQuery] = useState('');
+  const [internalSelectedCatCode, setInternalSelectedCatCode] = useState<string | null>(null);
+  const [internalSelectedSubId, setInternalSelectedSubId] = useState<string | null>(null);
+  const [internalSelectedTagIds, setInternalSelectedTagIds] = useState<string[]>([]);
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [visibleCount, setVisibleCount] = useState(15);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [internalSortOrder, setInternalSortOrder] = useState<'desc' | 'asc'>('desc');
+
+  const sortOrder = externalSortOrder || internalSortOrder;
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
+  const selectedCatCode = externalSelectedCatCode !== undefined ? externalSelectedCatCode : internalSelectedCatCode;
+  const selectedSubId = externalSelectedSubId !== undefined ? externalSelectedSubId : internalSelectedSubId;
+  const selectedTagIds = externalSelectedTagIds !== undefined ? externalSelectedTagIds : internalSelectedTagIds;
 
   const toggleSortOrder = () => {
-    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+    setInternalSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
     setVisibleCount(15);
   };
 
-  const setSearchQueryAndReset = (query: string) => {
-    setSearchQuery(query);
+  const setSearchQuery = (query: string) => {
+    setInternalSearchQuery(query);
     setVisibleCount(15);
   };
 
-  const setSelectedCatCodeAndReset = (code: string | null) => {
-    setSelectedCatCode(code);
+  const setSelectedCatCode = (code: string | null) => {
+    setInternalSelectedCatCode(code);
     setVisibleCount(15);
   };
 
-  const setSelectedSubIdAndReset = (id: string | null) => {
-    setSelectedSubId(id);
+  const setSelectedSubId = (id: string | null) => {
+    setInternalSelectedSubId(id);
     setVisibleCount(15);
   };
 
-  const setSelectedTagIdsAndReset = (action: string[] | ((prev: string[]) => string[])) => {
-    setSelectedTagIds(action);
+  const setSelectedTagIds = (action: string[] | ((prev: string[]) => string[])) => {
+    if (typeof action === 'function') {
+      setInternalSelectedTagIds(action);
+    } else {
+      setInternalSelectedTagIds(action);
+    }
     setVisibleCount(15);
   };
 
@@ -157,15 +176,15 @@ export const useGallery = ({ photos, categories, tags, dbCategories, columns, is
   }, [aggregatedPhotos.length, visibleCount]);
 
   return {
-    searchQuery, setSearchQuery: setSearchQueryAndReset,
-    selectedCatCode, setSelectedCatCode: setSelectedCatCodeAndReset,
-    selectedSubId, setSelectedSubId: setSelectedSubIdAndReset,
-    selectedTagIds, setSelectedTagIds: setSelectedTagIdsAndReset,
+    searchQuery, setSearchQuery,
+    selectedCatCode, setSelectedCatCode,
+    selectedSubId, setSelectedSubId,
+    selectedTagIds, setSelectedTagIds,
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
     lightboxIndex, setLightboxIndex,
     displayPhotos: aggregatedPhotos, // For lightbox indexed access
-    totalPhotoCount, // Added this
+    totalPhotoCount: aggregatedPhotos.length,
     visiblePhotos, gridPhotos,
     getRealId, observerTarget,
     sortOrder, toggleSortOrder
