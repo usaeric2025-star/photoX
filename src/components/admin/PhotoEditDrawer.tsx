@@ -32,7 +32,7 @@ interface Props {
   handleSingleAiAnalyze?: (data: string, catId?: string) => Promise<void>;
 }
 
-export const PhotoEditDrawer: React.FC<Props> = (props) => {
+export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
   const { formState, updateForm } = props;
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -334,4 +334,4 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
        </div>
     </div>
   );
-};
+});

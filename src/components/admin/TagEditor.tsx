@@ -29,7 +29,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
                 #{tag.name}
               </button>
               <div className="absolute -top-1 -right-1 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={(e) => { e.stopPropagation(); const n = prompt("输入标签名称:", tag.name); if(n && n !== tag.name) onUpdateTag(tag.id, n); }} className="bg-white p-0.5 rounded-full shadow border text-blue-600"><Pencil size={10}/></button>
+                <button onClick={(e) => { e.stopPropagation(); const n = prompt("输入标签名称 (仅限英文单词):", tag.name); if(n && /^[a-zA-Z]+$/.test(n)) { if(n !== tag.name) onUpdateTag(tag.id, n); } else if(n) { alert("标签名称必须仅包含英文单词，不含空格、数字或特殊字符"); } }} className="bg-white p-0.5 rounded-full shadow border text-blue-600"><Pencil size={10}/></button>
                 <button onClick={(e) => { e.stopPropagation(); if(confirm(`确定删除标签 #${tag.name}?`)) onDeleteTag(tag.id); }} className="bg-white p-0.5 rounded-full shadow border text-red-600"><Trash2 size={10}/></button>
               </div>
             </div>
