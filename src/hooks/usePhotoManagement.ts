@@ -55,7 +55,10 @@ export const usePhotoManagement = (
         // Healing for Manufacturers: if ID is missing but name string exists, find the ID
         const initialMfrId = photo.subcategoryId || (photo.sub_category ? manufacturers.find(m => m.name === photo.sub_category)?.id : null);
         
-        const rawTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
+        const rawTagIds = Array.isArray(photo.tagIds) && photo.tagIds.length > 0 ? photo.tagIds : 
+                          (Array.isArray(photo.tags) ? photo.tags.map(tagName => tags.find(t => t.name === tagName)?.id).filter(Boolean) as string[] : []);
+        
+        console.log("Healing tags for photo", photo.id, { rawTagIds, photoTagIds: photo.tagIds, photoTags: photo.tags });
         
         const dims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
 

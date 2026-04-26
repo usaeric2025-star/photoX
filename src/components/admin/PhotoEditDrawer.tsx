@@ -39,17 +39,22 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const [isLongPress, setIsLongPress] = useState(false);
 
   const sortedTags = useMemo(() => {
+    console.log("Drawing tags:", props.tags);
+    console.log("Current formStates tags:", formState.tagIds);
     return [...props.tags];
-  }, [props.tags]);
+  }, [props.tags, formState.tagIds]);
   
   const handleTagClick = (tag: any) => {
+    console.log("Tag clicked:", tag.id, "Existing tags:", formState.tagIds);
     if (isLongPress) {
         setIsLongPress(false);
         return;
     }
     if (formState.tagIds.includes(tag.id)) {
+        console.log("Removing tag:", tag.id);
         updateForm({ tagIds: formState.tagIds.filter(id => id !== tag.id) });
     } else if (formState.tagIds.length < 3) {
+        console.log("Adding tag:", tag.id);
         updateForm({ tagIds: [...formState.tagIds, tag.id] });
     }
   };

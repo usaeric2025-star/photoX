@@ -14,18 +14,19 @@ export const reconcileData = (
     if (Array.isArray(p.tagIds)) p.tagIds.forEach(id => usedTagIds.add(id));
   });
 
-  // 2. Filter authoritative lists to only contain used items
-  const reconciledCategories = categories.filter(c => usedCatIds.has(c.id));
-  const reconciledTags = tags.filter(t => usedTagIds.has(t.id));
-  const reconciledManufacturers = manufacturers.filter(m => usedManufacturerIds.has(m.id));
+  // 2. Add missing tags to the list
+  const reconciledTags = [...tags];
+  usedTagIds.forEach(tid => {
+    if (!reconciledTags.find(t => t.id === tid)) {
+      reconciledTags.push({ id: tid, name: tid }); // Assuming tag name = id if missing
+    }
+  });
 
   return {
-    reconciledCategories,
+    reconciledCategories: categories,
     reconciledTags,
-    reconciledManufacturers,
+    reconciledManufacturers: manufacturers,
     hasChanged: 
-      reconciledCategories.length !== categories.length ||
-      reconciledTags.length !== tags.length ||
-      reconciledManufacturers.length !== manufacturers.length
+      reconciledTags.length !== tags.length // simplified because we only add now
   };
 };

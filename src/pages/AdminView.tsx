@@ -594,6 +594,7 @@ export default function AdminView() {
                          input.click();
                        }}
                        onEditPhoto={(id) => setEditPhotoId(id)}
+                       onGroupPhotos={handleGroupPhotos}
                        hideHeader={true}
                        onRefresh={() => refreshCloudData(
                            user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
