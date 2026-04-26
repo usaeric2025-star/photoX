@@ -132,7 +132,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
       </div>
 
-       <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-32">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-32">
         <div className="flex gap-4 items-start">
           {(props.newPhotoData || props.editPhotoPreview) && (
             <div className="w-1/3 shrink-0">
@@ -142,6 +142,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             </div>
           )}
           <div className="flex-1 space-y-3">
+             <div className="space-y-1">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
+                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
+             </div>
              <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Code</h3>
@@ -153,12 +157,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">价格 / Price</h3>
-                  <input type="text" placeholder="价格..." value={formState.price} onChange={e => updateForm({ price: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold text-blue-600" />
+                  <input type="text" placeholder="价格..." value={formState.price||''} onChange={e => updateForm({ price: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold text-blue-600" />
                 </div>
-             </div>
-             <div className="space-y-1">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
-                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
              </div>
           </div>
         </div>

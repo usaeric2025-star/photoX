@@ -79,7 +79,7 @@ export const usePhotoManagement = (
         });
       }
     }
-  }, [editPhotoId, photos, dbCategories]);
+  }, [editPhotoId, photos, dbCategories, manufacturers, tags]);
 
   const resetAddState = () => {
     setNewPhotoData(null);
