@@ -61,6 +61,16 @@ export default function AdminView() {
   
   const { isSyncing, setIsSyncing, viewMode, setViewMode, settings, setSettings, lastSyncTime, refreshCloudData, handleLogoUpload } = useSyncEngine();
   const [internalPassword, setInternalPassword] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
+
+  useEffect(() => {
+    if (settings) {
+      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
+      if (settings.custom_model) setCustomModel(settings.custom_model);
+      if (settings.internal_password) setInternalPassword(settings.internal_password);
+    }
+  }, [settings]);
   
   const { saveSettings, handleSingleAiAnalyzeCallback, performPushSync, performPullSync } = useAdminViewActions(user, photos, setPhotos, settings, setSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData);
   const { activeScreen, setActiveScreen, toast, showToast, handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer } = useAdminViewLogic(photos, setPhotos, settings, saveSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, (update: any) => updateForm(update), setAlertDialog, setPromptDialog);
@@ -289,6 +299,12 @@ export default function AdminView() {
            performPullSync={performPullSync}
            cloudCount={cloudCount}
            lastSyncTime={lastSyncTime}
+           geminiApiKey={geminiApiKey}
+           setGeminiApiKey={setGeminiApiKey}
+           customModel={customModel}
+           setCustomModel={setCustomModel}
+           internalPassword={internalPassword}
+           setInternalPassword={setInternalPassword}
            photos={photos}
            setPhotos={setPhotos}
          />

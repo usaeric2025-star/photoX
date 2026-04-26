@@ -33,7 +33,7 @@ interface Props {
   handleSingleAiAnalyze?: (data: string, catId?: string) => Promise<void>;
 }
 
-export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
+export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { formState, updateForm } = props;
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -144,6 +144,7 @@ export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
                 {props.dbCategories.map(cat => {
                     // Normalize to string to compare safely
                     const isSelected = String(formState.categoryId) === String(cat.code);
+                    console.log(`Debug Category: formState.categoryId=${formState.categoryId}, cat.code=${cat.code}, isSelected=${isSelected}`);
                     return (
                   <button 
                     key={cat.code}
@@ -324,7 +325,7 @@ export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
           </section>
 
            {props.editPhotoId && props.onDelete && (
-            <div className="pt-4 pb-8 space-y-4">
+            <div className="pt-2 pb-4">
               <button 
                 onClick={() => props.onDelete!(props.editPhotoId!)}
                 className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
@@ -336,4 +337,4 @@ export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
        </div>
     </div>
   );
-});
+};
