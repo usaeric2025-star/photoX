@@ -168,6 +168,8 @@ export default function AdminView() {
 
 
   
+
+  
   return (
     <ErrorBoundary>
       {errorContent}
@@ -241,56 +243,6 @@ export default function AdminView() {
         />
       )}
 
-      {mainContent}
-
-      <AnimatePresence>
-        {isSyncing && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2000] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center p-6"
-          >
-            <div className="w-12 h-12 relative">
-               <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
-               <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin"></div>
-            </div>
-            
-            {isImporting && importTotal > 0 ? (
-              <div className="w-full max-w-xs mt-8">
-                <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
-                   <span>{t.uploadProgress}</span>
-                   <span>{importProgress} / {importTotal}</span>
-                </div>
-                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-600 transition-all duration-300 ease-out" 
-                    style={{ width: `${Math.round((importProgress / importTotal) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="mt-6 text-center">
-                <p className="text-sm font-bold text-slate-800 tracking-tight">{t.processing}</p>
-                <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.doNotClose}</p>
-              </div>
-            )}
-            
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <Modals 
-          confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog}
-          alertDialog={alertDialog} setAlertDialog={setAlertDialog}
-          promptDialog={promptDialog} setPromptDialog={setPromptDialog}
-          promptValue={promptValue} setPromptValue={setPromptValue}
-      />
-    </ErrorBoundary>
-  );
-
-  const mainContent = (
-    <>
       {activeScreen === 'manage' && (
          <SettingsScreen 
            setActiveScreen={setActiveScreen}
@@ -315,12 +267,6 @@ export default function AdminView() {
            performPullSync={performPullSync}
            cloudCount={cloudCount}
            lastSyncTime={lastSyncTime}
-           geminiApiKey={geminiApiKey}
-           setGeminiApiKey={setGeminiApiKey}
-           customModel={customModel}
-           setCustomModel={setCustomModel}
-           internalPassword={internalPassword}
-           setInternalPassword={setInternalPassword}
            photos={photos}
            setPhotos={setPhotos}
          />
@@ -341,7 +287,7 @@ export default function AdminView() {
               dbCategories={dbCategories} 
               categories={categories} 
               appLang={appLang}
-              quickAddSubCategory={quickAddSubCategory} 
+              quickAddSubCategory={() => quickAddSubCategory(formState)} 
               quickAddTag={quickAddTag} 
               quickAddManufacturer={quickAddManufacturer} 
               tags={tags}
@@ -427,83 +373,6 @@ export default function AdminView() {
                  </div>
         </div>
       )}
-    </>
-  );
-
-  return (
-    <ErrorBoundary>
-      {errorContent}
-      
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
-          >
-            {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : <X size={18} className="text-red-400" />}
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {batchEditIds && (
-        <BatchEditScreen 
-          resetAddState={() => { resetAddState(); setBatchIsHiddenApplied(false); }}
-          isSyncing={isSyncing}
-          saveBatchEdit={saveBatchEdit}
-          batchEditIds={batchEditIds}
-          dbCategories={dbCategories}
-          categories={categories}
-          appLang={appLang}
-          formState={formState}
-          updateForm={updateForm}
-          batchIsHiddenApplied={batchIsHiddenApplied}
-          setBatchIsHiddenApplied={setBatchIsHiddenApplied}
-          showOtherFields={showOtherFields}
-          setShowOtherFields={setShowOtherFields}
-          manufacturers={manufacturers}
-          tags={tags}
-          quickAddSubCategory={quickAddSubCategory}
-          quickAddTag={quickAddTag}
-          quickAddManufacturer={quickAddManufacturer}
-        />
-      )}
-      
-      {activeGroupId && (
-        <GroupDetailScreen
-          activeGroupId={activeGroupId}
-          setActiveGroupId={setActiveGroupId}
-          focusedGroupPhotoId={focusedGroupPhotoId}
-          setFocusedGroupPhotoId={setFocusedGroupPhotoId}
-          viewMode={viewMode}
-          publicPhotos={photos}
-          photos={photos}
-          setPhotos={setPhotos}
-          setPreviewUri={setPreviewUri}
-          setAlertDialog={setAlertDialog}
-          setConfirmDialog={setConfirmDialog}
-          user={user}
-          onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
-          dbCategories={dbCategories}
-          manufacturers={manufacturers}
-          appLang={appLang}
-          categories={categories}
-          tags={tags}
-          handleUngroup={handleUngroup}
-          onAddPhotoToGroup={() => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.multiple = true;
-            input.onchange = (e) => handlePhotoImport(e as any, false, (screen) => {});
-            input.click();
-          }}
-        />
-      )}
-
-      {mainContent}
 
       <AnimatePresence>
         {isSyncing && (

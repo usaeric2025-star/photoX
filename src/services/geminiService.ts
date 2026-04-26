@@ -114,18 +114,20 @@ export const analyzeProductPhoto = async (
   【核心規則 - 必須遵守】
   1. **標籤 (Tags)**：
      - **優先從現有標籤中選擇**：${JSON.stringify(tagsJson)}。
-     - 如果現有不符，請建議 **1 到 2 個新的英文單字**。
      - **規則：標籤必須是純英文單詞，無符號、數字。**
+     - **新增標籤 (newTags)**：只有當現有標籤列表中完全沒有能描述該家具材質或風格的詞時，才建議新標籤 (格式: 字符串數組，例如 ["Modern", "Velvet"], 若無則返回空數組 [])。
   2. **尺寸 (Dimensions)**：
      - **如果你識別出照片中有不同的規格或多組尺寸，請全部列出**。
      - 每組尺寸必須包含 "label" (規格名稱, 例如 '3-Seater', '2-Seater', 'Package'), "length", "width", "height", "unit", "isAI": true。
      - **單位識別**：請仔細辨認是 cm 還是 inch。如果無法確定，默認使用 cm。
   3. **廠商 (subcategoryId)**：禁止識別或修改。回傳值必須為 null。
   4. **分類 (categoryId)**：必須從代碼清單中選擇：${JSON.stringify(categoriesJson)}。
-  5. **輸出格式**：僅回傳一個合法、壓縮的 JSON 物件。禁止 Markdown。
+  5. **商品描述 (description)**：對家具進行簡短的文字描述（風格、材質、特色）。
+  6. **備註 (note)**：如果照片質量差、角度不佳、或識別信息不確定，在此注明。否則返回 null。
+  7. **輸出格式**：僅回傳一個合法、壓縮的 JSON 物件。禁止 Markdown。
 
   【JSON 範例格式】
-  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTagName":"Modern, Velvet","dimensions":[{"label":"Package","length":100,"width":80,"height":50,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
+  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTags":["Modern","Velvet"],"description":"A modern velvet sofa with gold legs.","dimensions":[{"label":"Package","length":100,"width":80,"height":50,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
   `;
 
   try {
@@ -249,12 +251,10 @@ export const analyzeProductPhoto = async (
     }
     parsedData.tagIds = safeTagIds;
 
-    // Normalize newTagName to always be an array of strings initially
+    // Normalize newTags to always be an array of strings
     let newTagList: string[] = [];
-    if (Array.isArray(parsedData.newTagName)) {
-      newTagList = parsedData.newTagName.map(s => String(s).trim()).filter(Boolean);
-    } else if (typeof parsedData.newTagName === 'string') {
-      newTagList = parsedData.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+    if (Array.isArray(parsedData.newTags)) {
+      newTagList = parsedData.newTags.map(s => String(s).trim()).filter(Boolean);
     }
 
     // Total tags enforcement: Ensure we have exactly 2 tags (ID or New Name)
@@ -273,12 +273,11 @@ export const analyzeProductPhoto = async (
     }
     
     // De-duplicate tags by name if possible (though we handle IDs and names separately)
-    // For now, let's just make sure we don't have the same name twice in newTagName
+    // For now, let's just make sure we don't have the same name twice in newTags
     if (newTagList.length > 0) {
-       const uniqueNewTags = Array.from(new Set(newTagList));
-       parsedData.newTagName = uniqueNewTags.join(', ');
+       parsedData.newTags = Array.from(new Set(newTagList));
     } else {
-       parsedData.newTagName = null;
+       parsedData.newTags = [];
     }
     
     // Attach the model info so the UI can log/show it

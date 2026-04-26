@@ -89,5 +89,42 @@ export const useAdminViewActions = (
     }
   }, []);
 
-  return { saveSettings, performPushSync, handleSingleAiAnalyzeCallback };
+  const performPushSync = useCallback(async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      await saveSettingsCloud({
+        ...settings,
+        categories,
+        tags,
+        manufacturers
+      });
+      const result = await syncPhotosToCloudService(user.id, photos, (p: number) => {}); // Placeholder setSyncPercent
+      setAlertDialog({ 
+        title: t.pushSuccess, 
+        message: t.pushSuccessMsg(result.skipped) 
+      });
+    } catch (err: any) {
+      setAlertDialog({ title: t.pushFail, message: err.message });
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t]);
+
+  const performPullSync = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      await refreshCloudData(
+        user, categories, tags, manufacturers, setSettings, 
+        (v:any)=>v, (v:any)=>v, (v:any)=>v, (v:any)=>v, setCategories, setTags, setManufacturers, setPhotos, (v:any)=>v, true
+      );
+      setAlertDialog({ title: t.pullSuccess, message: t.pullSuccessMsg });
+    } catch (err: any) {
+      setAlertDialog({ title: t.pullFail, message: err.message });
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [user, categories, tags, manufacturers, setSettings, setCategories, setTags, setManufacturers, setPhotos, setIsSyncing, setAlertDialog, t, refreshCloudData]);
+
+  return { saveSettings, performPushSync, performPullSync, handleSingleAiAnalyzeCallback };
 };

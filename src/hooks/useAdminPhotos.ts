@@ -175,8 +175,8 @@ export const useAdminPhotos = (
              finalSubId = newMfrId;
           }
           
-          if (result.newTagName) {
-            const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+          if (result.newTags && Array.isArray(result.newTags)) {
+            const newNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
             const newTagsToAdd: Tag[] = [];
             const newTagIds: string[] = [];
             
@@ -303,8 +303,8 @@ export const useAdminPhotos = (
       }
       
       let finalTagIdsFromAi = result.tagIds || [];
-      if (result.newTagName) {
-        const newNames = result.newTagName.split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (result.newTags && Array.isArray(result.newTags)) {
+        const newNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
         const newTagsToAdd: Tag[] = [];
         const newTagIds: string[] = [];
         
