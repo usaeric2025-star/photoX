@@ -11,13 +11,13 @@ interface TagEditorProps {
 }
 
 export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd }) => {
-  const [editingTagId, setEditingTagId] = useState<string | null>(null);
+  const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const startPress = (tagId: string) => {
+  const startPress = (tag: any) => {
     pressTimer.current = setTimeout(() => {
-      setEditingTagId(tagId);
-    }, 600);
+      setActiveActionTag(tag);
+    }, 500);
   };
 
   const endPress = () => {
@@ -33,37 +33,40 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">标签 / Tags</h3>
         <button onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
       </div>
-      <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start" onClick={() => setEditingTagId(null)}>
+      <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {tags.map(tag => {
           const isSelected = selectedTagIds.includes(tag.id);
-          const isEditing = editingTagId === tag.id;
           return (
             <div 
               key={tag.id} 
               className="relative"
-              onMouseDown={() => startPress(tag.id)}
+              onMouseDown={() => startPress(tag)}
               onMouseUp={endPress}
               onMouseLeave={endPress}
-              onTouchStart={() => startPress(tag.id)}
+              onTouchStart={() => startPress(tag)}
               onTouchEnd={endPress}
               onTouchCancel={endPress}
             >
               <button 
-                onClick={(e) => { e.stopPropagation(); setEditingTagId(null); onToggleTag(tag); }}
+                onClick={(e) => { e.stopPropagation(); onToggleTag(tag); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${isSelected ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-800 border-transparent hover:bg-slate-200'}`}
               >
                 #{tag.name}
               </button>
-              {isEditing && (
-                <div className="absolute -top-1 -right-1 flex gap-0.5 z-10">
-                  <button onClick={(e) => { e.stopPropagation(); const n = prompt("输入标签名称 (仅限英文单词):", tag.name); if(n && /^[a-zA-Z]+$/.test(n)) { if(n !== tag.name) onUpdateTag(tag.id, n); } else if(n) { alert("标签名称必须仅包含英文单词，不含空格、数字或特殊字符"); } setEditingTagId(null); }} className="bg-white p-1 rounded-full shadow border text-blue-600"><Pencil size={12}/></button>
-                  <button onClick={(e) => { e.stopPropagation(); if(confirm(`确定删除标签 #${tag.name}?`)) onDeleteTag(tag.id); setEditingTagId(null); }} className="bg-white p-1 rounded-full shadow border text-red-600"><Trash2 size={12}/></button>
-                </div>
-              )}
             </div>
           );
         })}
       </div>
+
+      {activeActionTag && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/50 flex items-center justify-center p-4" onClick={() => setActiveActionTag(null)}>
+          <div className="bg-white rounded-2xl p-4 w-full max-w-[200px] shadow-xl space-y-2" onClick={(e) => e.stopPropagation()}>
+            <p className="text-center font-bold text-slate-800 pb-2 border-b">#{activeActionTag.name}</p>
+            <button className="w-full text-blue-600 font-medium py-2 rounded-lg hover:bg-blue-50" onClick={() => { const n = prompt("输入标签名称 (仅限英文单词):", activeActionTag.name); if(n && /^[a-zA-Z]+$/.test(n)) { if(n !== activeActionTag.name) onUpdateTag(activeActionTag.id, n); } else if(n) { alert("标签名称必须仅包含英文单词，不含空格、数字或特殊字符"); } setActiveActionTag(null); }}>编辑</button>
+            <button className="w-full text-red-600 font-medium py-2 rounded-lg hover:bg-red-50" onClick={() => { if(confirm(`确定删除标签 #${activeActionTag.name}?`)) onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}>删除</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
