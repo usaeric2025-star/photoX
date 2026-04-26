@@ -312,12 +312,14 @@ export default function AdminView() {
     setSettings(s); 
     await saveData('product_settings', s);
     if (user) {
+      // Use the provided object 's' to ensure we aren't using stale scope variables
+      const { categories: cats, tags: tg, manufacturers: mfrs } = s;
       setTimeout(() => {
         saveSettingsCloud({
           ...s,
-          categories,
-          tags,
-          manufacturers
+          categories: cats || categories,
+          tags: tg || tags,
+          manufacturers: mfrs || manufacturers
         }).catch(console.error);
       }, 0);
     }
@@ -625,6 +627,7 @@ export default function AdminView() {
                    columns={columns}
                    setColumns={setColumns}
                    cloudCount={cloudCount}
+                   manufacturers={manufacturers}
                 />
              </div>
         </div>

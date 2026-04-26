@@ -47,6 +47,10 @@ export const usePhotoManagement = (
       const photo = photos.find(p => p.id === editPhotoId);
       if (photo) {
         const initialCatId = photo.categoryId || (photo.category ? dbCategories.find(c => c.zh === photo.category || c.en === photo.category || c.code === photo.category)?.code : null);
+        
+        // Healing for Manufacturers: if ID is missing but name string exists, find the ID
+        const initialMfrId = photo.subcategoryId || (photo.sub_category ? manufacturers.find(m => m.name === photo.sub_category)?.id : null);
+        
         const rawTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
         
         const dims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
@@ -54,13 +58,14 @@ export const usePhotoManagement = (
         setFormState({
           name: photo.name || '',
           categoryId: initialCatId || null,
-          subcategoryId: photo.subcategoryId || null,
+          subcategoryId: initialMfrId || null,
           tagIds: rawTagIds,
           description: photo.description || '',
           manual_code: photo.manual_code || '',
           model_number: photo.model_number || '',
           dimensions: dims as any[],
           isHidden: !!photo.isHidden,
+          price: photo.price || '',
           dimL: dims[0]?.length?.toString() || '',
           dimW: dims[0]?.width?.toString() || '',
           dimH: dims[0]?.height?.toString() || '',
@@ -113,7 +118,7 @@ export const usePhotoManagement = (
             subcategoryId: subcategoryId,
             tagIds: tagIds,
             category: categoryName || original.category,
-            sub_category: manufacturerName || original.sub_category,
+            sub_category: subcategoryId ? (manufacturerName || original.sub_category) : '',
             tags: finalTags,
             description: description,
             manual_code: manual_code,
@@ -203,7 +208,7 @@ export const usePhotoManagement = (
                  subcategoryId: subcategoryId || p.subcategoryId,
                  tagIds: tagIds.length > 0 ? tagIds : p.tagIds,
                  category: categoryName || p.category,
-                 sub_category: manufacturerName || p.sub_category,
+                 sub_category: subcategoryId ? (manufacturerName || p.sub_category) : p.sub_category,
                  tags: finalTags.length > 0 ? finalTags : p.tags,
                  description: description || p.description,
                  manual_code: manual_code || p.manual_code,

@@ -12,6 +12,7 @@ export default function PublicView() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [dbCategories, setDbCategories] = useState<DB_Category[]>([]);
   const [publicTags, setPublicTags] = useState<Tag[]>([]);
+  const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -41,6 +42,9 @@ export default function PublicView() {
         if (cloudSettings.tags) {
           setPublicTags(cloudSettings.tags);
         }
+        if (cloudSettings.manufacturers) {
+          setPublicManufacturers(cloudSettings.manufacturers);
+        }
       }
     } catch (e) {
       console.error(e);
@@ -66,6 +70,7 @@ export default function PublicView() {
           photos={publicPhotos} 
           categories={categories}
           tags={publicTags}
+          manufacturers={publicManufacturers}
           dbCategories={dbCategories}
           onExit={() => navigate('/admin')}
           showExit={false}

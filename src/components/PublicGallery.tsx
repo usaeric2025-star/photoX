@@ -10,6 +10,7 @@ interface PublicGalleryProps {
   photos: Photo[];
   categories: Category[];
   tags: Tag[];
+  manufacturers?: any[];
   dbCategories: DB_Category[];
   onExit?: () => void;
   showExit?: boolean;
@@ -49,7 +50,7 @@ interface PublicGalleryProps {
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
-  photos, categories, tags, dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, 
+  photos, categories, tags, manufacturers = [], dbCategories, onExit, showExit, onLogin, loginWithGoogle, user, 
   internalPassword, settings, isRefreshing, onRefresh,
   isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onGroupClick, onOpenSettings, onAddPhoto,
   selectedIds = [], onToggleSelection, onClearSelection,
@@ -955,15 +956,24 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 })()}
 
                 {/* 4. 厂商 (Manufacturer) (Only if staff/admin/showExit) */}
-                {(isAdminMode || isStaffMode || showExit) && displayPhotos[lightboxIndex].sub_category && (
-                  <div>
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer}</h3>
-                    <span className="bg-orange-50 text-orange-600 px-3 py-1 border border-orange-200 rounded-full text-sm font-bold inline-block shadow-sm">
-                      <Key size={12} className="inline-block mr-1.5 -translate-y-[1px]" />
-                      {displayPhotos[lightboxIndex].sub_category}
-                    </span>
-                  </div>
-                )}
+                {(isAdminMode || isStaffMode || showExit) && (() => {
+                  const photo = displayPhotos[lightboxIndex];
+                  const mfrId = photo.subcategoryId;
+                  const mfr = manufacturers.find(m => m.id === mfrId);
+                  const mfrName = mfr ? mfr.name : (photo.sub_category && photo.sub_category !== photo.category ? photo.sub_category : null);
+                  
+                  if (!mfrName) return null;
+
+                  return (
+                    <div>
+                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer}</h3>
+                      <span className="bg-orange-50 text-orange-600 px-3 py-1 border border-orange-200 rounded-full text-sm font-bold inline-block shadow-sm">
+                        <Key size={12} className="inline-block mr-1.5 -translate-y-[1px]" />
+                        {mfrName}
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 {/* 5. 标签 (Tags) */}
                 {(() => {
