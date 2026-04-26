@@ -249,11 +249,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const startLongPress = (photoId: string) => {
     if (!isAdminMode) return;
+    console.log("Long press attempt started for:", photoId);
     const timer = setTimeout(() => {
+      console.log("Long press triggered for:", photoId);
       if (onEditPhoto) onEditPhoto(photoId);
       if ('vibrate' in navigator) navigator.vibrate(50);
       setLongPressTimer(null);
-    }, 600) as unknown as NodeJS.Timeout;
+    }, 400) as unknown as NodeJS.Timeout;
     setLongPressTimer(timer);
   };
 

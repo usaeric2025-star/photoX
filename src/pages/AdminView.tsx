@@ -151,6 +151,33 @@ export default function AdminView() {
     }
   }, [settings]);
 
+  const reconciled = useRef(false);
+  useEffect(() => {
+    if (reconciled.current) return;
+    if (photos.length > 0) {
+        import('../lib/reconcileData').then(({ reconcileData }) => {
+            const { 
+              reconciledCategories, 
+              reconciledTags, 
+              reconciledManufacturers, 
+              hasChanged 
+            } = reconcileData(photos, dbCategories, tags, manufacturers);
+            
+            if (hasChanged) {
+                console.log("Reconciling data consistency...");
+                saveSettingsCloud({ 
+                    ...settings, 
+                    categories: reconciledCategories,
+                    tags: reconciledTags,
+                    manufacturers: reconciledManufacturers
+                });
+                reconciled.current = true;
+            }
+        });
+    }
+  }, [photos, dbCategories, tags, manufacturers, settings]);
+
+
   const { 
     // categories, setCategories,
     // tags, setTags,
