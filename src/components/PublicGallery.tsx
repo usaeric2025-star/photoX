@@ -290,7 +290,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
       {lightboxIndex === null && !hideHeader && (
-        <header className="shrink-0 z-50 bg-[#FDFAF6] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
+        <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0" onClick={handleHeaderClick}>
             {settings?.logo_url ? (
               <img src={settings.logo_url} alt="Logo" className="h-12 sm:h-14 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm cursor-pointer" />
@@ -379,7 +379,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       )}
 
       {/* Filter & Search */}
-      <div className="shrink-0 p-4 z-40 bg-[#FDFAF6] space-y-4">
+      <div className="shrink-0 p-3 z-40 bg-[#FDFAF6] space-y-2">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <input 
@@ -387,7 +387,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-3 pl-11 pr-4 text-sm text-[#1D3557] placeholder-[#1D3557]/30 focus:outline-none focus:bg-white transition-all shadow-inner"
+              className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-2.5 pl-11 pr-4 text-sm text-[#1D3557] placeholder-[#1D3557]/30 focus:outline-none focus:bg-white transition-all shadow-inner"
             />
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1D3557]/30" />
           </div>
@@ -444,7 +444,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               ))}
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           <AnimatePresence>
             {selectedCatCode && (
                 <motion.div 
@@ -490,7 +490,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       </div>
 
       {/* Grid - Scrollable area */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-6 pb-40 bg-[#FDFAF6]">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-2 pb-40 bg-[#FDFAF6]">
         {displayPhotos.length === 0 ? (                
           <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
@@ -587,17 +587,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   }
                   
                   return (
-                    <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent translate-y-1 group-hover:translate-y-0 transition-transform">
-                      {catName && !isUncategorized && (
-                        <p className="text-white text-[9px] font-bold truncate uppercase tracking-wider">
-                          {catName}
+                    <div className="absolute bottom-0 left-0 w-full p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
+                      {!isUncategorized && catName && (
+                        <p className="text-[10px] font-black tracking-tighter leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                          {catName.toUpperCase()}
                         </p>
                       )}
                       
                       {photoTags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {photoTags.filter(t => typeof t === 'string' && t.trim() !== '').map((tagName, idx) => (
-                            <span key={idx} className="bg-slate-900/60 text-white text-[7px] px-1 rounded uppercase tracking-wider font-bold whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1 mt-0.5 overflow-hidden max-h-4">
+                          {photoTags.slice(0, 2).filter(t => typeof t === 'string' && t.trim() !== '').map((tagName, idx) => (
+                            <span key={idx} className="bg-slate-900/30 backdrop-blur-sm text-white text-[6px] px-1 py-0.5 rounded-sm uppercase tracking-widest font-extrabold whitespace-nowrap border border-white/10">
                               {tagName}
                             </span>
                           ))}
