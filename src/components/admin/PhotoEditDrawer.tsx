@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff, Search } from 'lucide-react';
+import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff, Search, Sparkles } from 'lucide-react';
 import { Photo } from '../../types';
 
 interface Props {
@@ -49,6 +49,7 @@ interface Props {
   aiDebugInfo: { step: string; message: string; error?: string } | null;
   isAnalyzing?: boolean;
   abortAnalysis?: () => void;
+  handleSingleAiAnalyze?: (data: string, catId?: string) => Promise<void>;
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
@@ -98,13 +99,27 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
               <span className="text-[8px] font-bold uppercase tracking-widest">{props.addIsHidden ? '公开屏蔽中' : '公开显示中'}</span>
             </div>
         </div>
-        <button 
-          onClick={props.saveNewPhoto}
-          className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-2 ${props.isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
-        >
-          {props.isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14}/>}
-          保存
-        </button>
+        <div className="flex items-center gap-2">
+            {props.handleSingleAiAnalyze && (
+              <button 
+                onClick={() => {
+                  const data = props.newPhotoData || props.editPhotoPreview;
+                  if (data) props.handleSingleAiAnalyze!(data, props.addCatId || undefined);
+                }}
+                disabled={props.isAnalyzing}
+                className="p-2.5 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 shadow-sm active:scale-95 disabled:opacity-50"
+              >
+                {props.isAnalyzing ? <RefreshCcw size={18} className="animate-spin" /> : <Sparkles size={18} />}
+              </button>
+            )}
+            <button 
+              onClick={props.saveNewPhoto}
+              className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-2 ${props.isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              {props.isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14}/>}
+              保存
+            </button>
+        </div>
       </div>
 
        <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
@@ -140,9 +155,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 <button 
                 key={cat.code}
                 onClick={() => { props.setAddCatId(cat.code); }}
-                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${props.addCatId === cat.code ? 'bg-white border-blue-600 text-blue-600 shadow-xl shadow-blue-600/5' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
+                className={`p-4 rounded-3xl border-4 text-left transition-all active:scale-[0.98] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-600 text-blue-700 shadow-xl shadow-blue-600/10 scale-[1.02]' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
                 >
-                <span className="font-bold block text-sm tracking-tight">{cat[props.appLang] || cat.zh}</span>
+                <span className={`font-black block text-sm tracking-tight ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
                 <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono">{cat.en}</span>
                 </button>
             ))}
@@ -210,9 +225,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
              </button>
              
              {props.showOtherFields && (
-               <div className="space-y-3 pt-2">
+                <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between pl-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">产品尺寸 (长 x 宽 x 高) cm</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">产品尺寸 / DIMENSIONS (长 x 宽 x 高) cm</span>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="space-y-1">

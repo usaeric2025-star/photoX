@@ -472,6 +472,34 @@ export default function AdminView() {
               quickAddSubCategory={quickAddSubCategory} quickAddTag={quickAddTag} quickAddManufacturer={quickAddManufacturer} tags={tags}
               newPhotoData={newPhotoData} manufacturers={manufacturers}
               aiDebugInfo={aiDebugInfo}
+              isAnalyzing={isAnalyzing}
+              handleSingleAiAnalyze={async (data, catId) => {
+                const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
+                if (result) {
+                  if (result.name && !addName) setAddName(result.name);
+                  
+                  // Correct category matching
+                  if (result.categoryId && !catId && !addCatId) {
+                    setAddCatId(result.categoryId);
+                  } else if (result.newCategoryName && !catId && !addCatId) {
+                    const foundCat = dbCategories.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName);
+                    if (foundCat) setAddCatId(foundCat.code);
+                  }
+
+                  if (result.tagIds) {
+                    const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
+                    setAddTagIds(rawTagIds);
+                  }
+                  if (result.dimensions) {
+                    if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
+                    if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
+                    if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
+                  }
+                  if (result.modelNumber && !addModelNumber) {
+                    setAddModelNumber(result.modelNumber);
+                  }
+                }
+              }}
               onDelete={(id) => {
                 setConfirmDialog({
                   message: t.confirmDeleteSingle,
@@ -647,10 +675,15 @@ export default function AdminView() {
             const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
             if (result) {
               if (result.name && !addName) setAddName(result.name);
-              if (result.newCategoryName && !catId && !addCatId) {
-                const foundCat = categories.find(c => c.name === result.newCategoryName);
-                if (foundCat) setAddCatId(foundCat.id);
+              
+              // Correct category matching
+              if (result.categoryId && !catId && !addCatId) {
+                setAddCatId(result.categoryId);
+              } else if (result.newCategoryName && !catId && !addCatId) {
+                const foundCat = dbCategories.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName);
+                if (foundCat) setAddCatId(foundCat.code);
               }
+
               if (result.tagIds) {
                 const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
                 setAddTagIds(rawTagIds);
@@ -660,6 +693,7 @@ export default function AdminView() {
                 if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
                 if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
               }
+              // Explicitly sync model number from AI
               if (result.modelNumber && !addModelNumber) {
                 setAddModelNumber(result.modelNumber);
               }

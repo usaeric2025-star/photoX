@@ -36,7 +36,8 @@ export const usePhotoManagement = (
       const photo = photos.find(p => p.id === editPhotoId);
       if (photo) {
         setAddName(photo.name || '');
-        setAddCatId(photo.categoryId || null);
+        const initialCatId = photo.categoryId || (photo.category ? dbCategories.find(c => c.zh === photo.category || c.en === photo.category || c.code === photo.category)?.code : null);
+        setAddCatId(initialCatId || null);
         setAddSubId(photo.subcategoryId || null);
         const rawTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
         setAddTagIds(rawTagIds);

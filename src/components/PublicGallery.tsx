@@ -578,9 +578,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
                   const isUncategorized = catName === t.uncategorized || uncatValues.includes(catName.toLowerCase());
                   
-                  const photoTags = photo.tagIds && photo.tagIds.length > 0
-                    ? tags.filter(t => photo.tagIds!.includes(t.id)).map(t => t.name)
-                    : (photo.tags || []);
+                  let photoTags = [];
+                  if (photo.tagIds && photo.tagIds.length > 0 && tags.length > 0) {
+                    photoTags = tags.filter(t => photo.tagIds!.includes(t.id)).map(t => t.name);
+                  }
+                  if (photoTags.length === 0 && photo.tags && photo.tags.length > 0) {
+                    photoTags = photo.tags || [];
+                  }
                   
                   return (
                     <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent translate-y-1 group-hover:translate-y-0 transition-transform">
@@ -592,8 +596,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       
                       {photoTags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {photoTags.map((tagName, idx) => (
-                            <span key={idx} className="bg-white/20 text-white text-[7px] px-1 rounded uppercase tracking-wider font-bold whitespace-nowrap">
+                          {photoTags.filter(t => typeof t === 'string' && t.trim() !== '').map((tagName, idx) => (
+                            <span key={idx} className="bg-slate-900/60 text-white text-[7px] px-1 rounded uppercase tracking-wider font-bold whitespace-nowrap">
                               {tagName}
                             </span>
                           ))}
