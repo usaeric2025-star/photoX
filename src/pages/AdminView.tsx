@@ -419,8 +419,13 @@ export default function AdminView() {
       title: '自定义标签',
       placeholder: '输入新标签名称',
       onSubmit: async (val: string) => {
+        const trimmedName = val.trim();
+        if (tags.some(t => t.name.toLowerCase() === trimmedName.toLowerCase())) {
+          setAlertDialog({ title: '提示', message: '标签已存在' });
+          return;
+        }
         const newTagId = crypto.randomUUID();
-        const nextTags = [...tags, { id: newTagId, name: val.trim(), aliases: [] }];
+        const nextTags = [...tags, { id: newTagId, name: trimmedName, aliases: [] }];
         setTags(nextTags);
         updateForm({ tagIds: [...formState.tagIds, newTagId] });
         await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });

@@ -65,7 +65,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     setLongPressTimer(setTimeout(() => {
         setIsLongPress(true);
         setManagingTag(tag);
-    }, 1200));
+    }, 600));
   };
 
   const handlePointerUp = () => {
@@ -146,7 +146,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
                 <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
              </div>
-             <div className="grid grid-cols-3 gap-2">
+             <div className="space-y-3">
                 <div className="space-y-1">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Code</h3>
                   <input type="text" placeholder="编号..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm" />
