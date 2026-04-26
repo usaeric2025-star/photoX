@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
-import { loginWithGoogle, saveSettingsCloud } from '../services/supabaseService';
+import { loginWithGoogle, saveSettings, savePhotoToCloud } from '../services/supabaseService';
+import { Tag } from '../types';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Modals } from '../components/admin/Modals';
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
@@ -26,7 +27,16 @@ export default function AdminView() {
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] || translations['en'];
   const { user, authChecked, logout } = useAuth();
-  const { photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories, manufacturers, setManufacturers, displayPhotos, gridPhotos } = useGalleryContext();
+  const { photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories, manufacturers, setManufacturers, displayPhotos, gridPhotos, visibleCount, setVisibleCount } = useGalleryContext();
+  
+  const [isMultiSelect, setIsMultiSelect] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const cancelBatchAiRef = useRef(false);
+  
+  // Need setters to be defined or from context
+  const [publicCategories, setPublicCategories] = useState<any[]>([]);
+  const [publicTags, setPublicTags] = useState<any[]>([]);
+  const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
   const navigate = useNavigate();
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -58,6 +68,16 @@ export default function AdminView() {
   const handleManageClick = () => setActiveScreen('manage');
 
   const { updateTag, deleteTag } = useAdminCategory();
+  
+  const handleDeletePhoto = async (id: string) => {
+    await deletePhoto(id);
+    setEditPhotoId(null);
+  };
+  
+  const handleDeleteTag = async (tag: Tag) => {
+      await deleteTag(tag.id, photos, setPhotos);
+  };
+
   const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
 
