@@ -100,35 +100,26 @@ export const analyzeProductPhoto = async (
   const promptText = `
   你是一位家具專業分析師。請分析照片中的家具，並嚴格按照以下規則提取資訊：
 
-  【核心規則 - 必須遵守】
-  1. 輸出格式：必須僅回傳一個合法、可解析的 JSON 物件。禁止包含任何 Markdown 語法（如 \`\`\`json）、禁止包含換行符號在字串中、禁止包含額外解釋。
-  2. 類別 (CategoryId)：
-     - 若系統已提供預設類別 (targetCategoryId is ${targetCategoryId || 'null'})，請優先符合該類別。
-     - 若未提供，請從以下代碼清單中選擇一個代碼 (code)。禁止創造新代碼。
-     - 分類代碼清單: ${JSON.stringify(categoriesJson)}
-  3. 廠商 (Manufacturer)：禁止識別或修改廠商。回傳的 subcategoryId 必須為 null。
-  4. 產品名稱 (Name)：請根據照片識別家具。若原名稱 "${originalName || '無'}" 無意義（如純數字或 "未命名"），請提供一個專業的英文名稱（如 "Modern Velvet Sofa"）；否則保留原名稱。
+  【優先級 1：圖片文字識別】
+  - 請仔細觀察照片中是否有任何標籤、吊牌、包裝盒上的文字。
+  - **如果識別到產品名稱、系列名或品牌名，請直接填入 "name" 欄位。**
+  - **識別標價牌或標籤上的手寫/列印代號，填入 "manualCode"。**
+  - **識別規格標籤上的產品型號 (Model No/SKU)，填入 "modelNumber"。**
+  - **識別尺寸信息 (H/W/L)，填入 "dimensions"。**
 
-  【資訊提取優先權】
-  5. 型號 (Model Number)：請仔細識別照片中（如標籤、包裝）上的製造商型號、SKU 或系列號。
-  6. 手動編號 (Manual Code)：識別照片中手寫或標價牌上的代號。
-  7. 尺寸 (Dimensions)：識別照片中提及的長、寬、高（單位預設為 cm）。
-  8. 標籤 (Tags)：提供 1 到 2 個最貼切的英文標籤，例如 "Sofa", "Luxury", "Minimalist"。請僅回傳標籤名稱。
+  【優先級 2：外觀特徵分析】
+  - 如果圖中沒有明確名稱，請根據家具的樣式、材質、顏色給出一個專業的英文名稱。例如 "Modern Grey Marble Coffee Table" 而非簡單的 "Table"。
+  - 若原名稱 "${originalName || '無'}" 就是專業名稱且與照片符合，請保留。但若原名稱為純數字、"未命名" 或空值，則必須更新為專業名稱。
+
+  【核心規則 - 禁止事項】
+  - **廠商 (subcategoryId)：禁止識別或修改。回傳值必須為 null。**
+  - **分類 (categoryId)：必須從清單中選擇代碼。**
+  - **輸出格式：僅回傳 JSON。禁止 Markdown、禁止換行、禁止在字串內使用未轉義的引號。**
+
+  分類代碼清單: ${JSON.stringify(categoriesJson)}
 
   【JSON 範例格式】
-  {
-    "name": "Product Name",
-    "categoryId": "category_code",
-    "subcategoryId": null,
-    "tagIds": [],
-    "newTagName": "tag1, tag2",
-    "newCategoryName": null,
-    "newSubCategoryName": null,
-    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" },
-    "manualCode": "ABC-123",
-    "modelNumber": "SKU-999",
-    "note": "Short description"
-  }
+  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTagName":"tag1, tag2","newCategoryName":null,"newSubCategoryName":null,"dimensions":{"length":0,"width":0,"height":0,"unit":"cm"},"manualCode":null,"modelNumber":null,"note":null}
   `;
 
   try {
@@ -209,7 +200,7 @@ export const analyzeProductPhoto = async (
     
     const jsonStr = textOutput.substring(startIndex, endIndex + 1);
     
-    // Improved sanitize: remove control characters and handle potential trailing commas or minor syntax errors
+    // Improved sanitize: remove control characters and attempt to fix common unescaped quotes within values
     const saferJson = jsonStr
       .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // Replace control characters with space
       .replace(/,\s*([}\]])/g, "$1") // Remove trailing commas
@@ -219,8 +210,18 @@ export const analyzeProductPhoto = async (
     try {
       parsedData = JSON.parse(saferJson);
     } catch (parseErr) {
-      console.error("Initial JSON parse failed. URL:", fetchUrl, "Raw:", textOutput);
-      throw parseErr;
+      // Emergency cleanup for common value-side syntax errors (like unescaped quotes)
+      try {
+        const heuristicFixed = saferJson.replace(/":\s*"(.*?)"(\s*[},])/g, (match, p1, p2) => {
+          // If the internal string p1 has unescaped double quotes, it's invalid.
+          // This is a dangerous regex but helps with simple nested quotes like "Product "Name""
+          return `": "${p1.replace(/"/g, '\\"')}"${p2}`;
+        });
+        parsedData = JSON.parse(heuristicFixed);
+      } catch (e) {
+        console.error("Initial JSON parse failed. URL:", fetchUrl, "Raw:", textOutput);
+        throw parseErr;
+      }
     }
     
     // Normalize tagIds to always be an array of strings

@@ -55,22 +55,9 @@ interface Props {
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
 
-  const tagCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    props.photos.forEach(p => {
-      const ids = Array.isArray(p.tagIds) ? p.tagIds : [];
-      ids.forEach(id => {
-        counts[id] = (counts[id] || 0) + 1;
-      });
-    });
-    return counts;
-  }, [props.photos]);
-
   const sortedTags = useMemo(() => {
-    return [...props.tags].sort((a,b) => {
-      return (tagCounts[b.id] || 0) - (tagCounts[a.id] || 0);
-    });
-  }, [props.tags, tagCounts]);
+    return [...props.tags];
+  }, [props.tags]);
   
   const handleMouseDown = (tag: any) => {
     setLongPressTimer(setTimeout(() => {
@@ -172,24 +159,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
             <div className="grid grid-cols-4 gap-1.5">
-                {props.dbCategories.slice(0, 4).map(cat => (
+                {props.dbCategories.map(cat => (
                   <button 
                     key={cat.code}
                     onClick={() => { props.setAddCatId(cat.code); }}
-                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-500 shadow-md shadow-blue-500/10' : 'bg-white border-slate-100'}`}
+                    className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-md shadow-blue-600/10' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-[10px] leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
-                    <span className={`text-[6px] uppercase tracking-tighter mt-0.5 font-bold ${props.addCatId === cat.code ? 'text-blue-400' : 'text-slate-300'}`}>{cat.en}</span>
-                  </button>
-                ))}
-                {props.dbCategories.slice(4, 7).map(cat => (
-                  <button 
-                    key={cat.code}
-                    onClick={() => { props.setAddCatId(cat.code); }}
-                    className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl border transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-500 shadow-md shadow-blue-500/10' : 'bg-white border-slate-100'}`}
-                  >
-                    <span className={`font-black text-[10px] leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
-                    <span className={`text-[6px] uppercase tracking-tighter mt-0.5 font-bold ${props.addCatId === cat.code ? 'text-blue-400' : 'text-slate-300'}`}>{cat.en}</span>
+                    <span className={`font-black text-sm leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
                   </button>
                 ))}
             </div>
