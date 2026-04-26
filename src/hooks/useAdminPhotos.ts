@@ -410,7 +410,7 @@ export const useAdminPhotos = (
         processed++;
         setImportProgress(processed);
         try {
-          // 1. Calculate MD5 from file directly as requested
+          // 1. Hash Calculation
           const hash = await (async () => {
              try {
                return await calculateMD5FromFile(file);
@@ -427,8 +427,15 @@ export const useAdminPhotos = (
             continue;
           }
 
-          // Note: Cloud duplicate check removed from import stage to improve performance and prevent rate limiting.
-          // It will be handled during the syncPush stage instead.
+          if (user) {
+             const dupInCloud = await checkImageHashExists(hash);
+             if (dupInCloud) {
+                duplicateCount++;
+                continue;
+             }
+          }
+          
+          sessionHashes.add(hash);
 
           // 4. Processing
           const rawUri = await new Promise<string>((resolve, reject) => {
@@ -441,7 +448,6 @@ export const useAdminPhotos = (
           if (!rawUri) continue;
           
           const compressedUri = await compressImage(rawUri, 1200, 0.8);
-          sessionHashes.add(hash);
 
           // 5. Use crypto.randomUUID() for both photo ID and naming storage
           const photoId = crypto.randomUUID();

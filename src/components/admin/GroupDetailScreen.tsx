@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, Share2, Edit3, Minimize2, Settings2, ChevronRight, X, Plus } from 'lucide-react';
+import { ChevronLeft, Share2, Edit3, Minimize2, Settings2, ChevronRight, X, Plus, Pencil } from 'lucide-react';
 import { Photo, Category, Tag, DB_Category } from '../../types';
 import { savePhotoToCloud } from '../../services/supabaseService';
 
@@ -25,6 +25,7 @@ interface GroupDetailScreenProps {
   handleUngroup: (groupId: string) => void;
   onAddPhotoToGroup: () => void;
   manufacturers: any[];
+  onBatchEdit?: (ids: string[]) => void;
 }
 
 export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
@@ -47,7 +48,8 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   tags,
   handleUngroup,
   onAddPhotoToGroup,
-  manufacturers
+  manufacturers,
+  onBatchEdit
 }) => {
   const [isUnifiedEditing, setIsUnifiedEditing] = useState(false);
 
@@ -84,6 +86,15 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Group {activeGroupId}</p>
         </div>
         <div className="flex items-center gap-2">
+          {viewMode === 'private' && (
+            <button 
+              onClick={() => onBatchEdit?.(groupPhotos.map(p => p.id))}
+              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+              title="統一編輯"
+            >
+              <Pencil size={20} />
+            </button>
+          )}
           <button 
             onClick={async () => {
               const files = await Promise.all(groupPhotos.map(async (p, i) => {

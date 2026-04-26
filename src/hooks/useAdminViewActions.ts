@@ -63,7 +63,7 @@ export const useAdminViewActions = (
         console.log('Form State Name:', formState.name);
         
         const updates: Partial<any> = {};
-        if (result.name && (formState.name === '未命名产品' || formState.name === 'Furniture' || !formState.name)) {
+        if (result.name && (!formState.name || formState.name === '未命名产品' || formState.name === 'Furniture' || /^(img|image|photo)[\s_-]?\d+/i.test(formState.name) || /\.(jpg|jpeg|png|heic|webp)$/i.test(formState.name))) {
           console.log('Setting name to:', result.name);
           updates.name = result.name;
         }

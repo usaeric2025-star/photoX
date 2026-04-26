@@ -256,6 +256,7 @@ export default function AdminView() {
           setConfirmDialog={setConfirmDialog}
           user={user}
           onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
+          onBatchEdit={(ids) => { setBatchEditIds(ids); setActiveGroupId(null); }}
           dbCategories={dbCategories}
           manufacturers={manufacturers}
           appLang={appLang}

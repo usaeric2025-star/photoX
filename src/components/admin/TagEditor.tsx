@@ -15,19 +15,54 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const hasLongPressed = useRef<boolean>(false);
 
-  const startPress = (tag: any) => {
+  const activeTouchId = useRef<number | null>(null);
+  const touchStartPoint = useRef<{x: number, y: number} | null>(null);
+
+  const startPress = (tag: any, e?: React.TouchEvent | React.MouseEvent) => {
     hasLongPressed.current = false;
+    
+    if (e && 'touches' in e) {
+      activeTouchId.current = e.touches[0].identifier;
+      touchStartPoint.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    } else {
+      activeTouchId.current = null;
+      touchStartPoint.current = null;
+    }
+
     pressTimer.current = setTimeout(() => {
       hasLongPressed.current = true;
       setActiveActionTag(tag);
-    }, 400); // reduced from 500
+    }, 350);
   };
 
-  const endPress = () => {
+  const clearTimer = () => {
     if (pressTimer.current) {
       clearTimeout(pressTimer.current);
       pressTimer.current = null;
     }
+  };
+
+  const cancelPress = () => {
+    clearTimer();
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPoint.current) return;
+    const touchList = Array.from(e.changedTouches) as React.Touch[];
+    const touch = touchList.find(t => t.identifier === activeTouchId.current);
+    if (!touch) return;
+    
+    const dx = touch.clientX - touchStartPoint.current.x;
+    const dy = touch.clientY - touchStartPoint.current.y;
+    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
+      cancelPress();
+    }
+  };
+
+  const endPress = () => {
+    clearTimer();
+    activeTouchId.current = null;
+    touchStartPoint.current = null;
   };
 
   return (
@@ -40,26 +75,31 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
         {tags.map(tag => {
           const isSelected = selectedTagIds.includes(tag.id);
           return (
-            <div 
-              key={tag.id} 
-              className="relative"
-              onMouseDown={() => startPress(tag)}
-              onMouseUp={endPress}
-              onMouseLeave={endPress}
-              onTouchStart={() => startPress(tag)}
-              onTouchEnd={endPress}
-              onTouchMove={endPress} /* cancel if sliding */
-              onTouchCancel={endPress}
-            >
+            <div key={tag.id} className="relative">
               <button 
                 type="button"
+                style={{ 
+                  WebkitTouchCallout: 'none', 
+                  WebkitUserSelect: 'none', 
+                  userSelect: 'none',
+                  touchAction: 'manipulation' // Prevents double-tap zoom delay
+                }}
+                onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onMouseDown={(e) => startPress(tag, e)}
+                onMouseUp={endPress}
+                onMouseLeave={cancelPress}
+                onTouchStart={(e) => startPress(tag, e)}
+                onTouchEnd={endPress}
+                onTouchMove={handleTouchMove}
+                onTouchCancel={cancelPress}
                 onClick={(e) => { 
                   e.stopPropagation(); 
+                  e.preventDefault();
                   if (!hasLongPressed.current) {
                     onToggleTag(tag); 
                   }
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${isSelected ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-800 border-transparent hover:bg-slate-200'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer select-none ${isSelected ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-800 border-transparent hover:bg-slate-200'}`}
               >
                 #{tag.name}
               </button>
