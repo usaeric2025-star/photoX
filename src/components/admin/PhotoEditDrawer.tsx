@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff, Search } from 'lucide-react';
 import { Photo } from '../../types';
 
 interface Props {
@@ -161,16 +161,29 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </section>
 
           <section className="space-y-4">
-             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
+            <div className="flex items-center justify-between pl-1">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
+              <div className="flex gap-1.5">
+                <button onClick={() => {
+                  const query = prompt("请输入标签关键词搜索:");
+                  // Implementation of search (filtering) would require more state or local filtering here.
+                  // For now, I will just log it.
+                  console.log("Searching tag:", query);
+                }} className="p-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100"><Search size={14} /></button>
+                <button onClick={props.quickAddTag} className="px-3 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 flex items-center gap-1">+ 新增</button>
+              </div>
+            </div>
              <div className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-2 h-24 items-center">
                 {[...props.tags].sort((a,b) => props.photos.filter(p => p.tagIds?.includes(b.id)).length - props.photos.filter(p => p.tagIds?.includes(a.id)).length).map(tag => (
                   <button 
                     key={tag.id}
-                    onMouseDown={() => handleMouseDown(tag)}
-                    onMouseUp={handleMouseUp}
-                    onTouchStart={() => handleMouseDown(tag)}
-                    onTouchEnd={handleMouseUp}
-                    onClick={() => props.setAddTagIds(props.addTagIds.includes(tag.id) ? props.addTagIds.filter(id => id !== tag.id) : [...props.addTagIds, tag.id])}
+                    onClick={() => {
+                        if (props.addTagIds.includes(tag.id)) {
+                            props.setAddTagIds(props.addTagIds.filter(id => id !== tag.id));
+                        } else if (props.addTagIds.length < 2) {
+                            props.setAddTagIds([...props.addTagIds, tag.id]);
+                        }
+                    }}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${props.addTagIds.includes(tag.id) ? 'bg-slate-800 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}
                   >
                     #{tag.name}

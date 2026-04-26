@@ -870,7 +870,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.tags}</h3>
                       </div>
-                      <div className="grid grid-flow-col grid-rows-2 gap-1.5 overflow-x-auto pb-2 h-14 items-center">
+                      <div className="flex flex-wrap gap-1.5">
                         {displayTags.map((tagName, idx) => (
                           <span key={idx} className="bg-slate-800 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm whitespace-nowrap">
                             {tagName}

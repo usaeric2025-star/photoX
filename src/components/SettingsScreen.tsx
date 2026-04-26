@@ -3,7 +3,7 @@ import {
   ChevronLeft, X, Cloud, LogOut, RefreshCcw, 
   Trash2, Download, Upload, MessageCircle, 
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
-  User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle
+  User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle, Save
 } from 'lucide-react';
 import { SubCategory, Tag, DB_Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -170,6 +170,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <ChevronLeft size={24} />
         </button>
         <h2 className="font-black text-xs text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">设置与管理</h2>
+        <button 
+           onClick={() => saveSettings(settings)}
+           className="px-3 py-1 bg-[#1D3557] hover:bg-[#1D3557]/90 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-1.5"
+        >
+            <Save size={12} />
+            保存
+        </button>
         <Settings2 size={20} className="text-[#1D3557]/20" />
       </div>
 

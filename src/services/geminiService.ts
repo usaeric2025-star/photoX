@@ -103,14 +103,18 @@ export const analyzeProductPhoto = async (
 
   強制性要求：
   1. 分類 (CategoryId)：從現有分類中選擇最合適的 code。必須選，不可為 null。
-  2. 產品名稱 (Name)：請識別照片中的家具並提供一個清晰、描述性的英文名稱。若照片中的家具沒有明顯可識別的名稱，或者現有名稱不適當（如純數字），請根據家具類型的外觀重新生成一個描述性英文名稱。
+  2. 產品名稱 (Name)：請識別照片中的家具並提供一個清晰、描述性的英文名稱。目前產品名稱為: "${originalName || '無'}"。請根據家具外觀，若原名稱不貼切（如純數字或過於簡略），請提供一個更好的描述性英文名稱，否則保留原名稱。
+  3. 廠商 (Manufacturer)：禁止修改廠商資訊。請保持原樣。
 
   可選資訊：
-  3. 標籤 (Tags)：提供 1 到 2 個最貼切的標籤。名稱僅限英文單字。若現有標籤不足，建議新標籤。
-  4. 尺寸 (Dimensions)：若明顯，請填寫，否則 null。
+  4. 標籤 (Tags)：提供 1 到 2 個最貼切的標籤。名稱僅限英文單字，禁止使用中文。若現有標籤不足，建議新標籤。
+  5. 尺寸 (Dimensions)：若明顯，請填寫，否則 null。                
+  6. 手動編號 (Manual Code)：識別照片中的家具編號，若有請填寫，否則 null。                
+  7. 備註 (Note)：識別照片中的家具備註，若有請說明，否則 null。                
 
   現有分類：${JSON.stringify(categoriesJson)}
   現有標籤：${JSON.stringify(tagsJson)}
+  現有名稱: ${originalName || '無'}
 
   請按照以下 JSON 格式回傳，不要包含 markdown：
   {
@@ -121,7 +125,9 @@ export const analyzeProductPhoto = async (
     "newTagName": "string or null",
     "newCategoryName": "string or null",
     "newSubCategoryName": null,
-    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" }
+    "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" },
+    "manualCode": "string or null",
+    "note": "string or null"
   }
   `;
 
