@@ -15,22 +15,24 @@ import {
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 
+import { useGalleryContext } from '../context/GalleryContext';
+
 export const useAdminPhotos = (
   user: any, 
   geminiApiKey: string, 
   aiProvider: string, 
   customModel: string,
-  categories: Category[],
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>,
-  tags: Tag[],
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
-  dbCategories: DB_Category[],
-  manufacturers: any[],
-  setManufacturers: React.Dispatch<React.SetStateAction<any[]>>,
   setAlertDialog: (dialog: { title: string, message: string } | null) => void,
   setIsSyncing: (syncing: boolean) => void
 ) => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const {
+    photos, setPhotos,
+    categories, setCategories,
+    tags, setTags,
+    dbCategories,
+    manufacturers, setManufacturers
+  } = useGalleryContext();
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isBatchAnalyzing, setIsBatchAnalyzing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -396,6 +398,7 @@ export const useAdminPhotos = (
     let successCount = 0;
     let duplicateCount = 0;
     let failCount = 0;
+    const failedFiles: string[] = [];
 
     const CHUNK_SIZE = 1; // Drop to 1 to save memory on mobile mapping
     let processed = 0;
@@ -509,6 +512,7 @@ export const useAdminPhotos = (
         } catch (err: any) {
           console.error("Import processing error", err);
           failCount++;
+          failedFiles.push(file.name);
         }
       }
       
@@ -528,7 +532,7 @@ export const useAdminPhotos = (
     if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
        let msg = `成功處理了 ${successCount} 張照片。`;
        if (duplicateCount > 0) msg += `\n跳過了 ${duplicateCount} 張重複照片。`;
-       if (failCount > 0) msg += `\n有 ${failCount} 張失敗。`;
+       if (failCount > 0) msg += `\n有 ${failCount} 張失敗: ${failedFiles.join(', ')}`;
        
        setAlertDialog({ 
          title: '上傳完成', 

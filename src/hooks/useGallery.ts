@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Photo, DB_Category, Category, Tag } from '../types';
+import { sanitizePhotoTags } from '../lib/sanitizer';
 
 interface UseGalleryProps {
   photos: Photo[];
@@ -65,7 +66,10 @@ export const useGallery = ({
   };
 
   const displayPhotos = useMemo(() => {
-    let filtered = isAdminMode ? photos : photos.filter(p => !p.isHidden);
+    // Sanitization: remove missing tags
+    const sanitized = photos.map(p => sanitizePhotoTags(p, tags));
+    
+    let filtered = isAdminMode ? sanitized : sanitized.filter(p => !p.isHidden);
     
     if (selectedCatCode) {
       const activeCat = dbCategories.find(c => c.code === selectedCatCode);
@@ -86,7 +90,8 @@ export const useGallery = ({
         const pTags = Array.isArray(p.tags) ? p.tags : [];
         const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
         return selectedTagIds.every(tid => {
-          const tagName = tags.find(t => t.id === tid)?.name;
+          const tagDef = tags.find(t => t.id === tid);
+          const tagName = tagDef?.name;
           return pTagIds.includes(tid) || (tagName && pTags.includes(tagName));
         });
       });

@@ -1,35 +1,45 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, X, LayoutGrid, Grid3X3, Layers, ArrowDown, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useGalleryContext } from '../../context/GalleryContext';
 
 interface Props {
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
   displayMode: 'grid' | 'list';
   setDisplayMode: (m: 'grid' | 'list') => void;
   showGroupsCollapsed: boolean;
   setShowGroupsCollapsed: (s: boolean) => void;
-  filterCatId: string | null;
-  setFilterCatId: (id: string | null) => void;
-  filterSubId: string | null;
-  setFilterSubId: (id: string | null) => void;
-  filterTagIds: string[];
-  setFilterTagIds: React.Dispatch<React.SetStateAction<string[]>>;
-  sortOrder: 'asc' | 'desc';
-  setSortOrder: (o: 'asc' | 'desc') => void;
-  dbCategories: any[];
-  categories: any[];
-  tags: any[];
   appLang: string;
 }
 
 export const SearchAndFilter: React.FC<Props> = ({ 
-    searchQuery, setSearchQuery, displayMode, setDisplayMode, 
-    showGroupsCollapsed, setShowGroupsCollapsed, filterCatId, setFilterCatId, 
-    filterSubId, setFilterSubId, filterTagIds, setFilterTagIds, 
+    displayMode, setDisplayMode, 
+    showGroupsCollapsed, setShowGroupsCollapsed,
+    appLang 
+}) => {
+  const {
+    searchQuery, setSearchQuery,
+    filterCatId, setFilterCatId,
+    filterSubId, setFilterSubId,
+    filterTagIds, setFilterTagIds,
     sortOrder, setSortOrder,
-    dbCategories, categories, tags, appLang 
-}) => (
+    categories,
+    tags,
+    dbCategories
+  } = useGalleryContext();
+
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+
+  // Sync local search when context search changes (e.g. cleared elsewhere)
+  useEffect(() => {
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
+
+  const handleSearchChange = (val: string) => {
+    setLocalSearch(val);
+    setSearchQuery(val); // Context handles the debounce internaly now
+  };
+
+  return (
     <div className="bg-[#FDFAF6] border-b border-[#1D3557]/5 px-6 py-4 space-y-3 shadow-sm">
       <div className="flex items-center gap-2">
         <div className="relative flex-1 group">
@@ -38,11 +48,11 @@ export const SearchAndFilter: React.FC<Props> = ({
             type="text" 
             placeholder="搜索产品..."
             className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-2.5 pl-10 pr-4 text-xs focus:bg-white transition-all outline-none text-[#1D3557] placeholder-[#1D3557]/30 shadow-inner"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={localSearch}
+            onChange={(e) => handleSearchChange(e.target.value)}
           />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1D3557]/30 hover:text-[#1D3557]/60 p-1">
+          {localSearch && (
+            <button onClick={() => handleSearchChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1D3557]/30 hover:text-[#1D3557]/60 p-1">
               <X size={14} />
             </button>
           )}
@@ -132,7 +142,7 @@ export const SearchAndFilter: React.FC<Props> = ({
               {tags.map(tag => (
                 <button 
                   key={tag.id}
-                  onClick={() => setFilterTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
+                  onClick={() => setFilterTagIds(filterTagIds.includes(tag.id) ? filterTagIds.filter(t => t !== tag.id) : [...filterTagIds, tag.id])}
                   className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${filterTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/40 hover:bg-white'}`}
                 >
                   #{tag.name}
@@ -143,4 +153,5 @@ export const SearchAndFilter: React.FC<Props> = ({
         )}
       </AnimatePresence>
     </div>
-);
+  );
+};

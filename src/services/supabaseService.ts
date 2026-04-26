@@ -124,7 +124,17 @@ export const uploadImages = async (userId: string, photoId: string, base64Data: 
   try {
     // Generate versions with compression
     const originalBase64 = await compressImage(base64Data, 1200, 0.8);
-    const thumbBase64 = await compressImage(base64Data, 300, 0.5);
+    let thumbBase64;
+    try {
+        thumbBase64 = await compressImage(base64Data, 300, 0.5);
+    } catch (e: any) {
+        if (e.name === 'QuotaExceededError') {
+             console.warn("Storage quota exceeded, using original as thumbnail");
+             thumbBase64 = originalBase64;
+        } else {
+             throw e;
+        }
+    }
 
     const uploadFile = async (base64: string, fileName: string) => {
       const res = await fetch(base64);

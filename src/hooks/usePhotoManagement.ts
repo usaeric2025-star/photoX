@@ -19,18 +19,22 @@ const INITIAL_FORM_STATE: ProductFormData = {
   dimH: '',
 };
 
+import { useGalleryContext } from '../context/GalleryContext';
+
 export const usePhotoManagement = (
   user: any,
-  photos: Photo[],
-  setPhotos: (p: Photo[] | ((prev: Photo[]) => Photo[])) => void,
-  categories: any[],
-  tags: Tag[],
-  dbCategories: any[],
-  manufacturers: any[],
   setAlertDialog: (a: any) => void,
   setIsSyncing: (s: boolean) => void,
   setActiveScreen: (s: any) => void
 ) => {
+  const {
+    photos, setPhotos,
+    categories,
+    tags,
+    dbCategories,
+    manufacturers
+  } = useGalleryContext();
+
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);

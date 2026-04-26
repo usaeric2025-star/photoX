@@ -41,6 +41,7 @@ import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
 import { usePhotoManagement } from '../hooks/usePhotoManagement';
 import { useAuth } from '../hooks/useAuth';
+import { useGalleryContext } from '../context/GalleryContext';
 import { SettingsScreen } from '../components/SettingsScreen';
 import { UploadForm } from '../components/admin/UploadForm';
 import { LoginScreen } from '../components/admin/LoginScreen';
@@ -52,6 +53,25 @@ export default function AdminView() {
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] || translations['en'];
   const { user, authChecked, logout } = useAuth();
+  const {
+    photos, setPhotos,
+    categories, setCategories,
+    tags, setTags,
+    dbCategories, setDbCategories,
+    manufacturers, setManufacturers,
+    searchQuery, setSearchQuery,
+    filterCatId, setFilterCatId,
+    filterSubId, setFilterSubId,
+    filterTagIds, setFilterTagIds,
+    sortOrder, setSortOrder,
+    showGroupsCollapsed, setShowGroupsCollapsed,
+    selectedIds, setSelectedIds,
+    isMultiSelect, setIsMultiSelect,
+    gridPhotos, // Use this for filtered/sorted list
+    displayPhotos,
+    visibleCount, setVisibleCount
+  } = useGalleryContext();
+  
   const navigate = useNavigate();
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -84,19 +104,19 @@ export default function AdminView() {
     }
   }, []);
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isMultiSelect, setIsMultiSelect] = useState(false);
+  // const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<any>(null);
   const [alertDialog, setAlertDialog] = useState<any>(null);
   const [promptDialog, setPromptDialog] = useState<any>(null);
   const [promptValue, setPromptValue] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  // const [searchQuery, setSearchQuery] = useState('');
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
-  const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
-  const [filterCatId, setFilterCatId] = useState<string | null>(null);
-  const [filterSubId, setFilterSubId] = useState<string | null>(null);
-  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  // const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
+  // const [filterCatId, setFilterCatId] = useState<string | null>(null);
+  // const [filterSubId, setFilterSubId] = useState<string | null>(null);
+  // const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+  // const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
@@ -114,7 +134,11 @@ export default function AdminView() {
     lastSyncTime, setLastSyncTime,
     refreshCloudData,
     handleLogoUpload
+    // Note: internalPassword and setInternalPassword are not returned by useSyncEngine 
+    // They are usually in Settings state or settings object
   } = useSyncEngine();
+
+  const [internalPassword, setInternalPassword] = useState('');
 
   useEffect(() => {
     if (settings) {
@@ -128,19 +152,19 @@ export default function AdminView() {
   }, [settings]);
 
   const { 
-    categories, setCategories,
-    tags, setTags,
+    // categories, setCategories,
+    // tags, setTags,
     updateTag,
     deleteTag,
-    dbCategories, setDbCategories,
-    manufacturers, setManufacturers,
+    // dbCategories, setDbCategories,
+    // manufacturers, setManufacturers,
     publicCategories, setPublicCategories,
     publicTags, setPublicTags,
     publicManufacturers, setPublicManufacturers
   } = useAdminCategory();
   
   const { 
-    photos, setPhotos,
+    // photos, setPhotos,
     isAnalyzing, setIsAnalyzing,
     isBatchAnalyzing, batchProgress,
     isImporting, importProgress, importTotal,
@@ -148,11 +172,11 @@ export default function AdminView() {
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
     handleBatchAiIdentify, handlePhotoImport, deletePhoto
-  } = useAdminPhotos(user, geminiApiKey, aiProvider, customModel, categories, setCategories, tags, setTags, dbCategories, manufacturers, setManufacturers, setAlertDialog, setIsSyncing);
+  } = useAdminPhotos(user, geminiApiKey, aiProvider, customModel, setAlertDialog, setIsSyncing);
 
   // Auto refresh on mount if user exists
   useEffect(() => {
-    if (authChecked && (user || getSafeSessionStorage('isStaffMode') === 'true')) {
+    if (authChecked && (user || sessionStorage.getItem('isStaffMode') === 'true')) {
       refreshCloudData(
         user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, false
       );
@@ -168,46 +192,12 @@ export default function AdminView() {
     resetAddState,
     saveNewPhoto,
     saveBatchEdit,
-  } = usePhotoManagement(user, photos, setPhotos, categories, tags, dbCategories, manufacturers, setAlertDialog, setIsSyncing, setActiveScreen);
+  } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
 
   const handleUngroup = (groupId: string) => {
     setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
   };
 
-  const [visibleCount, setVisibleCount] = useState(15);
-  const observerTarget = useRef(null);
-
-  const filteredPhotos = useMemo(() => {
-    let result = [...photos];
-    if (searchQuery) {
-      result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
-    if (filterCatId) {
-      result = result.filter(p => p.categoryId === filterCatId);
-    }
-    if (filterSubId) {
-      result = result.filter(p => p.subcategoryId === filterSubId);
-    }
-    if (filterTagIds.length > 0) {
-      result = result.filter(p => {
-        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-        return rawTagIds.some(id => filterTagIds.includes(id));
-      });
-    }
-
-    // Apply sort order
-    result.sort((a, b) => {
-       const timeA = a.created_at || (typeof a.id === 'string' && a.id.startsWith('group-') ? parseInt(a.id.split('-')[1]) : 0);
-       const timeB = b.created_at || (typeof b.id === 'string' && b.id.startsWith('group-') ? parseInt(b.id.split('-')[1]) : 0);
-       return sortOrder === 'desc' ? (typeof timeB === 'number' ? timeB - (timeA as number) : 0) : (typeof timeA === 'number' ? timeA - (timeB as number) : 0);
-    });
-
-    return result;
-  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder]);
-  
-  const displayPhotos = filteredPhotos.slice(0, visibleCount);
-  
-  const [internalPassword, setInternalPassword] = useState('');
   const [syncPercent, setSyncPercent] = useState(0);
   const [syncAction, setSyncAction] = useState('idle');
   const [showManageAccess, setShowManageAccess] = useState(false);
@@ -220,20 +210,21 @@ export default function AdminView() {
     setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, groupId } : p));
   };
 
+  const observerTarget = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
       entries => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && visibleCount < displayPhotos.length) {
             setVisibleCount(prev => prev + 15);
         }
       },
-      { threshold: 1 }
+      { threshold: 0.1 }
     );
     if (observerTarget.current) {
       observer.observe(observerTarget.current);
     }
     return () => observer.disconnect();
-  }, []);
+  }, [displayPhotos.length, visibleCount, setVisibleCount]);
   
   const errorContent = pageError ? (
     <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white p-4 font-bold overflow-auto max-h-[30vh]">
@@ -520,116 +511,70 @@ export default function AdminView() {
       
       {activeScreen === 'home' && (
         <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
-             <AdminHeader 
-                settings={settings}
-                user={user}
-                viewMode={viewMode}
-                setViewMode={(newMode) => {
-                  setViewMode(newMode);
-                  if (newMode === 'public') navigate('/');
-                }}
-                isBatchAnalyzing={isBatchAnalyzing}
-                batchProgress={batchProgress}
-                activeScreen={activeScreen}
-                isMultiSelect={isMultiSelect}
-                selectedIds={selectedIds}
-                filteredPhotos={filteredPhotos}
-                setSelectedIds={setSelectedIds}
-                setIsMultiSelect={setIsMultiSelect}
-                handleBatchAiIdentifyTrigger={() => {
-                  if (isBatchAnalyzing) {
-                    cancelBatchAiRef.current = true;
-                  } else {
-                    cancelBatchAiRef.current = false;
-                    let targetPhotos = filteredPhotos;
-                    if (selectedIds.length > 0) {
-                      targetPhotos = filteredPhotos.filter(p => selectedIds.includes(p.id));
-                    }
-                    handleBatchAiIdentify(targetPhotos, dbCategories, cancelBatchAiRef);
-                  }
-                }}
-                handleManageClick={handleManageClick}
-                loginWithGoogle={loginWithGoogle}
-                onAddPhoto={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.multiple = true;
-                  input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
-                  input.click();
-                }}
-                photosCount={filteredPhotos.length}
-                totalPhotosCount={photos.length}
-                cloudCount={cloudCount}
-                appLang={appLang}
-             />
-             <div className="flex-1 min-h-0 relative">
-                <PublicGallery 
-                   photos={photos}
-                   categories={categories}
-                   tags={tags}
-                   dbCategories={dbCategories}
-                   onExit={() => setViewMode('public')}
-                   showExit={true}
-                   user={user}
-                   settings={settings}
-                   isAdminMode={true}
-                   isMultiSelect={isMultiSelect}
-                   onToggleMultiSelect={() => {
-                     if (isMultiSelect) {
-                       setSelectedIds([]);
-                       setIsMultiSelect(false);
-                     } else {
-                       setIsMultiSelect(true);
-                     }
-                   }}
-                   selectedIds={selectedIds}
-                   onToggleSelection={(id) => {
-                     if (!isMultiSelect) return;
-                     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-                   }}
-                   onClearSelection={() => setSelectedIds([])}
-                   onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
-                   onDeletePhotos={(ids) => {
-                     setConfirmDialog({
-                       message: t.confirmDelete(ids.length),
-                       onConfirm: async () => {
-                         await deletePhoto(ids);
-                         setSelectedIds([]);
-                       }
-                     });
-                   }}
-                   onGroupPhotos={(ids) => handleGroupPhotos(ids)}
-                   onGroupClick={(groupId) => setActiveGroupId(groupId)}
-                   onOpenSettings={handleManageClick}
-                   onAddPhoto={() => {
-                     const input = document.createElement('input');
-                     input.type = 'file';
-                     input.accept = 'image/*';
-                     input.multiple = true;
-                     input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
-                     input.click();
-                   }}
-                   hideHeader={true}
-                   sortOrder={sortOrder}
-                   onToggleSortOrder={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                   searchQuery={searchQuery}
-                   onSearchQueryChange={setSearchQuery}
-                   filterCatId={filterCatId}
-                   onFilterCatIdChange={setFilterCatId}
-                   filterSubId={filterSubId}
-                   onFilterSubIdChange={setFilterSubId}
-                   filterTagIds={filterTagIds}
-                   onFilterTagIdsChange={setFilterTagIds}
-                   onRefresh={() => refreshCloudData(
-                       user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
-                   )}
-                   columns={columns}
-                   setColumns={setColumns}
-                   cloudCount={cloudCount}
-                   manufacturers={manufacturers}
-                />
-             </div>
+                <AdminHeader 
+                    settings={settings}
+                    user={user}
+                    viewMode={viewMode}
+                    setViewMode={(newMode) => {
+                      setViewMode(newMode);
+                      if (newMode === 'public') navigate('/');
+                    }}
+                    isBatchAnalyzing={isBatchAnalyzing}
+                    batchProgress={batchProgress}
+                    activeScreen={activeScreen}
+                    isMultiSelect={isMultiSelect}
+                    selectedIds={selectedIds}
+                    filteredPhotos={gridPhotos}
+                    setSelectedIds={setSelectedIds}
+                    setIsMultiSelect={setIsMultiSelect}
+                    handleBatchAiIdentifyTrigger={() => {
+                      if (isBatchAnalyzing) {
+                        cancelBatchAiRef.current = true;
+                      } else {
+                        cancelBatchAiRef.current = false;
+                        handleBatchAiIdentify(gridPhotos, dbCategories, cancelBatchAiRef);
+                      }
+                    }}
+                    handleManageClick={handleManageClick}
+                    loginWithGoogle={loginWithGoogle}
+                    onAddPhoto={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.multiple = true;
+                      input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                      input.click();
+                    }}
+                    photosCount={gridPhotos.length}
+                    totalPhotosCount={photos.length}
+                    cloudCount={cloudCount}
+                    appLang={appLang}
+                 />
+                 <div className="flex-1 min-h-0 relative">
+                    <PublicGallery 
+                       onExit={() => setViewMode('public')}
+                       showExit={true}
+                       user={user}
+                       settings={settings}
+                       isAdminMode={true}
+                       onOpenSettings={handleManageClick}
+                       onAddPhoto={() => {
+                         const input = document.createElement('input');
+                         input.type = 'file';
+                         input.accept = 'image/*';
+                         input.multiple = true;
+                         input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                         input.click();
+                       }}
+                       hideHeader={true}
+                       onRefresh={() => refreshCloudData(
+                           user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
+                       )}
+                       columns={columns}
+                       setColumns={setColumns}
+                       cloudCount={cloudCount}
+                    />
+                 </div>
         </div>
       )}
     </>
