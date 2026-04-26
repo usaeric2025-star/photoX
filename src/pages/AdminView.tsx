@@ -55,6 +55,8 @@ export default function AdminView() {
   const { saveSettings, handleSingleAiAnalyzeCallback, performPushSync, performPullSync } = useAdminViewActions(user, photos, setPhotos, settings, setSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData);
   const { activeScreen, setActiveScreen, toast, showToast, handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer } = useAdminViewLogic(photos, setPhotos, settings, saveSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, (update: any) => updateForm(update), setAlertDialog, setPromptDialog);
 
+  const handleManageClick = () => setActiveScreen('manage');
+
   const { updateTag, deleteTag } = useAdminCategory();
   const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
