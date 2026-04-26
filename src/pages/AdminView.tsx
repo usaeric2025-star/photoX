@@ -69,6 +69,9 @@ export default function AdminView() {
 
   const { updateTag, deleteTag } = useAdminCategory();
   
+  const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
+  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
+
   const handleDeletePhoto = async (id: string) => {
     await deletePhoto(id);
     setEditPhotoId(null);
@@ -78,13 +81,10 @@ export default function AdminView() {
       await deleteTag(tag.id, photos, setPhotos);
   };
 
-  const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
-  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
-
   // Auto refresh
   useEffect(() => {
     if (authChecked && (user || sessionStorage.getItem('isStaffMode') === 'true')) {
-      refreshCloudData(user, categories, tags, manufacturers, setSettings, (v:any)=>v, (v:any)=>v, (v:any)=>v, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, false);
+      refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, false);
     }
   }, [authChecked, user]);
 

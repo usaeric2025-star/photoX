@@ -7,8 +7,8 @@ export const reconcileData = (
   manufacturers: Manufacturer[]
 ) => {
   // 1. Map all used IDs
-  const usedCatIds = new Set(photos.map(p => p.catId).filter(Boolean));
-  const usedManufacturerIds = new Set(photos.map(p => p.manufacturerId).filter(Boolean));
+  const usedCatIds = new Set(photos.map(p => p.categoryId).filter(Boolean));
+  const usedManufacturerIds = new Set(photos.map(p => p.subcategoryId).filter(Boolean));
   const usedTagIds = new Set<string>();
   photos.forEach(p => {
     if (Array.isArray(p.tagIds)) p.tagIds.forEach(id => usedTagIds.add(id));
@@ -17,15 +17,15 @@ export const reconcileData = (
   // 2. Add missing items to the lists
   const reconciledCategories = [...categories];
   usedCatIds.forEach(id => {
-    if (!reconciledCategories.find(c => c.id === id)) {
-      reconciledCategories.push({ id, name: `Unknown Cat (${id})`, code: id } as DB_Category);                
+    if (!reconciledCategories.find(c => c.code === id)) {
+      reconciledCategories.push({ id: 0, name: `Unknown Cat (${id})`, code: id, zh: `未知 (${id})`, en: `Unknown (${id})`, ms: `Unknown (${id})`, sort_order: 999 } as DB_Category);                
     }
   });
 
   const reconciledTags = [...tags];
   usedTagIds.forEach(tid => {
     if (!reconciledTags.find(t => t.id === tid)) {
-      reconciledTags.push({ id: tid, name: tid }); 
+      reconciledTags.push({ id: tid, name: tid, aliases: [] } as Tag); 
     }
   });
 

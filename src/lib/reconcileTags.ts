@@ -15,7 +15,7 @@ export const reconcileTags = async (photos: Photo[], currentTags: Tag[]): Promis
   const addedIds: string[] = [];
   usedTagIds.forEach(tid => {
     if (!newTags.find(t => t.id === tid)) {
-      newTags.push({ id: tid, name: tid }); // Assuming tag name = id if missing
+      newTags.push({ id: tid, name: tid, aliases: [] } as Tag); // Assuming tag name = id if missing
       addedIds.push(tid);
     }
   });

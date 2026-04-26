@@ -33,6 +33,12 @@ export interface Tag {
   userId?: string;
 }
 
+export interface Manufacturer {
+  id: string;
+  name: string;
+  aliases: string[];
+}
+
 export interface Photo {
   id: string; // Database UUID
   storageId?: string; // Filename for Supabase Storage

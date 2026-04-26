@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { TagEditor } from './TagEditor';
 import { Photo, ProductFormData } from '../../types';
+import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight } from 'lucide-react';
 
 interface Props {
   editPhotoId: string | null;
@@ -54,7 +55,7 @@ export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
         <button onClick={props.resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
-          <X size={24} />
+          <CloseIcon size={24} />
         </button>
         {props.aiDebugInfo?.error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-[10px] font-bold max-w-[50%] animate-pulse">
@@ -80,7 +81,7 @@ export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
                     className="p-2.5 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 shadow-sm active:scale-95"
                     title="取消识别"
                   >
-                    <X size={18} />
+                    <CloseIcon size={18} />
                   </button>
                 )}
                 <button 
@@ -220,7 +221,7 @@ export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
                             }}
                             className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
                           >
-                            <X size={14} />
+                            <CloseIcon size={14} />
                           </button>
                         )}
                         <div className="grid grid-cols-2 gap-2">

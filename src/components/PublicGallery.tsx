@@ -84,17 +84,23 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     contextTags.forEach(t => tMap.set(t.id, t));
     allTagIds.forEach(id => {
         if (!tMap.has(id)) {
-            tMap.set(id, { id, name: id });
+            tMap.set(id, { id, name: id, aliases: [] });
         }
     });
     
-    // Dedup by name
     const uniqueTags = new Map<string, Tag>();
-    Array.from(tMap.values()).forEach(t => {
-      const name = (t.name || '').toLowerCase();
-      if(!uniqueTags.has(name)) {
-        uniqueTags.set(name, t);
+    tMap.forEach(t => {
+      // Need a full tag with aliases if we're creating a mock
+      if(!uniqueTags.has(t.name.toLowerCase())) {
+        uniqueTags.set(t.name.toLowerCase(), t);
       }
+    });
+    
+    // Fill in missing
+    allTagIds.forEach(id => {
+       if (!uniqueTags.has(id.toLowerCase())) {
+         uniqueTags.set(id.toLowerCase(), { id, name: id, aliases: [] });
+       }
     });
     return Array.from(uniqueTags.values());
   }, [contextTags, allTagIds]);

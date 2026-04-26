@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, RefreshCcw, ChevronRight, EyeOff, Eye } from 'lucide-react';
+import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { ProductFormData } from '../../types';
@@ -47,7 +47,7 @@ export const BatchEditScreen = ({
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
         <button onClick={resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
-          <X size={24} />
+          <CloseIcon size={24} />
         </button>
         <div className="flex flex-col items-center">
             <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">批量修改 ({batchEditIds?.length})</h2>
