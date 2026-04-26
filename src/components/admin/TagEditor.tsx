@@ -59,11 +59,20 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
       </div>
 
       {activeActionTag && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/50 flex items-center justify-center p-4" onClick={() => setActiveActionTag(null)}>
-          <div className="bg-white rounded-2xl p-4 w-full max-w-[200px] shadow-xl space-y-2" onClick={(e) => e.stopPropagation()}>
-            <p className="text-center font-bold text-slate-800 pb-2 border-b">#{activeActionTag.name}</p>
-            <button className="w-full text-blue-600 font-medium py-2 rounded-lg hover:bg-blue-50" onClick={() => { const n = prompt("输入标签名称 (仅限英文单词):", activeActionTag.name); if(n && /^[a-zA-Z]+$/.test(n)) { if(n !== activeActionTag.name) onUpdateTag(activeActionTag.id, n); } else if(n) { alert("标签名称必须仅包含英文单词，不含空格、数字或特殊字符"); } setActiveActionTag(null); }}>编辑</button>
-            <button className="w-full text-red-600 font-medium py-2 rounded-lg hover:bg-red-50" onClick={() => { if(confirm(`确定删除标签 #${activeActionTag.name}?`)) onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}>删除</button>
+        <div className="fixed inset-0 z-[200] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setActiveActionTag(null)}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-[240px] shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <span className="text-sm font-black text-slate-900">#{activeActionTag.name}</span>
+            </div>
+            <div className="space-y-2">
+                <button className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all" onClick={() => { const n = prompt("输入标签名称 (仅限英文单词):", activeActionTag.name); if(n && /^[a-zA-Z]+$/.test(n)) { if(n !== activeActionTag.name) onUpdateTag(activeActionTag.id, n); } else if(n) { alert("标签名称必须仅包含英文单词，不含空格、数字或特殊字符"); } setActiveActionTag(null); }}>
+                   <Pencil size={18} /> 编辑 / Edit
+                </button>
+                <button className="w-full flex items-center justify-center gap-2 text-red-600 bg-red-50 font-bold py-3 rounded-2xl hover:bg-red-100 active:scale-95 transition-all" onClick={() => { if(confirm(`确定删除标签 #${activeActionTag.name}?`)) onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}>
+                   <Trash2 size={18} /> 删除 / Delete
+                </button>
+            </div>
+            <button className="w-full text-slate-400 text-xs font-bold pt-2 active:text-slate-600" onClick={() => setActiveActionTag(null)}>取消 / Cancel</button>
           </div>
         </div>
       )}

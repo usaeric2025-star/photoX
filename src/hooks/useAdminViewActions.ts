@@ -23,20 +23,28 @@ export const useAdminViewActions = (
 ) => {
 
   const saveSettings = useCallback(async (s: any) => {
-    setSettings(s);
-    await saveData('product_settings', s);
-    if (user) {
-      const { categories: cats, tags: tg, manufacturers: mfrs } = s;
-      setTimeout(() => {
-        saveSettingsCloud({
-          ...s,
-          categories: cats || categories,
-          tags: tg || tags,
-          manufacturers: mfrs || manufacturers
-        }).catch(console.error);
-      }, 0);
+    try {
+      setSettings(s);
+      await saveData('product_settings', s);
+      if (user) {
+        const { categories: cats, tags: tg, manufacturers: mfrs } = s;
+        setTimeout(() => {
+          saveSettingsCloud({
+            ...s,
+            categories: cats || categories,
+            tags: tg || tags,
+            manufacturers: mfrs || manufacturers
+          }).catch((err: any) => {
+            console.error(err);
+            setAlertDialog({ title: '保存设置失败', message: err.message });
+          });
+        }, 0);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setAlertDialog({ title: '保存数据失败', message: err.message });
     }
-  }, [user, categories, tags, manufacturers, setSettings]);
+  }, [user, categories, tags, manufacturers, setSettings, setAlertDialog]);
 
   const handleSingleAiAnalyzeCallback = useCallback(async (
     data: string, 
@@ -48,46 +56,59 @@ export const useAdminViewActions = (
     handleSingleAiAnalyzeService?: any
   ) => {
     if(!handleSingleAiAnalyzeService) return;
-    const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId);
-    if (result) {
-      const updates: Partial<any> = {};
-      if (result.name && (formState.name === '未命名产品' || !formState.name)) updates.name = result.name;
-      
-      if (result.categoryId && !catId && !formState.categoryId) {
-        updates.categoryId = result.categoryId;
-      } else if (result.newCategoryName && !catId && !formState.categoryId) {
-        const foundCat = dbCategories?.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName);
-        if (foundCat) updates.categoryId = foundCat.code;
-      }
-
-      if (result.tagIds) {
-        updates.tagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
-      }
-      
-      if (result.dimensions) {
-        if (Array.isArray(result.dimensions)) {
-            updates.dimensions = result.dimensions;
-            if (result.dimensions.length > 0) {
-              const first = result.dimensions[0];
-              if (first.length && !formState.dimL) updates.dimL = first.length.toString();
-              if (first.width && !formState.dimW) updates.dimW = first.width.toString();
-              if (first.height && !formState.dimH) updates.dimH = first.height.toString();
-            }
-        } else if (typeof result.dimensions === 'object') {
-            if ((result.dimensions as any).length && !formState.dimL) updates.dimL = (result.dimensions as any).length.toString();
-            if ((result.dimensions as any).width && !formState.dimW) updates.dimW = (result.dimensions as any).width.toString();
-            if ((result.dimensions as any).height && !formState.dimH) updates.dimH = (result.dimensions as any).height.toString();
-            updates.dimensions = [result.dimensions];
+    try {
+      const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId);
+      if (result) {
+        console.log('AI Analysis Result:', result);
+        console.log('Form State Name:', formState.name);
+        
+        const updates: Partial<any> = {};
+        if (result.name && (formState.name === '未命名产品' || !formState.name)) {
+          console.log('Setting name to:', result.name);
+          updates.name = result.name;
         }
-      }
+        
+        if (result.categoryId && !catId && !formState.categoryId) {
+          updates.categoryId = result.categoryId;
+        } else if (result.newCategoryName && !catId && !formState.categoryId) {
+          const foundCat = dbCategories?.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName);
+          if (foundCat) updates.categoryId = foundCat.code;
+        }
 
-      if (result.modelNumber && !formState.model_number) {
-        updates.model_number = result.modelNumber;
+        if (result.tagIds) {
+          updates.tagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
+        }
+        
+        if (result.dimensions) {
+          if (Array.isArray(result.dimensions)) {
+              updates.dimensions = result.dimensions;
+              if (result.dimensions.length > 0) {
+                const first = result.dimensions[0];
+                if (first.length && !formState.dimL) updates.dimL = first.length.toString();
+                if (first.width && !formState.dimW) updates.dimW = first.width.toString();
+                if (first.height && !formState.dimH) updates.dimH = first.height.toString();
+              }
+          } else if (typeof result.dimensions === 'object') {
+              if ((result.dimensions as any).length && !formState.dimL) updates.dimL = (result.dimensions as any).length.toString();
+              if ((result.dimensions as any).width && !formState.dimW) updates.dimW = (result.dimensions as any).width.toString();
+              if ((result.dimensions as any).height && !formState.dimH) updates.dimH = (result.dimensions as any).height.toString();
+              updates.dimensions = [result.dimensions];
+          }
+        }
+
+        if (result.modelNumber && !formState.model_number) {
+          updates.model_number = result.modelNumber;
+        }
+        
+        updateForm(updates);
+      } else {
+        setAlertDialog({ title: 'AI 分析', message: '未能从图片分析出有效数据。' });
       }
-      
-      updateForm(updates);
+    } catch (err: any) {
+      console.error(err);
+      setAlertDialog({ title: 'AI 分析失败', message: err.message });
     }
-  }, []);
+  }, [setAlertDialog]);
 
   const performPushSync = useCallback(async () => {
     if (!user) return;
