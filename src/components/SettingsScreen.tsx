@@ -177,9 +177,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         
         {/* Logo Section */}
         <div className={cardClass} id="section-logo">
-            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
-              Logo 设置
+            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
+                Logo 设置
+              </span>
+              <button 
+                onClick={performPushSync}
+                disabled={isSyncing}
+                className="px-3 py-1 bg-[#D4A853] hover:bg-[#D4A853]/90 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isSyncing ? <RefreshCcw size={12} className="animate-spin" /> : <CloudUpload size={12}/>}
+                保持与备份
+              </button>
             </h4>
             <div className="flex items-center gap-5">
                 <div className="relative group">
