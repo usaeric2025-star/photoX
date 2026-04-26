@@ -124,6 +124,7 @@ export default function AdminView() {
     categories, setCategories,
     tags, setTags,
     updateTag,
+    deleteTag,
     dbCategories, setDbCategories,
     manufacturers, setManufacturers,
     publicCategories, setPublicCategories,
@@ -479,6 +480,7 @@ export default function AdminView() {
               }}
               editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
               abortAnalysis={abortAnalysis}
+              deleteTag={(id) => deleteTag(id, photos, setPhotos)}
           />
       )}
       

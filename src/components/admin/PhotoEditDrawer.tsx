@@ -38,6 +38,7 @@ interface Props {
   quickAddManufacturer: () => void;
   tags: any[];
   updateTag: (id: string, name: string) => void;
+  deleteTag: (id: string) => void;
   photos: Photo[];
   manufacturers: any[];
   editPhotoPreview?: string | null;
@@ -53,8 +54,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   
   const handleMouseDown = (tag: any) => {
     setLongPressTimer(setTimeout(() => {
-        const newName = prompt("请输入新标签名称", tag.name);
-        if (newName && newName !== tag.name) {
+        const newName = prompt("请输入新标签名称 (留空删除)", tag.name);
+        if (newName === "") {
+            props.deleteTag(tag.id);
+        } else if (newName && newName !== tag.name) {
             props.updateTag(tag.id, newName);
         }
     }, 500));
@@ -158,18 +161,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </section>
 
           <section className="space-y-4">
-            <div className="flex items-center justify-between pl-1">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
-              <div className="flex gap-1.5">
-                <button onClick={() => {
-                  const query = prompt("请输入标签关键词搜索:");
-                  // Implementation of search (filtering) would require more state or local filtering here.
-                  // For now, I will just log it.
-                  console.log("Searching tag:", query);
-                }} className="p-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100"><Search size={14} /></button>
-                <button onClick={props.quickAddTag} className="px-3 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 flex items-center gap-1">+ 新增</button>
-              </div>
-            </div>
+             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
              <div className="grid grid-flow-col grid-rows-2 gap-2 overflow-x-auto pb-2 h-24 items-center">
                 {[...props.tags].sort((a,b) => props.photos.filter(p => p.tagIds?.includes(b.id)).length - props.photos.filter(p => p.tagIds?.includes(a.id)).length).map(tag => (
                   <button 
@@ -184,6 +176,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     #{tag.name}
                   </button>
                 ))}
+                <button onClick={props.quickAddTag} className="px-4 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 whitespace-nowrap">+ 新增</button>
              </div>
           </section>
 
@@ -210,8 +203,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
              )}
           </section>
 
-          {props.editPhotoId && props.onDelete && (
-            <div className="pt-4 pb-8">
+           {props.editPhotoId && props.onDelete && (
+            <div className="pt-4 pb-8 space-y-4">
               <button 
                 onClick={() => props.onDelete!(props.editPhotoId)}
                 className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
@@ -219,7 +212,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 删除此照片
               </button>
             </div>
-          )}
+           )}
        </div>
     </div>
   );

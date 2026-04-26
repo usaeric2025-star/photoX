@@ -44,10 +44,19 @@ export const useAdminCategory = () => {
     setTags(prev => prev.map(t => t.id === tagId ? { ...t, name: newName } : t));
   };
 
+  const deleteTag = (tagId: string, photos: any[], setPhotos: any) => {
+    setTags(prev => prev.filter(t => t.id !== tagId));
+    setPhotos((prev: any[]) => prev.map(p => ({
+      ...p,
+      tagIds: p.tagIds ? p.tagIds.filter((id: string) => id !== tagId) : []
+    })));
+  };
+
   return {
     categories, setCategories,
     tags, setTags,
     updateTag,
+    deleteTag,
     manufacturers, setManufacturers,
     dbCategories, setDbCategories,
     publicCategories, setPublicCategories,
