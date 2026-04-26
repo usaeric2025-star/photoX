@@ -869,10 +869,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     <div>
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.tags}</h3>
-                        <div className="flex gap-1">
-                            <button className="text-slate-400 hover:text-slate-800"><Search size={14} /></button>
-                            {isAdminMode && <button className="text-blue-600 hover:text-blue-800"><Plus size={14} /></button>}
-                        </div>
                       </div>
                       <div className="grid grid-flow-col grid-rows-2 gap-1.5 overflow-x-auto pb-2 h-14 items-center">
                         {displayTags.map((tagName, idx) => (
