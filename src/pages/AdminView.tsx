@@ -231,10 +231,23 @@ export default function AdminView() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
 
-  const handleGroupPhotos = (ids: string[]) => {
+  const handleGroupPhotos = async (ids: string[]) => {
     if (ids.length < 2) return;
     const groupId = `group-${Date.now()}`;
-    setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, groupId } : p));
+    
+    // Update local state
+    const updatedPhotos = photos.map(p => ids.includes(p.id) ? { ...p, groupId } : p);
+    setPhotos(updatedPhotos);
+
+    // Save changes to IndexedDB
+    saveData('product_photos', updatedPhotos);
+    
+    // Persist changes to Cloud
+    if (user) {
+       for (const photo of updatedPhotos.filter(p => ids.includes(p.id))) {
+         await savePhotoToCloud(user.id, photo);
+       }
+    }
   };
 
   const observerTarget = useRef<HTMLDivElement>(null);
@@ -572,7 +585,7 @@ export default function AdminView() {
                       input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                       input.click();
                     }}
-                    photosCount={gridPhotos.length}
+                    photosCount={displayPhotos.length}
                     totalPhotosCount={photos.length}
                     cloudCount={cloudCount}
                     appLang={appLang}

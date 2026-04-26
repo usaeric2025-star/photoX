@@ -14,19 +14,35 @@ export const reconcileData = (
     if (Array.isArray(p.tagIds)) p.tagIds.forEach(id => usedTagIds.add(id));
   });
 
-  // 2. Add missing tags to the list
+  // 2. Add missing items to the lists
+  const reconciledCategories = [...categories];
+  usedCatIds.forEach(id => {
+    if (!reconciledCategories.find(c => c.id === id)) {
+      reconciledCategories.push({ id, name: `Unknown Cat (${id})`, code: id } as DB_Category);                
+    }
+  });
+
   const reconciledTags = [...tags];
   usedTagIds.forEach(tid => {
     if (!reconciledTags.find(t => t.id === tid)) {
-      reconciledTags.push({ id: tid, name: tid }); // Assuming tag name = id if missing
+      reconciledTags.push({ id: tid, name: tid }); 
+    }
+  });
+
+  const reconciledManufacturers = [...manufacturers];
+  usedManufacturerIds.forEach(id => {
+    if (!reconciledManufacturers.find(m => m.id === id)) {
+      reconciledManufacturers.push({ id, name: `Unknown Mfr (${id})` } as Manufacturer); 
     }
   });
 
   return {
-    reconciledCategories: categories,
+    reconciledCategories,
     reconciledTags,
-    reconciledManufacturers: manufacturers,
+    reconciledManufacturers,
     hasChanged: 
-      reconciledTags.length !== tags.length // simplified because we only add now
+      reconciledCategories.length !== categories.length ||
+      reconciledTags.length !== tags.length ||
+      reconciledManufacturers.length !== manufacturers.length
   };
 };
