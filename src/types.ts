@@ -68,6 +68,31 @@ export interface Photo {
   categoryId?: string | null; // For local filter
   subcategoryId?: string | null; // For local filter
   tagIds?: string[]; // For local filter
+  price?: string;
+}
+
+export interface ProductFormData {
+  name: string;
+  categoryId: string | null;
+  subcategoryId: string | null;
+  tagIds: string[];
+  description: string;
+  manual_code: string;
+  model_number: string;
+  dimensions: {
+    label?: string;
+    length?: number;
+    width?: number;
+    height?: number;
+    unit?: string;
+    isAI?: boolean;
+  }[];
+  isHidden: boolean;
+  price: string;
+  // Temporary single dim fields if needed for backward compatibility or simple UI
+  dimL?: string;
+  dimW?: string;
+  dimH?: string;
 }
 
 export interface AppState {

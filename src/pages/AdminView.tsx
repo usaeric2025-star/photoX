@@ -162,18 +162,7 @@ export default function AdminView() {
     newPhotoData, setNewPhotoData,
     editPhotoId, setEditPhotoId,
     batchEditIds, setBatchEditIds,
-    addCatId, setAddCatId,
-    addSubId, setAddSubId,
-    addTagIds, setAddTagIds,
-    addNote, setAddNote,
-    addName, setAddName,
-    addManualCode, setAddManualCode,
-    addModelNumber, setAddModelNumber,
-    addDimL, setAddDimL,
-    addDimW, setAddDimW,
-    addDimH, setAddDimH,
-    addDimensions, setAddDimensions,
-    addIsHidden, setAddIsHidden,
+    formState, updateForm,
     showOtherFields, setShowOtherFields,
     resetAddState,
     saveNewPhoto,
@@ -188,7 +177,7 @@ export default function AdminView() {
   const observerTarget = useRef(null);
 
   const filteredPhotos = useMemo(() => {
-    let result = photos;
+    let result = [...photos];
     if (searchQuery) {
       result = result.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
     }
@@ -204,8 +193,16 @@ export default function AdminView() {
         return rawTagIds.some(id => filterTagIds.includes(id));
       });
     }
+
+    // Apply sort order
+    result.sort((a, b) => {
+       const timeA = a.created_at || (typeof a.id === 'string' && a.id.startsWith('group-') ? parseInt(a.id.split('-')[1]) : 0);
+       const timeB = b.created_at || (typeof b.id === 'string' && b.id.startsWith('group-') ? parseInt(b.id.split('-')[1]) : 0);
+       return sortOrder === 'desc' ? (typeof timeB === 'number' ? timeB - (timeA as number) : 0) : (typeof timeA === 'number' ? timeA - (timeB as number) : 0);
+    });
+
     return result;
-  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds]);
+  }, [photos, searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder]);
   
   const displayPhotos = filteredPhotos.slice(0, visibleCount);
   
@@ -379,19 +376,19 @@ export default function AdminView() {
   };
 
   const quickAddSubCategory = () => {
-    if (!addCatId) return;
+    if (!formState.categoryId) return;
     setPromptValue('');
     setPromptDialog({
       title: '新增子分类',
       placeholder: '输入新子分类名称',
       onSubmit: async (val: string) => {
         const newSubId = crypto.randomUUID();
-        const nextCats = categories.map(c => c.id === addCatId ? {
+        const nextCats = categories.map(c => c.id === formState.categoryId ? {
           ...c,
           subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
         } : c);
         setCategories(nextCats);
-        setAddSubId(newSubId);
+        updateForm({ subcategoryId: newSubId });
         await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
       }
     });
@@ -405,7 +402,7 @@ export default function AdminView() {
         const newTagId = crypto.randomUUID();
         const nextTags = [...tags, { id: newTagId, name: val.trim(), aliases: [] }];
         setTags(nextTags);
-        setAddTagIds(prev => [...prev, newTagId]);
+        updateForm({ tagIds: [...formState.tagIds, newTagId] });
         await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
       }
     });
@@ -419,7 +416,7 @@ export default function AdminView() {
         const newMfrId = crypto.randomUUID();
         const nextMfrs = [...manufacturers, { id: newMfrId, name: val.trim(), aliases: [] }];
         setManufacturers(nextMfrs);
-        setAddSubId(newMfrId);
+        updateForm({ subcategoryId: newMfrId });
         await saveSettings({ ...settings, categories, tags, manufacturers: nextMfrs });
       }
     });
@@ -470,17 +467,9 @@ export default function AdminView() {
                 await saveNewPhoto();
                 showToast(t.saveSuccess || '保存成功');
               }} photos={photos} updateTag={updateTag}
-              addName={addName} setAddName={setAddName} addCatId={addCatId} setAddCatId={setAddCatId}
-              addSubId={addSubId} setAddSubId={setAddSubId} addTagIds={addTagIds} setAddTagIds={setAddTagIds}
-              addNote={addNote} setAddNote={setAddNote} 
-              addManualCode={addManualCode} setAddManualCode={setAddManualCode}
-              addModelNumber={addModelNumber} setAddModelNumber={setAddModelNumber}
-              addIsHidden={addIsHidden} setAddIsHidden={setAddIsHidden}
-              addDimL={addDimL} setAddDimL={setAddDimL} addDimW={addDimW} setAddDimW={setAddDimW}
-              addDimH={addDimH} setAddDimH={setAddDimH}
-              addDimensions={addDimensions} setAddDimensions={setAddDimensions}
+              formState={formState}
+              updateForm={updateForm}
               showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
-
               isSyncing={isSyncing} dbCategories={dbCategories} categories={categories} appLang={appLang}
               quickAddSubCategory={quickAddSubCategory} quickAddTag={quickAddTag} quickAddManufacturer={quickAddManufacturer} tags={tags}
               newPhotoData={newPhotoData} manufacturers={manufacturers}
@@ -489,40 +478,42 @@ export default function AdminView() {
               handleSingleAiAnalyze={async (data, catId) => {
                 const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
                 if (result) {
-                  if (result.name && !addName) setAddName(result.name);
+                  const updates: Partial<any> = {};
+                  if (result.name && !formState.name) updates.name = result.name;
                   
                   // Correct category matching
-                  if (result.categoryId && !catId && !addCatId) {
-                    setAddCatId(result.categoryId);
-                  } else if (result.newCategoryName && !catId && !addCatId) {
+                  if (result.categoryId && !catId && !formState.categoryId) {
+                    updates.categoryId = result.categoryId;
+                  } else if (result.newCategoryName && !catId && !formState.categoryId) {
                     const foundCat = dbCategories.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName);
-                    if (foundCat) setAddCatId(foundCat.code);
+                    if (foundCat) updates.categoryId = foundCat.code;
                   }
 
                   if (result.tagIds) {
-                    const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
-                    setAddTagIds(rawTagIds);
+                    updates.tagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
                   }
                   if (result.dimensions) {
                     if (Array.isArray(result.dimensions)) {
-                       setAddDimensions(result.dimensions);
+                       updates.dimensions = result.dimensions;
                        if (result.dimensions.length > 0) {
                           const first = result.dimensions[0];
-                          if (first.length && !addDimL) setAddDimL(first.length.toString());
-                          if (first.width && !addDimW) setAddDimW(first.width.toString());
-                          if (first.height && !addDimH) setAddDimH(first.height.toString());
+                          if (first.length && !formState.dimL) updates.dimL = first.length.toString();
+                          if (first.width && !formState.dimW) updates.dimW = first.width.toString();
+                          if (first.height && !formState.dimH) updates.dimH = first.height.toString();
                        }
                     } else if (typeof result.dimensions === 'object') {
-                       if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
-                       if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
-                       if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
-                       setAddDimensions([result.dimensions]);
+                       if (result.dimensions.length && !formState.dimL) updates.dimL = result.dimensions.length.toString();
+                       if (result.dimensions.width && !formState.dimW) updates.dimW = result.dimensions.width.toString();
+                       if (result.dimensions.height && !formState.dimH) updates.dimH = result.dimensions.height.toString();
+                       updates.dimensions = [result.dimensions];
                     }
                   }
 
-                  if (result.modelNumber && !addModelNumber) {
-                    setAddModelNumber(result.modelNumber);
+                  if (result.modelNumber && !formState.model_number) {
+                    updates.model_number = result.modelNumber;
                   }
+                  
+                  updateForm(updates);
                 }
               }}
               onDelete={(id) => {
@@ -673,35 +664,17 @@ export default function AdminView() {
           dbCategories={dbCategories}
           categories={categories}
           appLang={appLang}
-          addCatId={addCatId}
-          setAddCatId={setAddCatId}
-          addSubId={addSubId}
-          setAddSubId={setAddSubId}
-          quickAddSubCategory={quickAddSubCategory}
-          tags={tags}
-          quickAddTag={quickAddTag}
-          quickAddManufacturer={quickAddManufacturer}
-          addTagIds={addTagIds}
-          setAddTagIds={setAddTagIds}
-          addNote={addNote}
-          setAddNote={setAddNote}
-          addIsHidden={addIsHidden}
-          setAddIsHidden={setAddIsHidden}
+          formState={formState}
+          updateForm={updateForm}
           batchIsHiddenApplied={batchIsHiddenApplied}
           setBatchIsHiddenApplied={setBatchIsHiddenApplied}
           showOtherFields={showOtherFields}
           setShowOtherFields={setShowOtherFields}
-          addManualCode={addManualCode}
-          setAddManualCode={setAddManualCode}
-          addModelNumber={addModelNumber}
-          setAddModelNumber={setAddModelNumber}
-          addDimL={addDimL}
-          setAddDimL={setAddDimL}
-          addDimW={addDimW}
-          setAddDimW={setAddDimW}
-          addDimH={addDimH}
-          setAddDimH={setAddDimH}
           manufacturers={manufacturers}
+          tags={tags}
+          quickAddSubCategory={quickAddSubCategory}
+          quickAddTag={quickAddTag}
+          quickAddManufacturer={quickAddManufacturer}
         />
       )}
       

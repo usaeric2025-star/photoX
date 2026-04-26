@@ -133,24 +133,44 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                         <p className="text-white text-[10px] font-medium leading-relaxed line-clamp-2 opacity-90">
                           {focusedPhoto.description || "點擊圖片查看大圖"}
                         </p>
-                        {focusedPhoto.dimensions && (focusedPhoto.dimensions.length || focusedPhoto.dimensions.width || focusedPhoto.dimensions.height) && (
+                        {focusedPhoto.dimensions &&focusedPhoto.dimensions.length > 0 && Array.isArray(focusedPhoto.dimensions) && (
                           <div className="flex gap-2 mt-1 px-1">
-                            <span className="text-[8px] font-black text-blue-300 uppercase tracking-widest bg-blue-500/20 px-1 rounded">
-                              {focusedPhoto.dimensions.length} x {focusedPhoto.dimensions.width} x {focusedPhoto.dimensions.height} {focusedPhoto.dimensions.unit || 'cm'}
-                            </span>
+                             {focusedPhoto.dimensions.map((dim, idx) => (
+                                <span key={idx} className="text-[8px] font-black text-blue-300 uppercase tracking-widest bg-blue-500/20 px-2 py-1 rounded">
+                                  {dim.label ? `${dim.label}: ` : ''}{dim.length}x{dim.width}x{dim.height} {dim.unit || 'cm'}
+                                </span>
+                             ))}
                           </div>
                         )}
                      </div>
                   </div>
 
                   {viewMode === 'private' && user && (
-                    <div className="absolute top-4 left-4 flex gap-1">
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
                       <button 
                         onClick={() => onEditPhoto(focusedPhoto)}
-                        className="bg-black/40 backdrop-blur-md p-2 rounded-xl text-white/80 hover:bg-blue-600 transition-colors shadow-lg border border-white/10"
+                        className="bg-blue-600 backdrop-blur-md p-3 rounded-2xl text-white shadow-xl border border-white/20 flex items-center gap-2"
                         title="編輯此相片"
                       >
-                        <Edit3 size={16} />
+                        <Edit3 size={18} />
+                        <span className="text-xs font-bold">编辑详情</span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          updateGroupPhotos(prev => prev.map(p => {
+                            if (p.groupId === activeGroupId) {
+                              if (p.id === focusedPhoto.id) return { ...p, isGroupCover: true };
+                              if (p.isGroupCover) return { ...p, isGroupCover: false };
+                            }
+                            return p;
+                          }));
+                        }}
+                        className={`backdrop-blur-md p-3 rounded-2xl border flex items-center gap-2 shadow-xl transition-all ${focusedPhoto.isGroupCover ? 'bg-yellow-400 text-white border-yellow-300' : 'bg-black/40 text-white border-white/10'}`}
+                        title="設為封面"
+                      >
+                        <Settings2 size={18} />
+                        <span className="text-xs font-bold">{focusedPhoto.isGroupCover ? '核心封面' : '设为封面'}</span>
                       </button>
                     </div>
                   )}

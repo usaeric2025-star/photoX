@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff } from 'lucide-react';
-import { Category, Tag, DB_Category } from '../../types';
+import { Category, Tag, DB_Category, ProductFormData } from '../../types';
 
 interface UploadFormProps {
   onClose: () => void;
@@ -12,33 +12,10 @@ interface UploadFormProps {
   deletePhoto: (id: string) => void;
   saveNewPhoto: () => void;
   isSyncing: boolean;
-  addName: string;
-  setAddName: (name: string) => void;
-  addCatId: string | null;
-  setAddCatId: (id: string | null) => void;
-  addSubId: string | null;
-  setAddSubId: (id: string | null) => void;
-  addTagIds: string[];
-  setAddTagIds: (ids: string[] | ((prev: string[]) => string[])) => void;
-  addNote: string;
-  setAddNote: (note: string) => void;
-  addManualCode: string;
-  setAddManualCode: (code: string) => void;
-  addModelNumber: string;
-  setAddModelNumber: (num: string) => void;
+  formState: ProductFormData;
+  updateForm: (updates: Partial<ProductFormData>) => void;
   showOtherFields: boolean;
   setShowOtherFields: (show: boolean) => void;
-  addDimL: string;
-  setAddDimL: (val: string) => void;
-  addDimW: string;
-  setAddDimW: (val: string) => void;
-  addDimH: string;
-  setAddDimH: (val: string) => void;
-  addDimensions: any[];
-  setAddDimensions: (dims: any[]) => void;
-  addIsHidden: boolean;
-
-  setAddIsHidden: (h: boolean) => void;
   dbCategories: DB_Category[];
   appLang: string;
   categories: Category[];
@@ -53,13 +30,8 @@ interface UploadFormProps {
 
 export const UploadForm: React.FC<UploadFormProps> = ({
   onClose, editPhotoId, newPhotoData, isAnalyzing, handleSingleAiAnalyze,
-  deletePhoto, saveNewPhoto, isSyncing, addName, setAddName, addCatId, setAddCatId,
-  addSubId, setAddSubId, addTagIds, setAddTagIds, addNote, setAddNote,
-  addManualCode, setAddManualCode, addModelNumber, setAddModelNumber, showOtherFields, setShowOtherFields,
-  addDimL, setAddDimL, addDimW, setAddDimW, addDimH, setAddDimH,
-  addDimensions, setAddDimensions,
-  addIsHidden, setAddIsHidden,
-
+  deletePhoto, saveNewPhoto, isSyncing, formState, updateForm,
+  showOtherFields, setShowOtherFields,
   dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
   aiDebugInfo, abortAnalysis
 }) => {
@@ -72,11 +44,11 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <div className="flex flex-col items-center">
             <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
             <div 
-              onClick={() => setAddIsHidden(!addIsHidden)}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${addIsHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+              onClick={() => updateForm({ isHidden: !formState.isHidden })}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
-              {addIsHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-              <span className="text-[8px] font-bold uppercase tracking-widest">{addIsHidden ? '公开屏蔽中' : '公开显示中'}</span>
+              {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
+              <span className="text-[8px] font-bold uppercase tracking-widest">{formState.isHidden ? '公开屏蔽中' : '公开显示中'}</span>
             </div>
         </div>
         <div className="flex items-center gap-2">
@@ -94,7 +66,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 onClick={() => {
                   if (isAnalyzing) return;
-                  handleSingleAiAnalyze(newPhotoData, addCatId || undefined);
+                  handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined);
                 }}
                 disabled={isAnalyzing && !abortAnalysis}
                 className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-90 ${isAnalyzing ? 'bg-slate-50 border-slate-100 text-slate-400' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-100'}`}
@@ -124,7 +96,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
+       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">
         <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-slate-900 shadow-2xl flex items-center justify-center border-4 border-white">
           {newPhotoData && <img src={newPhotoData} className="max-w-full max-h-full object-contain" alt="New" />}
           {isAnalyzing && (
@@ -146,37 +118,25 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           )}
         </div>
 
-        <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">手动编号 / Manual Code</h3>
-            <input 
-              type="text" 
-              placeholder="输入手动编号 (如: SK-2024)..."
-              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
-              value={addManualCode}
-              onChange={(e) => setAddManualCode(e.target.value)}
-            />
-        </section>
-
-        <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model Number</h3>
-            <input 
-              type="text" 
-              placeholder="输入型号编号 (如: MOD-123)..."
-              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
-              value={addModelNumber}
-              onChange={(e) => setAddModelNumber(e.target.value)}
-            />
-        </section>
-
-        <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">名称 / Product Name</h3>
-            <input 
-              type="text" 
-              placeholder="输入产品名称..."
-              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
-              value={addName}
-              onChange={(e) => setAddName(e.target.value)}
-            />
+        <section className="space-y-4">
+           <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">手动编号 / Code</h3>
+                  <input type="text" placeholder="SK-2024..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-bold shadow-sm" />
+              </div>
+              <div className="space-y-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model</h3>
+                  <input type="text" placeholder="MOD-123..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-bold shadow-sm" />
+              </div>
+           </div>
+           <div className="space-y-2">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
+                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-black shadow-sm" />
+           </div>
+           <div className="space-y-2">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品价格 / Price</h3>
+                <input type="text" placeholder="输入价格..." value={formState.price} onChange={e => updateForm({ price: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-black shadow-sm text-blue-600" />
+           </div>
         </section>
 
         <section className="space-y-4">
@@ -185,8 +145,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             {dbCategories.map(cat => (
               <button 
                 key={cat.code}
-                onClick={() => { setAddCatId(cat.code); }}
-                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${addCatId === cat.code ? 'bg-white border-slate-800 text-slate-800 shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
+                onClick={() => { updateForm({ categoryId: cat.code }); }}
+                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${formState.categoryId === cat.code ? 'bg-white border-slate-800 text-slate-800 shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
                 <span className="font-bold block text-sm tracking-tight">{cat[appLang as keyof DB_Category] || cat.zh}</span>
                 <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono">{cat.en}</span>
@@ -203,8 +163,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             {manufacturers?.map(mfr => (
               <button 
                 key={mfr.id}
-                onClick={() => setAddSubId(mfr.id)}
-                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addSubId === mfr.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+                onClick={() => updateForm({ subcategoryId: mfr.id })}
+                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${formState.subcategoryId === mfr.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 {mfr.name}
               </button>
@@ -221,8 +181,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             {tags.map(tag => (
               <button 
                 key={tag.id}
-                onClick={() => setAddTagIds(prev => prev.includes(tag.id) ? prev.filter(tid => tid !== tag.id) : [...prev, tag.id])}
-                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addTagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+                onClick={() => updateForm({ tagIds: formState.tagIds.includes(tag.id) ? formState.tagIds.filter(tid => tid !== tag.id) : [...formState.tagIds, tag.id] })}
+                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${formState.tagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 #{tag.name}
               </button>
@@ -260,9 +220,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">产品尺寸 / DIMENSIONS</label>
                     <button 
                       onClick={() => {
-                        const newDims = [...(addDimensions || [])];
+                        const newDims = [...(formState.dimensions || [])];
                         newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
-                        setAddDimensions(newDims);
+                        updateForm({ dimensions: newDims });
                       }}
                       className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
                     >
@@ -271,12 +231,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   </div>
                   
                   <div className="space-y-3">
-                    {(addDimensions && addDimensions.length > 0 ? addDimensions : [{ label: '', length: parseFloat(addDimL)||0, width: parseFloat(addDimW)||0, height: parseFloat(addDimH)||0, unit: 'cm' }]).map((dim, idx) => (
+                    {(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim, idx) => (
                       <div key={idx} className="bg-slate-100/30 p-4 rounded-3xl border border-slate-100 space-y-3 relative">
-                        { (addDimensions && addDimensions.length > 1) && (
+                        { (formState.dimensions && formState.dimensions.length > 1) && (
                           <button 
                             onClick={() => {
-                              setAddDimensions(addDimensions.filter((_, i) => i !== idx));
+                              updateForm({ dimensions: formState.dimensions.filter((_, i) => i !== idx) });
                             }}
                             className="absolute top-3 right-3 p-1 text-slate-300 hover:text-red-500 transition-colors"
                           >
@@ -294,9 +254,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                 placeholder="如: 3-Seater" 
                                 value={dim.label || ''} 
                                 onChange={e => {
-                                  const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                  const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
                                   newDims[idx].label = e.target.value;
-                                  setAddDimensions(newDims);
+                                  updateForm({ dimensions: newDims });
                                 }}
                                 className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-xs font-bold outline-none focus:border-blue-500" 
                               />
@@ -308,9 +268,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                   <button 
                                     key={u}
                                     onClick={() => {
-                                      const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                      const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
                                       newDims[idx].unit = u;
-                                      setAddDimensions(newDims);
+                                      updateForm({ dimensions: newDims });
                                     }}
                                     className={`flex-1 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200'}`}
                                   >
@@ -327,10 +287,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                type="number" 
                                value={dim.length || ''} 
                                onChange={e => {
-                                 const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                 const curDims = formState.dimensions;
+                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].length = parseFloat(e.target.value) || 0;
-                                 setAddDimensions(newDims);
-                                 if (idx === 0) setAddDimL(e.target.value);
+                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
+                                 if (idx === 0) updates.dimL = e.target.value;
+                                 updateForm(updates);
                                }}
                                className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
                              />
@@ -341,10 +303,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                type="number" 
                                value={dim.width || ''} 
                                onChange={e => {
-                                 const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                 const curDims = formState.dimensions;
+                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].width = parseFloat(e.target.value) || 0;
-                                 setAddDimensions(newDims);
-                                 if (idx === 0) setAddDimW(e.target.value);
+                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
+                                 if (idx === 0) updates.dimW = e.target.value;
+                                 updateForm(updates);
                                }}
                                className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
                              />
@@ -355,10 +319,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                type="number" 
                                value={dim.height || ''} 
                                onChange={e => {
-                                 const newDims = [...(addDimensions.length > 0 ? addDimensions : [{...dim}])];
+                                 const curDims = formState.dimensions;
+                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].height = parseFloat(e.target.value) || 0;
-                                 setAddDimensions(newDims);
-                                 if (idx === 0) setAddDimH(e.target.value);
+                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
+                                 if (idx === 0) updates.dimH = e.target.value;
+                                 updateForm(updates);
                                }}
                                className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
                              />
@@ -375,8 +341,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                     <textarea 
                       placeholder="输入产品特色、说明回其他备注..."
                       className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
-                      value={addNote}
-                      onChange={(e) => setAddNote(e.target.value)}
+                      value={formState.description}
+                      onChange={e => updateForm({ description: e.target.value })}
                     />
                 </div>
               </motion.div>

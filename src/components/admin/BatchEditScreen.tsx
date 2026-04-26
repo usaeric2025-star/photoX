@@ -2,6 +2,8 @@ import React from 'react';
 import { X, RefreshCcw, ChevronRight, EyeOff, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+import { ProductFormData } from '../../types';
+
 export const BatchEditScreen = ({
   resetAddState,
   isSyncing,
@@ -10,36 +12,37 @@ export const BatchEditScreen = ({
   dbCategories,
   categories,
   appLang,
-  addCatId,
-  setAddCatId,
-  addSubId,
-  setAddSubId,
-  quickAddSubCategory,
-  tags,
-  quickAddTag,
-  quickAddManufacturer,
-  addTagIds,
-  setAddTagIds,
-  addNote,
-  setAddNote,
-  showOtherFields,
-  setShowOtherFields,
-  addManualCode,
-  setAddManualCode,
-  addModelNumber,
-  setAddModelNumber,
-  addDimL,
-  setAddDimL,
-  addDimW,
-  setAddDimW,
-  addDimH,
-  setAddDimH,
-  addIsHidden,
-  setAddIsHidden,
+  formState,
+  updateForm,
   batchIsHiddenApplied,
   setBatchIsHiddenApplied,
   manufacturers,
-}: any) => {
+  tags,
+  quickAddSubCategory,
+  quickAddTag,
+  quickAddManufacturer,
+  showOtherFields,
+  setShowOtherFields,
+}: {
+  resetAddState: () => void;
+  isSyncing: boolean;
+  saveBatchEdit: (batchIsHiddenApplied: boolean) => Promise<void>;
+  batchEditIds: string[] | null;
+  dbCategories: any[];
+  categories: any[];
+  appLang: string;
+  formState: ProductFormData;
+  updateForm: (updates: Partial<ProductFormData>) => void;
+  batchIsHiddenApplied: boolean;
+  setBatchIsHiddenApplied: (a: boolean) => void;
+  manufacturers: any[];
+  tags: any[];
+  quickAddSubCategory: () => void;
+  quickAddTag: () => void;
+  quickAddManufacturer: () => void;
+  showOtherFields: boolean;
+  setShowOtherFields: (s: boolean) => void;
+}) => {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
@@ -51,20 +54,20 @@ export const BatchEditScreen = ({
             <div 
               onClick={() => {
                 setBatchIsHiddenApplied(true);
-                setAddIsHidden(!addIsHidden);
+                updateForm({ isHidden: !formState.isHidden });
               }}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${batchIsHiddenApplied ? (addIsHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600') : 'bg-slate-50 border-slate-200 text-slate-400'}`}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${batchIsHiddenApplied ? (formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600') : 'bg-slate-50 border-slate-200 text-slate-400'}`}
             >
-              {!batchIsHiddenApplied ? <div className="w-2 h-2 rounded-full bg-slate-300" /> : (addIsHidden ? <EyeOff size={10} /> : <Eye size={10} />)}
-              <span className="text-[8px] font-bold uppercase tracking-widest">{!batchIsHiddenApplied ? '未套用公開狀態' : (addIsHidden ? '設為屏蔽' : '設為公開')}</span>
+              {!batchIsHiddenApplied ? <div className="w-2 h-2 rounded-full bg-slate-300" /> : (formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />)}
+              <span className="text-[8px] font-bold uppercase tracking-widest">{!batchIsHiddenApplied ? '未套用公開狀態' : (formState.isHidden ? '設為屏蔽' : '設為公開')}</span>
             </div>
         </div>
         <button 
           onClick={() => saveBatchEdit(batchIsHiddenApplied)}
-          className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+          className={`bg-blue-600 text-white px-8 py-3 rounded-[20px] text-sm font-black shadow-xl shadow-blue-600/30 transition-all active:scale-[0.9] flex items-center gap-3 border-2 border-white/20 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
         >
-          {isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : null}
-          套用修改
+          {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : null}
+          保存修改
         </button>
       </div>
 
@@ -82,8 +85,8 @@ export const BatchEditScreen = ({
               type="text" 
               placeholder="输入统一编号 (如: SK-2024)..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
-              value={addManualCode}
-              onChange={(e) => setAddManualCode(e.target.value)}
+              value={formState.manual_code}
+              onChange={(e) => updateForm({ manual_code: e.target.value })}
             />
         </section>
 
@@ -93,8 +96,19 @@ export const BatchEditScreen = ({
               type="text" 
               placeholder="输入统一型号编号 (如: MOD-123)..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
-              value={addModelNumber}
-              onChange={(e) => setAddModelNumber(e.target.value)}
+              value={formState.model_number}
+              onChange={(e) => updateForm({ model_number: e.target.value })}
+            />
+        </section>
+
+        <section className="space-y-4">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一价格 / Price</h3>
+            <input 
+              type="text" 
+              placeholder="输入统一价格..."
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300 text-blue-600"
+              value={formState.price}
+              onChange={(e) => updateForm({ price: e.target.value })}
             />
         </section>
 
@@ -105,11 +119,11 @@ export const BatchEditScreen = ({
               {dbCategories.slice(0, 4).map((cat: any) => (
                 <button 
                   key={cat.code}
-                  onClick={() => { setAddCatId(cat.code); }}
-                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                  onClick={() => { updateForm({ categoryId: cat.code }); }}
+                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
                 >
-                  <span className={`font-black text-[11px] leading-tight text-center ${addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[appLang] || cat.zh}</span>
-                  <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${addCatId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
+                  <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[appLang] || cat.zh}</span>
+                  <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${formState.categoryId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
                 </button>
               ))}
             </div>
@@ -117,11 +131,11 @@ export const BatchEditScreen = ({
               {dbCategories.slice(4, 7).map((cat: any) => (
                 <button 
                   key={cat.code}
-                  onClick={() => { setAddCatId(cat.code); }}
-                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                  onClick={() => { updateForm({ categoryId: cat.code }); }}
+                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
                 >
-                  <span className={`font-black text-[11px] leading-tight text-center ${addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[appLang] || cat.zh}</span>
-                  <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${addCatId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
+                  <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[appLang] || cat.zh}</span>
+                  <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${formState.categoryId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
                 </button>
               ))}
             </div>
@@ -137,8 +151,8 @@ export const BatchEditScreen = ({
             {manufacturers?.map((mfr: any) => (
               <button 
                 key={mfr.id}
-                onClick={() => setAddSubId(mfr.id)}
-                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addSubId === mfr.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+                onClick={() => updateForm({ subcategoryId: mfr.id })}
+                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${formState.subcategoryId === mfr.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 {mfr.name}
               </button>
@@ -155,8 +169,8 @@ export const BatchEditScreen = ({
             {tags.map((tag: any) => (
               <button 
                 key={tag.id}
-                onClick={() => setAddTagIds((prev: string[]) => prev.includes(tag.id) ? prev.filter((tid: string) => tid !== tag.id) : [...prev, tag.id])}
-                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${addTagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+                onClick={() => updateForm({ tagIds: formState.tagIds.includes(tag.id) ? formState.tagIds.filter((tid: string) => tid !== tag.id) : [...formState.tagIds, tag.id] })}
+                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${formState.tagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 #{tag.name}
               </button>
@@ -192,22 +206,22 @@ export const BatchEditScreen = ({
                     <input 
                       type="number"
                       placeholder="長"
-                      value={addDimL}
-                      onChange={(e) => setAddDimL(e.target.value)}
+                      value={formState.dimL}
+                      onChange={(e) => updateForm({ dimL: e.target.value })}
                       className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
                     />
                     <input 
                       type="number"
                       placeholder="寬"
-                      value={addDimW}
-                      onChange={(e) => setAddDimW(e.target.value)}
+                      value={formState.dimW}
+                      onChange={(e) => updateForm({ dimW: e.target.value })}
                       className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
                     />
                     <input 
                       type="number"
                       placeholder="高"
-                      value={addDimH}
-                      onChange={(e) => setAddDimH(e.target.value)}
+                      value={formState.dimH}
+                      onChange={(e) => updateForm({ dimH: e.target.value })}
                       className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
                     />
                   </div>
@@ -218,8 +232,8 @@ export const BatchEditScreen = ({
                     <textarea 
                       placeholder="輸入統一修改的備註內容..."
                       className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium min-h-[100px]"
-                      value={addNote}
-                      onChange={(e) => setAddNote(e.target.value)}
+                      value={formState.description}
+                      onChange={(e) => updateForm({ description: e.target.value })}
                     />
                 </div>
               </motion.div>

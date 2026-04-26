@@ -122,9 +122,9 @@ export const useSyncEngine = () => {
             if (user) {
                 const cloudPhotos = await loadPhotosFromCloud(user.id);
                 if (cloudPhotos) setCloudCount(cloudPhotos.length);
-            } else if (cloudPublicPhotos) {
+            } else if (cloudPhotos) {
                 // In staff mode/no user, show total public count
-                setCloudCount(cloudPublicPhotos.length);
+                setCloudCount(cloudPhotos.length);
             }
             
             const now = Date.now();

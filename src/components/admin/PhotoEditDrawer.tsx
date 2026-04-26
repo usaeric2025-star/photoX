@@ -1,37 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff, Search, Sparkles } from 'lucide-react';
-import { Photo } from '../../types';
+import { Photo, ProductFormData } from '../../types';
 
 interface Props {
   editPhotoId: string | null;
   resetAddState: () => void;
   saveNewPhoto: () => Promise<void>;
-  addName: string;
-  setAddName: (n: string) => void;
-  addCatId: string | null;
-  setAddCatId: (id: string | null) => void;
-  addSubId: string | null;
-  setAddSubId: (id: string | null) => void;
-  addTagIds: string[];
-  setAddTagIds: (ids: string[]) => void;
-  addNote: string;
-  setAddNote: (n: string) => void;
-  addManualCode: string;
-  setAddManualCode: (c: string) => void;
-  addModelNumber: string;
-  setAddModelNumber: (num: string) => void;
-  addDimL: string;
-  setAddDimL: (l: string) => void;
-  addDimW: string;
-  setAddDimW: (w: string) => void;
-  addDimH: string;
-  setAddDimH: (h: string) => void;
-  addDimensions: any[];
-  setAddDimensions: (dims: any[]) => void;
-  addIsHidden: boolean;
-
-  setAddIsHidden: (h: boolean) => void;
+  formState: ProductFormData;
+  updateForm: (updates: Partial<ProductFormData>) => void;
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
   isSyncing: boolean;
@@ -56,6 +33,7 @@ interface Props {
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
+  const { formState, updateForm } = props;
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [managingTag, setManagingTag] = useState<any | null>(null);
   const [isLongPress, setIsLongPress] = useState(false);
@@ -65,11 +43,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   }, [props.tags]);
   
   const handleTagClick = (tag: any) => {
-    if (isLongPress) return;
-    if (props.addTagIds.includes(tag.id)) {
-        props.setAddTagIds(props.addTagIds.filter(id => id !== tag.id));
-    } else if (props.addTagIds.length < 3) {
-        props.setAddTagIds([...props.addTagIds, tag.id]);
+    if (isLongPress) {
+        setIsLongPress(false);
+        return;
+    }
+    if (formState.tagIds.includes(tag.id)) {
+        updateForm({ tagIds: formState.tagIds.filter(id => id !== tag.id) });
+    } else if (formState.tagIds.length < 3) {
+        updateForm({ tagIds: [...formState.tagIds, tag.id] });
     }
   };
 
@@ -100,11 +81,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <div className="flex flex-col items-center">
             <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
             <div 
-              onClick={() => props.setAddIsHidden(!props.addIsHidden)}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${props.addIsHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+              onClick={() => updateForm({ isHidden: !formState.isHidden })}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
-              {props.addIsHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-              <span className="text-[8px] font-bold uppercase tracking-widest">{props.addIsHidden ? '公开屏蔽中' : '公开显示中'}</span>
+              {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
+              <span className="text-[8px] font-bold uppercase tracking-widest">{formState.isHidden ? '公开屏蔽中' : '公开显示中'}</span>
             </div>
         </div>
         <div className="flex items-center gap-2">
@@ -123,7 +104,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   onClick={() => {
                     if (props.isAnalyzing) return;
                     const data = props.newPhotoData || props.editPhotoPreview;
-                    if (data) props.handleSingleAiAnalyze!(data, props.addCatId || undefined);
+                    if (data) props.handleSingleAiAnalyze!(data, formState.categoryId || undefined);
                   }}
                   disabled={props.isAnalyzing && !props.abortAnalysis}
                   className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-95 ${props.isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
@@ -152,19 +133,23 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             </div>
           )}
           <div className="flex-1 space-y-3">
-             <div className="grid grid-cols-2 gap-2">
+             <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Code</h3>
-                  <input type="text" placeholder="编号..." value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm" />
+                  <input type="text" placeholder="编号..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm" />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model</h3>
-                  <input type="text" placeholder="型号..." value={props.addModelNumber} onChange={e => props.setAddModelNumber(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm" />
+                  <input type="text" placeholder="型号..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">价格 / Price</h3>
+                  <input type="text" placeholder="价格..." value={formState.price} onChange={e => updateForm({ price: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold text-blue-600" />
                 </div>
              </div>
              <div className="space-y-1">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
-                <input type="text" placeholder="输入名称..." value={props.addName} onChange={e => props.setAddName(e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
+                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
              </div>
           </div>
         </div>
@@ -175,10 +160,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 {props.dbCategories.map(cat => (
                   <button 
                     key={cat.code}
-                    onClick={() => { props.setAddCatId(cat.code); }}
-                    className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${props.addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-md shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                    onClick={() => { updateForm({ categoryId: cat.code }); }}
+                    className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.code ? 'bg-blue-50 border-blue-600 shadow-md shadow-blue-600/10' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-sm leading-tight text-center ${props.addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
+                    <span className={`font-black text-sm leading-tight text-center ${formState.categoryId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
                   </button>
                 ))}
             </div>
@@ -198,7 +183,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     onClick={() => handleTagClick(tag)}
                     onPointerCancel={() => { if (longPressTimer) clearTimeout(longPressTimer); }}
                     onContextMenu={(e) => e.preventDefault()}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${props.addTagIds.includes(tag.id) ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-600'}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${formState.tagIds.includes(tag.id) ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-600'}`}
                   >
                     #{tag.name}
                   </button>
@@ -273,8 +258,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             {props.manufacturers.map((mfr: any) => (
               <button 
                 key={mfr.id}
-                onClick={() => props.setAddSubId(mfr.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${props.addSubId === mfr.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600'}`}
+                onClick={() => updateForm({ subcategoryId: mfr.id })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${formState.subcategoryId === mfr.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600'}`}
               >
                 {mfr.name}
               </button>
@@ -299,9 +284,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">产品尺寸 / DIMENSIONS</span>
                     <button 
                       onClick={() => {
-                        const newDims = [...(props.addDimensions || [])];
+                        const newDims = [...(formState.dimensions || [])];
                         newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
-                        props.setAddDimensions(newDims);
+                        updateForm({ dimensions: newDims });
                       }}
                       className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
                     >
@@ -310,12 +295,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="space-y-3">
-                    {(props.addDimensions && props.addDimensions.length > 0 ? props.addDimensions : [{ label: '', length: parseFloat(props.addDimL)||0, width: parseFloat(props.addDimW)||0, height: parseFloat(props.addDimH)||0, unit: 'cm' }]).map((dim, idx) => (
+                    {(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim, idx) => (
                       <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
-                        { (props.addDimensions && props.addDimensions.length > 1) && (
+                        { (formState.dimensions && formState.dimensions.length > 1) && (
                           <button 
                             onClick={() => {
-                              props.setAddDimensions(props.addDimensions.filter((_, i) => i !== idx));
+                              updateForm({ dimensions: formState.dimensions.filter((_, i) => i !== idx) });
                             }}
                             className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
                           >
@@ -333,9 +318,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                 placeholder="如: 3-Seater" 
                                 value={dim.label || ''} 
                                 onChange={e => {
-                                  const newDims = [...((props.addDimensions && props.addDimensions.length > 0) ? props.addDimensions : [{...dim}])];
+                                  const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
                                   newDims[idx].label = e.target.value;
-                                  props.setAddDimensions(newDims);
+                                  updateForm({ dimensions: newDims });
                                 }}
                                 className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold" 
                               />
@@ -347,10 +332,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                   <button 
                                     key={u}
                                     onClick={() => {
-                                      const newDims = [...((props.addDimensions && props.addDimensions.length > 0) ? props.addDimensions : [{...dim}])];
+                                      const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
                                       newDims[idx].unit = u;
                                       newDims[idx].isAI = false;
-                                      props.setAddDimensions(newDims);
+                                      updateForm({ dimensions: newDims });
                                     }}
                                     className={`flex-1 p-2 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}
                                   >
@@ -367,11 +352,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                type="number" 
                                value={dim.length || ''} 
                                onChange={e => {
-                                 const curDims = props.addDimensions;
+                                 const curDims = formState.dimensions;
                                  const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].length = parseFloat(e.target.value) || 0;
-                                 props.setAddDimensions(newDims);
-                                 if (idx === 0) props.setAddDimL(e.target.value);
+                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
+                                 if (idx === 0) updates.dimL = e.target.value;
+                                 updateForm(updates);
                                }}
                                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
                              />
@@ -382,11 +368,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                type="number" 
                                value={dim.width || ''} 
                                onChange={e => {
-                                 const curDims = props.addDimensions;
+                                 const curDims = formState.dimensions;
                                  const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].width = parseFloat(e.target.value) || 0;
-                                 props.setAddDimensions(newDims);
-                                 if (idx === 0) props.setAddDimW(e.target.value);
+                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
+                                 if (idx === 0) updates.dimW = e.target.value;
+                                 updateForm(updates);
                                }}
                                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
                              />
@@ -397,11 +384,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                type="number" 
                                value={dim.height || ''} 
                                onChange={e => {
-                                 const curDims = props.addDimensions;
+                                 const curDims = formState.dimensions;
                                  const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].height = parseFloat(e.target.value) || 0;
-                                 props.setAddDimensions(newDims);
-                                 if (idx === 0) props.setAddDimH(e.target.value);
+                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
+                                 if (idx === 0) updates.dimH = e.target.value;
+                                 updateForm(updates);
                                }}
                                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
                              />
@@ -411,7 +399,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     ))}
                   </div>
 
-                  <textarea placeholder="备注信息..." value={props.addNote} onChange={e => props.setAddNote(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
+                  <textarea placeholder="备注信息..." value={formState.description} onChange={e => updateForm({ description: e.target.value })} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
 
                </div>
              )}
@@ -420,7 +408,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
            {props.editPhotoId && props.onDelete && (
             <div className="pt-4 pb-8 space-y-4">
               <button 
-                onClick={() => props.onDelete!(props.editPhotoId)}
+                onClick={() => props.onDelete!(props.editPhotoId!)}
                 className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
               >
                 删除此照片

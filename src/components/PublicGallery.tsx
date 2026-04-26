@@ -634,6 +634,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                           </span>
                         </div>
                       )}
+
+                      {photo.price && (
+                        <div className="mt-1 text-right">
+                          <span className="bg-white/90 text-blue-600 text-[8px] px-1.5 py-0.5 rounded-md font-black shadow-sm border border-blue-100">
+                             {photo.price}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -862,11 +870,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 {/* 2. 名称 (Product Name) */}
                 <div>
                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.name}</h3>
-                   <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">
-                     {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具记录' 
-                       ? displayPhotos[lightboxIndex].name 
-                       : t.unnamed}
-                   </h1>
+                   <div className="flex flex-col gap-1">
+                      <h1 className="text-2xl font-black text-slate-900 leading-tight tracking-tight">
+                        {displayPhotos[lightboxIndex].name && displayPhotos[lightboxIndex].name !== '家具记录' 
+                          ? displayPhotos[lightboxIndex].name 
+                          : t.unnamed}
+                      </h1>
+                      {displayPhotos[lightboxIndex].price && (
+                        <div className="flex items-center gap-2 mt-1">
+                           <span className="text-2xl font-black text-blue-600">
+                             {displayPhotos[lightboxIndex].price.includes('$') || displayPhotos[lightboxIndex].price.includes('RM') || displayPhotos[lightboxIndex].price.match(/^[0-9.,]+$/) ? '' : ''}
+                             {displayPhotos[lightboxIndex].price}
+                           </span>
+                        </div>
+                      )}
+                   </div>
                 </div>
 
                 {/* 3. 目录 (Category) */}

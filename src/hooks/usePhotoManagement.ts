@@ -1,7 +1,23 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
-import { Photo, Tag } from '../types';
+import { Photo, Tag, ProductFormData } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
 import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, generateItemCode, checkImageHashExists, uploadImages } from '../services/supabaseService';
+
+const INITIAL_FORM_STATE: ProductFormData = {
+  name: '',
+  categoryId: null,
+  subcategoryId: null,
+  tagIds: [],
+  description: '',
+  manual_code: '',
+  model_number: '',
+  dimensions: [],
+  isHidden: false,
+  price: '',
+  dimL: '',
+  dimW: '',
+  dimH: '',
+};
 
 export const usePhotoManagement = (
   user: any,
@@ -18,106 +34,92 @@ export const usePhotoManagement = (
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
-  const [addCatId, setAddCatId] = useState<string | null>(null);
-  const [addSubId, setAddSubId] = useState<string | null>(null);
-  const [addTagIds, setAddTagIds] = useState<string[]>([]);
-  const [addNote, setAddNote] = useState('');
-  const [addName, setAddName] = useState('');
-  const [addManualCode, setAddManualCode] = useState('');
-  const [addModelNumber, setAddModelNumber] = useState('');
-  const [addDimL, setAddDimL] = useState<string>('');
-  const [addDimW, setAddDimW] = useState<string>('');
-  const [addDimH, setAddDimH] = useState<string>('');
-  const [addDimensions, setAddDimensions] = useState<{label?: string, length?: number, width?: number, height?: number, unit?: string}[]>([]);
-  const [addIsHidden, setAddIsHidden] = useState(false);
+  const [formState, setFormState] = useState<ProductFormData>(INITIAL_FORM_STATE);
   const [showOtherFields, setShowOtherFields] = useState(false);
+
+  // Helper to update specific fields in formState
+  const updateForm = (updates: Partial<ProductFormData>) => {
+    setFormState(prev => ({ ...prev, ...updates }));
+  };
 
   useEffect(() => {
     if (editPhotoId) {
       const photo = photos.find(p => p.id === editPhotoId);
       if (photo) {
-        setAddName(photo.name || '');
         const initialCatId = photo.categoryId || (photo.category ? dbCategories.find(c => c.zh === photo.category || c.en === photo.category || c.code === photo.category)?.code : null);
-        setAddCatId(initialCatId || null);
-        setAddSubId(photo.subcategoryId || null);
         const rawTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
-        setAddTagIds(rawTagIds);
-        setAddNote(photo.description || '');
-        setAddManualCode(photo.manual_code || '');
-        setAddModelNumber(photo.model_number || '');
         
-        if (Array.isArray(photo.dimensions) && photo.dimensions.length > 0) {
-            setAddDimensions(photo.dimensions);
-            setAddDimL(photo.dimensions[0].length?.toString() || '');
-            setAddDimW(photo.dimensions[0].width?.toString() || '');
-            setAddDimH(photo.dimensions[0].height?.toString() || '');
-        } else {
-            setAddDimensions([]);
-            setAddDimL('');
-            setAddDimW('');
-            setAddDimH('');
-        }
-        
-        setAddIsHidden(!!photo.isHidden);
+        const dims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
+
+        setFormState({
+          name: photo.name || '',
+          categoryId: initialCatId || null,
+          subcategoryId: photo.subcategoryId || null,
+          tagIds: rawTagIds,
+          description: photo.description || '',
+          manual_code: photo.manual_code || '',
+          model_number: photo.model_number || '',
+          dimensions: dims as any[],
+          isHidden: !!photo.isHidden,
+          dimL: dims[0]?.length?.toString() || '',
+          dimW: dims[0]?.width?.toString() || '',
+          dimH: dims[0]?.height?.toString() || '',
+        });
       }
     }
-  }, [editPhotoId, photos]);
+  }, [editPhotoId, photos, dbCategories]);
 
   const resetAddState = () => {
     setNewPhotoData(null);
     setEditPhotoId(null);
     setBatchEditIds(null);
-    setAddCatId(null);
-    setAddSubId(null);
-    setAddTagIds([]);
-    setAddNote('');
-    setAddName('');
-    setAddManualCode('');
-    setAddModelNumber('');
-    setAddDimL('');
-    setAddDimW('');
-    setAddDimH('');
-    setAddDimensions([]);
-    setAddIsHidden(false);
+    setFormState(INITIAL_FORM_STATE);
     setShowOtherFields(false);
   };
 
   const saveNewPhoto = async () => {
-    if (!addCatId && !addName && !editPhotoId && !newPhotoData) {
+    const { 
+      name, categoryId, subcategoryId, tagIds, description, 
+      manual_code, model_number, dimensions, isHidden, price,
+      dimL, dimW, dimH
+    } = formState;
+
+    if (!categoryId && !name && !editPhotoId && !newPhotoData) {
        setAlertDialog({ title: '提示', message: '請填寫基本資訊或選擇分類' });
        return;
     }
 
     setIsSyncing(true);
     try {
-       const finalTags = tags.filter(t => addTagIds.includes(t.id)).map(t => t.name);
-       const categoryName = dbCategories.find(c => c.code === addCatId)?.zh || '';
-       const manufacturerName = manufacturers.find(m => m.id === addSubId)?.name || '';
+       const finalTags = tags.filter(t => tagIds.includes(t.id)).map(t => t.name);
+       const categoryName = dbCategories.find(c => c.code === categoryId)?.zh || '';
+       const manufacturerName = manufacturers.find(m => m.id === subcategoryId)?.name || '';
 
        if (editPhotoId) {
           const original = photos.find(p => p.id === editPhotoId);
           if (!original) throw new Error('Photo not found');
 
-          const finalDimensions = addDimensions.length > 0 ? addDimensions : [{
-            length: parseFloat(addDimL) || 0,
-            width: parseFloat(addDimW) || 0,
-            height: parseFloat(addDimH) || 0,
+          const finalDimensions = dimensions.length > 0 ? dimensions : [{
+            length: parseFloat(dimL || '0') || 0,
+            width: parseFloat(dimW || '0') || 0,
+            height: parseFloat(dimH || '0') || 0,
             unit: 'cm'
           }];
 
           const updatedPhoto: Photo = {
             ...original,
-            name: addName || original.name,
-            categoryId: addCatId,
-            subcategoryId: addSubId,
-            tagIds: addTagIds,
+            name: name || original.name,
+            categoryId: categoryId,
+            subcategoryId: subcategoryId,
+            tagIds: tagIds,
             category: categoryName || original.category,
             sub_category: manufacturerName || original.sub_category,
             tags: finalTags,
-            description: addNote,
-            manual_code: addManualCode,
-            model_number: addModelNumber,
-            isHidden: addIsHidden,
+            description: description,
+            manual_code: manual_code,
+            model_number: model_number,
+            isHidden: isHidden,
+            price: price,
             dimensions: finalDimensions,
             updatedAt: new Date().toISOString()
           };
@@ -130,10 +132,10 @@ export const usePhotoManagement = (
           }
        } else if (newPhotoData) {
           const dbId = crypto.randomUUID();
-          const finalDimensions = addDimensions.length > 0 ? addDimensions : [{
-            length: parseFloat(addDimL) || 0,
-            width: parseFloat(addDimW) || 0,
-            height: parseFloat(addDimH) || 0,
+          const finalDimensions = dimensions.length > 0 ? dimensions : [{
+            length: parseFloat(dimL || '0') || 0,
+            width: parseFloat(dimW || '0') || 0,
+            height: parseFloat(dimH || '0') || 0,
             unit: 'cm'
           }];
 
@@ -141,20 +143,21 @@ export const usePhotoManagement = (
             id: dbId,
             storageId: Date.now().toString() + Math.random().toString(36).substr(2, 9),
             item_code: generateItemCode(),
-            manual_code: addManualCode,
-            model_number: addModelNumber,
+            manual_code: manual_code,
+            model_number: model_number,
             image_hash: calculateMD5(newPhotoData),
-            name: addName || '未命名产品',
+            name: name || '未命名产品',
             category: categoryName || '未分类',
             sub_category: manufacturerName,
             tags: finalTags,
-            description: addNote,
+            description: description,
             image_url: '',
             uri: newPhotoData,
-            categoryId: addCatId,
-            subcategoryId: addSubId,
-            tagIds: addTagIds,
-            isHidden: addIsHidden,
+            categoryId: categoryId,
+            subcategoryId: subcategoryId,
+            tagIds: tagIds,
+            isHidden: isHidden,
+            price: price,
             dimensions: finalDimensions,
             createdAt: new Date().toISOString(),
             groupId: null
@@ -179,11 +182,16 @@ export const usePhotoManagement = (
 
   const saveBatchEdit = async (batchIsHiddenApplied: boolean = false) => {
      if (!batchEditIds) return;
+     const { 
+       categoryId, subcategoryId, tagIds, description, 
+       manual_code, model_number, isHidden, price
+     } = formState;
+
      setIsSyncing(true);
      try {
-        const finalTags = tags.filter(t => addTagIds.includes(t.id)).map(t => t.name);
-        const categoryName = dbCategories.find(c => c.code === addCatId)?.zh || '';
-        const manufacturerName = manufacturers.find(m => m.id === addSubId)?.name || '';
+        const finalTags = tags.filter(t => tagIds.includes(t.id)).map(t => t.name);
+        const categoryName = dbCategories.find(c => c.code === categoryId)?.zh || '';
+        const manufacturerName = manufacturers.find(m => m.id === subcategoryId)?.name || '';
 
         const updatedPhotosList: Photo[] = [];
         setPhotos(prev => {
@@ -191,16 +199,17 @@ export const usePhotoManagement = (
             if (batchEditIds.includes(p.id)) {
                const updated = {
                  ...p,
-                 categoryId: addCatId || p.categoryId,
-                 subcategoryId: addSubId || p.subcategoryId,
-                 tagIds: addTagIds.length > 0 ? addTagIds : p.tagIds,
+                 categoryId: categoryId || p.categoryId,
+                 subcategoryId: subcategoryId || p.subcategoryId,
+                 tagIds: tagIds.length > 0 ? tagIds : p.tagIds,
                  category: categoryName || p.category,
                  sub_category: manufacturerName || p.sub_category,
                  tags: finalTags.length > 0 ? finalTags : p.tags,
-                 description: addNote || p.description,
-                 manual_code: addManualCode || p.manual_code,
-                 model_number: addModelNumber || p.model_number,
-                 isHidden: batchIsHiddenApplied ? addIsHidden : p.isHidden,
+                 description: description || p.description,
+                 manual_code: manual_code || p.manual_code,
+                 model_number: model_number || p.model_number,
+                 isHidden: batchIsHiddenApplied ? isHidden : p.isHidden,
+                 price: price || p.price,
                  updatedAt: new Date().toISOString()
                };
                updatedPhotosList.push(updated);
@@ -230,19 +239,7 @@ export const usePhotoManagement = (
     newPhotoData, setNewPhotoData,
     editPhotoId, setEditPhotoId,
     batchEditIds, setBatchEditIds,
-    addCatId, setAddCatId,
-    addSubId, setAddSubId,
-    addTagIds, setAddTagIds,
-    addNote, setAddNote,
-    addName, setAddName,
-    addManualCode, setAddManualCode,
-    addModelNumber, setAddModelNumber,
-    addDimL, setAddDimL,
-    addDimW, setAddDimW,
-    addDimH, setAddDimH,
-    addDimensions, setAddDimensions,
-    addIsHidden, setAddIsHidden,
-
+    formState, updateForm,
     showOtherFields, setShowOtherFields,
     resetAddState,
     saveNewPhoto,
