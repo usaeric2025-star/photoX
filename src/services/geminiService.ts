@@ -118,14 +118,14 @@ export const analyzeProductPhoto = async (
      - **規則：標籤必須是單個英文單詞 (Single English word)，禁止使用中文，禁止使用片語。**
   2. **尺寸 (Dimensions)**：
      - **如果你識別出照片中有不同的規格或多組尺寸，請全部列出**。
-     - 每组尺寸必须包含 "label" (規格名稱, 例如 '3-Seater', '2-Seater', 'Package'), "length", "width", "height", "unit"。
+     - 每組尺寸必須包含 "label" (規格名稱, 例如 '3-Seater', '2-Seater', 'Package'), "length", "width", "height", "unit", "isAI": true。
      - **單位識別**：請仔細辨認是 cm 還是 inch。如果無法確定，默認使用 cm。
   3. **廠商 (subcategoryId)**：禁止識別或修改。回傳值必須為 null。
   4. **分類 (categoryId)**：必須從代碼清單中選擇：${JSON.stringify(categoriesJson)}。
   5. **輸出格式**：僅回傳一個合法、壓縮的 JSON 物件。禁止 Markdown。
 
   【JSON 範例格式】
-  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTagName":"Modern, Velvet","dimensions":[{"label":"Package","length":100,"width":80,"height":50,"unit":"cm"}],"manualCode":null,"modelNumber":null,"note":null}
+  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTagName":"Modern, Velvet","dimensions":[{"label":"Package","length":100,"width":80,"height":50,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
   `;
 
   try {

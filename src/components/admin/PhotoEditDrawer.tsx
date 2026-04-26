@@ -326,13 +326,16 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                         )}
                         <div className="grid grid-cols-2 gap-2">
                            <div className="space-y-1">
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">规格名称 / Label</span>
+                              <div className="flex items-center justify-between pl-1">
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">规格名称 / Label</span>
+                                {dim.isAI && <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">AI</span>}
+                              </div>
                               <input 
                                 type="text" 
                                 placeholder="如: 3-Seater" 
                                 value={dim.label || ''} 
                                 onChange={e => {
-                                  const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                  const newDims = [...((props.addDimensions && props.addDimensions.length > 0) ? props.addDimensions : [{...dim}])];
                                   newDims[idx].label = e.target.value;
                                   props.setAddDimensions(newDims);
                                 }}
@@ -346,8 +349,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                   <button 
                                     key={u}
                                     onClick={() => {
-                                      const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                      const newDims = [...((props.addDimensions && props.addDimensions.length > 0) ? props.addDimensions : [{...dim}])];
                                       newDims[idx].unit = u;
+                                      newDims[idx].isAI = false;
                                       props.setAddDimensions(newDims);
                                     }}
                                     className={`flex-1 p-2 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}
@@ -365,7 +369,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                type="number" 
                                value={dim.length || ''} 
                                onChange={e => {
-                                 const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                 const curDims = props.addDimensions;
+                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].length = parseFloat(e.target.value) || 0;
                                  props.setAddDimensions(newDims);
                                  if (idx === 0) props.setAddDimL(e.target.value);
@@ -379,7 +384,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                type="number" 
                                value={dim.width || ''} 
                                onChange={e => {
-                                 const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                 const curDims = props.addDimensions;
+                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].width = parseFloat(e.target.value) || 0;
                                  props.setAddDimensions(newDims);
                                  if (idx === 0) props.setAddDimW(e.target.value);
@@ -393,7 +399,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                type="number" 
                                value={dim.height || ''} 
                                onChange={e => {
-                                 const newDims = [...(props.addDimensions.length > 0 ? props.addDimensions : [{...dim}])];
+                                 const curDims = props.addDimensions;
+                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
                                  newDims[idx].height = parseFloat(e.target.value) || 0;
                                  props.setAddDimensions(newDims);
                                  if (idx === 0) props.setAddDimH(e.target.value);

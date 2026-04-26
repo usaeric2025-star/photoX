@@ -939,11 +939,20 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                         <div className="space-y-4">
                           {displayPhotos[lightboxIndex].dimensions.map((dim, dIdx) => (
                             <div key={dIdx} className="space-y-2">
-                              {dim.label && (
-                                <span className="inline-block px-2 py-1 bg-slate-200 text-slate-700 text-[10px] font-black rounded text-xs uppercase tracking-tight">
-                                  {dim.label}
-                                </span>
-                              )}
+                              <div className="flex items-center justify-between">
+                                {dim.label ? (
+                                  <span className="inline-block px-2 py-1 bg-slate-200 text-slate-700 text-[10px] font-black rounded text-xs uppercase tracking-tight">
+                                    {dim.label}
+                                  </span>
+                                ) : (
+                                  <div></div>
+                                )}
+                                {dim.isAI && (
+                                  <span className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 uppercase tracking-widest">
+                                    AI
+                                  </span>
+                                )}
+                              </div>
                               <div className="grid grid-cols-3 gap-3">
                                 <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-50">
                                   <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-1">{t.length} (L)</span>

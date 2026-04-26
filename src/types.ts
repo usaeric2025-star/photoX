@@ -53,6 +53,7 @@ export interface Photo {
     height?: number;
     unit?: string;
     label?: string;
+    isAI?: boolean;
   }[] | null;
   exif_data?: any | null;
   createdAt: string;

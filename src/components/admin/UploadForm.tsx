@@ -285,7 +285,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                         )}
                         <div className="grid grid-cols-2 gap-3">
                            <div className="space-y-1">
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">规格名称 / Label</span>
+                              <div className="flex items-center justify-between pl-1">
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">规格名称 / Label</span>
+                                {dim.isAI && <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">AI</span>}
+                              </div>
                               <input 
                                 type="text" 
                                 placeholder="如: 3-Seater" 
