@@ -151,7 +151,7 @@ export const translations = {
   },
   ms: {
     galleryName: 'Galeri',
-    gallerySub: (count: number) => `Jumlah ${count} foto`,
+    gallerySub: (count: number) => `${count} foto`,
     photosUnit: 'foto',
     search: 'Cari di sini...',
     allCats: 'ALL',

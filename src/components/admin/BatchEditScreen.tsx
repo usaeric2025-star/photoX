@@ -100,17 +100,31 @@ export const BatchEditScreen = ({
 
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標主目录 *</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {dbCategories.map((cat: any) => (
-              <button 
-                key={cat.code}
-                onClick={() => { setAddCatId(cat.code); }}
-                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${addCatId === cat.code ? 'bg-white border-blue-600 text-blue-600 shadow-xl shadow-blue-600/5' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
-              >
-                <span className="font-bold block text-sm tracking-tight">{cat[appLang] || cat.zh}</span>
-                <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono">{cat.en}</span>
-              </button>
-            ))}
+          <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-4 gap-2">
+              {dbCategories.slice(0, 4).map((cat: any) => (
+                <button 
+                  key={cat.code}
+                  onClick={() => { setAddCatId(cat.code); }}
+                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                >
+                  <span className={`font-black text-[11px] leading-tight text-center ${addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[appLang] || cat.zh}</span>
+                  <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${addCatId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-2 px-6">
+              {dbCategories.slice(4, 7).map((cat: any) => (
+                <button 
+                  key={cat.code}
+                  onClick={() => { setAddCatId(cat.code); }}
+                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${addCatId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                >
+                  <span className={`font-black text-[11px] leading-tight text-center ${addCatId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[appLang] || cat.zh}</span>
+                  <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${addCatId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 

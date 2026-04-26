@@ -587,8 +587,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   }
                   
                   return (
-                    <div className="absolute bottom-0 left-0 w-full p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
-                      {!isUncategorized && catName && (
+                    <div className="absolute bottom-0 left-0 w-full p-2">
+                       {!isUncategorized && catName && (
                         <p className="text-[10px] font-black tracking-tighter leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
                           {catName.toUpperCase()}
                         </p>

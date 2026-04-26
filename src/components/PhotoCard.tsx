@@ -98,10 +98,12 @@ export const PhotoCard = React.memo(({
         </div>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2 translate-y-1 group-hover:translate-y-0 transition-transform">
-        <p className="text-[9px] text-white/90 font-bold tracking-wider truncate uppercase mb-0.5">
-          {categoryName}
-        </p>
+      <div className="absolute bottom-0 left-0 right-0 p-1.5 flex flex-col gap-0.5">
+        {categoryName && (
+          <p className="text-[8px] text-white font-black tracking-tight uppercase px-1 py-0.5 bg-black/30 backdrop-blur-[2px] rounded-sm w-fit shadow-sm">
+            {categoryName}
+          </p>
+        )}
       </div>
     </motion.div>
   );
