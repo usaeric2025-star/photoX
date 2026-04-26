@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff, Search, Sparkles } from 'lucide-react';
+import { TagEditor } from './TagEditor';
 import { Photo, ProductFormData } from '../../types';
 
 interface Props {
@@ -34,9 +34,7 @@ interface Props {
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { formState, updateForm } = props;
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
-  const [managingTag, setManagingTag] = useState<any | null>(null);
-  const [isLongPress, setIsLongPress] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const sortedTags = useMemo(() => {
     console.log("Drawing tags:", props.tags);
@@ -44,36 +42,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     return [...props.tags];
   }, [props.tags, formState.tagIds]);
   
-  const handleTagClick = (tag: any) => {
-    console.log("Tag clicked:", tag.id, "Existing tags:", formState.tagIds);
-    if (isLongPress) {
-        setIsLongPress(false);
-        return;
-    }
+  const handleToggleTag = (tag: any) => {
     if (formState.tagIds.includes(tag.id)) {
-        console.log("Removing tag:", tag.id);
         updateForm({ tagIds: formState.tagIds.filter(id => id !== tag.id) });
     } else if (formState.tagIds.length < 3) {
-        console.log("Adding tag:", tag.id);
         updateForm({ tagIds: [...formState.tagIds, tag.id] });
     }
-  };
-
-  const handlePointerDown = (tag: any) => {
-    setIsLongPress(false);
-    if (longPressTimer) clearTimeout(longPressTimer);
-    setLongPressTimer(setTimeout(() => {
-        setIsLongPress(true);
-        setManagingTag(tag);
-    }, 600));
-  };
-
-  const handlePointerUp = () => {
-    if (longPressTimer) clearTimeout(longPressTimer);
-    // Allow slight delay before resetting isLongPress to ensure click handler sees it
-    setTimeout(() => {
-        if (!longPressTimer) setIsLongPress(false);
-    }, 10);
   };
 
   return (
@@ -181,83 +155,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
 
         <section className="space-y-2">
-            <div className="flex items-center justify-between pl-1">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">标签 / Tags</h3>
-                <button onClick={props.quickAddTag} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
-            </div>
-             <div className="flex flex-wrap gap-1.5 pb-1 max-h-32 overflow-y-auto content-start">
-                {sortedTags.map(tag => (
-                  <button 
-                    key={tag.id}
-                    onPointerDown={() => handlePointerDown(tag)}
-                    onPointerUp={handlePointerUp}
-                    onClick={() => handleTagClick(tag)}
-                    onPointerCancel={() => { if (longPressTimer) clearTimeout(longPressTimer); }}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${formState.tagIds.includes(tag.id) ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-600'}`}
-                  >
-                    #{tag.name}
-                  </button>
-                ))}
-
-             </div>
-
-             <AnimatePresence>
-                {managingTag && (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[110] bg-black/60 flex items-center justify-center p-6 backdrop-blur-sm"
-                        onClick={() => setManagingTag(null)}
-                    >
-                        <motion.div 
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <div className="p-8 space-y-6 text-center">
-                                <div className="space-y-1">
-                                    <h3 className="text-xl font-black text-slate-800">管理标签 / Manage</h3>
-                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">#{managingTag.name}</p>
-                                </div>
-                                <div className="grid grid-cols-1 gap-3">
-                                    <button 
-                                        onClick={() => {
-                                            const newName = prompt("输入新名称:", managingTag.name);
-                                            if (newName && newName !== managingTag.name) {
-                                                props.updateTag(managingTag.id, newName);
-                                            }
-                                            setManagingTag(null);
-                                        }}
-                                        className="w-full py-4 bg-blue-50 text-blue-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
-                                    >
-                                        修改名称 (Edit Name)
-                                    </button>
-                                    <button 
-                                        onClick={() => {
-                                            if (confirm(`确定删除标签 #${managingTag.name}?`)) {
-                                                props.deleteTag(managingTag.id);
-                                            }
-                                            setManagingTag(null);
-                                        }}
-                                        className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
-                                    >
-                                        立即删除 (Delete Tag)
-                                    </button>
-                                    <button 
-                                        onClick={() => setManagingTag(null)}
-                                        className="w-full py-4 bg-slate-50 text-slate-500 rounded-2xl font-bold transition-colors"
-                                    >
-                                        取消 (Cancel)
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-             </AnimatePresence>
+             <TagEditor 
+                tags={sortedTags} 
+                selectedTagIds={formState.tagIds} 
+                onToggleTag={handleToggleTag}
+                onUpdateTag={props.updateTag}
+                onDeleteTag={props.deleteTag}
+                onQuickAdd={props.quickAddTag}
+             />
           </section>
 
         <section className="space-y-2">
