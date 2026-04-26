@@ -65,6 +65,8 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                   onMouseLeave={onLongPressEnd}
                   onTouchStart={() => { if (isAdminMode) onLongPressStart(photo.id); }}
                   onTouchEnd={onLongPressEnd}
+                  onTouchMove={onLongPressEnd}
+                  onTouchCancel={onLongPressEnd}
                 >
                    <img src={photo.thumb_url || photo.image_url || photo.uri || undefined} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">

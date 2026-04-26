@@ -105,17 +105,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
          </div>
        )}
       
-      <div className="absolute bottom-0 left-0 w-full p-2">
+      <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/60 to-transparent">
          {!isUncategorized && catName && (
-          <p className="text-[10px] font-black tracking-tighter leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] mb-1">
-            {catName.toUpperCase()}
+          <p className="text-[10px] font-black tracking-tighter leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] mb-1 uppercase truncate">
+            {catName}
           </p>
         )}
         
         {photoTags.length > 0 && (
-          <div className="w-full mt-1 flex flex-nowrap gap-1 overflow-x-auto no-scrollbar items-center">
+          <div className="w-full flex flex-wrap gap-1 items-center">
             {photoTags.filter(t => typeof t === 'string' && t.trim() !== '').slice(0, 3).map((tagName, idx) => (
-              <span key={idx} className="bg-black/40 backdrop-blur-sm text-white text-[7px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-bold whitespace-nowrap border border-white/10 shrink-0">
+              <span key={idx} className="bg-white/20 backdrop-blur-md text-white text-[7px] px-1 py-0.5 rounded-sm uppercase tracking-wider font-bold truncate max-w-full">
                 {tagName}
               </span>
             ))}
