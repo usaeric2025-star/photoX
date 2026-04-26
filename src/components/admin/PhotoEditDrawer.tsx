@@ -19,6 +19,8 @@ interface Props {
   setAddNote: (n: string) => void;
   addManualCode: string;
   setAddManualCode: (c: string) => void;
+  addModelNumber: string;
+  setAddModelNumber: (num: string) => void;
   addDimL: string;
   setAddDimL: (l: string) => void;
   addDimW: string;
@@ -117,8 +119,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         )}
 
         <section className="space-y-3">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Item Code</h3>
-          <input type="text" placeholder="输入产品编号 (如: SK-2024)..." value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">手动编号 / Manual Code</h3>
+          <input type="text" placeholder="输入手动编号 (如: SK-2024)..." value={props.addManualCode} onChange={e => props.setAddManualCode(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
+        </section>
+
+        <section className="space-y-3">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model Number</h3>
+          <input type="text" placeholder="输入型号编号 (如: MOD-123)..." value={props.addModelNumber} onChange={e => props.setAddModelNumber(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200" />
         </section>
 
         <section className="space-y-3">
@@ -161,13 +168,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </section>
 
           <section className="space-y-4">
-            <div className="flex items-center justify-between pl-1">
+             <div className="flex items-center justify-between pl-1">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 -mt-2">
                 <button onClick={() => {
                   const query = prompt("请输入标签关键词搜索:");
-                  // Implementation of search (filtering) would require more state or local filtering here.
-                  // For now, I will just log it.
                   console.log("Searching tag:", query);
                 }} className="p-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100"><Search size={14} /></button>
                 <button onClick={props.quickAddTag} className="px-3 py-2 rounded-xl text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 flex items-center gap-1">+ 新增</button>
@@ -206,10 +211,22 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
              
              {props.showOtherFields && (
                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between pl-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">产品尺寸 (长 x 宽 x 高) cm</span>
+                  </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <input type="number" placeholder="长 cm" value={props.addDimL} onChange={e => props.setAddDimL(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
-                    <input type="number" placeholder="宽 cm" value={props.addDimW} onChange={e => props.setAddDimW(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
-                    <input type="number" placeholder="高 cm" value={props.addDimH} onChange={e => props.setAddDimH(e.target.value)} className="p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
+                    <div className="space-y-1">
+                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">长 / L</span>
+                       <input type="number" placeholder="L cm" value={props.addDimL} onChange={e => props.setAddDimL(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
+                    </div>
+                    <div className="space-y-1">
+                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">宽 / W</span>
+                       <input type="number" placeholder="W cm" value={props.addDimW} onChange={e => props.setAddDimW(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
+                    </div>
+                    <div className="space-y-1">
+                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">高 / H</span>
+                       <input type="number" placeholder="H cm" value={props.addDimH} onChange={e => props.setAddDimH(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 bg-white text-center font-bold" />
+                    </div>
                   </div>
                   <textarea placeholder="备注信息..." value={props.addNote} onChange={e => props.setAddNote(e.target.value)} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
                </div>

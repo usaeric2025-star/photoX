@@ -38,6 +38,7 @@ export interface Photo {
   storageId?: string; // Filename for Supabase Storage
   item_code: string; // System auto-code (FUR-YYYYMMDD-RAND)
   manual_code?: string; // Hidden price code
+  model_number?: string; // Manufacturer model number
   image_hash: string; // MD5 fingerprint
   name: string; // AI generated name
   category: string; // Main category name

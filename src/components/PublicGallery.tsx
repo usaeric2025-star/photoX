@@ -592,11 +592,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       
                       {photoTags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {photoTags.slice(0, 2).map((tagName, idx) => (
-                            <span key={idx} className="bg-white/20 text-white text-[7px] px-1 rounded uppercase tracking-wider font-bold">
+                          {photoTags.map((tagName, idx) => (
+                            <span key={idx} className="bg-white/20 text-white text-[7px] px-1 rounded uppercase tracking-wider font-bold whitespace-nowrap">
                               {tagName}
                             </span>
                           ))}
+                        </div>
+                      )}
+                      
+                      {(isAdminMode || isStaffMode || showExit) && photo.model_number && (
+                        <div className="mt-1">
+                          <span className="bg-blue-500/80 text-white text-[6px] px-1 rounded font-black tracking-widest uppercase">
+                             MOD: {photo.model_number}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -808,6 +816,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                       {displayPhotos[lightboxIndex].item_code && (
                         <span className="ml-auto text-[10px] bg-slate-100 text-slate-400 px-2 py-1 flex items-center rounded font-mono border border-slate-200">{t.sysCode}: {displayPhotos[lightboxIndex].item_code}</span>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Model Number (Staff/Admin only) */}
+                {(isAdminMode || isStaffMode || showExit) && displayPhotos[lightboxIndex].model_number && (
+                  <div>
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">型号编号 / Model Number</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-xl border border-slate-200 shadow-sm">
+                        {displayPhotos[lightboxIndex].model_number}
+                      </span>
                     </div>
                   </div>
                 )}

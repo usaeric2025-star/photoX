@@ -26,6 +26,8 @@ export const BatchEditScreen = ({
   setShowOtherFields,
   addManualCode,
   setAddManualCode,
+  addModelNumber,
+  setAddModelNumber,
   addDimL,
   setAddDimL,
   addDimW,
@@ -74,14 +76,25 @@ export const BatchEditScreen = ({
           </p>
         </div>
 
-        <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品编号</h3>
+        <section className="space-y-4">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品编号 / Item Code</h3>
             <input 
               type="text" 
               placeholder="输入统一编号 (如: SK-2024)..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
               value={addManualCode}
               onChange={(e) => setAddManualCode(e.target.value)}
+            />
+        </section>
+
+        <section className="space-y-4">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一型号编号 / Model Number</h3>
+            <input 
+              type="text" 
+              placeholder="输入统一型号编号 (如: MOD-123)..."
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              value={addModelNumber}
+              onChange={(e) => setAddModelNumber(e.target.value)}
             />
         </section>
 

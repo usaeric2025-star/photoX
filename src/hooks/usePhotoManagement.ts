@@ -24,6 +24,7 @@ export const usePhotoManagement = (
   const [addNote, setAddNote] = useState('');
   const [addName, setAddName] = useState('');
   const [addManualCode, setAddManualCode] = useState('');
+  const [addModelNumber, setAddModelNumber] = useState('');
   const [addDimL, setAddDimL] = useState<string>('');
   const [addDimW, setAddDimW] = useState<string>('');
   const [addDimH, setAddDimH] = useState<string>('');
@@ -41,6 +42,7 @@ export const usePhotoManagement = (
         setAddTagIds(rawTagIds);
         setAddNote(photo.description || '');
         setAddManualCode(photo.manual_code || '');
+        setAddModelNumber(photo.model_number || '');
         setAddDimL(photo.dimensions?.length?.toString() || '');
         setAddDimW(photo.dimensions?.width?.toString() || '');
         setAddDimH(photo.dimensions?.height?.toString() || '');
@@ -59,6 +61,7 @@ export const usePhotoManagement = (
     setAddNote('');
     setAddName('');
     setAddManualCode('');
+    setAddModelNumber('');
     setAddDimL('');
     setAddDimW('');
     setAddDimH('');
@@ -93,6 +96,7 @@ export const usePhotoManagement = (
             tags: finalTags,
             description: addNote,
             manual_code: addManualCode,
+            model_number: addModelNumber,
             isHidden: addIsHidden,
             dimensions: {
               length: parseFloat(addDimL) || 0,
@@ -115,6 +119,7 @@ export const usePhotoManagement = (
             storageId: Date.now().toString() + Math.random().toString(36).substr(2, 9),
             item_code: generateItemCode(),
             manual_code: addManualCode,
+            model_number: addModelNumber,
             image_hash: calculateMD5(newPhotoData),
             name: addName || '未命名产品',
             category: categoryName || '未分类',
@@ -175,6 +180,7 @@ export const usePhotoManagement = (
                  tags: finalTags.length > 0 ? finalTags : p.tags,
                  description: addNote || p.description,
                  manual_code: addManualCode || p.manual_code,
+                 model_number: addModelNumber || p.model_number,
                  isHidden: batchIsHiddenApplied ? addIsHidden : p.isHidden,
                  updatedAt: new Date().toISOString()
                };
@@ -211,6 +217,7 @@ export const usePhotoManagement = (
     addNote, setAddNote,
     addName, setAddName,
     addManualCode, setAddManualCode,
+    addModelNumber, setAddModelNumber,
     addDimL, setAddDimL,
     addDimW, setAddDimW,
     addDimH, setAddDimH,

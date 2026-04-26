@@ -88,45 +88,47 @@ export const analyzeProductPhoto = async (
 
 
   const categoriesJson = categories.map(c => ({
-    id: c.code, // dbCategories use .code
-    name: c.zh, // Use chinese mapping
-    enName: c.en
+    code: c.code, 
+    name: c.zh
   }));
   const manufacturersJson = manufacturers.map(m => ({ id: m.id, name: m.name }));
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
   const categoryContext = targetCategoryId
-    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.code === targetCategoryId)?.zh} (ID: ${targetCategoryId})。請確認照片分類是否符合此設定。`
+    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.code === targetCategoryId)?.zh} (code: ${targetCategoryId})。請確認照片分類是否符合此設定。`
     : `【強制要求】請從現有分類中選擇最合適的一個。`;
 
   const promptText = `
   你是一位家具專業分析師。請分析這張照片並提供資訊。
 
   強制性要求：
-  1. 分類 (CategoryId)：從現有分類中選擇最合適的 code。必須選，不可為 null。
+  1. 分類 (CategoryId)：必須從以下「現有分類」清單中選擇一個代碼 (code)。絕對不要自己創造新分類，必須選，不可為 null。
+     分類清單: ${JSON.stringify(categoriesJson)}
+
   2. 產品名稱 (Name)：請識別照片中的家具並提供一個清晰、描述性的英文名稱。目前產品名稱為: "${originalName || '無'}"。請根據家具外觀，若原名稱不貼切（如純數字或過於簡略），請提供一個更好的描述性英文名稱，否則保留原名稱。
   3. 廠商 (Manufacturer)：禁止修改廠商資訊。請保持原樣。
 
   可選資訊：
   4. 標籤 (Tags)：提供 1 到 2 個最貼切的標籤。名稱僅限英文單字，禁止使用中文。若現有標籤不足，建議新標籤。
   5. 尺寸 (Dimensions)：若明顯，請填寫，否則 null。                
-  6. 手動編號 (Manual Code)：識別照片中的家具編號，若有請填寫，否則 null。                
-  7. 備註 (Note)：識別照片中的家具備註，若有請說明，否則 null。                
+  6. 手動編號 (Manual Code)：識別照片中的家具編號或價格標籤上的代號，若有請填寫，否則 null。
+  7. 型號 (Model Number)：識別照片中產品具體的製造商型號 (如 SKU, Model No.)，若有請填寫，否則 null。
+  8. 備註 (Note)：識別照片中的家具備註，若有請說明，否則 null。
 
-  現有分類：${JSON.stringify(categoriesJson)}
-  現有標籤：${JSON.stringify(tagsJson)}
+  現有標籤：${JSON.stringify(tagsJson)}                
   現有名稱: ${originalName || '無'}
 
   請按照以下 JSON 格式回傳，不要包含 markdown：
   {
     "name": "English Name",
-    "categoryId": "string",
+    "categoryId": "string (必須是分類清單中的 code)",
     "subcategoryId": null,
     "tagIds": ["string"],
     "newTagName": "string or null",
     "newCategoryName": "string or null",
     "newSubCategoryName": null,
     "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" },
-    "manualCode": "string or null",
+    "manualCode": "string or null (e.g. Price code)",
+    "modelNumber": "string or null (e.g. Manufacturer SKU/Model)",
     "note": "string or null"
   }
   `;

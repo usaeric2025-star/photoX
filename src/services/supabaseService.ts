@@ -289,6 +289,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<bo
       image_url: photo.image_url,
       thumb_url: photo.thumb_url || null,
       dimensions: photo.dimensions || null,
+      model_number: photo.model_number || '',
       created_at: photo.createdAt,
       group_id: photo.groupId || null
     }, { 

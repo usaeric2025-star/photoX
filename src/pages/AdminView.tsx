@@ -162,6 +162,7 @@ export default function AdminView() {
     addNote, setAddNote,
     addName, setAddName,
     addManualCode, setAddManualCode,
+    addModelNumber, setAddModelNumber,
     addDimL, setAddDimL,
     addDimW, setAddDimW,
     addDimH, setAddDimH,
@@ -461,7 +462,9 @@ export default function AdminView() {
               editPhotoId={editPhotoId} resetAddState={resetAddState} saveNewPhoto={saveNewPhoto} photos={photos} updateTag={updateTag}
               addName={addName} setAddName={setAddName} addCatId={addCatId} setAddCatId={setAddCatId}
               addSubId={addSubId} setAddSubId={setAddSubId} addTagIds={addTagIds} setAddTagIds={setAddTagIds}
-              addNote={addNote} setAddNote={setAddNote} addManualCode={addManualCode} setAddManualCode={setAddManualCode}
+              addNote={addNote} setAddNote={setAddNote} 
+              addManualCode={addManualCode} setAddManualCode={setAddManualCode}
+              addModelNumber={addModelNumber} setAddModelNumber={setAddModelNumber}
               addIsHidden={addIsHidden} setAddIsHidden={setAddIsHidden}
               addDimL={addDimL} setAddDimL={setAddDimL} addDimW={addDimW} setAddDimW={setAddDimW}
               addDimH={addDimH} setAddDimH={setAddDimH} showOtherFields={showOtherFields} setShowOtherFields={setShowOtherFields}
@@ -622,6 +625,8 @@ export default function AdminView() {
           setShowOtherFields={setShowOtherFields}
           addManualCode={addManualCode}
           setAddManualCode={setAddManualCode}
+          addModelNumber={addModelNumber}
+          setAddModelNumber={setAddModelNumber}
           addDimL={addDimL}
           setAddDimL={setAddDimL}
           addDimW={addDimW}
@@ -655,6 +660,9 @@ export default function AdminView() {
                 if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
                 if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
               }
+              if (result.modelNumber && !addModelNumber) {
+                setAddModelNumber(result.modelNumber);
+              }
             }
           }}
           deletePhoto={deletePhoto}
@@ -672,6 +680,8 @@ export default function AdminView() {
           setAddNote={setAddNote}
           addManualCode={addManualCode}
           setAddManualCode={setAddManualCode}
+          addModelNumber={addModelNumber}
+          setAddModelNumber={setAddModelNumber}
           showOtherFields={showOtherFields}
           setShowOtherFields={setShowOtherFields}
           addDimL={addDimL}

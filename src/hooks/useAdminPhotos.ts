@@ -217,6 +217,7 @@ export const useAdminPhotos = (
                 name: p.name && p.name !== 'Furniture' ? p.name : (result.name || null),
                 category: p.category && p.category !== 'Uncategorized' ? p.category : (dbCatObj?.zh || result.newCategoryName || null),
                 sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
+                model_number: p.model_number || result.modelNumber || null,
                 tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
                 dimensions: p.dimensions || result.dimensions || null,
                 updatedAt: new Date().toISOString(),
@@ -345,6 +346,7 @@ export const useAdminPhotos = (
             name: p.name || result.name || null,
             category: p.category || dbCatObj?.zh || result.newCategoryName || null,
             sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
+            model_number: p.model_number || result.modelNumber || null,
             tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
             dimensions: p.dimensions || result.dimensions || null,
             updatedAt: new Date().toISOString(),
@@ -489,6 +491,7 @@ export const useAdminPhotos = (
                      tagIds: result.tagIds || [],
                      category: dbCatObj?.zh || result.newCategoryName || '未分类',
                      sub_category: manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || '',
+                     model_number: p.model_number || result.modelNumber || '',
                      dimensions: result.dimensions || p.dimensions
                    };
                    

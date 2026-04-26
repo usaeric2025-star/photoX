@@ -24,6 +24,8 @@ interface UploadFormProps {
   setAddNote: (note: string) => void;
   addManualCode: string;
   setAddManualCode: (code: string) => void;
+  addModelNumber: string;
+  setAddModelNumber: (num: string) => void;
   showOtherFields: boolean;
   setShowOtherFields: (show: boolean) => void;
   addDimL: string;
@@ -50,7 +52,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   onClose, editPhotoId, newPhotoData, isAnalyzing, handleSingleAiAnalyze,
   deletePhoto, saveNewPhoto, isSyncing, addName, setAddName, addCatId, setAddCatId,
   addSubId, setAddSubId, addTagIds, setAddTagIds, addNote, setAddNote,
-  addManualCode, setAddManualCode, showOtherFields, setShowOtherFields,
+  addManualCode, setAddManualCode, addModelNumber, setAddModelNumber, showOtherFields, setShowOtherFields,
   addDimL, setAddDimL, addDimW, setAddDimW, addDimH, setAddDimH,
   addIsHidden, setAddIsHidden,
   dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
@@ -126,13 +128,24 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </div>
 
         <section className="space-y-2">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Item Code</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">手动编号 / Manual Code</h3>
             <input 
               type="text" 
-              placeholder="输入产品编号 (如: SK-2024)..."
+              placeholder="输入手动编号 (如: SK-2024)..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
               value={addManualCode}
               onChange={(e) => setAddManualCode(e.target.value)}
+            />
+        </section>
+
+        <section className="space-y-2">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model Number</h3>
+            <input 
+              type="text" 
+              placeholder="输入型号编号 (如: MOD-123)..."
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              value={addModelNumber}
+              onChange={(e) => setAddModelNumber(e.target.value)}
             />
         </section>
 
