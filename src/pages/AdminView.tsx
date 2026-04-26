@@ -70,6 +70,12 @@ export default function AdminView() {
   }, []);
 
   const [activeScreen, setActiveScreen] = useState('home');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Handle OAuth Hash Redirect
   useEffect(() => {
@@ -460,7 +466,10 @@ export default function AdminView() {
 
       {(editPhotoId || newPhotoData) && (
           <PhotoEditDrawer 
-              editPhotoId={editPhotoId} resetAddState={resetAddState} saveNewPhoto={saveNewPhoto} photos={photos} updateTag={updateTag}
+              editPhotoId={editPhotoId} resetAddState={resetAddState} saveNewPhoto={async () => {
+                await saveNewPhoto();
+                showToast(t.saveSuccess || '保存成功');
+              }} photos={photos} updateTag={updateTag}
               addName={addName} setAddName={setAddName} addCatId={addCatId} setAddCatId={setAddCatId}
               addSubId={addSubId} setAddSubId={setAddSubId} addTagIds={addTagIds} setAddTagIds={setAddTagIds}
               addNote={addNote} setAddNote={setAddNote} 
@@ -640,6 +649,21 @@ export default function AdminView() {
   return (
     <ErrorBoundary>
       {errorContent}
+      
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
+          >
+            {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : <X size={18} className="text-red-400" />}
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {batchEditIds && (
         <BatchEditScreen 
           resetAddState={() => { resetAddState(); setBatchIsHiddenApplied(false); }}
@@ -681,94 +705,8 @@ export default function AdminView() {
         />
       )}
       
-      {activeScreen === 'addPhoto' && (
-        <UploadForm
-          onClose={() => { resetAddState(); setActiveScreen('home'); }}
-          editPhotoId={editPhotoId}
-          newPhotoData={newPhotoData}
-          isAnalyzing={isAnalyzing}
-          handleSingleAiAnalyze={async (data, catId) => {
-            const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
-            if (result) {
-              if (result.name && !addName) setAddName(result.name);
-              
-              // Correct category matching
-              if (result.categoryId && !catId && !addCatId) {
-                setAddCatId(result.categoryId);
-              } else if (result.newCategoryName && !catId && !addCatId) {
-                const foundCat = dbCategories.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName);
-                if (foundCat) setAddCatId(foundCat.code);
-              }
-
-              if (result.tagIds) {
-                const rawTagIds = Array.isArray(result.tagIds) ? result.tagIds : (typeof result.tagIds === 'string' ? [result.tagIds] : []);
-                setAddTagIds(rawTagIds);
-              }
-              if (result.dimensions) {
-                if (Array.isArray(result.dimensions)) {
-                   setAddDimensions(result.dimensions);
-                   if (result.dimensions.length > 0) {
-                      const first = result.dimensions[0];
-                      if (first.length && !addDimL) setAddDimL(first.length.toString());
-                      if (first.width && !addDimW) setAddDimW(first.width.toString());
-                      if (first.height && !addDimH) setAddDimH(first.height.toString());
-                   }
-                } else if (typeof result.dimensions === 'object') {
-                   if (result.dimensions.length && !addDimL) setAddDimL(result.dimensions.length.toString());
-                   if (result.dimensions.width && !addDimW) setAddDimW(result.dimensions.width.toString());
-                   if (result.dimensions.height && !addDimH) setAddDimH(result.dimensions.height.toString());
-                   setAddDimensions([result.dimensions]);
-                }
-              }
-
-              // Explicitly sync model number from AI
-              if (result.modelNumber && !addModelNumber) {
-                setAddModelNumber(result.modelNumber);
-              }
-            }
-          }}
-          deletePhoto={deletePhoto}
-          saveNewPhoto={saveNewPhoto}
-          isSyncing={isSyncing}
-          addName={addName}
-          setAddName={setAddName}
-          addCatId={addCatId}
-          setAddCatId={setAddCatId}
-          addSubId={addSubId}
-          setAddSubId={setAddSubId}
-          addTagIds={addTagIds}
-          setAddTagIds={setAddTagIds}
-          addNote={addNote}
-          setAddNote={setAddNote}
-          addManualCode={addManualCode}
-          setAddManualCode={setAddManualCode}
-          addModelNumber={addModelNumber}
-          setAddModelNumber={setAddModelNumber}
-          showOtherFields={showOtherFields}
-          setShowOtherFields={setShowOtherFields}
-          addDimL={addDimL}
-          setAddDimL={setAddDimL}
-          addDimW={addDimW}
-          setAddDimW={setAddDimW}
-          addDimH={addDimH}
-          setAddDimH={setAddDimH}
-          addDimensions={addDimensions}
-          setAddDimensions={setAddDimensions}
-          addIsHidden={addIsHidden}
-
-          setAddIsHidden={setAddIsHidden}
-          dbCategories={dbCategories}
-          appLang={appLang}
-          categories={categories}
-          tags={tags}
-          quickAddSubCategory={quickAddSubCategory}
-          quickAddTag={quickAddTag}
-          quickAddManufacturer={quickAddManufacturer}
-          manufacturers={manufacturers}
-          abortAnalysis={abortAnalysis}
-        />
-      )}
-
+      {/* Removed redundant UploadForm to unify UI and avoid double save buttons */}
+      
       {activeGroupId && (
         <GroupDetailScreen
           activeGroupId={activeGroupId}

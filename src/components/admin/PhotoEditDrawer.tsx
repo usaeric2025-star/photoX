@@ -64,28 +64,26 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     return [...props.tags];
   }, [props.tags]);
   
-  const handleMouseDown = (tag: any) => {
+  const handleTagClick = (tag: any) => {
+    if (isLongPress) return;
+    if (props.addTagIds.includes(tag.id)) {
+        props.setAddTagIds(props.addTagIds.filter(id => id !== tag.id));
+    } else if (props.addTagIds.length < 3) {
+        props.setAddTagIds([...props.addTagIds, tag.id]);
+    }
+  };
+
+  const handlePointerDown = (tag: any) => {
     setIsLongPress(false);
     if (longPressTimer) clearTimeout(longPressTimer);
-    
     setLongPressTimer(setTimeout(() => {
         setIsLongPress(true);
         setManagingTag(tag);
     }, 600));
   };
-  
-  const handleMouseUp = (tag: any) => {
+
+  const handlePointerUp = () => {
     if (longPressTimer) clearTimeout(longPressTimer);
-    if (!isLongPress) {
-        // Normal click logic
-        if (props.addTagIds.includes(tag.id)) {
-            props.setAddTagIds(props.addTagIds.filter(id => id !== tag.id));
-        } else if (props.addTagIds.length < 3) {
-            props.setAddTagIds([...props.addTagIds, tag.id]);
-        }
-    }
-    // Reset after a short delay to avoid double triggering if events bubble
-    setTimeout(() => setIsLongPress(false), 50);
   };
 
   return (
@@ -195,12 +193,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 {sortedTags.map(tag => (
                   <button 
                     key={tag.id}
-                    onPointerDown={() => handleMouseDown(tag)}
-                    onPointerUp={() => handleMouseUp(tag)}
+                    onPointerDown={() => handlePointerDown(tag)}
+                    onPointerUp={handlePointerUp}
+                    onClick={() => handleTagClick(tag)}
                     onPointerCancel={() => { if (longPressTimer) clearTimeout(longPressTimer); }}
                     onContextMenu={(e) => e.preventDefault()}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap border ${props.addTagIds.includes(tag.id) ? 'bg-slate-800 text-white border-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-600'}`}
-
                   >
                     #{tag.name}
                   </button>
