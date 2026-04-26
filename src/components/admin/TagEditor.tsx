@@ -24,7 +24,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
             <div key={tag.id} className="relative group">
               <button 
                 onClick={() => onToggleTag(tag)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${isSelected ? 'bg-slate-800 text-white border-slate-800' : 'bg-white border-slate-200 text-slate-600'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${isSelected ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-800 border-transparent hover:bg-slate-200'}`}
               >
                 #{tag.name}
               </button>

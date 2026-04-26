@@ -39,7 +39,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
         <button onClick={onClose} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
-          <X size={24} />
+          <CloseIcon size={24} />
         </button>
         <div className="flex flex-col items-center">
             <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
@@ -60,7 +60,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center shadow-sm active:scale-90"
                   title="取消识别"
                 >
-                  <X size={20} />
+                  <CloseIcon size={20} />
                 </button>
               )}
               <button 

@@ -53,6 +53,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   columns: propColumns, setColumns: propSetColumns,
   hideHeader,
 }) => {
+  const context = useGalleryContext();
+  console.log("PublicGallery context:", context);
   const {
     photos,
     categories,
@@ -69,7 +71,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     isMultiSelect, setIsMultiSelect,
     togglePhotoSelection, clearSelection,
     displayPhotos, gridPhotos
-  } = useGalleryContext();
+  } = context;
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
