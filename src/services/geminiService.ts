@@ -115,7 +115,7 @@ export const analyzeProductPhoto = async (
   1. **標籤 (Tags)**：
      - **優先從現有標籤中選擇**：${JSON.stringify(tagsJson)}。
      - 如果現有不符，請建議 **1 到 2 個新的英文單字**。
-     - **規則：標籤必須是單個英文單詞 (Single English word)，禁止使用中文，禁止使用片語。**
+     - **規則：標籤必須是純英文單詞，無符號、數字。**
   2. **尺寸 (Dimensions)**：
      - **如果你識別出照片中有不同的規格或多組尺寸，請全部列出**。
      - 每組尺寸必須包含 "label" (規格名稱, 例如 '3-Seater', '2-Seater', 'Package'), "length", "width", "height", "unit", "isAI": true。
