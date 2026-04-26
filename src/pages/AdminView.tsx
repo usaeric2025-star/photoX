@@ -166,6 +166,7 @@ export default function AdminView() {
     addDimL, setAddDimL,
     addDimW, setAddDimW,
     addDimH, setAddDimH,
+    addDimensions, setAddDimensions,
     addIsHidden, setAddIsHidden,
     showOtherFields, setShowOtherFields,
     resetAddState,
