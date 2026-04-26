@@ -65,7 +65,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     setLongPressTimer(setTimeout(() => {
         setIsLongPress(true);
         setManagingTag(tag);
-    }, 800));
+    }, 1200));
   };
 
   const handlePointerUp = () => {

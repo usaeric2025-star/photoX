@@ -23,7 +23,8 @@ import {
   syncPhotosToCloud as syncPhotosToCloudService,
   fetchSettings as fetchSettingsCloud,
   uploadLogo,
-  deletePhotoFromCloud
+  deletePhotoFromCloud,
+  savePhotoToCloud
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
