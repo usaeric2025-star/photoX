@@ -40,9 +40,14 @@ export const useAdminCategory = () => {
     persist();
   }, [categories, tags, manufacturers, dbCategories, isLoaded]);
 
+  const updateTag = (tagId: string, newName: string) => {
+    setTags(prev => prev.map(t => t.id === tagId ? { ...t, name: newName } : t));
+  };
+
   return {
     categories, setCategories,
     tags, setTags,
+    updateTag,
     manufacturers, setManufacturers,
     dbCategories, setDbCategories,
     publicCategories, setPublicCategories,

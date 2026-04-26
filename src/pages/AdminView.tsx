@@ -123,6 +123,7 @@ export default function AdminView() {
   const { 
     categories, setCategories,
     tags, setTags,
+    updateTag,
     dbCategories, setDbCategories,
     manufacturers, setManufacturers,
     publicCategories, setPublicCategories,
@@ -456,7 +457,7 @@ export default function AdminView() {
 
       {(editPhotoId || newPhotoData) && (
           <PhotoEditDrawer 
-              editPhotoId={editPhotoId} resetAddState={resetAddState} saveNewPhoto={saveNewPhoto}
+              editPhotoId={editPhotoId} resetAddState={resetAddState} saveNewPhoto={saveNewPhoto} photos={photos} updateTag={updateTag}
               addName={addName} setAddName={setAddName} addCatId={addCatId} setAddCatId={setAddCatId}
               addSubId={addSubId} setAddSubId={setAddSubId} addTagIds={addTagIds} setAddTagIds={setAddTagIds}
               addNote={addNote} setAddNote={setAddNote} addManualCode={addManualCode} setAddManualCode={setAddManualCode}

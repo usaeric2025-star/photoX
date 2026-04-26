@@ -38,6 +38,9 @@ export default function PublicView() {
         if (cloudSettings.categories) {
           setCategories(cloudSettings.categories);
         }
+        if (cloudSettings.tags) {
+          setPublicTags(cloudSettings.tags);
+        }
       }
     } catch (e) {
       console.error(e);

@@ -61,6 +61,7 @@ export const analyzeProductPhoto = async (
   provider: string = 'auto',
   customModel?: string,
   targetCategoryId?: string | null,
+  originalName?: string | null,
   signal?: AbortSignal
 ) => {
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
@@ -93,46 +94,32 @@ export const analyzeProductPhoto = async (
   }));
   const manufacturersJson = manufacturers.map(m => ({ id: m.id, name: m.name }));
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
-
-  const categoryContext = targetCategoryId 
-    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.code === targetCategoryId)?.zh} (ID: ${targetCategoryId}。請在此分類下進行識別。` 
-    : `請從以下分類中選擇最合適的一個。`;
+  const categoryContext = targetCategoryId
+    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.code === targetCategoryId)?.zh} (ID: ${targetCategoryId})。請確認照片分類是否符合此設定。`
+    : `【強制要求】請從現有分類中選擇最合適的一個。`;
 
   const promptText = `
-  你是一位家具專業分析師。請分析這張照片並提供以下精確資訊：
-  
-  ${categoryContext}
-  
-  1. 分類 (Category)：從「現有分類」中選擇最合適的一個，回傳其 ID (即 code)。${targetCategoryId ? '請務必選擇 ID 為 ' + targetCategoryId + ' 的分類。' : '這是首要任務，請務必精準匹配。如果完全不符合，再到 newCategoryName 建議。'}
-  2. 廠商 (Manufacturer/SubCategory)：從「現有廠商」中選擇最合適的，回傳其 ID 放入 subcategoryId。若無，給 null。
-  3. 標籤 (Tags)：請提供「剛好 2 個」最能描述該家具產品的標籤。請務必提供，不能少於 2 個。標籤名稱「僅限英文 (English)」，務必「僅使用一個單字」。
-     - 優先從「現有標籤」中挑選符合的標籤。
-     - 若現有標籤不足以描述產品特色，請在 newTagName 中建議新的標籤（總數湊齊 2 個，以逗號隔開）。請確保建議的標籤名稱不與現有標籤重複。
-  4. 產品名稱 (Name)：請識別照片中的家具並為其取一個合適的產品名稱。請務必提供名稱，且「僅能使用英文 (English)」。名稱長度不限，可以包含多個單字 (例如: Dining Table, Modern Office Chair)。絕對不要使用中文字符。如果圖片中沒有明確名稱，請根據家具的特徵自動生成一個描述性的名稱。
-  
-  重要原則：
-  - 完整性要求：產品名稱、分類、以及 2 個標籤都是「強制性」的。如果缺乏其中任何一項，將被視為無效回傳。
-  - 嚴禁「亂選」：如果現有分類或標籤不匹配，請給予 newCategoryName 或 newTagName，而不是強迫選一個不相關的。
-  - 標籤數量：請確保回傳內容總共包含 2 個標籤（現有標籤 + 建議標籤 = 2）。
-  - 若無法準確判斷家具尺寸，請「不要」隨意猜測，直接省略或回傳 null 即可。只有在非常明顯且有參照物的情況下才提供尺寸預估。
-  
-  現有分類：
-  ${JSON.stringify(categoriesJson)}
-  
-  現有廠商：
-  ${JSON.stringify(manufacturersJson)}
-  
-  現有標籤：
-  ${JSON.stringify(tagsJson)}
-  
-  請嚴格按照以下 JSON 格式回傳，不要包含任何 markdown 語法 (不要加 \`\`\`json)：
+  你是一位家具專業分析師。請分析這張照片並提供資訊。
+
+  強制性要求：
+  1. 分類 (CategoryId)：從現有分類中選擇最合適的 code。必須選，不可為 null。
+  2. 產品名稱 (Name)：請識別照片中的家具並取合適的英文名稱。若現有名稱是純數字，請忽略之，根據外觀重新生成英文描述名稱。
+
+  可選資訊：
+  3. 標籤 (Tags)：提供 1 到 2 個最貼切的標籤。名稱僅限英文單字。若現有標籤不足，建議新標籤。
+  4. 尺寸 (Dimensions)：若明顯，請填寫，否則 null。
+
+  現有分類：${JSON.stringify(categoriesJson)}
+  現有標籤：${JSON.stringify(tagsJson)}
+
+  請按照以下 JSON 格式回傳，不要包含 markdown：
   {
-    "name": "Product Name (Only English)",
-    "categoryId": "string (即符合的分類 ID/code) 或 null",
-    "subcategoryId": "string (符合的廠商 ID) 或 null",
-    "tagIds": ["string array, 現有標籤 ID"],
-    "newTagName": "建議的新標籤名 (若現有標籤不足 2 個則提供建議，以逗號隔開) 或 null",
-    "newCategoryName": "string (若無匹配現有分類則填寫建議名稱) 或 null",
+    "name": "English Name",
+    "categoryId": "string",
+    "subcategoryId": null,
+    "tagIds": ["string"],
+    "newTagName": "string or null",
+    "newCategoryName": "string or null",
     "newSubCategoryName": null,
     "dimensions": { "length": 0, "width": 0, "height": 0, "unit": "cm" }
   }

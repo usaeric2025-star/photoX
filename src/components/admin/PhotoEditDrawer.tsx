@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Save, RefreshCcw, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { Photo } from '../../types';
@@ -37,6 +37,8 @@ interface Props {
   quickAddTag: () => void;
   quickAddManufacturer: () => void;
   tags: any[];
+  updateTag: (id: string, name: string) => void;
+  photos: Photo[];
   manufacturers: any[];
   editPhotoPreview?: string | null;
   onDelete?: (id: string) => void;
@@ -47,6 +49,20 @@ interface Props {
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  const handleMouseDown = (tag: any) => {
+    setLongPressTimer(setTimeout(() => {
+        const newName = prompt("请输入新标签名称", tag.name);
+        if (newName && newName !== tag.name) {
+            props.updateTag(tag.id, newName);
+        }
+    }, 500));
+  };
+  
+  const handleMouseUp = () => {
+    if (longPressTimer) clearTimeout(longPressTimer);
+  };
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
@@ -143,10 +159,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
           <section className="space-y-4">
              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
-             <div className="flex flex-wrap gap-2 p-1">
-                {props.tags.map(tag => (
+             <div className="flex flex-wrap gap-2 p-1 max-h-24 overflow-y-hidden overflow-x-auto flex-nowrap pb-2">
+                {[...props.tags].sort((a,b) => props.photos.filter(p => p.tagIds?.includes(b.id)).length - props.photos.filter(p => p.tagIds?.includes(a.id)).length).map(tag => (
                   <button 
                     key={tag.id}
+                    onMouseDown={() => handleMouseDown(tag)}
+                    onMouseUp={handleMouseUp}
+                    onTouchStart={() => handleMouseDown(tag)}
+                    onTouchEnd={handleMouseUp}
                     onClick={() => props.setAddTagIds(props.addTagIds.includes(tag.id) ? props.addTagIds.filter(id => id !== tag.id) : [...props.addTagIds, tag.id])}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${props.addTagIds.includes(tag.id) ? 'bg-slate-800 text-white shadow-lg' : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'}`}
                   >

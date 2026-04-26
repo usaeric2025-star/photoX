@@ -130,11 +130,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   };
 
-  const openWhatsApp = (num: string, singlePhotoId?: string) => {
+  const openWhatsApp = (num: string, photo?: Photo) => {
     let msg = '';
     
     const getPhotoDisplayName = (p: Photo) => {
-      const isPlaceholder = !p.name || p.name === t.furnitureRecord || p.name === 'Furniture Record' || p.name === '未命名產品' || p.name === translations['zh'].furnitureRecord || p.name === translations['en'].furnitureRecord;
+      const isPlaceholder = !p.name || p.name === t.furnitureRecord || p.name === 'Furniture Record' || p.name === '未命名产品' || p.name === translations['zh'].furnitureRecord || p.name === translations['en'].furnitureRecord;
       if (!isPlaceholder) return p.name;
       const safeCat = (p.category || '').trim().toLowerCase();
       const cat = dbCategories.find(c => 
@@ -148,18 +148,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       return lang === 'en' ? translations['en'].furniture : translations['zh'].furniture;
     };
 
-    if (singlePhotoId) {
-      const p = photos.find(ph => ph.id === singlePhotoId);
-      if (p) {
-        const displayName = getPhotoDisplayName(p);
-        const manualCodeStr = p.manual_code ? ` [${p.manual_code}]` : '';
-        if (lang === 'ms') {
-          msg = `Halo, saya berminat dengan perabot ini:\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\nLihat lagi: photo-x-one.vercel.app`;
-        } else if (lang === 'en') {
-          msg = `Hello, I'm interested in this furniture:\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\nView more: photo-x-one.vercel.app`;
-        } else {
-          msg = `你好，我对这个家具有兴趣：\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\n查看更多：photo-x-one.vercel.app`;
-        }
+    if (photo) {
+      const displayName = getPhotoDisplayName(photo);
+      const manualCodeStr = photo.manual_code ? ` [${photo.manual_code}]` : '';
+      if (lang === 'ms') {
+        msg = `Halo, saya berminat dengan perabot ini:\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\nFoto: ${photo.image_url}\n\nLihat lagi: photo-x-one.vercel.app`;
+      } else if (lang === 'en') {
+        msg = `Hello, I'm interested in this furniture:\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\nPhoto: ${photo.image_url}\n\nView more: photo-x-one.vercel.app`;
+      } else {
+        msg = `你好，我对这个家具有兴趣：\n\n${displayName}${isStaffMode ? manualCodeStr : ''}\n\n照片: ${photo.image_url}\n\n查看更多：photo-x-one.vercel.app`;
       }
     } else {
       if (lang === 'ms') {
@@ -174,22 +171,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     setShowWhatsAppChoice(false);
   };
 
-  const contactWhatsApp = (photoId?: string) => {
-    const num1 = settings?.whatsapp_1;
-    const num2 = settings?.whatsapp_2;
-
-    if (num1 && num2) {
-      // Store which photo we are sharing if any
-      (window as any)._pendingPhotoId = photoId;
-      setShowWhatsAppChoice(true);
-    } else if (num1 || num2) {
-      openWhatsApp(num1 || num2, photoId);
-    } else {
-      const fallback = (import.meta as any).env.VITE_WHATSAPP_NUMBER;
-      if (fallback) openWhatsApp(fallback, photoId);
-      else alert(t.selectContact); // Reusing a somewhat fitting translation, maybe add 'contactNoNotSet' later if needed, but this works for now. Let me add missingContactNo to translations actually, I can just use placeholder logic or add it later. Actually let's just use t.contactNo
-
-    }
+  const contactWhatsApp = (photo?: Photo) => {
+    // Store which photo we are sharing if any
+    (window as any)._pendingPhoto = photo;
+    setShowWhatsAppChoice(true);
   };
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -315,13 +300,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               </div>
             )}
             
-            <div className="flex items-center gap-1 bg-[#1D3557]/5 px-2 py-0.5 rounded-full border border-[#1D3557]/10 shrink-0">
+            <div className="flex items-center gap-1 bg-[#1D3557]/5 px-2 py-0.5 rounded-full border border-[#1D3557]/10 shrink-0 cursor-pointer" onClick={onRefresh}>
               <span className="text-[8px] sm:text-[9px] font-black text-[#1D3557]/60 italic">
-                {photos.filter(p => !p.isHidden).length}
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-black text-[#1D3557]/20 italic">/</span>
-              <span className="text-[8px] sm:text-[9px] font-black text-blue-600/60 italic">
-                {cloudCount !== null ? cloudCount : '---'}
+                {t.gallerySub(photos.filter(p => !p.isHidden).length)}
               </span>
             </div>
           </div>
@@ -494,8 +475,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               )}
             </AnimatePresence>
 
-            <div className="flex flex-wrap gap-1.5 items-center">
-              {tags.map(tag => (
+            <div className="flex flex-wrap gap-1.5 items-center max-h-16 overflow-y-hidden overflow-x-auto flex-nowrap pb-2">
+              {[...tags].sort((a,b) => photos.filter(p => p.tagIds?.includes(b.id)).length - photos.filter(p => p.tagIds?.includes(a.id)).length).map(tag => (
                 <button 
                   key={tag.id}
                   onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
@@ -577,7 +558,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                      {photo.groupId.slice(-4)}
                    </div>
                  )}
-                {/* Category label */}
+                {/* Category/Tags label */}
                 {(() => {
                   const catCodeOrId = (photo.categoryId || photo.category || '').trim();
                   const cat = dbCategories.find(c => 
@@ -589,22 +570,34 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   
                   let catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');
                   
-                  // Translate "Uncategorized" if it's a known string and not already translated by cat record
-                  const uncategorizedStrings = ['未分类', '未分類', 'uncategorized', 'others', '其他'];
-                  if (!cat && uncategorizedStrings.includes(catName.toLowerCase())) {
+                  // Normalize uncategorized
+                  const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
+                  if (!cat || uncatValues.includes(catName.toLowerCase())) {
                     catName = t.uncategorized;
                   }
 
-                  const isUncategorized = !catName || 
-                    ['未分类', '未分類', 'uncategorized', 'others'].includes(catName.toLowerCase()) ||
-                    catName === t.uncategorized;
+                  const isUncategorized = catName === t.uncategorized || uncatValues.includes(catName.toLowerCase());
+                  
+                  const photoTags = photo.tagIds && photo.tagIds.length > 0
+                    ? tags.filter(t => photo.tagIds!.includes(t.id)).map(t => t.name)
+                    : (photo.tags || []);
                   
                   return (
                     <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent translate-y-1 group-hover:translate-y-0 transition-transform">
-                      {!isUncategorized && (
+                      {catName && !isUncategorized && (
                         <p className="text-white text-[9px] font-bold truncate uppercase tracking-wider">
                           {catName}
                         </p>
+                      )}
+                      
+                      {photoTags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {photoTags.slice(0, 2).map((tagName, idx) => (
+                            <span key={idx} className="bg-white/20 text-white text-[7px] px-1 rounded uppercase tracking-wider font-bold">
+                              {tagName}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </div>
                   );
@@ -926,7 +919,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 
                 <div className="pt-4 border-t border-slate-100 mt-2">
                    <button 
-                    onClick={() => contactWhatsApp(displayPhotos[lightboxIndex!].id)}
+                    onClick={() => contactWhatsApp(displayPhotos[lightboxIndex!])}
                     className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg hover:shadow-xl active:scale-[0.98] transition-all"
                    >
                      <MessageCircle size={20} />
@@ -1038,7 +1031,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               <div className="space-y-3">
                 {settings?.whatsapp_1 && (
                   <button 
-                    onClick={() => openWhatsApp(settings.whatsapp_1, (window as any)._pendingPhotoId)}
+                    onClick={() => openWhatsApp(settings.whatsapp_1, (window as any)._pendingPhoto)}
                     className="w-full py-4 px-6 bg-[#25D366] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
                     <span className="text-xl">👵</span>
@@ -1051,7 +1044,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 )}
                 {settings?.whatsapp_2 && (
                   <button 
-                    onClick={() => openWhatsApp(settings.whatsapp_2, (window as any)._pendingPhotoId)}
+                    onClick={() => openWhatsApp(settings.whatsapp_2, (window as any)._pendingPhoto)}
                     className="w-full py-4 px-6 bg-[#128C7E] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
                   >
                     <span className="text-xl">🏢</span>
@@ -1061,6 +1054,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     </div>
                     <MessageCircle size={20} className="shrink-0" />
                   </button>
+                )}
+                {!settings?.whatsapp_1 && !settings?.whatsapp_2 && (
+                  (() => {
+                    const fallback = (import.meta as any).env.VITE_WHATSAPP_NUMBER;
+                    if (!fallback) return null;
+                    return (
+                      <button 
+                        onClick={() => openWhatsApp(fallback, (window as any)._pendingPhoto)}
+                        className="w-full py-4 px-6 bg-slate-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
+                      >
+                        <MessageCircle size={20} />
+                        {t.contactNo}
+                      </button>
+                    )
+                  })()
                 )}
               </div>
             </motion.div>

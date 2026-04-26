@@ -2,6 +2,7 @@ export const translations = {
   en: {
     galleryName: 'Gallery',
     gallerySub: (count: number) => `${count} photos`,
+    photosUnit: 'photos',
     search: 'Search here...',
     allCats: 'ALL',
     name: 'Product Name',
@@ -75,7 +76,8 @@ export const translations = {
   },
   zh: {
     galleryName: '画廊',
-    gallerySub: (count: number) => `${count} 张照片`,
+    gallerySub: (count: number) => `${count} 照片`,
+    photosUnit: '照片',
     search: '在此搜索...',
     allCats: 'ALL',
     name: '产品名称',
@@ -150,6 +152,7 @@ export const translations = {
   ms: {
     galleryName: 'Galeri',
     gallerySub: (count: number) => `Jumlah ${count} foto`,
+    photosUnit: 'foto',
     search: 'Cari di sini...',
     allCats: 'ALL',
     name: 'Nama Produk',

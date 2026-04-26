@@ -160,7 +160,7 @@ export const useAdminPhotos = (
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-          const result = await analyzeProductPhoto(photo.uri!, dbCategories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null);
+          const result = await analyzeProductPhoto(photo.uri!, dbCategories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
           
           let finalCatId = result.categoryId || null;
           let finalSubId = result.subcategoryId || null;
@@ -272,9 +272,15 @@ export const useAdminPhotos = (
       setAiDebugInfo({ step: '检查金钥', message: `Key 读取: ${apiKey ? apiKey.substring(0, 5) + '...' : '空'}` });
       if (!apiKey) throw new Error('API Key 为空');
 
+      let originalName;
+      if (editPhotoId) {
+          const photo = photosRef.current.find(p => p.id === editPhotoId);
+          originalName = photo?.name;
+      }
+
       setAiDebugInfo({ step: '发送请求', message: `图片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
       
-      const result = await analyzeProductPhoto(imageData, dbCategories, tags, manufacturers, geminiApiKey, aiProvider, customModel, catId, signal);
+      const result = await analyzeProductPhoto(imageData, dbCategories, tags, manufacturers, geminiApiKey, aiProvider, customModel, catId, originalName, signal);
       
       if (signal.aborted) throw new Error('Aborted');
 
