@@ -52,7 +52,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
+    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe pb-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
         <button onClick={props.resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
           <CloseIcon size={24} />

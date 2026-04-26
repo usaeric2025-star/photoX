@@ -78,7 +78,7 @@ export default function AdminView() {
   const { updateTag, deleteTag } = useAdminCategory();
   
   const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
-  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
+  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
 
   const handleDeletePhoto = async (id: string) => {
     await deletePhoto(id);
@@ -398,6 +398,7 @@ export default function AdminView() {
                        }}
                        onEditPhoto={(id) => setEditPhotoId(id)}
                        onGroupPhotos={(ids) => handleGroupPhotos(ids, user, savePhotoToCloud)}
+                       onBatchEdit={setBatchEditIds}
                        hideHeader={true}
                        onRefresh={() => refreshCloudData(
                            user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true

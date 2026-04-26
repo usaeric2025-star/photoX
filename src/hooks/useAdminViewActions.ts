@@ -63,7 +63,7 @@ export const useAdminViewActions = (
         console.log('Form State Name:', formState.name);
         
         const updates: Partial<any> = {};
-        if (result.name && (formState.name === '未命名产品' || !formState.name)) {
+        if (result.name && (formState.name === '未命名产品' || formState.name === 'Furniture' || !formState.name)) {
           console.log('Setting name to:', result.name);
           updates.name = result.name;
         }
@@ -100,6 +100,14 @@ export const useAdminViewActions = (
           updates.model_number = result.modelNumber;
         }
         
+        if (result.manualCode && !formState.manual_code) {
+          updates.manual_code = result.manualCode;
+        }
+        
+        if (result.description && !formState.description) {
+          updates.description = result.description;
+        }
+        
         updateForm(updates);
         
         const updateMessages: string[] = [];
@@ -108,6 +116,8 @@ export const useAdminViewActions = (
         if ('tagIds' in updates) updateMessages.push('商品标签');
         if ('dimL' in updates || 'dimW' in updates || 'dimH' in updates || 'dimensions' in updates) updateMessages.push('尺寸信息');
         if ('model_number' in updates) updateMessages.push('型号');
+        if ('manual_code' in updates) updateMessages.push('原厂编号');
+        if ('description' in updates) updateMessages.push('商品描述');
         
         const msg = updateMessages.length > 0 
           ? `AI 已帮您自动填入：${updateMessages.join('，')}。` 

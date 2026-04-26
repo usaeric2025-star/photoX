@@ -54,7 +54,11 @@ export const usePhotoManagement = (
     if (editPhotoId) {
       const photo = photos.find(p => p.id === editPhotoId);
       if (photo) {
-        const initialCatId = photo.categoryId || (photo.category ? dbCategories.find(c => c.zh === photo.category || c.en === photo.category || c.code === photo.category)?.code : null);
+        const initialCatId = photo.categoryId || (photo.category ? dbCategories.find(c => 
+          (c.code || '').trim().toLowerCase() === String(photo.category).trim().toLowerCase() ||
+          (c.zh || '').trim().toLowerCase() === String(photo.category).trim().toLowerCase() || 
+          (c.en || '').trim().toLowerCase() === String(photo.category).trim().toLowerCase()
+        )?.code : null);
         
         // Healing for Manufacturers: if ID is missing but name string exists, find the ID
         const initialMfrId = photo.subcategoryId || (photo.sub_category ? manufacturers.find(m => m.name === photo.sub_category)?.id : null);

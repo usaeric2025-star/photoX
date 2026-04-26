@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Photo, DB_Category, Category, Tag } from '../types';
-import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2 } from 'lucide-react';
+import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { useGalleryContext } from '../context/GalleryContext';
 import { PhotoCard } from './PhotoCard';
@@ -32,6 +32,7 @@ interface PublicGalleryProps {
   onEditPhoto?: (id: string) => void;
   onDeletePhotos?: (ids: string[]) => void;
   onGroupPhotos?: (ids: string[]) => void;
+  onBatchEdit?: (ids: string[]) => void;
   onGroupClick?: (groupId: string) => void;
   onOpenSettings?: () => void;
   onAddPhoto?: () => void;
@@ -49,7 +50,7 @@ interface PublicGalleryProps {
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
   onExit, onLogin, loginWithGoogle, user, 
   internalPassword, settings, isRefreshing, onRefresh,
-  isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onGroupClick, onOpenSettings, onAddPhoto,
+  isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onBatchEdit, onGroupClick, onOpenSettings, onAddPhoto,
   columns: propColumns, setColumns: propSetColumns,
   hideHeader,
 }) => {
@@ -383,6 +384,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
            </div>
            <div className="flex items-center gap-2">
              <button onClick={() => onGroupPhotos?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title={t.merge}><Layers size={18} /></button>
+             <button onClick={() => onBatchEdit?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="统一编辑"><Pencil size={18} /></button>
              <button onClick={() => window.confirm(t.confirmDelete(selectedIds.length)) && onDeletePhotos?.(selectedIds)} className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20" title={t.delete}><Trash2 size={18} /></button>
              <button onClick={() => {
                const filtered = Array.isArray(photos) ? photos.filter(p => selectedIds.includes(p.id)) : [];

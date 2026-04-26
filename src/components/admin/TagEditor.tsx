@@ -13,11 +13,14 @@ interface TagEditorProps {
 export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd }) => {
   const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const hasLongPressed = useRef<boolean>(false);
 
   const startPress = (tag: any) => {
+    hasLongPressed.current = false;
     pressTimer.current = setTimeout(() => {
+      hasLongPressed.current = true;
       setActiveActionTag(tag);
-    }, 500);
+    }, 400); // reduced from 500
   };
 
   const endPress = () => {
@@ -31,7 +34,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
     <div className="space-y-2">
       <div className="flex items-center justify-between pl-1">
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">标签 / Tags</h3>
-        <button onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
+        <button type="button" onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
       </div>
       <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {tags.map(tag => {
@@ -45,10 +48,17 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
               onMouseLeave={endPress}
               onTouchStart={() => startPress(tag)}
               onTouchEnd={endPress}
+              onTouchMove={endPress} /* cancel if sliding */
               onTouchCancel={endPress}
             >
               <button 
-                onClick={(e) => { e.stopPropagation(); onToggleTag(tag); }}
+                type="button"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  if (!hasLongPressed.current) {
+                    onToggleTag(tag); 
+                  }
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${isSelected ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-800 border-transparent hover:bg-slate-200'}`}
               >
                 #{tag.name}

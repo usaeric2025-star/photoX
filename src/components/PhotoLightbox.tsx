@@ -106,7 +106,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
       {/* --- 右侧/下方：信息详情区 --- */}
       <div className="w-full md:w-[400px] flex flex-col bg-white overflow-y-auto no-scrollbar shadow-2xl z-10">
-        <div className="p-5 pb-24 space-y-5">
+        <div className="p-5 pb-24 md:pb-6 space-y-5">
            {/* 1. 标题与动作条 */}
            <div className="flex justify-between items-start gap-4">
               <div className="flex-1">
