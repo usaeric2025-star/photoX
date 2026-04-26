@@ -108,9 +108,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         )}
         
         {photoTags.length > 0 && (
-          <div className="w-full mt-1 flex flex-nowrap gap-1 overflow-x-auto no-scrollbar items-center">
-            {photoTags.filter(t => typeof t === 'string' && t.trim() !== '').map((tagName, idx) => (
-              <span key={idx} className="bg-black/40 backdrop-blur-sm text-white text-[7px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-bold whitespace-nowrap border border-white/10 shrink-0">
+          <div className="w-full mt-1 flex flex-wrap gap-1 items-center">
+            {photoTags.filter(t => typeof t === 'string' && t.trim() !== '').slice(0, 2).map((tagName, idx) => (
+              <span key={idx} className="bg-black/40 backdrop-blur-sm text-white text-[7px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-bold whitespace-nowrap border border-white/10">
                 {tagName}
               </span>
             ))}

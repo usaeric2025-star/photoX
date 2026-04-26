@@ -566,6 +566,7 @@ export default function AdminView() {
                          input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                          input.click();
                        }}
+                       onEditPhoto={(id) => setEditPhotoId(id)}
                        hideHeader={true}
                        onRefresh={() => refreshCloudData(
                            user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
