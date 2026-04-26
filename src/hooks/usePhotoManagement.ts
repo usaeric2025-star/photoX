@@ -137,7 +137,11 @@ export const usePhotoManagement = (
           };
 
 
-          setPhotos(prev => (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p));
+          setPhotos(prev => {
+            const nextPhotos = (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p);
+            saveData('product_photos', nextPhotos);
+            return nextPhotos;
+          });
           
           if (user) {
              await savePhotoToCloud(user.id, updatedPhoto);
@@ -176,7 +180,11 @@ export const usePhotoManagement = (
           };
 
 
-          setPhotos(prev => [newPhoto, ...(prev as Photo[])]);
+          setPhotos(prev => {
+            const nextPhotos = [newPhoto, ...(prev as Photo[])];
+            saveData('product_photos', nextPhotos);
+            return nextPhotos;
+          });
           
           if (user) {
             await savePhotoToCloud(user.id, newPhoto);
@@ -208,27 +216,28 @@ export const usePhotoManagement = (
         const updatedPhotosList: Photo[] = [];
         setPhotos(prev => {
           const next = prev.map(p => {
-            if (batchEditIds.includes(p.id)) {
-               const updated = {
-                 ...p,
-                 categoryId: categoryId || p.categoryId,
-                 subcategoryId: subcategoryId || p.subcategoryId,
-                 tagIds: tagIds.length > 0 ? tagIds : p.tagIds,
-                 category: categoryName || p.category,
-                 sub_category: subcategoryId ? (manufacturerName || p.sub_category) : p.sub_category,
-                 tags: finalTags.length > 0 ? finalTags : p.tags,
-                 description: description || p.description,
-                 manual_code: manual_code || p.manual_code,
-                 model_number: model_number || p.model_number,
-                 isHidden: batchIsHiddenApplied ? isHidden : p.isHidden,
-                 price: price || p.price,
-                 updatedAt: new Date().toISOString()
-               };
-               updatedPhotosList.push(updated);
-               return updated;
-            }
-            return p;
+             if (batchEditIds.includes(p.id)) {
+                const updated = {
+                  ...p,
+                  categoryId: categoryId || p.categoryId,
+                  subcategoryId: subcategoryId || p.subcategoryId,
+                  tagIds: tagIds.length > 0 ? tagIds : p.tagIds,
+                  category: categoryName || p.category,
+                  sub_category: subcategoryId ? (manufacturerName || p.sub_category) : p.sub_category,
+                  tags: finalTags.length > 0 ? finalTags : p.tags,
+                  description: description || p.description,
+                  manual_code: manual_code || p.manual_code,
+                  model_number: model_number || p.model_number,
+                  isHidden: batchIsHiddenApplied ? isHidden : p.isHidden,
+                  price: price || p.price,
+                  updatedAt: new Date().toISOString()
+                };
+                updatedPhotosList.push(updated);
+                return updated;
+             }
+             return p;
           });
+          saveData('product_photos', next);
           return next;
         });
         

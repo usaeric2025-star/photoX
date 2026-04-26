@@ -506,7 +506,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
             {(manufacturers || []).map(sub => (
               <div key={sub.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
-                <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{sub.name}</span>
+                <span 
+                   className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
+                   onClick={() => {
+                     const newName = prompt('输入新名称', sub.name);
+                     if (newName && newName.trim() !== sub.name) {
+                       const nextMfrs = manufacturers.map(m => m.id === sub.id ? { ...m, name: newName.trim() } : m);
+                       setManufacturers(nextMfrs);
+                       saveSettings({ ...settings, manufacturers: nextMfrs });
+                     }
+                   }}
+                >
+                   {sub.name}
+                </span>
                 <button onClick={() => deleteManufacturer(sub.id)} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
@@ -538,7 +550,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
             {(tags || []).map(tag => (
               <div key={tag.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
-                <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{tag.name}</span>
+                <span 
+                   className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
+                   onClick={() => {
+                     const newName = prompt('输入新名称', tag.name);
+                     if (newName && newName.trim() !== tag.name) {
+                       const nextTags = tags.map(t => t.id === tag.id ? { ...t, name: newName.trim() } : t);
+                       setTags(nextTags);
+                       saveSettings({ ...settings, tags: nextTags });
+                     }
+                   }}
+                >
+                   {tag.name}
+                </span>
                 <button onClick={() => deleteTag(tag.id)} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
