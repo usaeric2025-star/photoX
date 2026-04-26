@@ -205,6 +205,7 @@ export const analyzeProductPhoto = async (
     }
     
     const jsonStr = textOutput.substring(startIndex, endIndex + 1);
+    console.log("AI Raw Output:", jsonStr);
     
     // Improved sanitize: remove control characters and attempt to fix common unescaped quotes within values
     const saferJson = jsonStr

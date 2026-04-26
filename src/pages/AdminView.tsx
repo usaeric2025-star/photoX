@@ -408,7 +408,7 @@ export default function AdminView() {
           subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
         } : c);
         setCategories(nextCats);
-        updateForm({ subcategoryId: newSubId });
+        updateForm(prev => ({ ...prev, subcategoryId: newSubId }));
         await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
       }
     });
@@ -427,7 +427,7 @@ export default function AdminView() {
         const newTagId = crypto.randomUUID();
         const nextTags = [...tags, { id: newTagId, name: trimmedName, aliases: [] }];
         setTags(nextTags);
-        updateForm({ tagIds: [...formState.tagIds, newTagId] });
+        updateForm(prev => ({ ...prev, tagIds: [...prev.tagIds, newTagId] }));
         await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
       }
     });
@@ -441,7 +441,7 @@ export default function AdminView() {
         const newMfrId = crypto.randomUUID();
         const nextMfrs = [...manufacturers, { id: newMfrId, name: val.trim(), aliases: [] }];
         setManufacturers(nextMfrs);
-        updateForm({ subcategoryId: newMfrId });
+        updateForm(prev => ({ ...prev, subcategoryId: newMfrId }));
         await saveSettings({ ...settings, categories, tags, manufacturers: nextMfrs });
       }
     });
@@ -504,7 +504,7 @@ export default function AdminView() {
                 const result = await handleSingleAiAnalyze(data, catId, editPhotoId);
                 if (result) {
                   const updates: Partial<any> = {};
-                  if (result.name && !formState.name) updates.name = result.name;
+                  if (result.name && (formState.name === '未命名产品' || !formState.name)) updates.name = result.name;
                   
                   if (result.categoryId && !catId && !formState.categoryId) {
                     updates.categoryId = result.categoryId;

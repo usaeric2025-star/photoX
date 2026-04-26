@@ -42,8 +42,12 @@ export const usePhotoManagement = (
   const [showOtherFields, setShowOtherFields] = useState(false);
 
   // Helper to update specific fields in formState
-  const updateForm = (updates: Partial<ProductFormData>) => {
-    setFormState(prev => ({ ...prev, ...updates }));
+  const updateForm = (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
+    setFormState(prev => {
+      const next = typeof updates === 'function' ? updates(prev) : ({ ...prev, ...updates });
+      console.log("Form Updated, new state:", next);
+      return next;
+    });
   };
 
   useEffect(() => {

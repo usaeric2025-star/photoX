@@ -206,24 +206,24 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                    {/* 尺寸详情 */}
                    {Array.isArray(photo.dimensions) && photo.dimensions.length > 0 ? (
                      photo.dimensions.map((dim: any, i: number) => (
-                       <React.Fragment key={i}>
-                          <div className="bg-slate-50 p-3 rounded-xl">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Length</span>
-                            <p className="font-bold text-slate-700">{dim.length || '-'}</p>
+                       <div key={i} className="bg-slate-50 p-4 rounded-xl space-y-2 border border-slate-100">
+                          <p className="font-black text-slate-800 text-sm">{dim.label || `Dimension ${i + 1}`}</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                               <span className="text-[9px] font-bold text-slate-400 uppercase block">L</span>
+                               <p className="font-bold text-slate-700 text-sm">{dim.length || '-'}</p>
+                            </div>
+                            <div>
+                               <span className="text-[9px] font-bold text-slate-400 uppercase block">W</span>
+                               <p className="font-bold text-slate-700 text-sm">{dim.width || '-'}</p>
+                            </div>
+                            <div>
+                               <span className="text-[9px] font-bold text-slate-400 uppercase block">H</span>
+                               <p className="font-bold text-slate-700 text-sm">{dim.height || '-'}</p>
+                            </div>
                           </div>
-                          <div className="bg-slate-50 p-3 rounded-xl">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Width</span>
-                            <p className="font-bold text-slate-700">{dim.width || '-'}</p>
-                          </div>
-                          <div className="bg-slate-50 p-3 rounded-xl">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Height</span>
-                            <p className="font-bold text-slate-700">{dim.height || '-'}</p>
-                          </div>
-                          <div className="bg-slate-50 p-3 rounded-xl">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block mb-1">Unit</span>
-                            <p className="font-bold text-slate-700 uppercase">{dim.unit || 'cm'}</p>
-                          </div>
-                       </React.Fragment>
+                          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block mt-1 uppercase">{dim.unit || 'cm'}</span>
+                       </div>
                      ))
                    ) : (
                      <p className="text-slate-300 text-[10px] italic col-span-2 py-4">No size data recorded.</p>

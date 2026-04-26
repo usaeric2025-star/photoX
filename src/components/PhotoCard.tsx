@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Photo, DB_Category } from '../types';
 import { X, Layers } from 'lucide-react';
@@ -29,13 +29,15 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   lang, t, dbCategories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
 }) => {
-  const catCodeOrId = (photo.categoryId || photo.category || '').trim();
-  const cat = dbCategories.find(c => 
-    (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-    (c.zh || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-    (c.en || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-    (c.ms || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
-  );
+  const cat = useMemo(() => {
+    const catCodeOrId = (photo.categoryId || photo.category || '').trim();
+    return dbCategories.find(c => 
+      (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
+      (c.zh || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
+      (c.en || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
+      (c.ms || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
+    );
+  }, [photo.categoryId, photo.category, dbCategories, lang]);
   
   let catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');
   const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
@@ -44,13 +46,16 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }
   const isUncategorized = catName === t.uncategorized || uncatValues.includes(catName.toLowerCase());
   
-  let photoTags: string[] = [];
-  if (photo.tagIds && photo.tagIds.length > 0) {
-    photoTags = (photo.tagIds as string[]).map(tid => tagMap[tid] || tid).filter(Boolean);
-  }
-  if (photoTags.length === 0 && photo.tags && photo.tags.length > 0) {
-    photoTags = photo.tags || [];
-  }
+  const photoTags = useMemo(() => {
+    let tags: string[] = [];
+    if (photo.tagIds && photo.tagIds.length > 0) {
+        tags = (photo.tagIds as string[]).map(tid => tagMap[tid] || tid).filter(Boolean);
+    }
+    if (tags.length === 0 && photo.tags && photo.tags.length > 0) {
+        tags = photo.tags || [];
+    }
+    return tags;
+  }, [photo.tagIds, photo.tags, tagMap]);
 
   return (
     <motion.div 
@@ -114,22 +119,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
                 {tagName}
               </span>
             ))}
-          </div>
-        )}
-        
-        {(isAdminMode || isStaffMode) && photo.model_number && (
-          <div className="mt-1">
-            <span className="bg-blue-500/80 text-white text-[6px] px-1 rounded font-black tracking-widest uppercase">
-               MOD: {photo.model_number}
-            </span>
-          </div>
-        )}
-
-        {photo.price && (
-          <div className="mt-1 text-right">
-            <span className="bg-white/90 text-blue-600 text-[8px] px-1.5 py-0.5 rounded-md font-black shadow-sm border border-blue-100">
-               {photo.price}
-            </span>
           </div>
         )}
       </div>

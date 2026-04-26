@@ -9,10 +9,15 @@ interface GroupDetailViewProps {
   photos: Photo[];
   displayPhotos: Photo[];
   setLightboxIndex: (index: number) => void;
+  isAdminMode: boolean;
+  onEditPhoto?: (id: string) => void;
+  onLongPressStart: (id: string) => void;
+  onLongPressEnd: () => void;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
-  activeGroupId, setActiveGroupId, photos, displayPhotos, setLightboxIndex
+  activeGroupId, setActiveGroupId, photos, displayPhotos, setLightboxIndex,
+  isAdminMode, onEditPhoto, onLongPressStart, onLongPressEnd
 }) => {
   const activeGroupPhotos = React.useMemo(() => {
     if (!activeGroupId) return [];
@@ -38,7 +43,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
               </button>
            </div>
            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {activeGroupPhotos.map((photo, i) => (
+              {activeGroupPhotos.map((photo) => (
                 <motion.div 
                   key={photo.id}
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -51,6 +56,15 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         setLightboxIndex(realIndex);
                       }
                   }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    if (isAdminMode) return;
+                  }}
+                  onMouseDown={() => { if (isAdminMode) onLongPressStart(photo.id); }}
+                  onMouseUp={onLongPressEnd}
+                  onMouseLeave={onLongPressEnd}
+                  onTouchStart={() => { if (isAdminMode) onLongPressStart(photo.id); }}
+                  onTouchEnd={onLongPressEnd}
                 >
                    <img src={photo.thumb_url || photo.image_url || photo.uri || undefined} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">

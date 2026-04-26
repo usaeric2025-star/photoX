@@ -87,7 +87,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             tMap.set(id, { id, name: id });
         }
     });
-    return Array.from(tMap.values());
+    
+    // Dedup by name
+    const uniqueTags = new Map<string, Tag>();
+    Array.from(tMap.values()).forEach(t => {
+      const name = (t.name || '').toLowerCase();
+      if(!uniqueTags.has(name)) {
+        uniqueTags.set(name, t);
+      }
+    });
+    return Array.from(uniqueTags.values());
   }, [contextTags, allTagIds]);
 
   const [lang, setLang] = useState<LanguageCode>(() => {
@@ -393,6 +402,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         photos={photos}
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
+        isAdminMode={!!isAdminMode}
+        onEditPhoto={onEditPhoto}
+        onLongPressStart={startLongPress}
+        onLongPressEnd={endLongPress}
       />
 
       {/* Dialogs */}
