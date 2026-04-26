@@ -142,11 +142,12 @@ export const PhotoEditDrawer: React.FC<Props> = React.memo((props) => {
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
             <div className="grid grid-cols-4 gap-1.5">
                 {props.dbCategories.map(cat => {
+                    // Normalize to string to compare safely
                     const isSelected = String(formState.categoryId) === String(cat.code);
                     return (
                   <button 
                     key={cat.code}
-                    onClick={() => { updateForm({ categoryId: cat.code }); }}
+                    onClick={() => { updateForm({ categoryId: String(cat.code) }); }}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
                   >
                     <span className={`font-black text-sm leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>

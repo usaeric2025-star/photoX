@@ -68,7 +68,7 @@ export const usePhotoManagement = (
 
         setFormState({
           name: photo.name || '',
-          categoryId: initialCatId || null,
+          categoryId: initialCatId ? String(initialCatId) : null,
           subcategoryId: initialMfrId || null,
           tagIds: rawTagIds,
           description: photo.description || '',
