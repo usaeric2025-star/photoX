@@ -621,12 +621,33 @@ export const fetchSettings = async () => {
         throw error;
     }
     
+    // Map custom columns back to app expectations
+    if (data) {
+        if (data.api_key) data.gemini_api_key = data.api_key;
+        if (data.model_name) data.custom_model = data.model_name;
+        if (data.access_passcode) data.internal_password = data.access_passcode;
+    }
+    
     return data;
 };
 
 export const saveSettings = async (settings: any) => {
     try {
         const payload = { ...settings };
+        
+        // Map fields to requested columns
+        if (payload.gemini_api_key) {
+            payload.api_key = payload.gemini_api_key;
+            delete payload.gemini_api_key;
+        }
+        if (payload.custom_model) {
+            payload.model_name = payload.custom_model;
+            delete payload.custom_model;
+        }
+        if (payload.internal_password) {
+            payload.access_passcode = payload.internal_password;
+            delete payload.internal_password;
+        }
         
         console.log("Saving settings to Supabase...", payload);
 
