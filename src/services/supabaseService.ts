@@ -42,7 +42,7 @@ function mapSupabasePhoto(item: any): Photo {
     const cat = item.category;
 
     const tagIds = Array.isArray(item.photo_tags) 
-        ? item.photo_tags.map((pt: any) => String(pt.tag_id)).filter(Boolean)
+        ? item.photo_tags.map((pt: any) => String(pt.tag_id))
         : [];
 
     return {

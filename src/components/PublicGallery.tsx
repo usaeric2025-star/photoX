@@ -148,7 +148,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};
-    tags.forEach(t => { map[t.id] = t.name; });
+    tags.forEach(t => { map[String(t.id)] = t.name; });
     return map;
   }, [tags]);
 
