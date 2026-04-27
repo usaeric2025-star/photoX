@@ -5,6 +5,7 @@ import { Photo, Category, Tag, DB_Category } from '../../types';
 import { savePhotoToCloud } from '../../services/supabaseService';
 import { useGalleryContext } from '../../context/GalleryContext';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
+import { PhotoCard } from '../PhotoCard';
 
 interface GroupDetailScreenProps {
   activeGroupId: string;
@@ -34,16 +35,21 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   onBatchEdit
 }) => {
   const { user } = useGalleryContext();
-  const { viewMode, appLang: lang } = useAdminSession();
+  const { viewMode, appLang: lang, isAdminMode } = useAdminSession();
   const { handleUngroup: handleUngroupAction, dbCategories, categories, tags, manufacturers } = useAdminPhoto();
-  const { setAlertDialog: setAlert, setConfirmDialog: setConfirm } = useAdminUI();
+  const { setAlertDialog: setAlert, setConfirmDialog: setConfirm, setBatchEditIds } = useAdminUI();
   
   const appLang = lang;
-  const [isUnifiedEditing, setIsUnifiedEditing] = useState(false);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
+  const isMultiSelect = selectedPhotoIds.length > 0;
 
   const activePhotosSource = viewMode === 'public' ? publicPhotos : photos;
   const groupPhotos = activePhotosSource.filter(p => p.groupId === activeGroupId);
   
+  const togglePhotoSelection = (id: string) => {
+    setSelectedPhotoIds(prev => prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]);
+  };
+
   const updateGroupPhotos = (updater: (prev: Photo[]) => Photo[]) => {
     setPhotos(prev => {
       const next = updater(prev);
@@ -182,125 +188,27 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
 
             <div className="bg-white/60 backdrop-blur-md rounded-3xl border border-white shadow-sm overflow-hidden">
               <button 
-                onClick={() => setIsUnifiedEditing(!isUnifiedEditing)}
+                onClick={() => {
+                  if (selectedPhotoIds.length > 0) {
+                    onBatchEdit?.(selectedPhotoIds);
+                  } else {
+                    setAlert({ title: '提示', message: '請先選擇照片' });
+                  }
+                }}
                 className="w-full px-6 py-4 flex items-center justify-between active:bg-white/40 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-xl transition-colors ${isUnifiedEditing ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                  <div className={`p-2 rounded-xl transition-colors ${isMultiSelect ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
                     <Settings2 size={16} />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-xs font-bold text-slate-800">🛠️ 統一修改工具</h3>
+                    <h3 className="text-xs font-bold text-slate-800">🛠️ 統一修改選中照片 ({selectedPhotoIds.length})</h3>
                     <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">Batch Tagging & Category</p>
                   </div>
                 </div>
-                <motion.div
-                  animate={{ rotate: isUnifiedEditing ? 180 : 0 }}
-                  className="text-slate-400"
-                >
-                  <ChevronRight size={18} />
-                </motion.div>
               </button>
 
               <AnimatePresence>
-                {isUnifiedEditing && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-6 pb-6 space-y-4 pt-1 border-t border-white/40">
-                      <div className="space-y-2">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">統一描述 (Description)</p>
-                        <textarea 
-                          className="w-full px-4 py-3 rounded-2xl border border-slate-100 text-sm focus:ring-2 focus:ring-blue-500 transition-all bg-white"
-                          rows={3}
-                          placeholder="在此統一修改所有照片的描述..."
-                          onChange={(e) => {
-                            const text = e.target.value;
-                            updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, description: p.description ?? text } : p));
-                          }}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速分類套用</p>
-                        <div className="flex flex-wrap gap-2">
-                          {dbCategories?.map(cat => {
-                            const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.categoryId === cat.code);
-                            return (
-                              <button 
-                                key={cat.code}
-                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: cat.code } : p))}
-                                className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 active:bg-slate-50'}`}
-                              >
-                                {cat[appLang as keyof DB_Category] || cat.zh}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      <motion.div 
-                        initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
-                        className="space-y-2"
-                      >
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">廠商套用</p>
-                        <div className="flex flex-wrap gap-2">
-                          {manufacturers?.map(mfr => {
-                            const isAllMatch = groupPhotos.every(p => p.subcategoryId === mfr.id);
-                            return (
-                              <button 
-                                key={mfr.id}
-                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: mfr.id } : p))}
-                                className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
-                              >
-                                {mfr.name}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-
-                       <div className="space-y-2">
-                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速標籤套用</p>
-                         <div className="flex flex-wrap gap-1.5">
-                           {tags?.map(tag => {
-                             const isAllMatch = groupPhotos.every(p => {
-                                 const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-                                 return rawTagIds.includes(tag.id);
-                             });
-                             return (
-                               <button 
-                                 key={tag.id}
-                                 onClick={() => updateGroupPhotos(prev => {
-                                   const notAllHaveItByGroupId = prev.filter(ph => ph.groupId === activeGroupId).some(p => {
-                                       const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-                                       return !rawTagIds.includes(tag.id);
-                                   });
-                                   return prev.map(p => {
-                                     if (p.groupId !== activeGroupId) return p;
-                                     const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-                                     const hasIt = rawTagIds.includes(tag.id);
-                                     
-                                     if (notAllHaveItByGroupId) {
-                                       return hasIt ? p : { ...p, tagIds: [...rawTagIds, tag.id] };
-                                     } else {
-                                       return { ...p, tagIds: rawTagIds.filter(id => id !== tag.id) };
-                                     }
-                                   });
-                                 })}
-                                 className={`px-2.5 py-1 rounded-lg border text-[9px] font-bold transition-all ${isAllMatch ? 'bg-blue-500 border-blue-500 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
-                               >
-                                 #{tag.name}
-                               </button>
-                             );
-                           })}
-                         </div>
-                       </div>
-                    </div>
-                  </motion.div>
-                )}
               </AnimatePresence>
             </div>
 
@@ -327,44 +235,35 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                   </button>
               </div>
               
-              <div className="grid grid-cols-3 gap-3">
-                {groupPhotos.map((photo, idx) => (
-                  <motion.div 
-                    key={photo.id}
-                    layoutId={`group-item-${photo.id}`}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                        if(isUnifiedEditing) {
-                          updateGroupPhotos(prev => prev.map(p => {
-                            if (p.groupId === activeGroupId) {
-                              if (p.id === photo.id) return { ...p, isGroupCover: true };
-                              if (p.isGroupCover) return { ...p, isGroupCover: false };
-                            }
-                            return p;
-                          }));
-                        } else {
-                          setFocusedGroupPhotoId(photo.id);
-                        }
-                    }}
-                    className={`relative aspect-square rounded-2xl overflow-hidden shadow-md border-2 transition-all ${focusedGroupPhotoId === photo.id ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50' : 'border-white'}`}
-                  >
-                    <img src={photo.uri} className="w-full h-full object-cover" alt={`Group index ${idx}`} />
-                    <div className="absolute inset-0 bg-black/5" />
-                    {(photo.isGroupCover || (groupPhotos.every(p => !p.isGroupCover) && idx === 0)) && (
-                      <div className="absolute top-1.5 left-1.5 bg-black/40 backdrop-blur-sm text-white px-1.5 py-0.5 rounded text-[7px] font-bold uppercase tracking-tighter ring-1 ring-white/20">
-                         封面
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
-                  <button 
-                    onClick={onAddPhotoToGroup}
-                    className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
-                  >
-                    <Plus size={20} />
-                    <span className="text-[8px] font-bold mt-1 uppercase">新增</span>
-                  </button>
-              </div>
+               
+               <div className="grid grid-cols-3 gap-3">
+                 {groupPhotos.map((photo, idx) => (
+                   <PhotoCard 
+                     key={photo.id}
+                     photo={photo}
+                     index={idx}
+                     isAdminMode={isAdminMode}
+                     isMultiSelect={isMultiSelect}
+                     isStaffMode={false} // Adjust based on requirement
+                     isSelected={selectedPhotoIds.includes(photo.id)}
+                     showGroupsCollapsed={false}
+                     lang={lang}
+                     t={{}} // Passed empty object, update if necessary
+                     dbCategories={dbCategories}
+                     categories={categories}
+                     tagMap={{}} // Passed empty object
+                     onToggleSelection={() => togglePhotoSelection(photo.id)}
+                     onLightboxOpen={() => setFocusedGroupPhotoId(photo.id)}
+                   />
+                 ))}
+                 <button 
+                   onClick={onAddPhotoToGroup}
+                   className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
+                 >
+                   <Plus size={20} />
+                   <span className="text-[8px] font-bold mt-1 uppercase">新增</span>
+                 </button>
+               </div>
             </div>
          </div>
       </div>
