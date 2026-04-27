@@ -97,18 +97,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           onLightboxOpen(index);
         }
       }}
-      className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${isAdminMode && isSelected ? 'ring-4 ring-blue-500 ring-offset-2 scale-[0.95]' : ''}`}
+      className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-4 ring-blue-500 ring-offset-2 scale-[0.95]' : ''}`}
     >
       <img 
         src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
         alt={photo.name}
         loading="lazy" 
-        className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105`}
+        className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''}`}
       />
 
-      {isAdminMode && isSelected && (
+      {isAdminMode && isMultiSelect && isSelected && (
         <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full shadow-lg z-10">
-          <X size={12} className="rotate-45" />
+          <X size={12} />
         </div>
       )}
       {photo.groupId && (
