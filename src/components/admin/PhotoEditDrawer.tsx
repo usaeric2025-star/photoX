@@ -33,7 +33,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag
   } = useAdminPhoto();
   const { isAnalyzing, aiDebugInfo } = useAdminUI();
-  const { appLang, isSyncing: sessionSyncing } = useAdminSession();
+  const { appLang } = useAdminSession();
   
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
   const [isSyncing, setIsSyncing] = useState(false);
@@ -149,7 +149,18 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
             <div className="grid grid-cols-4 gap-1.5">
-                {(props.dbCategories || []).map(cat => {
+                {categories.map(cat => {
+                    const isSelected = String(formState.categoryId || '') === String(cat.id || '');
+                    return (
+                  <button 
+                    key={cat.id}
+                    onClick={() => { updateForm({ categoryId: String(cat.id) }); }}
+                    className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
+                  >
+                    <span className={`font-black text-sm leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat.name}</span>
+                  </button>);
+                })}
+                {(dbCategories || []).filter(dbc => !categories.some(c => c.name === dbc.zh)).map(cat => {
                     const isSelected = String(formState.categoryId || '') === String(cat.code || '');
                     return (
                   <button 
@@ -157,7 +168,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     onClick={() => { updateForm({ categoryId: String(cat.code) }); }}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-sm leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat[props.appLang] || cat.zh}</span>
+                    <span className={`font-black text-sm leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat[appLang as keyof typeof cat] || cat.zh}</span>
                   </button>);
                 })}
             </div>
@@ -168,19 +179,19 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 tags={sortedTags} 
                 selectedTagIds={formState.tagIds} 
                 onToggleTag={handleToggleTag}
-                onUpdateTag={props.updateTag}
-                onDeleteTag={props.deleteTag}
-                onQuickAdd={props.quickAddTag}
+                onUpdateTag={updateTag}
+                onDeleteTag={deleteTag}
+                onQuickAdd={quickAddTag}
              />
           </section>
 
         <section className="space-y-2">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">厂商 / Manufacturer</h3>
-            <button onClick={props.quickAddManufacturer} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增</button>
+            <button onClick={quickAddManufacturer} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto content-start">
-            {(props.manufacturers || []).map((mfr: any) => (
+            {(manufacturers || []).map((mfr: any) => (
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ subcategoryId: mfr.id })}

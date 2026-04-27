@@ -4,13 +4,6 @@ import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminSession, useAdminUI, useAdminPhoto } from '../../context/AdminContexts';
 
 interface Props {
-  settings: any;
-  user: any;
-  viewMode: 'public' | 'private';
-  setViewMode: (v: 'public' | 'private') => void;
-  isBatchAnalyzing: boolean;
-  batchProgress: { current: number, total: number };
-  activeScreen: string;
   isMultiSelect: boolean;
   selectedIds: string[];
   filteredPhotos: any[];
@@ -27,8 +20,7 @@ interface Props {
 }
 
 export const AdminHeader: React.FC<Props> = ({ 
-  settings: propsSettings, user: propsUser, viewMode: propsViewMode, setViewMode: propsSetViewMode, isBatchAnalyzing: propsIsBatchAnalyzing, 
-  batchProgress: propsBatchProgress, activeScreen: propsActiveScreen, isMultiSelect, selectedIds, 
+  isMultiSelect, selectedIds, 
   filteredPhotos, setSelectedIds, setIsMultiSelect, 
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, photosCount, totalPhotosCount, cloudCount,

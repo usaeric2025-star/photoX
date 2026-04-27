@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
-import { loginWithGoogle, saveSettings, savePhotoToCloud } from '../services/supabaseService';
-import { Tag } from '../types';
+import { loginWithGoogle, saveSettings } from '../services/supabaseService';
+// Removed Tag import
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Modals } from '../components/admin/Modals';
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
@@ -381,7 +381,7 @@ export default function AdminView() {
                                input.click();
                              }}
                              onEditPhoto={(id) => setEditPhotoId(id)}
-                             onGroupPhotos={(ids) => handleGroupPhotos(ids, user, savePhotoToCloud)}
+                             onGroupPhotos={(ids) => handleGroupPhotos(ids, user, () => {})}
                              onBatchEdit={setBatchEditIds}
                              hideHeader={true}
                              onRefresh={() => refreshCloudData(

@@ -72,27 +72,48 @@ export const useGallery = ({
     let filtered = isAdminMode ? sanitized : sanitized.filter(p => !p.isHidden);
     
     if (selectedCatCode) {
-      const activeCat = dbCategories.find(c => c.code === selectedCatCode);
-      filtered = filtered.filter(p => 
-        p.category === selectedCatCode || 
-        p.category === activeCat?.zh || 
-        p.categoryId === selectedCatCode
-      );
+      filtered = filtered.filter(p => {
+        if (p.categoryId === selectedCatCode) return true;
+        
+        const dbCat = dbCategories.find(c => c.code === selectedCatCode);
+        const catStr = (p.categoryId || (p as any).category || '').trim().toLowerCase();
+        
+        return dbCat && (
+          catStr === dbCat.code.toLowerCase() ||
+          catStr === dbCat.zh.trim().toLowerCase() ||
+          catStr === dbCat.en.trim().toLowerCase() ||
+          catStr === dbCat.ms.trim().toLowerCase()
+        );
+      });
     }
     
     if (selectedSubId) {
-      const activeSub = categories.flatMap(c => c.subcategories).find(s => s.id === selectedSubId);
-      filtered = filtered.filter(p => p.subcategoryId === selectedSubId || p.sub_category === activeSub?.name);
+      filtered = filtered.filter(p => {
+        if (p.subcategoryId === selectedSubId) return true;
+
+        let subName = '';
+        categories.forEach(c => {
+          const sub = c.subcategories.find(s => s.id === selectedSubId);
+          if (sub) subName = sub.name.trim().toLowerCase();
+        });
+        
+        const subStr = (p.subcategoryId || (p as any).sub_category || '').trim().toLowerCase();
+        return subStr && subStr === subName;
+      });
     }
 
     if (selectedTagIds.length > 0) {
       filtered = filtered.filter(p => {
-        const pTags = Array.isArray(p.tags) ? p.tags : [];
-        const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        
         return selectedTagIds.every(tid => {
-          const tagDef = tags.find(t => t.id === tid);
-          const tagName = tagDef?.name;
-          return pTagIds.includes(tid) || (tagName && pTags.includes(tagName));
+          if (rawTagIds.includes(tid)) return true;
+          
+          const tObj = tags.find(t => t.id === tid);
+          if (tObj) {
+            return rawTagIds.some((rt: string) => rt.trim().toLowerCase() === tObj.name.trim().toLowerCase());
+          }
+          return false;
         });
       });
     }
@@ -106,11 +127,10 @@ export const useGallery = ({
         const searchableText = [
           p.name,
           p.description,
-          ...(Array.isArray(p.tags) ? p.tags : []),
           ...mappedTagNames,
-          dbCategories.find(c => c.code === p.category)?.zh || '',
-          dbCategories.find(c => c.code === p.category)?.en || '',
-          dbCategories.find(c => c.code === p.category)?.ms || ''
+          dbCategories.find(c => c.code === p.categoryId)?.zh || '',
+          dbCategories.find(c => c.code === p.categoryId)?.en || '',
+          dbCategories.find(c => c.code === p.categoryId)?.ms || ''
         ].filter(Boolean).join(' ').toLowerCase();
 
         return searchableText.includes(q);

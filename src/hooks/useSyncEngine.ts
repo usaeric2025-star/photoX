@@ -40,16 +40,16 @@ export const useSyncEngine = () => {
         categories: any[],
         tags: any[],
         manufacturers: any[],
-        setSettings: (s: any) => void,
-        setPublicCategories: (c: any) => void,
-        setPublicTags: (t: any) => void,
-        setPublicManufacturers: (m: any) => void,
-        setDbCategories: (c: any) => void,
-        setCategories: (c: any) => void,
-        setTags: (t: any) => void,
-        setManufacturers: (m: any) => void,
-        setPublicPhotos: (p: any) => void,
-        setCloudCount: (c: number | null) => void,
+        setSettings?: (s: any) => void,
+        setPublicCategories?: (c: any) => void,
+        setPublicTags?: (t: any) => void,
+        setPublicManufacturers?: (m: any) => void,
+        setDbCategories?: (c: any) => void,
+        setCategories?: (c: any) => void,
+        setTags?: (t: any) => void,
+        setManufacturers?: (m: any) => void,
+        setPublicPhotos?: (p: any) => void,
+        setCloudCount?: (c: number | null) => void,
         force = false
     ) => {
         setIsSyncing(true);
@@ -57,7 +57,7 @@ export const useSyncEngine = () => {
         try {
             const cloudSettings = await fetchSettings();
             if (cloudSettings) {
-                setSettings(cloudSettings);
+                setSettings?.(cloudSettings);
                 await saveData('product_settings', cloudSettings);
                 
                 // Sync theme
@@ -66,33 +66,33 @@ export const useSyncEngine = () => {
                 if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
 
                 if (cloudSettings.categories !== undefined) {
-                    setPublicCategories(cloudSettings.categories);
-                    setCategories(cloudSettings.categories);
+                    setPublicCategories?.(cloudSettings.categories);
+                    setCategories?.(cloudSettings.categories);
                     await saveData('product_categories', cloudSettings.categories);
                 }
                 
                 if (cloudSettings.tags !== undefined) {
-                    setPublicTags(cloudSettings.tags);
-                    setTags(cloudSettings.tags);
+                    setPublicTags?.(cloudSettings.tags);
+                    setTags?.(cloudSettings.tags);
                     await saveData('product_tags', cloudSettings.tags);
                 }
                 
                 if (cloudSettings.manufacturers !== undefined) {
-                    setPublicManufacturers(cloudSettings.manufacturers);
-                    setManufacturers(cloudSettings.manufacturers);
+                    setPublicManufacturers?.(cloudSettings.manufacturers);
+                    setManufacturers?.(cloudSettings.manufacturers);
                     await saveData('product_manufacturers', cloudSettings.manufacturers);
                 }
             }
 
             const cloudDbCats = await loadCategoriesFromCloud();
             if (cloudDbCats && cloudDbCats.length > 0) {
-                setDbCategories(cloudDbCats);
+                setDbCategories?.(cloudDbCats);
                 await saveData('db_categories', cloudDbCats);
             }
 
             const cloudPhotos = user ? await loadPhotosFromCloud(user.id) : await loadAllPhotosFromCloud();
             if (cloudPhotos) {
-                setPublicPhotos((prev: any[]) => {
+                setPublicPhotos?.((prev: any[]) => {
                     const localMap = new Map((prev || []).map(p => [p.id, p]));
                     const merged = cloudPhotos.map(cp => {
                         const local = localMap.get(cp.id);
@@ -121,10 +121,10 @@ export const useSyncEngine = () => {
 
             if (user) {
                 const cloudPhotos = await loadPhotosFromCloud(user.id);
-                if (cloudPhotos) setCloudCount(cloudPhotos.length);
+                if (cloudPhotos) setCloudCount?.(cloudPhotos.length);
             } else if (cloudPhotos) {
                 // In staff mode/no user, show total public count
-                setCloudCount(cloudPhotos.length);
+                setCloudCount?.(cloudPhotos.length);
             }
             
             const now = Date.now();

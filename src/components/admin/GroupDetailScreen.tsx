@@ -74,7 +74,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Group {activeGroupId}</p>
         </div>
         <div className="flex items-center gap-2">
-          {viewMode === 'private' && (
             <button 
               onClick={() => onBatchEdit?.(groupPhotos.map(p => p.id))}
               className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
@@ -82,7 +81,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
             >
               <Pencil size={20} />
             </button>
-          )}
           <button 
             onClick={async () => {
               const files = await Promise.all(groupPhotos.map(async (p, i) => {
@@ -144,7 +142,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                      </div>
                   </div>
 
-                  {viewMode === 'private' && (
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                       <button 
                         onClick={() => onEditPhoto(focusedPhoto)}
@@ -172,7 +169,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                         <span className="text-xs font-bold">{focusedPhoto.isGroupCover ? '核心封面' : '设为封面'}</span>
                       </button>
                     </div>
-                  )}
 
                   <button 
                     onClick={() => setFocusedGroupPhotoId(null)}
@@ -231,11 +227,11 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-1">快速分類套用</p>
                         <div className="flex flex-wrap gap-2">
                           {dbCategories?.map(cat => {
-                            const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.category === cat.code);
+                            const isAllMatch = groupPhotos.length > 0 && groupPhotos.every(p => p.categoryId === cat.code);
                             return (
                               <button 
                                 key={cat.code}
-                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, category: cat.code, categoryId: cat.code } : p))}
+                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: cat.code } : p))}
                                 className={`px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-100 text-slate-600 active:bg-slate-50'}`}
                               >
                                 {cat[appLang as keyof DB_Category] || cat.zh}
@@ -256,7 +252,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                             return (
                               <button 
                                 key={mfr.id}
-                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: mfr.id, sub_category: mfr.name } : p))}
+                                onClick={() => updateGroupPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, subcategoryId: mfr.id } : p))}
                                 className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all shadow-sm ${isAllMatch ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-100 text-slate-500 active:bg-slate-50'}`}
                               >
                                 {mfr.name}
@@ -314,7 +310,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                   <div className="w-1 h-3 bg-slate-300 rounded-full"></div>
                   組內容 ({groupPhotos.length})
                 </h3>
-                {viewMode === 'private' && (
                   <button 
                     onClick={() => {
                       setConfirm({
@@ -330,7 +325,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                   >
                     <X size={12} /> 解除群組
                   </button>
-                )}
               </div>
               
               <div className="grid grid-cols-3 gap-3">
@@ -363,7 +357,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                     )}
                   </motion.div>
                 ))}
-                {viewMode === 'private' && (
                   <button 
                     onClick={onAddPhotoToGroup}
                     className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"
@@ -371,7 +364,6 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                     <Plus size={20} />
                     <span className="text-[8px] font-bold mt-1 uppercase">新增</span>
                   </button>
-                )}
               </div>
             </div>
          </div>

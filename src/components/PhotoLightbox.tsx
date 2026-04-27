@@ -59,13 +59,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   if (index === null || !photo) return null;
 
   // Header/Meta info calculation
-  const catCodeOrId = (photo.categoryId || photo.category || '').trim();
+  const catCodeOrId = (photo.categoryId || '').trim();
   const cat = dbCategories.find(c => 
-    (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-    (c.zh || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-    (c.en || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
+    (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
   );
-  const catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');
+  const catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : '';
 
   return (
     <motion.div 

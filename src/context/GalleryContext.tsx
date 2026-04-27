@@ -112,17 +112,23 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     if (filterCatId) {
-      result = result.filter(p => p.categoryId === filterCatId || p.category === filterCatId);
+      const activeCat = dbCategories.find(c => c.code === filterCatId);
+      result = result.filter(p => p.categoryId === filterCatId || p.category === filterCatId || (activeCat && p.category === activeCat.zh));
     }
     
     if (filterSubId) {
-      result = result.filter(p => p.subcategoryId === filterSubId || p.sub_category === filterSubId);
+      const activeMfr = manufacturers.find(m => m.id === filterSubId);
+      result = result.filter(p => p.subcategoryId === filterSubId || p.sub_category === filterSubId || (activeMfr && p.sub_category === activeMfr.name));
     }
     
     if (filterTagIds.length > 0) {
       result = result.filter(p => {
-        const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
-        return filterTagIds.every(tid => pTagIds.includes(tid));
+        const pTags = Array.isArray(p.tags) ? p.tags : [];
+        const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        return filterTagIds.every(tid => {
+           const tDef = tags.find(t => t.id === tid);
+           return pTagIds.includes(tid) || (tDef && pTags.includes(tDef.name));
+        });
       });
     }
 

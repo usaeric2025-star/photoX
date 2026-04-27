@@ -216,10 +216,7 @@ export const useAdminPhotos = (
                 subcategoryId: p.subcategoryId || finalSubId, 
                 tagIds: mergedTagIds,
                 name: p.name && p.name !== 'Furniture' ? p.name : (result.name || null),
-                category: p.category && p.category !== 'Uncategorized' ? p.category : (dbCatObj?.zh || result.newCategoryName || null),
-                sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
                 model_number: p.model_number || result.modelNumber || null,
-                tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
                 dimensions: p.dimensions || result.dimensions || null,
                 updatedAt: new Date().toISOString(),
                 isAnalyzing: false 
@@ -345,10 +342,7 @@ export const useAdminPhotos = (
             subcategoryId: finalSubId,
             tagIds: mergedTagIds,
             name: p.name || result.name || null,
-            category: p.category || dbCatObj?.zh || result.newCategoryName || null,
-            sub_category: p.sub_category || manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || null,
             model_number: p.model_number || result.modelNumber || null,
-            tags: tags.filter(t => mergedTagIds.includes(t.id)).map(t => t.name),
             dimensions: p.dimensions || result.dimensions || null,
             updatedAt: new Date().toISOString(),
             isAnalyzing: false 
@@ -458,9 +452,6 @@ export const useAdminPhotos = (
             manual_code: '',
             image_hash: hash,
             name: file.name.split('.')[0] || '未命名产品',
-            category: '未分类',
-            sub_category: '',
-            tags: [],
             description: '',
             image_url: '',
             uri: compressedUri,
@@ -497,8 +488,6 @@ export const useAdminPhotos = (
                      categoryId: finalCatId,
                      subcategoryId: finalSubId,
                      tagIds: result.tagIds || [],
-                     category: dbCatObj?.zh || result.newCategoryName || '未分类',
-                     sub_category: manufacturers.find(m => m.id === finalSubId)?.name || result.newSubCategoryName || '',
                      model_number: p.model_number || result.modelNumber || '',
                      dimensions: result.dimensions || p.dimensions
                    };

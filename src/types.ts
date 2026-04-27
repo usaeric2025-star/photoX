@@ -47,9 +47,9 @@ export interface Photo {
   model_number?: string; // Manufacturer model number
   image_hash: string; // MD5 fingerprint
   name: string; // AI generated name
-  category: string; // Main category name
-  sub_category?: string; // Sub category name
-  tags: string[]; // Tag array
+  // category: string | null; REMOVED
+  // sub_category: string | null; REMOVED
+  // tags: string[]; REMOVED
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
   thumb_url?: string; // Thumbnail URL in Storage
@@ -71,9 +71,9 @@ export interface Photo {
   userId?: string;
   // UI legacy fields mapping if needed
   uri?: string; // For local preview
-  categoryId?: string | null; // For local filter
-  subcategoryId?: string | null; // For local filter
-  tagIds?: string[]; // For local filter
+  categoryId: string | null; // For local filter
+  subcategoryId: string | null; // For local filter
+  tagIds: string[]; // For local filter
   price?: string;
 }
 

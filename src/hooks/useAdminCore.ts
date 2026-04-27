@@ -137,7 +137,7 @@ export const useAdminCore = (
         tags,
         manufacturers
       });
-      const result = await syncPhotosToCloudService(user.id, photos, () => {});
+      const result = await syncPhotosToCloudService(user.id, photos);
       setAlertDialog({ 
         title: t.pushSuccess, 
         message: t.pushSuccessMsg(result.skipped) 
@@ -154,7 +154,7 @@ export const useAdminCore = (
     try {
       await refreshCloudData(
         user, categories, tags, manufacturers, setSettings, 
-        (v:any)=>v, (v:any)=>v, (v:any)=>v, (v:any)=>v, setCategories, setTags, setManufacturers, setPhotos, (v:any)=>v, true
+        undefined, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, undefined, true
       );
       setAlertDialog({ title: t.pullSuccess, message: t.pullSuccessMsg });
     } catch (err: any) {

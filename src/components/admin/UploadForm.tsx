@@ -150,7 +150,17 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
           <div className="grid grid-cols-2 gap-3">
-            {dbCategories.map(cat => (
+            {categories.map(cat => (
+              <button 
+                key={cat.id}
+                onClick={() => { updateForm({ categoryId: cat.id }); }}
+                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${formState.categoryId === cat.id ? 'bg-white border-slate-800 text-slate-800 shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
+              >
+                <span className="font-bold block text-sm tracking-tight">{cat.name}</span>
+                <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono"></span>
+              </button>
+            ))}
+            {(dbCategories || []).filter(dbc => !categories.some(c => c.name === dbc.zh)).map(cat => (
               <button 
                 key={cat.code}
                 onClick={() => { updateForm({ categoryId: cat.code }); }}

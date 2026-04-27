@@ -30,16 +30,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
 }) => {
   const cat = useMemo(() => {
-    const catCodeOrId = (photo.categoryId || photo.category || '').trim();
+    const catCodeOrId = (photo.categoryId || '').trim();
     return dbCategories.find(c => 
-      (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-      (c.zh || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-      (c.en || '').trim().toLowerCase() === catCodeOrId.toLowerCase() || 
-      (c.ms || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
+      (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
     );
-  }, [photo.categoryId, photo.category, dbCategories, lang]);
+  }, [photo.categoryId, dbCategories, lang]);
   
-  let catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : (photo.category || '');
+  let catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : '';
   const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
   if (!cat || uncatValues.includes(catName.toLowerCase())) {
     catName = t.uncategorized;
@@ -51,8 +48,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     if (photo.tagIds && photo.tagIds.length > 0) {
         tags = (photo.tagIds as string[]).map(tid => tagMap[tid] || tid).filter(Boolean);
     }
-    if (tags.length === 0 && photo.tags && photo.tags.length > 0) {
-        tags = photo.tags || [];
+    if (tags.length === 0 && photo.tagIds && photo.tagIds.length > 0) {
+        tags = photo.tagIds || [];
     }
     return tags;
   }, [photo.tagIds, photo.tags, tagMap]);

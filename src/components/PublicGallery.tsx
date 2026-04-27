@@ -217,12 +217,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const getPhotoDisplayName = (p: Photo) => {
     const isPlaceholder = !p.name || p.name === t.furnitureRecord || p.name === 'Furniture Record' || p.name === '未命名产品' || p.name === translations['zh'].furnitureRecord || p.name === translations['en'].furnitureRecord;
     if (!isPlaceholder) return p.name;
-    const safeCat = (p.category || '').trim().toLowerCase();
+    const safeCat = (p.categoryId || '').trim().toLowerCase();
     const cat = dbCategories.find(c => 
-      (c.code || '').trim().toLowerCase() === safeCat || 
-      (c.zh || '').trim().toLowerCase() === safeCat || 
-      (c.en || '').trim().toLowerCase() === safeCat || 
-      (c.ms || '').trim().toLowerCase() === safeCat
+      (c.code || '').trim().toLowerCase() === safeCat
     );
     if (cat) return cat[lang as keyof DB_Category] || cat.zh;
     if (lang === 'ms') return translations['ms'].furniture;
