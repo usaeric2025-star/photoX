@@ -41,9 +41,8 @@ function mapSupabasePhoto(item: any): Photo {
 
     const cat = item.category;
 
-    // 确保 tagIds 是字符串数组
     const tagIds = (item.photo_tags || [])
-      .map((pt: any) => String(pt.tag_id))
+      .map((pt: any) => String(pt.tag_id || pt)) // 兼容 pt 是对象或者直接是 id 的情况
       .filter(Boolean);
 
     return {
@@ -581,7 +580,14 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
         console.error("Failed to load tags from cloud:", error);
         throw error;
     }
-    return data || [];
+    
+    console.log("DEBUG: loadTagsFromCloud resulting data:", data);
+    
+    // Ensure id is always string to match frontend expectations
+    return (data || []).map((t: any) => ({
+      ...t,
+      id: String(t.id)
+    }));
 };
 
 export const updateTagInDB = async (tagId: string, name: string): Promise<boolean> => {

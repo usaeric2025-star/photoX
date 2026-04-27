@@ -291,6 +291,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
+      {/* TEMP BUG RENDER */}
+      <div className="bg-red-500 text-white p-2 text-xs">
+        <div>Photos: {photos.length}</div>
+        <div>Tags length: {tags.length}</div>
+        <div>First phone tagIds: {JSON.stringify(photos.find(p => p.tagIds?.length)?.tagIds)}</div>
+        <div>TagMap keys: {JSON.stringify(Object.keys(tagMap))}</div>
+      </div>
       {/* Header */}
       {lightboxIndex === null && !hideHeader && (
         <PublicGalleryHeader 
