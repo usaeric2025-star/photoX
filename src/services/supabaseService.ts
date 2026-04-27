@@ -674,7 +674,11 @@ export const fetchSettings = async () => {
         if (data.api_key) data.gemini_api_key = data.api_key;
         if (data.model_name) data.custom_model = data.model_name;
         if (data.access_passcode) data.internal_password = data.access_passcode;
-        if (data.manufacturers_json) data.manufacturers = data.manufacturers_json;
+        if (data.manufacturers_json) {
+            data.manufacturers = typeof data.manufacturers_json === 'string' 
+                ? JSON.parse(data.manufacturers_json) 
+                : data.manufacturers_json;
+        }
     }
     
     return data;
