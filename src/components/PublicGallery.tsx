@@ -12,6 +12,7 @@ import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
 import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
+import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -48,12 +49,19 @@ interface PublicGalleryProps {
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
-  onExit, onLogin, loginWithGoogle, user, 
-  internalPassword, settings, isRefreshing, onRefresh,
-  isAdminMode, onEditPhoto, onDeletePhotos, onGroupPhotos, onBatchEdit, onGroupClick, onOpenSettings, onAddPhoto,
+  onExit, onLogin, loginWithGoogle: propsLoginWithGoogle, 
+  onRefresh,
+  onEditPhoto, onDeletePhotos, onGroupPhotos, onBatchEdit, onGroupClick, onOpenSettings, onAddPhoto,
   columns: propColumns, setColumns: propSetColumns,
   hideHeader,
 }) => {
+  const { 
+    user, isAdminMode, settings, loginWithGoogle: sessionLogin, isSyncing 
+  } = useAdminSession();
+  
+  const loginWithGoogle = propsLoginWithGoogle || sessionLogin;
+  const { internalPassword } = settings || {};
+
   const context = useGalleryContext();
   console.log("PublicGallery context:", context);
   const {
@@ -293,7 +301,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           settings={settings}
           photos={photos}
           isAdminMode={!!isAdminMode}
-          isRefreshing={!!isRefreshing}
+          isRefreshing={!!isSyncing}
           isMultiSelect={!!isMultiSelect}
           lang={lang}
           t={t}

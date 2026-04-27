@@ -104,7 +104,7 @@ export const useAdminPhotos = (
   const handleBatchAiIdentify = async (
       photos: Photo[], 
       dbCategories: any[], 
-      cancelBatchAiRef: React.MutableRefObject<boolean>
+      isCancelled: boolean
   ) => {
     const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
     const unProcessed = photos.filter(p => {
@@ -124,12 +124,11 @@ export const useAdminPhotos = (
 
     setBatchProgress({ current: 0, total: unProcessed.length });
     setIsBatchAnalyzing(true);
-    cancelBatchAiRef.current = false;
     let successCount = 0;
 
     try {
       for (let i = 0; i < unProcessed.length; i++) {
-        if (cancelBatchAiRef.current) break;
+        if (isCancelled) break;
         
         let photo = unProcessed[i];
         setBatchProgress(prev => ({ ...prev, current: i + 1 }));

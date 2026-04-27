@@ -18,6 +18,8 @@ interface GalleryContextType {
   isMultiSelect: boolean;
   showGroupsCollapsed: boolean;
   visibleCount: number;
+  user: any;
+  isAdminMode: boolean;
   
   // Settlers
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
@@ -34,6 +36,8 @@ interface GalleryContextType {
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   setShowGroupsCollapsed: (show: boolean) => void;
   setVisibleCount: React.Dispatch<React.SetStateAction<number>>;
+  setUser: (user: any) => void;
+  setIsAdminMode: (is: boolean) => void;
   
   // Actions
   togglePhotoSelection: (id: string) => void;
@@ -63,6 +67,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [visibleCount, setVisibleCount] = useState(15);
+  const [user, setUser] = useState<any>(null);
+  const [isAdminMode, setIsAdminMode] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -162,6 +168,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isMultiSelect,
     showGroupsCollapsed,
     visibleCount,
+    user,
+    isAdminMode,
     setPhotos,
     setCategories,
     setTags,
@@ -176,6 +184,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSelectedIds,
     setShowGroupsCollapsed,
     setVisibleCount,
+    setUser,
+    setIsAdminMode,
     togglePhotoSelection,
     clearSelection,
     isPhotoSelected,
@@ -183,7 +193,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     gridPhotos
   }), [
     photos, categories, tags, dbCategories, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
-    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount,
+    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, user, isAdminMode,
     togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos
   ]);
 

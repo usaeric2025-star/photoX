@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles, CheckSquare, Settings2, Eye, EyeOff, LogIn, Plus, Globe } from 'lucide-react';
 import { translations, LanguageCode } from '../../lib/translations';
+import { useAdminSession, useAdminUI, useAdminPhoto } from '../../context/AdminContexts';
 
 interface Props {
   settings: any;
@@ -26,13 +27,16 @@ interface Props {
 }
 
 export const AdminHeader: React.FC<Props> = ({ 
-  settings, user, viewMode, setViewMode, isBatchAnalyzing, 
-  batchProgress, activeScreen, isMultiSelect, selectedIds, 
+  settings: propsSettings, user: propsUser, viewMode: propsViewMode, setViewMode: propsSetViewMode, isBatchAnalyzing: propsIsBatchAnalyzing, 
+  batchProgress: propsBatchProgress, activeScreen: propsActiveScreen, isMultiSelect, selectedIds, 
   filteredPhotos, setSelectedIds, setIsMultiSelect, 
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, photosCount, totalPhotosCount, cloudCount,
   appLang = 'zh'
 }) => {
+  const { settings, user, viewMode, setViewMode } = useAdminSession();
+  const { isBatchAnalyzing, batchProgress, activeScreen } = useAdminUI();
+  
   const t = translations[appLang as LanguageCode] || translations['zh'];
 
   return (

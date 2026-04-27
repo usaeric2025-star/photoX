@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { TagEditor } from './TagEditor';
 import { Photo, ProductFormData } from '../../types';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight } from 'lucide-react';
+import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
 
 interface Props {
   editPhotoId: string | null;
@@ -12,36 +13,34 @@ interface Props {
   updateForm: (updates: Partial<ProductFormData>) => void;
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
-  isSyncing: boolean;
-  dbCategories: any[];
-  categories: any[];
-  appLang: string;
-  quickAddSubCategory: () => void;
-  quickAddTag: () => void;
-  quickAddManufacturer: () => void;
-  tags: any[];
-  updateTag: (id: string, name: string) => void;
-  deleteTag: (id: string) => void;
-  photos: Photo[];
-  manufacturers: any[];
   editPhotoPreview?: string | null;
   onDelete?: (id: string) => void;
   newPhotoData?: string | null;
-  aiDebugInfo: { step: string; message: string; error?: string } | null;
-  isAnalyzing?: boolean;
   abortAnalysis?: () => void;
-  handleSingleAiAnalyze?: (data: string, catId?: string) => Promise<void>;
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
-  const { formState, updateForm } = props;
+  const { 
+    handleSingleAiAnalyze, 
+    dbCategories, 
+    categories, 
+    tags, 
+    photos, 
+    manufacturers, 
+    quickAddTag, 
+    quickAddManufacturer,
+    updateTag,
+    deleteTag
+  } = useAdminPhoto();
+  const { isAnalyzing, aiDebugInfo } = useAdminUI();
+  const { appLang, isSyncing: sessionSyncing } = useAdminSession();
+  
+  const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
   const [isSyncing, setIsSyncing] = useState(false);
 
   const sortedTags = useMemo(() => {
-    console.log("Drawing tags:", props.tags);
-    console.log("Current formStates tags:", formState.tagIds);
-    return [...props.tags];
-  }, [props.tags, formState.tagIds]);
+    return [...tags];
+  }, [tags]);
   
   const handleToggleTag = (tag: any) => {
     if (formState.tagIds.includes(tag.id)) {
@@ -75,9 +74,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
 
         <div className="flex items-center gap-2 relative z-10">
-            {props.handleSingleAiAnalyze && (
+            {handleSingleAiAnalyze && (
               <div className="flex items-center gap-2">
-                {props.isAnalyzing && props.abortAnalysis && (
+                {isAnalyzing && props.abortAnalysis && (
                   <button 
                     onClick={props.abortAnalysis}
                     className="p-2.5 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 shadow-sm active:scale-95"
@@ -88,14 +87,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 )}
                 <button 
                   onClick={() => {
-                    if (props.isAnalyzing) return;
+                    if (isAnalyzing) return;
                     const data = props.newPhotoData || props.editPhotoPreview;
-                    if (data) props.handleSingleAiAnalyze!(data, formState.categoryId || undefined);
+                    if (data) handleSingleAiAnalyze!(data, formState.categoryId || undefined);
                   }}
-                  disabled={props.isAnalyzing && !props.abortAnalysis}
-                  className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-95 ${props.isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
+                  disabled={isAnalyzing && !props.abortAnalysis}
+                  className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-95 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
                 >
-                  {props.isAnalyzing ? <RefreshCcw size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                  {isAnalyzing ? <RefreshCcw size={18} className="animate-spin" /> : <Sparkles size={18} />}
                 </button>
               </div>
             )}

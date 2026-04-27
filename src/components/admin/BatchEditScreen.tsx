@@ -3,46 +3,38 @@ import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye } from 'lucide-re
 import { motion, AnimatePresence } from 'motion/react';
 
 import { ProductFormData } from '../../types';
+import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
 
 export const BatchEditScreen = ({
   resetAddState,
-  isSyncing,
   saveBatchEdit,
   batchEditIds,
-  dbCategories,
-  categories,
-  appLang,
   formState,
   updateForm,
   batchIsHiddenApplied,
   setBatchIsHiddenApplied,
-  manufacturers,
-  tags,
-  quickAddSubCategory,
-  quickAddTag,
-  quickAddManufacturer,
   showOtherFields,
   setShowOtherFields,
 }: {
   resetAddState: () => void;
-  isSyncing: boolean;
   saveBatchEdit: (batchIsHiddenApplied: boolean) => Promise<void>;
   batchEditIds: string[] | null;
-  dbCategories: any[];
-  categories: any[];
-  appLang: string;
   formState: ProductFormData;
   updateForm: (updates: Partial<ProductFormData>) => void;
   batchIsHiddenApplied: boolean;
   setBatchIsHiddenApplied: (a: boolean) => void;
-  manufacturers: any[];
-  tags: any[];
-  quickAddSubCategory: () => void;
-  quickAddTag: () => void;
-  quickAddManufacturer: () => void;
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
 }) => {
+  const { 
+    quickAddManufacturer: quickAddMfr, 
+    quickAddTag: quickAddT,
+    dbCategories,
+    categories,
+    manufacturers,
+    tags
+  } = useAdminPhoto();
+  const { isSyncing, appLang } = useAdminSession();
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm relative min-h-[72px]">
@@ -155,7 +147,7 @@ export const BatchEditScreen = ({
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一厂商名称</h3>
-            <button onClick={quickAddManufacturer} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
+            <button onClick={quickAddMfr} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
             {manufacturers?.map((mfr: any) => (
@@ -173,7 +165,7 @@ export const BatchEditScreen = ({
         <section className="space-y-4">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品标签</h3>
-            <button onClick={quickAddTag} className="text-[10px] text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
+            <button onClick={quickAddT} className="text-[10px] text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
             {tags.map((tag: any) => (

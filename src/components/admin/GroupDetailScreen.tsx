@@ -3,28 +3,20 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, Share2, Edit3, Minimize2, Settings2, ChevronRight, X, Plus, Pencil } from 'lucide-react';
 import { Photo, Category, Tag, DB_Category } from '../../types';
 import { savePhotoToCloud } from '../../services/supabaseService';
+import { useGalleryContext } from '../../context/GalleryContext';
+import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
 
 interface GroupDetailScreenProps {
   activeGroupId: string;
   setActiveGroupId: (id: string | null) => void;
   focusedGroupPhotoId: string | null;
   setFocusedGroupPhotoId: (id: string | null) => void;
-  viewMode: 'public' | 'private';
   publicPhotos: Photo[];
   photos: Photo[];
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
   setPreviewUri: (uri: string | null) => void;
-  setAlertDialog: (dialog: { title: string, message: string } | null) => void;
-  setConfirmDialog: (dialog: { message: string, onConfirm: () => void } | null) => void;
-  user: any | null;
   onEditPhoto: (photo: Photo) => void;
-  dbCategories: DB_Category[];
-  appLang: 'zh' | 'en' | 'vi' | string;
-  categories: Category[];
-  tags: Tag[];
-  handleUngroup: (groupId: string) => void;
   onAddPhotoToGroup: () => void;
-  manufacturers: any[];
   onBatchEdit?: (ids: string[]) => void;
 }
 
@@ -33,24 +25,20 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   setActiveGroupId,
   focusedGroupPhotoId,
   setFocusedGroupPhotoId,
-  viewMode,
   publicPhotos,
   photos,
   setPhotos,
   setPreviewUri,
-  setAlertDialog,
-  setConfirmDialog,
-  user,
   onEditPhoto,
-  dbCategories,
-  appLang,
-  categories,
-  tags,
-  handleUngroup,
   onAddPhotoToGroup,
-  manufacturers,
   onBatchEdit
 }) => {
+  const { user } = useGalleryContext();
+  const { viewMode, appLang: lang } = useAdminSession();
+  const { handleUngroup: handleUngroupAction, dbCategories, categories, tags, manufacturers } = useAdminPhoto();
+  const { setAlertDialog: setAlert, setConfirmDialog: setConfirm } = useAdminUI();
+  
+  const appLang = lang;
   const [isUnifiedEditing, setIsUnifiedEditing] = useState(false);
 
   const activePhotosSource = viewMode === 'public' ? publicPhotos : photos;
@@ -110,7 +98,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                     title: `照片組 ${activeGroupId}`,
                   });
                 } catch (err) {
-                  setAlertDialog({ title: '提示', message: '部分瀏覽器不支援多檔分享。' });
+                  setAlert({ title: '提示', message: '部分瀏覽器不支援多檔分享。' });
                 }
               }
             }}
@@ -329,10 +317,10 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                 {viewMode === 'private' && (
                   <button 
                     onClick={() => {
-                      setConfirmDialog({
+                      setConfirm({
                         message: `確定要將這 ${groupPhotos.length} 張照片解除同組嗎？`,
                         onConfirm: () => {
-                          handleUngroup(activeGroupId);
+                          handleUngroupAction(activeGroupId);
                           setActiveGroupId(null);
                           setFocusedGroupPhotoId(null);
                         }

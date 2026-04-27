@@ -98,36 +98,52 @@ export const analyzeProductPhoto = async (
     : `【強制要求】請從現有分類中選擇最合適的一個。`;
 
   const promptText = `
-  你是一位家具專業分析師。請分析照片中的家具，並嚴格按照以下規則提取資訊：
+你是一位家具專業分析師。請分析照片中的家具，並嚴格按照以下規則提取資訊：
 
-  【優先級 1：圖片文字識別】
-  - 請仔細觀察照片中是否有任何標籤、吊牌、包裝盒上的文字。
-  - **如果識別到產品名稱、系列名或品牌名，請優先填入 "name" 欄位。**
-  - **識別標價牌或標籤上的手寫/列印代號，填入 "manualCode"。**
-  - **識別規格標籤上的產品型號 (Model No/SKU)，填入 "modelNumber"。**
-  - **識別尺寸信息 (H/W/L)，如有測量標註，請識別。**
+【優先級 1：圖片文字識別】
+- 仔細觀察照片中是否有任何標籤、吊牌、包裝盒上的文字
+- 識別標價牌或標籤上的手寫/列印代號，填入 "manualCode"
+- 識別規格標籤上的產品型號（Model No / SKU），填入 "modelNumber"，若無則填 null
+- 識別尺寸信息（H/W/L），如有測量標註請識別
 
-  【優先級 2：外觀特徵分析】
-  - 如果圖中沒有明確名稱，請根據家具樣式給出一個專業的 **英文名稱**。
-  - 若原名稱 "${originalName || '無'}" 為純數字或 "未命名"，則必須更新為專業名稱。
+【優先級 2：名稱規則 - 強制執行】
+- "name" 字段無論任何情況必須填寫，不能為空
+- 如果照片上有文字名稱：優先使用，中文一律翻譯成英文
+- 如果照片上沒有文字名稱：根據家具外觀給出專業英文名稱
+- 如果原本名稱是純數字或編號：直接替換為專業英文名稱
+- 名稱格式：英文，首字母大寫，簡潔專業
 
-  【核心規則 - 必須遵守】
-  1. **標籤 (Tags)**：
-     - **優先從現有標籤中選擇**：${JSON.stringify(tagsJson)}。
-     - **規則：標籤必須是純英文單詞，無符號、數字。**
-     - **新增標籤 (newTags)**：只有當現有標籤列表中完全沒有能描述該家具材質或風格的詞時，才建議新標籤 (格式: 字符串數組，例如 ["Modern", "Velvet"], 若無則返回空數組 [])。
-  2. **尺寸 (Dimensions)**：
-     - **如果你識別出照片中有不同的規格或多組尺寸，請全部列出**。
-     - 每組尺寸必須包含 "label" (規格名稱, 例如 '3-Seater', '2-Seater', 'Package'), "length", "width", "height", "unit", "isAI": true。
-     - **單位識別**：請仔細辨認是 cm 還是 inch。如果無法確定，默認使用 cm。
-  3. **廠商 (subcategoryId)**：禁止識別或修改。回傳值必須為 null。
-  4. **分類 (categoryId)**：必須從代碼清單中選擇：${JSON.stringify(categoriesJson)}。
-  5. **商品描述 (description)**：對家具進行簡短的文字描述（風格、材質、特色）。
-  6. **備註 (note)**：如果照片質量差、角度不佳、或識別信息不確定，在此注明。否則返回 null。
-  7. **輸出格式**：僅回傳一個合法、壓縮的 JSON 物件。禁止 Markdown。
+【優先級 3：外觀特徵分析】
+- 填寫一句英文描述，說明家具的外觀、材質、風格或用途
+- 填入 "description" 字段，不能為空
 
-  【JSON 範例格式】
-  {"name":"Product Name","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTags":["Modern","Velvet"],"description":"A modern velvet sofa with gold legs.","dimensions":[{"label":"Package","length":100,"width":80,"height":50,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
+【核心規則 - 必須遵守】
+
+1. 標籤（Tags）：
+   - 強制只選或新增 2 個標籤
+   - 第一個：與家具用途或風格相關（例如 SOFA、CLASSIC、OFFICE）
+   - 第二個：與材質相關（例如 WOODEN、PLASTIK、FABRIC）
+   - 兩個方向不強制，可根據實際情況調整
+   - 優先從現有標籤中選擇：${JSON.stringify(tagsJson)}
+   - 若現有標籤無合適選項，才新增標籤
+   - 強制規則：每個標籤必須是單一英文單詞，無空格、無符號、無數字
+   - 新增標籤填入 "newTags" 字段，格式為數組，例如：["Rattan"]
+   - 若不需要新增標籤，"newTags" 返回空數組 []
+
+2. 尺寸（Dimensions）：
+   - 如果識別出照片中有不同規格或多組尺寸，請全部列出
+   - 每組尺寸必須包含 "label"（規格名稱，例如 '3-Seater'）、"length"、"width"、"height"、"unit"、"isAI": true
+   - 單位識別：仔細辨認是 cm 還是 inch，無法確定則默認 cm
+   - 若照片中無尺寸信息，返回空數組 []
+
+3. 廠商（subcategoryId）：禁止識別或修改，回傳值必須為 null
+
+4. 分類（categoryId）：${categoryContext} 代碼清單：${JSON.stringify(categoriesJson)}
+
+5. 輸出格式：僅回傳一個合法、壓縮的 JSON 物件，禁止 Markdown
+
+【JSON 範例格式】
+{"name":"Classic Wooden Dining Chair","description":"A solid wood dining chair with a curved backrest and upholstered seat, suitable for dining rooms or restaurants.","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTags":["Rattan"],"dimensions":[{"label":"Standard","length":50,"width":45,"height":90,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
   `;
 
   try {

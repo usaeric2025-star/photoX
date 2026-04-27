@@ -8,6 +8,7 @@ import {
 import { SubCategory, Tag, DB_Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { testAiConnection } from '../services/geminiService';
+import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 
 interface SettingsScreenProps {
   setActiveScreen: (screen: 'home' | 'add' | 'manage' | 'settings') => void;
@@ -47,38 +48,20 @@ const obfuscateKey = (key: string) => {
   return btoa(key).split('').reverse().join('');
 };
 
-export const SettingsScreen: React.FC<SettingsScreenProps> = ({
-  setActiveScreen,
-  settings,
-  setSettings,
-  saveSettings,
-  manufacturers,
-  setManufacturers,
-  tags,
-  setTags,
-  user,
-  loginWithGoogle,
-  logout,
-  triggerManualSync,
-  isSyncing,
-  syncPercent,
-  handleLogoUpload,
-  setCategories,
-  categories,
-  dbCategories,
-  performPushSync,
-  performPullSync,
-  cloudCount,
-  lastSyncTime,
-  geminiApiKey,
-  setGeminiApiKey,
-  customModel,
-  setCustomModel,
-  internalPassword,
-  setInternalPassword,
-  photos,
-  setPhotos
-}) => {
+export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
+  const { 
+    settings, user, loginWithGoogle, logout, isSyncing, syncPercent, 
+    geminiApiKey, setGeminiApiKey, customModel, setCustomModel, 
+    internalPassword, setInternalPassword, lastSyncTime,
+    setSettings, saveSettings
+  } = useAdminSession();
+  const { 
+    manufacturers, tags, dbCategories, cloudCount, 
+    setManufacturers, setTags, setCategories, setPhotos, photos, categories
+  } = useAdminPhoto();
+  const { isSyncing: uiSyncing } = useAdminUI();
+
+  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync } = props;
   const [newSubName, setNewSubName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [showCatOverview, setShowCatOverview] = useState(false);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, X } from 'lucide-react';
+import { useAdminUI } from '../../context/AdminContexts';
 
 interface Dialog {
   title: string;
@@ -15,11 +16,9 @@ interface PromptDialog {
 }
 
 export const Modals = ({
-  confirmDialog, setConfirmDialog,
-  alertDialog, setAlertDialog,
-  promptDialog, setPromptDialog,
   promptValue, setPromptValue
 }: any) => {
+  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminUI();
   return (
     <>
       <AnimatePresence>

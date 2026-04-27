@@ -19,16 +19,27 @@ import { useAdminDialogs } from '../hooks/useAdminDialogs';
 import { usePhotoManagement } from '../hooks/usePhotoManagement';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
-import { useAdminViewActions } from '../hooks/useAdminViewActions';
-import { useAdminViewLogic } from '../hooks/useAdminViewLogic';
+import { useAdminCore } from '../hooks/useAdminCore';
 import { translations, LanguageCode } from '../lib/translations';
+
+import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 
 export default function AdminView() {
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
-  const t = translations[lang] || translations['en'];
+  const t = translations[lang] ?? translations.en;
   const { user, authChecked, logout } = useAuth();
-  const { photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories, manufacturers, setManufacturers, displayPhotos, gridPhotos, visibleCount, setVisibleCount, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryContext();
+  const { 
+    photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories, manufacturers, setManufacturers, 
+    displayPhotos, gridPhotos, visibleCount, setVisibleCount, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
+    setUser, setIsAdminMode
+  } = useGalleryContext();
   
+  useEffect(() => {
+    if (authChecked) {
+      setUser(user);
+      setIsAdminMode(!!user || sessionStorage.getItem('isStaffMode') === 'true');
+    }
+  }, [authChecked, user, setUser, setIsAdminMode]);
   const cancelBatchAiRef = useRef(false);
   
   // Need setters to be defined or from context
@@ -70,8 +81,14 @@ export default function AdminView() {
     }
   }, [settings]);
   
-  const { saveSettings, handleSingleAiAnalyzeCallback, performPushSync, performPullSync } = useAdminViewActions(user, photos, setPhotos, settings, setSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData);
-  const { activeScreen, setActiveScreen, toast, showToast, handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer } = useAdminViewLogic(photos, setPhotos, settings, saveSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, (update: any) => updateForm(update), setAlertDialog, setPromptDialog);
+  const {
+      activeScreen, setActiveScreen, toast, showToast, saveSettings,
+      performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
+      handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
+  } = useAdminCore(
+      user, photos, setPhotos, settings, setSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
+      setIsSyncing, setAlertDialog, setPromptDialog, updateForm, t, refreshCloudData
+  );
 
   const handleManageClick = () => setActiveScreen('manage');
 
@@ -211,261 +228,221 @@ export default function AdminView() {
   
 
   
+  // Context providers values
+  const sessionValue = {
+    user, isAdminMode: !!user || sessionStorage.getItem('isStaffMode') === 'true', 
+    settings, setSettings, geminiApiKey, setGeminiApiKey,
+    internalPassword, setInternalPassword, customModel, setCustomModel,
+    viewMode, setViewMode, isSyncing, setIsSyncing, syncPercent, setSyncPercent,
+    loginWithGoogle, logout, appLang: lang
+  };
+
+  const photoValue = {
+    photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories,
+    manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport,
+    deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    updateTag, deleteTag: handleDeleteTag, quickAddTag, quickAddManufacturer
+  };
+
+  const uiValue = {
+    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
+    confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    toast, showToast, isAnalyzing, isBatchAnalyzing, batchProgress, aiDebugInfo, abortAnalysis
+  };
+
   return (
     <ErrorBoundary>
-      {errorContent}
-      
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
-          >
-            {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : <X size={18} className="text-red-400" />}
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {batchEditIds && (
-        <BatchEditScreen 
-          resetAddState={() => { resetAddState(); setBatchIsHiddenApplied(false); }}
-          isSyncing={isSyncing}
-          saveBatchEdit={saveBatchEdit}
-          batchEditIds={batchEditIds}
-          dbCategories={dbCategories}
-          categories={categories}
-          appLang={appLang}
-          formState={formState}
-          updateForm={updateForm}
-          batchIsHiddenApplied={batchIsHiddenApplied}
-          setBatchIsHiddenApplied={setBatchIsHiddenApplied}
-          showOtherFields={showOtherFields}
-          setShowOtherFields={setShowOtherFields}
-          manufacturers={manufacturers}
-          tags={tags}
-          quickAddSubCategory={() => quickAddSubCategory(formState)}
-          quickAddTag={quickAddTag}
-          quickAddManufacturer={quickAddManufacturer}
-        />
-      )}
-      
-      {activeGroupId && (
-        <GroupDetailScreen
-          activeGroupId={activeGroupId}
-          setActiveGroupId={setActiveGroupId}
-          focusedGroupPhotoId={focusedGroupPhotoId}
-          setFocusedGroupPhotoId={setFocusedGroupPhotoId}
-          viewMode={viewMode}
-          publicPhotos={photos}
-          photos={photos}
-          setPhotos={setPhotos}
-          setPreviewUri={setPreviewUri}
-          setAlertDialog={setAlertDialog}
-          setConfirmDialog={setConfirmDialog}
-          user={user}
-          onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
-          onBatchEdit={(ids) => { setBatchEditIds(ids); setActiveGroupId(null); }}
-          dbCategories={dbCategories}
-          manufacturers={manufacturers}
-          appLang={appLang}
-          categories={categories}
-          tags={tags}
-          handleUngroup={handleUngroup}
-          onAddPhotoToGroup={() => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.multiple = true;
-            input.onchange = (e) => handlePhotoImport(e as any, false, (screen) => {});
-            input.click();
-          }}
-        />
-      )}
-
-      {activeScreen === 'manage' && (
-         <SettingsScreen 
-           setActiveScreen={setActiveScreen}
-           settings={settings}
-           setSettings={setSettings}
-           saveSettings={saveSettings}
-           manufacturers={manufacturers}
-           setManufacturers={setManufacturers}
-           tags={tags}
-           setTags={setTags}
-           user={user}
-           loginWithGoogle={loginWithGoogle}
-           logout={logout}
-           triggerManualSync={performPushSync}
-           isSyncing={isSyncing}
-           syncPercent={syncPercent}
-           handleLogoUpload={handleLogoUpload}
-           setCategories={setCategories}
-           categories={categories}
-           dbCategories={dbCategories}
-           performPushSync={performPushSync}
-           performPullSync={performPullSync}
-           cloudCount={cloudCount}
-           lastSyncTime={lastSyncTime}
-           geminiApiKey={geminiApiKey}
-           setGeminiApiKey={setGeminiApiKey}
-           customModel={customModel}
-           setCustomModel={setCustomModel}
-           internalPassword={internalPassword}
-           setInternalPassword={setInternalPassword}
-           photos={photos}
-           setPhotos={setPhotos}
-         />
-      )}
-
-      {(editPhotoId || newPhotoData) && (
-          <PhotoEditDrawer 
-              editPhotoId={editPhotoId} 
-              resetAddState={resetAddState} 
-              saveNewPhoto={saveNewPhoto} 
-              photos={photos} 
-              updateTag={updateTag}
-              formState={formState}
-              updateForm={updateForm}
-              showOtherFields={showOtherFields} 
-              setShowOtherFields={setShowOtherFields}
-              isSyncing={isSyncing} 
-              dbCategories={dbCategories} 
-              categories={categories} 
-              appLang={appLang}
-              quickAddSubCategory={() => quickAddSubCategory(formState)} 
-              quickAddTag={quickAddTag} 
-              quickAddManufacturer={quickAddManufacturer} 
-              tags={tags}
-              newPhotoData={newPhotoData} 
-              manufacturers={manufacturers}
-              aiDebugInfo={aiDebugInfo}
-              isAnalyzing={isAnalyzing}
-              handleSingleAiAnalyze={(data, catId) => handleSingleAiAnalyzeCallback(data, catId, editPhotoId, formState, dbCategories, updateForm, handleSingleAiAnalyze)}
-              onDelete={handleDeletePhoto}
-              editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
-              abortAnalysis={abortAnalysis}
-              deleteTag={handleDeleteTag}
-          />
-      )}
-      
-      {activeScreen === 'home' && (
-        <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
-                <AdminHeader 
-                    settings={settings}
-                    user={user}
-                    viewMode={viewMode}
-                    setViewMode={(newMode) => {
-                      setViewMode(newMode);
-                      if (newMode === 'public') navigate('/');
-                    }}
-                    isBatchAnalyzing={isBatchAnalyzing}
-                    batchProgress={batchProgress}
-                    activeScreen={activeScreen}
-                    isMultiSelect={isMultiSelect}
-                    selectedIds={selectedIds}
-                    filteredPhotos={gridPhotos}
-                    setSelectedIds={setSelectedIds}
-                    setIsMultiSelect={setIsMultiSelect}
-                    handleBatchAiIdentifyTrigger={() => {
-                      if (isBatchAnalyzing) {
-                        cancelBatchAiRef.current = true;
-                      } else {
-                        cancelBatchAiRef.current = false;
-                        handleBatchAiIdentify(gridPhotos, dbCategories, cancelBatchAiRef);
-                      }
-                    }}
-                    handleManageClick={handleManageClick}
-                    loginWithGoogle={loginWithGoogle}
-                    onAddPhoto={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'image/*';
-                      input.multiple = true;
-                      input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
-                      input.click();
-                    }}
-                    photosCount={displayPhotos.length}
-                    totalPhotosCount={photos.length}
-                    cloudCount={cloudCount}
-                    appLang={appLang}
-                 />
-                 <div className="flex-1 min-h-0 relative">
-                    <PublicGallery 
-                       onExit={() => setViewMode('public')}
-                       showExit={true}
-                       user={user}
-                       settings={settings}
-                       isAdminMode={true}
-                       onOpenSettings={handleManageClick}
-                       onAddPhoto={() => {
-                         const input = document.createElement('input');
-                         input.type = 'file';
-                         input.accept = 'image/*';
-                         input.multiple = true;
-                         input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
-                         input.click();
-                       }}
-                       onEditPhoto={(id) => setEditPhotoId(id)}
-                       onGroupPhotos={(ids) => handleGroupPhotos(ids, user, savePhotoToCloud)}
-                       onBatchEdit={setBatchEditIds}
-                       hideHeader={true}
-                       onRefresh={() => refreshCloudData(
-                           user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
-                       )}
-                       columns={columns}
-                       setColumns={setColumns}
-                       cloudCount={cloudCount}
-                    />
-                 </div>
-        </div>
-      )}
-
-      <AnimatePresence>
-        {isSyncing && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2000] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center p-6"
-          >
-            <div className="w-12 h-12 relative">
-               <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
-               <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin"></div>
-            </div>
+      <AdminSessionProvider value={sessionValue}>
+        <AdminPhotoProvider value={photoValue}>
+          <AdminUIProvider value={uiValue}>
+            {errorContent}
             
-            {isImporting && importTotal > 0 ? (
-              <div className="w-full max-w-xs mt-8">
-                <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
-                   <span>{t.uploadProgress}</span>
-                   <span>{importProgress} / {importTotal}</span>
-                </div>
-                <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-600 transition-all duration-300 ease-out" 
-                    style={{ width: `${Math.round((importProgress / importTotal) * 100)}%` }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="mt-6 text-center">
-                <p className="text-sm font-bold text-slate-800 tracking-tight">{t.processing}</p>
-                <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.doNotClose}</p>
-              </div>
+            <AnimatePresence>
+              {toast && (
+                <motion.div
+                  initial={{ opacity: 0, y: -50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -50 }}
+                  className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
+                >
+                  {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : <X size={18} className="text-red-400" />}
+                  {toast.message}
+                </motion.div>
+              )}
+            </AnimatePresence>
+      
+            {batchEditIds && (
+              <BatchEditScreen 
+                resetAddState={() => { resetAddState(); setBatchIsHiddenApplied(false); }}
+                saveBatchEdit={saveBatchEdit}
+                batchEditIds={batchEditIds}
+                dbCategories={dbCategories}
+                categories={categories}
+                appLang={appLang}
+                formState={formState}
+                updateForm={updateForm}
+                batchIsHiddenApplied={batchIsHiddenApplied}
+                setBatchIsHiddenApplied={setBatchIsHiddenApplied}
+                showOtherFields={showOtherFields}
+                setShowOtherFields={setShowOtherFields}
+                manufacturers={manufacturers}
+                tags={tags}
+                quickAddSubCategory={() => quickAddSubCategory(formState)}
+                quickAddTag={quickAddTag}
+                quickAddManufacturer={quickAddManufacturer}
+              />
             )}
             
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <Modals 
-          confirmDialog={confirmDialog} setConfirmDialog={setConfirmDialog}
-          alertDialog={alertDialog} setAlertDialog={setAlertDialog}
-          promptDialog={promptDialog} setPromptDialog={setPromptDialog}
-          promptValue={promptValue} setPromptValue={setPromptValue}
-      />
+            {activeGroupId && (
+              <GroupDetailScreen
+                activeGroupId={activeGroupId}
+                setActiveGroupId={setActiveGroupId}
+                focusedGroupPhotoId={focusedGroupPhotoId}
+                setFocusedGroupPhotoId={setFocusedGroupPhotoId}
+                publicPhotos={photos}
+                photos={photos}
+                setPhotos={setPhotos}
+                setPreviewUri={setPreviewUri}
+                onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
+                onBatchEdit={(ids) => { setBatchEditIds(ids); setActiveGroupId(null); }}
+                onAddPhotoToGroup={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.multiple = true;
+                  input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                  input.click();
+                }}
+              />
+            )}
+      
+            {activeScreen === 'manage' && (
+               <SettingsScreen 
+                 setActiveScreen={setActiveScreen}
+                 saveSettings={saveSettings}
+                 handleLogoUpload={handleLogoUpload}
+                 performPushSync={performPushSync}
+                 performPullSync={performPullSync}
+               />
+            )}
+      
+            {(editPhotoId || newPhotoData) && (
+                <PhotoEditDrawer 
+                    editPhotoId={editPhotoId} 
+                    resetAddState={resetAddState} 
+                    saveNewPhoto={saveNewPhoto} 
+                    formState={formState}
+                    updateForm={updateForm}
+                    showOtherFields={showOtherFields} 
+                    setShowOtherFields={setShowOtherFields}
+                    newPhotoData={newPhotoData} 
+                    onDelete={handleDeletePhoto}
+                    editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
+                    abortAnalysis={abortAnalysis}
+                />
+            )}
+            
+            {activeScreen === 'home' && (
+              <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
+                      <AdminHeader 
+                          selectedIds={selectedIds}
+                          filteredPhotos={gridPhotos}
+                          setSelectedIds={setSelectedIds}
+                          setIsMultiSelect={setIsMultiSelect}
+                          handleBatchAiIdentifyTrigger={() => {
+                            if (isBatchAnalyzing) {
+                              cancelBatchAiRef.current = true;
+                            } else {
+                              cancelBatchAiRef.current = false;
+                              handleBatchAiIdentify(gridPhotos, dbCategories, cancelBatchAiRef.current);
+                            }
+                          }}
+                          handleManageClick={handleManageClick}
+                          loginWithGoogle={loginWithGoogle}
+                          onAddPhoto={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = 'image/*';
+                            input.multiple = true;
+                            input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                            input.click();
+                          }}
+                          photosCount={displayPhotos.length}
+                          totalPhotosCount={photos.length}
+                          cloudCount={cloudCount}
+                          appLang={appLang}
+                       />
+                       <div className="flex-1 min-h-0 relative">
+                          <PublicGallery 
+                             onExit={() => setViewMode('public')}
+                             showExit={true}
+                             onOpenSettings={handleManageClick}
+                             onAddPhoto={() => {
+                               const input = document.createElement('input');
+                               input.type = 'file';
+                               input.accept = 'image/*';
+                               input.multiple = true;
+                               input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                               input.click();
+                             }}
+                             onEditPhoto={(id) => setEditPhotoId(id)}
+                             onGroupPhotos={(ids) => handleGroupPhotos(ids, user, savePhotoToCloud)}
+                             onBatchEdit={setBatchEditIds}
+                             hideHeader={true}
+                             onRefresh={() => refreshCloudData(
+                                 user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
+                             )}
+                             columns={columns}
+                             setColumns={setColumns}
+                             cloudCount={cloudCount}
+                          />
+                       </div>
+              </div>
+            )}
+      
+            <AnimatePresence>
+              {isSyncing && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[2000] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center p-6"
+                >
+                  <div className="w-12 h-12 relative">
+                     <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
+                     <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin"></div>
+                  </div>
+                  
+                  {isImporting && importTotal > 0 ? (
+                    <div className="w-full max-w-xs mt-8">
+                      <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
+                         <span>{t.uploadProgress}</span>
+                         <span>{importProgress} / {importTotal}</span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-600 transition-all duration-300 ease-out" 
+                          style={{ width: `${Math.round((importProgress / importTotal) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-6 text-center">
+                      <p className="text-sm font-bold text-slate-800 tracking-tight">{t.processing}</p>
+                      <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.doNotClose}</p>
+                    </div>
+                  )}
+                  
+                </motion.div>
+              )}
+            </AnimatePresence>
+      
+            <Modals 
+                promptValue={promptValue} setPromptValue={setPromptValue}
+            />
+          </AdminUIProvider>
+        </AdminPhotoProvider>
+      </AdminSessionProvider>
     </ErrorBoundary>
   );
 }

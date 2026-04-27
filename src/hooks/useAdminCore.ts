@@ -1,10 +1,8 @@
-
 import React, { useState, useCallback } from 'react';
 import { saveSettings as saveSettingsCloud, syncPhotosToCloud as syncPhotosToCloudService } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
-import { translations, LanguageCode } from '../lib/translations';
 
-export const useAdminViewActions = (
+export const useAdminCore = (
   user: any,
   photos: any[],
   setPhotos: React.Dispatch<React.SetStateAction<any[]>>,
@@ -18,9 +16,18 @@ export const useAdminViewActions = (
   setManufacturers: React.Dispatch<React.SetStateAction<any[]>>,
   setIsSyncing: React.Dispatch<React.SetStateAction<boolean>>,
   setAlertDialog: React.Dispatch<React.SetStateAction<any>>,
+  setPromptDialog: React.Dispatch<React.SetStateAction<any>>,
+  updateForm: Function,
   t: any,
   refreshCloudData: Function
 ) => {
+  const [activeScreen, setActiveScreen] = useState('home');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
 
   const saveSettings = useCallback(async (s: any) => {
     try {
@@ -52,19 +59,15 @@ export const useAdminViewActions = (
     editPhotoId?: string, 
     formState?: any, 
     dbCategories?: any[], 
-    updateForm?: any,
+    updateFormFn?: any,
     handleSingleAiAnalyzeService?: any
   ) => {
     if(!handleSingleAiAnalyzeService) return;
     try {
       const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId);
       if (result) {
-        console.log('AI Analysis Result:', result);
-        console.log('Form State Name:', formState.name);
-        
         const updates: Partial<any> = {};
         if (result.name && (!formState.name || formState.name === '未命名产品' || formState.name === 'Furniture' || /^(img|image|photo)[\s_-]?\d+/i.test(formState.name) || /\.(jpg|jpeg|png|heic|webp)$/i.test(formState.name))) {
-          console.log('Setting name to:', result.name);
           updates.name = result.name;
         }
         
@@ -96,19 +99,11 @@ export const useAdminViewActions = (
           }
         }
 
-        if (result.modelNumber && !formState.model_number) {
-          updates.model_number = result.modelNumber;
-        }
+        if (result.modelNumber && !formState.model_number) updates.model_number = result.modelNumber;
+        if (result.manualCode && !formState.manual_code) updates.manual_code = result.manualCode;
+        if (result.description && !formState.description) updates.description = result.description;
         
-        if (result.manualCode && !formState.manual_code) {
-          updates.manual_code = result.manualCode;
-        }
-        
-        if (result.description && !formState.description) {
-          updates.description = result.description;
-        }
-        
-        updateForm(updates);
+        updateFormFn(updates);
         
         const updateMessages: string[] = [];
         if ('name' in updates) updateMessages.push('商品名称');
@@ -143,7 +138,7 @@ export const useAdminViewActions = (
         tags,
         manufacturers
       });
-      const result = await syncPhotosToCloudService(user.id, photos, (p: number) => {}); // Placeholder setSyncPercent
+      const result = await syncPhotosToCloudService(user.id, photos, () => {});
       setAlertDialog({ 
         title: t.pushSuccess, 
         message: t.pushSuccessMsg(result.skipped) 
@@ -170,5 +165,75 @@ export const useAdminViewActions = (
     }
   }, [user, categories, tags, manufacturers, setSettings, setCategories, setTags, setManufacturers, setPhotos, setIsSyncing, setAlertDialog, t, refreshCloudData]);
 
-  return { saveSettings, performPushSync, performPullSync, handleSingleAiAnalyzeCallback };
+  const handleUngroup = useCallback((groupId: string) => {
+    setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
+  }, [setPhotos]);
+
+  const handleGroupPhotos = useCallback(async (ids: string[], user: any, savePhotoToCloud: Function) => {
+    if (ids.length < 2) return;
+    const groupId = `group-${Date.now()}`;
+    const updatedPhotos = photos.map(p => ids.includes(p.id) ? { ...p, groupId } : p);
+    setPhotos(updatedPhotos);
+  }, [photos, setPhotos]);
+
+  const quickAddSubCategory = useCallback((formState: any) => {
+    if (!formState.categoryId) return;
+    setPromptDialog({
+      title: '新增子分类',
+      placeholder: '输入新子分类名称',
+      onSubmit: async (val: string) => {
+        const newSubId = crypto.randomUUID();
+        const nextCats = categories.map(c => c.id === formState.categoryId ? {
+          ...c,
+          subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
+        } : c);
+        setCategories(nextCats);
+        updateForm((prev: any) => ({ ...prev, subcategoryId: newSubId }));
+        await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
+      }
+    });
+  }, [categories, tags, manufacturers, settings, saveSettings, setCategories, updateForm, setPromptDialog]);
+
+  const quickAddTag = useCallback(() => {
+    setPromptDialog({
+      title: '自定义标签',
+      placeholder: '输入新标签名称',
+      onSubmit: async (val: string) => {
+        const trimmedName = val.trim();
+        if (tags.some(t => t.name.toLowerCase() === trimmedName.toLowerCase())) {
+          setAlertDialog({ title: '提示', message: '标签已存在' });
+          return;
+        }
+        const newTagId = crypto.randomUUID();
+        const nextTags = [...tags, { id: newTagId, name: trimmedName, aliases: [] }];
+        setTags(nextTags);
+        updateForm((prev: any) => ({ ...prev, tagIds: [...prev.tagIds, newTagId] }));
+        await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
+      }
+    });
+  }, [tags, categories, manufacturers, settings, saveSettings, setTags, updateForm, setAlertDialog, setPromptDialog]);
+
+  const quickAddManufacturer = useCallback(() => {
+    setPromptDialog({
+      title: '新增厂商',
+      placeholder: '输入新厂商名称',
+      onSubmit: async (val: string) => {
+        const newMfrId = crypto.randomUUID();
+        const nextMfrs = [...manufacturers, { id: newMfrId, name: val.trim(), aliases: [] }];
+        setManufacturers(nextMfrs);
+        updateForm((prev: any) => ({ ...prev, subcategoryId: newMfrId }));
+        await saveSettings({ ...settings, categories, tags, manufacturers: nextMfrs });
+      }
+    });
+  }, [manufacturers, categories, tags, settings, saveSettings, setManufacturers, updateForm, setPromptDialog]);
+
+  return {
+    activeScreen, setActiveScreen,
+    toast, showToast,
+    saveSettings,
+    performPushSync, performPullSync,
+    handleSingleAiAnalyzeCallback,
+    handleUngroup, handleGroupPhotos,
+    quickAddSubCategory, quickAddTag, quickAddManufacturer
+  };
 };

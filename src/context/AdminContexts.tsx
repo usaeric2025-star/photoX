@@ -1,0 +1,116 @@
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { Photo, Category, Tag, DB_Category, ProductFormData } from '../types';
+
+// --- AdminSessionContext ---
+interface AdminSessionContextType {
+  user: any;
+  isAdminMode: boolean;
+  settings: any;
+  setSettings: (s: any) => void;
+  geminiApiKey: string;
+  setGeminiApiKey: (k: string) => void;
+  internalPassword: string;
+  setInternalPassword: (p: string) => void;
+  customModel: string;
+  setCustomModel: (m: string) => void;
+  viewMode: 'public' | 'private';
+  setViewMode: (v: 'public' | 'private') => void;
+  isSyncing: boolean;
+  setIsSyncing: (v: boolean) => void;
+  syncPercent: number;
+  setSyncPercent: (v: number) => void;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => void;
+  appLang: string;
+}
+
+const AdminSessionContext = createContext<AdminSessionContextType | undefined>(undefined);
+
+export const AdminSessionProvider: React.FC<{ children: ReactNode, value: AdminSessionContextType }> = ({ children, value }) => (
+  <AdminSessionContext.Provider value={value}>{children}</AdminSessionContext.Provider>
+);
+
+export const useAdminSession = () => {
+  const context = useContext(AdminSessionContext);
+  if (!context) throw new Error('useAdminSession must be used within AdminSessionProvider');
+  return context;
+};
+
+// --- AdminPhotoContext ---
+interface AdminPhotoContextType {
+  // Data lists
+  photos: Photo[];
+  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
+  categories: Category[];
+  setCategories: (c: Category[]) => void;
+  tags: Tag[];
+  setTags: (t: Tag[]) => void;
+  dbCategories: DB_Category[];
+  setDbCategories: (c: DB_Category[]) => void;
+  manufacturers: any[];
+  setManufacturers: (m: any[]) => void;
+  
+  // Method references
+  handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
+  handleBatchAiIdentify: (photos: Photo[], dbCats: DB_Category[], isCancelled: boolean) => Promise<void>;
+  handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean, onComplete: (screen: string) => void) => Promise<void>;
+  deletePhoto: (id: string) => Promise<void>;
+  handleGroupPhotos: (ids: string[], user: any, savePhotoToCloud: any) => Promise<void>;
+  handleUngroup: (groupId: string) => Promise<void>;
+  saveNewPhoto: () => Promise<void>;
+  saveBatchEdit: () => Promise<void>;
+  updateTag: (id: string, name: string) => Promise<void>;
+  deleteTag: (id: string) => Promise<void>;
+  quickAddTag: () => Promise<void>;
+  quickAddManufacturer: () => Promise<void>;
+}
+
+const AdminPhotoContext = createContext<AdminPhotoContextType | undefined>(undefined);
+
+export const AdminPhotoProvider: React.FC<{ children: ReactNode, value: AdminPhotoContextType }> = ({ children, value }) => (
+  <AdminPhotoContext.Provider value={value}>{children}</AdminPhotoContext.Provider>
+);
+
+export const useAdminPhoto = () => {
+  const context = useContext(AdminPhotoContext);
+  if (!context) throw new Error('useAdminPhoto must be used within AdminPhotoProvider');
+  return context;
+};
+
+// --- AdminUIContext ---
+interface AdminUIContextType {
+  activeScreen: string;
+  setActiveScreen: (s: string) => void;
+  editPhotoId: string | null;
+  setEditPhotoId: (id: string | null) => void;
+  batchEditIds: string[] | null;
+  setBatchEditIds: (ids: string[] | null) => void;
+  
+  confirmDialog: { message: string, onConfirm: () => void } | null;
+  setConfirmDialog: (d: { message: string, onConfirm: () => void } | null) => void;
+  alertDialog: { title: string, message: string } | null;
+  setAlertDialog: (d: { title: string, message: string } | null) => void;
+  promptDialog: { title: string, message: string, placeholder?: string } | null;
+  setPromptDialog: (d: { title: string, message: string, placeholder?: string } | null) => void;
+  
+  toast: { message: string, type: 'success' | 'error' } | null;
+  showToast: (msg: string, type: 'success' | 'error') => void;
+  
+  isAnalyzing: boolean;
+  isBatchAnalyzing: boolean;
+  batchProgress: number;
+  aiDebugInfo: { step: string; message: string; error?: string } | null;
+  abortAnalysis: () => void;
+}
+
+const AdminUIContext = createContext<AdminUIContextType | undefined>(undefined);
+
+export const AdminUIProvider: React.FC<{ children: ReactNode, value: AdminUIContextType }> = ({ children, value }) => (
+  <AdminUIContext.Provider value={value}>{children}</AdminUIContext.Provider>
+);
+
+export const useAdminUI = () => {
+  const context = useContext(AdminUIContext);
+  if (!context) throw new Error('useAdminUI must be used within AdminUIProvider');
+  return context;
+};
