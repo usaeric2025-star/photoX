@@ -3,7 +3,8 @@ import {
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
   addTagToDB,
-  addManufacturerToDB
+  addManufacturerToDB,
+  updatePhotosGroupInCloud
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 
@@ -171,15 +172,20 @@ export const useAdminCore = (
     }
   }, [user, categories, tags, manufacturers, setSettings, setCategories, setTags, setManufacturers, setPhotos, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount]);
 
-  const handleUngroup = useCallback((groupId: string) => {
+  const handleUngroup = useCallback(async (groupId: string) => {
     setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
-  }, [setPhotos]);
+    const photoIds = photos.filter(p => p.groupId === groupId).map(p => p.id);
+    if (photoIds.length > 0) {
+      await updatePhotosGroupInCloud(photoIds, null);
+    }
+  }, [photos, setPhotos]);
 
   const handleGroupPhotos = useCallback(async (ids: string[], user: any, savePhotoToCloud: Function) => {
     if (ids.length < 2) return;
     const groupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const updatedPhotos = photos.map(p => ids.includes(p.id) ? { ...p, groupId } : p);
     setPhotos(updatedPhotos);
+    await updatePhotosGroupInCloud(ids, groupId);
   }, [photos, setPhotos]);
 
   const quickAddSubCategory = useCallback((formState: any) => {

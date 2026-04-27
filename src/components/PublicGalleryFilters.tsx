@@ -144,7 +144,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
               <button 
                 key={tag.id}
                 onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? [] : [tag.id])}
-                className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
               >
                 #{tag.name}
               </button>

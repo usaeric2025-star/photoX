@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Photo, Category, Tag } from '../types';
 import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
+import { VirtuosoGrid } from 'react-virtuoso';
 import { useGalleryContext } from '../context/GalleryContext';
 import { PhotoCard } from './PhotoCard';
 import { translations, LanguageCode } from '../lib/translations';
@@ -46,6 +47,38 @@ interface PublicGalleryProps {
   cloudCount?: number | null;
   hideHeader?: boolean;
 }
+
+
+const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
+  const handleOpenLightbox = useCallback(() => {
+    const realIndex = displayPhotos.findIndex((p: any) => p.id === gridPhotos[index].id);
+    if (realIndex !== -1) onLightboxOpen(realIndex);
+  }, [index, displayPhotos, gridPhotos, onLightboxOpen]);
+
+  return (
+    <PhotoCard 
+      photo={photo}
+      index={index}
+      isAdminMode={isAdminMode}
+      isMultiSelect={isMultiSelect}
+      isStaffMode={isStaffMode}
+      isSelected={isSelected}
+      showGroupsCollapsed={showGroupsCollapsed}
+      lang={lang}
+      t={t}
+      categories={categories}
+      tagMap={tagMap}
+      onToggleSelection={onToggleSelection}
+      onEditPhoto={onEditPhoto}
+      onGroupClick={onGroupClick}
+      onLightboxOpen={handleOpenLightbox}
+      onLongPressStart={onLongPressStart}
+      onLongPressEnd={onLongPressEnd}
+      shareSinglePhoto={shareSinglePhoto}
+    />
+  );
+});
+MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
   onExit, onLogin, loginWithGoogle: propsLoginWithGoogle, 
@@ -335,7 +368,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       />
 
       {/* Grid */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar p-2 pb-40 bg-[#FDFAF6]">
+      <div ref={scrollContainerRef} className="flex-1 overflow-hidden bg-[#FDFAF6]">
         {displayPhotos.length === 0 ? (                
           <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
@@ -344,16 +377,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
           </div>
         ) : (
-          <div className={`grid gap-3 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}>
-            {gridPhotos.map((photo, i) => (
-              <PhotoCard 
-                key={photo.id}
-                photo={photo}
-                index={i}
+          <VirtuosoGrid
+            style={{ height: '100%', width: '100%' }}
+            totalCount={gridPhotos.length}
+            listClassName={`grid gap-3 p-2 pb-40 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
+            itemContent={(index) => (
+              <MemoizedPhotoCard
+                key={index}
+                index={index}
+                photo={gridPhotos[index]}
                 isAdminMode={!!isAdminMode}
                 isMultiSelect={isMultiSelect}
                 isStaffMode={isStaffMode}
-                isSelected={selectedIds.includes(photo.id)}
+                isSelected={!!selectedIds.includes(gridPhotos[index].id)}
                 showGroupsCollapsed={showGroupsCollapsed}
                 lang={lang}
                 t={t}
@@ -361,22 +397,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 tagMap={tagMap}
                 onToggleSelection={togglePhotoSelection}
                 onEditPhoto={onEditPhoto}
-                onGroupClick={(groupId) => {
-                  if (onGroupClick) onGroupClick(groupId);
-                  else setActiveGroupId(groupId);
-                }}
-                onLightboxOpen={() => {
-                  const realIndex = displayPhotos.findIndex(p => p.id === photo.id);
-                  if (realIndex !== -1) setLightboxIndex(realIndex);
-                }}
+                onGroupClick={onGroupClick || setActiveGroupId}
+                onLightboxOpen={setLightboxIndex}
                 onLongPressStart={startLongPress}
                 onLongPressEnd={endLongPress}
                 shareSinglePhoto={shareSinglePhoto}
+                displayPhotos={displayPhotos}
+                gridPhotos={gridPhotos}
               />
-            ))}
-          </div>
+            )}
+            endReached={() => {
+              if (visibleCount < displayPhotos.length) {
+                setVisibleCount(prev => prev + 15);
+              }
+            }}
+          />
         )}
-        <div ref={observerTarget} className="h-40"></div>
       </div>
 
       {/* Admin Bulk Actions */}
@@ -468,6 +504,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         isStaffMode={isStaffMode}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         shareSinglePhoto={shareSinglePhoto}
+        onUngroup={async (id) => {
+          // You need to import/implement the actual group handling logic
+          console.log("Ungroup photo", id);
+          setLightboxIndex(null);
+        }}
+        onSetGroupCover={async (id, groupId) => {
+          console.log("Set cover", id, groupId);
+        }}
       />
 
       <WhatsAppChoiceDialog 

@@ -19,11 +19,13 @@ interface PhotoLightboxProps {
   isStaffMode: boolean;
   contactWhatsApp: (photo: Photo) => void;
   shareSinglePhoto: (photo: Photo) => void;
+  onUngroup?: (photoId: string) => void;
+  onSetGroupCover?: (photoId: string, groupId: string) => void;
 }
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-  isAdminMode, isStaffMode, contactWhatsApp, shareSinglePhoto
+  isAdminMode, isStaffMode, contactWhatsApp, shareSinglePhoto, onUngroup, onSetGroupCover
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
@@ -173,6 +175,24 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
              <MessageCircle size={20} fill="currentColor" />
              {t.whatsAppInquiry}
            </button>
+
+           {/* Admin Group Controls */}
+           {isAdminMode && photo.groupId && (
+             <div className="grid grid-cols-2 gap-2">
+               <button 
+                 onClick={() => onUngroup?.(photo.id)}
+                 className="bg-red-50 text-red-600 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-red-100"
+               >
+                 {t.ungroup || 'Ungroup'}
+               </button>
+               <button 
+                 onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
+                 className={`py-2 rounded-xl text-xs font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+               >
+                 {t.setCover || 'Set Cover'}
+               </button>
+             </div>
+           )}
 
            {/* 4. 描述内容 */}
            {photo.description && (

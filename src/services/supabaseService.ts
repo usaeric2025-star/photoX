@@ -86,6 +86,7 @@ function mapSupabasePhoto(item: any): Photo {
       exif_data: item.exif_data,
       createdAt: item.created_at,
       groupId: item.group_id,
+      isGroupCover: item.is_group_cover || false,
       userId: item.user_id,
       uri: item.image_url
     };
@@ -329,6 +330,18 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
   }
 };
 
+export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: string | null) => {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update({ group_id: groupId })
+    .in('id', photoIds);
+    
+  if (error) {
+    console.error("Failed to update group id:", error);
+    throw error;
+  }
+};
+
 export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -366,7 +379,8 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     dimensions: photo.dimensions || null,
     model_number: photo.model_number || '',
     created_at: photo.createdAt,
-    group_id: photo.groupId || null
+    group_id: photo.groupId || null,
+    is_group_cover: photo.isGroupCover || false
   };
 
   if (isUUID) {
