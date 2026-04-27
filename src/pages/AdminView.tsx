@@ -81,12 +81,23 @@ export default function AdminView() {
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
 
   const handleDeletePhoto = async (id: string) => {
-    await deletePhoto(id);
-    setEditPhotoId(null);
+    setConfirmDialog({
+      message: t?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
+      onConfirm: async () => {
+        await deletePhoto(id);
+        setEditPhotoId(null);
+      }
+    });
   };
   
-  const handleDeleteTag = async (tag: Tag) => {
-      await deleteTag(tag.id, photos, setPhotos);
+  const handleDeleteTag = async (id: string) => {
+    const tag = tags.find(t => t.id === id);
+    setConfirmDialog({
+      message: t?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
+      onConfirm: async () => {
+        await deleteTag(id, photos, setPhotos);
+      }
+    });
   };
 
   // Auto refresh

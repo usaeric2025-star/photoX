@@ -37,21 +37,22 @@ export const UploadForm: React.FC<UploadFormProps> = ({
 }) => {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
-        <button onClick={onClose} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
-          <X size={24} />
-        </button>
-        <div className="flex flex-col items-center">
-            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
+      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm relative min-h-[72px]">
+        {/* Placeholder for left side to balance flex, or just empty */}
+        <div className="flex-1"></div>
+
+        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight pointer-events-auto">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
             <div 
               onClick={() => updateForm({ isHidden: !formState.isHidden })}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 pointer-events-auto ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
               {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
               <span className="text-[8px] font-bold uppercase tracking-widest">{formState.isHidden ? '公开屏蔽中' : '公开显示中'}</span>
             </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 relative z-10">
           {!editPhotoId && newPhotoData && (
             <div className="flex items-center gap-2">
               {isAnalyzing && abortAnalysis && (
@@ -78,7 +79,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           )}
           {editPhotoId && (
             <button 
-              onClick={() => deletePhoto(editPhotoId)}
+              onClick={() => { if(window.confirm('確定要刪除這張照片嗎？')) deletePhoto(editPhotoId); }}
               className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 transition-all active:scale-90"
               title="刪除照片"
             >
@@ -92,6 +93,13 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           >
             {isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : null}
             完成儲存
+          </button>
+          <button 
+            onClick={onClose} 
+            className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full active:scale-95 ml-1"
+            title="關閉"
+          >
+            <X size={20} />
           </button>
         </div>
       </div>

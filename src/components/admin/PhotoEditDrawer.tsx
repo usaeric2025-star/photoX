@@ -53,26 +53,28 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe pb-safe">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
-        <button onClick={props.resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
-          <CloseIcon size={24} />
-        </button>
-        {props.aiDebugInfo?.error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-[10px] font-bold max-w-[50%] animate-pulse">
-            AI 错误: {props.aiDebugInfo.error}
-          </div>
-        )}
-        <div className="flex flex-col items-center">
-            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
+      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm relative min-h-[72px]">
+        {/* Left spacer for centering */ }
+        <div className="flex-1">
+          {props.aiDebugInfo?.error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-[10px] font-bold max-w-fit animate-pulse">
+              AI 错误: {props.aiDebugInfo.error}
+            </div>
+          )}
+        </div>
+
+        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight pointer-events-auto">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
             <div 
               onClick={() => updateForm({ isHidden: !formState.isHidden })}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 pointer-events-auto ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
               {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
               <span className="text-[8px] font-bold uppercase tracking-widest">{formState.isHidden ? '公开屏蔽中' : '公开显示中'}</span>
             </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex items-center gap-2 relative z-10">
             {props.handleSingleAiAnalyze && (
               <div className="flex items-center gap-2">
                 {props.isAnalyzing && props.abortAnalysis && (
@@ -103,6 +105,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             >
               {props.isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14}/>}
               保存
+            </button>
+            <button 
+              onClick={props.resetAddState} 
+              className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full active:scale-95 ml-1"
+              title="關閉"
+            >
+              <CloseIcon size={20} />
             </button>
         </div>
       </div>

@@ -156,7 +156,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                      </div>
                   </div>
 
-                  {viewMode === 'private' && user && (
+                  {viewMode === 'private' && (
                     <div className="absolute top-4 left-4 flex flex-col gap-2">
                       <button 
                         onClick={() => onEditPhoto(focusedPhoto)}
@@ -326,7 +326,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                   <div className="w-1 h-3 bg-slate-300 rounded-full"></div>
                   組內容 ({groupPhotos.length})
                 </h3>
-                {viewMode === 'private' && user && (
+                {viewMode === 'private' && (
                   <button 
                     onClick={() => {
                       setConfirmDialog({
@@ -375,7 +375,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                     )}
                   </motion.div>
                 ))}
-                {viewMode === 'private' && user && (
+                {viewMode === 'private' && (
                   <button 
                     onClick={onAddPhotoToGroup}
                     className="aspect-square rounded-2xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors bg-white/40"

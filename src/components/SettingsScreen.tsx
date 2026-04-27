@@ -110,6 +110,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   const deleteManufacturer = (id: string) => {
+    if (!window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) return;
     const nextMfrs = manufacturers.filter(m => m.id !== id);
     setManufacturers(nextMfrs);
     const nextCats = categories.map(c => ({
@@ -134,6 +135,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   };
 
   const deleteTag = (id: string) => {
+    if (!window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) return;
     const nextTags = (tags || []).filter(t => t.id !== id);
     setTags(nextTags);
     saveSettings({ ...settings, categories, manufacturers, tags: nextTags });

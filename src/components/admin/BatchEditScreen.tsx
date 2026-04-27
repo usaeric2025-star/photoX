@@ -45,30 +45,40 @@ export const BatchEditScreen = ({
 }) => {
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm">
-        <button onClick={resetAddState} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors rounded-full active:bg-slate-100">
-          <CloseIcon size={24} />
-        </button>
-        <div className="flex flex-col items-center">
-            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight">批量修改 ({batchEditIds?.length})</h2>
+      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm relative min-h-[72px]">
+        {/* Left Spacer */}
+        <div className="flex-1"></div>
+
+        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
+            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight pointer-events-auto">批量修改 ({batchEditIds?.length})</h2>
             <div 
               onClick={() => {
                 setBatchIsHiddenApplied(true);
                 updateForm({ isHidden: !formState.isHidden });
               }}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 ${batchIsHiddenApplied ? (formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600') : 'bg-slate-50 border-slate-200 text-slate-400'}`}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 pointer-events-auto ${batchIsHiddenApplied ? (formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600') : 'bg-slate-50 border-slate-200 text-slate-400'}`}
             >
               {!batchIsHiddenApplied ? <div className="w-2 h-2 rounded-full bg-slate-300" /> : (formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />)}
               <span className="text-[8px] font-bold uppercase tracking-widest">{!batchIsHiddenApplied ? '未套用公開狀態' : (formState.isHidden ? '設為屏蔽' : '設為公開')}</span>
             </div>
         </div>
-        <button 
-          onClick={() => saveBatchEdit(batchIsHiddenApplied)}
-          className={`bg-blue-600 text-white px-8 py-3 rounded-[20px] text-sm font-black shadow-xl shadow-blue-600/30 transition-all active:scale-[0.9] flex items-center gap-3 border-2 border-white/20 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
-        >
-          {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : null}
-          保存修改
-        </button>
+
+        <div className="flex items-center gap-2 relative z-10">
+            <button 
+              onClick={() => saveBatchEdit(batchIsHiddenApplied)}
+              className={`bg-blue-600 text-white px-8 py-3 rounded-[20px] text-sm font-black shadow-xl shadow-blue-600/30 transition-all active:scale-[0.9] flex items-center gap-3 border-2 border-white/20 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+            >
+              {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : null}
+              保存修改
+            </button>
+            <button 
+              onClick={resetAddState} 
+              className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full active:scale-95 ml-1"
+              title="關閉"
+            >
+              <CloseIcon size={20} />
+            </button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar pb-32">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
 
 interface Dialog {
   title: string;
@@ -38,7 +38,13 @@ export const Modals = ({
               className="w-full max-w-[280px] bg-white rounded-[24px] p-5 shadow-2xl overflow-hidden relative text-center"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <button 
+                onClick={() => setConfirmDialog(null)}
+                className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 mt-2">
                 <Trash2 size={24} />
               </div>
               <h3 className="font-bold text-slate-800 text-base mb-2">確認操作</h3>
@@ -83,6 +89,12 @@ export const Modals = ({
               className="w-full max-w-[280px] bg-white rounded-[24px] p-5 shadow-2xl overflow-hidden relative"
               onClick={(e) => e.stopPropagation()}
             >
+              <button 
+                onClick={() => setPromptDialog(null)}
+                className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
               <h3 className="font-bold text-slate-800 text-base mb-4 text-center">{promptDialog.title}</h3>
               <input 
                 type="text"
@@ -139,7 +151,13 @@ export const Modals = ({
               className="w-full max-w-[280px] bg-white rounded-[24px] p-5 shadow-2xl overflow-hidden relative text-center"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="font-bold text-slate-800 text-base mb-2">{alertDialog.title}</h3>
+              <button 
+                onClick={() => setAlertDialog(null)}
+                className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h3 className="font-bold text-slate-800 text-base mb-2 mt-2">{alertDialog.title}</h3>
               <p className="text-sm text-slate-500 mb-6 leading-relaxed">
                 {alertDialog.message}
               </p>
