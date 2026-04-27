@@ -3,7 +3,6 @@ import {
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
   addTagToDB,
-  addManufacturerToDB,
   updatePhotosGroupInCloud
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';

@@ -674,6 +674,7 @@ export const fetchSettings = async () => {
         if (data.api_key) data.gemini_api_key = data.api_key;
         if (data.model_name) data.custom_model = data.model_name;
         if (data.access_passcode) data.internal_password = data.access_passcode;
+        if (data.manufacturers_json) data.manufacturers = data.manufacturers_json;
     }
     
     return data;
@@ -695,6 +696,10 @@ export const saveSettings = async (settings: any) => {
         if (payload.internal_password) {
             payload.access_passcode = payload.internal_password;
             delete payload.internal_password;
+        }
+        if (payload.manufacturers) {
+            payload.manufacturers_json = payload.manufacturers;
+            delete payload.manufacturers;
         }
         
         console.log("Saving settings to Supabase...", payload);
@@ -777,16 +782,4 @@ export const addTagToDB = async (name: string): Promise<Tag> => {
     return data;
 };
 
-export const addManufacturerToDB = async (name: string): Promise<any> => {
-    const { data, error } = await supabase
-        .from('manufacturers')
-        .insert({ name, aliases: [] })
-        .select()
-        .single();
-    if (error) {
-        console.error("Failed to add manufacturer:", error);
-        throw error;
-    }
-    return data;
-};
 

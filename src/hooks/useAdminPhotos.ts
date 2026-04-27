@@ -11,8 +11,7 @@ import {
   checkImageHashExists,
   loadAllPhotosFromCloud,
   loadPhotosFromCloud,
-  addTagToDB,
-  addManufacturerToDB
+  addTagToDB
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
@@ -168,10 +167,9 @@ export const useAdminPhotos = (
           let finalTagIds = result.tagIds || [];
           
           if (result.newSubCategoryName && !result.subcategoryId) {
-             const savedMfr = await addManufacturerToDB(result.newSubCategoryName);
-             const newMfrId = savedMfr.id;
+             const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
              setManufacturers(prev => [...prev, savedMfr]);
-             finalSubId = newMfrId;
+             finalSubId = savedMfr.id;
           }
           
           if (result.newTags && Array.isArray(result.newTags)) {
@@ -291,10 +289,9 @@ export const useAdminPhotos = (
 
       // Same manufacturer/tag ID creation logic as batch if new ones are suggested
       if (result.newSubCategoryName && !result.subcategoryId) {
-        const savedMfr = await addManufacturerToDB(result.newSubCategoryName);
-        const newMfrId = savedMfr.id;
+        const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
         setManufacturers(prev => [...prev, savedMfr]);
-        result.subcategoryId = newMfrId;
+        result.subcategoryId = savedMfr.id;
       }
       
       let finalTagIdsFromAi = result.tagIds || [];

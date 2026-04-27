@@ -8,7 +8,7 @@ import {
 import { SubCategory, Tag } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { testAiConnection } from '../services/geminiService';
-import { addTagToDB, addManufacturerToDB } from '../services/supabaseService';
+import { addTagToDB } from '../services/supabaseService';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 
 interface SettingsScreenProps {
