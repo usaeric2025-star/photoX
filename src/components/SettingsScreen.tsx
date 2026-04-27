@@ -75,12 +75,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const addManufacturer = async () => {
     if (!newSubName.trim()) return;
-    const savedMfr = await addManufacturerToDB(newSubName.trim());
-    const newMfrId = savedMfr.id;
+    const newMfrId = `temp-mfr-${Date.now()}`;
     const newMfr = {
       id: newMfrId,
-      name: savedMfr.name,
-      aliases: savedMfr.aliases || [savedMfr.name]
+      name: newSubName.trim(),
+      aliases: [newSubName.trim()]
     };
     const nextMfrs = [...(manufacturers || []), newMfr];
     setManufacturers(nextMfrs);
