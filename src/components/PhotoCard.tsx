@@ -67,7 +67,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     // Only show tags present in the tagMap
     return photo.tagIds
       .map(tid => tagMap[String(tid)])
-      .filter((tagName): tagName is string => !!tagName && tagName.trim() !== '');
+      .filter(Boolean);
   }, [photo.tagIds, tagMap]);
 
   return (

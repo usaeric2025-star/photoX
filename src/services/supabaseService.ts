@@ -41,9 +41,10 @@ function mapSupabasePhoto(item: any): Photo {
 
     const cat = item.category;
 
-    const tagIds = Array.isArray(item.photo_tags) 
-        ? item.photo_tags.map((pt: any) => String(pt.tag_id))
-        : [];
+    // 确保 tagIds 是字符串数组
+    const tagIds = (item.photo_tags || [])
+      .map((pt: any) => String(pt.tag_id))
+      .filter(Boolean);
 
     return {
       id: item.id,
@@ -58,7 +59,7 @@ function mapSupabasePhoto(item: any): Photo {
       categoryEn: cat?.en,
       categoryMs: cat?.ms,
       subcategoryId: item.sub_category || null,
-      tagIds: tagIds,
+      tagIds: tagIds.length > 0 ? tagIds : [],  // 至少是空数组
       description: item.description,
       image_url: item.image_url,
       dimensions: item.dimensions,
