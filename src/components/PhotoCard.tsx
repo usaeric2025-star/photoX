@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Photo, DB_Category } from '../types';
+import { Photo, DB_Category, Category } from '../types';
 import { X, Layers } from 'lucide-react';
 
 interface PhotoCardProps {
@@ -14,6 +14,7 @@ interface PhotoCardProps {
   lang: string;
   t: any;
   dbCategories: DB_Category[];
+  categories: Category[];
   tagMap: Record<string, string>;
   onToggleSelection?: (id: string) => void;
   onEditPhoto?: (id: string) => void;
@@ -26,22 +27,37 @@ interface PhotoCardProps {
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   photo, index, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
-  lang, t, dbCategories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
+  lang, t, dbCategories, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
 }) => {
-  const cat = useMemo(() => {
+  const catName = useMemo(() => {
     const catCodeOrId = (photo.categoryId || '').trim();
-    return dbCategories.find(c => 
+    
+    // Try new categorization system first
+    const activeCat = categories ? categories.find(c => c.id === catCodeOrId) : null;
+    if (activeCat) return activeCat.name;
+
+    // Fallback to legacy dbCategories
+    const legacyCat = dbCategories.find(c => 
       (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
     );
-  }, [photo.categoryId, dbCategories, lang]);
+    
+    if (legacyCat) {
+      return legacyCat[lang as keyof DB_Category] || legacyCat.en;
+    }
+    
+    return '';
+  }, [photo.categoryId, categories, dbCategories, lang]);
   
-  let catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : '';
-  const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
-  if (!cat || uncatValues.includes(catName.toLowerCase())) {
-    catName = t.uncategorized;
-  }
-  const isUncategorized = catName === t.uncategorized || uncatValues.includes(catName.toLowerCase());
+  const displayCatName = useMemo(() => {
+    const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
+    if (!catName || uncatValues.includes(catName.toLowerCase())) {
+      return t.uncategorized;
+    }
+    return catName;
+  }, [catName, t.uncategorized]);
+
+  const isUncategorized = displayCatName === t.uncategorized;
   
   const photoTags = useMemo(() => {
     let tags: string[] = [];
@@ -102,9 +118,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
        )}
       
       <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/60 to-transparent">
-         {!isUncategorized && catName && (
+         {!isUncategorized && displayCatName && (
           <p className="text-[10px] font-black tracking-tighter leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] mb-1 uppercase truncate">
-            {catName}
+            {displayCatName}
           </p>
         )}
         

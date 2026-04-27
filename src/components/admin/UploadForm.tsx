@@ -139,7 +139,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
            </div>
            <div className="space-y-2">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
-                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-black shadow-sm" />
+                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value.toUpperCase() })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-black shadow-sm" />
            </div>
            <div className="space-y-2">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品价格 / Price</h3>
@@ -149,25 +149,23 @@ export const UploadForm: React.FC<UploadFormProps> = ({
 
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {categories.map(cat => (
+          <div className="grid grid-cols-3 gap-2">
+            {categories.filter(c => c.name && c.name.trim()).map(cat => (
               <button 
                 key={cat.id}
                 onClick={() => { updateForm({ categoryId: cat.id }); }}
-                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${formState.categoryId === cat.id ? 'bg-white border-slate-800 text-slate-800 shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
+                className={`p-3 rounded-2xl border-2 text-center transition-all active:scale-[0.98] ${formState.categoryId === cat.id ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
-                <span className="font-bold block text-sm tracking-tight">{cat.name}</span>
-                <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono"></span>
+                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.id ? 'text-white' : 'text-slate-800'}`}>{cat.name}</span>
               </button>
             ))}
-            {(dbCategories || []).filter(dbc => !categories.some(c => c.name === dbc.zh)).map(cat => (
+            {(dbCategories || []).filter(dbc => dbc.zh && dbc.zh.trim() && dbc.code && dbc.code.trim() && !categories.some(c => c.name === dbc.zh)).map(cat => (
               <button 
                 key={cat.code}
                 onClick={() => { updateForm({ categoryId: cat.code }); }}
-                className={`p-4 rounded-3xl border-2 text-left transition-all active:scale-[0.98] ${formState.categoryId === cat.code ? 'bg-white border-slate-800 text-slate-800 shadow-xl' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
+                className={`p-3 rounded-2xl border-2 text-center transition-all active:scale-[0.98] ${formState.categoryId === cat.code ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
-                <span className="font-bold block text-sm tracking-tight">{cat[appLang as keyof DB_Category] || cat.zh}</span>
-                <span className="text-[9px] uppercase tracking-wider opacity-60 font-mono">{cat.en}</span>
+                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.code ? 'text-white' : 'text-slate-800'}`}>{cat[appLang as keyof DB_Category] || cat.zh}</span>
               </button>
             ))}
           </div>

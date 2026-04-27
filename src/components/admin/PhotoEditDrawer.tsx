@@ -52,30 +52,33 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe pb-safe">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm relative min-h-[72px]">
-        {/* Left spacer for centering */ }
-        <div className="flex-1">
-          {props.aiDebugInfo?.error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-[10px] font-bold max-w-fit animate-pulse">
-              AI 错误: {props.aiDebugInfo.error}
+      <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
+        {/* Left: AI/Status Info */}
+        <div className="flex-1 flex items-center gap-2 overflow-hidden">
+          {props.aiDebugInfo?.error ? (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-xl text-[10px] font-bold truncate">
+              AI: {props.aiDebugInfo.error}
+            </div>
+          ) : (
+            <div 
+              onClick={() => updateForm({ isHidden: !formState.isHidden })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+            >
+              {formState.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.isHidden ? '公开屏蔽' : '公开显示'}</span>
             </div>
           )}
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight pointer-events-auto">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
-            <div 
-              onClick={() => updateForm({ isHidden: !formState.isHidden })}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border transition-all cursor-pointer mt-1 pointer-events-auto ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
-            >
-              {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-              <span className="text-[8px] font-bold uppercase tracking-widest">{formState.isHidden ? '公开屏蔽中' : '公开显示中'}</span>
-            </div>
+        {/* Center: Title */}
+        <div className="flex-shrink-0">
+          <h2 className="font-black text-base text-slate-800 tracking-tight leading-tight text-center truncate px-2">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
         </div>
 
-        <div className="flex items-center gap-2 relative z-10">
+        {/* Right: Actions */}
+        <div className="flex-1 flex items-center justify-end gap-2">
             {handleSingleAiAnalyze && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {isAnalyzing && props.abortAnalysis && (
                   <button 
                     onClick={props.abortAnalysis}
@@ -100,14 +103,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             )}
             <button 
               onClick={props.saveNewPhoto}
-              className={`bg-blue-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-2 ${props.isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`bg-blue-600 text-white px-5 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-1.5 ${props.isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {props.isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14}/>}
               保存
             </button>
             <button 
               onClick={props.resetAddState} 
-              className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full active:scale-95 ml-1"
+              className="w-10 h-10 flex-shrink-0 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full active:scale-95"
               title="關閉"
             >
               <CloseIcon size={20} />
@@ -127,7 +130,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           <div className="flex-1 space-y-3">
              <div className="space-y-1">
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
-                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
+                <input type="text" placeholder="输入名称..." value={formState.name} onChange={e => updateForm({ name: e.target.value.toUpperCase() })} className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" />
              </div>
              <div className="flex w-full gap-2 overflow-x-auto">
                 <div className="flex-1 min-w-[30%] space-y-1">
@@ -149,7 +152,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
             <div className="grid grid-cols-4 gap-1.5">
-                {categories.map(cat => {
+                {categories.filter(c => c.name && c.name.trim()).map(cat => {
                     const isSelected = String(formState.categoryId || '') === String(cat.id || '');
                     return (
                   <button 
@@ -157,10 +160,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     onClick={() => { updateForm({ categoryId: String(cat.id) }); }}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-sm leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat.name}</span>
+                    <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat.name}</span>
                   </button>);
                 })}
-                {(dbCategories || []).filter(dbc => !categories.some(c => c.name === dbc.zh)).map(cat => {
+                {(dbCategories || []).filter(dbc => dbc.zh && dbc.zh.trim() && dbc.code && dbc.code.trim() && !categories.some(c => c.name === dbc.zh)).map(cat => {
                     const isSelected = String(formState.categoryId || '') === String(cat.code || '');
                     return (
                   <button 
@@ -168,7 +171,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     onClick={() => { updateForm({ categoryId: String(cat.code) }); }}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-sm leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat[appLang as keyof typeof cat] || cat.zh}</span>
+                    <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat[appLang as keyof typeof cat] || cat.zh}</span>
                   </button>);
                 })}
             </div>

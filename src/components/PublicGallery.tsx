@@ -366,6 +366,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 lang={lang}
                 t={t}
                 dbCategories={dbCategories}
+                categories={categories}
                 tagMap={tagMap}
                 onToggleSelection={togglePhotoSelection}
                 onEditPhoto={onEditPhoto}
@@ -470,6 +471,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         t={t}
         lang={lang}
         dbCategories={dbCategories}
+        categories={categories}
+        manufacturers={context.manufacturers}
+        tagMap={tagMap}
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}

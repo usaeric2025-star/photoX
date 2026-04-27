@@ -531,7 +531,8 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
   
   console.log(`Successfully deleted record ${photo.id} from database. Now removing file from storage...`);
   const filename = photo.storageId || photo.id;
-  await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`]);
+  // Delete both original and thumbnail
+  await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`, `public/thumb_${filename}.webp`]);
   console.log(`Storage deletion complete for ${filename}.`);
 };
 

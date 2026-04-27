@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, ChevronRight, MessageCircle, Share2, Key, Layers, Maximize } from 'lucide-react';
-import { Photo, DB_Category } from '../types';
+import { Photo, DB_Category, Category } from '../types';
 
 interface PhotoLightboxProps {
   photo: Photo | null;
@@ -13,6 +13,9 @@ interface PhotoLightboxProps {
   t: any;
   lang: string;
   dbCategories: DB_Category[];
+  categories: Category[];
+  manufacturers: any[];
+  tagMap: Record<string, string>;
   isAdminMode: boolean;
   isStaffMode: boolean;
   contactWhatsApp: (photo: Photo) => void;
@@ -20,7 +23,7 @@ interface PhotoLightboxProps {
 }
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
-  photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, dbCategories, 
+  photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, dbCategories, categories, manufacturers, tagMap,
   isAdminMode, isStaffMode, contactWhatsApp, shareSinglePhoto
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
@@ -60,10 +63,35 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   // Header/Meta info calculation
   const catCodeOrId = (photo.categoryId || '').trim();
-  const cat = dbCategories.find(c => 
-    (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
-  );
-  const catName = cat ? (cat[lang as keyof DB_Category] || cat.en) : '';
+  
+  // Try new categorization system first
+  const activeCat = categories.find(c => c.id === catCodeOrId);
+  let catName = activeCat ? activeCat.name : '';
+
+  // Fallback to legacy dbCategories
+  if (!catName) {
+    const legacyCat = dbCategories.find(c => 
+      (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
+    );
+    catName = legacyCat ? (legacyCat[lang as keyof DB_Category] || legacyCat.en) : '';
+  }
+
+  // Manufacturer lookup
+  const subId = photo.subcategoryId;
+  const mfr = manufacturers && subId ? manufacturers.find(m => m.id === subId) : null;
+  const mfrName = mfr ? mfr.name : (photo as any).sub_category;
+
+  // Tags lookup
+  const displayTags = React.useMemo(() => {
+    let tags: string[] = [];
+    if (photo.tagIds && photo.tagIds.length > 0) {
+      tags = photo.tagIds.map(tid => tagMap[tid] || tid).filter(Boolean);
+    }
+    if (tags.length === 0 && (photo as any).tags) {
+       tags = (photo as any).tags;
+    }
+    return tags;
+  }, [photo.tagIds, (photo as any).tags, tagMap]);
 
   return (
     <motion.div 
@@ -108,9 +136,9 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
            {/* 1. 标题与动作条 */}
            <div className="flex justify-between items-start gap-4">
               <div className="flex-1">
-                <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.furnitureRecord}</p>
-                <h2 className="text-xl font-black text-[#1D3557] leading-tight">
-                  {photo.name || t.furnitureRecord}
+                <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
+                <h2 className="text-xl font-black text-[#1D3557] leading-tight uppercase">
+                  {photo.name || t.unnamed}
                 </h2>
               </div>
            </div>
@@ -169,23 +197,23 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
              {activeTab === 'info' ? (
                 <div className="space-y-4">
                    {/* 厂商 */}
-                   {(photo.sub_category && photo.sub_category !== photo.category) && (
+                   {(mfrName && mfrName !== catName) && (
                     <div>
                       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.manufacturer}</h3>
                       <span className="bg-orange-50 text-orange-600 px-3 py-1 border border-orange-200 rounded-full text-xs font-bold inline-block">
                         <Key size={10} className="inline-block mr-1.5" />
-                        {photo.sub_category}
+                        {mfrName}
                       </span>
                     </div>
                    )}
 
                    {/* 标签 */}
-                   {photo.tags && photo.tags.length > 0 && (
+                   {displayTags.length > 0 && (
                       <div>
                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.tags}</h3>
                         <div className="flex flex-wrap gap-2">
-                           {photo.tags.map((tag: string, i: number) => (
-                             <span key={i} className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] font-bold">#{tag}</span>
+                           {displayTags.map((tagName: string, i: number) => (
+                             <span key={i} className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] font-bold">#{tagName}</span>
                            ))}
                         </div>
                       </div>

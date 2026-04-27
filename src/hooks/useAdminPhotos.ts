@@ -539,13 +539,45 @@ export const useAdminPhotos = (
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
       const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
       
+      // Track affected groups to reassign covers if needed
+      const affectedGroups = new Set<string>();
+      photosToDelete.forEach(p => {
+        if (p.groupId && p.isGroupCover) {
+          affectedGroups.add(p.groupId);
+        }
+      });
+
       // 1. Delete from Cloud
       if (user) {
         await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
       }
 
       // 2. Update UI and Local Storage
-      const newPhotos = photosRef.current.filter(p => !ids.includes(p.id));
+      let newPhotos = photosRef.current.filter(p => !ids.includes(p.id));
+
+      // 3. Reassign covers for affected groups
+      for (const groupId of affectedGroups) {
+        const remainingGroupPhotos = newPhotos.filter(p => p.groupId === groupId);
+        // If there's a cover already (maybe deleted multiple but one was cover and others were not), skip
+        if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
+          // Find the oldest photo to be the new cover
+          const sorted = [...remainingGroupPhotos].sort((a, b) => 
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+          const newCover = { ...sorted[0], isGroupCover: true };
+          
+          // Update in memory array for the subsequent setPhotos call
+          newPhotos = newPhotos.map(p => p.id === newCover.id ? newCover : p);
+          
+          // Sync new cover to cloud immediately
+          if (user) {
+            savePhotoToCloud(user.id, newCover).catch(err => 
+              console.error(`Failed to reassign group cover for group ${groupId}:`, err)
+            );
+          }
+        }
+      }
+
       setPhotos(newPhotos);
       saveData('product_photos', newPhotos);
   };
