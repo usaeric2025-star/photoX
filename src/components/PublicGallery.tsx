@@ -12,7 +12,7 @@ import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
 import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
-import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
+import { useOptionalAdminSession } from '../context/AdminContexts';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -54,12 +54,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   onEditPhoto, onDeletePhotos, onGroupPhotos, onBatchEdit, onGroupClick, onOpenSettings, onAddPhoto,
   columns: propColumns, setColumns: propSetColumns,
   hideHeader,
+  user: propsUser,
+  isAdminMode: propsIsAdminMode,
+  settings: propsSettings,
+  isRefreshing: propsIsRefreshing
 }) => {
-  const { 
-    user, isAdminMode, settings, loginWithGoogle: sessionLogin, isSyncing 
-  } = useAdminSession();
+  const adminSession = useOptionalAdminSession();
+  const user = adminSession?.user || propsUser;
+  const isAdminMode = adminSession?.isAdminMode || propsIsAdminMode;
+  const settings = adminSession?.settings || propsSettings;
+  const loginWithGoogle = propsLoginWithGoogle || adminSession?.loginWithGoogle;
+  const isSyncing = adminSession?.isSyncing || propsIsRefreshing;
   
-  const loginWithGoogle = propsLoginWithGoogle || sessionLogin;
   const { internalPassword } = settings || {};
 
   const context = useGalleryContext();

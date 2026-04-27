@@ -36,6 +36,8 @@ export const useAdminSession = () => {
   return context;
 };
 
+export const useOptionalAdminSession = () => useContext(AdminSessionContext);
+
 // --- AdminPhotoContext ---
 interface AdminPhotoContextType {
   // Data lists

@@ -21,7 +21,6 @@ export const useAdminCore = (
   t: any,
   refreshCloudData: Function
 ) => {
-  const [activeScreen, setActiveScreen] = useState('home');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -228,7 +227,6 @@ export const useAdminCore = (
   }, [manufacturers, categories, tags, settings, saveSettings, setManufacturers, updateForm, setPromptDialog]);
 
   return {
-    activeScreen, setActiveScreen,
     toast, showToast,
     saveSettings,
     performPushSync, performPullSync,

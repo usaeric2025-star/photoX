@@ -81,8 +81,11 @@ export default function AdminView() {
     }
   }, [settings]);
   
+  const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
+  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
+
   const {
-      activeScreen, setActiveScreen, toast, showToast, saveSettings,
+      toast, showToast, saveSettings,
       performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
       handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
   } = useAdminCore(
@@ -95,11 +98,11 @@ export default function AdminView() {
   const { updateTag, deleteTag } = useAdminCategory();
   
   const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
-  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
+
 
   const handleDeletePhoto = async (id: string) => {
     setConfirmDialog({
-      message: t?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
+      message: (t as any)?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
       onConfirm: async () => {
         await deletePhoto(id);
         setEditPhotoId(null);
@@ -110,7 +113,7 @@ export default function AdminView() {
   const handleDeleteTag = async (id: string) => {
     const tag = tags.find(t => t.id === id);
     setConfirmDialog({
-      message: t?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
+      message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
       onConfirm: async () => {
         await deleteTag(id, photos, setPhotos);
       }
@@ -276,20 +279,12 @@ export default function AdminView() {
                 resetAddState={() => { resetAddState(); setBatchIsHiddenApplied(false); }}
                 saveBatchEdit={saveBatchEdit}
                 batchEditIds={batchEditIds}
-                dbCategories={dbCategories}
-                categories={categories}
-                appLang={appLang}
                 formState={formState}
                 updateForm={updateForm}
                 batchIsHiddenApplied={batchIsHiddenApplied}
                 setBatchIsHiddenApplied={setBatchIsHiddenApplied}
                 showOtherFields={showOtherFields}
                 setShowOtherFields={setShowOtherFields}
-                manufacturers={manufacturers}
-                tags={tags}
-                quickAddSubCategory={() => quickAddSubCategory(formState)}
-                quickAddTag={quickAddTag}
-                quickAddManufacturer={quickAddManufacturer}
               />
             )}
             
