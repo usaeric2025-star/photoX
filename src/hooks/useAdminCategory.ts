@@ -3,13 +3,13 @@ import { Category, Tag, SubCategory } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
+import { updateTagInDB, deleteTagFromDB } from '../services/supabaseService';
 
 export const useAdminCategory = () => {
   const {
     categories, setCategories,
     tags, setTags,
-    manufacturers, setManufacturers,
-    dbCategories, setDbCategories
+    manufacturers, setManufacturers
   } = useGalleryContext();
 
   const [publicCategories, setPublicCategories] = useState<Category[]>([]);
@@ -23,9 +23,6 @@ export const useAdminCategory = () => {
       if (storedCats && storedCats.length > 0) setCategories(storedCats);
       else if (categories.length === 0) setCategories(DEFAULT_CATEGORIES);
 
-      const storedDbCats = await loadData('db_categories');
-      if (storedDbCats && storedDbCats.length > 0) setDbCategories(storedDbCats);
-
       const storedTags = await loadData('product_tags');
       if (storedTags && storedTags.length > 0) setTags(storedTags);
       else if (tags.length === 0) setTags(DEFAULT_TAGS);
@@ -36,22 +33,22 @@ export const useAdminCategory = () => {
       setIsLoaded(true);
     };
     loadInit();
-  }, [setCategories, setDbCategories, setTags, setManufacturers]); // Add setters if needed, but they are constant from useGalleryContext memo
+  }, [setCategories, setTags, setManufacturers]); // Add setters if needed, but they are constant from useGalleryContext memo
 
   // Persist categories/tags/manufacturers locally
   useEffect(() => {
     if (!isLoaded) return;
     const persist = async () => {
       await saveData('product_categories', categories);
-      await saveData('db_categories', dbCategories);
       await saveData('product_tags', tags);
       await saveData('product_manufacturers', manufacturers);
     };
     persist();
-  }, [categories, tags, manufacturers, dbCategories, isLoaded]);
+  }, [categories, tags, manufacturers, isLoaded]);
 
   const updateTag = (tagId: string, newName: string) => {
     setTags(prev => prev.map(t => t.id === tagId ? { ...t, name: newName } : t));
+    updateTagInDB(tagId, newName).catch(err => console.error("Cloud tag update failed:", err));
   };
 
   const deleteTag = (tagId: string, photos: any[], setPhotos: any) => {
@@ -60,6 +57,7 @@ export const useAdminCategory = () => {
       ...p,
       tagIds: p.tagIds ? p.tagIds.filter((id: string) => id !== tagId) : []
     })));
+    deleteTagFromDB(tagId).catch(err => console.error("Cloud tag deletion failed:", err));
   };
 
   return {
@@ -68,7 +66,6 @@ export const useAdminCategory = () => {
     updateTag,
     deleteTag,
     manufacturers, setManufacturers,
-    dbCategories, setDbCategories,
     publicCategories, setPublicCategories,
     publicTags, setPublicTags,
     publicManufacturers, setPublicManufacturers

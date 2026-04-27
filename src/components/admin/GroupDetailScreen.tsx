@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, Share2, Edit3, Minimize2, Settings2, ChevronRight, X, Plus, Pencil } from 'lucide-react';
-import { Photo, Category, Tag, DB_Category } from '../../types';
+import { ChevronLeft, Share2, Edit3, Minimize2, Settings2, ChevronRight, X, Plus, Pencil, Layers } from 'lucide-react';
+import { Photo, Category, Tag } from '../../types';
 import { savePhotoToCloud } from '../../services/supabaseService';
 import { useGalleryContext } from '../../context/GalleryContext';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
@@ -19,6 +19,7 @@ interface GroupDetailScreenProps {
   onEditPhoto: (photo: Photo) => void;
   onAddPhotoToGroup: () => void;
   onBatchEdit?: (ids: string[]) => void;
+  onUngroup?: (groupId: string) => void;
 }
 
 export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
@@ -32,22 +33,32 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   setPreviewUri,
   onEditPhoto,
   onAddPhotoToGroup,
-  onBatchEdit
+  onBatchEdit,
+  onUngroup
 }) => {
   const { user } = useGalleryContext();
   const { viewMode, appLang: lang, isAdminMode } = useAdminSession();
-  const { handleUngroup: handleUngroupAction, dbCategories, categories, tags, manufacturers } = useAdminPhoto();
+  const { handleUngroup: handleUngroupAction, categories, tags, manufacturers } = useAdminPhoto();
   const { setAlertDialog: setAlert, setConfirmDialog: setConfirm, setBatchEditIds } = useAdminUI();
   
   const appLang = lang;
   
+  const tagMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    if (tags) {
+        tags.forEach(t => { map[t.id] = t.name; });
+    }
+    return map;
+  }, [tags]);
+
   const { translations } = require('../../lib/translations');
   const t = translations[lang as keyof typeof translations] || translations['en'];
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
   const isMultiSelect = selectedPhotoIds.length > 0;
 
   const activePhotosSource = viewMode === 'public' ? publicPhotos : photos;
-  const groupPhotos = activePhotosSource.filter(p => p.groupId === activeGroupId);
+  const rawGroupPhotos = activePhotosSource.filter(p => p.groupId === activeGroupId);
+  const groupPhotos = rawGroupPhotos;
   
   const togglePhotoSelection = (id: string) => {
     setSelectedPhotoIds(prev => prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]);
@@ -83,13 +94,28 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Group {activeGroupId}</p>
         </div>
         <div className="flex items-center gap-2">
-            <button 
-              onClick={() => onBatchEdit?.(groupPhotos.map(p => p.id))}
-              className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
-              title="統一編輯"
-            >
-              <Pencil size={20} />
-            </button>
+          {viewMode !== 'public' && (
+            <>
+              <button 
+                onClick={() => onBatchEdit?.(groupPhotos.map(p => p.id))}
+                className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full transition-colors"
+                title="統一編輯"
+              >
+                <Pencil size={20} />
+              </button>
+              <button 
+                onClick={() => {
+                   if (confirm('確定要解散此同組嗎？')) {
+                      onUngroup?.(activeGroupId);
+                   }
+                }}
+                className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                title="解散同組"
+              >
+                <Layers size={20} className="rotate-45" />
+              </button>
+            </>
+          )}
           <button 
             onClick={async () => {
               const files = await Promise.all(groupPhotos.map(async (p, i) => {
@@ -252,18 +278,17 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                      showGroupsCollapsed={false}
                      lang={lang}
                      t={t as any || {}}
-                     dbCategories={dbCategories}
                      categories={categories}
-                     tagMap={{}}
+                     tagMap={tagMap}
                      onToggleSelection={() => togglePhotoSelection(photo.id)}
                      onLightboxOpen={() => setFocusedGroupPhotoId(photo.id)}
                      onLongPressStart={() => {
-                        window.longPressTimer = setTimeout(() => {
+                        (window as any).longPressTimer = setTimeout(() => {
                             onEditPhoto?.(photo);
-                        }, 500);
+                        }, 800);
                      }}
                      onLongPressEnd={() => {
-                        if (window.longPressTimer) clearTimeout(window.longPressTimer);
+                        if ((window as any).longPressTimer) clearTimeout((window as any).longPressTimer);
                      }}
                      shareSinglePhoto={() => {}}
                    />

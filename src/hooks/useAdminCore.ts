@@ -1,5 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { saveSettings as saveSettingsCloud, syncPhotosToCloud as syncPhotosToCloudService } from '../services/supabaseService';
+import { 
+  saveSettings as saveSettingsCloud, 
+  syncPhotosToCloud as syncPhotosToCloudService,
+  addTagToDB,
+  addManufacturerToDB
+} from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 
 export const useAdminCore = (
@@ -34,12 +39,11 @@ export const useAdminCore = (
       setSettings(s);
       await saveData('product_settings', s);
       if (user) {
-        const { categories: cats, tags: tg, manufacturers: mfrs } = s;
+        const { categories: cats, manufacturers: mfrs } = s;
         setTimeout(() => {
           saveSettingsCloud({
             ...s,
             categories: cats || categories,
-            tags: tg || tags,
             manufacturers: mfrs || manufacturers
           }).catch((err: any) => {
             console.error(err);
@@ -58,7 +62,6 @@ export const useAdminCore = (
     catId?: string, 
     editPhotoId?: string, 
     formState?: any, 
-    dbCategories?: any[], 
     updateFormFn?: any,
     handleSingleAiAnalyzeService?: any
   ) => {
@@ -74,8 +77,8 @@ export const useAdminCore = (
         if (result.categoryId && !catId && !formState.categoryId) {
           updates.categoryId = result.categoryId;
         } else if (result.newCategoryName && !catId && !formState.categoryId) {
-          const foundCat = dbCategories?.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName);
-          if (foundCat) updates.categoryId = foundCat.code;
+          const foundCat = categories?.find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName || c.name === result.newCategoryName);
+          if (foundCat) updates.categoryId = foundCat.id;
         }
 
         if (result.tagIds) {
@@ -135,13 +138,12 @@ export const useAdminCore = (
       await saveSettingsCloud({
         ...settings,
         categories,
-        tags,
         manufacturers
       });
       const result = await syncPhotosToCloudService(user.id, photos);
       const now = Date.now();
       await saveData('last_sync_time', now);
-      refreshCloudData(user, categories, tags, manufacturers, setSettings, undefined, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true);
+      refreshCloudData(user, categories, tags, manufacturers, setSettings, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true);
       
       setAlertDialog({ 
         title: t.pushSuccess, 
@@ -159,7 +161,7 @@ export const useAdminCore = (
     try {
       await refreshCloudData(
         user, categories, tags, manufacturers, setSettings, 
-        undefined, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
+        undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
       );
       setAlertDialog({ title: t.pullSuccess, message: t.pullSuccessMsg });
     } catch (err: any) {
@@ -175,7 +177,7 @@ export const useAdminCore = (
 
   const handleGroupPhotos = useCallback(async (ids: string[], user: any, savePhotoToCloud: Function) => {
     if (ids.length < 2) return;
-    const groupId = `group-${Date.now()}`;
+    const groupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const updatedPhotos = photos.map(p => ids.includes(p.id) ? { ...p, groupId } : p);
     setPhotos(updatedPhotos);
   }, [photos, setPhotos]);
@@ -186,11 +188,18 @@ export const useAdminCore = (
       title: '新增子分类',
       placeholder: '输入新子分类名称',
       onSubmit: async (val: string) => {
-        const newSubId = crypto.randomUUID();
-        const nextCats = categories.map(c => c.id === formState.categoryId ? {
+        const trimmed = val.trim();
+        // Since subcategories are still part of the category object in JSON (legacy), 
+        // but the goal is to move to tables, we'll use a hack or assume sub_categories table soon.
+        // For now, let's get a UUID from the database.
+        const savedMfr = await addManufacturerToDB(trimmed);
+        const newSubId = savedMfr.id;
+        
+        const nextCats = categories.map(c => c.id === formState.categoryId || c.code === formState.categoryId ? {
           ...c,
-          subcategories: [...c.subcategories, { id: newSubId, name: val.trim(), aliases: [] }]
+          subcategories: [...(c.subcategories || []), { id: newSubId, name: trimmed, aliases: [] }]
         } : c);
+        
         setCategories(nextCats);
         updateForm((prev: any) => ({ ...prev, subcategoryId: newSubId }));
         await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
@@ -208,10 +217,16 @@ export const useAdminCore = (
           setAlertDialog({ title: '提示', message: '标签已存在' });
           return;
         }
-        const newTagId = crypto.randomUUID();
-        const nextTags = [...tags, { id: newTagId, name: trimmedName, aliases: [] }];
+        
+        const savedTag = await addTagToDB(trimmedName);
+        const newTagId = savedTag.id;
+        
+        const nextTags = [...tags, savedTag];
         setTags(nextTags);
-        updateForm((prev: any) => ({ ...prev, tagIds: [...prev.tagIds, newTagId] }));
+        updateForm((prev: any) => {
+          const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds : (typeof prev.tagIds === 'string' ? [prev.tagIds] : []);
+          return { ...prev, tagIds: [...safeTags, newTagId] };
+        });
         await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
       }
     });
@@ -222,8 +237,11 @@ export const useAdminCore = (
       title: '新增厂商',
       placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
-        const newMfrId = crypto.randomUUID();
-        const nextMfrs = [...manufacturers, { id: newMfrId, name: val.trim(), aliases: [] }];
+        const trimmed = val.trim();
+        const savedMfr = await addManufacturerToDB(trimmed);
+        const newMfrId = savedMfr.id;
+        
+        const nextMfrs = [...manufacturers, savedMfr];
         setManufacturers(nextMfrs);
         updateForm((prev: any) => ({ ...prev, subcategoryId: newMfrId }));
         await saveSettings({ ...settings, categories, tags, manufacturers: nextMfrs });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, ChevronRight, MessageCircle, Share2, Key, Layers, Maximize } from 'lucide-react';
-import { Photo, DB_Category, Category } from '../types';
+import { Photo, Category } from '../types';
 
 interface PhotoLightboxProps {
   photo: Photo | null;
@@ -12,7 +12,6 @@ interface PhotoLightboxProps {
   onNext: (e?: React.MouseEvent) => void;
   t: any;
   lang: string;
-  dbCategories: DB_Category[];
   categories: Category[];
   manufacturers: any[];
   tagMap: Record<string, string>;
@@ -23,7 +22,7 @@ interface PhotoLightboxProps {
 }
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
-  photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, dbCategories, categories, manufacturers, tagMap,
+  photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
   isAdminMode, isStaffMode, contactWhatsApp, shareSinglePhoto
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
@@ -81,24 +80,21 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   if (index === null || !photo) return null;
 
   // Header/Meta info calculation
-  const catCodeOrId = (photo.categoryId || '').trim();
+  const catId = photo.categoryId;
   
-  // Try new categorization system first
-  const activeCat = categories.find(c => c.id === catCodeOrId);
-  let catName = activeCat ? activeCat.name : '';
-
-  // Fallback to legacy dbCategories
-  if (!catName) {
-    const legacyCat = dbCategories.find(c => 
-      (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
-    );
-    catName = legacyCat ? (legacyCat[lang as keyof DB_Category] || legacyCat.en) : '';
+  const activeCat = categories.find(c => String(c.id) === String(catId));
+  let catName = '';
+  if (activeCat) {
+     if (lang === 'zh') catName = activeCat.zh || activeCat.name;
+     else if (lang === 'en') catName = activeCat.en || activeCat.name;
+     else if (lang === 'ms') catName = activeCat.ms || activeCat.name || activeCat.en;
+     else catName = activeCat.name;
   }
 
   // Manufacturer lookup
   const subId = photo.subcategoryId;
   const mfr = manufacturers && subId ? manufacturers.find(m => m.id === subId) : null;
-  const mfrName = mfr ? mfr.name : (photo as any).sub_category;
+  const mfrName = mfr ? mfr.name : null;
 
   return (
     <motion.div 

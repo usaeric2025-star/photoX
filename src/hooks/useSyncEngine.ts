@@ -9,7 +9,8 @@ import {
     loadPhotosFromCloud,
     savePhotoToCloud,
     deletePhotoFromCloud,
-    uploadLogo
+    uploadLogo,
+    loadTagsFromCloud
 } from '../services/supabaseService';
 
 export const useSyncEngine = () => {
@@ -20,6 +21,18 @@ export const useSyncEngine = () => {
 
     React.useEffect(() => {
         const initSettings = async () => {
+            // Cleanup legacy localStorage data if requested to solve UUID issues once and for all
+            const hasCleaned = await loadData('uuid_v2_cleanup_done');
+            if (!hasCleaned) {
+                console.log("SyncEngine: Performing one-time cleanup of legacy local data...");
+                const keysToClear = ['product_categories', 'db_categories', 'product_tags', 'temp_tags'];
+                for (const key of keysToClear) {
+                    // indexedDB saveData is our loadData wrapper
+                    await saveData(key, null);
+                }
+                await saveData('uuid_v2_cleanup_done', true);
+            }
+
             let s = await loadData('product_settings');
             if (!s) {
                 // Migrate from old key if exists
@@ -46,7 +59,6 @@ export const useSyncEngine = () => {
         setPublicCategories?: (c: any) => void,
         setPublicTags?: (t: any) => void,
         setPublicManufacturers?: (m: any) => void,
-        setDbCategories?: (c: any) => void,
         setCategories?: (c: any) => void,
         setTags?: (t: any) => void,
         setManufacturers?: (m: any) => void,
@@ -67,39 +79,55 @@ export const useSyncEngine = () => {
                 if (cloudSettings.primary_color) document.documentElement.style.setProperty('--custom-text', cloudSettings.primary_color);
                 if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
 
-                if (cloudSettings.categories !== undefined) {
-                    setPublicCategories?.(cloudSettings.categories);
-                    setCategories?.(cloudSettings.categories);
-                    await saveData('product_categories', cloudSettings.categories);
-                }
-                
-                if (cloudSettings.tags !== undefined) {
-                    setPublicTags?.(cloudSettings.tags);
-                    setTags?.(cloudSettings.tags);
-                    await saveData('product_tags', cloudSettings.tags);
-                }
-                
                 if (cloudSettings.manufacturers !== undefined) {
-                    setPublicManufacturers?.(cloudSettings.manufacturers);
-                    setManufacturers?.(cloudSettings.manufacturers);
-                    await saveData('product_manufacturers', cloudSettings.manufacturers);
+                    setManufacturers?.((prev: any[]) => {
+                        const localMap = new Map((prev || []).map(m => [m.id, m]));
+                        cloudSettings.manufacturers.forEach((m: any) => localMap.set(m.id, m));
+                        const merged = Array.from(localMap.values());
+                        setPublicManufacturers?.(merged);
+                        saveData('product_manufacturers', merged);
+                        return merged;
+                    });
                 }
             }
 
-            const cloudDbCats = await loadCategoriesFromCloud();
-            if (cloudDbCats && cloudDbCats.length > 0) {
-                setDbCategories?.(cloudDbCats);
-                await saveData('db_categories', cloudDbCats);
+            // --- Load Tags Relational ---
+            const cloudTags = await loadTagsFromCloud();
+            if (cloudTags && cloudTags.length > 0) {
+              setTags?.(cloudTags);
+              setPublicTags?.(cloudTags);
+              await saveData('product_tags', cloudTags);
+            } else if (cloudSettings?.tags) {
+              // Migration fallback
+              setTags?.(cloudSettings.tags);
+              setPublicTags?.(cloudSettings.tags);
+              await saveData('product_tags', cloudSettings.tags);
+            }
+
+            const cloudCategories = await loadCategoriesFromCloud();
+            if (cloudCategories && cloudCategories.length > 0) {
+                // Categories from cloud already follow the Category interface
+                const normalized = cloudCategories.map(c => ({
+                  ...c,
+                  id: String(c.id),
+                  name: c.name || c.zh || 'Uncategorized',
+                  subcategories: c.subcategories || [] 
+                }));
+                
+                setCategories?.(normalized);
+                setPublicCategories?.(normalized);
+                await saveData('product_categories', normalized);
             }
 
             const cloudPhotos = user ? await loadPhotosFromCloud(user.id) : await loadAllPhotosFromCloud();
             if (cloudPhotos) {
                 setPublicPhotos?.((prev: any[]) => {
-                    const localMap = new Map((prev || []).map(p => [p.id, p]));
-                    const merged = cloudPhotos.map(cp => {
+                    const localMap = new Map((prev || []).filter(p => p && p.id).map(p => [p.id, p]));
+                    
+                    cloudPhotos.forEach(cp => {
                         const local = localMap.get(cp.id);
                         if (local) {
-                            return {
+                            localMap.set(cp.id, {
                                 ...cp,
                                 categoryId: local.categoryId || cp.categoryId,
                                 subcategoryId: local.subcategoryId || cp.subcategoryId,
@@ -107,15 +135,13 @@ export const useSyncEngine = () => {
                                 name: local.name || cp.name,
                                 manual_code: local.manual_code || cp.manual_code,
                                 description: local.description || cp.description
-                            };
+                            });
+                        } else {
+                            localMap.set(cp.id, cp);
                         }
-                        return cp;
                     });
                     
-                    const cloudIds = new Set(cloudPhotos.map(p => p.id));
-                    const localOnly = (prev || []).filter(p => !cloudIds.has(p.id)).map(p => ({ ...p, isAnalyzing: false }));
-                    
-                    const final = [...merged, ...localOnly];
+                    const final = Array.from(localMap.values());
                     saveData('product_photos', final);
                     return final;
                 });

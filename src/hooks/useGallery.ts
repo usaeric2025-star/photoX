@@ -1,12 +1,11 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Photo, DB_Category, Category, Tag } from '../types';
+import { Photo, Category, Tag } from '../types';
 import { sanitizePhotoTags } from '../lib/sanitizer';
 
 interface UseGalleryProps {
   photos: Photo[];
   categories: Category[];
   tags: Tag[];
-  dbCategories: DB_Category[];
   columns: 2 | 3 | 5;
   isAdminMode?: boolean;
   externalSortOrder?: 'asc' | 'desc';
@@ -17,7 +16,7 @@ interface UseGalleryProps {
 }
 
 export const useGallery = ({ 
-  photos, categories, tags, dbCategories, columns, isAdminMode = false, 
+  photos, categories, tags, columns, isAdminMode = false, 
   externalSortOrder, externalSearchQuery, 
   externalSelectedCatCode, externalSelectedSubId, externalSelectedTagIds 
 }: UseGalleryProps) => {
@@ -72,34 +71,11 @@ export const useGallery = ({
     let filtered = isAdminMode ? sanitized : sanitized.filter(p => !p.isHidden);
     
     if (selectedCatCode) {
-      filtered = filtered.filter(p => {
-        if (p.categoryId === selectedCatCode) return true;
-        
-        const dbCat = dbCategories.find(c => c.code === selectedCatCode);
-        const catStr = (p.categoryId || (p as any).category || '').trim().toLowerCase();
-        
-        return dbCat && (
-          catStr === dbCat.code.toLowerCase() ||
-          catStr === dbCat.zh.trim().toLowerCase() ||
-          catStr === dbCat.en.trim().toLowerCase() ||
-          catStr === dbCat.ms.trim().toLowerCase()
-        );
-      });
+      filtered = filtered.filter(p => p.categoryId === selectedCatCode);
     }
     
     if (selectedSubId) {
-      filtered = filtered.filter(p => {
-        if (p.subcategoryId === selectedSubId) return true;
-
-        let subName = '';
-        categories.forEach(c => {
-          const sub = c.subcategories.find(s => s.id === selectedSubId);
-          if (sub) subName = sub.name.trim().toLowerCase();
-        });
-        
-        const subStr = (p.subcategoryId || (p as any).sub_category || '').trim().toLowerCase();
-        return subStr && subStr === subName;
-      });
+      filtered = filtered.filter(p => p.subcategoryId === selectedSubId);
     }
 
     if (selectedTagIds.length > 0) {
@@ -128,9 +104,6 @@ export const useGallery = ({
           p.name,
           p.description,
           ...mappedTagNames,
-          dbCategories.find(c => c.code === p.categoryId)?.zh || '',
-          dbCategories.find(c => c.code === p.categoryId)?.en || '',
-          dbCategories.find(c => c.code === p.categoryId)?.ms || ''
         ].filter(Boolean).join(' ').toLowerCase();
 
         return searchableText.includes(q);
@@ -145,7 +118,7 @@ export const useGallery = ({
     });
 
     return filtered;
-  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, dbCategories, categories, tags, sortOrder, isAdminMode]);
+  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, categories, tags, sortOrder, isAdminMode]);
 
   const totalPhotoCount = displayPhotos.length;
 

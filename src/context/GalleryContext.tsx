@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
-import { Photo, Category, Tag, DB_Category } from '../types';
+import { Photo, Category, Tag } from '../types';
 
 interface GalleryContextType {
   // State
   photos: Photo[];
   categories: Category[];
   tags: Tag[];
-  dbCategories: DB_Category[];
   manufacturers: any[];
   searchQuery: string;
   debouncedSearchQuery: string;
@@ -23,9 +22,8 @@ interface GalleryContextType {
   
   // Settlers
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+  setCategories: React.Dispatch<React.SetStateAction<any[]>>;
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
-  setDbCategories: React.Dispatch<React.SetStateAction<DB_Category[]>>;
   setManufacturers: React.Dispatch<React.SetStateAction<any[]>>;
   setSearchQuery: (query: string) => void;
   setFilterCatId: (id: string | null) => void;
@@ -52,11 +50,19 @@ interface GalleryContextType {
 const GalleryContext = createContext<GalleryContextType | undefined>(undefined);
 
 export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [photosState, setPhotosState] = useState<Photo[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [dbCategories, setDbCategories] = useState<DB_Category[]>([]);
   const [manufacturers, setManufacturers] = useState<any[]>([]);
+  
+  const setPhotos = useCallback((update: any) => {
+    setPhotosState(prev => {
+        const next = typeof update === 'function' ? update(prev) : update;
+        return next;
+    });
+  }, []);
+
+  const photos = photosState;
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [filterCatId, setFilterCatId] = useState<string | null>(null);
@@ -104,45 +110,22 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       result = result.filter(p => 
         (p.name || '').toLowerCase().includes(q) || 
         (p.manual_code || '').toLowerCase().includes(q) ||
-        (p.category || '').toLowerCase().includes(q) ||
-        (p.sub_category || '').toLowerCase().includes(q) ||
-        (p.model_number || '').toLowerCase().includes(q) ||
-        (Array.isArray(p.tags) && p.tags.some(t => t.toLowerCase().includes(q)))
+        (p.model_number || '').toLowerCase().includes(q)
       );
     }
     
     if (filterCatId) {
-      const activeLegacyCat = dbCategories.find(c => c.code === filterCatId);
-      const activeNewCat = categories.find(c => c.id === filterCatId);
-      
-      result = result.filter(p => {
-        // 1. Direct ID match
-        if (p.categoryId === filterCatId) return true;
-        
-        // 2. Direct string match on category name
-        if (p.category === filterCatId) return true;
-        
-        // 3. Match by name from systems
-        if (activeLegacyCat && (p.category === activeLegacyCat.zh || p.category === activeLegacyCat.en)) return true;
-        if (activeNewCat && p.category === activeNewCat.name) return true;
-        
-        return false;
-      });
+      result = result.filter(p => p.categoryId === filterCatId);
     }
     
     if (filterSubId) {
-      const activeMfr = manufacturers.find(m => m.id === filterSubId);
-      result = result.filter(p => p.subcategoryId === filterSubId || p.sub_category === filterSubId || (activeMfr && p.sub_category === activeMfr.name));
+      result = result.filter(p => p.subcategoryId === filterSubId);
     }
     
     if (filterTagIds.length > 0) {
       result = result.filter(p => {
-        const pTags = Array.isArray(p.tags) ? p.tags : [];
         const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-        return filterTagIds.every(tid => {
-           const tDef = tags.find(t => t.id === tid);
-           return pTagIds.includes(tid) || (tDef && pTags.includes(tDef.name));
-        });
+        return filterTagIds.every(tid => pTagIds.includes(tid));
       });
     }
 
@@ -172,47 +155,47 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return result.slice(0, visibleCount);
   }, [displayPhotos, showGroupsCollapsed, visibleCount]);
 
-  const value = useMemo(() => ({
-    photos,
-    categories,
-    tags,
-    dbCategories,
-    manufacturers,
-    searchQuery,
-    debouncedSearchQuery,
-    filterCatId,
-    filterSubId,
-    filterTagIds,
-    sortOrder,
-    selectedIds,
-    isMultiSelect,
-    showGroupsCollapsed,
-    visibleCount,
-    user,
-    isAdminMode,
-    setPhotos,
-    setCategories,
-    setTags,
-    setDbCategories,
-    setManufacturers,
-    setSearchQuery,
-    setFilterCatId,
-    setFilterSubId,
-    setFilterTagIds,
-    setSortOrder,
-    setIsMultiSelect,
-    setSelectedIds,
-    setShowGroupsCollapsed,
-    setVisibleCount,
-    setUser,
-    setIsAdminMode,
-    togglePhotoSelection,
-    clearSelection,
-    isPhotoSelected,
-    displayPhotos,
-    gridPhotos
-  }), [
-    photos, categories, tags, dbCategories, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
+  const value = useMemo(() => {
+    return {
+      photos,
+      categories,
+      tags,
+      manufacturers,
+      searchQuery,
+      debouncedSearchQuery,
+      filterCatId,
+      filterSubId,
+      filterTagIds,
+      sortOrder,
+      selectedIds,
+      isMultiSelect,
+      showGroupsCollapsed,
+      visibleCount,
+      user,
+      isAdminMode,
+      setPhotos,
+      setCategories,
+      setTags,
+      setManufacturers,
+      setSearchQuery,
+      setFilterCatId,
+      setFilterSubId,
+      setFilterTagIds,
+      setSortOrder,
+      setIsMultiSelect,
+      setSelectedIds,
+      setShowGroupsCollapsed,
+      setVisibleCount,
+      setUser,
+      setIsAdminMode,
+      togglePhotoSelection,
+      clearSelection,
+      isPhotoSelected,
+      displayPhotos,
+      gridPhotos
+    };
+  }, [
+    photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
     sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, user, isAdminMode,
     togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos
   ]);

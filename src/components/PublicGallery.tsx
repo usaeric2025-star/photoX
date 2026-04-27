@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Photo, DB_Category, Category, Tag } from '../types';
+import { Photo, Category, Tag } from '../types';
 import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { useGalleryContext } from '../context/GalleryContext';
@@ -19,7 +19,6 @@ interface PublicGalleryProps {
   categories: Category[];
   tags: Tag[];
   manufacturers?: any[];
-  dbCategories: DB_Category[];
   onExit?: () => void;
   showExit?: boolean;
   onLogin?: () => void;
@@ -74,7 +73,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     photos,
     categories,
     tags: contextTags,
-    dbCategories,
     searchQuery, setSearchQuery,
     filterCatId: selectedCatCode, setFilterCatId: setSelectedCatCode,
     filterSubId: selectedSubId, setFilterSubId: setSelectedSubId,
@@ -99,27 +97,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const tags = useMemo(() => {
     const tMap = new Map<string, Tag>();
     contextTags.forEach(t => tMap.set(t.id, t));
+    
+    // Fill in missing tags seen on photos but not in global tags list
     allTagIds.forEach(id => {
         if (!tMap.has(id)) {
             tMap.set(id, { id, name: id, aliases: [] });
         }
     });
     
-    const uniqueTags = new Map<string, Tag>();
-    tMap.forEach(t => {
-      // Need a full tag with aliases if we're creating a mock
-      if(!uniqueTags.has(t.name.toLowerCase())) {
-        uniqueTags.set(t.name.toLowerCase(), t);
-      }
-    });
-    
-    // Fill in missing
-    allTagIds.forEach(id => {
-       if (!uniqueTags.has(id.toLowerCase())) {
-         uniqueTags.set(id.toLowerCase(), { id, name: id, aliases: [] });
-       }
-    });
-    return Array.from(uniqueTags.values());
+    return Array.from(tMap.values());
   }, [contextTags, allTagIds]);
 
   const [lang, setLang] = useState<LanguageCode>(() => {
@@ -222,13 +208,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     
     // Try new system
     const activeCat = categories.find(c => c.id === catId);
-    if (activeCat) return activeCat.name;
-
-    // Try legacy
-    const legacyCat = dbCategories.find(c => 
-      (c.code || '').trim().toLowerCase() === catId.toLowerCase()
-    );
-    if (legacyCat) return legacyCat[lang as keyof DB_Category] || legacyCat.zh;
+    if (activeCat) return activeCat.zh || activeCat.name;
 
     if (lang === 'ms') return translations['ms'].furniture;
     return lang === 'en' ? translations['en'].furniture : translations['zh'].furniture;
@@ -285,14 +265,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   };
 
   const startLongPress = (photoId: string) => {
-    if (!isAdminMode) return;
     console.log("Long press attempt started for:", photoId);
     const timer = setTimeout(() => {
       console.log("Long press triggered for:", photoId);
-      if (onEditPhoto) onEditPhoto(photoId);
+      if (isAdminMode) {
+        if (onEditPhoto) onEditPhoto(photoId);
+      } else {
+        const photo = photos.find(p => p.id === photoId);
+        if (photo) shareSinglePhoto(photo);
+      }
       if ('vibrate' in navigator) navigator.vibrate(50);
       setLongPressTimer(null);
-    }, 400) as unknown as NodeJS.Timeout;
+    }, 800) as unknown as NodeJS.Timeout;
     setLongPressTimer(timer);
   };
 
@@ -337,7 +321,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         setColumns={setColumns}
         showGroupsCollapsed={showGroupsCollapsed}
         setShowGroupsCollapsed={setShowGroupsCollapsed}
-        dbCategories={dbCategories}
         categories={categories}
         selectedCatCode={selectedCatCode}
         setSelectedCatCode={setSelectedCatCode}
@@ -373,7 +356,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 showGroupsCollapsed={showGroupsCollapsed}
                 lang={lang}
                 t={t}
-                dbCategories={dbCategories}
                 categories={categories}
                 tagMap={tagMap}
                 onToggleSelection={togglePhotoSelection}
@@ -478,7 +460,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         t={t}
         lang={lang}
-        dbCategories={dbCategories}
         categories={categories}
         manufacturers={context.manufacturers}
         tagMap={tagMap}

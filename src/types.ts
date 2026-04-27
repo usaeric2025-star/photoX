@@ -3,15 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export interface DB_Category {
-  id: number;
-  code: string;
-  zh: string;
-  en: string;
-  ms: string;
-  sort_order: number;
-}
-
 export interface SubCategory {
   id: string;
   name: string;
@@ -21,6 +12,9 @@ export interface SubCategory {
 export interface Category {
   id: string;
   name: string;
+  zh?: string;
+  en?: string;
+  ms?: string;
   aliases: string[];
   subcategories: SubCategory[];
   userId?: string;
@@ -47,9 +41,6 @@ export interface Photo {
   model_number?: string; // Manufacturer model number
   image_hash: string; // MD5 fingerprint
   name: string; // AI generated name
-  // category: string | null; REMOVED
-  // sub_category: string | null; REMOVED
-  // tags: string[]; REMOVED
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
   thumb_url?: string; // Thumbnail URL in Storage

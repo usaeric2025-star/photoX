@@ -5,9 +5,10 @@ import {
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
   User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle, Save
 } from 'lucide-react';
-import { SubCategory, Tag, DB_Category } from '../types';
+import { SubCategory, Tag } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { testAiConnection } from '../services/geminiService';
+import { addTagToDB, addManufacturerToDB } from '../services/supabaseService';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 
 interface SettingsScreenProps {
@@ -28,7 +29,6 @@ interface SettingsScreenProps {
   handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   setCategories: React.Dispatch<React.SetStateAction<any[]>>;
   categories: any[];
-  dbCategories: DB_Category[];
   performPushSync: () => Promise<void>;
   performPullSync: () => Promise<void>;
   cloudCount: number | null;
@@ -56,7 +56,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setSettings, saveSettings
   } = useAdminSession();
   const { 
-    manufacturers, tags, dbCategories, 
+    manufacturers, tags, 
     setManufacturers, setTags, setCategories, setPhotos, photos, categories
   } = useAdminPhoto();
   const { isSyncing: uiSyncing } = useAdminUI();
@@ -73,13 +73,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTestResult(result);
   };
 
-  const addManufacturer = () => {
+  const addManufacturer = async () => {
     if (!newSubName.trim()) return;
-    const newMfrId = crypto.randomUUID();
+    const savedMfr = await addManufacturerToDB(newSubName.trim());
+    const newMfrId = savedMfr.id;
     const newMfr = {
       id: newMfrId,
-      name: newSubName.trim(),
-      aliases: [newSubName.trim()]
+      name: savedMfr.name,
+      aliases: savedMfr.aliases || [savedMfr.name]
     };
     const nextMfrs = [...(manufacturers || []), newMfr];
     setManufacturers(nextMfrs);
@@ -104,14 +105,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     saveSettings({ ...settings, categories: nextCats, manufacturers: nextMfrs, tags });
   };
 
-  const addTag = () => {
+  const addTag = async () => {
     if (!newTagName.trim()) return;
-    const newTag: Tag = {
-      id: crypto.randomUUID(),
-      name: newTagName.trim(),
-      aliases: [newTagName.trim()]
-    };
-    const nextTags = [...(tags || []), newTag];
+    const savedTag = await addTagToDB(newTagName.trim());
+    const nextTags = [...(tags || []), savedTag];
     setTags(nextTags);
     setNewTagName('');
     saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
@@ -368,10 +365,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                             结构派生自云端配置（只读）。
                         </p>
                         <div className="grid grid-cols-2 gap-2">
-                            {(dbCategories || []).map(cat => (
-                                <div key={cat.code} className="p-3 bg-[#FDFAF6] border border-[#1D3557]/10 rounded-2xl shadow-sm hover:border-[#D4A853] transition-all">
-                                    <p className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{cat.zh}</p>
-                                    <p className="text-[8px] text-[#1D3557]/40 font-black uppercase truncate tracking-widest">{cat.code}</p>
+                            {(categories || []).map(cat => (
+                                <div key={cat.id} className="p-3 bg-[#FDFAF6] border border-[#1D3557]/10 rounded-2xl shadow-sm hover:border-[#D4A853] transition-all">
+                                    <p className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{cat.zh || cat.name}</p>
+                                    <p className="text-[8px] text-[#1D3557]/40 font-black uppercase truncate tracking-widest">{cat.id}</p>
                                 </div>
                             ))}
                         </div>

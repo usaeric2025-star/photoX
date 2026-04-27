@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Photo, Category, Tag, DB_Category, ProductFormData } from '../types';
+import { Photo, Category, Tag, ProductFormData } from '../types';
 
 // --- AdminSessionContext ---
 interface AdminSessionContextType {
@@ -47,14 +47,12 @@ interface AdminPhotoContextType {
   setCategories: (c: Category[]) => void;
   tags: Tag[];
   setTags: (t: Tag[]) => void;
-  dbCategories: DB_Category[];
-  setDbCategories: (c: DB_Category[]) => void;
   manufacturers: any[];
   setManufacturers: (m: any[]) => void;
   
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
-  handleBatchAiIdentify: (photos: Photo[], dbCats: DB_Category[], isCancelled: boolean) => Promise<void>;
+  handleBatchAiIdentify: (photos: Photo[], categories: Category[], isCancelled: boolean) => Promise<void>;
   handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean, onComplete: (screen: string) => void) => Promise<void>;
   deletePhoto: (id: string) => Promise<void>;
   handleGroupPhotos: (ids: string[], user: any, savePhotoToCloud: any) => Promise<void>;

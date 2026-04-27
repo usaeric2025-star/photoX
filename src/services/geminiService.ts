@@ -54,9 +54,9 @@ const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000
 
 export const analyzeProductPhoto = async (
   base64Image: string,
-  categories: any[], // Now taking dbCategories
+  categories: any[], 
   tags: Tag[],
-  manufacturers: any[], // New parameter
+  manufacturers: any[], 
   customApiKey?: string,
   provider: string = 'auto',
   customModel?: string,
@@ -88,13 +88,13 @@ export const analyzeProductPhoto = async (
 
 
   const categoriesJson = categories.map(c => ({
-    code: c.code, 
-    name: c.zh
+    id: c.id, 
+    name: c.zh || c.name || ''
   }));
   const manufacturersJson = manufacturers.map(m => ({ id: m.id, name: m.name }));
   const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
   const categoryContext = targetCategoryId
-    ? `【強制要求】系統已預設分類為: ${categories.find(c => c.code === targetCategoryId)?.zh} (code: ${targetCategoryId})。請確認照片分類是否符合此設定。`
+    ? `【強制要求】系統已預設分類為: ${categories.find(c => String(c.id) === String(targetCategoryId))?.zh || categories.find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})。請確認照片分類是否符合此設定。`
     : `【強制要求】請從現有分類中選擇最合適的一個。`;
 
   const promptText = `
@@ -138,12 +138,12 @@ export const analyzeProductPhoto = async (
 
 3. 廠商（subcategoryId）：禁止識別或修改，回傳值必須為 null
 
-4. 分類（categoryId）：${categoryContext} 代碼清單：${JSON.stringify(categoriesJson)}
+4. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
 
 5. 輸出格式：僅回傳一個合法、壓縮的 JSON 物件，禁止 Markdown
 
 【JSON 範例格式】
-{"name":"Classic Wooden Dining Chair","description":"A solid wood dining chair with a curved backrest and upholstered seat, suitable for dining rooms or restaurants.","categoryId":"category_code","subcategoryId":null,"tagIds":[],"newTags":["Rattan"],"dimensions":[{"label":"Standard","length":50,"width":45,"height":90,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
+{"name":"Classic Wooden Dining Chair","description":"A solid wood dining chair with a curved backrest and upholstered seat, suitable for dining rooms or restaurants.","categoryId":1,"subcategoryId":null,"tagIds":[],"newTags":["Rattan"],"dimensions":[{"label":"Standard","length":50,"width":45,"height":90,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
   `;
 
   try {

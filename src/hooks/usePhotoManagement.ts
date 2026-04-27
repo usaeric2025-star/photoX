@@ -31,7 +31,6 @@ export const usePhotoManagement = (
     photos, setPhotos,
     categories,
     tags,
-    dbCategories,
     manufacturers
   } = useGalleryContext();
 
@@ -54,26 +53,16 @@ export const usePhotoManagement = (
     if (editPhotoId) {
       const photo = photos.find(p => p.id === editPhotoId);
       if (photo) {
-        const initialCatId = photo.categoryId || (photo.category ? dbCategories.find(c => 
-          (c.code || '').trim().toLowerCase() === String(photo.category).trim().toLowerCase() ||
-          (c.zh || '').trim().toLowerCase() === String(photo.category).trim().toLowerCase() || 
-          (c.en || '').trim().toLowerCase() === String(photo.category).trim().toLowerCase()
-        )?.code : null);
+        const rawTagIds = Array.isArray(photo.tagIds) && photo.tagIds.length > 0 ? photo.tagIds : [];
         
-        // Healing for Manufacturers: if ID is missing but name string exists, find the ID
-        const initialMfrId = photo.subcategoryId || (photo.sub_category ? manufacturers.find(m => m.name === photo.sub_category)?.id : null);
-        
-        const rawTagIds = Array.isArray(photo.tagIds) && photo.tagIds.length > 0 ? photo.tagIds : 
-                          (Array.isArray(photo.tags) ? photo.tags.map(tagName => tags.find(t => t.name === tagName)?.id).filter(Boolean) as string[] : []);
-        
-        console.log("Healing tags for photo", photo.id, { rawTagIds, photoTagIds: photo.tagIds, photoTags: photo.tags });
+        console.log("Healing tags for photo", photo.id, { rawTagIds, photoTagIds: photo.tagIds });
         
         const dims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
 
         setFormState({
           name: photo.name || '',
-          categoryId: initialCatId ? String(initialCatId) : null,
-          subcategoryId: initialMfrId || null,
+          categoryId: photo.categoryId || null,
+          subcategoryId: photo.subcategoryId || null,
           tagIds: rawTagIds,
           description: photo.description || '',
           manual_code: photo.manual_code || '',
@@ -87,7 +76,7 @@ export const usePhotoManagement = (
         });
       }
     }
-  }, [editPhotoId, photos, dbCategories, manufacturers, tags]);
+  }, [editPhotoId, photos, manufacturers, tags]);
 
   const resetAddState = () => {
     setNewPhotoData(null);
@@ -111,8 +100,7 @@ export const usePhotoManagement = (
 
     setIsSyncing(true);
     try {
-       const finalTags = tags.filter(t => tagIds.includes(t.id)).map(t => t.name);
-       const categoryName = dbCategories.find(c => c.code === categoryId)?.zh || '';
+       const categoryName = categories.find(c => c.id === categoryId)?.zh || '';
        const manufacturerName = manufacturers.find(m => m.id === subcategoryId)?.name || '';
 
        if (editPhotoId) {
@@ -152,7 +140,7 @@ export const usePhotoManagement = (
              await savePhotoToCloud(user.id, updatedPhoto);
           }
        } else if (newPhotoData) {
-          const dbId = crypto.randomUUID();
+          const finalId = crypto.randomUUID();
           const finalDimensions = dimensions.length > 0 ? dimensions : [{
             length: parseFloat(dimL || '0') || 0,
             width: parseFloat(dimW || '0') || 0,
@@ -161,7 +149,7 @@ export const usePhotoManagement = (
           }];
 
           const newPhoto: Photo = {
-            id: dbId,
+            id: finalId,
             storageId: Date.now().toString() + Math.random().toString(36).substr(2, 9),
             item_code: generateItemCode(),
             manual_code: manual_code,
@@ -211,10 +199,6 @@ export const usePhotoManagement = (
 
      setIsSyncing(true);
      try {
-        const finalTags = tags.filter(t => tagIds.includes(t.id)).map(t => t.name);
-        const categoryName = dbCategories.find(c => c.code === categoryId)?.zh || '';
-        const manufacturerName = manufacturers.find(m => m.id === subcategoryId)?.name || '';
-
         const updatedPhotosList: Photo[] = [];
         setPhotos(prev => {
           const next = prev.map(p => {
@@ -224,9 +208,6 @@ export const usePhotoManagement = (
                   categoryId: categoryId || p.categoryId,
                   subcategoryId: subcategoryId || p.subcategoryId,
                   tagIds: tagIds.length > 0 ? tagIds : p.tagIds,
-                  category: categoryName || p.category,
-                  sub_category: subcategoryId ? (manufacturerName || p.sub_category) : p.sub_category,
-                  tags: finalTags.length > 0 ? finalTags : p.tags,
                   description: description || p.description,
                   manual_code: manual_code || p.manual_code,
                   model_number: model_number || p.model_number,

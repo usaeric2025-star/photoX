@@ -22,7 +22,6 @@ interface Props {
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { 
     handleSingleAiAnalyze, 
-    dbCategories, 
     categories, 
     tags, 
     photos, 
@@ -39,7 +38,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const [isSyncing, setIsSyncing] = useState(false);
 
   const sortedTags = useMemo(() => {
-    return [...tags];
+    return tags;
   }, [tags]);
   
   const handleToggleTag = (tag: any) => {
@@ -152,7 +151,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         <div className="space-y-3">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
             <div className="grid grid-cols-4 gap-1.5">
-                {categories.filter(c => c.name && c.name.trim()).map(cat => {
+                {categories.filter(cat => cat && cat.id && cat.name).map((cat: any) => {
                     const isSelected = String(formState.categoryId || '') === String(cat.id || '');
                     return (
                   <button 
@@ -160,18 +159,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     onClick={() => { updateForm({ categoryId: String(cat.id) }); }}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat.name}</span>
-                  </button>);
-                })}
-                {(dbCategories || []).filter(dbc => dbc.zh && dbc.zh.trim() && dbc.code && dbc.code.trim() && !categories.some(c => c.name === dbc.zh)).map(cat => {
-                    const isSelected = String(formState.categoryId || '') === String(cat.code || '');
-                    return (
-                  <button 
-                    key={cat.code}
-                    onClick={() => { updateForm({ categoryId: String(cat.code) }); }}
-                    className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
-                  >
-                    <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat[appLang as keyof typeof cat] || cat.zh}</span>
+                    <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat.zh || cat.name}</span>
                   </button>);
                 })}
             </div>

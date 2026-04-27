@@ -1,8 +1,8 @@
-import { Photo, Tag, DB_Category, Manufacturer } from '../types';
+import { Photo, Tag, Category, Manufacturer } from '../types';
 
 export const reconcileData = (
   photos: Photo[], 
-  categories: DB_Category[], 
+  categories: Category[], 
   tags: Tag[], 
   manufacturers: Manufacturer[]
 ) => {
@@ -17,8 +17,8 @@ export const reconcileData = (
   // 2. Add missing items to the lists
   const reconciledCategories = [...categories];
   usedCatIds.forEach(id => {
-    if (!reconciledCategories.find(c => c.code === id)) {
-      reconciledCategories.push({ id: 0, name: `Unknown Cat (${id})`, code: id, zh: `未知 (${id})`, en: `Unknown (${id})`, ms: `Unknown (${id})`, sort_order: 999 } as DB_Category);                
+    if (id && !reconciledCategories.find(c => c.id === id)) {
+      reconciledCategories.push({ id, name: id, aliases: [], subcategories: [] } as Category);                
     }
   });
 
@@ -31,8 +31,8 @@ export const reconcileData = (
 
   const reconciledManufacturers = [...manufacturers];
   usedManufacturerIds.forEach(id => {
-    if (!reconciledManufacturers.find(m => m.id === id)) {
-      reconciledManufacturers.push({ id, name: `Unknown Mfr (${id})` } as Manufacturer); 
+    if (id && !reconciledManufacturers.find(m => m.id === id)) {
+      reconciledManufacturers.push({ id, name: id, aliases: [] } as Manufacturer); 
     }
   });
 

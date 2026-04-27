@@ -29,7 +29,7 @@ export default function AdminView() {
   const t = translations[lang] ?? translations.en;
   const { user, authChecked, logout } = useAuth();
   const { 
-    photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories, manufacturers, setManufacturers, 
+    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     displayPhotos, gridPhotos, visibleCount, setVisibleCount, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode
   } = useGalleryContext();
@@ -123,7 +123,7 @@ export default function AdminView() {
   // Auto refresh
   useEffect(() => {
     if (authChecked && (user || sessionStorage.getItem('isStaffMode') === 'true')) {
-      refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, false);
+      refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, false);
     }
   }, [authChecked, user]);
 
@@ -241,7 +241,7 @@ export default function AdminView() {
   };
 
   const photoValue = {
-    photos, setPhotos, categories, setCategories, tags, setTags, dbCategories, setDbCategories,
+    photos, setPhotos, categories, setCategories, tags, setTags,
     manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport,
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, quickAddTag, quickAddManufacturer
@@ -308,6 +308,7 @@ export default function AdminView() {
                   input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                   input.click();
                 }}
+                onUngroup={() => { handleUngroup(activeGroupId); setActiveGroupId(null); }}
               />
             )}
       
@@ -339,7 +340,7 @@ export default function AdminView() {
                 />
             )}
             
-            {activeScreen === 'home' && (
+            {activeScreen === 'home' && viewMode === 'private' && (
               <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
                       <AdminHeader 
                           isMultiSelect={isMultiSelect}
@@ -352,7 +353,7 @@ export default function AdminView() {
                               cancelBatchAiRef.current = true;
                             } else {
                               cancelBatchAiRef.current = false;
-                              handleBatchAiIdentify(gridPhotos, dbCategories, cancelBatchAiRef.current);
+                              handleBatchAiIdentify(gridPhotos, cancelBatchAiRef.current);
                             }
                           }}
                           handleManageClick={handleManageClick}
@@ -372,7 +373,7 @@ export default function AdminView() {
                        />
                        <div className="flex-1 min-h-0 relative">
                           <PublicGallery 
-                             isAdminMode={viewMode !== 'public'}
+                             isAdminMode={true}
                              onExit={() => setViewMode('public')}
                              showExit={true}
                              onOpenSettings={handleManageClick}
@@ -389,7 +390,7 @@ export default function AdminView() {
                              onBatchEdit={setBatchEditIds}
                              hideHeader={true}
                              onRefresh={() => refreshCloudData(
-                                 user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setDbCategories, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
+                                 user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
                              )}
                              columns={columns}
                              setColumns={setColumns}
@@ -397,6 +398,24 @@ export default function AdminView() {
                           />
                        </div>
                     </div>
+            )}
+
+            {activeScreen === 'home' && viewMode === 'public' && (
+              <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
+                 <div className="flex-1 min-h-0 relative bg-bg">
+                    <PublicGallery 
+                       isAdminMode={false}
+                       onExit={() => setViewMode('private')}
+                       showExit={true}
+                       onRefresh={() => performPullSync()}
+                       hideHeader={false}
+                       columns={columns}
+                       setColumns={setColumns}
+                       cloudCount={cloudCount}
+                       user={undefined}
+                    />
+                 </div>
+              </div>
             )}
       
             <AnimatePresence>

@@ -10,8 +10,7 @@ export default function PublicView() {
   const { user, authChecked } = useAuth();
   const { 
     photos, setPhotos, 
-    setCategories, 
-    setDbCategories, 
+    categories, setCategories, 
     setTags, 
     setManufacturers 
   } = useGalleryContext();
@@ -35,13 +34,18 @@ export default function PublicView() {
         setPhotos(cloudPhotos);
       }
       if (cloudCats) {
-        setDbCategories(cloudCats);
+        // Categories from cloud already follow the Category interface
+        const normalized = cloudCats.map((c: any) => ({
+          ...c,
+          id: String(c.id),
+          name: c.name || c.zh || 'Uncategorized',
+          subcategories: c.subcategories || [] 
+        }));
+        
+        setCategories(normalized);
       }
       if (cloudSettings) {
         setSettings(cloudSettings);
-        if (cloudSettings.categories) {
-          setCategories(cloudSettings.categories);
-        }
         if (cloudSettings.tags) {
           setTags(cloudSettings.tags);
         }

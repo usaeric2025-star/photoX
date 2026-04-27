@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Photo, Category, Tag, DB_Category, SubCategory } from '../types';
+import { Photo, Category, Tag, SubCategory } from '../types';
 import { 
   savePhotoToCloud, 
   deletePhotoFromCloud, 
@@ -10,7 +10,9 @@ import {
   generateItemCode,
   checkImageHashExists,
   loadAllPhotosFromCloud,
-  loadPhotosFromCloud
+  loadPhotosFromCloud,
+  addTagToDB,
+  addManufacturerToDB
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
@@ -29,7 +31,6 @@ export const useAdminPhotos = (
     photos, setPhotos,
     categories, setCategories,
     tags, setTags,
-    dbCategories,
     manufacturers, setManufacturers
   } = useGalleryContext();
 
@@ -103,13 +104,12 @@ export const useAdminPhotos = (
 
   const handleBatchAiIdentify = async (
       photos: Photo[], 
-      dbCategories: any[], 
       isCancelled: boolean
   ) => {
     const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
     const unProcessed = photos.filter(p => {
        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-       return (!p.categoryId || !p.subcategoryId || rawTagIds.length < 2 || !p.name) && !p.isAnalyzing;
+       return (!p.categoryId || rawTagIds.length < 2 || !p.name) && !p.isAnalyzing;
     });
     
     if (unProcessed.length === 0) {
@@ -161,16 +161,16 @@ export const useAdminPhotos = (
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-          const result = await analyzeProductPhoto(photo.uri!, dbCategories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
+          const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
           
           let finalCatId = result.categoryId || null;
           let finalSubId = result.subcategoryId || null;
           let finalTagIds = result.tagIds || [];
           
           if (result.newSubCategoryName && !result.subcategoryId) {
-             const newMfrId = crypto.randomUUID();
-             const newMfr = { id: newMfrId, name: result.newSubCategoryName, aliases: [] };
-             setManufacturers(prev => [...prev, newMfr]);
+             const savedMfr = await addManufacturerToDB(result.newSubCategoryName);
+             const newMfrId = savedMfr.id;
+             setManufacturers(prev => [...prev, savedMfr]);
              finalSubId = newMfrId;
           }
           
@@ -179,17 +179,17 @@ export const useAdminPhotos = (
             const newTagsToAdd: Tag[] = [];
             const newTagIds: string[] = [];
             
-            newNames.forEach((name: string) => {
+            for (const name of newNames) {
               // Check if tag with same name already exists in current tags
               const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
               if (existingTag) {
                 newTagIds.push(existingTag.id);
               } else {
-                const id = crypto.randomUUID();
-                newTagsToAdd.push({ id, name, aliases: [] });
-                newTagIds.push(id);
+                const savedTag = await addTagToDB(name);
+                newTagsToAdd.push(savedTag);
+                newTagIds.push(savedTag.id);
               }
-            });
+            }
             
             if (newTagsToAdd.length > 0) {
               setTags(prev => {
@@ -206,8 +206,6 @@ export const useAdminPhotos = (
 
               const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
               const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
-
-              const dbCatObj = dbCategories.find(c => c.code === finalCatId);
 
               // Use newCategoryName directly as category if no code matches
               const updatedPhoto: Photo = { 
@@ -279,7 +277,7 @@ export const useAdminPhotos = (
 
       setAiDebugInfo({ step: '发送请求', message: `图片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
       
-      const result = await analyzeProductPhoto(imageData, dbCategories, tags, manufacturers, geminiApiKey, aiProvider, customModel, catId, originalName, signal);
+      const result = await analyzeProductPhoto(imageData, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel, catId, originalName, signal);
       
       if (signal.aborted) throw new Error('Aborted');
 
@@ -293,8 +291,9 @@ export const useAdminPhotos = (
 
       // Same manufacturer/tag ID creation logic as batch if new ones are suggested
       if (result.newSubCategoryName && !result.subcategoryId) {
-        const newMfrId = crypto.randomUUID();
-        setManufacturers(prev => [...prev, { id: newMfrId, name: result.newSubCategoryName, aliases: [] }]);
+        const savedMfr = await addManufacturerToDB(result.newSubCategoryName);
+        const newMfrId = savedMfr.id;
+        setManufacturers(prev => [...prev, savedMfr]);
         result.subcategoryId = newMfrId;
       }
       
@@ -304,16 +303,16 @@ export const useAdminPhotos = (
         const newTagsToAdd: Tag[] = [];
         const newTagIds: string[] = [];
         
-        newNames.forEach((name: string) => {
+        for (const name of newNames) {
           const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
           if (existingTag) {
             newTagIds.push(existingTag.id);
           } else {
-            const id = crypto.randomUUID();
-            newTagsToAdd.push({ id, name, aliases: [] });
-            newTagIds.push(id);
+            const savedTag = await addTagToDB(name);
+            newTagsToAdd.push(savedTag);
+            newTagIds.push(savedTag.id);
           }
-        });
+        }
         
         if (newTagsToAdd.length > 0) {
           setTags(prev => {
@@ -333,8 +332,6 @@ export const useAdminPhotos = (
           
           const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
           const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
-
-          const dbCatObj = dbCategories.find(c => c.code === finalCatId);
 
           const updatedPhoto = { 
             ...p, 
@@ -442,8 +439,8 @@ export const useAdminPhotos = (
           
           const compressedUri = await compressImage(rawUri, 1200, 0.8);
 
-          // 5. Use crypto.randomUUID() for both photo ID and naming storage
-          const photoId = crypto.randomUUID();
+          // Use a temporary ID for local state, will be replaced by DB UUID after sync
+          const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           
           const newPhoto: Photo = {
             id: photoId,
@@ -469,15 +466,13 @@ export const useAdminPhotos = (
           if (useAi) {
             (async (targetPhoto: Photo) => {
               try {
-                const result = await analyzeProductPhoto(targetPhoto.uri!, dbCategories, tags, manufacturers, geminiApiKey, aiProvider, customModel);
+                const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel);
                 
                 let finalCatId = result.categoryId || null;
                 let finalSubId = result.subcategoryId || null;
                 
                 // For simplicity in background processing, new tags/categories are skipped here if they lack IDs
                 // Or we can just populate the text directly.
-
-                const dbCatObj = dbCategories.find(c => c.code === finalCatId);
 
                 setPhotos(prev => prev.map(p => {
                    if (p.id !== photoId) return p;

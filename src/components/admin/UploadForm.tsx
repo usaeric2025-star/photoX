@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff } from 'lucide-react';
-import { Category, Tag, DB_Category, ProductFormData } from '../../types';
+import { Category, Tag, ProductFormData } from '../../types';
 
 interface UploadFormProps {
   onClose: () => void;
@@ -16,8 +16,6 @@ interface UploadFormProps {
   updateForm: (updates: Partial<ProductFormData>) => void;
   showOtherFields: boolean;
   setShowOtherFields: (show: boolean) => void;
-  dbCategories: DB_Category[];
-  appLang: string;
   categories: Category[];
   tags: Tag[];
   quickAddSubCategory: () => void;
@@ -32,7 +30,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   onClose, editPhotoId, newPhotoData, isAnalyzing, handleSingleAiAnalyze,
   deletePhoto, saveNewPhoto, isSyncing, formState, updateForm,
   showOtherFields, setShowOtherFields,
-  dbCategories, appLang, categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
+  categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
   aiDebugInfo, abortAnalysis
 }) => {
   return (
@@ -150,22 +148,13 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
           <div className="grid grid-cols-3 gap-2">
-            {categories.filter(c => c.name && c.name.trim()).map(cat => (
+            {categories.filter(c => c.name && c.name.trim()).map((cat: any) => (
               <button 
                 key={cat.id}
                 onClick={() => { updateForm({ categoryId: cat.id }); }}
                 className={`p-3 rounded-2xl border-2 text-center transition-all active:scale-[0.98] ${formState.categoryId === cat.id ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
-                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.id ? 'text-white' : 'text-slate-800'}`}>{cat.name}</span>
-              </button>
-            ))}
-            {(dbCategories || []).filter(dbc => dbc.zh && dbc.zh.trim() && dbc.code && dbc.code.trim() && !categories.some(c => c.name === dbc.zh)).map(cat => (
-              <button 
-                key={cat.code}
-                onClick={() => { updateForm({ categoryId: cat.code }); }}
-                className={`p-3 rounded-2xl border-2 text-center transition-all active:scale-[0.98] ${formState.categoryId === cat.code ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
-              >
-                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.code ? 'text-white' : 'text-slate-800'}`}>{cat[appLang as keyof DB_Category] || cat.zh}</span>
+                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.id ? 'text-white' : 'text-slate-800'}`}>{cat.zh || cat.name}</span>
               </button>
             ))}
           </div>
@@ -176,7 +165,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 / Manufacturer</h3>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
-            {manufacturers?.map(mfr => (
+            {(manufacturers || []).map((mfr: any) => (
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ subcategoryId: mfr.id })}
@@ -194,7 +183,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
           <div className="flex flex-wrap gap-2 p-1">
-            {tags.map(tag => (
+            {tags.map((tag: any) => (
               <button 
                 key={tag.id}
                 onClick={() => updateForm({ tagIds: formState.tagIds.includes(tag.id) ? formState.tagIds.filter(tid => tid !== tag.id) : [...formState.tagIds, tag.id] })}

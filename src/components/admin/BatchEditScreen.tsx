@@ -29,7 +29,6 @@ export const BatchEditScreen = ({
   const { 
     quickAddManufacturer: quickAddMfr, 
     quickAddTag: quickAddT,
-    dbCategories,
     categories,
     manufacturers,
     tags
@@ -124,17 +123,7 @@ export const BatchEditScreen = ({
                   onClick={() => { updateForm({ categoryId: cat.id }); }}
                   className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.id ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
                 >
-                  <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.id ? 'text-blue-700' : 'text-slate-700'}`}>{cat.name}</span>
-                </button>
-              ))}
-              {(dbCategories || []).filter((dbc: any) => !categories.some((c: any) => c.name === dbc.zh)).map((cat: any) => (
-                <button 
-                  key={cat.code}
-                  onClick={() => { updateForm({ categoryId: cat.code }); }}
-                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.code ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
-                >
-                  <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.code ? 'text-blue-700' : 'text-slate-700'}`}>{cat[appLang] || cat.zh}</span>
-                  <span className={`text-[7px] uppercase tracking-tighter mt-0.5 font-bold ${formState.categoryId === cat.code ? 'text-blue-500' : 'text-slate-400'}`}>{cat.en}</span>
+                  <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.id ? 'text-blue-700' : 'text-slate-700'}`}>{cat.zh || cat.name}</span>
                 </button>
               ))}
             </div>
@@ -147,7 +136,7 @@ export const BatchEditScreen = ({
             <button onClick={quickAddMfr} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
-            {manufacturers?.map((mfr: any) => (
+            {(manufacturers || []).map((mfr: any) => (
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ subcategoryId: mfr.id })}

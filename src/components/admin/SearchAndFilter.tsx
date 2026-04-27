@@ -23,8 +23,7 @@ export const SearchAndFilter: React.FC<Props> = ({
     filterTagIds, setFilterTagIds,
     sortOrder, setSortOrder,
     categories,
-    tags,
-    dbCategories
+    tags
   } = useGalleryContext();
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -87,22 +86,13 @@ export const SearchAndFilter: React.FC<Props> = ({
         >
           全部产品
         </button>
-        {categories.map(cat => (
+        {categories.map((cat: any) => (
           <button 
             key={cat.id}
             onClick={() => { setFilterCatId(cat.id); setFilterSubId(null); }}
             className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${filterCatId === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
           >
-            {cat.name}
-          </button>
-        ))}
-        {(dbCategories || []).filter(dbc => !categories.some(c => c.name === dbc.zh)).map(cat => (
-          <button 
-            key={cat.code}
-            onClick={() => { setFilterCatId(cat.code); setFilterSubId(null); }}
-            className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${filterCatId === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
-          >
-            {cat[appLang] || cat.zh}
+            {cat.zh || cat.name}
           </button>
         ))}
       </div>
@@ -124,8 +114,8 @@ export const SearchAndFilter: React.FC<Props> = ({
                   全部
                 </button>
                 {(() => {
-                  const legacyMatchedCat = categories.find(c => c.name === (dbCategories || []).find(dc => dc.code === filterCatId)?.zh || c.id === filterCatId);
-                  return legacyMatchedCat?.subcategories.map(sub => (
+                  const activeCat = categories.find(c => c.id === filterCatId);
+                  return (activeCat?.subcategories || []).map((sub: any) => (
                     <button 
                       key={sub.id}
                       onClick={() => setFilterSubId(sub.id)}
@@ -139,7 +129,7 @@ export const SearchAndFilter: React.FC<Props> = ({
             )}
             
             <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth px-1">
-              {tags.map(tag => (
+              {tags.map((tag: any) => (
                 <button 
                   key={tag.id}
                   onClick={() => setFilterTagIds(filterTagIds.includes(tag.id) ? filterTagIds.filter(t => t !== tag.id) : [...filterTagIds, tag.id])}

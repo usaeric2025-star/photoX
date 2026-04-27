@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Photo, Category, Tag, DB_Category } from '../types';
+import { Photo, Category, Tag } from '../types';
 import SparkMD5 from 'spark-md5';
 
 const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || 'https://vbpnlkeweqkjufijtdph.supabase.co';
@@ -259,7 +259,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
   }
 };
 
-export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<boolean> => {
+export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
@@ -280,41 +280,68 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<bo
 
   // Ensure ID is UUID format
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
-  const newId = isUUID ? photo.id : crypto.randomUUID();
+  
+  const payload: any = {
+    user_id: session.user.id,
+    item_code: photo.item_code,
+    manual_code: photo.manual_code || '',
+    image_hash: photo.image_hash,
+    name: photo.name,
+    category_id: photo.categoryId || null,
+    sub_category: photo.subcategoryId || '',
+    // Deprecating JSON tags field in favor of photo_tags table
+    description: photo.description || '',
+    image_url: photo.image_url,
+    thumb_url: photo.thumb_url || null,
+    dimensions: photo.dimensions || null,
+    model_number: photo.model_number || '',
+    created_at: photo.createdAt,
+    group_id: photo.groupId || null
+  };
 
-  // Upsert on item_code as requested, ignoring duplicates
-  const { data, error: dbError } = await supabase
+  if (isUUID) {
+    payload.id = photo.id;
+  }
+
+  // Upsert on photo as before
+  const { data: savedPhoto, error: dbError } = await supabase
     .from(TABLE_NAME)
-    .upsert({
-      id: newId,
-      user_id: session.user.id,
-      item_code: photo.item_code,
-      manual_code: photo.manual_code || '',
-      image_hash: photo.image_hash,
-      name: photo.name,
-      category: photo.categoryId || '',
-      sub_category: photo.subcategoryId || '',
-      tags: Array.isArray(photo.tagIds) ? photo.tagIds : [],
-      description: photo.description || '',
-      image_url: photo.image_url,
-      thumb_url: photo.thumb_url || null,
-      dimensions: photo.dimensions || null,
-      model_number: photo.model_number || '',
-      created_at: photo.createdAt,
-      group_id: photo.groupId || null
-    }, { 
+    .upsert(payload, { 
       onConflict: 'id',
       ignoreDuplicates: false 
     })
-    .select('id');
+    .select('id')
+    .single();
 
   if (dbError) {
     console.error("Supabase Database Upsert Error:", dbError);
     throw new Error(`數據同步失敗: ${dbError.message}`);
   }
 
-  // If ignoreDuplicates is true, data will be empty if it was a duplicate
-  return data && data.length > 0;
+  const finalPhotoId = savedPhoto.id;
+
+  // --- Relational Tags Sync ---
+  if (Array.isArray(photo.tagIds) && photo.tagIds.length >= 0) {
+    // 1. Delete existing associations
+    await supabase.from('photo_tags').delete().eq('photo_id', finalPhotoId);
+    
+    // 2. Insert new associations
+    if (photo.tagIds.length > 0) {
+      const tagAssociations = photo.tagIds
+        .filter(tid => tid && tid.length > 5) // Basic check for valid IDs
+        .map(tagId => ({
+          photo_id: finalPhotoId,
+          tag_id: tagId
+        }));
+      
+      if (tagAssociations.length > 0) {
+        const { error: tagError } = await supabase.from('photo_tags').insert(tagAssociations);
+        if (tagError) console.warn("Failed to sync photo tags:", tagError);
+      }
+    }
+  }
+
+  return finalPhotoId;
 };
 
 export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgress?: (p: number) => void): Promise<{success: number, skipped: number}> => {
@@ -430,7 +457,10 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
 export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*')
+    .select(`
+      *,
+      photo_tags(tag_id)
+    `)
     .order('created_at', { ascending: false });
   
   if (error) throw error;
@@ -446,6 +476,10 @@ export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
       }
     }
 
+    const tagIds = Array.isArray(item.photo_tags) 
+        ? item.photo_tags.map((pt: any) => pt.tag_id).filter(Boolean)
+        : [];
+
     return {
       id: item.id,
       storageId: storageId,
@@ -453,9 +487,9 @@ export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
       manual_code: item.manual_code,
       image_hash: item.image_hash,
       name: item.name,
-      categoryId: item.category || null,
+      categoryId: item.category_id || null,
       subcategoryId: item.sub_category || null,
-      tagIds: item.tags || [],
+      tagIds: tagIds,
       description: item.description,
       image_url: item.image_url,
       dimensions: item.dimensions,
@@ -473,7 +507,10 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
   console.log("Fetching cloud photos for user:", userId);
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*')
+    .select(`
+      *,
+      photo_tags(tag_id)
+    `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
@@ -495,6 +532,11 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
       }
     }
 
+    // Map photo_tags list to tagIds array
+    const tagIds = Array.isArray(item.photo_tags) 
+        ? item.photo_tags.map((pt: any) => pt.tag_id).filter(Boolean)
+        : [];
+
     return {
       id: item.id,
       storageId: storageId,
@@ -502,9 +544,9 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
       manual_code: item.manual_code,
       image_hash: item.image_hash,
       name: item.name,
-      categoryId: item.category || null,
+      categoryId: item.category_id || null,
       subcategoryId: item.sub_category || null,
-      tagIds: item.tags || [],
+      tagIds: tagIds,
       description: item.description,
       image_url: item.image_url,
       dimensions: item.dimensions,
@@ -538,7 +580,7 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
 
 // --- Settings Sync ---
 
-export const loadCategoriesFromCloud = async (): Promise<DB_Category[]> => {
+export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -549,6 +591,45 @@ export const loadCategoriesFromCloud = async (): Promise<DB_Category[]> => {
     return [];
   }
   return data || [];
+};
+
+export const loadTagsFromCloud = async (): Promise<Tag[]> => {
+    const { data, error } = await supabase
+        .from('tags')
+        .select('*')
+        .order('name', { ascending: true });
+    
+    if (error) {
+        console.error("Failed to load tags from cloud:", error);
+        return [];
+    }
+    return data || [];
+};
+
+export const updateTagInDB = async (tagId: string, name: string): Promise<boolean> => {
+    const { error } = await supabase
+        .from('tags')
+        .update({ name })
+        .eq('id', tagId);
+    
+    if (error) {
+        console.error("Failed to update tag:", error);
+        return false;
+    }
+    return true;
+};
+
+export const deleteTagFromDB = async (tagId: string): Promise<boolean> => {
+    const { error } = await supabase
+        .from('tags')
+        .delete()
+        .eq('id', tagId);
+    
+    if (error) {
+        console.error("Failed to delete tag from cloud:", error);
+        return false;
+    }
+    return true;
 };
 
 export const fetchSettings = async () => {
@@ -572,9 +653,6 @@ export const fetchSettings = async () => {
     if (settings.access_passcode) settings.internal_password = settings.access_passcode;
     
     // Parse JSON data if it exists
-    if (settings.categories_json) {
-      try { settings.categories = JSON.parse(settings.categories_json); } catch(e) { console.error(e); }
-    }
     if (settings.tags_json) {
       try { settings.tags = JSON.parse(settings.tags_json); } catch(e) { console.error(e); }
     }
@@ -606,8 +684,8 @@ export const saveSettings = async (settings: any) => {
         }
 
         // Clean up temporary UI fields before saving
+        // Note: we're deprecating categories_json in settings favor of the 'categories' table
         if (payload.categories) {
-          payload.categories_json = JSON.stringify(payload.categories);
           delete payload.categories;
         }
         if (payload.tags) {
@@ -673,6 +751,47 @@ export const uploadLogo = async (file: File) => {
     } catch (err: any) {
         console.error("Logo upload process error:", err);
         throw err;
+    }
+};
+
+// --- New DB-driven ID generation helpers ---
+
+/**
+ * Get a fresh UUID from the database
+ */
+export const getDatabaseUUID = async (): Promise<string> => {
+  const { data, error } = await supabase.rpc('get_uuid_v4');
+  if (!error && data) return data;
+  return crypto.randomUUID(); 
+};
+
+export const addTagToDB = async (name: string): Promise<Tag> => {
+    try {
+        const { data, error } = await supabase
+            .from('tags')
+            .insert({ name, aliases: [] })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    } catch (e) {
+        console.warn("Tags table missing? Falling back to JSON with generated UUID.");
+        return { id: crypto.randomUUID(), name, aliases: [] };
+    }
+};
+
+export const addManufacturerToDB = async (name: string): Promise<any> => {
+    try {
+        const { data, error } = await supabase
+            .from('manufacturers')
+            .insert({ name, aliases: [] })
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    } catch (e) {
+        console.warn("Manufacturers table missing? Falling back to JSON.");
+        return { id: crypto.randomUUID(), name, aliases: [] };
     }
 };
 

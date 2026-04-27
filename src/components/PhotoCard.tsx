@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Photo, DB_Category, Category } from '../types';
+import { Photo, Category } from '../types';
 import { X, Layers } from 'lucide-react';
 
 interface PhotoCardProps {
@@ -13,7 +13,6 @@ interface PhotoCardProps {
   showGroupsCollapsed: boolean;
   lang: string;
   t: any;
-  dbCategories: DB_Category[];
   categories: Category[];
   tagMap: Record<string, string>;
   onToggleSelection?: (id: string) => void;
@@ -27,27 +26,23 @@ interface PhotoCardProps {
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   photo, index, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
-  lang, t, dbCategories, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
+  lang, t, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
 }) => {
   const catName = useMemo(() => {
-    const catCodeOrId = (photo.categoryId || '').trim();
+    const catId = photo.categoryId;
+    if (!catId) return '';
     
-    // Try new categorization system first
-    const activeCat = categories ? categories.find(c => c.id === catCodeOrId) : null;
-    if (activeCat) return activeCat.name;
-
-    // Fallback to legacy dbCategories
-    const legacyCat = dbCategories.find(c => 
-      (c.code || '').trim().toLowerCase() === catCodeOrId.toLowerCase()
-    );
-    
-    if (legacyCat) {
-      return legacyCat[lang as keyof DB_Category] || legacyCat.en;
+    const activeCat = categories ? categories.find(c => String(c.id) === String(catId)) : null;
+    if (activeCat) {
+      if (lang === 'zh') return activeCat.zh || activeCat.name;
+      if (lang === 'en') return activeCat.en || activeCat.name;
+      if (lang === 'ms') return activeCat.ms || activeCat.name || activeCat.en;
+      return activeCat.name;
     }
     
     return '';
-  }, [photo.categoryId, categories, dbCategories, lang]);
+  }, [photo.categoryId, categories, lang]);
   
   const displayCatName = useMemo(() => {
     const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
@@ -80,9 +75,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         if (isAdminMode) return;
         shareSinglePhoto(photo);
         if ('vibrate' in navigator) navigator.vibrate(50);
-      }}
-      onContextMenu={(e) => {
-        if (isAdminMode) e.preventDefault();
       }}
       onMouseDown={() => onLongPressStart(photo.id)}
       onMouseUp={onLongPressEnd}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { DB_Category, Category, Tag } from '../types';
+import { Category, Tag } from '../types';
 
 interface PublicGalleryFiltersProps {
   searchQuery: string;
@@ -12,8 +12,7 @@ interface PublicGalleryFiltersProps {
   setColumns: (val: any) => void;
   showGroupsCollapsed: boolean;
   setShowGroupsCollapsed: (val: boolean) => void;
-  dbCategories: DB_Category[];
-  categories: Category[];
+  categories: any[];
   selectedCatCode: string | null;
   setSelectedCatCode: (id: string | null) => void;
   selectedSubId: string | null;
@@ -27,7 +26,7 @@ interface PublicGalleryFiltersProps {
 
 export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   searchQuery, setSearchQuery, sortOrder, toggleSortOrder, columns, setColumns,
-  showGroupsCollapsed, setShowGroupsCollapsed, dbCategories, categories,
+  showGroupsCollapsed, setShowGroupsCollapsed, categories,
   selectedCatCode, setSelectedCatCode, selectedSubId, setSelectedSubId,
   selectedTagIds, setSelectedTagIds, sortedTags, lang, t
 }) => {
@@ -83,25 +82,14 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             {t.allCats}
           </button>
           
-          {/* New categories system */}
+          {/* Unified categories system (from table) */}
           {categories.filter(c => c.name && c.name.trim()).map(cat => (
             <button 
               key={cat.id}
               onClick={() => { setSelectedCatCode(cat.id); setSelectedSubId(null); }}
               className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
             >
-              {cat.name}
-            </button>
-          ))}
-
-          {/* Legacy dbCategories that aren't in the new system yet */}
-          {(dbCategories || []).filter(dbc => dbc.zh && dbc.zh.trim() && dbc.code && dbc.code.trim() && !categories.some(c => c.name === dbc.zh)).map(cat => (
-            <button 
-              key={cat.code}
-              onClick={() => { setSelectedCatCode(cat.code); setSelectedSubId(null); }}
-              className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
-            >
-              {cat[lang as keyof DB_Category] || cat.en}
+              {cat.zh || cat.name}
             </button>
           ))}
       </div>
@@ -122,9 +110,8 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   {t.all}
                 </button>
                 {(() => {
-                  const dbCat = dbCategories.find(dc => dc.code === selectedCatCode);
-                  const legacyMatchedCat = categories.find(c => c.name === dbCat?.zh || c.id === selectedCatCode);
-                  return legacyMatchedCat?.subcategories.map(sub => (
+                  const currentCat = categories.find(c => c.id === selectedCatCode || c.code === selectedCatCode);
+                  return Array.from(new Map((currentCat?.subcategories || []).map((s: any) => [s.id, s])).values()).map((sub: any) => (
                     <button 
                       key={sub.id}
                       onClick={() => setSelectedSubId(sub.id)}
