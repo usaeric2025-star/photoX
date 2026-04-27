@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Photo, Category, Tag } from '../types';
 import SparkMD5 from 'spark-md5';
 
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL || 'https://vbpnlkeweqkjufijtdph.supabase.co';
+const supabaseUrl = 'https://vbpnlkeweqkjufijtdph.supabase.co';
 const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_mXZxsfqH-fATbT2g9fiX7A_-VfzOwa8';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -41,9 +41,29 @@ function mapSupabasePhoto(item: any): Photo {
 
     const cat = item.category;
 
-    const tagIds = (item.photo_tags || [])
-      .map((pt: any) => String(pt.tag_id || pt)) // 兼容 pt 是对象或者直接是 id 的情况
-      .filter(Boolean);
+    let tagIds: string[] = [];
+    if (Array.isArray(item.photo_tags)) {
+      tagIds = item.photo_tags
+        .map((pt: any) => {
+          if (pt == null) return null;
+          if (typeof pt === 'object') {
+            if (pt.tag_id != null) return String(pt.tag_id);
+            if (pt.tags && pt.tags.id != null) return String(pt.tags.id);
+            if (pt.id != null) return String(pt.id);
+          }
+          return String(pt);
+        })
+        .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
+    } else if (Array.isArray(item.tags)) {
+      // Fallback in case tags are returned directly
+      tagIds = item.tags
+        .map((t: any) => {
+          if (t == null) return null;
+          if (typeof t === 'object' && t.id != null) return String(t.id);
+          return String(t);
+        })
+        .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
+    }
 
     return {
       id: item.id,
@@ -58,9 +78,10 @@ function mapSupabasePhoto(item: any): Photo {
       categoryEn: cat?.en,
       categoryMs: cat?.ms,
       subcategoryId: item.sub_category || null,
-      tagIds: tagIds.length > 0 ? tagIds : [],  // 至少是空数组
+      tagIds,
       description: item.description,
       image_url: item.image_url,
+      thumb_url: item.thumb_url,
       dimensions: item.dimensions,
       exif_data: item.exif_data,
       createdAt: item.created_at,
@@ -501,7 +522,10 @@ export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
     .from(TABLE_NAME)
     .select(`
       *,
-      photo_tags(tag_id),
+      photo_tags(
+        tag_id,
+        tags(id, name)
+      ),
       category:categories(*)
     `)
     .order('created_at', { ascending: false });
@@ -521,7 +545,10 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
     .from(TABLE_NAME)
     .select(`
       *,
-      photo_tags(tag_id),
+      photo_tags(
+        tag_id,
+        tags(id, name)
+      ),
       category:categories(*)
     `)
     .eq('user_id', userId)
