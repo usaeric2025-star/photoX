@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
 import { Photo, Category } from '../types';
 import { X, Layers } from 'lucide-react';
 
@@ -71,10 +70,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [photo.tagIds, tagMap]);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: (index % 15) * 0.03 }}
+    <div 
       onContextMenu={(e) => {
         e.preventDefault();
         if (isAdminMode) return;
@@ -99,44 +95,44 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           onLightboxOpen(index);
         }
       }}
-      className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-4 ring-blue-500 ring-offset-2 scale-[0.95]' : ''}`}
+      className={`aspect-square bg-white rounded-lg overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.95] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-2 ring-blue-500 scale-[0.95]' : ''}`}
     >
       <img 
         draggable={false}
         src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
         alt={photo.name}
         loading="lazy" 
-        className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''}`}
+        className={`w-full h-full object-cover ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''}`}
       />
 
       {isAdminMode && isMultiSelect && isSelected && (
-        <div className="absolute top-2 right-2 bg-blue-600 text-white p-1 rounded-full shadow-lg z-10">
-          <X size={12} />
+        <div className="absolute top-1 right-1 bg-blue-600 text-white p-0.5 rounded-full shadow-lg z-10">
+          <X size={10} />
         </div>
       )}
       {photo.groupId && (
-         <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-lg text-[7px] text-white font-bold flex items-center gap-1 border border-white/20 uppercase">
-           <Layers size={9} />
+         <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
+           <Layers size={8} />
          </div>
        )}
       
-      <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/60 to-transparent">
+      <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/70 to-transparent">
          {!isUncategorized && displayCatName && (
-          <p className="text-[10px] font-black tracking-tighter leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] mb-1 uppercase truncate">
+          <p className="text-[11px] font-bold tracking-tight leading-none text-white drop-shadow-md mb-0.5 uppercase truncate">
             {displayCatName}
           </p>
         )}
         
         {photoTags.length > 0 && (
-          <div className="w-full flex flex-nowrap gap-1 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {photoTags.map((tagName, idx) => (
-              <span key={idx} className="bg-white/20 backdrop-blur-md text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-extrabold whitespace-nowrap">
+              <span key={idx} className="bg-white/30 backdrop-blur-sm text-white/90 text-[8px] px-1 py-0 rounded-sm uppercase tracking-tighter font-medium whitespace-nowrap">
                 {tagName}
               </span>
             ))}
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 });

@@ -117,12 +117,6 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 exit={{ opacity: 0, height: 0 }}
                 className="flex flex-wrap gap-1.5"
               >
-                <button 
-                  onClick={() => setSelectedSubId(null)}
-                  className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest whitespace-nowrap border transition-all ${!selectedSubId ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
-                >
-                  {t.all}
-                </button>
                 {(() => {
                   const currentCat = categories.find(c => c.id === selectedCatCode || c.code === selectedCatCode);
                   const subList = currentCat?.subcategories || [];
@@ -135,7 +129,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     <button 
                       key={sub.id}
                       onClick={() => setSelectedSubId(sub.id)}
-                      className={`px-3 py-1 rounded-lg text-[9px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
+                      className={`px-2 py-0.5 rounded-lg text-[8px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                     >
                       {sub.name}
                     </button>
@@ -145,12 +139,12 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             )}
           </AnimatePresence>
 
-        <div className="flex flex-wrap gap-1 items-start max-h-[6rem] overflow-y-auto pb-1 content-start">
+        <div className="flex flex-wrap gap-0.5 items-start max-h-[6rem] overflow-y-auto pb-1 content-start">
             {sortedTags.map(tag => (
               <button 
                 key={tag.id}
                 onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? [] : [tag.id])}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
               >
                 #{tag.name}
               </button>
