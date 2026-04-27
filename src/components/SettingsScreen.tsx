@@ -556,22 +556,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <button 
-                onClick={async () => {
-                  const { migratePhotos } = await import('../lib/migration');
-                  const { updatedPhotos, count } = migratePhotos(photos, categories, tags, manufacturers);
-                  if (count > 0) {
-                    setPhotos(updatedPhotos);
-                    saveSettings({ ...settings, categories, tags, manufacturers });
-                    alert(`已处理 ${count} 张照片！`);
-                  } else {
-                    alert('无数据需要清理。');
-                  }
-                }}
-                className={secondaryBtnClass + " w-full col-span-2"}
-              >
-                清理旧数据
-              </button>
-              <button 
                 onClick={() => {
                   const data = JSON.stringify({ photos, categories, tags, manufacturers });
                   const blob = new Blob([data], { type: 'application/json' });

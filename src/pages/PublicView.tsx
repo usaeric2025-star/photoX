@@ -71,6 +71,7 @@ export default function PublicView() {
       ) : (
         <PublicGallery 
           onExit={() => navigate('/admin')}
+          onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
           showExit={false}
           onLogin={() => navigate('/admin')}
           loginWithGoogle={loginWithGoogle}
