@@ -64,10 +64,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   
   const photoTags = useMemo(() => {
     if (!photo.tagIds || photo.tagIds.length === 0) return [];
-    // Ensure we are dealing with strings and map them using tagMap
+    // Only show tags present in the tagMap
     return photo.tagIds
-      .map(tid => tagMap[String(tid)] || String(tid))
-      .filter(val => typeof val === 'string' && val.trim() !== '');
+      .map(tid => tagMap[String(tid)])
+      .filter((tagName): tagName is string => !!tagName && tagName.trim() !== '');
   }, [photo.tagIds, tagMap]);
 
   return (

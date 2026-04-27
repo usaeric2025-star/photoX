@@ -51,9 +51,10 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   // Tags lookup
   const displayTags = React.useMemo(() => {
     if (!photo || !photo.tagIds || photo.tagIds.length === 0) return [];
+    // Only show tags present in the tagMap
     return photo.tagIds
-      .map(tid => tagMap[String(tid)] || String(tid))
-      .filter(val => typeof val === 'string' && val.trim() !== '');
+      .map(tid => tagMap[String(tid)])
+      .filter((tagName): tagName is string => !!tagName && tagName.trim() !== '');
   }, [photo?.id, photo?.tagIds, tagMap]);
 
   const onTouchStart = (e: React.TouchEvent) => {
