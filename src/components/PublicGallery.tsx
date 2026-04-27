@@ -48,7 +48,6 @@ interface PublicGalleryProps {
   hideHeader?: boolean;
 }
 
-
 const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
   const handleOpenLightbox = useCallback(() => {
     const realIndex = displayPhotos.findIndex((p: any) => p.id === gridPhotos[index].id);
@@ -101,7 +100,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const internalPassword = settings?.access_passcode;
 
   const context = useGalleryContext();
-  console.log("PublicGallery context:", context);
   const {
     photos,
     categories,
@@ -188,24 +186,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const toggleSortOrder = useCallback(() => {
     setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
   }, [sortOrder, setSortOrder]);
-
-  const observerTarget = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && visibleCount < displayPhotos.length) {
-          setVisibleCount(prev => prev + 12);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-    return () => {
-      if (observerTarget.current) observer.disconnect();
-    };
-  }, [displayPhotos.length, visibleCount, setVisibleCount]);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -505,7 +485,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         shareSinglePhoto={shareSinglePhoto}
         onUngroup={async (id) => {
-          // You need to import/implement the actual group handling logic
           console.log("Ungroup photo", id);
           setLightboxIndex(null);
         }}
