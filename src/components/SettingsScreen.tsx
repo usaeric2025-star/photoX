@@ -52,16 +52,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
     settings, user, loginWithGoogle, logout, isSyncing, syncPercent, 
     geminiApiKey, setGeminiApiKey, customModel, setCustomModel, 
-    internalPassword, setInternalPassword, lastSyncTime,
+    internalPassword, setInternalPassword,
     setSettings, saveSettings
   } = useAdminSession();
   const { 
-    manufacturers, tags, dbCategories, cloudCount, 
+    manufacturers, tags, dbCategories, 
     setManufacturers, setTags, setCategories, setPhotos, photos, categories
   } = useAdminPhoto();
   const { isSyncing: uiSyncing } = useAdminUI();
 
-  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync } = props;
+  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime } = props;
   const [newSubName, setNewSubName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [showCatOverview, setShowCatOverview] = useState(false);

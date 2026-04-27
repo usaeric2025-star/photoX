@@ -60,9 +60,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   isRefreshing: propsIsRefreshing
 }) => {
   const adminSession = useOptionalAdminSession();
-  const user = adminSession?.user || propsUser;
-  const isAdminMode = adminSession?.isAdminMode || propsIsAdminMode;
-  const settings = adminSession?.settings || propsSettings;
+  const user = propsUser !== undefined ? propsUser : adminSession?.user;
+  const isAdminMode = propsIsAdminMode !== undefined ? propsIsAdminMode : !!adminSession?.isAdminMode;
+  const settings = propsSettings !== undefined ? propsSettings : adminSession?.settings;
   const loginWithGoogle = propsLoginWithGoogle || adminSession?.loginWithGoogle;
   const isSyncing = adminSession?.isSyncing || propsIsRefreshing;
   

@@ -30,6 +30,8 @@ export const useSyncEngine = () => {
                 }
             }
             if (s && !settings) setSettings(s);
+            const lastSync = await loadData('last_sync_time');
+            if (lastSync) setLastSyncTime(lastSync);
         };
         initSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps

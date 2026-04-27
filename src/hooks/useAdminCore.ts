@@ -19,7 +19,8 @@ export const useAdminCore = (
   setPromptDialog: React.Dispatch<React.SetStateAction<any>>,
   updateForm: Function,
   t: any,
-  refreshCloudData: Function
+  refreshCloudData: Function,
+  setCloudCount?: Function
 ) => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -138,6 +139,10 @@ export const useAdminCore = (
         manufacturers
       });
       const result = await syncPhotosToCloudService(user.id, photos);
+      const now = Date.now();
+      await saveData('last_sync_time', now);
+      refreshCloudData(user, categories, tags, manufacturers, setSettings, undefined, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true);
+      
       setAlertDialog({ 
         title: t.pushSuccess, 
         message: t.pushSuccessMsg(result.skipped) 
@@ -147,14 +152,14 @@ export const useAdminCore = (
     } finally {
       setIsSyncing(false);
     }
-  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t]);
+  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData, setSettings, setCategories, setTags, setManufacturers, setPhotos, setCloudCount]);
 
   const performPullSync = useCallback(async () => {
     setIsSyncing(true);
     try {
       await refreshCloudData(
         user, categories, tags, manufacturers, setSettings, 
-        undefined, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, undefined, true
+        undefined, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
       );
       setAlertDialog({ title: t.pullSuccess, message: t.pullSuccessMsg });
     } catch (err: any) {
@@ -162,7 +167,7 @@ export const useAdminCore = (
     } finally {
       setIsSyncing(false);
     }
-  }, [user, categories, tags, manufacturers, setSettings, setCategories, setTags, setManufacturers, setPhotos, setIsSyncing, setAlertDialog, t, refreshCloudData]);
+  }, [user, categories, tags, manufacturers, setSettings, setCategories, setTags, setManufacturers, setPhotos, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount]);
 
   const handleUngroup = useCallback((groupId: string) => {
     setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));

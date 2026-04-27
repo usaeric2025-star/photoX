@@ -84,20 +84,20 @@ export default function AdminView() {
   const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
 
+  const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
+
   const {
       toast, showToast, saveSettings,
       performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
       handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
   } = useAdminCore(
       user, photos, setPhotos, settings, setSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-      setIsSyncing, setAlertDialog, setPromptDialog, updateForm, t, refreshCloudData
+      setIsSyncing, setAlertDialog, setPromptDialog, updateForm, t, refreshCloudData, setCloudCount
   );
 
   const handleManageClick = () => setActiveScreen('manage');
 
   const { updateTag, deleteTag } = useAdminCategory();
-  
-  const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
 
 
   const handleDeletePhoto = async (id: string) => {
@@ -318,6 +318,8 @@ export default function AdminView() {
                  handleLogoUpload={handleLogoUpload}
                  performPushSync={performPushSync}
                  performPullSync={performPullSync}
+                 cloudCount={cloudCount}
+                 lastSyncTime={lastSyncTime}
                />
             )}
       
@@ -340,6 +342,7 @@ export default function AdminView() {
             {activeScreen === 'home' && (
               <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
                       <AdminHeader 
+                          isMultiSelect={isMultiSelect}
                           selectedIds={selectedIds}
                           filteredPhotos={gridPhotos}
                           setSelectedIds={setSelectedIds}
@@ -369,6 +372,7 @@ export default function AdminView() {
                        />
                        <div className="flex-1 min-h-0 relative">
                           <PublicGallery 
+                             isAdminMode={viewMode !== 'public'}
                              onExit={() => setViewMode('public')}
                              showExit={true}
                              onOpenSettings={handleManageClick}
@@ -392,7 +396,7 @@ export default function AdminView() {
                              cloudCount={cloudCount}
                           />
                        </div>
-              </div>
+                    </div>
             )}
       
             <AnimatePresence>

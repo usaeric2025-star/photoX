@@ -81,11 +81,16 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         shareSinglePhoto(photo);
         if ('vibrate' in navigator) navigator.vibrate(50);
       }}
+      onContextMenu={(e) => {
+        if (isAdminMode) e.preventDefault();
+      }}
       onMouseDown={() => onLongPressStart(photo.id)}
       onMouseUp={onLongPressEnd}
       onMouseLeave={onLongPressEnd}
       onTouchStart={() => onLongPressStart(photo.id)}
       onTouchEnd={onLongPressEnd}
+      onTouchMove={onLongPressEnd}
+      onTouchCancel={onLongPressEnd}
       onClick={() => {
         if (isAdminMode && isMultiSelect && onToggleSelection) {
           onToggleSelection(photo.id);
@@ -100,6 +105,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       className={`aspect-square bg-white rounded-2xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.98] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-4 ring-blue-500 ring-offset-2 scale-[0.95]' : ''}`}
     >
       <img 
+        draggable={false}
         src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
         alt={photo.name}
         loading="lazy" 

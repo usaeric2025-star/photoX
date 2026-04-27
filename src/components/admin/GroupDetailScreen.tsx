@@ -40,6 +40,9 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
   const { setAlertDialog: setAlert, setConfirmDialog: setConfirm, setBatchEditIds } = useAdminUI();
   
   const appLang = lang;
+  
+  const { translations } = require('../../lib/translations');
+  const t = translations[lang as keyof typeof translations] || translations['en'];
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
   const isMultiSelect = selectedPhotoIds.length > 0;
 
@@ -244,16 +247,25 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                      index={idx}
                      isAdminMode={isAdminMode}
                      isMultiSelect={isMultiSelect}
-                     isStaffMode={false} // Adjust based on requirement
+                     isStaffMode={false}
                      isSelected={selectedPhotoIds.includes(photo.id)}
                      showGroupsCollapsed={false}
                      lang={lang}
-                     t={{}} // Passed empty object, update if necessary
+                     t={t as any || {}}
                      dbCategories={dbCategories}
                      categories={categories}
-                     tagMap={{}} // Passed empty object
+                     tagMap={{}}
                      onToggleSelection={() => togglePhotoSelection(photo.id)}
                      onLightboxOpen={() => setFocusedGroupPhotoId(photo.id)}
+                     onLongPressStart={() => {
+                        window.longPressTimer = setTimeout(() => {
+                            onEditPhoto?.(photo);
+                        }, 500);
+                     }}
+                     onLongPressEnd={() => {
+                        if (window.longPressTimer) clearTimeout(window.longPressTimer);
+                     }}
+                     shareSinglePhoto={() => {}}
                    />
                  ))}
                  <button 
