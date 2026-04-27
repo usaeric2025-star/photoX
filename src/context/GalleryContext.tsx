@@ -169,8 +169,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
     }
     
-    return result.slice(0, visibleCount);
-  }, [displayPhotos, showGroupsCollapsed, visibleCount]);
+    return result;
+  }, [displayPhotos, showGroupsCollapsed]);
 
   const value = useMemo(() => {
     return {

@@ -21,8 +21,21 @@ export default function PublicView() {
   const navigate = useNavigate();
 
   const syncWithCloud = async (isBackground = false) => {
-    if (!isBackground) setIsInitializing(true);
+    // 1. 先读本地缓存
+    const cachedPhotos = await loadData('cachedPhotos');
+    const cachedCats = await loadData('cachedCategories');
+    const cachedTags = await loadData('cachedTags');
+
+    if (cachedPhotos) {
+      setPhotos(cachedPhotos);
+      if (!isBackground) setIsInitializing(false);
+    }
+    if (cachedCats) setCategories(cachedCats);
+    if (cachedTags) setTags(cachedTags);
+
+    if (!isBackground && !cachedPhotos) setIsInitializing(true);
     else setIsRefreshing(true);
+
     try {
       const [cloudPhotos, cloudCats, cloudTags, cloudSettings] = await Promise.all([
         loadAllPhotosFromCloud(),
@@ -33,6 +46,7 @@ export default function PublicView() {
 
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
+        saveData('cachedPhotos', cloudPhotos);
       }
       
       if (cloudCats) {
@@ -43,10 +57,12 @@ export default function PublicView() {
           subcategories: c.subcategories || [] 
         }));
         setCategories(normalized);
+        saveData('cachedCategories', normalized);
       }
 
       if (cloudTags) {
         setTags(cloudTags);
+        saveData('cachedTags', cloudTags);
       }
 
       if (cloudSettings) {
@@ -54,6 +70,7 @@ export default function PublicView() {
         if (cloudSettings.manufacturers) {
           setManufacturers(cloudSettings.manufacturers);
         }
+        saveData('cachedSettings', cloudSettings);
       }
     } catch (e) {
       console.error("Critical error in syncWithCloud:", e);

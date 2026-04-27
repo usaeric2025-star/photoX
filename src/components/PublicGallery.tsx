@@ -135,7 +135,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const [lang, setLang] = useState<LanguageCode>(() => {
     return (localStorage.getItem('appLang') as LanguageCode) || 'en';
   });
-  const t = translations[lang] || translations['en'];
+  const t = useMemo(() => translations[lang] || translations['en'], [lang]);
   
   useEffect(() => {
     localStorage.setItem('appLang', lang);
@@ -191,7 +191,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const scrollToTop = () => {
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'instant' });
-    setVisibleCount(15);
   };
 
   useEffect(() => {
@@ -360,6 +359,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           <VirtuosoGrid
             style={{ height: '100%', width: '100%' }}
             totalCount={gridPhotos.length}
+            overscan={600}
             listClassName={`grid gap-3 p-2 pb-40 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (
               <MemoizedPhotoCard
@@ -386,11 +386,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 gridPhotos={gridPhotos}
               />
             )}
-            endReached={() => {
-              if (visibleCount < displayPhotos.length) {
-                setVisibleCount(prev => prev + 15);
-              }
-            }}
           />
         )}
       </div>

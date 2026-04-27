@@ -94,7 +94,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">Group {activeGroupId}</p>
         </div>
         <div className="flex items-center gap-2">
-          {viewMode !== 'public' && (
+          {isAdminMode && (
             <>
               <button 
                 onClick={() => onBatchEdit?.(groupPhotos.map(p => p.id))}
