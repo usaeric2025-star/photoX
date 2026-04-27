@@ -217,11 +217,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const getPhotoDisplayName = (p: Photo) => {
     const isPlaceholder = !p.name || p.name === t.furnitureRecord || p.name === 'Furniture Record' || p.name === '未命名产品' || p.name === translations['zh'].furnitureRecord || p.name === translations['en'].furnitureRecord;
     if (!isPlaceholder) return p.name;
-    const safeCat = (p.categoryId || '').trim().toLowerCase();
-    const cat = dbCategories.find(c => 
-      (c.code || '').trim().toLowerCase() === safeCat
+    
+    const catId = (p.categoryId || '').trim();
+    
+    // Try new system
+    const activeCat = categories.find(c => c.id === catId);
+    if (activeCat) return activeCat.name;
+
+    // Try legacy
+    const legacyCat = dbCategories.find(c => 
+      (c.code || '').trim().toLowerCase() === catId.toLowerCase()
     );
-    if (cat) return cat[lang as keyof DB_Category] || cat.zh;
+    if (legacyCat) return legacyCat[lang as keyof DB_Category] || legacyCat.zh;
+
     if (lang === 'ms') return translations['ms'].furniture;
     return lang === 'en' ? translations['en'].furniture : translations['zh'].furniture;
   };

@@ -112,8 +112,22 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     if (filterCatId) {
-      const activeCat = dbCategories.find(c => c.code === filterCatId);
-      result = result.filter(p => p.categoryId === filterCatId || p.category === filterCatId || (activeCat && p.category === activeCat.zh));
+      const activeLegacyCat = dbCategories.find(c => c.code === filterCatId);
+      const activeNewCat = categories.find(c => c.id === filterCatId);
+      
+      result = result.filter(p => {
+        // 1. Direct ID match
+        if (p.categoryId === filterCatId) return true;
+        
+        // 2. Direct string match on category name
+        if (p.category === filterCatId) return true;
+        
+        // 3. Match by name from systems
+        if (activeLegacyCat && (p.category === activeLegacyCat.zh || p.category === activeLegacyCat.en)) return true;
+        if (activeNewCat && p.category === activeNewCat.name) return true;
+        
+        return false;
+      });
     }
     
     if (filterSubId) {

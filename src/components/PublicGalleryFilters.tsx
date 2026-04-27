@@ -76,21 +76,34 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
       </div>
 
       <div className="grid grid-cols-4 gap-2 px-1">
+          <button 
+            onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); }}
+            className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+          >
+            {t.allCats}
+          </button>
+          
+          {/* New categories system */}
+          {categories.filter(c => c.name && c.name.trim()).map(cat => (
             <button 
-              onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); }}
-              className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+              key={cat.id}
+              onClick={() => { setSelectedCatCode(cat.id); setSelectedSubId(null); }}
+              className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
             >
-              {t.allCats}
+              {cat.name}
             </button>
-            {Array.isArray(dbCategories) && dbCategories.map(cat => (
-              <button 
-                key={cat.code}
-                onClick={() => { setSelectedCatCode(cat.code); setSelectedSubId(null); }}
-                className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
-              >
-                {cat[lang as keyof DB_Category] || cat.en}
-              </button>
-            ))}
+          ))}
+
+          {/* Legacy dbCategories that aren't in the new system yet */}
+          {(dbCategories || []).filter(dbc => dbc.zh && dbc.zh.trim() && dbc.code && dbc.code.trim() && !categories.some(c => c.name === dbc.zh)).map(cat => (
+            <button 
+              key={cat.code}
+              onClick={() => { setSelectedCatCode(cat.code); setSelectedSubId(null); }}
+              className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.code ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+            >
+              {cat[lang as keyof DB_Category] || cat.en}
+            </button>
+          ))}
       </div>
 
       <div className="space-y-2">

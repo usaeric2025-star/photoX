@@ -552,9 +552,25 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         <div className={cardClass}>
             <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
               <div className="w-1.5 h-3.5 bg-slate-800 rounded-full"></div>
-              数据备份与恢复
+              数据维护
             </h4>
             <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={async () => {
+                  const { migratePhotos } = await import('../lib/migration');
+                  const { updatedPhotos, count } = migratePhotos(photos, categories, tags, manufacturers);
+                  if (count > 0) {
+                    setPhotos(updatedPhotos);
+                    saveSettings({ ...settings, categories, tags, manufacturers });
+                    alert(`已处理 ${count} 张照片！`);
+                  } else {
+                    alert('无数据需要清理。');
+                  }
+                }}
+                className={secondaryBtnClass + " w-full col-span-2"}
+              >
+                清理旧数据
+              </button>
               <button 
                 onClick={() => {
                   const data = JSON.stringify({ photos, categories, tags, manufacturers });
