@@ -81,20 +81,37 @@ export const SearchAndFilter: React.FC<Props> = ({
 
       <div className="grid grid-cols-4 gap-2">
         <button 
-          onClick={() => { setFilterCatId(null); setFilterSubId(null); }}
+          onClick={() => { 
+            setFilterCatId(null); 
+            setFilterSubId(null); 
+            window.scrollTo({ top: 0, behavior: 'instant' });
+          }}
           className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!filterCatId ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
         >
           全部产品
         </button>
-        {categories.map((cat: any) => (
-          <button 
-            key={cat.id}
-            onClick={() => { setFilterCatId(cat.id); setFilterSubId(null); }}
-            className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${filterCatId === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
-          >
-            {cat.zh || cat.name}
-          </button>
-        ))}
+        {categories
+          .filter((cat: any) => {
+            const n = (cat.name || '').toLowerCase();
+            const z = (cat.zh || '').toLowerCase();
+            return !['all', '全部', '全部产品', '全部產品'].includes(n) && !['全部', '全部产品', '全部產品'].includes(z);
+          })
+          .map((cat: any) => {
+            const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
+            return (
+              <button 
+                key={cat.id}
+                onClick={() => { 
+                  setFilterCatId(cat.id); 
+                  setFilterSubId(null); 
+                  window.scrollTo({ top: 0, behavior: 'instant' });
+                }}
+                className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${filterCatId === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+              >
+                {displayName}
+              </button>
+            );
+          })}
       </div>
 
       <AnimatePresence>
@@ -115,7 +132,12 @@ export const SearchAndFilter: React.FC<Props> = ({
                 </button>
                 {(() => {
                   const activeCat = categories.find(c => c.id === filterCatId);
-                  return (activeCat?.subcategories || []).map((sub: any) => (
+                  return (activeCat?.subcategories || [])
+                    .filter((s: any) => {
+                      const n = (s.name || '').toLowerCase();
+                      return !['all', '全部', '全部产品'].includes(n);
+                    })
+                    .map((sub: any) => (
                     <button 
                       key={sub.id}
                       onClick={() => setFilterSubId(sub.id)}

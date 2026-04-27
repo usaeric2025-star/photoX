@@ -65,7 +65,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const loginWithGoogle = propsLoginWithGoogle || adminSession?.loginWithGoogle;
   const isSyncing = adminSession?.isSyncing || propsIsRefreshing;
   
-  const { internalPassword } = settings || {};
+  const internalPassword = settings?.access_passcode;
 
   const context = useGalleryContext();
   console.log("PublicGallery context:", context);
@@ -97,13 +97,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const tags = useMemo(() => {
     const tMap = new Map<string, Tag>();
     contextTags.forEach(t => tMap.set(t.id, t));
-    
-    // Fill in missing tags seen on photos but not in global tags list
-    allTagIds.forEach(id => {
-        if (!tMap.has(id)) {
-            tMap.set(id, { id, name: id, aliases: [] });
-        }
-    });
     
     return Array.from(tMap.values());
   }, [contextTags, allTagIds]);
@@ -188,6 +181,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     setVisibleCount(15);
   };
 
+  useEffect(() => {
+    scrollToTop();
+  }, [selectedCatCode, selectedSubId, selectedTagIds]);
+
   const handleHeaderClick = () => {
     const next = headerClickCount + 1;
     if (next >= 3) {
@@ -208,7 +205,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     
     // Try new system
     const activeCat = categories.find(c => c.id === catId);
-    if (activeCat) return activeCat.zh || activeCat.name;
+    if (activeCat) {
+      if (lang === 'zh') return activeCat.zh || activeCat.name;
+      if (lang === 'ms') return activeCat.ms || activeCat.name || activeCat.en || activeCat.zh;
+      return activeCat.en || activeCat.name || activeCat.zh;
+    }
 
     if (lang === 'ms') return translations['ms'].furniture;
     return lang === 'en' ? translations['en'].furniture : translations['zh'].furniture;

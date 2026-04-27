@@ -117,15 +117,18 @@ export const BatchEditScreen = ({
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標主目录 *</h3>
           <div className="flex flex-col gap-2">
             <div className="grid grid-cols-4 gap-2">
-              {categories.map((cat: any) => (
-                <button 
-                  key={cat.id}
-                  onClick={() => { updateForm({ categoryId: cat.id }); }}
-                  className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.id ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
-                >
-                  <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.id ? 'text-blue-700' : 'text-slate-700'}`}>{cat.zh || cat.name}</span>
-                </button>
-              ))}
+              {categories.map((cat: any) => {
+                const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
+                return (
+                  <button 
+                    key={cat.id}
+                    onClick={() => { updateForm({ categoryId: cat.id }); }}
+                    className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.id ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
+                  >
+                    <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.id ? 'text-blue-700' : 'text-slate-700'}`}>{displayName}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </section>

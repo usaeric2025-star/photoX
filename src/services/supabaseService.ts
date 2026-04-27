@@ -21,6 +21,55 @@ export const calculateMD5 = (base64Data: string): string => {
   }
 };
 
+// Helper to map Supabase item to Photo type
+function mapSupabasePhoto(item: any): Photo {
+    if (!item) return {} as Photo;
+    
+    // Extract storageId from image_url if possible
+    let storageId = item.id;
+    if (item.image_url) {
+      try {
+        const parts = item.image_url.split('/');
+        const lastPart = parts[parts.length - 1];
+        if (lastPart) {
+          storageId = lastPart.split('.')[0];
+        }
+      } catch (e) {
+        console.warn("Failed to parse storageId from URL:", e);
+      }
+    }
+
+    const cat = item.category;
+
+    const tagIds = Array.isArray(item.photo_tags) 
+        ? item.photo_tags.map((pt: any) => String(pt.tag_id)).filter(Boolean)
+        : [];
+
+    return {
+      id: item.id,
+      storageId: storageId,
+      item_code: item.item_code,
+      manual_code: item.manual_code,
+      image_hash: item.image_hash,
+      name: item.name,
+      categoryId: item.category_id ? String(item.category_id) : null,
+      categoryName: cat?.name,
+      categoryZh: cat?.zh,
+      categoryEn: cat?.en,
+      categoryMs: cat?.ms,
+      subcategoryId: item.sub_category || null,
+      tagIds: tagIds,
+      description: item.description,
+      image_url: item.image_url,
+      dimensions: item.dimensions,
+      exif_data: item.exif_data,
+      createdAt: item.created_at,
+      groupId: item.group_id,
+      userId: item.user_id,
+      uri: item.image_url
+    };
+}
+
 export const calculateMD5FromFile = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const spark = new SparkMD5.ArrayBuffer();
@@ -328,7 +377,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     // 2. Insert new associations
     if (photo.tagIds.length > 0) {
       const tagAssociations = photo.tagIds
-        .filter(tid => tid && tid.length > 5) // Basic check for valid IDs
+        .filter(tid => !!tid)
         .map(tagId => ({
           photo_id: finalPhotoId,
           tag_id: tagId
@@ -414,14 +463,6 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
           console.log(`Found locally cached URL for hash ${photo.image_hash}, reusing.`);
           photo.image_url = cachedUrls.imageUrl;
           photo.thumb_url = cachedUrls.thumbUrl;
-        } else {
-          // 2nd fallback Global check if not found locally (optional, but good for total dedup)
-          const existingInfo = await checkImageHashExists(photo.image_hash);
-          if (existingInfo && !cloudIds.has(photo.id)) {
-              console.log(`Found existing image globally for hash ${photo.image_hash}, reuse URL.`);
-              photo.image_url = existingInfo.image_url;
-              hashUrlMap.set(photo.image_hash, { imageUrl: existingInfo.image_url });
-          }
         }
       }
 
@@ -455,52 +496,23 @@ export const syncPhotosToCloud = async (userId: string, photos: Photo[], onProgr
 };
 
 export const loadAllPhotosFromCloud = async (): Promise<Photo[]> => {
+  console.log("Fetching all cloud photos...");
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select(`
       *,
-      photo_tags(tag_id)
+      photo_tags(tag_id),
+      category:categories(*)
     `)
     .order('created_at', { ascending: false });
   
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase Fetch Error (loadAllPhotosFromCloud):", error);
+    throw error;
+  }
 
-  return (data || []).map(item => {
-    // Extract storageId from image_url if possible
-    let storageId = item.id;
-    if (item.image_url) {
-      const parts = item.image_url.split('/');
-      const lastPart = parts[parts.length - 1];
-      if (lastPart) {
-        storageId = lastPart.split('.')[0];
-      }
-    }
-
-    const tagIds = Array.isArray(item.photo_tags) 
-        ? item.photo_tags.map((pt: any) => pt.tag_id).filter(Boolean)
-        : [];
-
-    return {
-      id: item.id,
-      storageId: storageId,
-      item_code: item.item_code,
-      manual_code: item.manual_code,
-      image_hash: item.image_hash,
-      name: item.name,
-      categoryId: item.category_id || null,
-      subcategoryId: item.sub_category || null,
-      tagIds: tagIds,
-      description: item.description,
-      image_url: item.image_url,
-      dimensions: item.dimensions,
-      exif_data: item.exif_data,
-      createdAt: item.created_at,
-      groupId: item.group_id,
-      userId: item.user_id,
-      // Local fallbacks
-      uri: item.image_url 
-    };
-  });
+  console.log(`loadAllPhotosFromCloud: Found ${data?.length || 0} items.`);
+  return (data || []).map(item => mapSupabasePhoto(item));
 };
 
 export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
@@ -509,7 +521,8 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
     .from(TABLE_NAME)
     .select(`
       *,
-      photo_tags(tag_id)
+      photo_tags(tag_id),
+      category:categories(*)
     `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -520,43 +533,7 @@ export const loadPhotosFromCloud = async (userId: string): Promise<Photo[]> => {
   }
 
   console.log(`Found ${data?.length || 0} photos in cloud for user ${userId}`);
-
-  return (data || []).map(item => {
-    // Extract storageId from image_url if possible
-    let storageId = item.id;
-    if (item.image_url) {
-      const parts = item.image_url.split('/');
-      const lastPart = parts[parts.length - 1];
-      if (lastPart) {
-        storageId = lastPart.split('.')[0];
-      }
-    }
-
-    // Map photo_tags list to tagIds array
-    const tagIds = Array.isArray(item.photo_tags) 
-        ? item.photo_tags.map((pt: any) => pt.tag_id).filter(Boolean)
-        : [];
-
-    return {
-      id: item.id,
-      storageId: storageId,
-      item_code: item.item_code,
-      manual_code: item.manual_code,
-      image_hash: item.image_hash,
-      name: item.name,
-      categoryId: item.category_id || null,
-      subcategoryId: item.sub_category || null,
-      tagIds: tagIds,
-      description: item.description,
-      image_url: item.image_url,
-      dimensions: item.dimensions,
-      exif_data: item.exif_data,
-      createdAt: item.created_at,
-      groupId: item.group_id,
-      userId: item.user_id,
-      uri: item.image_url
-    };
-  });
+  return (data || []).map(item => mapSupabasePhoto(item));
 };
 
 export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
@@ -588,7 +565,7 @@ export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
 
   if (error) {
     console.error("Failed to load categories:", error);
-    return [];
+    throw error;
   }
   return data || [];
 };
@@ -601,7 +578,7 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
     
     if (error) {
         console.error("Failed to load tags from cloud:", error);
-        return [];
+        throw error;
     }
     return data || [];
 };
@@ -639,67 +616,20 @@ export const fetchSettings = async () => {
         .eq('id', 1)
         .single();
     
-    if (error && error.code !== 'PGRST116') { // Ignore "no rows returned" error
+    if (error) {
         console.error("Failed to fetch settings:", error);
-        return null;
+        throw error;
     }
     
-    const settings = data || null;
-    if (!settings) return null;
-    
-    // Map custom columns back to app expectations
-    if (settings.api_key) settings.gemini_api_key = settings.api_key;
-    if (settings.model_name) settings.custom_model = settings.model_name;
-    if (settings.access_passcode) settings.internal_password = settings.access_passcode;
-    
-    // Parse JSON data if it exists
-    if (settings.tags_json) {
-      try { settings.tags = JSON.parse(settings.tags_json); } catch(e) { console.error(e); }
-    }
-    if (settings.manufacturers_json) {
-      try { settings.manufacturers = JSON.parse(settings.manufacturers_json); } catch(e) { console.error(e); }
-    }
-    
-    return settings;
+    return data;
 };
 
 export const saveSettings = async (settings: any) => {
     try {
-        // Prepare the payload
         const payload = { ...settings };
         
-        // Map fields to requested columns
-        if ('gemini_api_key' in payload) {
-            payload.api_key = payload.gemini_api_key;
-            delete payload.gemini_api_key;
-        }
-        if ('custom_model' in payload) {
-            payload.model_name = payload.custom_model;
-            delete payload.custom_model;
-        }
-        if ('internal_password' in payload) {
-            payload.access_passcode = payload.internal_password;
-            payload.passcode_enabled = !!payload.internal_password;
-            delete payload.internal_password;
-        }
+        console.log("Saving settings to Supabase...", payload);
 
-        // Clean up temporary UI fields before saving
-        // Note: we're deprecating categories_json in settings favor of the 'categories' table
-        if (payload.categories) {
-          delete payload.categories;
-        }
-        if (payload.tags) {
-          payload.tags_json = JSON.stringify(payload.tags);
-          delete payload.tags;
-        }
-        if (payload.manufacturers) {
-          payload.manufacturers_json = JSON.stringify(payload.manufacturers);
-          delete payload.manufacturers;
-        }
-
-        console.log("Attempting to save settings to Supabase...", payload);
-
-        // Upsert into row with id: 1
         const { error: upsertError } = await supabase
             .from('settings')
             .upsert({ ...payload, id: 1 }, { onConflict: 'id' });
@@ -711,7 +641,7 @@ export const saveSettings = async (settings: any) => {
         
         return true;
     } catch (err: any) {
-        console.error("Detailed error in saveSettings:", err);
+        console.error("Error in saveSettings:", err);
         throw err;
     }
 };
@@ -766,32 +696,28 @@ export const getDatabaseUUID = async (): Promise<string> => {
 };
 
 export const addTagToDB = async (name: string): Promise<Tag> => {
-    try {
-        const { data, error } = await supabase
-            .from('tags')
-            .insert({ name, aliases: [] })
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
-    } catch (e) {
-        console.warn("Tags table missing? Falling back to JSON with generated UUID.");
-        return { id: crypto.randomUUID(), name, aliases: [] };
+    const { data, error } = await supabase
+        .from('tags')
+        .insert({ name, aliases: [] })
+        .select()
+        .single();
+    if (error) {
+        console.error("Failed to add tag:", error);
+        throw error;
     }
+    return data;
 };
 
 export const addManufacturerToDB = async (name: string): Promise<any> => {
-    try {
-        const { data, error } = await supabase
-            .from('manufacturers')
-            .insert({ name, aliases: [] })
-            .select()
-            .single();
-        if (error) throw error;
-        return data;
-    } catch (e) {
-        console.warn("Manufacturers table missing? Falling back to JSON.");
-        return { id: crypto.randomUUID(), name, aliases: [] };
+    const { data, error } = await supabase
+        .from('manufacturers')
+        .insert({ name, aliases: [] })
+        .select()
+        .single();
+    if (error) {
+        console.error("Failed to add manufacturer:", error);
+        throw error;
     }
+    return data;
 };
 

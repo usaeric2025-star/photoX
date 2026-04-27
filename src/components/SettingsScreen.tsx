@@ -365,12 +365,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                             结构派生自云端配置（只读）。
                         </p>
                         <div className="grid grid-cols-2 gap-2">
-                            {(categories || []).map(cat => (
+                            {(categories || []).map(cat => {
+                                const displayName = cat.zh || cat.name; // Keep as zh/name or use appLang? Admin usually is zh-focused here
+                                return (
                                 <div key={cat.id} className="p-3 bg-[#FDFAF6] border border-[#1D3557]/10 rounded-2xl shadow-sm hover:border-[#D4A853] transition-all">
-                                    <p className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{cat.zh || cat.name}</p>
+                                    <p className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{displayName}</p>
                                     <p className="text-[8px] text-[#1D3557]/40 font-black uppercase truncate tracking-widest">{cat.id}</p>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </motion.div>
                 )}

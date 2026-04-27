@@ -32,10 +32,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag
   } = useAdminPhoto();
   const { isAnalyzing, aiDebugInfo } = useAdminUI();
-  const { appLang } = useAdminSession();
-  
+  const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [localSyncing, setLocalSyncing] = useState(false);
+  const isSyncing = sessionSyncing || localSyncing;
 
   const sortedTags = useMemo(() => {
     return tags;
@@ -81,7 +81,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 {isAnalyzing && props.abortAnalysis && (
                   <button 
                     onClick={props.abortAnalysis}
-                    className="p-2.5 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 shadow-sm active:scale-95"
+                    className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600 border border-orange-100 shadow-sm active:scale-95"
                     title="取消识别"
                   >
                     <CloseIcon size={18} />
@@ -94,7 +94,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     if (data) handleSingleAiAnalyze!(data, formState.categoryId || undefined);
                   }}
                   disabled={isAnalyzing && !props.abortAnalysis}
-                  className={`p-2.5 rounded-xl border shadow-sm transition-all active:scale-95 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
+                  className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all active:scale-95 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
                 >
                   {isAnalyzing ? <RefreshCcw size={18} className="animate-spin" /> : <Sparkles size={18} />}
                 </button>
@@ -102,10 +102,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             )}
             <button 
               onClick={props.saveNewPhoto}
-              className={`bg-blue-600 text-white px-5 py-2.5 rounded-2xl text-xs font-black shadow-lg shadow-blue-600/20 transition-all active:scale-[0.95] flex items-center gap-1.5 ${props.isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+              disabled={isSyncing}
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all active:scale-[0.95] ${isSyncing ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'}`}
+              title="保存"
             >
-              {props.isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14}/>}
-              保存
+              {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18}/>}
             </button>
             <button 
               onClick={props.resetAddState} 
@@ -153,13 +154,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             <div className="grid grid-cols-4 gap-1.5">
                 {categories.filter(cat => cat && cat.id && cat.name).map((cat: any) => {
                     const isSelected = String(formState.categoryId || '') === String(cat.id || '');
+                    const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
                     return (
                   <button 
                     key={cat.id}
                     onClick={() => { updateForm({ categoryId: String(cat.id) }); }}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
                   >
-                    <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{cat.zh || cat.name}</span>
+                    <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{displayName}</span>
                   </button>);
                 })}
             </div>

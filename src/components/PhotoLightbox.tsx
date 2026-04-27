@@ -50,16 +50,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   // Tags lookup
   const displayTags = React.useMemo(() => {
-    if (!photo) return [];
-    let tags: string[] = [];
-    if (photo.tagIds && photo.tagIds.length > 0) {
-      tags = photo.tagIds.map(tid => tagMap[tid] || tid).filter(Boolean);
-    }
-    if (tags.length === 0 && (photo as any).tags) {
-       tags = (photo as any).tags;
-    }
-    return tags;
-  }, [photo, tagMap]);
+    if (!photo || !photo.tagIds || photo.tagIds.length === 0) return [];
+    return photo.tagIds
+      .map(tid => tagMap[String(tid)] || String(tid))
+      .filter(val => typeof val === 'string' && val.trim() !== '');
+  }, [photo?.id, photo?.tagIds, tagMap]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -86,8 +81,8 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   let catName = '';
   if (activeCat) {
      if (lang === 'zh') catName = activeCat.zh || activeCat.name;
-     else if (lang === 'en') catName = activeCat.en || activeCat.name;
-     else if (lang === 'ms') catName = activeCat.ms || activeCat.name || activeCat.en;
+     else if (lang === 'en') catName = activeCat.en || activeCat.name || activeCat.zh;
+     else if (lang === 'ms') catName = activeCat.ms || activeCat.name || activeCat.en || activeCat.zh;
      else catName = activeCat.name;
   }
 
@@ -223,7 +218,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{t.tags}</h3>
                         <div className="flex flex-wrap gap-2">
                            {displayTags.map((tagName: string, i: number) => (
-                             <span key={i} className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] font-bold">#{tagName}</span>
+                             <span key={i} className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border border-slate-200">#{tagName}</span>
                            ))}
                         </div>
                       </div>

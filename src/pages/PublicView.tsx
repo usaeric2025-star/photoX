@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadAllPhotosFromCloud, loadCategoriesFromCloud, fetchSettings, loginWithGoogle } from '../services/supabaseService';
+import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, fetchSettings, loginWithGoogle } from '../services/supabaseService';
 import { PublicGallery } from '../components/PublicGallery';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
@@ -24,37 +24,39 @@ export default function PublicView() {
     if (!isBackground) setIsInitializing(true);
     else setIsRefreshing(true);
     try {
-      const [cloudPhotos, cloudCats, cloudSettings] = await Promise.all([
+      const [cloudPhotos, cloudCats, cloudTags, cloudSettings] = await Promise.all([
         loadAllPhotosFromCloud(),
         loadCategoriesFromCloud(),
+        loadTagsFromCloud(),
         fetchSettings()
       ]);
 
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
       }
+      
       if (cloudCats) {
-        // Categories from cloud already follow the Category interface
         const normalized = cloudCats.map((c: any) => ({
           ...c,
           id: String(c.id),
           name: c.name || c.zh || 'Uncategorized',
           subcategories: c.subcategories || [] 
         }));
-        
         setCategories(normalized);
       }
+
+      if (cloudTags) {
+        setTags(cloudTags);
+      }
+
       if (cloudSettings) {
         setSettings(cloudSettings);
-        if (cloudSettings.tags) {
-          setTags(cloudSettings.tags);
-        }
         if (cloudSettings.manufacturers) {
           setManufacturers(cloudSettings.manufacturers);
         }
       }
     } catch (e) {
-      console.error(e);
+      console.error("Critical error in syncWithCloud:", e);
     } finally {
       setIsInitializing(false);
       setIsRefreshing(false);

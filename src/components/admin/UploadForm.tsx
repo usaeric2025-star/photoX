@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { Category, Tag, ProductFormData } from '../../types';
+import { useAdminSession } from '../../context/AdminContexts';
 
 interface UploadFormProps {
   onClose: () => void;
@@ -33,6 +34,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
   aiDebugInfo, abortAnalysis
 }) => {
+  const { appLang } = useAdminSession();
+  
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-white shadow-sm relative min-h-[72px]">
@@ -148,15 +151,18 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
           <div className="grid grid-cols-3 gap-2">
-            {categories.filter(c => c.name && c.name.trim()).map((cat: any) => (
+            {categories.filter(c => c.name && c.name.trim()).map((cat: any) => {
+              const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
+              return (
               <button 
                 key={cat.id}
                 onClick={() => { updateForm({ categoryId: cat.id }); }}
                 className={`p-3 rounded-2xl border-2 text-center transition-all active:scale-[0.98] ${formState.categoryId === cat.id ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
               >
-                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.id ? 'text-white' : 'text-slate-800'}`}>{cat.zh || cat.name}</span>
+                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.id ? 'text-white' : 'text-slate-800'}`}>{displayName}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
         </section>
 

@@ -25,7 +25,7 @@ export const useSyncEngine = () => {
             const hasCleaned = await loadData('uuid_v2_cleanup_done');
             if (!hasCleaned) {
                 console.log("SyncEngine: Performing one-time cleanup of legacy local data...");
-                const keysToClear = ['product_categories', 'db_categories', 'product_tags', 'temp_tags'];
+                const keysToClear = ['product_categories', 'db_categories', 'product_tags', 'temp_tags', 'product_photos'];
                 for (const key of keysToClear) {
                     // indexedDB saveData is our loadData wrapper
                     await saveData(key, null);
@@ -128,13 +128,16 @@ export const useSyncEngine = () => {
                         const local = localMap.get(cp.id);
                         if (local) {
                             localMap.set(cp.id, {
+                                ...local,
                                 ...cp,
-                                categoryId: local.categoryId || cp.categoryId,
-                                subcategoryId: local.subcategoryId || cp.subcategoryId,
-                                tagIds: (local.tagIds && local.tagIds.length > 0) ? local.tagIds : cp.tagIds,
-                                name: local.name || cp.name,
-                                manual_code: local.manual_code || cp.manual_code,
-                                description: local.description || cp.description
+                                // Favor cloud values for relational IDs as source of truth
+                                categoryId: cp.categoryId || local.categoryId,
+                                subcategoryId: cp.subcategoryId || local.subcategoryId,
+                                tagIds: (cp.tagIds && cp.tagIds.length > 0) ? cp.tagIds : local.tagIds,
+                                // Merge other fields preference
+                                name: cp.name || local.name,
+                                manual_code: cp.manual_code || local.manual_code,
+                                description: cp.description || local.description
                             });
                         } else {
                             localMap.set(cp.id, cp);

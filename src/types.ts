@@ -63,7 +63,11 @@ export interface Photo {
   // UI legacy fields mapping if needed
   uri?: string; // For local preview
   categoryId: string | null; // For local filter
-  subcategoryId: string | null; // For local filter
+  categoryName?: string; // Cache for display
+  categoryZh?: string;
+  categoryEn?: string;
+  categoryMs?: string;
+  subcategoryId: string | null; 
   tagIds: string[]; // For local filter
   price?: string;
 }

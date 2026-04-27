@@ -277,7 +277,7 @@ export const GroupDetailScreen: React.FC<GroupDetailScreenProps> = ({
                      isSelected={selectedPhotoIds.includes(photo.id)}
                      showGroupsCollapsed={false}
                      lang={lang}
-                     t={t as any || {}}
+                     t={t as any}
                      categories={categories}
                      tagMap={tagMap}
                      onToggleSelection={() => togglePhotoSelection(photo.id)}

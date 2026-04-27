@@ -115,7 +115,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     if (filterCatId) {
-      result = result.filter(p => p.categoryId === filterCatId);
+      result = result.filter(p => String(p.categoryId) === String(filterCatId));
     }
     
     if (filterSubId) {
@@ -125,7 +125,18 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (filterTagIds.length > 0) {
       result = result.filter(p => {
         const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-        return filterTagIds.every(tid => pTagIds.includes(tid));
+        
+        // Every selected tag must match either by ID or by name
+        return filterTagIds.every(tid => {
+          if (pTagIds.includes(tid)) return true;
+          
+          // Fallback: If tid is a UUID but photo has a name string
+          const tagObj = tags.find(t => t.id === tid);
+          if (tagObj) {
+            return pTagIds.some(pt => pt.toLowerCase() === tagObj.name.toLowerCase());
+          }
+          return false;
+        });
       });
     }
 

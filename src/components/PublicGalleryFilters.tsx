@@ -82,16 +82,30 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             {t.allCats}
           </button>
           
-          {/* Unified categories system (from table) */}
-          {categories.filter(c => c.name && c.name.trim()).map(cat => (
-            <button 
-              key={cat.id}
-              onClick={() => { setSelectedCatCode(cat.id); setSelectedSubId(null); }}
-              className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
-            >
-              {cat.zh || cat.name}
-            </button>
-          ))}
+           {/* Unified categories system (from table) */}
+          {categories
+            .filter(c => c.name && c.name.trim())
+            .filter(c => {
+              const n = (c.name || '').toLowerCase();
+              const z = (c.zh || '').toLowerCase();
+              return !['all', '全部', '全部产品', '全部產品'].includes(n) && !['全部', '全部产品', '全部產品'].includes(z);
+            })
+            .map(cat => {
+              const displayName = lang === 'zh' ? (cat.zh || cat.name) : lang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
+              return (
+                <button 
+                  key={cat.id}
+                  onClick={() => { 
+                    setSelectedCatCode(cat.id); 
+                    setSelectedSubId(null);
+                    window.scrollTo({ top: 0, behavior: 'instant' }); 
+                  }}
+                  className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                >
+                  {displayName}
+                </button>
+              );
+            })}
       </div>
 
       <div className="space-y-2">
@@ -111,7 +125,13 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 </button>
                 {(() => {
                   const currentCat = categories.find(c => c.id === selectedCatCode || c.code === selectedCatCode);
-                  return Array.from(new Map((currentCat?.subcategories || []).map((s: any) => [s.id, s])).values()).map((sub: any) => (
+                  const subList = currentCat?.subcategories || [];
+                  return Array.from(new Map(subList.map((s: any) => [s.id, s])).values())
+                    .filter((s: any) => {
+                      const n = (s.name || '').toLowerCase();
+                      return !['all', '全部', '全部产品'].includes(n);
+                    })
+                    .map((sub: any) => (
                     <button 
                       key={sub.id}
                       onClick={() => setSelectedSubId(sub.id)}

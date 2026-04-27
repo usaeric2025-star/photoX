@@ -30,10 +30,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
 }) => {
   const catName = useMemo(() => {
+    // 1. Favor pre-joined cloud values for accuracy
+    if (lang === 'zh' && photo.categoryZh) return photo.categoryZh;
+    if (lang === 'en' && photo.categoryEn) return photo.categoryEn;
+    if (lang === 'ms' && photo.categoryMs) return photo.categoryMs;
+    if (photo.categoryName) return photo.categoryName;
+
     const catId = photo.categoryId;
     if (!catId) return '';
     
+    // 2. Exact ID lookup fallback (for local unsynced data)
     const activeCat = categories ? categories.find(c => String(c.id) === String(catId)) : null;
+
     if (activeCat) {
       if (lang === 'zh') return activeCat.zh || activeCat.name;
       if (lang === 'en') return activeCat.en || activeCat.name;
@@ -42,7 +50,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     }
     
     return '';
-  }, [photo.categoryId, categories, lang]);
+  }, [photo.categoryId, photo.categoryZh, photo.categoryEn, photo.categoryMs, photo.categoryName, categories, lang]);
   
   const displayCatName = useMemo(() => {
     const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
@@ -55,15 +63,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const isUncategorized = displayCatName === t.uncategorized;
   
   const photoTags = useMemo(() => {
-    let tags: string[] = [];
-    if (photo.tagIds && photo.tagIds.length > 0) {
-        tags = (photo.tagIds as string[]).map(tid => tagMap[tid] || tid).filter(Boolean);
-    }
-    if (tags.length === 0 && photo.tagIds && photo.tagIds.length > 0) {
-        tags = photo.tagIds || [];
-    }
-    return tags;
-  }, [photo.tagIds, photo.tags, tagMap]);
+    if (!photo.tagIds || photo.tagIds.length === 0) return [];
+    // Ensure we are dealing with strings and map them using tagMap
+    return photo.tagIds
+      .map(tid => tagMap[String(tid)] || String(tid))
+      .filter(val => typeof val === 'string' && val.trim() !== '');
+  }, [photo.tagIds, tagMap]);
 
   return (
     <motion.div 
@@ -124,8 +129,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         
         {photoTags.length > 0 && (
           <div className="w-full flex flex-nowrap gap-1 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {photoTags.filter(t => typeof t === 'string' && t.trim() !== '').map((tagName, idx) => (
-              <span key={idx} className="bg-white/20 backdrop-blur-md text-white text-[7px] px-1 py-0.5 rounded-sm uppercase tracking-wider font-bold whitespace-nowrap">
+            {photoTags.map((tagName, idx) => (
+              <span key={idx} className="bg-white/20 backdrop-blur-md text-white text-[9px] px-1.5 py-0.5 rounded-sm uppercase tracking-wider font-extrabold whitespace-nowrap">
                 {tagName}
               </span>
             ))}
