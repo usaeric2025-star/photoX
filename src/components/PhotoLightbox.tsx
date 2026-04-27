@@ -28,6 +28,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
+  const [isImageLoading, setIsImageLoading] = useState(true);
+
+  useEffect(() => {
+    setIsImageLoading(true);
+  }, [photo?.id]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') onPrev();
@@ -42,6 +48,19 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const minSwipeDistance = 50;
+
+  // Tags lookup
+  const displayTags = React.useMemo(() => {
+    if (!photo) return [];
+    let tags: string[] = [];
+    if (photo.tagIds && photo.tagIds.length > 0) {
+      tags = photo.tagIds.map(tid => tagMap[tid] || tid).filter(Boolean);
+    }
+    if (tags.length === 0 && (photo as any).tags) {
+       tags = (photo as any).tags;
+    }
+    return tags;
+  }, [photo, tagMap]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
@@ -81,18 +100,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const mfr = manufacturers && subId ? manufacturers.find(m => m.id === subId) : null;
   const mfrName = mfr ? mfr.name : (photo as any).sub_category;
 
-  // Tags lookup
-  const displayTags = React.useMemo(() => {
-    let tags: string[] = [];
-    if (photo.tagIds && photo.tagIds.length > 0) {
-      tags = photo.tagIds.map(tid => tagMap[tid] || tid).filter(Boolean);
-    }
-    if (tags.length === 0 && (photo as any).tags) {
-       tags = (photo as any).tags;
-    }
-    return tags;
-  }, [photo.tagIds, (photo as any).tags, tagMap]);
-
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -111,10 +118,17 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           <X size={20} />
         </button>
 
+        {isImageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+             <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          </div>
+        )}
         <img 
+          key={photo.id}
           src={photo.image_url || photo.uri || ''} 
           alt={photo.name}
-          className="max-w-full max-h-full object-contain"
+          className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+          onLoad={() => setIsImageLoading(false)}
         />
 
         {/* 翻页按钮 - 桌面端显示在图片两侧 */}

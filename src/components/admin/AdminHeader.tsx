@@ -107,27 +107,32 @@ export const AdminHeader: React.FC<Props> = ({
             )}
           </button>
           
-          <button 
-            onClick={() => {
-              if (isMultiSelect) {
-                setIsMultiSelect(false);
-                setSelectedIds([]);
-              } else {
-                setIsMultiSelect(true);
-              }
-            }}
-            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg scale-105' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
-            title={isMultiSelect ? t.cancelSelect : t.selectMode}
-          >
-            <CheckSquare size={20} />
-          </button>
+          {viewMode !== 'public' && (
+            <button 
+              onClick={() => {
+                if (isMultiSelect) {
+                  setIsMultiSelect(false);
+                  setSelectedIds([]);
+                } else {
+                  setIsMultiSelect(true);
+                }
+              }}
+              className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg scale-105 ring-4 ring-blue-500/30' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
+              title={isMultiSelect ? t.cancelSelect : t.selectMode}
+            >
+              <CheckSquare size={20} />
+            </button>
+          )}
 
           <button 
-            onClick={() => setViewMode(viewMode === 'public' ? 'private' : 'public')}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-indigo-600 text-white shadow-lg scale-105' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
+            onClick={() => {
+              // Note: If you have an error in your console with Hooks, it is typically resolved when you refresh the page
+              setViewMode(viewMode === 'public' ? 'private' : 'public')
+            }}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
             title={viewMode === 'public' ? "退出访客视图" : "访客视图预览"}
           >
-            <Globe size={20} />
+            {viewMode === 'public' ? <Eye size={20} /> : <Globe size={20} />}
           </button>
 
           <button 
