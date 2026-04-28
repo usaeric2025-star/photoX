@@ -85,6 +85,12 @@ export const useAdminCore = (
     try {
       const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId);
       if (result) {
+        // 1. Identify recognition results for the feedback message
+        const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${result.categoryName || '未识别'}\n标签：${result.tags?.join(', ') || '无'}`;
+        
+        // Show native alert to ensure visibility on mobile devices as requested
+        alert(resultMessage);
+
         const updates: Partial<any> = {};
         if (result.name && shouldUpdateName(formState.name)) {
           updates.name = result.name;
@@ -143,7 +149,10 @@ export const useAdminCore = (
       }
     } catch (err: any) {
       console.error(err);
-      setAlertDialog({ title: 'AI 分析失败', message: err.message });
+      setAlertDialog({ 
+        title: 'AI 识别失败', 
+        message: err.message || '请检查网络或 API 密钥' 
+      });
     }
   }, [setAlertDialog]);
 
