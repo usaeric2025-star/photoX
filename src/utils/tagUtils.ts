@@ -11,7 +11,10 @@ export const resolveTagIdsBatch = async (
   // 1. Identify which strings are names and which are likely IDs
   // (Assuming non-existent in Map/tags means it's a name)
   const namesToCreate = Array.from(new Set(
-    tagNamesOrIds.filter(tid => !tagNameToIdMap.has(tid) && !tags.some(t => t.id === tid))
+    tagNamesOrIds.filter(tid => {
+      const strTid = String(tid);
+      return !tagNameToIdMap.has(strTid) && !tags.some(t => String(t.id) === strTid);
+    })
   ));
 
   let newTagsMap = new Map<string, string>();

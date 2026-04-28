@@ -80,12 +80,13 @@ export const useGallery = ({
 
     if (selectedTagIds.length > 0) {
       filtered = filtered.filter(p => {
-        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        const rawTagIds = (Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : [])).map(String);
         
         return selectedTagIds.every(tid => {
-          if (rawTagIds.includes(tid)) return true;
+          const strTid = String(tid);
+          if (rawTagIds.includes(strTid)) return true;
           
-          const tObj = tags.find(t => t.id === tid);
+          const tObj = tags.find(t => String(t.id) === strTid);
           if (tObj) {
             return rawTagIds.some((rt: string) => rt.trim().toLowerCase() === tObj.name.trim().toLowerCase());
           }
@@ -97,8 +98,8 @@ export const useGallery = ({
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => {
-        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-        const mappedTagNames = rawTagIds.map(tid => tags.find(t => t.id === tid)?.name).filter(Boolean);
+        const rawTagIds = (Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : [])).map(String);
+        const mappedTagNames = rawTagIds.map(tid => tags.find(t => String(t.id) === tid)?.name).filter(Boolean);
         
         const searchableText = [
           p.name,

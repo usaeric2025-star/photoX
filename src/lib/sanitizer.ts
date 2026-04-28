@@ -9,16 +9,16 @@ export const sanitizePhotoTags = (photo: Photo, tags: Tag[]): Photo => {
   
   namesAndIds.forEach(val => {
     if (!val) return;
-    if (tags.some(t => t.id === val)) {
-      validTagIds.push(val);
+    const strVal = String(val);
+    if (tags.some(t => String(t.id) === strVal)) {
+      validTagIds.push(strVal);
     } else {
-      const matchedByName = tags.find(t => t.name.toLowerCase() === val.toLowerCase());
+      const matchedByName = tags.find(t => t.name.toLowerCase() === strVal.toLowerCase());
       if (matchedByName) {
-        validTagIds.push(matchedByName.id);
+        validTagIds.push(String(matchedByName.id));
       } else {
         // If it neither matches an ID nor a name, we might lose it, but it shouldn't happen usually
-        // Actually, let's keep it just in case it's a new tag not yet synced to client
-        validTagIds.push(val); 
+        validTagIds.push(strVal); 
       }
     }
   });

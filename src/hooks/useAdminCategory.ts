@@ -48,28 +48,29 @@ export const useAdminCategory = () => {
   }, [categories, tags, manufacturers, isLoaded]);
 
   const updateTag = (tagId: string, newName: string) => {
-    setTags(prev => prev.map(t => t.id === tagId ? { ...t, name: newName } : t));
+    setTags(prev => prev.map(t => String(t.id) === String(tagId) ? { ...t, name: newName } : t));
     updateTagInDB(tagId, newName).catch(err => console.error("Cloud tag update failed:", err));
   };
 
-  const deleteTag = async (tagId: string, photos: any[], setPhotos: any, onRefresh?: () => void) => {
+  const deleteTag = async (tagId: string, photos: any[], setPhotos: any) => {
     try {
+        const strTagId = String(tagId);
         // 1. Cloud deletion (Service now handles join table photo_tags)
-        const success = await deleteTagFromDB(tagId);
+        const success = await deleteTagFromDB(strTagId);
         if (!success) throw new Error("Cloud delete returned false");
 
         // 2. Update local tags state
-        setTags(prev => prev.filter(t => t.id !== tagId));
+        setTags(prev => prev.filter(t => String(t.id) !== strTagId));
 
         // 3. Update local photos state to remove the tag association immediately (UI snappy)
         if (typeof setPhotos === 'function') {
           setPhotos((prev: any[]) => {
             const next = prev.map(p => {
-              const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
-              if (pTagIds.includes(tagId)) {
+              const pTagIds = (Array.isArray(p.tagIds) ? p.tagIds : []).map(String);
+              if (pTagIds.includes(strTagId)) {
                 return {
                   ...p,
-                  tagIds: pTagIds.filter((id: any) => id !== tagId)
+                  tagIds: pTagIds.filter((id: string) => id !== strTagId)
                 };
               }
               return p;
@@ -77,11 +78,6 @@ export const useAdminCategory = () => {
             saveData('product_photos', next);
             return next;
           });
-        }
-        
-        // 4. Trigger total refresh if provided (to re-sync with cloud truth)
-        if (onRefresh) {
-          onRefresh();
         }
     } catch (err: any) {
         console.error("Cloud tag deletion failed:", err);

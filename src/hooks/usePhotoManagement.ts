@@ -43,13 +43,13 @@ export const usePhotoManagement = (
   const [showOtherFields, setShowOtherFields] = useState(false);
 
   // Helper to update specific fields in formState
-  const updateForm = (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
+  const updateForm = useCallback((updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
     setFormState(prev => {
       const next = typeof updates === 'function' ? updates(prev) : ({ ...prev, ...updates });
       console.log("Form Updated, new state:", next);
       return next;
     });
-  };
+  }, []);
 
   const lastInitializedId = useRef<string | null>(null);
 
@@ -59,7 +59,7 @@ export const usePhotoManagement = (
 
       const photo = photos.find(p => p.id === editPhotoId);
       if (photo) {
-        const rawTagIds = Array.isArray(photo.tagIds) && photo.tagIds.length > 0 ? photo.tagIds : [];
+        const rawTagIds = (Array.isArray(photo.tagIds) ? photo.tagIds : []).map(String);
         const dims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
 
         setFormState({
@@ -247,7 +247,7 @@ export const usePhotoManagement = (
                   name: name || p.name,
                   categoryId: categoryId || p.categoryId,
                   subcategoryId: subcategoryId || p.subcategoryId,
-                  tagIds: finalTagIds.length > 0 ? finalTagIds : p.tagIds,
+                  tagIds: finalTagIds.length > 0 ? finalTagIds : (Array.isArray(p.tagIds) ? p.tagIds.map(String) : []),
                   description: description || p.description,
                   manual_code: manual_code || p.manual_code,
                   model_number: model_number || p.model_number,

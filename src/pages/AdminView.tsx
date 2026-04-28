@@ -131,9 +131,7 @@ export default function AdminView() {
       onConfirm: async () => {
         setIsSyncing(true);
         try {
-          await deleteTag(id, photos, setPhotos, () => {
-            refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true);
-          });
+          await deleteTag(id, photos, setPhotos);
         } finally {
           setIsSyncing(false);
         }
