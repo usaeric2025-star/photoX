@@ -223,7 +223,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     const catId = (p.categoryId || '').trim();
     
     // Try new system
-    const activeCat = categories.find(c => c.id === catId);
+    const activeCat = categories.find(c => String(c.id) === String(catId));
     if (activeCat) {
       if (lang === 'zh') return activeCat.zh || activeCat.name;
       if (lang === 'ms') return activeCat.ms || activeCat.name || activeCat.en || activeCat.zh;
