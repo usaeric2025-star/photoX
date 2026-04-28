@@ -5,12 +5,14 @@ export const fetchSettings = async () => {
         .from('settings')
         .select('*')
         .eq('id', 1)
-        .single();
+        .maybeSingle();
     
     if (error) {
         console.error("Failed to fetch settings:", error);
-        throw error;
+        return null;
     }
+    
+    if (!data) return null;
     
     // Map custom columns back to app expectations
     if (data) {

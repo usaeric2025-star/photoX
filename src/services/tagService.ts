@@ -9,7 +9,7 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
     
     if (error) {
         console.error("Failed to load tags from cloud:", error);
-        throw error;
+        return [];
     }
     
     console.log("DEBUG: loadTagsFromCloud resulting data:", data);

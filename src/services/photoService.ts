@@ -404,7 +404,7 @@ export const loadAllPhotosFromCloud = async (
   
   if (error) {
     console.error("[ERROR] Supabase Fetch Error (loadAllPhotosFromCloud):", error);
-    throw error;
+    return [];
   }
 
   return (data || []).map(item => mapSupabasePhoto(item));
@@ -446,7 +446,7 @@ export const loadPhotosFromCloud = async (
 
   if (error) {
     console.error("[ERROR] Supabase Fetch Error (cloud photos):", error);
-    throw error;
+    return [];
   }
 
   return (data || []).map(item => mapSupabasePhoto(item));

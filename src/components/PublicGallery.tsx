@@ -488,7 +488,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           setLightboxIndex(null);
         }}
         onSetGroupCover={async (id, groupId) => {
-          // logic
+          context.setPhotos(prev => prev.map(p => {
+             if (p.groupId !== groupId) return p;
+             return { ...p, isGroupCover: p.id === id };
+          }));
+          const groupPhotos = photos.filter(p => p.groupId === groupId);
+          import('../services/supabaseService').then(async (m) => {
+             await Promise.all(
+                groupPhotos.map(p => m.updatePhotoInCloud(p.id, { isGroupCover: p.id === id }))
+             );
+          });
         }}
         onEditPhoto={(photo) => {
            setLightboxIndex(null);

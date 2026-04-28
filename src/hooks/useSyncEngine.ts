@@ -89,14 +89,9 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
 
                 if (cloudSettings.manufacturers !== undefined) {
-                    setManufacturers((prev: any[]) => {
-                        const localMap = new Map((prev || []).map(m => [m.id, m]));
-                        cloudSettings.manufacturers.forEach((m: any) => localMap.set(m.id, m));
-                        const merged = Array.from(localMap.values());
-                        setPublicManufacturers?.(merged);
-                        saveData('product_manufacturers', merged);
-                        return merged;
-                    });
+                    setManufacturers(cloudSettings.manufacturers);
+                    setPublicManufacturers?.(cloudSettings.manufacturers);
+                    saveData('product_manufacturers', cloudSettings.manufacturers);
                 }
             }
 
@@ -106,11 +101,15 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
               setTags(cloudTags);
               setPublicTags?.(cloudTags);
               await saveData('product_tags', cloudTags);
-            } else if (cloudSettings?.tags) {
+            } else if (cloudSettings?.tags && cloudSettings.tags.length > 0) {
               // Migration fallback
               setTags(cloudSettings.tags);
               setPublicTags?.(cloudSettings.tags);
               await saveData('product_tags', cloudSettings.tags);
+            } else {
+              setTags([]);
+              setPublicTags?.([]);
+              await saveData('product_tags', []);
             }
 
             const cloudCategories = await loadCategoriesFromCloud();
@@ -126,6 +125,10 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 setCategories(normalized);
                 setPublicCategories?.(normalized);
                 await saveData('product_categories', normalized);
+            } else {
+                setCategories([]);
+                setPublicCategories?.([]);
+                await saveData('product_categories', []);
             }
 
             const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;

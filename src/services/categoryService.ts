@@ -9,7 +9,7 @@ export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
 
   if (error) {
     console.error("Failed to load categories:", error);
-    throw error;
+    return [];
   }
   return data || [];
 };

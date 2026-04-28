@@ -8,7 +8,7 @@ import {
 import { SubCategory, Tag } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { testAiConnection } from '../services/geminiService';
-import { addTagToDB } from '../services/supabaseService';
+import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 
 interface SettingsScreenProps {
@@ -114,11 +114,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
   };
 
-  const deleteTag = (id: string) => {
+  const deleteTag = async (id: string) => {
     if (!window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) return;
-    const nextTags = (tags || []).filter(t => t.id !== id);
-    setTags(nextTags);
-    saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
+    try {
+      await deleteTagFromDB(String(id));
+      const nextTags = (tags || []).filter(t => String(t.id) !== String(id));
+      setTags(nextTags);
+      saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
+    } catch (e) {
+      console.error('Failed to delete tag:', e);
+    }
   };
 
   const setSettingField = (field: string, value: any) => {

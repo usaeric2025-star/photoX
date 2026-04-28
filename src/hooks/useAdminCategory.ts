@@ -86,7 +86,11 @@ export const useAdminCategory = (externalUI?: any) => {
 
         // 3. Update local tags state
         if (typeof setTags === 'function') {
-          setTags(prev => prev.filter(t => String(t.id) !== strTagId));
+          setTags(prev => {
+            const nextTags = prev.filter(t => String(t.id) !== strTagId);
+            saveData('product_tags', nextTags);
+            return nextTags;
+          });
         }
 
         // 4. Update local photos state to remove the tag association immediately

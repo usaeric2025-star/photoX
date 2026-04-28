@@ -222,11 +222,23 @@ export const useAdminCore = (
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;
-    const groupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const updatedPhotos = photos.map(p => ids.includes(p.id) ? { ...p, groupId } : p);
+    
+    const existingGroupIds = Array.from(new Set(
+      photos.filter(p => ids.includes(p.id) && p.groupId).map(p => p.groupId)
+    ));
+    
+    const groupIdToUse = existingGroupIds.length > 0 ? existingGroupIds[0]! : `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const allPhotosToGroup = photos.filter(p => 
+      ids.includes(p.id) || (p.groupId && existingGroupIds.includes(p.groupId))
+    );
+    
+    const photoIdsToUpdate = allPhotosToGroup.map(p => p.id);
+
+    const updatedPhotos = photos.map(p => photoIdsToUpdate.includes(p.id) ? { ...p, groupId: groupIdToUse } : p);
     setPhotos(updatedPhotos);
     try {
-      await updatePhotosGroupInCloud(ids, groupId);
+      await updatePhotosGroupInCloud(photoIdsToUpdate, groupIdToUse);
       showToast('已完成群組', 'success');
     } catch (err: any) {
       console.error('Group photos error:', err);

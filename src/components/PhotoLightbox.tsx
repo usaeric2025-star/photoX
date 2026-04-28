@@ -170,15 +170,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
               </div>
               {isAdminMode && (
                 <div className="flex items-center gap-2">
-                  {onAiAnalyze && (
-                    <button
-                      onClick={() => isAnalyzing ? onCancelAnalyze?.() : onAiAnalyze(photo)}
-                      className={`p-2 rounded-full border transition-all ${isAnalyzing ? 'bg-red-50 border-red-200 text-red-600' : 'bg-purple-50 border-purple-200 text-purple-600'}`}
-                      title={isAnalyzing ? '取消分析' : 'AI 識別'}
-                    >
-                      {isAnalyzing ? <X size={20} className="animate-pulse" /> : <Sparkles size={20} />}
-                    </button>
-                  )}
                   {onToggleHidden && (
                     <button 
                       onClick={() => onToggleHidden(photo)}
@@ -221,22 +212,8 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
 
            {/* Admin Group Controls */}
-           {isAdminMode && (
+           {isAdminMode && photo.groupId && (
              <div className="grid grid-cols-2 gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    onClose();
-                    onEditPhoto?.(photo);
-                  }}
-                  className="bg-blue-50 text-blue-700 
-                  py-2 rounded-xl text-xs font-bold 
-                  col-span-2 flex items-center justify-center gap-2
-                  border border-blue-100"
-                >
-                  <Edit3 size={14} /> 编辑照片信息
-                </button>
-                {photo.groupId && (
-                <>
                   <button 
                     onClick={() => onUngroup?.(photo.id)}
                     className="bg-red-50 text-red-600 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-red-100"
@@ -249,14 +226,18 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   >
                     {t.setCover || 'Set Cover'}
                   </button>
-                </>
-                )}
              </div>
            )}
 
            {/* 4. 描述内容 */}
            {photo.description && (
-             <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mt-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
+                  <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
+                    <Sparkles size={8} /> AI
+                  </div>
+                </div>
                 <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
                   {photo.description}
                 </p>
