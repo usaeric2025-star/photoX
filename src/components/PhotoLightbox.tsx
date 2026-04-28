@@ -127,12 +127,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         />
 
         {/* 翻页按钮 - 桌面端显示在图片两侧 */}
-        <div className="absolute inset-y-0 left-0 w-16 hidden md:flex items-center justify-start pl-4 group cursor-pointer" onClick={onPrev}>
+        <div className="absolute inset-y-0 left-0 w-16 hidden md:flex items-center justify-start pl-4 z-20 group cursor-pointer" onClick={onPrev}>
           <div className="w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
             <ChevronLeft size={24} />
           </div>
         </div>
-        <div className="absolute inset-y-0 right-0 w-16 hidden md:flex items-center justify-start pr-4 group cursor-pointer" onClick={onNext}>
+        <div className="absolute inset-y-0 right-0 w-16 hidden md:flex items-center justify-start pr-4 z-20 group cursor-pointer" onClick={onNext}>
           <div className="flex w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full items-center justify-center text-white transition-all ml-auto">
             <ChevronRight size={24} />
           </div>
