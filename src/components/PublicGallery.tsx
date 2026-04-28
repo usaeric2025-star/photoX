@@ -278,18 +278,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   };
 
   const startLongPress = (photoId: string) => {
-    console.log("Long press attempt started for:", photoId);
     const timer = setTimeout(() => {
-      console.log("Long press triggered for:", photoId);
+      if ('vibrate' in navigator) navigator.vibrate(50);
       if (isAdminMode) {
-        if (onEditPhoto) onEditPhoto(photoId);
+        setIsMultiSelect(true);
+        togglePhotoSelection(photoId);
       } else {
         const photo = photos.find(p => p.id === photoId);
         if (photo) shareSinglePhoto(photo);
       }
-      if ('vibrate' in navigator) navigator.vibrate(50);
       setLongPressTimer(null);
-    }, 800) as unknown as NodeJS.Timeout;
+    }, 800);
     setLongPressTimer(timer);
   };
 
@@ -498,6 +497,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onSetGroupCover={async (id, groupId) => {
           console.log("Set cover", id, groupId);
+        }}
+        onEditPhoto={(photo) => {
+           setLightboxIndex(null);
+           if (onEditPhoto) onEditPhoto(photo.id);
         }}
       />
 

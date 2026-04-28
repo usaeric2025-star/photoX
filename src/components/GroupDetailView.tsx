@@ -131,7 +131,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                           setFocusedGroupPhotoId(null);
                           onEditPhoto?.(focusedPhoto);
                         }}
-                        className="bg-white text-[#1D3557] p-3 rounded-full shadow-xl"
+                        className="bg-white text-[#1D3557] p-4 
+                        rounded-full shadow-xl active:scale-95 
+                        transition-all"
                       >
                         <Edit3 size={20} />
                       </button>

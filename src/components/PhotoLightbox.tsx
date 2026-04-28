@@ -21,11 +21,12 @@ interface PhotoLightboxProps {
   shareSinglePhoto: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
+  onEditPhoto?: (photo: Photo) => void;
 }
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-  isAdminMode, isStaffMode, contactWhatsApp, shareSinglePhoto, onUngroup, onSetGroupCover
+  isAdminMode, isStaffMode, contactWhatsApp, shareSinglePhoto, onUngroup, onSetGroupCover, onEditPhoto
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
@@ -189,6 +190,18 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
            {/* Admin Group Controls */}
            {isAdminMode && photo.groupId && (
              <div className="grid grid-cols-2 gap-2">
+               <button
+                 onClick={() => {
+                   onClose();
+                   onEditPhoto?.(photo);
+                 }}
+                 className="bg-slate-100 text-slate-700 
+                 py-2 rounded-xl text-xs font-bold 
+                 col-span-2 flex items-center justify-center gap-2
+                 border border-slate-200"
+               >
+                 <Edit3 size={14} /> 编辑此照片
+               </button>
                <button 
                  onClick={() => onUngroup?.(photo.id)}
                  className="bg-red-50 text-red-600 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-red-100"
