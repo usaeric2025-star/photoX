@@ -4,6 +4,7 @@ import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
 import { updateTagInDB, deleteTagFromDB } from '../services/supabaseService';
+import { supabase } from '../services/client';
 
 export const useAdminCategory = () => {
   const {
@@ -60,10 +61,14 @@ export const useAdminCategory = () => {
         })));
         const success = await deleteTagFromDB(tagId);
         if (!success) throw new Error("Cloud delete returned false");
+        
+        // Ensure sync
+        const { data: newTags } = await supabase.from('tags').select('*');
+        if (newTags) {
+            setTags(newTags.map((t: any) => ({ ...t, id: String(t.id) })));
+        }
     } catch (err: any) {
         console.error("Cloud tag deletion failed:", err);
-        // Important: Re-fetch or at least alert the user if deletion failed to maintain sync.
-        // For now, alerting user that data might be out of sync
         alert("删除标签失败，请检查网络或联系管理员。");
     }
   };
