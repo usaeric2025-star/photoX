@@ -133,7 +133,7 @@ export const analyzeProductPhoto = async (
 2. 尺寸（Dimensions）：
    - 如果識別出照片中有不同規格或多組尺寸，請全部列出
    - 每組尺寸必須包含 "label"（規格名稱，例如 '3-Seater'）、"length"、"width"、"height"、"unit"、"isAI": true
-   - 單位識別：仔細辨認是 cm 還是 inch，無法確定則默認 cm
+   - 單位識別：仔細辨認是 cm, mm 還是 inch，無法確定則默認 cm
    - 若照片中無尺寸信息，返回空數組 []
 
 3. 廠商（subcategoryId）：禁止識別或修改，回傳值必須為 null

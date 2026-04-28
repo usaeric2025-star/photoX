@@ -239,16 +239,32 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 <div className="space-y-3 pt-2">
                   <div className="flex items-center justify-between pl-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">产品尺寸 / DIMENSIONS</span>
-                    <button 
-                      onClick={() => {
-                        const newDims = [...(formState.dimensions || [])];
-                        newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
-                        updateForm({ dimensions: newDims });
-                      }}
-                      className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
-                    >
-                      + 增加规格 / ADD SIZE
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {handleSingleAiAnalyze && (
+                        <button 
+                          onClick={() => {
+                            if (isAnalyzing) return;
+                            const data = props.newPhotoData || props.editPhotoPreview;
+                            if (data) handleSingleAiAnalyze!(data, formState.categoryId || undefined);
+                          }}
+                          disabled={isAnalyzing}
+                          className={`text-[9px] font-black px-2 py-1 rounded-lg border flex items-center gap-1 transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 active:scale-95'}`}
+                        >
+                          <Sparkles size={10} className={isAnalyzing ? 'animate-spin' : ''} /> 
+                          {isAnalyzing ? '识别中...' : 'AI 识别尺寸'}
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => {
+                          const newDims = [...(formState.dimensions || [])];
+                          newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
+                          updateForm({ dimensions: newDims });
+                        }}
+                        className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 active:scale-95"
+                      >
+                        + 增加规格 / ADD SIZE
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-3">
@@ -285,7 +301,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                            <div className="space-y-1">
                               <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
                               <div className="flex gap-1">
-                                {['cm', 'inch'].map(u => (
+                                {['cm', 'mm', 'inch'].map(u => (
                                   <button 
                                     key={u}
                                     onClick={() => {
