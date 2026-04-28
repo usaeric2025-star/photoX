@@ -206,8 +206,14 @@ export const useAdminCore = (
     const groupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const updatedPhotos = photos.map(p => ids.includes(p.id) ? { ...p, groupId } : p);
     setPhotos(updatedPhotos);
-    await updatePhotosGroupInCloud(ids, groupId);
-  }, [photos, setPhotos]);
+    try {
+      await updatePhotosGroupInCloud(ids, groupId);
+      showToast('已完成群組', 'success');
+    } catch (err: any) {
+      console.error('Group photos error:', err);
+      setAlertDialog({ title: '群組失敗', message: err?.message || '未知錯誤' });
+    }
+  }, [photos, setPhotos, showToast, setAlertDialog]);
 
   const quickAddSubCategory = useCallback((formState: any) => {
     if (!formState.categoryId) return;

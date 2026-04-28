@@ -14,7 +14,7 @@ import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
 import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
-import { useOptionalAdminSession } from '../context/AdminContexts';
+import { useOptionalAdminSession, useOptionalAdminPhoto } from '../context/AdminContexts';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -92,6 +92,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   isRefreshing: propsIsRefreshing
 }) => {
   const adminSession = useOptionalAdminSession();
+  const adminPhoto = useOptionalAdminPhoto();
   const user = propsUser !== undefined ? propsUser : adminSession?.user;
   const isAdminMode = propsIsAdminMode !== undefined ? propsIsAdminMode : !!adminSession?.isAdminMode;
   const settings = propsSettings !== undefined ? propsSettings : adminSession?.settings;
@@ -396,7 +397,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
            <div className="flex items-center gap-2">
              <button onClick={() => onGroupPhotos?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title={t.merge}><Layers size={18} /></button>
              <button onClick={() => onBatchEdit?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="统一编辑"><Pencil size={18} /></button>
-             <button onClick={() => window.confirm(t.confirmDelete(selectedIds.length)) && onDeletePhotos?.(selectedIds)} className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20" title={t.delete}><Trash2 size={18} /></button>
+             <button onClick={async () => {
+                if (window.confirm(t.confirmDelete(selectedIds.length))) {
+                    for (const id of selectedIds) {
+                        await adminPhoto?.deletePhoto(id);
+                    }
+                    clearSelection();
+                }
+             }} className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20" title={t.delete}><Trash2 size={18} /></button>
              <button onClick={async () => {
                const filtered = Array.isArray(photos) ? photos.filter(p => selectedIds.includes(p.id)) : [];
                const text = filtered.map(p => p.name || t.furniture).join(', ');

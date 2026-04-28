@@ -77,6 +77,8 @@ export const useAdminPhoto = () => {
   return context;
 };
 
+export const useOptionalAdminPhoto = () => useContext(AdminPhotoContext);
+
 // --- AdminUIContext ---
 interface AdminUIContextType {
   activeScreen: string;

@@ -100,6 +100,20 @@ export default function AdminView() {
   const { updateTag, deleteTag } = useAdminCategory();
 
 
+  const handleDeletePhotos = async (ids: string[]) => {
+    setConfirmDialog({
+      message: (t as any)?.confirmDelete?.(ids.length) || `確定要刪除這 ${ids.length} 張照片嗎？`,
+      onConfirm: async () => {
+        for (const id of ids) {
+          await deletePhoto(id);
+        }
+        setEditPhotoId(null);
+        setSelectedIds([]);
+        setIsMultiSelect(false);
+      }
+    });
+  };
+  
   const handleDeletePhoto = async (id: string) => {
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
