@@ -137,7 +137,10 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<any>)
 };
 
 export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
-  return updatePhotoInCloud(photoId, { is_hidden: isHidden });
+  return updatePhotoInCloud(photoId, { 
+    is_hidden: isHidden,
+    updated_at: new Date().toISOString()
+  });
 };
 
 export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<string> => {
@@ -179,7 +182,8 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     created_at: photo.createdAt,
     group_id: photo.groupId || null,
     is_group_cover: photo.isGroupCover || false,
-    group_order: photo.groupOrder || 0
+    group_order: photo.groupOrder || 0,
+    updated_at: photo.updatedAt || new Date().toISOString()
   };
 
   if (isUUID) {

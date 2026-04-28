@@ -128,10 +128,12 @@ export default function AdminView() {
     const tag = tags.find(t => t.id === id);
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
-      onConfirm: async () => {
-        setIsSyncing(true);
-        try {
-          await deleteTag(id, photos, setPhotos);
+        onConfirm: async () => {
+          setIsSyncing(true);
+          try {
+            await deleteTag(id, photos);
+          } catch (err) {
+          console.error('[handleDeleteTag] 删除过程出错:', err);
         } finally {
           setIsSyncing(false);
         }

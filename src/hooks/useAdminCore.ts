@@ -85,10 +85,15 @@ export const useAdminCore = (
     try {
       const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId);
       if (result) {
-        // 1. Identify recognition results for the feedback message
-        const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${result.categoryName || '未识别'}\n标签：${result.tags?.join(', ') || '无'}`;
+        // Recognition feedback alert - find names for better readability
+        const catNameStr = categories.find(c => String(c.id) === String(result.categoryId))?.zh || result.newCategoryName || '未识别';
+        const tagNamesStr = [
+            ...(result.tagIds || []).map((id: string) => tags.find(t => String(t.id) === String(id))?.name).filter(Boolean),
+            ...(result.newTags || [])
+        ];
+        const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${catNameStr}\n标签：${tagNamesStr.join(', ') || '无'}`;
         
-        // Show native alert to ensure visibility on mobile devices as requested
+        // Show native alert to ensure visibility on mobile devices
         alert(resultMessage);
 
         const updates: Partial<any> = {};
@@ -258,35 +263,47 @@ export const useAdminCore = (
   const quickAddTag = useCallback(() => {
     setPromptDialog({
       title: '自定义标签',
-      placeholder: '输入新标签名称',
+      placeholder: '输入新标签名称 (例如 清货)',
       onSubmit: async (val: string) => {
-        const trimmedName = val.trim();
-        if (tags.some(t => t.name.toLowerCase() === trimmedName.toLowerCase())) {
-          setAlertDialog({ title: '提示', message: '标签已存在' });
+        const trimmedName = val.trim().toUpperCase();
+        if (!trimmedName) return;
+
+        if (tags.some(t => t.name.toUpperCase() === trimmedName)) {
+          const existingTag = tags.find(t => t.name.toUpperCase() === trimmedName);
+          if (existingTag) {
+            const entryId = String(existingTag.id);
+            updateForm((prev: any) => {
+               const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds.map(String) : [];
+               if (safeTags.includes(entryId)) return prev;
+               return { ...prev, tagIds: [...safeTags, entryId] };
+            });
+          }
           return;
         }
         
-        await addTagToDB(trimmedName);
-        
-        // Reload all tags from server to ensure sync
-        const { data: newTags } = await supabase.from('tags').select('*');
-        if (newTags) {
-            setTags(newTags.map((t: any) => ({ ...t, id: String(t.id) })));
-        }
-        
-        updateForm((prev: any) => {
-          // Find the new tag ID
-          const latestTags = newTags || [];
-          const addedTag = latestTags.find((t: any) => t.name === trimmedName);
-          const newTagId = addedTag ? String(addedTag.id) : null;
+        setIsSyncing(true);
+        try {
+          const savedTag = await addTagToDB(trimmedName);
           
-          const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds : (typeof prev.tagIds === 'string' ? [prev.tagIds] : []);
-          return newTagId ? { ...prev, tagIds: [...safeTags, newTagId] } : prev;
-        });
-        await saveSettings({ ...settings, categories, tags: newTags || tags, manufacturers });
+          // Update global tags state
+          setTags(prev => [...prev, savedTag]);
+          
+          // Select it in the form
+          updateForm((prev: any) => {
+            const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds.map(String) : [];
+            return { ...prev, tagIds: [...safeTags, savedTag.id] };
+          });
+          
+          showToast('已新增标签: #' + trimmedName);
+        } catch (err: any) {
+          console.error(err);
+          setAlertDialog({ title: '新增标签失败', message: err.message });
+        } finally {
+          setIsSyncing(false);
+        }
       }
     });
-  }, [tags, categories, manufacturers, settings, saveSettings, setTags, updateForm, setAlertDialog, setPromptDialog]);
+  }, [tags, updateForm, setTags, setPromptDialog, setAlertDialog, setIsSyncing, showToast]);
 
   const quickAddManufacturer = useCallback(() => {
     setPromptDialog({

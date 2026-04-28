@@ -126,8 +126,8 @@ export const analyzeProductPhoto = async (
    - 第一個標籤：側重家具用途或風格（例如 SOFA、CLASSIC、OFFICE）。
    - 第二個標籤：側重材質（例如 WOODEN、PLASTIC、FABRIC）。
    - 若現有標籤完全無關聯，才可以填入 "newTags"。
-   - 強制規範：每個標籤必須是單一英文單詞，不得包含空格、符號或數字。
-   - 新增標籤填入 "newTags" 字段，格式為數組（如 ["Rattan"]），若不新增則返回 []。
+   - 強制規範：每個標籤必須是單一英文單詞，不得包含空格、符號或數字，且必須全部大写 (UPPERCASE)。
+   - 新增標籤填入 "newTags" 字段，格式為數組（如 ["RATTAN"]），若不新增則返回 []。
 
 2. 尺寸（Dimensions）：
    - 如果識別出照片中有不同規格或多組尺寸，請全部列出

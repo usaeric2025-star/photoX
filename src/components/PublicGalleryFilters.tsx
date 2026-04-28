@@ -142,15 +142,21 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="relative">
           <div className="flex flex-wrap gap-0.5 items-start max-h-[5rem] overflow-y-auto pb-1 content-start pr-1">
-              {sortedTags.map(tag => (
-                <button 
-                  key={tag.id}
-                  onClick={() => { setSelectedTagIds(prev => prev.includes(tag.id) ? [] : [tag.id]); onScrollToTop(); }}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
-                >
-                  #{tag.name}
-                </button>
-              ))}
+              {sortedTags.map(tag => {
+                const toTitleCase = (str: string) => {
+                  if (!str) return '';
+                  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+                };
+                return (
+                  <button 
+                    key={tag.id}
+                    onClick={() => { setSelectedTagIds(prev => prev.includes(tag.id) ? [] : [tag.id]); onScrollToTop(); }}
+                    className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                  >
+                    #{toTitleCase(tag.name)}
+                  </button>
+                );
+              })}
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#FDFAF6] to-transparent pointer-events-none" />
         </div>

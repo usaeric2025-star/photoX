@@ -93,8 +93,8 @@ interface AdminUIContextType {
   setConfirmDialog: (d: { message: string, onConfirm: () => void } | null) => void;
   alertDialog: { title: string, message: string } | null;
   setAlertDialog: (d: { title: string, message: string } | null) => void;
-  promptDialog: { title: string, message: string, placeholder?: string } | null;
-  setPromptDialog: (d: { title: string, message: string, placeholder?: string } | null) => void;
+  promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
+  setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
   
   toast: { message: string, type: 'success' | 'error' } | null;
   showToast: (msg: string, type: 'success' | 'error') => void;

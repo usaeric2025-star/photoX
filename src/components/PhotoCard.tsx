@@ -61,12 +61,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const isUncategorized = displayCatName === t.uncategorized;
   
+  const toTitleCase = (str: string) => {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   const photoTags = useMemo(() => {
     if (!photo.tagIds || photo.tagIds.length === 0) return [];
     // Only show tags present in the tagMap
     return photo.tagIds
       .map(tid => tagMap[String(tid)])
-      .filter(Boolean);
+      .filter(Boolean)
+      .map(toTitleCase);
   }, [photo.tagIds, tagMap]);
 
   return (

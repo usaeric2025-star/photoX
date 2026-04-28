@@ -10,7 +10,8 @@ export const useAdminCategory = () => {
   const {
     categories, setCategories,
     tags, setTags,
-    manufacturers, setManufacturers
+    manufacturers, setManufacturers,
+    setPhotos
   } = useGalleryContext();
 
   const [publicCategories, setPublicCategories] = useState<Category[]>([]);
@@ -52,35 +53,48 @@ export const useAdminCategory = () => {
     updateTagInDB(tagId, newName).catch(err => console.error("Cloud tag update failed:", err));
   };
 
-  const deleteTag = async (tagId: string, photos: any[], setPhotos: any) => {
+  const deleteTag = async (tagId: string, photos: any[]) => {
+    if (!tagId) return;
+
     try {
         const strTagId = String(tagId);
-        // 1. Cloud deletion (Service now handles join table photo_tags)
+        console.log('[deleteTag] 开始删除標籤', { tagId: strTagId, photosLength: photos?.length });
+        
+        // 2. Cloud deletion
         const success = await deleteTagFromDB(strTagId);
-        if (!success) throw new Error("Cloud delete returned false");
-
-        // 2. Update local tags state
-        setTags(prev => prev.filter(t => String(t.id) !== strTagId));
-
-        // 3. Update local photos state to remove the tag association immediately (UI snappy)
-        if (typeof setPhotos === 'function') {
-          setPhotos((prev: any[]) => {
-            const next = prev.map(p => {
-              const pTagIds = (Array.isArray(p.tagIds) ? p.tagIds : []).map(String);
-              if (pTagIds.includes(strTagId)) {
-                return {
-                  ...p,
-                  tagIds: pTagIds.filter((id: string) => id !== strTagId)
-                };
-              }
-              return p;
-            });
-            saveData('product_photos', next);
-            return next;
-          });
+        if (!success) {
+          throw new Error("Cloud delete returned false");
         }
+
+        // 3. Update local tags state
+        if (typeof setTags === 'function') {
+          setTags(prev => prev.filter(t => String(t.id) !== strTagId));
+        }
+
+        // 4. Update local photos state to remove the tag association immediately
+        setPhotos((prev: any[]) => {
+          if (!Array.isArray(prev)) {
+             return prev;
+          }
+          const next = prev.map(p => {
+            const pTagIds = (Array.isArray(p.tagIds) || typeof p.tagIds === 'object') ? (Array.isArray(p.tagIds) ? p.tagIds : []) : [];
+            const strPTagIds = pTagIds.map(id => String(id));
+
+            if (strPTagIds.includes(strTagId)) {
+              return {
+                ...p,
+                tagIds: strPTagIds.filter((id: string) => id !== strTagId)
+              };
+            }
+            return p;
+          });
+          saveData('product_photos', next);
+          return next;
+        });
+
+        console.log('[deleteTag] 標籤删除成功');
     } catch (err: any) {
-        console.error("Cloud tag deletion failed:", err);
+        console.error("[deleteTag] 删除失败:", err);
         alert("刪除標籤失敗，請檢查網路連線。");
     }
   };

@@ -106,7 +106,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const addTag = async () => {
     if (!newTagName.trim()) return;
-    const savedTag = await addTagToDB(newTagName.trim());
+    const normalized = newTagName.trim().toUpperCase();
+    const savedTag = await addTagToDB(normalized);
     const nextTags = [...(tags || []), savedTag];
     setTags(nextTags);
     setNewTagName('');
@@ -532,8 +533,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                    className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
                    onClick={() => {
                      const newName = prompt('输入新名称', tag.name);
-                     if (newName && newName.trim() !== tag.name) {
-                       const nextTags = tags.map(t => t.id === tag.id ? { ...t, name: newName.trim() } : t);
+                     if (newName && newName.trim().toUpperCase() !== tag.name) {
+                       const normalized = newName.trim().toUpperCase();
+                       const nextTags = tags.map(t => t.id === tag.id ? { ...t, name: normalized } : t);
                        setTags(nextTags);
                        saveSettings({ ...settings, tags: nextTags });
                      }

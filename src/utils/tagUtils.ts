@@ -8,22 +8,22 @@ export const resolveTagIdsBatch = async (
   tagNameToIdMap: Map<string, string>,
   setTags: (updater: (prev: Tag[]) => Tag[]) => void
 ): Promise<string[]> => {
-  // Helper for fuzzy matching: lowercase and remove non-alphas
-  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  // Helper for fuzzy matching: uppercase and remove non-alphas
+  const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
 
   const findFuzzyMatch = (name: string): string | null => {
     const normName = normalize(name);
     if (!normName) return null;
 
-    // 1. Direct case-insensitive match (already handled by tagNameToIdMap mostly, but for completeness)
+    // 1. Direct case-insensitive match
     for (const t of tags) {
       const normExisting = normalize(t.name);
       if (normName === normExisting) return String(t.id);
       
-      // 2. Semantic overlap: e.g. "Marble" matches "Marblelook" or vice-versa
-      // Only match if the words are deeply related (length diff < 5)
+      // 2. Semantic overlap
+      // Only match if the words are deeply related
       const isSimilar = (normName.startsWith(normExisting) || normExisting.startsWith(normName)) && 
-                        Math.abs(normName.length - normExisting.length) <= 5;
+                        Math.abs(normName.length - normExisting.length) <= 4; 
       
       if (isSimilar) return String(t.id);
     }
@@ -35,7 +35,7 @@ export const resolveTagIdsBatch = async (
   const trulyNewNames: string[] = [];
 
   for (const item of tagNamesOrIds) {
-    const strItem = String(item);
+    const strItem = String(item).toUpperCase().trim();
     
     // Check if it's already a known ID
     if (tags.some(t => String(t.id) === strItem)) {
@@ -44,7 +44,9 @@ export const resolveTagIdsBatch = async (
     }
 
     // Check if name exists exactly (case-insensitive)
-    const existingIdFromMap = tagNameToIdMap.get(strItem);
+    const existingIdFromMap = Array.from(tagNameToIdMap.entries())
+      .find(([name]) => normalize(name) === normalize(strItem))?.[1];
+    
     if (existingIdFromMap) {
       resolvedIds.push(existingIdFromMap);
       continue;
@@ -76,10 +78,8 @@ export const resolveTagIdsBatch = async (
 
   // 3. Final mapping
   const finalResults: string[] = [];
-  // Note: we re-iterate trulyNewNames to maintain order if necessary, 
-  // but simpler to just use the logic flow from step 1
   for (const item of tagNamesOrIds) {
-    const strItem = String(item);
+    const strItem = String(item).toUpperCase().trim();
     if (tags.some(t => String(t.id) === strItem)) {
       finalResults.push(strItem);
     } else if (tagNameToIdMap.has(strItem)) {
@@ -91,7 +91,7 @@ export const resolveTagIdsBatch = async (
       } else if (newTagsMap.has(strItem)) {
         finalResults.push(newTagsMap.get(strItem)!);
       } else {
-        // This shouldn't be reached often, but as fallback:
+        // Fallback
         finalResults.push(strItem);
       }
     }

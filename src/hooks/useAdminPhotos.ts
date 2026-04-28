@@ -263,6 +263,16 @@ export const useAdminPhotos = (
       if (signal.aborted) throw new Error('Aborted');
 
       setAiDebugInfo({ step: '完成', message: 'AI 识别成功' });
+      
+      // Recognition feedback alert - find names for better readability
+      const catName = categories.find(c => String(c.id) === String(result.categoryId))?.zh || result.newCategoryName || '未识别';
+      const tagNames = [
+          ...(result.tagIds || []).map((id: string) => tags.find(t => String(t.id) === String(id))?.name).filter(Boolean),
+          ...(result.newTags || [])
+      ];
+      const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${catName}\n标签：${tagNames.join(', ') || '无'}`;
+      alert(resultMessage);
+
       setTimeout(() => {
         if (currentAnalysisController.current === controller) {
           setAiDebugInfo(null);
@@ -280,7 +290,10 @@ export const useAdminPhotos = (
       let finalTagIdsFromAi = result.tagIds || [];
       if (result.newTags && Array.isArray(result.newTags)) {
           const rawNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
-          const tagsToCreateNames = rawNames.filter(n => !tagNameToIdMap.has(n) && !tags.some(t => t.name.toLowerCase() === n.toLowerCase()));
+          const tagsToCreateNames = rawNames.filter(n => {
+            const upper = n.toUpperCase();
+            return !tagNameToIdMap.has(upper) && !tags.some(t => t.name.toUpperCase() === upper);
+          });
           
           let newTagsMap = new Map<string, string>();
           if (tagsToCreateNames.length > 0) {

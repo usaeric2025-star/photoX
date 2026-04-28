@@ -115,7 +115,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
               <span className="text-sm font-black text-slate-900">#{activeActionTag.name}</span>
             </div>
             <div className="space-y-2">
-                <button className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all" onClick={() => { const n = prompt("输入标签名称 (仅限英文单词):", activeActionTag.name); if(n && /^[a-zA-Z]+$/.test(n)) { if(n !== activeActionTag.name) onUpdateTag(activeActionTag.id, n); } else if(n) { alert("标签名称必须仅包含英文单词，不含空格、数字或特殊字符"); } setActiveActionTag(null); }}>
+                <button className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all" onClick={() => { const n = prompt("输入标签名称 (仅限英文单词):", activeActionTag.name); if(n && /^[a-zA-Z]+$/.test(n)) { const up = n.toUpperCase(); if(up !== activeActionTag.name) onUpdateTag(activeActionTag.id, up); } else if(n) { alert("标签名称必须仅包含英文单词，不含空格、数字或特殊字符"); } setActiveActionTag(null); }}>
                    <Pencil size={18} /> 编辑 / Edit
                 </button>
                 <button className="w-full flex items-center justify-center gap-2 text-red-600 bg-red-50 font-bold py-3 rounded-2xl hover:bg-red-100 active:scale-95 transition-all" onClick={() => { onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}>

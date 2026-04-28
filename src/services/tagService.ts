@@ -14,17 +14,19 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
     
     console.log("DEBUG: loadTagsFromCloud resulting data:", data);
     
-    // Ensure id is always string to match frontend expectations
+    // Ensure name is uppercase and id is string
     return (data || []).map((t: any) => ({
       ...t,
+      name: (t.name || '').toUpperCase(),
       id: String(t.id)
     }));
 };
 
 export const addTagToDB = async (name: string): Promise<Tag> => {
+    const normalizedName = name.toUpperCase().trim();
     const { data, error } = await supabase
         .from('tags')
-        .insert([{ name }])
+        .insert([{ name: normalizedName }])
         .select()
         .single();
     
@@ -50,9 +52,10 @@ export const addTagToDB = async (name: string): Promise<Tag> => {
 };
 
 export const batchCreateTags = async (names: string[]): Promise<Map<string, string>> => {
+    const normalizedNames = names.map(n => n.toUpperCase().trim());
     const { data, error } = await supabase
         .from('tags')
-        .insert(names.map(name => ({ name })))
+        .insert(normalizedNames.map(name => ({ name })))
         .select('id, name');
     
     if (error) {
@@ -80,9 +83,10 @@ export const batchCreateTags = async (names: string[]): Promise<Map<string, stri
 };
 
 export const updateTagInDB = async (tagId: string, name: string): Promise<boolean> => {
+    const normalizedName = name.toUpperCase().trim();
     const { error } = await supabase
         .from('tags')
-        .update({ name })
+        .update({ name: normalizedName })
         .eq('id', tagId);
     
     if (error) {
