@@ -187,10 +187,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
   }, [sortOrder, setSortOrder]);
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const virtuosoRef = useRef<any>(null);
 
   const scrollToTop = () => {
-    scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+    virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   useEffect(() => {
@@ -347,7 +347,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       />
 
       {/* Grid */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-hidden bg-[#FDFAF6]">
+      <div ref={virtuosoRef} className="flex-1 overflow-hidden bg-[#FDFAF6]">
         {displayPhotos.length === 0 ? (                
           <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
@@ -357,6 +357,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           </div>
         ) : (
           <VirtuosoGrid
+            ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
             totalCount={gridPhotos.length}
             overscan={600}
