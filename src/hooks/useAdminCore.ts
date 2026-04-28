@@ -223,8 +223,8 @@ export const useAdminCore = (
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;
     
-    const existingGroupIds = Array.from(new Set(
-      photos.filter(p => ids.includes(p.id) && p.groupId).map(p => p.groupId)
+    const existingGroupIds: string[] = Array.from(new Set(
+      photos.filter(p => ids.includes(p.id) && p.groupId).map(p => p.groupId as string)
     ));
     
     const groupIdToUse = existingGroupIds.length > 0 ? existingGroupIds[0]! : `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
