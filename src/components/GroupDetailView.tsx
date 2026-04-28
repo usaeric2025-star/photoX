@@ -62,9 +62,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
         >
            <div className="flex flex-col mb-8">
               <div className="flex items-center justify-between mb-4">
-                <button onClick={() => { setActiveGroupId(null); }} className="p-2 -ml-2 text-slate-500 hover:text-slate-800 transition-colors">
-                  <ChevronLeft size={24} />
-                </button>
                 <h2 className="text-3xl font-black text-[#1D3557] tracking-tighter">Group {activeGroupId}</h2>
                 <button 
                   onClick={() => setActiveGroupId(null)}
@@ -132,9 +129,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
 
                   <button 
                     onClick={() => setFocusedGroupPhotoId(null)}
-                    className="absolute top-4 right-4 bg-black/40 backdrop-blur-md p-2 rounded-full text-white/80 hover:bg-black/60 transition-colors"
+                    className="absolute top-4 right-4 bg-white/90 backdrop-blur-md p-3 rounded-full text-slate-800 shadow-xl hover:bg-white transition-colors"
                   >
-                    <Minimize2 size={16} />
+                    <X size={20} />
                   </button>
                 </motion.div>
              )}
@@ -172,10 +169,14 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
               </h3>
               {isAdminMode && (
                 <button 
-                  onClick={() => {
+                  onClick={async () => {
                     if (confirm(`確定要將這 ${activeGroupPhotos.length} 張照片解除同組嗎？`)) {
-                      onUngroup?.(activeGroupId);
-                      setActiveGroupId(null);
+                      try {
+                        await onUngroup?.(activeGroupId);
+                        setActiveGroupId(null);
+                      } catch (err) {
+                        console.error('Failed to ungroup:', err);
+                      }
                     }
                   }}
                   className="text-[10px] text-red-500 font-bold flex items-center gap-1 active:scale-95 transition-all"
