@@ -51,13 +51,21 @@ export const useAdminCategory = () => {
     updateTagInDB(tagId, newName).catch(err => console.error("Cloud tag update failed:", err));
   };
 
-  const deleteTag = (tagId: string, photos: any[], setPhotos: any) => {
-    setTags(prev => prev.filter(t => t.id !== tagId));
-    setPhotos((prev: any[]) => prev.map(p => ({
-      ...p,
-      tagIds: p.tagIds ? p.tagIds.filter((id: string) => id !== tagId) : []
-    })));
-    deleteTagFromDB(tagId).catch(err => console.error("Cloud tag deletion failed:", err));
+  const deleteTag = async (tagId: string, photos: any[], setPhotos: any) => {
+    try {
+        setTags(prev => prev.filter(t => t.id !== tagId));
+        setPhotos((prev: any[]) => prev.map(p => ({
+          ...p,
+          tagIds: p.tagIds ? p.tagIds.filter((id: string) => id !== tagId) : []
+        })));
+        const success = await deleteTagFromDB(tagId);
+        if (!success) throw new Error("Cloud delete returned false");
+    } catch (err: any) {
+        console.error("Cloud tag deletion failed:", err);
+        // Important: Re-fetch or at least alert the user if deletion failed to maintain sync.
+        // For now, alerting user that data might be out of sync
+        alert("删除标签失败，请检查网络或联系管理员。");
+    }
   };
 
   return {

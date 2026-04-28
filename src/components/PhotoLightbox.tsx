@@ -113,9 +113,23 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <button onClick={onClose} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center">
-          <X size={20} />
-        </button>
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          {isAdminMode && (
+            <button 
+              onClick={() => {
+                onClose();
+                onEditPhoto?.(photo);
+              }}
+              className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all"
+              title="编辑此照片"
+            >
+              <Edit3 size={20} />
+            </button>
+          )}
+          <button onClick={onClose} className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all">
+            <X size={20} />
+          </button>
+        </div>
 
         {isImageLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -207,32 +221,36 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
 
            {/* Admin Group Controls */}
-           {isAdminMode && photo.groupId && (
-             <div className="grid grid-cols-2 gap-2">
-               <button
-                 onClick={() => {
-                   onClose();
-                   onEditPhoto?.(photo);
-                 }}
-                 className="bg-slate-100 text-slate-700 
-                 py-2 rounded-xl text-xs font-bold 
-                 col-span-2 flex items-center justify-center gap-2
-                 border border-slate-200"
-               >
-                 <Edit3 size={14} /> 编辑此照片
-               </button>
-               <button 
-                 onClick={() => onUngroup?.(photo.id)}
-                 className="bg-red-50 text-red-600 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-red-100"
-               >
-                 {t.ungroup || 'Ungroup'}
-               </button>
-               <button 
-                 onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
-                 className={`py-2 rounded-xl text-xs font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
-               >
-                 {t.setCover || 'Set Cover'}
-               </button>
+           {isAdminMode && (
+             <div className="grid grid-cols-2 gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    onClose();
+                    onEditPhoto?.(photo);
+                  }}
+                  className="bg-blue-50 text-blue-700 
+                  py-2 rounded-xl text-xs font-bold 
+                  col-span-2 flex items-center justify-center gap-2
+                  border border-blue-100"
+                >
+                  <Edit3 size={14} /> 编辑照片信息
+                </button>
+                {photo.groupId && (
+                <>
+                  <button 
+                    onClick={() => onUngroup?.(photo.id)}
+                    className="bg-red-50 text-red-600 py-2 rounded-xl text-xs font-bold uppercase tracking-widest border border-red-100"
+                  >
+                    {t.ungroup || 'Ungroup'}
+                  </button>
+                  <button 
+                    onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
+                    className={`py-2 rounded-xl text-xs font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+                  >
+                    {t.setCover || 'Set Cover'}
+                  </button>
+                </>
+                )}
              </div>
            )}
 
