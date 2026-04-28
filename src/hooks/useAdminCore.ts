@@ -8,6 +8,9 @@ import {
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 
+import { useGalleryContext } from '../context/GalleryContext';
+import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
+
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name) return true;
   const lower = name.toLowerCase();
@@ -21,10 +24,6 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
     name.length < 3
   );
 };
-
-import { useGalleryContext } from '../context/GalleryContext';
-
-import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 export const useAdminCore = (
   user: any,

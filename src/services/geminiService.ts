@@ -71,7 +71,7 @@ export const analyzeProductPhoto = async (
 
   // Use OpenRouter endpoint
   const baseURL = 'https://openrouter.ai/api/v1';
-  let modelName = customModel || 'google/gemini-2.0-flash-lite-preview-02-05';
+  let modelName = customModel || 'google/gemini-2.5-flash-lite-preview-09-2025';
   
   // Ensure the model name includes the provider prefix if needed, openrouter models usually look like google/gemini-...
   if (!modelName.includes('/')) {

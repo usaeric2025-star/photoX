@@ -18,6 +18,8 @@ import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
+import { IMAGE_COMPRESS, AI_CONFIG } from '../constants/config';
+import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name) return true;
@@ -32,10 +34,6 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
     name.length < 3
   );
 };
-
-import { IMAGE_COMPRESS, AI_CONFIG } from '../constants/config';
-
-import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 export const useAdminPhotos = (
   user: any, 
