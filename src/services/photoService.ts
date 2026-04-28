@@ -99,6 +99,10 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: stri
     .in('id', photoIds);
     
   if (error) {
+    if (error.message.includes('group_id') && error.message.includes('column')) {
+      console.warn("Skipping group sync as group_id column appears missing in DB");
+      return;
+    }
     console.error("Failed to update group id:", error);
     throw error;
   }
@@ -111,6 +115,22 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<any>)
     .eq('id', photoId);
     
   if (error) {
+    if (error.message.includes('column')) {
+       // Try again without group fields if they were the cause
+       const safeUpdates = { ...updates };
+       let modified = false;
+       ['group_id', 'group_order', 'is_group_cover'].forEach(key => {
+         if (key in safeUpdates) {
+           delete (safeUpdates as any)[key];
+           modified = true;
+         }
+       });
+       
+       if (modified) {
+         const { error: retryError } = await supabase.from(TABLE_NAME).update(safeUpdates).eq('id', photoId);
+         if (!retryError) return;
+       }
+    }
     console.error("Failed to update photo in cloud:", error);
     throw error;
   }
@@ -176,23 +196,26 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     .select('id')
     .maybeSingle();
 
-  // FALLBACK: If group_order or is_group_cover columns are missing in the DB schema,
-  // we retry without them to ensure the rest of the data is saved.
-  if (dbError && dbError.message.includes('column') && 
-      (dbError.message.includes('group_order') || dbError.message.includes('is_group_cover'))) {
-    console.warn("DB Schema mismatch detected, retrying without group metadata:", dbError.message);
-    const safePayload = { ...payload };
-    delete safePayload.group_order;
-    delete safePayload.is_group_cover;
+  // FALLBACK: If group columns are missing in the DB schema, retry without them
+  if (dbError && dbError.message.includes('column')) {
+    const isGroupError = ['group_id', 'group_order', 'is_group_cover'].some(col => dbError?.message.includes(col));
     
-    const retry = await supabase
-      .from(TABLE_NAME)
-      .upsert(safePayload, { onConflict: 'id', ignoreDuplicates: false })
-      .select('id')
-      .maybeSingle();
-    
-    savedPhoto = retry.data;
-    dbError = retry.error;
+    if (isGroupError) {
+      console.warn("DB Schema mismatch detected for group columns, retrying without them...");
+      const safePayload = { ...payload };
+      delete safePayload.group_id;
+      delete safePayload.group_order;
+      delete safePayload.is_group_cover;
+      
+      const retry = await supabase
+        .from(TABLE_NAME)
+        .upsert(safePayload, { onConflict: 'id', ignoreDuplicates: false })
+        .select('id')
+        .maybeSingle();
+      
+      savedPhoto = retry.data;
+      dbError = retry.error;
+    }
   }
 
   if (dbError) {
@@ -200,13 +223,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     throw new Error(`數據同步失敗: ${dbError.message}`);
   }
 
-  if (!savedPhoto) {
-    // maybeSingle might return null if the id is new but upsert failed or returned nothing
-    // but usually upsert with select('id') returns the id.
-    throw new Error("數據保存失敗：未返回保存結果");
-  }
-
-  const finalPhotoId = savedPhoto.id;
+  const finalPhotoId = savedPhoto?.id || photo.id;
 
   // --- Relational Tags Sync ---
   if (Array.isArray(photo.tagIds) && photo.tagIds.length >= 0) {
