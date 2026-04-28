@@ -53,6 +53,7 @@ interface AdminPhotoContextType {
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
   handleBatchAiIdentify: (photos: Photo[], categories: Category[], isCancelled: boolean) => Promise<void>;
+  handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;
   handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean, onComplete: (screen: string) => void) => Promise<void>;
   deletePhoto: (id: string) => Promise<void>;
   handleGroupPhotos: (ids: string[], user: any, savePhotoToCloud: any) => Promise<void>;

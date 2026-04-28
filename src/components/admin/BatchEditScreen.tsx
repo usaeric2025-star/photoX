@@ -68,6 +68,17 @@ export const BatchEditScreen = ({
         </div>
 
         <section className="space-y-4">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品名称 / Product Name</h3>
+            <input 
+              type="text" 
+              placeholder="输入统一产品名称..."
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              value={formState.name}
+              onChange={(e) => updateForm({ name: e.target.value })}
+            />
+        </section>
+
+        <section className="space-y-4">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品编号 / Item Code</h3>
             <input 
               type="text" 

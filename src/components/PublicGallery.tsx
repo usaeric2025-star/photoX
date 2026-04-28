@@ -452,7 +452,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
         onCancelAnalyze={() => adminUI?.abortAnalysis()}
         isAnalyzing={!!adminUI?.isAnalyzing}
-        onBatchAiAnalyze={(photos) => adminPhoto?.handleBatchAiIdentify(photos, false)}
+        onBatchAiAnalyze={(photos) => adminPhoto?.handleGroupAiIdentify(photos)}
         setPhotos={context.setPhotos}
         lang={lang}
         t={t}

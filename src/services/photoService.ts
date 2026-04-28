@@ -103,16 +103,20 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: stri
   }
 };
 
-export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
+export const updatePhotoInCloud = async (photoId: string, updates: Partial<any>) => {
   const { error } = await supabase
     .from(TABLE_NAME)
-    .update({ is_hidden: isHidden })
+    .update(updates)
     .eq('id', photoId);
     
   if (error) {
-    console.error("Failed to update hidden status:", error);
+    console.error("Failed to update photo in cloud:", error);
     throw error;
   }
+};
+
+export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
+  return updatePhotoInCloud(photoId, { is_hidden: isHidden });
 };
 
 export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<string> => {

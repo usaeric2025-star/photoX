@@ -84,7 +84,7 @@ export default function AdminView() {
   const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
 
-  const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
+  const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
 
   const {
       toast, showToast, saveSettings,
@@ -241,7 +241,7 @@ export default function AdminView() {
 
   const photoValue = {
     photos, setPhotos, categories, setCategories, tags, setTags,
-    manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handlePhotoImport,
+    manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, quickAddTag, quickAddManufacturer
   };
@@ -312,6 +312,7 @@ export default function AdminView() {
                 lang={lang}
                 t={t}
                 categories={categories}
+                onBatchAiAnalyze={handleGroupAiIdentify}
               />
             )}
       

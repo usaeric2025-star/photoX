@@ -18,6 +18,7 @@ const INITIAL_FORM_STATE: ProductFormData = {
   dimL: '',
   dimW: '',
   dimH: '',
+  isGroupCover: false,
 };
 
 import { useGalleryContext } from '../context/GalleryContext';
@@ -219,7 +220,7 @@ export const usePhotoManagement = (
   const saveBatchEdit = async (batchIsHiddenApplied: boolean = false) => {
      if (!batchEditIds) return;
      const { 
-       categoryId, subcategoryId, tagIds, description, 
+       name, categoryId, subcategoryId, tagIds, description, 
        manual_code, model_number, isHidden, price
      } = formState;
 
@@ -234,6 +235,7 @@ export const usePhotoManagement = (
              if (batchEditIds.includes(p.id)) {
                 const updated = {
                   ...p,
+                  name: name || p.name,
                   categoryId: categoryId || p.categoryId,
                   subcategoryId: subcategoryId || p.subcategoryId,
                   tagIds: finalTagIds.length > 0 ? finalTagIds : p.tagIds,

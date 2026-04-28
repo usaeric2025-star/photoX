@@ -588,6 +588,86 @@ export const useAdminPhotos = (
     aiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
-    handleBatchAiIdentify, handlePhotoImport, deletePhoto, updatePhoto
+    handleBatchAiIdentify, 
+    handleGroupAiIdentify: async (groupPhotos: Photo[]) => {
+      if (groupPhotos.length === 0) return;
+      const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
+      if (!effectiveKey) {
+        setAlertDialog({ title: '提示', message: '請先在設定中設定 AI 金鑰' });
+        return;
+      }
+
+      setIsSyncing(true);
+      setIsAnalyzing(true);
+      setAiDebugInfo({ step: '群組識別', message: '正在分析第一張照片...' });
+
+      try {
+        // 1. Sort to find the cover or first photo
+        const sorted = [...groupPhotos].sort((a, b) => {
+          if (a.isGroupCover) return -1;
+          if (b.isGroupCover) return 1;
+          return 0;
+        });
+        const firstPhoto = sorted[0];
+
+        // 2. Analyze the first photo
+        const result = await analyzeProductPhoto(
+          firstPhoto.uri || firstPhoto.image_url, 
+          categories, tags, manufacturers, 
+          effectiveKey, aiProvider, customModel, 
+          firstPhoto.categoryId
+        );
+
+        // 3. Resolve tags and manufacturers as in single analysis
+        if (result.newSubCategoryName && !result.subcategoryId) {
+          const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
+          setManufacturers(prev => [...prev, savedMfr]);
+          result.subcategoryId = savedMfr.id;
+        }
+
+        const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
+        const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
+
+        // 4. Apply results to ALL photos in the group
+        const groupIds = groupPhotos.map(p => p.id);
+        const nextPhotos = photosRef.current.map(p => {
+          if (!groupIds.includes(p.id)) return p;
+
+          return {
+            ...p,
+            name: result.name || p.name,
+            categoryId: result.categoryId || p.categoryId,
+            subcategoryId: result.subcategoryId || p.subcategoryId,
+            tagIds: finalTagIds,
+            model_number: result.modelNumber || p.model_number,
+            dimensions: result.dimensions || p.dimensions,
+            updatedAt: new Date().toISOString()
+          };
+        });
+
+        setPhotos(nextPhotos);
+        photosRef.current = nextPhotos;
+        await saveData('product_photos', nextPhotos);
+
+        // 5. Sync all to cloud
+        if (user) {
+          await Promise.all(
+            nextPhotos
+              .filter(p => groupIds.includes(p.id))
+              .map(p => savePhotoToCloud(user.id, p))
+          );
+        }
+
+        setAiDebugInfo(null);
+        setAlertDialog({ title: '群組識別完成', message: `已將第一張照片的識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。` });
+      } catch (err: any) {
+        console.error("Group AI analysis failed:", err);
+        setAlertDialog({ title: '識別失敗', message: err.message || '群組識別過程出現問題' });
+      } finally {
+        setIsAnalyzing(false);
+        setIsSyncing(false);
+      }
+    },
+    handlePhotoImport, deletePhoto, updatePhoto
   };
 };
