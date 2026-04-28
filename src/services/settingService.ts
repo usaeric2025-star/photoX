@@ -22,6 +22,11 @@ export const fetchSettings = async () => {
                 ? JSON.parse(data.manufacturers_json) 
                 : data.manufacturers_json;
         }
+        if (data.tags_json) {
+            data.tags = typeof data.tags_json === 'string' 
+                ? JSON.parse(data.tags_json) 
+                : data.tags_json;
+        }
     }
     
     return data;
@@ -50,11 +55,22 @@ export const saveSettings = async (settings: any) => {
               : JSON.stringify(payload.manufacturers);
             delete payload.manufacturers;
         }
+        if (payload.tags) {
+            payload.tags_json = typeof payload.tags === 'string'
+              ? payload.tags
+              : JSON.stringify(payload.tags);
+            delete payload.tags;
+        }
 
-        // Remove client-only fields
+        // Remove client-only fields to prevent schema errors
+        delete payload.gemini_api_key;
+        delete payload.custom_model;
+        delete payload.internal_password;
         delete payload.categories;
-        
-        console.log("Saving settings to Supabase...", payload);
+        delete payload.tags;
+        delete payload.manufacturers;
+
+        console.log("Saving settings to Supabase (cleaned payload)...", payload);
 
         const { error: upsertError } = await supabase
             .from('settings')

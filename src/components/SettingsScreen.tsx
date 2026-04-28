@@ -84,9 +84,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     const nextMfrs = [...(manufacturers || []), newMfr];
     setManufacturers(nextMfrs);
     setNewSubName('');
-    const nextCats = categories.map(c => ({
+    const nextCats = (categories || []).map(c => ({
       ...c,
-      subcategories: [...(c.subcategories || []), { ...newMfr }]
+      subcategories: Array.isArray(c.subcategories) ? [...c.subcategories, { ...newMfr }] : [{ ...newMfr }]
     }));
     setCategories(nextCats);
     saveSettings({ ...settings, categories: nextCats, manufacturers: nextMfrs, tags });
@@ -94,11 +94,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const deleteManufacturer = (id: string) => {
     if (!window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) return;
-    const nextMfrs = manufacturers.filter(m => m.id !== id);
+    const nextMfrs = (manufacturers || []).filter(m => m.id !== id);
     setManufacturers(nextMfrs);
-    const nextCats = categories.map(c => ({
+    const nextCats = (categories || []).map(c => ({
       ...c,
-      subcategories: (c.subcategories || []).filter(sub => sub.id !== id)
+      subcategories: Array.isArray(c.subcategories) ? c.subcategories.filter((sub: any) => sub.id !== id) : []
     }));
     setCategories(nextCats);
     saveSettings({ ...settings, categories: nextCats, manufacturers: nextMfrs, tags });
@@ -291,7 +291,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                         联系人 A <Heart size={10} className="inline-block text-red-400 animate-pulse" />
                     </label>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 min-w-0">
                   <input 
                     type="text" 
                     placeholder="姓名 (例如 John)"
@@ -317,7 +317,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                         联系人 B <Smile size={10} className="inline-block text-[#D4A853]" />
                     </label>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 min-w-0">
                   <input 
                     type="text" 
                     placeholder="姓名 (例如 Mary)"

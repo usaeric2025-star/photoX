@@ -25,6 +25,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     categories, 
     tags, 
     photos, 
+    setPhotos,
     manufacturers, 
     quickAddTag, 
     quickAddManufacturer,
@@ -35,6 +36,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
   const isSyncing = sessionSyncing;
+
+  const isPartOfGroup = useMemo(() => {
+    if (!editPhotoId) return false;
+    const photo = photos.find(p => p.id === editPhotoId);
+    return !!(photo && photo.groupId);
+  }, [editPhotoId, photos]);
 
   const sortedTags = useMemo(() => {
     return tags;
@@ -99,15 +106,30 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 </button>
               </div>
             )}
+            {isPartOfGroup && (
+              <button 
+                onClick={() => updateForm({ isGroupCover: !formState.isGroupCover })}
+                className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all active:scale-[0.95] ${formState.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
+                title="设为封面"
+              >
+                <div className="text-[10px] font-bold">封面</div>
+              </button>
+            )}
             <button 
-              onClick={() => updateForm({ isGroupCover: !formState.isGroupCover })}
-              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all active:scale-[0.95] ${formState.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
-              title="设为封面"
-            >
-              <div className="text-[10px] font-bold">封面</div>
-            </button>
-            <button 
-              onClick={props.saveNewPhoto}
+              onClick={async () => {
+                if (isPartOfGroup) {
+                  const photo = photos.find(p => p.id === editPhotoId);
+                  if (photo && photo.groupId) {
+                     setPhotos(prevPhotos => prevPhotos.map(p => {
+                         if (p.groupId === photo.groupId) {
+                             return { ...p, tagIds: formState.tagIds, categoryId: formState.categoryId };
+                         }
+                         return p;
+                     }));
+                  }
+                }
+                await props.saveNewPhoto();
+              }}
               disabled={isSyncing}
               className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all active:scale-[0.95] ${isSyncing ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20'}`}
               title="保存"

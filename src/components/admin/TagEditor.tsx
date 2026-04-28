@@ -73,7 +73,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
       </div>
       <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {Array.from(new Map(tags.map(t => [t.id, t])).values()).map((tag: any) => {
-          const isSelected = selectedTagIds.includes(tag.id);
+          const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           return (
             <div key={tag.id} className="relative">
               <button 

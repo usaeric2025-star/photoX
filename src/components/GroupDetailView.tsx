@@ -79,18 +79,18 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
           className="fixed inset-0 z-[200] bg-[#FDFAF6] p-6 overflow-y-auto pt-safe"
         >
            {/* Header */}
-           <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#FDFAF6]/80 backdrop-blur-sm z-50 py-4">
-              <div className="flex items-center gap-2">
+           <div className="grid grid-cols-[1fr,auto,1fr] gap-4 mb-8 sticky top-0 bg-[#FDFAF6]/80 backdrop-blur-sm z-50 py-4 items-center">
+              <div className="flex items-center">
                 {isAdminMode && (
                   <button onClick={onAddPhotoToGroup} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Plus size={20} /></button>
                 )}
               </div>
               
-              <h2 className="text-xl font-black text-[#1D3557] tracking-tighter col-span-3">
+              <h2 className="text-xl font-black text-[#1D3557] tracking-tighter">
                   GROUP {activeGroupId?.slice(-4)}
               </h2>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-end gap-2">
                  {isAdminMode && (
                     <div className="flex gap-2">
                       <button 
