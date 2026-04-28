@@ -416,7 +416,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
         onLongPressStart={isAdminMode ? startLongPress : undefined}
         onLongPressEnd={isAdminMode ? endLongPress : undefined}
-        onBatchEdit={onBatchEdit}
+        onBatchEdit={(ids) => {
+          setActiveGroupId(null);
+          if (onBatchEdit) onBatchEdit(ids);
+          else if (adminUI) adminUI.setBatchEditIds(ids);
+        }}
         onUngroup={onGroupPhotos} 
         onAddPhotoToGroup={onAddPhoto}
         onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}

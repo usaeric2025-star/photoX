@@ -79,6 +79,8 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         showExit={true}
         hideHeader={true}
         onEditPhoto={(id) => adminUI?.setEditPhotoId(id)}
+        onBatchEdit={(ids) => adminUI?.setBatchEditIds(ids)}
+        onGroupPhotos={(ids) => adminPhoto?.handleGroupPhotos(ids)}
       />
 
       {/* Admin Bulk Actions */}

@@ -198,19 +198,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                     alt="Focused Photo" 
                   />
 
-                  {/* Individual action buttons for focused grouped photos */}
-                  <div className="absolute bottom-12 left-0 right-0 flex justify-center gap-6 z-20 pointer-events-none">
-                     <button 
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         onEditPhoto?.(focusedPhoto);
-                       }}
-                       className="w-14 h-14 flex items-center justify-center bg-white text-slate-900 rounded-full shadow-2xl active:scale-95 transition-all pointer-events-auto"
-                     >
-                       <Pencil size={24} />
-                     </button>
-                  </div>
-
                   <button 
                     onClick={() => setFocusedGroupPhotoId(null)}
                     className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-colors"
