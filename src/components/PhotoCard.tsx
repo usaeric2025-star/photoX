@@ -56,21 +56,26 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [photo.categoryId, (photo as any).category_id, categories, lang]);
   
   const displayCatName = useMemo(() => {
+    const catId = photo.categoryId || (photo as any).category_id;
+    const isOther = String(catId) === '7';
     const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
     
-    // If we have a real category name, use it
-    if (catName && !uncatValues.includes(catName.toLowerCase())) {
-      return catName;
+    // 1. If it's a real category ID (including 7 for Other), use the category name
+    if (catId && catName) {
+      // Even if it's "others" string, if the ID is 7, it's a valid category
+      if (isOther || !uncatValues.includes(catName.toLowerCase())) {
+        return catName;
+      }
     }
     
-    // If category is "uncategorized", but we have a manufacturer name, 
+    // 2. If truly uncategorized (no catId) but has a manufacturer name, 
     // many users treat manufacturer as the "directory". 
-    if (mfrName) {
+    if (!catId && mfrName) {
       return mfrName;
     }
 
-    return t.uncategorized;
-  }, [catName, mfrName, t.uncategorized]);
+    return catName || t.uncategorized;
+  }, [catName, mfrName, t.uncategorized, photo.categoryId, (photo as any).category_id]);
 
   const isUncategorized = displayCatName === t.uncategorized;
   
