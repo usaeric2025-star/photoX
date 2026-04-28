@@ -194,20 +194,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
            </div>
 
            {/* 3. 核心功能按钮 - WhatsApp 咨询 (高亮显示在最显眼处) */}
-           {isAdminMode && (
-             <button
-               onClick={() => {
-                 onClose();
-                 onEditPhoto?.(photo);
-               }}
-               className="w-full bg-[#1D3557] text-white 
-               p-3 rounded-2xl flex items-center justify-center 
-               mb-3 active:scale-[0.98]"
-               title="编辑此照片"
-             >
-               <Edit3 size={20} />
-             </button>
-           )}
            <button 
              onClick={() => {
                 (window as any)._pendingPhoto = photo;

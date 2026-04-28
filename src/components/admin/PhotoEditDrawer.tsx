@@ -75,12 +75,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
         {/* Right: Actions */}
         <div className="flex-1 flex items-center justify-end gap-2">
-            <div 
-              onClick={() => updateForm({ isGroupCover: !formState.isGroupCover })}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${formState.isGroupCover ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
-            >
-              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.isGroupCover ? '已设为封面' : '设为封面'}</span>
-            </div>
             {handleSingleAiAnalyze && (
               <div className="flex items-center gap-1.5">
                 {isAnalyzing && props.abortAnalysis && (
@@ -105,6 +99,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 </button>
               </div>
             )}
+            <button 
+              onClick={() => updateForm({ isGroupCover: !formState.isGroupCover })}
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all active:scale-[0.95] ${formState.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
+              title="设为封面"
+            >
+              <div className="text-[10px] font-bold">封面</div>
+            </button>
             <button 
               onClick={props.saveNewPhoto}
               disabled={isSyncing}
