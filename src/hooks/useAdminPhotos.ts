@@ -351,31 +351,35 @@ export const useAdminPhotos = (
       }
 
       if (editPhotoId) {
-        setPhotos(prev => prev.map(p => {
-          if (p.id !== editPhotoId) return p;
-          
-          let finalCatId = result.categoryId || p.categoryId;
-          let finalSubId = result.subcategoryId || p.subcategoryId;
-          
-          const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-          const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
+        setPhotos(prev => {
+          const next = prev.map(p => {
+            if (p.id !== editPhotoId) return p;
+            
+            let finalCatId = result.categoryId || p.categoryId;
+            let finalSubId = result.subcategoryId || p.subcategoryId;
+            
+            const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+            const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
 
-          const updatedPhoto = { 
-            ...p, 
-            categoryId: finalCatId,
-            subcategoryId: finalSubId,
-            tagIds: mergedTagIds,
-            name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
-            model_number: p.model_number || result.modelNumber || null,
-            dimensions: (!p.dimensions || p.dimensions.length === 0)
-              ? (result.dimensions || null)
-              : p.dimensions,
-            updatedAt: new Date().toISOString(),
-            isAnalyzing: false 
-          };
-          
-          return updatedPhoto;
-        }));
+            const updatedPhoto = { 
+              ...p, 
+              categoryId: finalCatId,
+              subcategoryId: finalSubId,
+              tagIds: mergedTagIds,
+              name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
+              model_number: p.model_number || result.modelNumber || null,
+              dimensions: (!p.dimensions || p.dimensions.length === 0)
+                ? (result.dimensions || null)
+                : p.dimensions,
+              updatedAt: new Date().toISOString(),
+              isAnalyzing: false 
+            };
+            
+            return updatedPhoto;
+          });
+          photosRef.current = next;
+          return next;
+        });
         
         // Backup to cloud outside state updater
         if (user) {
