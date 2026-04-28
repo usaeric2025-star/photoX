@@ -67,8 +67,11 @@ export const useAdminPhotos = (
       currentAnalysisController.current.abort();
       currentAnalysisController.current = null;
       setAiDebugInfo({ step: '已取消', message: '用戶中斷了 AI 識別任务' });
-      setTimeout(() => setAiDebugInfo(null), 3000);
+      
+      // Stop the UI loading state
       setIsAnalyzing(false);
+      
+      setTimeout(() => setAiDebugInfo(null), 3000);
     }
   };
 
@@ -196,11 +199,11 @@ export const useAdminPhotos = (
               // Check if tag with same name already exists in current tags
               const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
               if (existingTag) {
-                newTagIds.push(existingTag.id);
+                newTagIds.push(String(existingTag.id));
               } else {
                 const savedTag = await addTagToDB(name);
                 newTagsToAdd.push(savedTag);
-                newTagIds.push(savedTag.id);
+                newTagIds.push(String(savedTag.id));
               }
             }
             
@@ -226,9 +229,11 @@ export const useAdminPhotos = (
                 categoryId: p.categoryId && p.categoryId !== 'uncategorized' ? p.categoryId : finalCatId, 
                 subcategoryId: p.subcategoryId || finalSubId, 
                 tagIds: mergedTagIds,
-                name: p.name && p.name !== 'Furniture' ? p.name : (result.name || null),
+                name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                 model_number: p.model_number || result.modelNumber || null,
-                dimensions: p.dimensions || result.dimensions || null,
+                dimensions: (!p.dimensions || p.dimensions.length === 0)
+                  ? (result.dimensions || null)
+                  : p.dimensions,
                 updatedAt: new Date().toISOString(),
                 isAnalyzing: false 
               };
@@ -243,6 +248,7 @@ export const useAdminPhotos = (
           if (user) {
             const updatedPhoto = photosRef.current.find(p => p.id === photo.id);
             if (updatedPhoto) {
+              console.log('Saving photo with tagIds:', updatedPhoto.tagIds);
               await savePhotoToCloud(user.id, updatedPhoto);
             }
           }
@@ -321,11 +327,11 @@ export const useAdminPhotos = (
         for (const name of newNames) {
           const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
           if (existingTag) {
-            newTagIds.push(existingTag.id);
+            newTagIds.push(String(existingTag.id));
           } else {
             const savedTag = await addTagToDB(name);
             newTagsToAdd.push(savedTag);
-            newTagIds.push(savedTag.id);
+            newTagIds.push(String(savedTag.id));
           }
         }
         
@@ -353,9 +359,11 @@ export const useAdminPhotos = (
             categoryId: finalCatId,
             subcategoryId: finalSubId,
             tagIds: mergedTagIds,
-            name: p.name || result.name || null,
+            name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
             model_number: p.model_number || result.modelNumber || null,
-            dimensions: p.dimensions || result.dimensions || null,
+            dimensions: (!p.dimensions || p.dimensions.length === 0)
+              ? (result.dimensions || null)
+              : p.dimensions,
             updatedAt: new Date().toISOString(),
             isAnalyzing: false 
           };
@@ -367,6 +375,7 @@ export const useAdminPhotos = (
         if (user) {
           const updatedPhoto = photosRef.current.find(p => p.id === editPhotoId);
           if (updatedPhoto) {
+            console.log('Saving photo with tagIds:', updatedPhoto.tagIds);
             await savePhotoToCloud(user.id, updatedPhoto);
           }
         }

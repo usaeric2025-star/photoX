@@ -14,7 +14,7 @@ import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
 import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
-import { useOptionalAdminSession, useOptionalAdminPhoto } from '../context/AdminContexts';
+import { useOptionalAdminSession, useOptionalAdminPhoto, useOptionalAdminUI } from '../context/AdminContexts';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -93,6 +93,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 }) => {
   const adminSession = useOptionalAdminSession();
   const adminPhoto = useOptionalAdminPhoto();
+  const adminUI = useOptionalAdminUI();
   const user = propsUser !== undefined ? propsUser : adminSession?.user;
   const isAdminMode = propsIsAdminMode !== undefined ? propsIsAdminMode : !!adminSession?.isAdminMode;
   const settings = propsSettings !== undefined ? propsSettings : adminSession?.settings;
@@ -501,6 +502,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         tagMap={tagMap}
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
+        onAiAnalyze={async (photo) => await adminPhoto?.handleSingleAiAnalyze(photo.uri!, photo.categoryId || undefined)}
+        isAnalyzing={!!adminUI?.isAnalyzing}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         onUngroup={async (id) => {
           console.log("Ungroup photo", id);

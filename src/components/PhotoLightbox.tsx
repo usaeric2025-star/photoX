@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { Photo, Category } from '../types';
 
 interface PhotoLightboxProps {
@@ -22,11 +22,14 @@ interface PhotoLightboxProps {
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   onEditPhoto?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
+  onAiAnalyze?: (photo: Photo) => void;
+  isAnalyzing?: boolean;
 }
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-  isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto, onToggleHidden
+  isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto, onToggleHidden,
+  onAiAnalyze, isAnalyzing
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
@@ -151,12 +154,24 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                 </h2>
               </div>
               {isAdminMode && onToggleHidden && (
-                <button 
-                  onClick={() => onToggleHidden(photo)}
-                  className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
-                >
-                  {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+                <div className="flex items-center gap-2">
+                  {onAiAnalyze && (
+                    <button
+                      onClick={() => onAiAnalyze(photo)}
+                      disabled={isAnalyzing}
+                      className={`p-2 rounded-full border transition-all ${isAnalyzing ? 'bg-slate-100 border-slate-200 text-slate-400' : 'bg-purple-50 border-purple-200 text-purple-600'}`}
+                      title={isAnalyzing ? '分析中...' : 'AI 識別'}
+                    >
+                      <Sparkles size={20} className={isAnalyzing ? 'animate-pulse' : ''} />
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => onToggleHidden(photo)}
+                    className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+                  >
+                    {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               )}
            </div>
 

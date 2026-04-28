@@ -116,3 +116,5 @@ export const useAdminUI = () => {
   if (!context) throw new Error('useAdminUI must be used within AdminUIProvider');
   return context;
 };
+
+export const useOptionalAdminUI = () => useContext(AdminUIContext);
