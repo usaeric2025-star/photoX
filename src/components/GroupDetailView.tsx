@@ -80,38 +80,44 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
         >
            {/* Header */}
            <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#FDFAF6]/80 backdrop-blur-sm z-50 py-4">
-              <button 
-                onClick={() => setActiveGroupId(null)}
-                className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm hover:ring-2 hover:ring-[#D4A853] transition-all"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                {isAdminMode && (
+                  <button onClick={onAddPhotoToGroup} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Plus size={20} /></button>
+                )}
+              </div>
               
-              <h2 className="text-xl font-black text-[#1D3557] tracking-tighter">
+              <h2 className="text-xl font-black text-[#1D3557] tracking-tighter col-span-3">
                   GROUP {activeGroupId?.slice(-4)}
               </h2>
 
-              {isAdminMode && (
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => {
-                      const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
-                      onBatchEdit?.(ids);
-                    }}
-                    className={`p-3 border rounded-full shadow-sm bg-white border-[#D4A853] text-[#D4A853]`}
-                  >
-                    <Pencil size={20} />
-                  </button>
-                  <button onClick={async () => {
-                      if (confirm(`確定要解散這 ${activeGroupPhotos.length} 張照片的群組嗎？`)) {
-                        await onUngroup?.(groupIdRef.current!);
-                        setActiveGroupId(null);
-                      }
-                  }} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Layers size={20} /></button>
-                  <button onClick={() => onBatchAiAnalyze?.(activeGroupPhotos)} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Sparkles size={20} /></button>
-                  <button onClick={onAddPhotoToGroup} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Plus size={20} /></button>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                 {isAdminMode && (
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => {
+                          const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
+                          onBatchEdit?.(ids);
+                        }}
+                        className={`p-3 border rounded-full shadow-sm bg-white border-[#D4A853] text-[#D4A853]`}
+                      >
+                        <Pencil size={20} />
+                      </button>
+                      <button onClick={async () => {
+                          if (confirm(`確定要解散這 ${activeGroupPhotos.length} 張照片的群組嗎？`)) {
+                            await onUngroup?.(groupIdRef.current!);
+                            setActiveGroupId(null);
+                          }
+                      }} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Layers size={20} /></button>
+                      <button onClick={() => onBatchAiAnalyze?.(activeGroupPhotos)} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Sparkles size={20} /></button>
+                    </div>
+                 )}
+                 <button 
+                  onClick={() => setActiveGroupId(null)}
+                  className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm hover:ring-2 hover:ring-[#D4A853] transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
            </div>
            
            {/* Detail View */}

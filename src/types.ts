@@ -90,6 +90,7 @@ export interface ProductFormData {
   }[];
   isHidden: boolean;
   price: string;
+  isGroupCover: boolean;
   // Temporary single dim fields if needed for backward compatibility or simple UI
   dimL?: string;
   dimW?: string;

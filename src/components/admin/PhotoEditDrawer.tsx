@@ -68,13 +68,19 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           )}
         </div>
 
-        {/* Center: Title */}
+            {/* Center: Title */}
         <div className="flex-shrink-0">
           <h2 className="font-black text-base text-slate-800 tracking-tight leading-tight text-center truncate px-2">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
         </div>
 
         {/* Right: Actions */}
         <div className="flex-1 flex items-center justify-end gap-2">
+            <div 
+              onClick={() => updateForm({ isGroupCover: !formState.isGroupCover })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${formState.isGroupCover ? 'bg-blue-600 border-blue-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-600'}`}
+            >
+              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.isGroupCover ? '已设为封面' : '设为封面'}</span>
+            </div>
             {handleSingleAiAnalyze && (
               <div className="flex items-center gap-1.5">
                 {isAnalyzing && props.abortAnalysis && (
