@@ -154,7 +154,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   {photo.name || t.unnamed}
                 </h2>
               </div>
-              {isAdminMode && onToggleHidden && (
+              {isAdminMode && (
                 <div className="flex items-center gap-2">
                   {onAiAnalyze && (
                     <button
@@ -165,12 +165,14 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                       {isAnalyzing ? <X size={20} className="animate-pulse" /> : <Sparkles size={20} />}
                     </button>
                   )}
-                  <button 
-                    onClick={() => onToggleHidden(photo)}
-                    className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
-                  >
-                    {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+                  {onToggleHidden && (
+                    <button 
+                      onClick={() => onToggleHidden(photo)}
+                      className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+                    >
+                      {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  )}
                 </div>
               )}
            </div>

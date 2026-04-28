@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Photo, Tag, ProductFormData } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
+import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, generateItemCode, checkImageHashExists, uploadImages } from '../services/supabaseService';
 
 const INITIAL_FORM_STATE: ProductFormData = {
@@ -30,7 +31,7 @@ export const usePhotoManagement = (
   const {
     photos, setPhotos,
     categories,
-    tags,
+    tags, setTags, tagNameToIdMap, tagIdToNameMap,
     manufacturers
   } = useGalleryContext();
 
@@ -105,6 +106,9 @@ export const usePhotoManagement = (
        const categoryName = categories.find(c => c.id === categoryId)?.zh || '';
        const manufacturerName = manufacturers.find(m => m.id === subcategoryId)?.name || '';
 
+        // Resolve tag names to IDs
+       const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+
        if (editPhotoId) {
           const original = photos.find(p => p.id === editPhotoId);
           if (!original) throw new Error('Photo not found');
@@ -121,7 +125,7 @@ export const usePhotoManagement = (
             name: name || original.name,
             categoryId: categoryId,
             subcategoryId: subcategoryId,
-            tagIds: tagIds,
+            tagIds: finalTagIds,
             description: description,
             manual_code: manual_code,
             model_number: model_number,
@@ -130,7 +134,6 @@ export const usePhotoManagement = (
             dimensions: finalDimensions,
             updatedAt: new Date().toISOString()
           };
-
 
           setPhotos(prev => {
             const nextPhotos = (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p);
@@ -163,14 +166,13 @@ export const usePhotoManagement = (
             uri: newPhotoData,
             categoryId: categoryId,
             subcategoryId: subcategoryId,
-            tagIds: tagIds,
+            tagIds: finalTagIds,
             isHidden: isHidden,
             price: price,
             dimensions: finalDimensions,
             createdAt: new Date().toISOString(),
             groupId: null
           };
-
 
           setPhotos(prev => {
             const nextPhotos = [newPhoto, ...(prev as Photo[])];
@@ -201,6 +203,9 @@ export const usePhotoManagement = (
 
      setIsSyncing(true);
      try {
+        // Resolve tag names to IDs
+        const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+
         const updatedPhotosList: Photo[] = [];
         setPhotos(prev => {
           const next = prev.map(p => {
@@ -209,7 +214,7 @@ export const usePhotoManagement = (
                   ...p,
                   categoryId: categoryId || p.categoryId,
                   subcategoryId: subcategoryId || p.subcategoryId,
-                  tagIds: tagIds.length > 0 ? tagIds : p.tagIds,
+                  tagIds: finalTagIds.length > 0 ? finalTagIds : p.tagIds,
                   description: description || p.description,
                   manual_code: manual_code || p.manual_code,
                   model_number: model_number || p.model_number,

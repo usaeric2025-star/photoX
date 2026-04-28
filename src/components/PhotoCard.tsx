@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Photo, Category } from '../types';
-import { X, Layers, Pencil } from 'lucide-react';
+import { X, Layers } from 'lucide-react';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -104,18 +104,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         className={`w-full h-full object-cover ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''}`}
       />
 
-      {isAdminMode && !isMultiSelect && (
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditPhoto?.(photo.id);
-          }}
-          className="absolute top-2 left-2 p-1.5 bg-white/80 backdrop-blur-sm text-[#1D3557] rounded-full shadow-sm hover:bg-white z-20"
-        >
-          <Pencil size={14} />
-        </button>
-      )}
-
       {isAdminMode && isMultiSelect && isSelected && (
         <div className="absolute top-1 right-1 bg-blue-600 text-white p-0.5 rounded-full shadow-lg z-10">
           <X size={10} />
@@ -124,6 +112,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       {photo.groupId && (
          <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
            <Layers size={8} />
+           {photo.groupId.slice(-4)}
          </div>
        )}
       

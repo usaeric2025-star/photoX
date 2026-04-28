@@ -17,13 +17,16 @@ interface GroupDetailViewProps {
   setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>;
   updateGroupPhotos?: (ids: string[], groupId: string | null) => void;
   onAiAnalyze?: (photo: Photo) => void;
+  onCancelAnalyze?: () => void;
+  isAnalyzing?: boolean;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
   activeGroupId, setActiveGroupId, photos,
   isAdminMode, onEditPhoto,
   onBatchEdit, onUngroup, onAddPhotoToGroup,
-  setPhotos, updateGroupPhotos,
+  setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
 }) => {
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -105,6 +108,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         setActiveGroupId(null);
                       }
                   }} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Layers size={20} /></button>
+                  <button onClick={() => onBatchAiAnalyze?.(activeGroupPhotos)} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Sparkles size={20} /></button>
                   <button onClick={onAddPhotoToGroup} className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm"><Plus size={20} /></button>
                 </div>
               )}
@@ -142,12 +146,14 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                       </button>
                       <button
                         onClick={async () => {
-                          setFocusedGroupPhotoId(null);
-                          onAiAnalyze?.(focusedPhoto);
+                          if (isAnalyzing) {
+                             onCancelAnalyze?.();
+                          } else {
+                             setFocusedGroupPhotoId(null);
+                             onAiAnalyze?.(focusedPhoto);
+                          }
                         }}
-                        className="bg-white text-purple-600 p-4 
-                        rounded-full shadow-xl active:scale-95 
-                        transition-all"
+                        className={`bg-white p-4 rounded-full shadow-xl active:scale-95 transition-all ${isAnalyzing ? 'text-red-600' : 'text-purple-600'}`}
                       >
                          <Sparkles size={20} />
                       </button>

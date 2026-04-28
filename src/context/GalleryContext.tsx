@@ -6,6 +6,8 @@ interface GalleryContextType {
   photos: Photo[];
   categories: Category[];
   tags: Tag[];
+  tagNameToIdMap: Map<string, string>;
+  tagIdToNameMap: Map<string, string>;
   manufacturers: any[];
   searchQuery: string;
   debouncedSearchQuery: string;
@@ -98,9 +100,20 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return selectedIds.includes(id);
   }, [selectedIds]);
 
+  const tagNameToIdMap = useMemo(() => {
+    const map = new Map<string, string>();
+    tags.forEach(tag => map.set(tag.name, tag.id));
+    return map;
+  }, [tags]);
+
+  const tagIdToNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    tags.forEach(tag => map.set(tag.id, tag.name));
+    return map;
+  }, [tags]);
+
   // Intermediate: Raw Filtered and Sorted
-  const displayPhotos = useMemo(() => {
-    let result = [...photos];
+  const displayPhotos = useMemo(() => {    let result = [...photos];
     
     if (debouncedSearchQuery) {
       const q = debouncedSearchQuery.toLowerCase();
@@ -174,6 +187,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       photos,
       categories,
       tags,
+      tagNameToIdMap,
+      tagIdToNameMap,
       manufacturers,
       searchQuery,
       debouncedSearchQuery,
@@ -209,6 +224,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
     sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, user, isAdminMode,
+    tagNameToIdMap, tagIdToNameMap,
     togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos
   ]);
 

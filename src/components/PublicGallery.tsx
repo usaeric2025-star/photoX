@@ -450,6 +450,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         onUngroup={onGroupPhotos} // Assuming onGroupPhotos handles this or needs update
         onAddPhotoToGroup={onAddPhoto}
         onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
+        onCancelAnalyze={() => adminUI?.abortAnalysis()}
+        isAnalyzing={!!adminUI?.isAnalyzing}
+        onBatchAiAnalyze={(photos) => adminPhoto?.handleBatchAiIdentify(photos, false)}
         setPhotos={context.setPhotos}
         lang={lang}
         t={t}

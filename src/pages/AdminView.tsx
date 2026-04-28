@@ -92,7 +92,7 @@ export default function AdminView() {
       handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
   } = useAdminCore(
       user, photos, setPhotos, settings, setSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-      setIsSyncing, setAlertDialog, setPromptDialog, updateForm, t, refreshCloudData, setCloudCount
+      setIsSyncing, setAlertDialog, setPromptDialog, updateForm, t, refreshCloudData, setCloudCount, lastSyncTime
   );
 
   const handleManageClick = () => setActiveScreen('manage');
@@ -355,7 +355,7 @@ export default function AdminView() {
                               cancelBatchAiRef.current = true;
                             } else {
                               cancelBatchAiRef.current = false;
-                              handleBatchAiIdentify(gridPhotos, cancelBatchAiRef.current);
+                              handleBatchAiIdentify(gridPhotos, () => cancelBatchAiRef.current);
                             }
                           }}
                           handleManageClick={handleManageClick}

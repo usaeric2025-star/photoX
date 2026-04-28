@@ -11,9 +11,10 @@ import {
   checkImageHashExists,
   loadAllPhotosFromCloud,
   loadPhotosFromCloud,
-  addTagToDB,
+  batchCreateTags,
   syncPhotosToCloud
 } from '../services/supabaseService';
+import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 
@@ -44,7 +45,7 @@ export const useAdminPhotos = (
   const {
     photos, setPhotos,
     categories, setCategories,
-    tags, setTags,
+    tags, setTags, tagNameToIdMap, tagIdToNameMap,
     manufacturers, setManufacturers
   } = useGalleryContext();
 
@@ -121,7 +122,7 @@ export const useAdminPhotos = (
 
   const handleBatchAiIdentify = async (
       photos: Photo[], 
-      isCancelled: boolean
+      isCancelled: () => boolean
   ) => {
     const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
     const unProcessed = photos.filter(p => {
@@ -141,145 +142,97 @@ export const useAdminPhotos = (
 
     setBatchProgress({ current: 0, total: unProcessed.length });
     setIsBatchAnalyzing(true);
-    let successCount = 0;
-
-    try {
-      for (let i = 0; i < unProcessed.length; i++) {
-        if (isCancelled) break;
-        
-        let photo = unProcessed[i];
-        setBatchProgress(prev => ({ ...prev, current: i + 1 }));
-        
+    
+    const CONCURRENCY = 5;
+    let completedCount = 0;
+    
+    const processPhoto = async (photo: Photo): Promise<void> => {
         // --- Duplicate check logic ---
         if (photo.uri && !photo.image_hash) {
-          const hash = calculateMD5(photo.uri);
-          photo.image_hash = hash;
-          setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, image_hash: hash } : p));
+            const hash = calculateMD5(photo.uri);
+            photo.image_hash = hash;
+            setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, image_hash: hash } : p));
         }
 
         if (photo.image_hash) {
-          const dupInLocal = photosRef.current.find(p => p.id !== photo.id && p.image_hash === photo.image_hash);
-          if (dupInLocal) {
-            console.log(`Removing duplicate ${photo.id} in favor of ${dupInLocal.id}`);
-            await deletePhoto(photo.id);
-            continue; // Skip AI for deleted duplicate
-          }
-
-          if (user) {
-            const dupInCloud = await checkImageHashExists(photo.image_hash);
-            // If in cloud and NOT this record (id check), then it's a duplicate
-            // However, cloud check doesn't return ID often.
-            // If we found something with DIFFERENT code/id in cloud, we might consider it duplicate.
-            // For now, let's stick to local duplicates during batch to avoid too many DB queries.
-          }
+            const dupInLocal = photosRef.current.find(p => p.id !== photo.id && p.image_hash === photo.image_hash);
+            if (dupInLocal) {
+                console.log(`Removing duplicate ${photo.id} in favor of ${dupInLocal.id}`);
+                await deletePhoto(photo.id);
+                return;
+            }
         }
-        // ------------------------------
-
+        
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-          const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
-          
-          let finalCatId = result.categoryId || null;
-          let finalSubId = result.subcategoryId || null;
-          let finalTagIds = result.tagIds || [];
-          
-          if (result.newSubCategoryName && !result.subcategoryId) {
-             const newMfr = { id: crypto.randomUUID(), name: result.newSubCategoryName };
-             setManufacturers(prev => [...prev, newMfr]);
-             finalSubId = newMfr.id;
-          }
-          
-          if (result.newTags && Array.isArray(result.newTags)) {
-            const newNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
-            const newTagsToAdd: Tag[] = [];
+            const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
             
-            for (const name of newNames) {
-              const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
-              if (!existingTag) {
-                const savedTag = await addTagToDB(name);
-                newTagsToAdd.push(savedTag);
-              }
+            let finalCatId = result.categoryId || null;
+            let finalSubId = result.subcategoryId || null;
+            
+            if (result.newSubCategoryName && !result.subcategoryId) {
+                const newMfr = { id: crypto.randomUUID(), name: result.newSubCategoryName };
+                setManufacturers(prev => [...prev, newMfr]);
+                finalSubId = newMfr.id;
             }
             
-            if (newTagsToAdd.length > 0) {
-              setTags(prev => {
-                const filtered = newTagsToAdd.filter(nt => !prev.some(p => p.name.toLowerCase() === nt.name.toLowerCase()));
-                return [...prev, ...filtered];
-              });
-            }
-          }
+            const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
+            const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
 
-          // Refresh tags list immediately to include newly added ones
-          const updatedTags = [...tags, ...(result.newTags || []).map((name: string) => ({ name, id: 'temp-' + name }))]; 
-          
-          // Re-calculate Tag IDs with full tag list
-          const mergedTagIdsForSaving = Array.from(new Set([
-            ...finalTagIds,
-            ...(result.newTags || []).map((name: string) => {
-                const t = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
-                return String(t?.id || 'temp-' + name);
-            })
-          ]));
+            setPhotos(prev => {
+                const next = prev.map(p => {
+                    if (p.id !== photo.id) return p;
 
-          setPhotos(prev => {
-            const next = prev.map(p => {
-              if (p.id !== photo.id) return p;
+                    const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+                    const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
 
-              const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-              const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...mergedTagIdsForSaving]));
-
-              // Use newCategoryName directly as category if no code matches
-              const updatedPhoto: Photo = { 
-                ...p, 
-                categoryId: p.categoryId && p.categoryId !== 'uncategorized' ? p.categoryId : finalCatId, 
-                subcategoryId: p.subcategoryId || finalSubId, 
-                tagIds: mergedTagIds,
-                name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
-                model_number: p.model_number || result.modelNumber || null,
-                dimensions: (!p.dimensions || p.dimensions.length === 0)
-                  ? (result.dimensions || null)
-                  : p.dimensions,
-                updatedAt: new Date().toISOString(),
-                isAnalyzing: false 
-              };
-
-              return updatedPhoto;
+                    return { 
+                        ...p, 
+                        categoryId: p.categoryId && p.categoryId !== 'uncategorized' ? p.categoryId : finalCatId, 
+                        subcategoryId: p.subcategoryId || finalSubId, 
+                        tagIds: mergedTagIds,
+                        name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
+                        model_number: p.model_number || result.modelNumber || null,
+                        dimensions: (!p.dimensions || p.dimensions.length === 0) ? (result.dimensions || null) : p.dimensions,
+                        updatedAt: new Date().toISOString(),
+                        isAnalyzing: false 
+                    };
+                });
+                photosRef.current = next;
+                saveData('product_photos', next);
+                return next;
             });
-            photosRef.current = next;
-            return next;
-          });
 
-          // Perform cloud update outside of state updater
-          if (user) {
-            const updatedPhoto = photosRef.current.find(p => p.id === photo.id);
-            if (updatedPhoto) {
-              console.log('Saving photo with tagIds:', updatedPhoto.tagIds);
-              await savePhotoToCloud(user.id, updatedPhoto);
+            if (user) {
+                const updatedPhoto = photosRef.current.find(p => p.id === photo.id);
+                if (updatedPhoto) {
+                    await savePhotoToCloud(user.id, updatedPhoto);
+                }
             }
-          }
-          successCount++;
         } catch (err: any) {
-          setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
-          const errMsg = err.message || '未知錯誤';
-          if (errMsg.includes('權限') || errMsg.includes('Failed to fetch') || errMsg.includes('401') || errMsg.includes('403')) {
-            setAlertDialog({ title: '识别失败', message: `AI 识别失败，可能金鑰無效或網路錯誤。\n\n照片 ID: ${photo.id}\n错误原因: ${errMsg}\n\n已終止後續任務。` });
-            break;
-          } else {
-            console.error("Skipping photo due to error:", errMsg);
-            continue;
-          }
+            setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
+            throw err; 
         }
-      }
-      if (successCount > 0) {
-        setAlertDialog({ title: '处理完成', message: `处理终止或完成！成功识别了 ${successCount} 张照片。` });
-      }
+    };
+
+    try {
+        for (let i = 0; i < unProcessed.length; i += CONCURRENCY) {
+            if (isCancelled()) break;
+            
+            const batch = unProcessed.slice(i, i + CONCURRENCY);
+            const batchResults = await Promise.allSettled(batch.map(p => processPhoto(p)));
+            
+            completedCount += batchResults.filter(r => r.status === 'fulfilled').length;
+            setBatchProgress(prev => ({ ...prev, current: Math.min(i + CONCURRENCY, unProcessed.length) }));
+        }
     } finally {
-      setIsBatchAnalyzing(false);
-      setBatchProgress({ current: 0, total: 0 });
-      setPhotos(prev => prev.map(p => 
-        p.isAnalyzing ? { ...p, isAnalyzing: false } : p
-      ));
+        setIsBatchAnalyzing(false);
+        setBatchProgress({ current: 0, total: 0 });
+        setPhotos(prev => prev.map(p => 
+            p.isAnalyzing ? { ...p, isAnalyzing: false } : p
+        ));
+        setAlertDialog({ title: '处理完成', message: `处理终止或完成！共处理了 ${completedCount} 张照片。` });
     }
   };
 
@@ -326,64 +279,65 @@ export const useAdminPhotos = (
       
       let finalTagIdsFromAi = result.tagIds || [];
       if (result.newTags && Array.isArray(result.newTags)) {
-        const newNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
-        const newTagsToAdd: Tag[] = [];
-        const newTagIds: string[] = [];
-        
-        for (const name of newNames) {
-          const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
-          if (existingTag) {
-            newTagIds.push(String(existingTag.id));
-          } else {
-            const savedTag = await addTagToDB(name);
-            newTagsToAdd.push(savedTag);
-            newTagIds.push(String(savedTag.id));
+          const rawNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
+          const tagsToCreateNames = rawNames.filter(n => !tagNameToIdMap.has(n) && !tags.some(t => t.name.toLowerCase() === n.toLowerCase()));
+          
+          let newTagsMap = new Map<string, string>();
+          if (tagsToCreateNames.length > 0) {
+              newTagsMap = await batchCreateTags(tagsToCreateNames);
+              setTags(prev => [...prev, ...Array.from(newTagsMap.entries()).map(([name, id]) => ({id, name}))]);
           }
+
+          finalTagIdsFromAi = Array.from(new Set([
+            ...finalTagIdsFromAi,
+            ...result.newTags.map((name: string) => {
+              const existingId = tagNameToIdMap.get(name);
+              if (existingId) return String(existingId);
+              const newId = newTagsMap.get(name);
+              if (newId) return String(newId);
+              
+              const t = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
+              return String(t?.id);
+            })
+          ])).filter(id => id !== 'undefined' && id !== 'null' && id !== undefined);
         }
-        
-        if (newTagsToAdd.length > 0) {
-          setTags(prev => {
-            const filtered = newTagsToAdd.filter(nt => !prev.some(p => p.name.toLowerCase() === nt.name.toLowerCase()));
-            return [...prev, ...filtered];
-          });
-        }
-        finalTagIdsFromAi = Array.from(new Set([...finalTagIdsFromAi, ...newTagIds]));
-      }
 
       if (editPhotoId) {
-        setPhotos(prev => {
-          const next = prev.map(p => {
-            if (p.id !== editPhotoId) return p;
-            
-            let finalCatId = result.categoryId || p.categoryId;
-            let finalSubId = result.subcategoryId || p.subcategoryId;
-            
-            const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-            const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
+        // Calculate new photos list
+        const nextPhotos = photosRef.current.map(p => {
+          if (p.id !== editPhotoId) return p;
+          
+          let finalCatId = result.categoryId || p.categoryId;
+          let finalSubId = result.subcategoryId || p.subcategoryId;
+          
+          const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+          const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
 
-            const updatedPhoto = { 
-              ...p, 
-              categoryId: finalCatId,
-              subcategoryId: finalSubId,
-              tagIds: mergedTagIds,
-              name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
-              model_number: p.model_number || result.modelNumber || null,
-              dimensions: (!p.dimensions || p.dimensions.length === 0)
-                ? (result.dimensions || null)
-                : p.dimensions,
-              updatedAt: new Date().toISOString(),
-              isAnalyzing: false 
-            };
-            
-            return updatedPhoto;
-          });
-          photosRef.current = next;
-          return next;
+          const updatedPhoto = { 
+            ...p, 
+            categoryId: finalCatId,
+            subcategoryId: finalSubId,
+            tagIds: mergedTagIds,
+            name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
+            model_number: p.model_number || result.modelNumber || null,
+            dimensions: (!p.dimensions || p.dimensions.length === 0)
+              ? (result.dimensions || null)
+              : p.dimensions,
+            updatedAt: new Date().toISOString(),
+            isAnalyzing: false 
+          };
+          
+          return updatedPhoto;
         });
+
+        // Update state and persistence
+        setPhotos(nextPhotos);
+        photosRef.current = nextPhotos;
+        await saveData('product_photos', nextPhotos);
         
         // Backup to cloud outside state updater
         if (user) {
-          const updatedPhoto = photosRef.current.find(p => p.id === editPhotoId);
+          const updatedPhoto = nextPhotos.find(p => p.id === editPhotoId);
           if (updatedPhoto) {
             console.log('Saving photo with tagIds:', updatedPhoto.tagIds);
             await savePhotoToCloud(user.id, updatedPhoto);

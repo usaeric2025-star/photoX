@@ -39,7 +39,8 @@ export const useAdminCore = (
   updateForm: Function,
   t: any,
   refreshCloudData: Function,
-  setCloudCount?: Function
+  setCloudCount?: Function,
+  lastSyncTime?: number | null
 ) => {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -154,7 +155,8 @@ export const useAdminCore = (
         categories,
         manufacturers
       });
-      const result = await syncPhotosToCloudService(user.id, photos);
+      const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
+      const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
       const now = Date.now();
       await saveData('last_sync_time', now);
       refreshCloudData(user, categories, tags, manufacturers, setSettings, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true);
@@ -168,7 +170,7 @@ export const useAdminCore = (
     } finally {
       setIsSyncing(false);
     }
-  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData, setSettings, setCategories, setTags, setManufacturers, setPhotos, setCloudCount]);
+  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData, setSettings, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, lastSyncTime]);
 
   const performPullSync = useCallback(async () => {
     setIsSyncing(true);
