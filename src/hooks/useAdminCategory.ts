@@ -4,14 +4,17 @@ import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
 import { updateTagInDB, deleteTagFromDB } from '../services/supabaseService';
-import { supabase } from '../services/client';
+import { useOptionalAdminUI } from '../context/AdminContexts';
 
 export const useAdminCategory = () => {
+  const adminUI = useOptionalAdminUI();
+  const setAlertDialog = adminUI?.setAlertDialog || (() => {});
+
   const {
     categories, setCategories,
     tags, setTags,
     manufacturers, setManufacturers,
-    setPhotos
+    photos, setPhotos
   } = useGalleryContext();
 
   const [publicCategories, setPublicCategories] = useState<Category[]>([]);
@@ -53,7 +56,7 @@ export const useAdminCategory = () => {
     updateTagInDB(tagId, newName).catch(err => console.error("Cloud tag update failed:", err));
   };
 
-  const deleteTag = async (tagId: string, photos: any[]) => {
+  const deleteTag = async (tagId: string) => {
     if (!tagId) return;
 
     try {
@@ -95,7 +98,7 @@ export const useAdminCategory = () => {
         console.log('[deleteTag] 標籤删除成功');
     } catch (err: any) {
         console.error("[deleteTag] 删除失败:", err);
-        alert("刪除標籤失敗，請檢查網路連線。");
+        setAlertDialog({ title: '刪除失敗', message: "刪除標籤失敗，請檢查網路連線。" });
     }
   };
 

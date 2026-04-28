@@ -15,8 +15,6 @@ interface AdminSessionContextType {
   setCustomModel: (m: string) => void;
   viewMode: 'public' | 'private';
   setViewMode: (v: 'public' | 'private') => void;
-  isSyncing: boolean;
-  setIsSyncing: (v: boolean) => void;
   syncPercent: number;
   setSyncPercent: (v: number) => void;
   loginWithGoogle: () => Promise<void>;
@@ -99,9 +97,9 @@ interface AdminUIContextType {
   toast: { message: string, type: 'success' | 'error' } | null;
   showToast: (msg: string, type: 'success' | 'error') => void;
   
-  isAnalyzing: boolean;
-  isBatchAnalyzing: boolean;
-  batchProgress: number;
+  loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing';
+  setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void;
+  batchProgress: { current: number, total: number };
   aiDebugInfo: { step: string; message: string; error?: string } | null;
   abortAnalysis: () => void;
 }

@@ -22,27 +22,32 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
   );
 };
 
+import { useGalleryContext } from '../context/GalleryContext';
+
+import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
+
 export const useAdminCore = (
   user: any,
-  photos: any[],
-  setPhotos: React.Dispatch<React.SetStateAction<any[]>>,
-  settings: any,
-  setSettings: React.Dispatch<React.SetStateAction<any>>,
-  categories: any[],
-  setCategories: React.Dispatch<React.SetStateAction<any[]>>,
-  tags: any[],
-  setTags: React.Dispatch<React.SetStateAction<any[]>>,
-  manufacturers: any[],
-  setManufacturers: React.Dispatch<React.SetStateAction<any[]>>,
-  setIsSyncing: React.Dispatch<React.SetStateAction<boolean>>,
-  setAlertDialog: React.Dispatch<React.SetStateAction<any>>,
-  setPromptDialog: React.Dispatch<React.SetStateAction<any>>,
   updateForm: Function,
   t: any,
   refreshCloudData: Function,
-  setCloudCount?: Function,
   lastSyncTime?: number | null
 ) => {
+  const {
+    photos, setPhotos,
+    settings, setSettings,
+    categories, setCategories,
+    tags, setTags,
+    manufacturers, setManufacturers
+  } = useGalleryContext();
+
+  const adminSession = useOptionalAdminSession();
+  const adminUI = useOptionalAdminUI();
+  const setIsSyncing = adminSession?.setIsSyncing || (() => {});
+  const setAlertDialog = adminUI?.setAlertDialog || (() => {});
+  const setPromptDialog = adminUI?.setPromptDialog || (() => {});
+  const setCloudCount = adminUI?.setCloudCount || (() => {});
+
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
@@ -93,8 +98,7 @@ export const useAdminCore = (
         ];
         const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${catNameStr}\n标签：${tagNamesStr.join(', ') || '无'}`;
         
-        // Show native alert to ensure visibility on mobile devices
-        alert(resultMessage);
+        setAlertDialog({ title: 'AI 识别结果 / AI Analysis Result', message: resultMessage });
 
         const updates: Partial<any> = {};
         if (result.name && shouldUpdateName(formState.name)) {
@@ -159,7 +163,7 @@ export const useAdminCore = (
         message: err.message || '请检查网络或 API 密钥' 
       });
     }
-  }, [setAlertDialog]);
+  }, [setAlertDialog, categories, tags]);
 
   const performPushSync = useCallback(async () => {
     if (!user) return;
@@ -174,7 +178,7 @@ export const useAdminCore = (
       const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
       const now = Date.now();
       await saveData('last_sync_time', now);
-      refreshCloudData(user, categories, tags, manufacturers, setSettings, undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true);
+      refreshCloudData(user, true, setCloudCount);
       
       setAlertDialog({ 
         title: t.pushSuccess, 
@@ -185,22 +189,19 @@ export const useAdminCore = (
     } finally {
       setIsSyncing(false);
     }
-  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData, setSettings, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, lastSyncTime]);
+  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount, lastSyncTime]);
 
   const performPullSync = useCallback(async () => {
     setIsSyncing(true);
     try {
-      await refreshCloudData(
-        user, categories, tags, manufacturers, setSettings, 
-        undefined, undefined, undefined, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
-      );
+      await refreshCloudData(user, true, setCloudCount);
       setAlertDialog({ title: t.pullSuccess, message: t.pullSuccessMsg });
     } catch (err: any) {
       setAlertDialog({ title: t.pullFail, message: err.message });
     } finally {
       setIsSyncing(false);
     }
-  }, [user, categories, tags, manufacturers, setSettings, setCategories, setTags, setManufacturers, setPhotos, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount]);
+  }, [user, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
     try {
@@ -218,7 +219,7 @@ export const useAdminCore = (
     }
   }, [photos, setPhotos, showToast, setAlertDialog]);
 
-  const handleGroupPhotos = useCallback(async (ids: string[], user: any, savePhotoToCloud: Function) => {
+  const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;
     const groupId = `group-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const updatedPhotos = photos.map(p => ids.includes(p.id) ? { ...p, groupId } : p);
@@ -258,7 +259,7 @@ export const useAdminCore = (
         });
       }
     });
-  }, [categories, tags, manufacturers, settings, saveSettings, setCategories, updateForm, setPromptDialog]);
+  }, [categories, tags, manufacturers, settings, saveSettings, updateForm, setPromptDialog]);
 
   const quickAddTag = useCallback(() => {
     setPromptDialog({

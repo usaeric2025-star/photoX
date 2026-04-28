@@ -23,11 +23,10 @@ const INITIAL_FORM_STATE: ProductFormData = {
 
 import { useGalleryContext } from '../context/GalleryContext';
 
+import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
+
 export const usePhotoManagement = (
-  user: any,
-  setAlertDialog: (a: any) => void,
-  setIsSyncing: (s: boolean) => void,
-  setActiveScreen: (s: any) => void
+  user: any
 ) => {
   const {
     photos, setPhotos,
@@ -35,6 +34,12 @@ export const usePhotoManagement = (
     tags, setTags, tagNameToIdMap, tagIdToNameMap,
     manufacturers
   } = useGalleryContext();
+
+  const adminSession = useOptionalAdminSession();
+  const adminUI = useOptionalAdminUI();
+  const setAlertDialog = adminUI?.setAlertDialog || (() => {});
+  const setLoadingState = adminUI?.setLoadingState || (() => {});
+  const setActiveScreen = adminUI?.setActiveScreen || (() => {});
 
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
@@ -133,7 +138,7 @@ export const usePhotoManagement = (
        return;
     }
 
-    setIsSyncing(true);
+    setLoadingState('syncing');
     try {
        const categoryName = categories.find(c => c.id === categoryId)?.zh || '';
        const manufacturerName = manufacturers.find(m => m.id === subcategoryId)?.name || '';
@@ -222,7 +227,7 @@ export const usePhotoManagement = (
     } catch (err: any) {
        setAlertDialog({ title: '儲存失敗', message: err.message });
     } finally {
-       setIsSyncing(false);
+       setLoadingState('idle');
     }
   };
 
@@ -233,7 +238,7 @@ export const usePhotoManagement = (
        manual_code, model_number, isHidden, price
      } = formState;
 
-     setIsSyncing(true);
+     setLoadingState('syncing');
      try {
         // Resolve tag names to IDs
         const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
@@ -277,7 +282,7 @@ export const usePhotoManagement = (
      } catch (err: any) {
         setAlertDialog({ title: '批量儲存失敗', message: err.message });
      } finally {
-        setIsSyncing(false);
+        setLoadingState('idle');
      }
   };
 

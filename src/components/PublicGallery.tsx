@@ -47,6 +47,8 @@ interface PublicGalleryProps {
   setColumns?: (val: 2 | 3 | 5) => void;
   cloudCount?: number | null;
   hideHeader?: boolean;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
 }
 
 const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
@@ -89,7 +91,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   user: propsUser,
   isAdminMode: propsIsAdminMode,
   settings: propsSettings,
-  isRefreshing: propsIsRefreshing
+  isRefreshing: propsIsRefreshing,
+  onLoadMore,
+  hasMore
 }) => {
   const adminSession = useOptionalAdminSession();
   const adminPhoto = useOptionalAdminPhoto();
@@ -358,6 +362,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
             totalCount={gridPhotos.length}
+            endReached={onLoadMore}
             overscan={600}
             listClassName={`grid gap-3 p-2 pb-40 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (
@@ -389,44 +394,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         )}
       </div>
 
-      {/* Admin Bulk Actions */}
-      {isAdminMode && selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-3 bg-[#1D3557] px-5 py-3 rounded-2xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300">
-           <div className="bg-white/10 px-2 py-1 rounded-lg">
-             <span className="text-xs font-black text-white">{selectedIds.length}</span>
-           </div>
-           <div className="flex items-center gap-2">
-             <button onClick={() => onGroupPhotos?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title={t.merge}><Layers size={18} /></button>
-             <button onClick={() => onBatchEdit?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="统一编辑"><Pencil size={18} /></button>
-             <button onClick={async () => {
-                if (window.confirm(t.confirmDelete(selectedIds.length))) {
-                    for (const id of selectedIds) {
-                        await adminPhoto?.deletePhoto(id);
-                    }
-                    clearSelection();
-                }
-             }} className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20" title={t.delete}><Trash2 size={18} /></button>
-             <button onClick={async () => {
-               const filtered = Array.isArray(photos) ? photos.filter(p => selectedIds.includes(p.id)) : [];
-               const text = filtered.map(p => p.name || t.furniture).join(', ');
-               try {
-                 if (navigator.share) {
-                   await navigator.share({ title: t.shareTitle, text: t.shareMsgCount(selectedIds.length, text), url: window.location.origin });
-                 } else {
-                   alert(t.shareNotSupported);
-                 }
-               } catch (e: any) {
-                 if (e.name !== 'AbortError') {
-                   console.error("Batch share failed:", e);
-                 }
-               }
-             }} className="w-10 h-10 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl flex items-center justify-center text-blue-400 transition-all active:scale-95 border border-blue-500/20" title={t.share}><Share2 size={18} /></button>
-           </div>
-           <div className="w-px h-6 bg-white/10 mx-1" />
-           <button onClick={clearSelection} className="p-2 text-white/40 hover:text-white transition-colors"><X size={18} /></button>
-        </div>
-      )}
-
       {/* Floating Action Buttons */}
       {lightboxIndex === null && !isAdminMode && (
         <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-[400]">
@@ -444,14 +411,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         setLightboxIndex={setLightboxIndex}
         isAdminMode={!!isAdminMode}
         onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
-        onLongPressStart={startLongPress}
-        onLongPressEnd={endLongPress}
+        onLongPressStart={isAdminMode ? startLongPress : undefined}
+        onLongPressEnd={isAdminMode ? endLongPress : undefined}
         onBatchEdit={onBatchEdit}
-        onUngroup={onGroupPhotos} // Assuming onGroupPhotos handles this or needs update
+        onUngroup={onGroupPhotos} 
         onAddPhotoToGroup={onAddPhoto}
         onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
         onCancelAnalyze={() => adminUI?.abortAnalysis()}
-        isAnalyzing={!!adminUI?.isAnalyzing}
+        isAnalyzing={adminUI?.loadingState === 'analyzing'}
         onBatchAiAnalyze={(photos) => adminPhoto?.handleGroupAiIdentify(photos)}
         setPhotos={context.setPhotos}
         lang={lang}
@@ -508,14 +475,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         isStaffMode={isStaffMode}
         onAiAnalyze={async (photo) => await adminPhoto?.handleSingleAiAnalyze(photo.uri!, photo.categoryId || undefined)}
         onCancelAnalyze={() => adminUI?.abortAnalysis()}
-        isAnalyzing={!!adminUI?.isAnalyzing}
+        isAnalyzing={adminUI?.loadingState === 'analyzing'}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         onUngroup={async (id) => {
-          console.log("Ungroup photo", id);
+          if (onGroupPhotos) onGroupPhotos([id]);
           setLightboxIndex(null);
         }}
         onSetGroupCover={async (id, groupId) => {
-          console.log("Set cover", id, groupId);
+          // logic
         }}
         onEditPhoto={(photo) => {
            setLightboxIndex(null);
@@ -527,7 +494,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
              await updatePhotoHidden(photo.id, newStatus);
              context.setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
            } catch (e) {
-             console.error("Failed to toggle hidden:", e);
+             console.error("[ERROR] Failed to toggle hidden:", e);
            }
         }}
       />

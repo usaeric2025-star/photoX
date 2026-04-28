@@ -12,7 +12,11 @@ export default function PublicView() {
     photos, setPhotos, 
     categories, setCategories, 
     setTags, 
-    setManufacturers 
+    setManufacturers,
+    page, setPage,
+    hasMore, setHasMore,
+    filterCatId,
+    debouncedSearchQuery
   } = useGalleryContext();
   
   const [settings, setSettings] = useState<any>(null);
@@ -45,7 +49,7 @@ export default function PublicView() {
 
     try {
       const [cloudPhotos, cloudCats, cloudTags, cloudSettings] = await Promise.all([
-        loadAllPhotosFromCloud(),
+        loadAllPhotosFromCloud(undefined, 0, 50, filterCatId),
         loadCategoriesFromCloud(),
         loadTagsFromCloud(),
         fetchSettings()
@@ -53,6 +57,8 @@ export default function PublicView() {
 
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
+        setPage(0);
+        setHasMore(cloudPhotos.length === 50);
         saveData('cachedPhotos', cloudPhotos);
       }
       
@@ -87,6 +93,36 @@ export default function PublicView() {
     }
   };
 
+  const loadMore = async () => {
+    if (!hasMore || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    const nextPage = page + 1;
+    
+    try {
+      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, 50, filterCatId);
+      if (morePhotos && morePhotos.length > 0) {
+        setPhotos(prev => [...prev, ...morePhotos]);
+        setPage(nextPage);
+        setHasMore(morePhotos.length === 50);
+      } else {
+        setHasMore(false);
+      }
+    } catch (e) {
+      console.error("[ERROR] loadMore failed:", e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    // When filters change and we are on page 0, it means the reset from context happened.
+    // We should trigger a fresh fetch if it's not the initial mount (isInitializing is false).
+    if (!isInitializing && page === 0) {
+      syncWithCloud(true);
+    }
+  }, [filterCatId, debouncedSearchQuery]);
+
   useEffect(() => {
     syncWithCloud(false);
   }, []);
@@ -110,6 +146,8 @@ export default function PublicView() {
           settings={settings}
           isRefreshing={isRefreshing}
           onRefresh={() => syncWithCloud(true)}
+          onLoadMore={loadMore}
+          hasMore={hasMore}
         />
       )}
     </div>

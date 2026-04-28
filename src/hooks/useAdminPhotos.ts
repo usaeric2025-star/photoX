@@ -17,6 +17,7 @@ import {
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
+import { useGalleryContext } from '../context/GalleryContext';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name) return true;
@@ -32,15 +33,16 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
   );
 };
 
-import { useGalleryContext } from '../context/GalleryContext';
+import { IMAGE_COMPRESS, AI_CONFIG } from '../constants/config';
+
+import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 export const useAdminPhotos = (
   user: any, 
   geminiApiKey: string, 
   aiProvider: string, 
   customModel: string,
-  setAlertDialog: (dialog: { title: string, message: string } | null) => void,
-  setIsSyncing: (syncing: boolean) => void
+  setLoadingState?: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void
 ) => {
   const {
     photos, setPhotos,
@@ -49,9 +51,16 @@ export const useAdminPhotos = (
     manufacturers, setManufacturers
   } = useGalleryContext();
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isBatchAnalyzing, setIsBatchAnalyzing] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
+  const adminSession = useOptionalAdminSession();
+  const adminUI = useOptionalAdminUI();
+  const setIsSyncing = adminSession?.setIsSyncing || (() => {});
+  const setAlertDialog = adminUI?.setAlertDialog || (() => {});
+  const setActiveScreen = adminUI?.setActiveScreen || (() => {});
+
+  const [internalLoadingState, setInternalLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
+  const actualSetLoadingState = setLoadingState || setInternalLoadingState;
+  const loadingState = setLoadingState ? undefined : internalLoadingState;
+
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
@@ -70,7 +79,7 @@ export const useAdminPhotos = (
       setAiDebugInfo({ step: '已取消', message: '用戶中斷了 AI 識別任务' });
       
       // Stop the UI loading state
-      setIsAnalyzing(false);
+      actualSetLoadingState('idle');
       
       setTimeout(() => setAiDebugInfo(null), 3000);
     }
@@ -79,7 +88,6 @@ export const useAdminPhotos = (
   useEffect(() => {
     photosRef.current = photos;
     if (!isInitializing) {
-      console.log("DEBUG: Saving to IndexedDB, photo count:", photos.length);
       saveData('product_photos', photos);
     }
   }, [photos, isInitializing]);
@@ -141,9 +149,9 @@ export const useAdminPhotos = (
     }
 
     setBatchProgress({ current: 0, total: unProcessed.length });
-    setIsBatchAnalyzing(true);
+    actualSetLoadingState('analyzing');
     
-    const CONCURRENCY = 5;
+    const CONCURRENCY = AI_CONFIG.CONCURRENCY;
     let completedCount = 0;
     
     const processPhoto = async (photo: Photo): Promise<void> => {
@@ -157,7 +165,6 @@ export const useAdminPhotos = (
         if (photo.image_hash) {
             const dupInLocal = photosRef.current.find(p => p.id !== photo.id && p.image_hash === photo.image_hash);
             if (dupInLocal) {
-                console.log(`Removing duplicate ${photo.id} in favor of ${dupInLocal.id}`);
                 await deletePhoto(photo.id);
                 return;
             }
@@ -227,7 +234,7 @@ export const useAdminPhotos = (
             setBatchProgress(prev => ({ ...prev, current: Math.min(i + CONCURRENCY, unProcessed.length) }));
         }
     } finally {
-        setIsBatchAnalyzing(false);
+        actualSetLoadingState('idle');
         setBatchProgress({ current: 0, total: 0 });
         setPhotos(prev => prev.map(p => 
             p.isAnalyzing ? { ...p, isAnalyzing: false } : p
@@ -238,7 +245,7 @@ export const useAdminPhotos = (
 
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
     if (!imageData) return;
-    setIsAnalyzing(true);
+    actualSetLoadingState('analyzing');
     setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
     
     const controller = new AbortController();
@@ -271,7 +278,7 @@ export const useAdminPhotos = (
           ...(result.newTags || [])
       ];
       const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${catName}\n标签：${tagNames.join(', ') || '无'}`;
-      alert(resultMessage);
+      setAlertDialog({ title: 'AI 识别结果', message: resultMessage });
 
       setTimeout(() => {
         if (currentAnalysisController.current === controller) {
@@ -288,32 +295,12 @@ export const useAdminPhotos = (
       }
       
       let finalTagIdsFromAi = result.tagIds || [];
-      if (result.newTags && Array.isArray(result.newTags)) {
-          const rawNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
-          const tagsToCreateNames = rawNames.filter(n => {
-            const upper = n.toUpperCase();
-            return !tagNameToIdMap.has(upper) && !tags.some(t => t.name.toUpperCase() === upper);
-          });
-          
-          let newTagsMap = new Map<string, string>();
-          if (tagsToCreateNames.length > 0) {
-              newTagsMap = await batchCreateTags(tagsToCreateNames);
-              setTags(prev => [...prev, ...Array.from(newTagsMap.entries()).map(([name, id]) => ({id, name}))]);
-          }
-
-          finalTagIdsFromAi = Array.from(new Set([
-            ...finalTagIdsFromAi,
-            ...result.newTags.map((name: string) => {
-              const existingId = tagNameToIdMap.get(name);
-              if (existingId) return String(existingId);
-              const newId = newTagsMap.get(name);
-              if (newId) return String(newId);
-              
-              const t = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
-              return String(t?.id);
-            })
-          ])).filter(id => id !== 'undefined' && id !== 'null' && id !== undefined);
-        }
+      const allSuggestedTags = Array.from(new Set([
+        ...finalTagIdsFromAi,
+        ...(result.newTags || [])
+      ]));
+      
+      finalTagIdsFromAi = await resolveTagIdsBatch(allSuggestedTags, tags, tagNameToIdMap, setTags);
 
       if (editPhotoId) {
         // Calculate new photos list
@@ -352,7 +339,6 @@ export const useAdminPhotos = (
         if (user) {
           const updatedPhoto = nextPhotos.find(p => p.id === editPhotoId);
           if (updatedPhoto) {
-            console.log('Saving photo with tagIds:', updatedPhoto.tagIds);
             await savePhotoToCloud(user.id, updatedPhoto);
           }
         }
@@ -361,25 +347,24 @@ export const useAdminPhotos = (
       result.tagIds = finalTagIdsFromAi;
       return result;
     } catch (err: any) {
-      console.error("Single AI analysis failed:", err);
+      console.error("[ERROR] Single AI analysis failed:", err);
       setAiDebugInfo({ step: '错误', message: '识别失败', error: err.message });
       setAlertDialog({ title: 'AI 识别失败', message: err.message || '识别过程出现问题' });
     } finally {
-      setIsAnalyzing(false);
+      actualSetLoadingState('idle');
     }
   };
 
   const handlePhotoImport = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    useAi: boolean,
-    setActiveScreen: (s: any) => void
+    useAi: boolean
   ) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
     const fileArray = Array.from(files) as File[];
     
-    setIsImporting(true);
+    actualSetLoadingState('importing');
     setIsSyncing(true); // Global loading overlay
     setImportTotal(fileArray.length);
     setImportProgress(0);
@@ -438,7 +423,7 @@ export const useAdminPhotos = (
           
           if (!rawUri) continue;
           
-          const compressedUri = await compressImage(rawUri, 1200, 0.8);
+          const compressedUri = await compressImage(rawUri, IMAGE_COMPRESS.MAX_WIDTH, IMAGE_COMPRESS.QUALITY);
 
           // Use a temporary ID for local state, will be replaced by DB UUID after sync
           const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -522,7 +507,7 @@ export const useAdminPhotos = (
     }
     
     setIsSyncing(false);
-    setIsImporting(false);
+    actualSetLoadingState('idle');
     
     if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
        let msg = `成功處理了 ${successCount} 張照片。`;
@@ -540,7 +525,6 @@ export const useAdminPhotos = (
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
       const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
       
-      // Track affected groups to reassign covers if needed
       const affectedGroups = new Set<string>();
       photosToDelete.forEach(p => {
         if (p.groupId && p.isGroupCover) {
@@ -548,32 +532,24 @@ export const useAdminPhotos = (
         }
       });
 
-      // 1. Delete from Cloud
       if (user) {
         await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
       }
 
-      // 2. Update UI and Local Storage
       let newPhotos = photosRef.current.filter(p => !ids.includes(p.id));
 
-      // 3. Reassign covers for affected groups
       for (const groupId of affectedGroups) {
         const remainingGroupPhotos = newPhotos.filter(p => p.groupId === groupId);
-        // If there's a cover already (maybe deleted multiple but one was cover and others were not), skip
         if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
-          // Find the oldest photo to be the new cover
           const sorted = [...remainingGroupPhotos].sort((a, b) => 
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
           const newCover = { ...sorted[0], isGroupCover: true };
-          
-          // Update in memory array for the subsequent setPhotos call
           newPhotos = newPhotos.map(p => p.id === newCover.id ? newCover : p);
           
-          // Sync new cover to cloud immediately
           if (user) {
             savePhotoToCloud(user.id, newCover).catch(err => 
-              console.error(`Failed to reassign group cover for group ${groupId}:`, err)
+              console.error(`[ERROR] Failed to reassign group cover for group ${groupId}:`, err)
             );
           }
         }
@@ -597,7 +573,9 @@ export const useAdminPhotos = (
 
   return {
     photos, setPhotos,
-    isAnalyzing, setIsAnalyzing, isBatchAnalyzing, isImporting, importProgress, importTotal, batchProgress,
+    loadingState: actualSetLoadingState, // We should return the setter if needed, but the current UI uses the state
+    isImporting: (loadingState || internalLoadingState) === 'importing',
+    importProgress, importTotal, batchProgress,
     aiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
@@ -610,8 +588,7 @@ export const useAdminPhotos = (
         return;
       }
 
-      setIsSyncing(true);
-      setIsAnalyzing(true);
+      actualSetLoadingState('analyzing');
       setAiDebugInfo({ step: '群組識別', message: '正在分析第一張照片...' });
 
       try {
@@ -674,11 +651,10 @@ export const useAdminPhotos = (
         setAiDebugInfo(null);
         setAlertDialog({ title: '群組識別完成', message: `已將第一張照片的識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。` });
       } catch (err: any) {
-        console.error("Group AI analysis failed:", err);
+        console.error("[ERROR] Group AI analysis failed:", err);
         setAlertDialog({ title: '識別失敗', message: err.message || '群組識別過程出現問題' });
       } finally {
-        setIsAnalyzing(false);
-        setIsSyncing(false);
+        actualSetLoadingState('idle');
       }
     },
     handlePhotoImport, deletePhoto, updatePhoto

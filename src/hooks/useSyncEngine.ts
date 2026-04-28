@@ -13,8 +13,25 @@ import {
     loadTagsFromCloud
 } from '../services/supabaseService';
 
-export const useSyncEngine = () => {
-    const [isSyncing, setIsSyncing] = useState(false);
+import { useGalleryContext } from '../context/GalleryContext';
+
+export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void) => {
+    const { 
+        setPhotos: setPublicPhotos, 
+        setCategories, 
+        setTags, 
+        setManufacturers 
+    } = useGalleryContext();
+
+    const [internalSyncing, setInternalSyncing] = React.useState(false);
+    const setIsSyncing = (val: boolean) => {
+        if (setLoadingState) {
+            setLoadingState(val ? 'syncing' : 'idle');
+        } else {
+            setInternalSyncing(val);
+        }
+    };
+    const isSyncing = setLoadingState ? false : internalSyncing;
     const [viewMode, setViewMode] = useState<'public' | 'private'>('private');
     const [settings, setSettings] = useState<any>(null);
     const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
@@ -52,26 +69,18 @@ export const useSyncEngine = () => {
 
     const refreshCloudData = async (
         user: any,
-        categories: any[],
-        tags: any[],
-        manufacturers: any[],
-        setSettings?: (s: any) => void,
+        force = false,
+        setCloudCount?: (c: number | null) => void,
         setPublicCategories?: (c: any) => void,
         setPublicTags?: (t: any) => void,
-        setPublicManufacturers?: (m: any) => void,
-        setCategories?: (c: any) => void,
-        setTags?: (t: any) => void,
-        setManufacturers?: (m: any) => void,
-        setPublicPhotos?: (p: any) => void,
-        setCloudCount?: (c: number | null) => void,
-        force = false
+        setPublicManufacturers?: (m: any) => void
     ) => {
         setIsSyncing(true);
         console.log("SyncEngine: Refreshing data (Force:", force, ")...");
         try {
             const cloudSettings = await fetchSettings();
             if (cloudSettings) {
-                setSettings?.(cloudSettings);
+                setSettings(cloudSettings);
                 await saveData('product_settings', cloudSettings);
                 
                 // Sync theme
@@ -80,7 +89,7 @@ export const useSyncEngine = () => {
                 if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
 
                 if (cloudSettings.manufacturers !== undefined) {
-                    setManufacturers?.((prev: any[]) => {
+                    setManufacturers((prev: any[]) => {
                         const localMap = new Map((prev || []).map(m => [m.id, m]));
                         cloudSettings.manufacturers.forEach((m: any) => localMap.set(m.id, m));
                         const merged = Array.from(localMap.values());
@@ -94,12 +103,12 @@ export const useSyncEngine = () => {
             // --- Load Tags Relational ---
             const cloudTags = await loadTagsFromCloud();
             if (cloudTags && cloudTags.length > 0) {
-              setTags?.(cloudTags);
+              setTags(cloudTags);
               setPublicTags?.(cloudTags);
               await saveData('product_tags', cloudTags);
             } else if (cloudSettings?.tags) {
               // Migration fallback
-              setTags?.(cloudSettings.tags);
+              setTags(cloudSettings.tags);
               setPublicTags?.(cloudSettings.tags);
               await saveData('product_tags', cloudSettings.tags);
             }
@@ -114,14 +123,15 @@ export const useSyncEngine = () => {
                   subcategories: c.subcategories || [] 
                 }));
                 
-                setCategories?.(normalized);
+                setCategories(normalized);
                 setPublicCategories?.(normalized);
                 await saveData('product_categories', normalized);
             }
 
-            const cloudPhotos = user ? await loadPhotosFromCloud(user.id) : await loadAllPhotosFromCloud();
+            const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
+            const cloudPhotos = user ? await loadPhotosFromCloud(user.id, lastSyncISO) : await loadAllPhotosFromCloud();
             if (cloudPhotos) {
-                setPublicPhotos?.((prev: any[]) => {
+                setPublicPhotos((prev: any[]) => {
                     const localMap = new Map((prev || []).filter(p => p && p.id).map(p => [p.id, p]));
                     
                     cloudPhotos.forEach(cp => {

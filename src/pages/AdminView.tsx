@@ -9,6 +9,7 @@ import { Modals } from '../components/admin/Modals';
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { BatchEditScreen } from '../components/admin/BatchEditScreen';
+import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
 import { SettingsScreen } from '../components/SettingsScreen';
 import { GroupDetailView } from '../components/GroupDetailView';
@@ -60,6 +61,7 @@ export default function AdminView() {
     };
   }, []);
 
+  const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
   const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const [appLang] = useState('zh');
@@ -68,7 +70,7 @@ export default function AdminView() {
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   
-  const { isSyncing, setIsSyncing, viewMode, setViewMode, settings, setSettings, lastSyncTime, refreshCloudData, handleLogoUpload } = useSyncEngine();
+  const { viewMode, setViewMode, settings, setSettings, lastSyncTime, refreshCloudData, handleLogoUpload } = useSyncEngine(setLoadingState);
   const [internalPassword, setInternalPassword] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');
@@ -82,17 +84,21 @@ export default function AdminView() {
   }, [settings]);
   
   const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
-  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, setAlertDialog, setIsSyncing, setActiveScreen);
+  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user);
 
-  const { isAnalyzing, isBatchAnalyzing, batchProgress, isImporting, importProgress, importTotal, aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, deletePhoto } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setAlertDialog, setIsSyncing);
+  const { 
+    batchProgress, isImporting, importProgress, importTotal, 
+    aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, 
+    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, 
+    handlePhotoImport, deletePhoto 
+  } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setLoadingState);
 
   const {
       toast, showToast, saveSettings,
       performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
       handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
   } = useAdminCore(
-      user, photos, setPhotos, settings, setSettings, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-      setIsSyncing, setAlertDialog, setPromptDialog, updateForm, t, refreshCloudData, setCloudCount, lastSyncTime
+      user, updateForm, t, refreshCloudData, lastSyncTime
   );
 
   const handleManageClick = () => setActiveScreen('manage');
@@ -129,13 +135,13 @@ export default function AdminView() {
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
         onConfirm: async () => {
-          setIsSyncing(true);
+          setLoadingState('syncing');
           try {
-            await deleteTag(id, photos);
+            await deleteTag(id);
           } catch (err) {
           console.error('[handleDeleteTag] 删除过程出错:', err);
         } finally {
-          setIsSyncing(false);
+          setLoadingState('idle');
         }
       }
     });
@@ -144,7 +150,7 @@ export default function AdminView() {
   // Auto refresh
   useEffect(() => {
     if (authChecked && (user || sessionStorage.getItem('isStaffMode') === 'true')) {
-      refreshCloudData(user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, false);
+      refreshCloudData(user, false, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers);
     }
   }, [authChecked, user]);
 
@@ -241,7 +247,7 @@ export default function AdminView() {
     user, isAdminMode: !!user || sessionStorage.getItem('isStaffMode') === 'true', 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
-    viewMode, setViewMode, isSyncing, setIsSyncing, syncPercent, setSyncPercent,
+    viewMode, setViewMode, syncPercent, setSyncPercent,
     loginWithGoogle, logout, appLang: lang
   };
 
@@ -255,7 +261,7 @@ export default function AdminView() {
   const uiValue = {
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast, isAnalyzing, isBatchAnalyzing, batchProgress, aiDebugInfo, abortAnalysis
+    toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
   };
 
   return (
@@ -311,7 +317,7 @@ export default function AdminView() {
                   input.type = 'file';
                   input.accept = 'image/*';
                   input.multiple = true;
-                  input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                  input.onchange = (e) => handlePhotoImport(e as any, false);
                   input.click();
                 }}
                 setPhotos={setPhotos}
@@ -359,7 +365,7 @@ export default function AdminView() {
                           setSelectedIds={setSelectedIds}
                           setIsMultiSelect={setIsMultiSelect}
                           handleBatchAiIdentifyTrigger={() => {
-                            if (isBatchAnalyzing) {
+                            if (loadingState === 'analyzing') {
                               cancelBatchAiRef.current = true;
                             } else {
                               cancelBatchAiRef.current = false;
@@ -373,7 +379,7 @@ export default function AdminView() {
                             input.type = 'file';
                             input.accept = 'image/*';
                             input.multiple = true;
-                            input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
+                            input.onchange = (e) => handlePhotoImport(e as any, false);
                             input.click();
                           }}
                           photosCount={photos.length}
@@ -382,29 +388,8 @@ export default function AdminView() {
                           appLang={appLang}
                        />
                        <div className="flex-1 min-h-0 relative">
-                          <PublicGallery 
-                             isAdminMode={true}
+                          <AdminGalleryShell 
                              onExit={() => setViewMode('public')}
-                             showExit={true}
-                             onOpenSettings={handleManageClick}
-                             onAddPhoto={() => {
-                               const input = document.createElement('input');
-                               input.type = 'file';
-                               input.accept = 'image/*';
-                               input.multiple = true;
-                               input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
-                               input.click();
-                             }}
-                             onEditPhoto={(id) => setEditPhotoId(id)}
-                             onGroupPhotos={(ids) => handleGroupPhotos(ids, user, () => {})}
-                             onBatchEdit={setBatchEditIds}
-                             hideHeader={true}
-                             onRefresh={() => refreshCloudData(
-                                 user, categories, tags, manufacturers, setSettings, setPublicCategories, setPublicTags, setPublicManufacturers, setCategories, setTags, setManufacturers, setPhotos, setCloudCount, true
-                             )}
-                             columns={columns}
-                             setColumns={setColumns}
-                             cloudCount={cloudCount}
                           />
                        </div>
                     </div>
@@ -429,7 +414,7 @@ export default function AdminView() {
             )}
       
             <AnimatePresence>
-              {isSyncing && (
+              {loadingState !== 'idle' && (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -441,7 +426,7 @@ export default function AdminView() {
                      <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin"></div>
                   </div>
                   
-                  {isImporting && importTotal > 0 ? (
+                  {loadingState === 'importing' && importTotal > 0 ? (
                     <div className="w-full max-w-xs mt-8">
                       <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
                          <span>{t.uploadProgress}</span>

@@ -21,6 +21,8 @@ interface GalleryContextType {
   visibleCount: number;
   user: any;
   isAdminMode: boolean;
+  page: number;
+  hasMore: boolean;
   
   // Settlers
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
@@ -37,6 +39,8 @@ interface GalleryContextType {
   setShowGroupsCollapsed: (show: boolean) => void;
   setUser: (user: any) => void;
   setIsAdminMode: (is: boolean) => void;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  setHasMore: (has: boolean) => void;
   
   // Actions
   togglePhotoSelection: (id: string) => void;
@@ -75,6 +79,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   // Debounce search query
   useEffect(() => {
@@ -86,7 +92,9 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Reset pagination on filter change
   useEffect(() => {
-  }, [debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, showGroupsCollapsed]);
+    setPage(0);
+    setHasMore(true);
+  }, [debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder]);
 
   const togglePhotoSelection = useCallback((id: string) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -201,6 +209,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       showGroupsCollapsed,
       user,
       isAdminMode,
+      page,
+      hasMore,
       setPhotos,
       setCategories,
       setTags,
@@ -215,6 +225,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setShowGroupsCollapsed,
       setUser,
       setIsAdminMode,
+      setPage,
+      setHasMore,
       togglePhotoSelection,
       clearSelection,
       isPhotoSelected,
@@ -223,7 +235,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
-    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, user, isAdminMode,
+    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, user, isAdminMode, page, hasMore,
     tagNameToIdMap, tagIdToNameMap,
     togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos
   ]);
