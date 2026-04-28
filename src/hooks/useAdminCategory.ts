@@ -55,16 +55,27 @@ export const useAdminCategory = () => {
   const deleteTag = async (tagId: string, photos: any[], setPhotos: any) => {
     console.log("DEBUG TagEditor:", { tagId, photosCount: photos?.length, setPhotosIsFunction: typeof setPhotos === 'function' });
     try {
+        // 1. Update local states immediately
         setTags(prev => prev.filter(t => t.id !== tagId));
-        setPhotos((prev: any[]) => prev.map(p => ({
-          ...p,
-          tagIds: p.tagIds ? p.tagIds.filter((id: string) => id !== tagId) : []
-        })));
+        if (typeof setPhotos === 'function') {
+          setPhotos((prev: any[]) => {
+            const next = prev.map(p => ({
+              ...p,
+              tagIds: Array.isArray(p.tagIds) ? p.tagIds.filter((id: any) => String(id) !== String(tagId)) : []
+            }));
+            saveData('product_photos', next); // Persist local change
+            return next;
+          });
+        }
+        
+        // 2. Cloud deletion
+        // Delete associations first to be safe, then the tag itself
+        await supabase.from('photo_tags').delete().eq('tag_id', tagId);
         const success = await deleteTagFromDB(tagId);
         if (!success) throw new Error("Cloud delete returned false");
         
-        // Ensure sync
-        const { data: newTags } = await supabase.from('tags').select('*');
+        // 3. Re-verify tags list from cloud
+        const { data: newTags } = await supabase.from('tags').select('*').order('name', { ascending: true });
         if (newTags) {
             setTags(newTags.map((t: any) => ({ ...t, id: String(t.id) })));
         }

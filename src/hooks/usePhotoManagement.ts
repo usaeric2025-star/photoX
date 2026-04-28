@@ -78,7 +78,7 @@ export const usePhotoManagement = (
         });
       }
     }
-  }, [editPhotoId, photos, manufacturers, tags]);
+  }, [editPhotoId]); // Only reset form when switching photos, not when tags/categories/manufacturers change
 
   useEffect(() => {
     if (batchEditIds && batchEditIds.length > 0) {
