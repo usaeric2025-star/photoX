@@ -344,6 +344,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         sortedTags={sortedTags}
         lang={lang}
         t={t}
+        onScrollToTop={scrollToTop}
       />
 
       {/* Grid */}
@@ -414,9 +415,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
       {/* Floating Action Buttons */}
       {lightboxIndex === null && !isAdminMode && (
-        <div className="fixed bottom-6 left-6 right-6 flex justify-between z-[400] pointer-events-none">
-            <button onClick={scrollToTop} className="bg-[#1D3557] text-[#FDFAF6] p-4 rounded-full shadow-lg transition-all active:scale-95 border border-[#1D3557]/10 pointer-events-auto"><ArrowUpToLine size={24} /></button>
-            <button onClick={() => setShowWhatsAppChoice(true)} className="bg-[#25D366] text-white p-4 rounded-full shadow-lg pointer-events-auto"><MessageCircle size={24} /></button>
+        <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-[400]">
+            <button onClick={scrollToTop} className="bg-[#1D3557] text-[#FDFAF6] p-3 rounded-full shadow-lg transition-all active:scale-95 border border-[#1D3557]/10"><ArrowUpToLine size={20} /></button>
+            <button onClick={() => setShowWhatsAppChoice(true)} className="bg-[#25D366] text-white p-3 rounded-full shadow-lg"><MessageCircle size={20} /></button>
         </div>
       )}
 

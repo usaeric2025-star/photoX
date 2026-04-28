@@ -150,7 +150,7 @@ export const usePhotoManagement = (
 
           const newPhoto: Photo = {
             id: finalId,
-            storageId: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+            storageId: finalId,
             item_code: generateItemCode(),
             manual_code: manual_code,
             model_number: model_number,
@@ -225,9 +225,11 @@ export const usePhotoManagement = (
         });
         
         if (user) {
-           for (const photo of updatedPhotosList) {
-              savePhotoToCloud(user.id, photo).catch(e => console.error("Batch sync failed for", photo.id, e));
-           }
+           await Promise.allSettled(
+             updatedPhotosList.map(photo => 
+               savePhotoToCloud(user.id, photo)
+             )
+           );
         }
         
         resetAddState();

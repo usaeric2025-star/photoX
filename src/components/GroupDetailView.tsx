@@ -198,16 +198,16 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                   className={`aspect-square bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl border cursor-pointer relative group transition-all ${selectedPhotoIds.includes(photo.id) ? 'ring-4 ring-blue-500' : 'border-[#1D3557]/10'}`}
                   onClick={() => {
                       if (isAdminMode) {
-                        togglePhotoSelection(photo.id);
+                        setFocusedGroupPhotoId(photo.id); // 点击放大
                       } else {
                         const realIndex = displayPhotos.findIndex(p => p.id === photo.id);
                         if (realIndex !== -1) setLightboxIndex(realIndex);
                       }
                   }}
-                  onMouseDown={() => { if (isAdminMode) onLongPressStart(photo.id); }}
+                  onMouseDown={() => { if (isAdminMode) togglePhotoSelection(photo.id); }}
                   onMouseUp={onLongPressEnd}
                   onMouseLeave={onLongPressEnd}
-                  onTouchStart={() => { if (isAdminMode) onLongPressStart(photo.id); }}
+                  onTouchStart={() => { if (isAdminMode) togglePhotoSelection(photo.id); }}
                   onTouchEnd={onLongPressEnd}
                 >
                    <img 

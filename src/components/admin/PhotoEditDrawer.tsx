@@ -34,8 +34,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { isAnalyzing, aiDebugInfo } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
-  const [localSyncing, setLocalSyncing] = useState(false);
-  const isSyncing = sessionSyncing || localSyncing;
+  const isSyncing = sessionSyncing;
 
   const sortedTags = useMemo(() => {
     return tags;
@@ -54,9 +53,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
       <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
         {/* Left: AI/Status Info */}
         <div className="flex-1 flex items-center gap-2 overflow-hidden">
-          {props.aiDebugInfo?.error ? (
+          {aiDebugInfo?.error ? (
             <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-xl text-[10px] font-bold truncate">
-              AI: {props.aiDebugInfo.error}
+              AI: {aiDebugInfo.error}
             </div>
           ) : (
             <div 

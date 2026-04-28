@@ -185,7 +185,7 @@ export const useAdminCore = (
       console.error('Ungroup error:', err);
       setAlertDialog({ title: '解除群組失敗', message: err?.message || '未知錯誤' });
     }
-  }, [photos, setPhotos, updatePhotosGroupInCloud, showToast, setAlertDialog]);
+  }, [photos, setPhotos, showToast, setAlertDialog]);
 
   const handleGroupPhotos = useCallback(async (ids: string[], user: any, savePhotoToCloud: Function) => {
     if (ids.length < 2) return;
@@ -205,17 +205,20 @@ export const useAdminCore = (
         // Since subcategories are still part of the category object in JSON (legacy), 
         // but the goal is to move to tables, we'll use a hack or assume sub_categories table soon.
         // For now, let's get a UUID from the database.
-        const savedMfr = await addManufacturerToDB(trimmed);
-        const newSubId = savedMfr.id;
-        
-        const nextCats = categories.map(c => c.id === formState.categoryId || c.code === formState.categoryId ? {
-          ...c,
-          subcategories: [...(c.subcategories || []), { id: newSubId, name: trimmed, aliases: [] }]
-        } : c);
-        
-        setCategories(nextCats);
-        updateForm((prev: any) => ({ ...prev, subcategoryId: newSubId }));
-        await saveSettings({ ...settings, categories: nextCats, tags, manufacturers });
+        const newMfr = {
+          id: crypto.randomUUID(),
+          name: trimmed,
+          aliases: [trimmed]
+        };
+        const nextMfrs = [...manufacturers, newMfr];
+        setManufacturers(nextMfrs);
+        updateForm((prev: any) => ({ 
+          ...prev, subcategoryId: newMfr.id 
+        }));
+        await saveSettings({ 
+          ...settings, categories, tags, 
+          manufacturers: nextMfrs 
+        });
       }
     });
   }, [categories, tags, manufacturers, settings, saveSettings, setCategories, updateForm, setPromptDialog]);
@@ -251,12 +254,14 @@ export const useAdminCore = (
       placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
         const trimmed = val.trim();
-        const savedMfr = await addManufacturerToDB(trimmed);
-        const newMfrId = savedMfr.id;
-        
-        const nextMfrs = [...manufacturers, savedMfr];
+        const newMfr = {
+          id: crypto.randomUUID(),
+          name: trimmed,
+          aliases: [trimmed]
+        };
+        const nextMfrs = [...manufacturers, newMfr];
         setManufacturers(nextMfrs);
-        updateForm((prev: any) => ({ ...prev, subcategoryId: newMfrId }));
+        updateForm((prev: any) => ({ ...prev, subcategoryId: newMfr.id }));
         await saveSettings({ ...settings, categories, tags, manufacturers: nextMfrs });
       }
     });

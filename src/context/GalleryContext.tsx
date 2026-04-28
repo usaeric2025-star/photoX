@@ -33,7 +33,6 @@ interface GalleryContextType {
   setIsMultiSelect: (is: boolean) => void;
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   setShowGroupsCollapsed: (show: boolean) => void;
-  setVisibleCount: React.Dispatch<React.SetStateAction<number>>;
   setUser: (user: any) => void;
   setIsAdminMode: (is: boolean) => void;
   
@@ -72,7 +71,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(15);
   const [user, setUser] = useState<any>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
 
@@ -86,7 +84,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Reset pagination on filter change
   useEffect(() => {
-    setVisibleCount(15);
   }, [debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, showGroupsCollapsed]);
 
   const togglePhotoSelection = useCallback((id: string) => {
@@ -187,7 +184,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       selectedIds,
       isMultiSelect,
       showGroupsCollapsed,
-      visibleCount,
       user,
       isAdminMode,
       setPhotos,
@@ -202,7 +198,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsMultiSelect,
       setSelectedIds,
       setShowGroupsCollapsed,
-      setVisibleCount,
       setUser,
       setIsAdminMode,
       togglePhotoSelection,
@@ -213,7 +208,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
-    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, user, isAdminMode,
+    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, user, isAdminMode,
     togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos
   ]);
 

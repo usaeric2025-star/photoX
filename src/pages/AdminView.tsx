@@ -30,7 +30,7 @@ export default function AdminView() {
   const { user, authChecked, logout } = useAuth();
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-    displayPhotos, gridPhotos, visibleCount, setVisibleCount, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
+    gridPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode
   } = useGalleryContext();
   
@@ -137,22 +137,6 @@ export default function AdminView() {
   const [showManageAccess, setShowManageAccess] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
-
-  const observerTarget = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && visibleCount < displayPhotos.length) {
-            setVisibleCount(prev => prev + 15);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-    return () => observer.disconnect();
-  }, [displayPhotos.length, visibleCount, setVisibleCount]);
   
   const errorContent = pageError ? (
     <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white p-4 font-bold overflow-auto max-h-[30vh]">
@@ -370,7 +354,7 @@ export default function AdminView() {
                             input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                             input.click();
                           }}
-                          photosCount={displayPhotos.length}
+                          photosCount={gridPhotos.length}
                           totalPhotosCount={photos.length}
                           cloudCount={cloudCount}
                           appLang={appLang}

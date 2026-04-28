@@ -25,7 +25,7 @@ export const useSyncEngine = () => {
             const hasCleaned = await loadData('uuid_v2_cleanup_done');
             if (!hasCleaned) {
                 console.log("SyncEngine: Performing one-time cleanup of legacy local data...");
-                const keysToClear = ['product_categories', 'db_categories', 'product_tags', 'temp_tags', 'product_photos'];
+                const keysToClear = ['product_categories', 'db_categories', 'product_tags', 'temp_tags'];
                 for (const key of keysToClear) {
                     // indexedDB saveData is our loadData wrapper
                     await saveData(key, null);
@@ -150,11 +150,7 @@ export const useSyncEngine = () => {
                 });
             }
 
-            if (user) {
-                const cloudPhotos = await loadPhotosFromCloud(user.id);
-                if (cloudPhotos) setCloudCount?.(cloudPhotos.length);
-            } else if (cloudPhotos) {
-                // In staff mode/no user, show total public count
+            if (cloudPhotos) {
                 setCloudCount?.(cloudPhotos.length);
             }
             

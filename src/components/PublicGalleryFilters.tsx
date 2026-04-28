@@ -22,13 +22,14 @@ interface PublicGalleryFiltersProps {
   sortedTags: Tag[];
   lang: string;
   t: any;
+  onScrollToTop: () => void;
 }
 
 export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   searchQuery, setSearchQuery, sortOrder, toggleSortOrder, columns, setColumns,
   showGroupsCollapsed, setShowGroupsCollapsed, categories,
   selectedCatCode, setSelectedCatCode, selectedSubId, setSelectedSubId,
-  selectedTagIds, setSelectedTagIds, sortedTags, lang, t
+  selectedTagIds, setSelectedTagIds, sortedTags, lang, t, onScrollToTop
 }) => {
   return (
     <div className="shrink-0 p-3 z-40 bg-[#FDFAF6] space-y-2">
@@ -76,7 +77,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
       <div className="grid grid-cols-4 gap-2 px-1">
           <button 
-            onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); }}
+            onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); onScrollToTop(); }}
             className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
           >
             {t.allCats}
@@ -98,7 +99,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   onClick={() => { 
                     setSelectedCatCode(cat.id); 
                     setSelectedSubId(null);
-                    window.scrollTo({ top: 0, behavior: 'instant' }); 
+                    onScrollToTop();
                   }}
                   className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                 >
@@ -128,7 +129,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     .map((sub: any) => (
                     <button 
                       key={sub.id}
-                      onClick={() => setSelectedSubId(sub.id)}
+                      onClick={() => { setSelectedSubId(sub.id); onScrollToTop(); }}
                       className={`px-2 py-0.5 rounded-lg text-[8px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                     >
                       {sub.name}
@@ -139,17 +140,20 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             )}
           </AnimatePresence>
 
-        <div className="flex flex-wrap gap-0.5 items-start max-h-[6rem] overflow-y-auto pb-1 content-start">
-            {sortedTags.map(tag => (
-              <button 
-                key={tag.id}
-                onClick={() => setSelectedTagIds(prev => prev.includes(tag.id) ? [] : [tag.id])}
-                className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
-              >
-                #{tag.name}
-              </button>
-            ))}
+        <div className="relative">
+          <div className="flex flex-wrap gap-0.5 items-start max-h-[5rem] overflow-y-auto pb-1 content-start pr-1">
+              {sortedTags.map(tag => (
+                <button 
+                  key={tag.id}
+                  onClick={() => { setSelectedTagIds(prev => prev.includes(tag.id) ? [] : [tag.id]); onScrollToTop(); }}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                >
+                  #{tag.name}
+                </button>
+              ))}
           </div>
+          <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#FDFAF6] to-transparent pointer-events-none" />
+        </div>
         </div>
     </div>
   );

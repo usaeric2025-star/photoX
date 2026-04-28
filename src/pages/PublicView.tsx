@@ -25,6 +25,7 @@ export default function PublicView() {
     const cachedPhotos = await loadData('cachedPhotos');
     const cachedCats = await loadData('cachedCategories');
     const cachedTags = await loadData('cachedTags');
+    const cachedSettings = await loadData('cachedSettings');
 
     if (cachedPhotos) {
       setPhotos(cachedPhotos);
@@ -32,6 +33,12 @@ export default function PublicView() {
     }
     if (cachedCats) setCategories(cachedCats);
     if (cachedTags) setTags(cachedTags);
+    if (cachedSettings) {
+      setSettings(cachedSettings);
+      if (cachedSettings.manufacturers) {
+        setManufacturers(cachedSettings.manufacturers);
+      }
+    }
 
     if (!isBackground && !cachedPhotos) setIsInitializing(true);
     else setIsRefreshing(true);

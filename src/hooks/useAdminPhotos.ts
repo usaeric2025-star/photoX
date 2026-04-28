@@ -11,7 +11,8 @@ import {
   checkImageHashExists,
   loadAllPhotosFromCloud,
   loadPhotosFromCloud,
-  addTagToDB
+  addTagToDB,
+  syncPhotosToCloud
 } from '../services/supabaseService';
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
@@ -167,9 +168,9 @@ export const useAdminPhotos = (
           let finalTagIds = result.tagIds || [];
           
           if (result.newSubCategoryName && !result.subcategoryId) {
-             const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
-             setManufacturers(prev => [...prev, savedMfr]);
-             finalSubId = savedMfr.id;
+             const newMfr = { id: crypto.randomUUID(), name: result.newSubCategoryName };
+             setManufacturers(prev => [...prev, newMfr]);
+             finalSubId = newMfr.id;
           }
           
           if (result.newTags && Array.isArray(result.newTags)) {
@@ -250,6 +251,9 @@ export const useAdminPhotos = (
     } finally {
       setIsBatchAnalyzing(false);
       setBatchProgress({ current: 0, total: 0 });
+      setPhotos(prev => prev.map(p => 
+        p.isAnalyzing ? { ...p, isAnalyzing: false } : p
+      ));
     }
   };
 
@@ -510,6 +514,11 @@ export const useAdminPhotos = (
         });
         await new Promise(resolve => setTimeout(resolve, 50));
       }
+    }
+    
+    if (user && successCount > 0) {
+      const newPhotos = photosRef.current;
+      await syncPhotosToCloud(user.id, newPhotos);
     }
     
     setIsSyncing(false);

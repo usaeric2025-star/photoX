@@ -169,11 +169,21 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
            {/* 3. 核心功能按钮 - WhatsApp 咨询 (高亮显示在最显眼处) */}
            <button 
-             onClick={() => contactWhatsApp(photo)}
+             onClick={() => {
+                (window as any)._pendingPhoto = photo;
+                contactWhatsApp(photo);
+              }}
              className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-green-200 transition-all active:scale-[0.98]"
            >
              <MessageCircle size={20} fill="currentColor" />
              {t.whatsAppInquiry}
+           </button>
+           <button
+             onClick={() => shareSinglePhoto(photo)}
+             className="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-blue-200 transition-all active:scale-[0.98]"
+           >
+             <Share2 size={20} />
+             {t.share || 'Share'}
            </button>
 
            {/* Admin Group Controls */}
