@@ -702,7 +702,9 @@ export const saveSettings = async (settings: any) => {
             delete payload.internal_password;
         }
         if (payload.manufacturers) {
-            payload.manufacturers_json = payload.manufacturers;
+            payload.manufacturers_json = typeof payload.manufacturers === 'string'
+              ? payload.manufacturers
+              : JSON.stringify(payload.manufacturers);
             delete payload.manufacturers;
         }
         

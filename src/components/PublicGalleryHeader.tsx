@@ -13,6 +13,8 @@ interface PublicGalleryHeaderProps {
   onHeaderClick: () => void;
   onRefresh: () => void;
   onToggleMultiSelect: () => void;
+  clearSelection: () => void;
+  setIsMultiSelect: (val: boolean) => void;
   onAddPhoto: () => void;
   onSetLang: (lang: any) => void;
   onExit?: () => void;
@@ -22,7 +24,7 @@ interface PublicGalleryHeaderProps {
 
 export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
   settings, photos, isAdminMode, isRefreshing, isMultiSelect, lang, t,
-  onHeaderClick, onRefresh, onToggleMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings
+  onHeaderClick, onRefresh, onToggleMultiSelect, clearSelection, setIsMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings
 }) => {
   return (
     <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">

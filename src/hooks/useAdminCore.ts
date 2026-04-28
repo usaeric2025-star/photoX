@@ -2,8 +2,8 @@ import React, { useState, useCallback } from 'react';
 import { 
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
-  addTagToDB,
-  updatePhotosGroupInCloud
+  updatePhotosGroupInCloud,
+  addTagToDB
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 

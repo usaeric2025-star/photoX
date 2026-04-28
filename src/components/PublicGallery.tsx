@@ -316,6 +316,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           onHeaderClick={handleHeaderClick}
           onRefresh={onRefresh!}
           onToggleMultiSelect={() => setIsMultiSelect(!isMultiSelect)}
+          clearSelection={clearSelection}
+          setIsMultiSelect={setIsMultiSelect}
           onAddPhoto={onAddPhoto!}
           onSetLang={(l) => setLang(l)}
           onExit={() => onExit ? onExit() : navigate('/admin')}
