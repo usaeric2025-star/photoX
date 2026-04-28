@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { Photo, Tag, ProductFormData } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
