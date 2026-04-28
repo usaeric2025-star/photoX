@@ -22,6 +22,7 @@ interface Props {
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { 
     handleSingleAiAnalyze, 
+    handleSingleAiAnalyzeCallback,
     categories, 
     tags, 
     photos, 
@@ -97,7 +98,20 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   onClick={() => {
                     if (isAnalyzing) return;
                     const data = props.newPhotoData || props.editPhotoPreview;
-                    if (data) handleSingleAiAnalyze!(data, formState.categoryId || undefined);
+                    if (!data) return;
+                    
+                    if (handleSingleAiAnalyzeCallback) {
+                      handleSingleAiAnalyzeCallback(
+                        data, 
+                        formState.categoryId || undefined, 
+                        editPhotoId || undefined, 
+                        formState, 
+                        updateForm, 
+                        handleSingleAiAnalyze
+                      );
+                    } else {
+                      handleSingleAiAnalyze!(data, formState.categoryId || undefined);
+                    }
                   }}
                   disabled={isAnalyzing && !props.abortAnalysis}
                   className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all active:scale-95 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
@@ -257,7 +271,20 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                           onClick={() => {
                             if (isAnalyzing) return;
                             const data = props.newPhotoData || props.editPhotoPreview;
-                            if (data) handleSingleAiAnalyze!(data, formState.categoryId || undefined);
+                            if (!data) return;
+
+                            if (handleSingleAiAnalyzeCallback) {
+                              handleSingleAiAnalyzeCallback(
+                                data, 
+                                formState.categoryId || undefined, 
+                                editPhotoId || undefined, 
+                                formState, 
+                                updateForm, 
+                                handleSingleAiAnalyze
+                              );
+                            } else {
+                              handleSingleAiAnalyze!(data, formState.categoryId || undefined);
+                            }
                           }}
                           disabled={isAnalyzing}
                           className={`text-[9px] font-black px-2 py-1 rounded-lg border flex items-center gap-1 transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 active:scale-95'}`}

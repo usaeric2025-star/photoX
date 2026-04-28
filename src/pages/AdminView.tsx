@@ -279,6 +279,7 @@ export default function AdminView() {
   const photoValue = {
     photos, setPhotos, categories, setCategories, tags, setTags,
     manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
+    handleSingleAiAnalyzeCallback,
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, quickAddTag, quickAddManufacturer
   };

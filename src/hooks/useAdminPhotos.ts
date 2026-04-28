@@ -277,15 +277,6 @@ export const useAdminPhotos = (
 
       setAiDebugInfo({ step: '完成', message: 'AI 识别成功' });
       
-      // Recognition feedback alert - find names for better readability
-      const catName = categories.find(c => String(c.id) === String(result.categoryId))?.zh || result.newCategoryName || '未识别';
-      const tagNames = [
-          ...(result.tagIds || []).map((id: string) => tags.find(t => String(t.id) === String(id))?.name).filter(Boolean),
-          ...(result.newTags || [])
-      ];
-      const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${catName}\n标签：${tagNames.join(', ') || '无'}`;
-      setAlertDialog({ title: 'AI 识别结果', message: resultMessage });
-
       setTimeout(() => {
         if (currentAnalysisController.current === controller) {
           setAiDebugInfo(null);
@@ -463,18 +454,22 @@ export const useAdminPhotos = (
                 let finalCatId = result.categoryId || null;
                 let finalSubId = result.subcategoryId || null;
                 
-                // For simplicity in background processing, new tags/categories are skipped here if they lack IDs
-                // Or we can just populate the text directly.
+                const allSuggestedTags = Array.from(new Set([
+                  ...(result.tagIds || []),
+                  ...(result.newTags || [])
+                ]));
+                
+                const finalTagIds = await resolveTagIdsBatch(allSuggestedTags, tags, tagNameToIdMap, setTags);
 
                 setPhotos(prev => prev.map(p => {
                    if (p.id !== photoId) return p;
                    const updatedPhoto = {
                      ...p,
                      isAnalyzing: false,
-                     name: result.name || p.name,
+                     name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                      categoryId: finalCatId,
                      subcategoryId: finalSubId,
-                     tagIds: result.tagIds || [],
+                     tagIds: finalTagIds,
                      model_number: p.model_number || result.modelNumber || '',
                      dimensions: result.dimensions || p.dimensions
                    };

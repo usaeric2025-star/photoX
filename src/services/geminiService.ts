@@ -71,7 +71,7 @@ export const analyzeProductPhoto = async (
 
   // Use OpenRouter endpoint
   const baseURL = 'https://openrouter.ai/api/v1';
-  let modelName = customModel || 'google/gemini-2.5-flash-lite-preview-09-2025';
+  let modelName = customModel || 'google/gemini-2.0-flash-lite-preview-02-05';
   
   // Ensure the model name includes the provider prefix if needed, openrouter models usually look like google/gemini-...
   if (!modelName.includes('/')) {
@@ -101,10 +101,10 @@ export const analyzeProductPhoto = async (
 你是一位家具專業分析師。請分析照片中的家具，並嚴格按照以下規則提取資訊：
 
 【優先級 1：圖片文字識別】
-- 仔細觀察照片中是否有任何標籤、吊牌、包裝盒上的文字
+- 仔細觀察照片中是否有任何標籤、吊牌、包裝盒、說明書上的文字
 - 識別標價牌或標籤上的手寫/列印代號，填入 "manualCode"
 - 識別規格標籤上的產品型號（Model No / SKU），填入 "modelNumber"，若無則填 null
-- 識別尺寸信息（H/W/L），如有測量標註請識別
+- 識別尺寸信息（H/W/L），如有測量標註、吊牌上的尺寸請務必識別
 
 【優先級 2：名稱規則 - 強制執行】
 - "name" 字段無論任何情況必須填寫，不能為空
@@ -120,20 +120,19 @@ export const analyzeProductPhoto = async (
 【核心規則 - 必須遵守】
 
 1. 標籤（Tags）：
-   - 強制只選或新增 2 個標籤。
+   - 強制選取或新增 2-3 個標籤以描述產品。
    - 【極其重要】語義去重：請仔細對比現有標籤清單 ${JSON.stringify(tagsJson)}。
    - 如果你想新增的標籤與現有標籤意思接近（例如：Marble 與 Marblelook、Sofa 與 Couches、Leather 與 Faux-leather）、或是包含關係，必須優先選擇現有標籤清單中的詞，嚴禁新增語義重複的標籤。
-   - 第一個標籤：側重家具用途或風格（例如 SOFA、CLASSIC、OFFICE）。
-   - 第二個標籤：側重材質（例如 WOODEN、PLASTIC、FABRIC）。
+   - 標籤側重：家具用途/性質、風格、材質、顏色等。
    - 若現有標籤完全無關聯，才可以填入 "newTags"。
    - 強制規範：每個標籤必須是單一英文單詞，不得包含空格、符號或數字，且必須全部大写 (UPPERCASE)。
    - 新增標籤填入 "newTags" 字段，格式為數組（如 ["RATTAN"]），若不新增則返回 []。
 
 2. 尺寸（Dimensions）：
-   - 如果識別出照片中有不同規格或多組尺寸，請全部列出
-   - 每組尺寸必須包含 "label"（規格名稱，例如 '3-Seater'）、"length"、"width"、"height"、"unit"、"isAI": true
-   - 單位識別：仔細辨認是 cm, mm 還是 inch，無法確定則默認 cm
-   - 若照片中無尺寸信息，返回空數組 []
+   - 仔細從照片或標籤中尋找尺寸信息。
+   - 如果識別出照片中有多個組成部分或多組尺寸，請全部列出。
+   - 每組尺寸必須包含 "label"（規格名稱，例如 'Overall'、'Single-Seater'）、"length"、"width"、"height"（若僅有 1 或 2 個維度也請填入對應欄位，其餘填 0）、"unit": "cm" (默認)、"isAI": true
+   - 若照片中完全找不到任何尺寸依據，返回空數組 []。
 
 3. 廠商（subcategoryId）：禁止識別或修改，回傳值必須為 null
 
