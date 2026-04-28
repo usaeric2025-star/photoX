@@ -79,6 +79,28 @@ export const usePhotoManagement = (
     }
   }, [editPhotoId, photos, manufacturers, tags]);
 
+  useEffect(() => {
+    if (batchEditIds && batchEditIds.length > 0) {
+      const photosInBatch = photos.filter(p => batchEditIds.includes(p.id));
+      if (photosInBatch.length > 0) {
+        const firstPhoto = photosInBatch[0];
+        
+        // Find common values for tags (if all photos have the same tags)
+        const allTagsSame = photosInBatch.every(p => 
+          JSON.stringify([...(p.tagIds || [])].sort()) === JSON.stringify([...(firstPhoto.tagIds || [])].sort())
+        );
+
+        setFormState({
+          ...INITIAL_FORM_STATE,
+          categoryId: firstPhoto.categoryId || null,
+          subcategoryId: firstPhoto.subcategoryId || null,
+          tagIds: allTagsSame ? (firstPhoto.tagIds || []) : [],
+          // Keep other fields empty for now as they might differ
+        });
+      }
+    }
+  }, [batchEditIds, photos]);
+
   const resetAddState = () => {
     setNewPhotoData(null);
     setEditPhotoId(null);
