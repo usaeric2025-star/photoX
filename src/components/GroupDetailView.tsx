@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Edit3, Settings2, Plus, ChevronLeft, Layers, Pencil, Trash2 } from 'lucide-react';
+import { X, Edit3, Settings2, Plus, ChevronLeft, Layers, Pencil } from 'lucide-react';
 import { Photo } from '../types';
+import { updatePhotosGroupInCloud } from '../services/supabaseService';
 
 interface GroupDetailViewProps {
   activeGroupId: string | null;
@@ -42,11 +43,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
     focusedGroupPhotoId ? activeGroupPhotos.find(p => p.id === focusedGroupPhotoId) : null
   , [focusedGroupPhotoId, activeGroupPhotos]);
 
-  const handleRemoveFromGroup = (e: React.MouseEvent, photo: Photo) => {
+  const handleRemoveFromGroup = async (e: React.MouseEvent, photo: Photo) => {
     e.stopPropagation();
-    if (confirm(`確定要將這張照片移出群組嗎？`)) {
-      setPhotos?.(prev => prev.map(p => p.id === photo.id ? { ...p, groupId: null } : p));
-      updateGroupPhotos?.([photo.id], null);
+    if (confirm('確定要將這張照片移出群組嗎？')) {
+      setPhotos?.(prev => prev.map(p => 
+        p.id === photo.id ? { ...p, groupId: null } : p
+      ));
+      await updatePhotosGroupInCloud([photo.id], null);
     }
   };
 
@@ -119,6 +122,36 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                     referrerPolicy="no-referrer"
                     alt="Focused Photo" 
                   />
+
+                  {isAdminMode && (
+                    <div className="absolute bottom-6 left-0 right-0 
+                      flex justify-center gap-3 px-4">
+                      <button
+                        onClick={() => {
+                          setFocusedGroupPhotoId(null);
+                          onEditPhoto?.(focusedPhoto);
+                        }}
+                        className="bg-white text-[#1D3557] p-3 rounded-full shadow-xl"
+                      >
+                        <Edit3 size={20} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPhotos?.(prev => prev.map(p => {
+                            if (p.groupId !== activeGroupId) return p;
+                            return { ...p, isGroupCover: p.id === focusedPhoto.id };
+                          }));
+                        }}
+                        className={`p-3 rounded-full shadow-xl
+                          ${focusedPhoto.isGroupCover 
+                            ? 'bg-[#D4A853] text-white' 
+                            : 'bg-white text-[#1D3557]'}`}
+                      >
+                        <Settings2 size={20} />
+                      </button>
+                    </div>
+                  )}
+
                   <button 
                     onClick={() => setFocusedGroupPhotoId(null)}
                     className="absolute top-4 right-4 bg-white/20 p-2 rounded-full text-white"
@@ -130,6 +163,12 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
            </AnimatePresence>
 
            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-20">
+              {isAdminMode && isMultiSelectMode && (
+                <div className="text-center text-xs font-bold 
+                  text-[#1D3557]/60 mb-4 col-span-full">
+                  已选 {selectedPhotoIds.length} 张
+                </div>
+              )}
               {activeGroupPhotos.map((photo) => (
                 <motion.div 
                   key={photo.id}
@@ -153,11 +192,32 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                     referrerPolicy="no-referrer"
                    />
-                   
-                   {isAdminMode && (
-                     <button 
-                       onClick={(e) => handleRemoveFromGroup(e, photo)}
-                       className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-red-500 transition-colors"
+                 
+                   {isAdminMode && isMultiSelectMode && (
+                     <div className={`absolute inset-0 flex items-center 
+                       justify-center transition-all
+                       ${selectedPhotoIds.includes(photo.id) 
+                         ? 'bg-blue-500/30' 
+                         : 'bg-black/10'}`}
+                     >
+                       <div className={`w-6 h-6 rounded-full border-2 
+                         flex items-center justify-center
+                         ${selectedPhotoIds.includes(photo.id)
+                           ? 'bg-blue-500 border-blue-500'
+                           : 'border-white bg-black/30'}`}
+                       >
+                         {selectedPhotoIds.includes(photo.id) && (
+                           <X size={12} className="text-white" />
+                         )}
+                       </div>
+                     </div>
+                   )}
+
+                   {isAdminMode && !isMultiSelectMode && (
+                     <button onClick={(e) => handleRemoveFromGroup(e, photo)}
+                       className="absolute top-2 right-2 p-1 
+                       bg-black/50 text-white rounded-full 
+                       hover:bg-red-500 transition-colors z-10"
                      >
                        <X size={14} />
                      </button>

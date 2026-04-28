@@ -45,8 +45,15 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           {isAdminMode && (
             <div className="flex items-center gap-2 mr-2">
               <button 
-                onClick={onToggleMultiSelect}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400'}`}
+                onClick={() => {
+                  if (isMultiSelect) {
+                    clearSelection();
+                    setIsMultiSelect(false);
+                  } else {
+                    setIsMultiSelect(true);
+                  }
+                }}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white border-slate-200 text-slate-400'}`}
                 title={t.selectMode}
               >
                 <Grid3X3 size={20} />
