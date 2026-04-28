@@ -130,7 +130,7 @@ export const BatchEditScreen = ({
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ subcategoryId: mfr.id })}
-                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${formState.subcategoryId === mfr.id ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${String(formState.subcategoryId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 {mfr.name}
               </button>
@@ -144,15 +144,25 @@ export const BatchEditScreen = ({
             <button onClick={quickAddT} className="text-[10px] text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
-            {tags.map((tag: any) => (
+            {tags.map((tag: any) => {
+              const isSelected = formState.tagIds.map(String).includes(String(tag.id));
+              return (
               <button 
                 key={tag.id}
-                onClick={() => updateForm({ tagIds: formState.tagIds.includes(tag.id) ? formState.tagIds.filter((tid: string) => tid !== tag.id) : [...formState.tagIds, tag.id] })}
-                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${formState.tagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+                onClick={() => {
+                  const tagIdStr = String(tag.id);
+                  const exists = formState.tagIds.map(String).includes(tagIdStr);
+                  updateForm({ 
+                    tagIds: exists 
+                      ? formState.tagIds.filter((tid: string) => String(tid) !== tagIdStr) 
+                      : [...formState.tagIds, tagIdStr] 
+                  });
+                }}
+                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${isSelected ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 #{tag.name}
               </button>
-            ))}
+            )})}
           </div>
         </section>
 
