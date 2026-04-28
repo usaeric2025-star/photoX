@@ -7,10 +7,17 @@ export const useAdminDialogs = () => {
     const [promptDialog, setPromptDialog] = useState<any>(null);
     const [promptValue, setPromptValue] = useState('');
 
+    const wrappedSetPromptDialog = useCallback((dialog: any) => {
+        if (dialog === null) {
+            setPromptValue('');
+        }
+        setPromptDialog(dialog);
+    }, []);
+
     return {
         confirmDialog, setConfirmDialog,
         alertDialog, setAlertDialog,
-        promptDialog, setPromptDialog,
+        promptDialog, setPromptDialog: wrappedSetPromptDialog,
         promptValue, setPromptValue,
     };
 };
