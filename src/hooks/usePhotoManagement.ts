@@ -93,6 +93,8 @@ export const usePhotoManagement = (
       dimL, dimW, dimH
     } = formState;
 
+    console.log("Saving new photo, formState.name:", name);
+
     if (!categoryId && !name && !editPhotoId && !newPhotoData) {
        setAlertDialog({ title: '提示', message: '請填寫基本資訊或選擇分類' });
        return;

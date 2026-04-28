@@ -279,7 +279,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   };
 
-  const shareSinglePhoto = async (photo: Photo) => {
+  const shareSinglePhoto = useCallback(async (photo: Photo) => {
     const msg = getShareMessage(photo);
     try {
       if (navigator.share) {
@@ -292,7 +292,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         console.error("Share failed:", e);
       }
     }
-  };
+  }, [t.shareTitle, t.shareNotSupported]);
 
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">

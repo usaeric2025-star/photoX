@@ -7,6 +7,20 @@ import {
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 
+const shouldUpdateName = (name: string | null | undefined): boolean => {
+  if (!name) return true;
+  const lower = name.toLowerCase();
+  return (
+    lower === 'furniture' ||
+    lower === '未命名产品' ||
+    lower === 'furniture record' ||
+    /^[\d\s\-_]+$/.test(name) ||
+    /\.(jpg|jpeg|png|heic|webp)$/i.test(name) ||
+    /^(img|image|photo|dsc|pic)[\s_-]?\d+/i.test(lower) ||
+    name.length < 3
+  );
+};
+
 export const useAdminCore = (
   user: any,
   photos: any[],
@@ -70,7 +84,7 @@ export const useAdminCore = (
       const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId);
       if (result) {
         const updates: Partial<any> = {};
-        if (result.name && (!formState.name || formState.name === '未命名产品' || formState.name === 'Furniture' || /^(img|image|photo)[\s_-]?\d+/i.test(formState.name) || /\.(jpg|jpeg|png|heic|webp)$/i.test(formState.name))) {
+        if (result.name && shouldUpdateName(formState.name)) {
           updates.name = result.name;
         }
         

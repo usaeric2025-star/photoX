@@ -17,6 +17,20 @@ import {
 import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 
+const shouldUpdateName = (name: string | null | undefined): boolean => {
+  if (!name) return true;
+  const lower = name.toLowerCase();
+  return (
+    lower === 'furniture' ||
+    lower === '未命名产品' ||
+    lower === 'furniture record' ||
+    /^[\d\s\-_]+$/.test(name) ||
+    /\.(jpg|jpeg|png|heic|webp)$/i.test(name) ||
+    /^(img|image|photo|dsc|pic)[\s_-]?\d+/i.test(lower) ||
+    name.length < 3
+  );
+};
+
 import { useGalleryContext } from '../context/GalleryContext';
 
 export const useAdminPhotos = (
