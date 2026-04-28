@@ -104,14 +104,18 @@ export const Modals = ({
                 onChange={(e) => setPromptValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && promptValue.trim()) {
-                    promptDialog.onSubmit(promptValue);
-                    setPromptDialog(null);
-                  }
-                }}
-              />
+                      promptDialog.onSubmit(promptValue);
+                      setPromptDialog(null);
+                      setPromptValue('');
+                    }
+                  }}
+                />
               <div className="flex gap-3">
                 <button 
-                  onClick={() => setPromptDialog(null)}
+                  onClick={() => {
+                      setPromptDialog(null);
+                      setPromptValue('');
+                  }}
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
                 >
                   取消
@@ -121,6 +125,7 @@ export const Modals = ({
                     if (promptValue.trim()) {
                       promptDialog.onSubmit(promptValue);
                       setPromptDialog(null);
+                      setPromptValue('');
                     }
                   }}
                   disabled={!promptValue.trim()}
