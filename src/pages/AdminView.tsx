@@ -129,6 +129,7 @@ export default function AdminView() {
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
       onConfirm: async () => {
+        console.log("DEBUG: Calling deleteTag", { id, hasPhotos: !!photos, hasSetPhotos: typeof setPhotos === 'function' });
         await deleteTag(id, photos, setPhotos);
       }
     });

@@ -271,6 +271,8 @@ export const useAdminCore = (
           const addedTag = latestTags.find((t: any) => t.name === trimmedName);
           const newTagId = addedTag ? String(addedTag.id) : null;
           
+          console.log("DEBUG: QuickAdding tag", { trimmedName, newTagId, prevTagIds: prev.tagIds });
+
           const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds : (typeof prev.tagIds === 'string' ? [prev.tagIds] : []);
           return newTagId ? { ...prev, tagIds: [...safeTags, newTagId] } : prev;
         });
