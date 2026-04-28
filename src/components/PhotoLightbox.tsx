@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff } from 'lucide-react';
 import { Photo, Category } from '../types';
 
 interface PhotoLightboxProps {
@@ -21,11 +21,12 @@ interface PhotoLightboxProps {
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   onEditPhoto?: (photo: Photo) => void;
+  onToggleHidden?: (photo: Photo) => void;
 }
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-  isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto
+  isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto, onToggleHidden
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
@@ -149,6 +150,14 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   {photo.name || t.unnamed}
                 </h2>
               </div>
+              {isAdminMode && onToggleHidden && (
+                <button 
+                  onClick={() => onToggleHidden(photo)}
+                  className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+                >
+                  {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              )}
            </div>
 
            {/* 2. 价格与型号 - 核心信息 */}

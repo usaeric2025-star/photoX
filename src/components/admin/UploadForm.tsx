@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff } from 'lucide-react';
+import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
 import { Category, Tag, ProductFormData } from '../../types';
 import { useAdminSession } from '../../context/AdminContexts';
 
@@ -90,10 +90,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           <button 
             onClick={saveNewPhoto}
             disabled={isSyncing}
-            className={`bg-slate-800 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-lg shadow-slate-800/10 transition-all active:scale-95 flex items-center gap-2 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`bg-slate-800 text-white w-10 h-10 rounded-2xl shadow-lg shadow-slate-800/10 transition-all active:scale-95 flex items-center justify-center ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+            title="完成儲存"
           >
-            {isSyncing ? <RefreshCcw size={14} className="animate-spin" /> : null}
-            完成儲存
+            {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
           </button>
           <button 
             onClick={onClose} 

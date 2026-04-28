@@ -354,7 +354,7 @@ export default function AdminView() {
                             input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                             input.click();
                           }}
-                          photosCount={gridPhotos.length}
+                          photosCount={photos.length}
                           totalPhotosCount={photos.length}
                           cloudCount={cloudCount}
                           appLang={appLang}

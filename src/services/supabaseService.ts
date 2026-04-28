@@ -87,6 +87,7 @@ function mapSupabasePhoto(item: any): Photo {
       createdAt: item.created_at,
       groupId: item.group_id,
       isGroupCover: item.is_group_cover || false,
+      isHidden: item.is_hidden || false,
       userId: item.user_id,
       uri: item.image_url
     };
@@ -338,6 +339,18 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: stri
     
   if (error) {
     console.error("Failed to update group id:", error);
+    throw error;
+  }
+};
+
+export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .update({ is_hidden: isHidden })
+    .eq('id', photoId);
+    
+  if (error) {
+    console.error("Failed to update hidden status:", error);
     throw error;
   }
 };

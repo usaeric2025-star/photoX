@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { updatePhotoHidden } from '../services/supabaseService';
 import { Photo, Category, Tag } from '../types';
 import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -278,6 +279,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   };
 
+  const shareSinglePhoto = async (photo: Photo) => {
+    const msg = getShareMessage(photo);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: t.shareTitle, text: msg, url: window.location.origin });
+      } else {
+        alert(t.shareNotSupported);
+      }
+    } catch (e: any) {
+      if (e.name !== 'AbortError') {
+        console.error("Share failed:", e);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
@@ -362,6 +378,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 onLightboxOpen={setLightboxIndex}
                 onLongPressStart={startLongPress}
                 onLongPressEnd={endLongPress}
+                shareSinglePhoto={shareSinglePhoto}
                 displayPhotos={displayPhotos}
                 gridPhotos={gridPhotos}
               />
@@ -380,10 +397,20 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
              <button onClick={() => onGroupPhotos?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title={t.merge}><Layers size={18} /></button>
              <button onClick={() => onBatchEdit?.(selectedIds)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="统一编辑"><Pencil size={18} /></button>
              <button onClick={() => window.confirm(t.confirmDelete(selectedIds.length)) && onDeletePhotos?.(selectedIds)} className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20" title={t.delete}><Trash2 size={18} /></button>
-             <button onClick={() => {
+             <button onClick={async () => {
                const filtered = Array.isArray(photos) ? photos.filter(p => selectedIds.includes(p.id)) : [];
                const text = filtered.map(p => p.name || t.furniture).join(', ');
-               navigator.share ? navigator.share({ title: t.shareTitle, text: t.shareMsgCount(selectedIds.length, text), url: window.location.origin }) : alert(t.shareNotSupported);
+               try {
+                 if (navigator.share) {
+                   await navigator.share({ title: t.shareTitle, text: t.shareMsgCount(selectedIds.length, text), url: window.location.origin });
+                 } else {
+                   alert(t.shareNotSupported);
+                 }
+               } catch (e: any) {
+                 if (e.name !== 'AbortError') {
+                   console.error("Batch share failed:", e);
+                 }
+               }
              }} className="w-10 h-10 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl flex items-center justify-center text-blue-400 transition-all active:scale-95 border border-blue-500/20" title={t.share}><Share2 size={18} /></button>
            </div>
            <div className="w-px h-6 bg-white/10 mx-1" />
@@ -477,6 +504,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         onEditPhoto={(photo) => {
            setLightboxIndex(null);
            if (onEditPhoto) onEditPhoto(photo.id);
+        }}
+        onToggleHidden={async (photo) => {
+           const newStatus = !photo.isHidden;
+           try {
+             await updatePhotoHidden(photo.id, newStatus);
+             context.setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
+           } catch (e) {
+             console.error("Failed to toggle hidden:", e);
+           }
         }}
       />
 
