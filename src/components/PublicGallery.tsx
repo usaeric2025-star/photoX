@@ -51,7 +51,7 @@ interface PublicGalleryProps {
   hasMore?: boolean;
 }
 
-const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
+const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
   const handleOpenLightbox = useCallback(() => {
     const realIndex = displayPhotos.findIndex((p: any) => p.id === gridPhotos[index].id);
     if (realIndex !== -1) onLightboxOpen(realIndex);
@@ -69,6 +69,7 @@ const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect
       lang={lang}
       t={t}
       categories={categories}
+      manufacturers={manufacturers}
       tagMap={tagMap}
       onToggleSelection={onToggleSelection}
       onEditPhoto={onEditPhoto}
@@ -110,6 +111,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const {
     photos,
     categories,
+    manufacturers,
     tags: contextTags,
     searchQuery, setSearchQuery,
     filterCatId: selectedCatCode, setFilterCatId: setSelectedCatCode,
@@ -378,6 +380,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 lang={lang}
                 t={t}
                 categories={categories}
+                manufacturers={manufacturers}
                 tagMap={tagMap}
                 onToggleSelection={togglePhotoSelection}
                 onEditPhoto={onEditPhoto}

@@ -51,9 +51,24 @@ export const useAdminCategory = () => {
     persist();
   }, [categories, tags, manufacturers, isLoaded]);
 
-  const updateTag = (tagId: string, newName: string) => {
-    setTags(prev => prev.map(t => String(t.id) === String(tagId) ? { ...t, name: newName } : t));
-    updateTagInDB(tagId, newName).catch(err => console.error("Cloud tag update failed:", err));
+  const updateTag = async (tagId: string, newName: string) => {
+    try {
+      const upName = newName.toUpperCase().trim();
+      if (!upName) return;
+      
+      setTags(prev => prev.map(t => String(t.id) === String(tagId) ? { ...t, name: upName } : t));
+      
+      const success = await updateTagInDB(tagId, upName);
+      if (!success) {
+        throw new Error("Cloud update failed");
+      }
+    } catch (err: any) {
+      console.error("Cloud tag update failed:", err);
+      // Revert local state if cloud failed
+      const storedTags = await loadData('product_tags');
+      if (storedTags) setTags(storedTags);
+      setAlertDialog({ title: '更新失敗', message: '無法同步更新到雲端。' });
+    }
   };
 
   const deleteTag = async (tagId: string) => {

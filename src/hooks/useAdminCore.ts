@@ -266,36 +266,36 @@ export const useAdminCore = (
       title: '自定义标签',
       placeholder: '输入新标签名称 (例如 清货)',
       onSubmit: async (val: string) => {
-        const trimmedName = val.trim().toUpperCase();
-        if (!trimmedName) return;
+        const normalized = val.trim().toUpperCase();
+        if (!normalized) return;
 
-        if (tags.some(t => t.name.toUpperCase() === trimmedName)) {
-          const existingTag = tags.find(t => t.name.toUpperCase() === trimmedName);
-          if (existingTag) {
-            const entryId = String(existingTag.id);
-            updateForm((prev: any) => {
-               const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds.map(String) : [];
-               if (safeTags.includes(entryId)) return prev;
-               return { ...prev, tagIds: [...safeTags, entryId] };
-            });
-          }
+        const existing = tags.find(t => t.name.toUpperCase() === normalized);
+        
+        if (existing) {
+          const entryId = String(existing.id);
+          updateForm((prev: any) => {
+            const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds.map(String) : [];
+            if (safeTags.includes(entryId)) return prev;
+            return { ...prev, tagIds: [...safeTags, entryId] };
+          });
+          showToast(`标签 "${normalized}" 已存在`);
           return;
         }
         
         setIsSyncing(true);
         try {
-          const savedTag = await addTagToDB(trimmedName);
+          const savedTag = await addTagToDB(normalized);
           
-          // Update global tags state
+          // 4. 更新全局标签列表（让 tagMap 包含新标签）
           setTags(prev => [...prev, savedTag]);
           
-          // Select it in the form
+          // 5. 更新当前照片的 tagIds（让这张照片立即关联新标签）
           updateForm((prev: any) => {
             const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds.map(String) : [];
-            return { ...prev, tagIds: [...safeTags, savedTag.id] };
+            return { ...prev, tagIds: [...safeTags, String(savedTag.id)] };
           });
           
-          showToast('已新增标签: #' + trimmedName);
+          showToast(`已新增标签 "${normalized}"`);
         } catch (err: any) {
           console.error(err);
           setAlertDialog({ title: '新增标签失败', message: err.message });

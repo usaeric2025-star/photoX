@@ -13,6 +13,7 @@ interface PhotoCardProps {
   lang: string;
   t: any;
   categories: Category[];
+  manufacturers: any[];
   tagMap: Record<string, string>;
   onToggleSelection?: (id: string) => void;
   onEditPhoto?: (id: string) => void;
@@ -25,16 +26,24 @@ interface PhotoCardProps {
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   photo, index, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
-  lang, t, categories, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
+  lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
 }) => {
+  const mfrName = useMemo(() => {
+    const mfrId = photo.subcategoryId || (photo as any).sub_category;
+    if (mfrId) {
+      const activeMfr = manufacturers.find((m: any) => String(m.id) === String(mfrId));
+      if (activeMfr) return activeMfr.name;
+    }
+    return '';
+  }, [photo.subcategoryId, (photo as any).sub_category, manufacturers]);
+
   const catName = useMemo(() => {
-    const catId = photo.categoryId;
+    const catId = photo.categoryId || (photo as any).category_id;
     
-    // 1. If we have a categoryId, try to look it up in the provided categories list first
-    // This ensures that local updates to categoryId show the correct name immediately
     if (catId) {
-      const activeCat = categories ? categories.find(c => String(c.id) === String(catId)) : null;
+      const catIdStr = String(catId);
+      const activeCat = categories ? categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr) : null;
       if (activeCat) {
         if (lang === 'zh') return activeCat.zh || activeCat.name;
         if (lang === 'en') return activeCat.en || activeCat.name;
@@ -43,22 +52,25 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       }
     }
 
-    // 2. Fallback to pre-joined cloud values (good for initial load or if category list is incomplete)
-    if (lang === 'zh' && photo.categoryZh) return photo.categoryZh;
-    if (lang === 'en' && photo.categoryEn) return photo.categoryEn;
-    if (lang === 'ms' && photo.categoryMs) return photo.categoryMs;
-    if (photo.categoryName) return photo.categoryName;
-    
     return '';
-  }, [photo.categoryId, photo.categoryZh, photo.categoryEn, photo.categoryMs, photo.categoryName, categories, lang]);
+  }, [photo.categoryId, (photo as any).category_id, categories, lang]);
   
   const displayCatName = useMemo(() => {
     const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
-    if (!catName || uncatValues.includes(catName.toLowerCase())) {
-      return t.uncategorized;
+    
+    // If we have a real category name, use it
+    if (catName && !uncatValues.includes(catName.toLowerCase())) {
+      return catName;
     }
-    return catName;
-  }, [catName, t.uncategorized]);
+    
+    // If category is "uncategorized", but we have a manufacturer name, 
+    // many users treat manufacturer as the "directory". 
+    if (mfrName) {
+      return mfrName;
+    }
+
+    return t.uncategorized;
+  }, [catName, mfrName, t.uncategorized]);
 
   const isUncategorized = displayCatName === t.uncategorized;
   

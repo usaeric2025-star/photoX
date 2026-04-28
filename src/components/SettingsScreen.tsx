@@ -106,7 +106,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const addTag = async () => {
     if (!newTagName.trim()) return;
-    const normalized = newTagName.trim().toUpperCase();
+    const normalized = newTagName.toUpperCase().trim();
     const savedTag = await addTagToDB(normalized);
     const nextTags = [...(tags || []), savedTag];
     setTags(nextTags);

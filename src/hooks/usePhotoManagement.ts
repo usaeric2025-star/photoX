@@ -140,9 +140,6 @@ export const usePhotoManagement = (
 
     setLoadingState('syncing');
     try {
-       const categoryName = categories.find(c => c.id === categoryId)?.zh || '';
-       const manufacturerName = manufacturers.find(m => m.id === subcategoryId)?.name || '';
-
         // Resolve tag names to IDs
        const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
 
