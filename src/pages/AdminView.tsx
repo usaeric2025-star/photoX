@@ -110,8 +110,8 @@ export default function AdminView() {
   } = useAdminPhotos(
     user, 
     settings?.gemini_api_key, 
-    'gemini', 
-    settings?.custom_model || 'gemini-1.5-flash', 
+    settings?.provider || 'openrouter', 
+    settings?.custom_model || '', 
     setLoadingState,
     uiBasicValue,
     sessionBasicValue

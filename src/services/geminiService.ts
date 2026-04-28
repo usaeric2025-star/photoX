@@ -87,14 +87,14 @@ export const analyzeProductPhoto = async (
   }
 
 
-  const categoriesJson = categories.map(c => ({
+  const categoriesJson = (categories || []).map(c => ({
     id: c.id, 
     name: c.zh || c.name || ''
   }));
-  const manufacturersJson = manufacturers.map(m => ({ id: m.id, name: m.name }));
-  const tagsJson = tags.map(t => ({ id: t.id, name: t.name }));
+  const manufacturersJson = (manufacturers || []).map(m => ({ id: m.id, name: m.name }));
+  const tagsJson = (tags || []).map(t => ({ id: t.id, name: t.name }));
   const categoryContext = targetCategoryId
-    ? `【強制要求】系統已預設分類為: ${categories.find(c => String(c.id) === String(targetCategoryId))?.zh || categories.find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})。請確認照片分類是否符合此設定。`
+    ? `【強制要求】系統已預設分類為: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.zh || (categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})。請確認照片分類是否符合此設定。`
     : `【強制要求】請從現有分類中選擇最合適的一個。`;
 
   const promptText = `

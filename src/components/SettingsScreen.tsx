@@ -50,18 +50,18 @@ const obfuscateKey = (key: string) => {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
-    settings, user, loginWithGoogle, logout, isSyncing, syncPercent, 
+    settings, user, loginWithGoogle, logout, syncPercent, 
     geminiApiKey, setGeminiApiKey, customModel, setCustomModel, 
     internalPassword, setInternalPassword,
-    setSettings, saveSettings
+    setSettings
   } = useAdminSession();
   const { 
     manufacturers, tags, 
     setManufacturers, setTags, setCategories, setPhotos, photos, categories
   } = useAdminPhoto();
-  const { isSyncing: uiSyncing } = useAdminUI();
+  const { loadingState } = useAdminUI();
 
-  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime } = props;
+  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [newSubName, setNewSubName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [showCatOverview, setShowCatOverview] = useState(false);

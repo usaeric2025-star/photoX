@@ -51,7 +51,7 @@ interface AdminPhotoContextType {
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
   handleSingleAiAnalyzeCallback?: (data: string, catId?: string, editPhotoId?: string, formState?: any, updateFormFn?: any, service?: any) => Promise<void>;
-  handleBatchAiIdentify: (photos: Photo[], categories: Category[], isCancelled: boolean) => Promise<void>;
+  handleBatchAiIdentify: (photos: Photo[], isCancelled: () => boolean) => Promise<void>;
   handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;
   handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean, onComplete: (screen: string) => void) => Promise<void>;
   deletePhoto: (id: string) => Promise<void>;
