@@ -362,7 +362,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 onLightboxOpen={setLightboxIndex}
                 onLongPressStart={startLongPress}
                 onLongPressEnd={endLongPress}
-                shareSinglePhoto={shareSinglePhoto}
                 displayPhotos={displayPhotos}
                 gridPhotos={gridPhotos}
               />
