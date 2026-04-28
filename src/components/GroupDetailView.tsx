@@ -125,7 +125,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
 
                   {isAdminMode && (
                     <div className="absolute bottom-6 left-0 right-0 
-                      flex justify-center gap-3 px-4">
+                      flex justify-center gap-3 px-4 z-[220]">
                       <button
                         onClick={() => {
                           setFocusedGroupPhotoId(null);
