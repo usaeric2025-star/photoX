@@ -120,15 +120,14 @@ export const analyzeProductPhoto = async (
 【核心規則 - 必須遵守】
 
 1. 標籤（Tags）：
-   - 強制只選或新增 2 個標籤
-   - 第一個：與家具用途或風格相關（例如 SOFA、CLASSIC、OFFICE）
-   - 第二個：與材質相關（例如 WOODEN、PLASTIK、FABRIC）
-   - 兩個方向不強制，可根據實際情況調整
-   - 優先從現有標籤中選擇：${JSON.stringify(tagsJson)}
-   - 若現有標籤無合適選項，才新增標籤
-   - 強制規則：每個標籤必須是單一英文單詞，無空格、無符號、無數字
-   - 新增標籤填入 "newTags" 字段，格式為數組，例如：["Rattan"]
-   - 若不需要新增標籤，"newTags" 返回空數組 []
+   - 強制只選或新增 2 個標籤。
+   - 【極其重要】語義去重：請仔細對比現有標籤清單 ${JSON.stringify(tagsJson)}。
+   - 如果你想新增的標籤與現有標籤意思接近（例如：Marble 與 Marblelook、Sofa 與 Couches、Leather 與 Faux-leather）、或是包含關係，必須優先選擇現有標籤清單中的詞，嚴禁新增語義重複的標籤。
+   - 第一個標籤：側重家具用途或風格（例如 SOFA、CLASSIC、OFFICE）。
+   - 第二個標籤：側重材質（例如 WOODEN、PLASTIC、FABRIC）。
+   - 若現有標籤完全無關聯，才可以填入 "newTags"。
+   - 強制規範：每個標籤必須是單一英文單詞，不得包含空格、符號或數字。
+   - 新增標籤填入 "newTags" 字段，格式為數組（如 ["Rattan"]），若不新增則返回 []。
 
 2. 尺寸（Dimensions）：
    - 如果識別出照片中有不同規格或多組尺寸，請全部列出
