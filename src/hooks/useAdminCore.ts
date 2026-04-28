@@ -173,22 +173,19 @@ export const useAdminCore = (
 
   const handleUngroup = useCallback(async (groupId: string) => {
     try {
-      let photoIds: string[] = [];
-      setPhotos(prev => {
-        photoIds = prev.filter(p => p.groupId === groupId).map(p => p.id);
-        return prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p);
-      });
+      const photosToUngroup = photos.filter(p => p.groupId === groupId);
+      const photoIds = photosToUngroup.map(p => p.id);
       
       if (photoIds.length > 0) {
         await updatePhotosGroupInCloud(photoIds, null);
+        setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
         showToast('已解除群組', 'success');
       }
     } catch (err: any) {
-      console.error(err);
-      setAlertDialog({ title: '解除群組失敗', message: err.message || '未知錯誤' });
-      throw err; // Re-throw if necessary to stop further execution
+      console.error('Ungroup error:', err);
+      setAlertDialog({ title: '解除群組失敗', message: err?.message || '未知錯誤' });
     }
-  }, [setPhotos, updatePhotosGroupInCloud, showToast, setAlertDialog]);
+  }, [photos, setPhotos, updatePhotosGroupInCloud, showToast, setAlertDialog]);
 
   const handleGroupPhotos = useCallback(async (ids: string[], user: any, savePhotoToCloud: Function) => {
     if (ids.length < 2) return;
