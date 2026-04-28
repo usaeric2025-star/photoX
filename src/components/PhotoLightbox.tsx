@@ -23,13 +23,14 @@ interface PhotoLightboxProps {
   onEditPhoto?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
   onAiAnalyze?: (photo: Photo) => void;
+  onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
 }
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
   isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto, onToggleHidden,
-  onAiAnalyze, isAnalyzing
+  onAiAnalyze, onCancelAnalyze, isAnalyzing
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
@@ -157,12 +158,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                 <div className="flex items-center gap-2">
                   {onAiAnalyze && (
                     <button
-                      onClick={() => onAiAnalyze(photo)}
-                      disabled={isAnalyzing}
-                      className={`p-2 rounded-full border transition-all ${isAnalyzing ? 'bg-slate-100 border-slate-200 text-slate-400' : 'bg-purple-50 border-purple-200 text-purple-600'}`}
-                      title={isAnalyzing ? '分析中...' : 'AI 識別'}
+                      onClick={() => isAnalyzing ? onCancelAnalyze?.() : onAiAnalyze(photo)}
+                      className={`p-2 rounded-full border transition-all ${isAnalyzing ? 'bg-red-50 border-red-200 text-red-600' : 'bg-purple-50 border-purple-200 text-purple-600'}`}
+                      title={isAnalyzing ? '取消分析' : 'AI 識別'}
                     >
-                      <Sparkles size={20} className={isAnalyzing ? 'animate-pulse' : ''} />
+                      {isAnalyzing ? <X size={20} className="animate-pulse" /> : <Sparkles size={20} />}
                     </button>
                   )}
                   <button 

@@ -449,6 +449,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         onBatchEdit={onBatchEdit}
         onUngroup={onGroupPhotos} // Assuming onGroupPhotos handles this or needs update
         onAddPhotoToGroup={onAddPhoto}
+        onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
         setPhotos={context.setPhotos}
         lang={lang}
         t={t}
@@ -503,6 +504,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
         onAiAnalyze={async (photo) => await adminPhoto?.handleSingleAiAnalyze(photo.uri!, photo.categoryId || undefined)}
+        onCancelAnalyze={() => adminUI?.abortAnalysis()}
         isAnalyzing={!!adminUI?.isAnalyzing}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         onUngroup={async (id) => {

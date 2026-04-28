@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Edit3, Settings2, Plus, ChevronLeft, Layers, Pencil } from 'lucide-react';
+import { X, Edit3, Settings2, Plus, ChevronLeft, Layers, Pencil, Sparkles } from 'lucide-react';
 import { Photo } from '../types';
 import { updatePhotosGroupInCloud } from '../services/supabaseService';
 
@@ -16,6 +16,7 @@ interface GroupDetailViewProps {
   onAddPhotoToGroup?: () => void;
   setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>;
   updateGroupPhotos?: (ids: string[], groupId: string | null) => void;
+  onAiAnalyze?: (photo: Photo) => void;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
@@ -138,6 +139,17 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         transition-all"
                       >
                         <Edit3 size={20} />
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setFocusedGroupPhotoId(null);
+                          onAiAnalyze?.(focusedPhoto);
+                        }}
+                        className="bg-white text-purple-600 p-4 
+                        rounded-full shadow-xl active:scale-95 
+                        transition-all"
+                      >
+                         <Sparkles size={20} />
                       </button>
                       <button
                         onClick={() => {
