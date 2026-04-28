@@ -1,5 +1,5 @@
 import React from 'react';
-import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye } from 'lucide-react';
+import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { ProductFormData } from '../../types';
@@ -57,10 +57,9 @@ export const BatchEditScreen = ({
         <div className="flex items-center gap-2 relative z-10">
             <button 
               onClick={() => saveBatchEdit(batchIsHiddenApplied)}
-              className={`bg-blue-600 text-white px-8 py-3 rounded-[20px] text-sm font-black shadow-xl shadow-blue-600/30 transition-all active:scale-[0.9] flex items-center gap-3 border-2 border-white/20 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shadow-md active:scale-95 transition-all ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
             >
-              {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : null}
-              保存修改
+              {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
             </button>
             <button 
               onClick={resetAddState} 

@@ -90,9 +90,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
               {isAdminMode && (
                 <div className="flex gap-2">
                   <button 
-                    disabled={!isMultiSelectMode || selectedPhotoIds.length === 0}
-                    onClick={() => onBatchEdit?.(selectedPhotoIds)} 
-                    className={`p-3 border rounded-full shadow-sm ${isMultiSelectMode && selectedPhotoIds.length > 0 ? "bg-white border-[#D4A853] text-[#D4A853]" : "bg-white border-[#1D3557]/10 text-slate-300"}`}
+                    onClick={() => {
+                      const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
+                      onBatchEdit?.(ids);
+                    }}
+                    className={`p-3 border rounded-full shadow-sm bg-white border-[#D4A853] text-[#D4A853]`}
                   >
                     <Pencil size={20} />
                   </button>

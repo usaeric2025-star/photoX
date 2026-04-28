@@ -243,25 +243,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   };
 
-  const shareSinglePhoto = async (photo: Photo) => {
-    const msg = getShareMessage(photo);
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: photo.name || t.furnitureRecord,
-          text: msg,
-        });
-      } catch (e: any) {
-        if (e.name !== 'AbortError') {
-          console.error('Share err:', e);
-        }
-      }
-    } else {
-      setShowWhatsAppChoice(true);
-      (window as any)._pendingPhoto = photo;
-    }
-  };
-
   const openWhatsApp = (num: string, photo?: Photo) => {
     let msg = '';
     if (photo) {
@@ -283,9 +264,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       if (isAdminMode) {
         setIsMultiSelect(true);
         togglePhotoSelection(photoId);
-      } else {
-        const photo = photos.find(p => p.id === photoId);
-        if (photo) shareSinglePhoto(photo);
       }
       setLongPressTimer(null);
     }, 800);
@@ -490,7 +468,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
-        shareSinglePhoto={shareSinglePhoto}
         onUngroup={async (id) => {
           console.log("Ungroup photo", id);
           setLightboxIndex(null);

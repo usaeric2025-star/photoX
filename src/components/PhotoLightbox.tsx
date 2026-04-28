@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight, MessageCircle, Share2, Key, Layers, Maximize } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3 } from 'lucide-react';
 import { Photo, Category } from '../types';
 
 interface PhotoLightboxProps {
@@ -18,7 +18,6 @@ interface PhotoLightboxProps {
   isAdminMode: boolean;
   isStaffMode: boolean;
   contactWhatsApp: (photo: Photo) => void;
-  shareSinglePhoto: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   onEditPhoto?: (photo: Photo) => void;
@@ -26,7 +25,7 @@ interface PhotoLightboxProps {
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-  isAdminMode, isStaffMode, contactWhatsApp, shareSinglePhoto, onUngroup, onSetGroupCover, onEditPhoto
+  isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
@@ -104,7 +103,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     >
       {/* --- 左侧/上方：图片展示区 --- */}
       <div 
-        className="relative flex-1 bg-black flex items-center justify-center h-[50vh] md:h-full"
+        className="relative flex-1 bg-black flex items-center justify-center h-[40vh] md:h-full"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -169,6 +168,20 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
            </div>
 
            {/* 3. 核心功能按钮 - WhatsApp 咨询 (高亮显示在最显眼处) */}
+           {isAdminMode && (
+             <button
+               onClick={() => {
+                 onClose();
+                 onEditPhoto?.(photo);
+               }}
+               className="w-full bg-[#1D3557] text-white 
+               py-3 rounded-2xl font-black text-sm uppercase 
+               tracking-widest flex items-center justify-center 
+               gap-3 mb-3 active:scale-[0.98]"
+             >
+               <Edit3 size={18} /> 编辑此照片
+             </button>
+           )}
            <button 
              onClick={() => {
                 (window as any)._pendingPhoto = photo;
@@ -179,13 +192,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
              <MessageCircle size={20} fill="currentColor" />
              {t.whatsAppInquiry}
            </button>
-           <button
-             onClick={() => shareSinglePhoto(photo)}
-             className="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-blue-200 transition-all active:scale-[0.98]"
-           >
-             <Share2 size={20} />
-             {t.share || 'Share'}
-           </button>
+
 
            {/* Admin Group Controls */}
            {isAdminMode && photo.groupId && (
