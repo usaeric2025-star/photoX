@@ -31,7 +31,9 @@ export const useAdminCore = (
   updateForm: Function,
   t: any,
   refreshCloudData: Function,
-  lastSyncTime?: number | null
+  lastSyncTime?: number | null,
+  externalUI?: any,
+  externalSession?: any
 ) => {
   const {
     photos, setPhotos,
@@ -41,8 +43,8 @@ export const useAdminCore = (
     manufacturers, setManufacturers
   } = useGalleryContext();
 
-  const adminSession = useOptionalAdminSession();
-  const adminUI = useOptionalAdminUI();
+  const adminSession = useOptionalAdminSession() || externalSession;
+  const adminUI = useOptionalAdminUI() || externalUI;
   const setIsSyncing = adminSession?.setIsSyncing || (() => {});
   const setAlertDialog = adminUI?.setAlertDialog || (() => {});
   const setPromptDialog = adminUI?.setPromptDialog || (() => {});

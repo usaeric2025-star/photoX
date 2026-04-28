@@ -62,6 +62,7 @@ export default function AdminView() {
   }, []);
 
   const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
+  const [cloudCount, setCloudCount] = useState<number | null>(null);
   const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const [appLang] = useState('zh');
@@ -84,26 +85,50 @@ export default function AdminView() {
   }, [settings]);
   
   const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
-  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user);
+
+  // Fix: Base setters for hooks that use context internally
+  const uiBasicValue = { 
+    setAlertDialog, 
+    setPromptDialog, 
+    setActiveScreen,
+    setConfirmDialog,
+    setLoadingState,
+    setCloudCount,
+    cloudCount
+  };
+  const sessionBasicValue = { 
+    setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle') 
+  };
+
+  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 
   const { 
     batchProgress, isImporting, importProgress, importTotal, 
-    aiDebugInfo, abortAnalysis, cloudCount, setCloudCount, 
+    aiDebugInfo, abortAnalysis, 
     handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, 
     handlePhotoImport, deletePhoto 
-  } = useAdminPhotos(user, settings?.gemini_api_key, 'gemini', settings?.custom_model || 'gemini-1.5-flash', setLoadingState);
+  } = useAdminPhotos(
+    user, 
+    settings?.gemini_api_key, 
+    'gemini', 
+    settings?.custom_model || 'gemini-1.5-flash', 
+    setLoadingState,
+    uiBasicValue,
+    sessionBasicValue
+  );
 
-  const {
-      toast, showToast, saveSettings,
-      performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-      handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
+  const { 
+    toast, showToast, saveSettings,
+    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
+    handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
   } = useAdminCore(
-      user, updateForm, t, refreshCloudData, lastSyncTime
+      user, updateForm, t, refreshCloudData, lastSyncTime,
+      uiBasicValue, sessionBasicValue
   );
 
   const handleManageClick = () => setActiveScreen('manage');
 
-  const { updateTag, deleteTag } = useAdminCategory();
+  const { updateTag, deleteTag } = useAdminCategory(uiBasicValue);
 
 
   const handleDeletePhotos = async (ids: string[]) => {

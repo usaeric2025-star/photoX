@@ -26,7 +26,9 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 export const usePhotoManagement = (
-  user: any
+  user: any,
+  externalUI?: any,
+  externalSession?: any
 ) => {
   const {
     photos, setPhotos,
@@ -35,8 +37,8 @@ export const usePhotoManagement = (
     manufacturers
   } = useGalleryContext();
 
-  const adminSession = useOptionalAdminSession();
-  const adminUI = useOptionalAdminUI();
+  const adminSession = useOptionalAdminSession() || externalSession;
+  const adminUI = useOptionalAdminUI() || externalUI;
   const setAlertDialog = adminUI?.setAlertDialog || (() => {});
   const setLoadingState = adminUI?.setLoadingState || (() => {});
   const setActiveScreen = adminUI?.setActiveScreen || (() => {});

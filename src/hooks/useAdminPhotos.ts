@@ -42,7 +42,9 @@ export const useAdminPhotos = (
   geminiApiKey: string, 
   aiProvider: string, 
   customModel: string,
-  setLoadingState?: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void
+  setLoadingState?: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void,
+  externalUI?: any,
+  externalSession?: any
 ) => {
   const {
     photos, setPhotos,
@@ -51,11 +53,15 @@ export const useAdminPhotos = (
     manufacturers, setManufacturers
   } = useGalleryContext();
 
-  const adminSession = useOptionalAdminSession();
-  const adminUI = useOptionalAdminUI();
+  const adminSession = useOptionalAdminSession() || externalSession;
+  const adminUI = useOptionalAdminUI() || externalUI;
   const setIsSyncing = adminSession?.setIsSyncing || (() => {});
   const setAlertDialog = adminUI?.setAlertDialog || (() => {});
   const setActiveScreen = adminUI?.setActiveScreen || (() => {});
+  
+  const [internalCloudCount, setInternalCloudCount] = useState<number | null>(null);
+  const cloudCount = adminUI?.cloudCount ?? internalCloudCount;
+  const setCloudCount = adminUI?.setCloudCount || setInternalCloudCount;
 
   const [internalLoadingState, setInternalLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
   const actualSetLoadingState = setLoadingState || setInternalLoadingState;
@@ -64,7 +70,6 @@ export const useAdminPhotos = (
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
-  const [cloudCount, setCloudCount] = useState<number | null>(null);
   
   const photosRef = useRef(photos);
   

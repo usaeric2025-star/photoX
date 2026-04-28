@@ -6,8 +6,8 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { updateTagInDB, deleteTagFromDB } from '../services/supabaseService';
 import { useOptionalAdminUI } from '../context/AdminContexts';
 
-export const useAdminCategory = () => {
-  const adminUI = useOptionalAdminUI();
+export const useAdminCategory = (externalUI?: any) => {
+  const adminUI = useOptionalAdminUI() || externalUI;
   const setAlertDialog = adminUI?.setAlertDialog || (() => {});
 
   const {

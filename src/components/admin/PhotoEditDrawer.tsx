@@ -193,7 +193,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     return (
                   <button 
                     key={cat.id}
-                    onClick={() => { updateForm({ categoryId: String(cat.id) }); }}
+                    onClick={() => { 
+                      const nextId = isSelected ? null : String(cat.id);
+                      updateForm({ categoryId: nextId }); 
+                    }}
                     className={`flex flex-col items-center justify-center py-4 px-1 rounded-xl border-2 transition-all active:scale-[0.95] ${isSelected ? 'bg-blue-600 border-blue-600 shadow-md shadow-blue-600/30' : 'bg-white border-slate-100'}`}
                   >
                     <span className={`font-black text-xs leading-tight text-center ${isSelected ? 'text-white' : 'text-slate-700'}`}>{displayName}</span>
@@ -219,15 +222,17 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             <button onClick={quickAddManufacturer} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto content-start">
-            {(manufacturers || []).map((mfr: any) => (
+            {(manufacturers || []).map((mfr: any) => {
+              const isSelected = formState.subcategoryId === mfr.id;
+              return (
               <button 
                 key={mfr.id}
-                onClick={() => updateForm({ subcategoryId: mfr.id })}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${formState.subcategoryId === mfr.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600'}`}
+                onClick={() => updateForm({ subcategoryId: isSelected ? null : mfr.id })}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600'}`}
               >
                 {mfr.name}
               </button>
-            ))}
+            )})}
           </div>
         </section>
 
