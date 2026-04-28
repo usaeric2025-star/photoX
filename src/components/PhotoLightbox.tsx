@@ -108,7 +108,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <button onClick={onClose} className="absolute top-4 left-4 z-10 w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center">
+        <button onClick={onClose} className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center">
           <X size={20} />
         </button>
 

@@ -62,7 +62,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
         >
            <div className="flex flex-col mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-3xl font-black text-[#1D3557] tracking-tighter">Group {activeGroupId}</h2>
+                <h2 className="text-3xl font-black text-[#1D3557] tracking-tighter">
+                    GROUP {activeGroupId?.slice(-4)}
+                </h2>
                 <button 
                   onClick={() => setActiveGroupId(null)}
                   className="p-3 bg-white border border-[#1D3557]/10 rounded-full text-[#1D3557] shadow-sm hover:ring-2 hover:ring-[#D4A853] transition-all"
@@ -216,6 +218,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                       {!isAdminMode && <Maximize className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" size={32} />}
                    </div>
+                   
+                   <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-md backdrop-blur-sm">
+                      {photo.groupId?.slice(-4)}
+                   </div>
+
                    {isAdminMode && (
                      <div className="absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-full bg-black/50 text-white">
                         {selectedPhotoIds.includes(photo.id) ? <X size={16} /> : <div className="w-4 h-4 border-2 rounded-full border-white" />}
