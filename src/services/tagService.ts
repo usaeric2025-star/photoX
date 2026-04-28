@@ -30,7 +30,10 @@ export const addTagToDB = async (name: string): Promise<Tag> => {
     
     if (error) {
         console.error("Failed to add tag to DB:", error);
-        throw error;
+        // Safely extract error message
+        const errorMessage = error.message || 
+                             (typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error));
+        throw new Error(errorMessage);
     }
     return { ...data, id: String(data.id) };
 };
@@ -43,7 +46,10 @@ export const batchCreateTags = async (names: string[]): Promise<Map<string, stri
     
     if (error) {
         console.error("Failed to batch create tags:", error);
-        throw error;
+        // Safely extract error message
+        const errorMessage = error.message || 
+                             (typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error));
+        throw new Error(errorMessage);
     }
     
     const map = new Map<string, string>();
