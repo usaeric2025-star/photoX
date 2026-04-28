@@ -140,7 +140,7 @@ export const SearchAndFilter: React.FC<Props> = ({
                     .map((sub: any) => (
                     <button 
                       key={sub.id}
-                      onClick={() => setFilterSubId(sub.id)}
+                      onClick={() => setFilterSubId(filterSubId === sub.id ? null : sub.id)}
                       className={`px-3 py-1 rounded-lg text-[9px] font-black tracking-widest whitespace-nowrap border transition-all ${filterSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white shadow-md' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium hover:text-[#1D3557]/60'}`}
                     >
                       {sub.name}

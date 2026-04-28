@@ -129,7 +129,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     .map((sub: any) => (
                     <button 
                       key={sub.id}
-                      onClick={() => { setSelectedSubId(sub.id); onScrollToTop(); }}
+                      onClick={() => { setSelectedSubId(selectedSubId === sub.id ? null : sub.id); onScrollToTop(); }}
                       className={`px-2 py-0.5 rounded-lg text-[8px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
                     >
                       {sub.name}
