@@ -193,17 +193,12 @@ export const useAdminPhotos = (
           if (result.newTags && Array.isArray(result.newTags)) {
             const newNames = result.newTags.map((s: string) => s.trim()).filter(Boolean);
             const newTagsToAdd: Tag[] = [];
-            const newTagIds: string[] = [];
             
             for (const name of newNames) {
-              // Check if tag with same name already exists in current tags
               const existingTag = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
-              if (existingTag) {
-                newTagIds.push(String(existingTag.id));
-              } else {
+              if (!existingTag) {
                 const savedTag = await addTagToDB(name);
                 newTagsToAdd.push(savedTag);
-                newTagIds.push(String(savedTag.id));
               }
             }
             
@@ -213,15 +208,26 @@ export const useAdminPhotos = (
                 return [...prev, ...filtered];
               });
             }
-            finalTagIds = Array.from(new Set([...finalTagIds, ...newTagIds]));
           }
+
+          // Refresh tags list immediately to include newly added ones
+          const updatedTags = [...tags, ...(result.newTags || []).map((name: string) => ({ name, id: 'temp-' + name }))]; 
+          
+          // Re-calculate Tag IDs with full tag list
+          const mergedTagIdsForSaving = Array.from(new Set([
+            ...finalTagIds,
+            ...(result.newTags || []).map((name: string) => {
+                const t = tags.find(t => t.name.toLowerCase() === name.toLowerCase());
+                return String(t?.id || 'temp-' + name);
+            })
+          ]));
 
           setPhotos(prev => {
             const next = prev.map(p => {
               if (p.id !== photo.id) return p;
 
               const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-              const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
+              const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...mergedTagIdsForSaving]));
 
               // Use newCategoryName directly as category if no code matches
               const updatedPhoto: Photo = { 
