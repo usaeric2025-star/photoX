@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Edit3, Settings2, Plus, ChevronLeft, Layers, Pencil, Sparkles, Star } from 'lucide-react';
+import { X, Edit3, Settings2, Plus, ChevronLeft, Layers, Pencil, Sparkles, Star, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Photo } from '../types';
-import { updatePhotosGroupInCloud, updatePhotoInCloud } from '../services/supabaseService';
+import { updatePhotosGroupInCloud, updatePhotoInCloud } from '../services/photoService';
 
 interface GroupDetailViewProps {
   activeGroupId: string | null;
@@ -43,11 +43,50 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
     return photos
       .filter(p => p.groupId === activeGroupId)
       .sort((a, b) => {
+        // Priority 1: Cover
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
-        return 0;
+        // Priority 2: Explicit order
+        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
+          return a.groupOrder - b.groupOrder;
+        }
+        // Priority 3: Fallback to name or created date if order is missing
+        return (a.item_code || '').localeCompare(b.item_code || '');
       });
   }, [activeGroupId, photos]);
+
+  const handleMovePhoto = async (photo: Photo, direction: 'forward' | 'backward') => {
+    const currentIndex = activeGroupPhotos.findIndex(p => p.id === photo.id);
+    if (currentIndex === -1) return;
+
+    let targetIndex = -1;
+    if (direction === 'backward' && currentIndex < activeGroupPhotos.length - 1) {
+      targetIndex = currentIndex + 1;
+    } else if (direction === 'forward' && currentIndex > 0) {
+      // Don't swap with cover if cover is at 0
+      if (currentIndex === 1 && activeGroupPhotos[0].isGroupCover && direction === 'forward') return;
+      targetIndex = currentIndex - 1;
+    }
+
+    if (targetIndex === -1) return;
+
+    const targetPhoto = activeGroupPhotos[targetIndex];
+    
+    // We swap orders
+    const newPhotos = photos.map(p => {
+       if (p.id === photo.id) return { ...p, groupOrder: targetIndex };
+       if (p.id === targetPhoto.id) return { ...p, groupOrder: currentIndex };
+       return p;
+    });
+
+    setPhotos?.(newPhotos);
+    
+    // Sync to cloud
+    await Promise.all([
+      updatePhotoInCloud(photo.id, { group_order: targetIndex }),
+      updatePhotoInCloud(targetPhoto.id, { group_order: currentIndex })
+    ]);
+  };
 
   const focusedPhoto = useMemo(() => 
     focusedGroupPhotoId ? activeGroupPhotos.find(p => p.id === focusedGroupPhotoId) : null
@@ -209,7 +248,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                      </div>
                    )}
 
-                   {isAdminMode && !isMultiSelectMode && (
+                    {isAdminMode && !isMultiSelectMode && (
                      <div className="absolute top-2 right-2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={(e) => handleSetCover(e, photo.id)}
@@ -223,6 +262,25 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                           className="p-2 bg-black/40 text-white rounded-full hover:bg-red-500 backdrop-blur-md transition-colors"
                         >
                           <X size={14} />
+                        </button>
+                     </div>
+                   )}
+
+                   {isAdminMode && !isMultiSelectMode && !photo.isGroupCover && (
+                     <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleMovePhoto(photo, 'forward'); }}
+                          className="p-2 bg-black/40 text-white rounded-full hover:bg-blue-500 backdrop-blur-md transition-colors"
+                          title="往前移"
+                        >
+                          <ArrowLeft size={14} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleMovePhoto(photo, 'backward'); }}
+                          className="p-2 bg-black/40 text-white rounded-full hover:bg-blue-500 backdrop-blur-md transition-colors"
+                          title="往後移"
+                        >
+                          <ArrowRight size={14} />
                         </button>
                      </div>
                    )}

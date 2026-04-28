@@ -67,6 +67,7 @@ export function mapSupabasePhoto(item: any): Photo {
       createdAt: item.created_at,
       groupId: item.group_id,
       isGroupCover: item.is_group_cover || false,
+      groupOrder: item.group_order || 0,
       isHidden: item.is_hidden || false,
       userId: item.user_id,
       uri: item.image_url
@@ -157,7 +158,8 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     model_number: photo.model_number || '',
     created_at: photo.createdAt,
     group_id: photo.groupId || null,
-    is_group_cover: photo.isGroupCover || false
+    is_group_cover: photo.isGroupCover || false,
+    group_order: photo.groupOrder || 0
   };
 
   if (isUUID) {

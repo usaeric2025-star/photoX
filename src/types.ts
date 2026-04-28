@@ -57,6 +57,7 @@ export interface Photo {
   updatedAt?: string;
   groupId?: string | null;
   isGroupCover?: boolean; // New field
+  groupOrder?: number; // Order within group
   isAnalyzing?: boolean;
   isHidden?: boolean;
   userId?: string;

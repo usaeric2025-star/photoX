@@ -66,7 +66,7 @@ export const analyzeProductPhoto = async (
 ) => {
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('請先在管理設定中設定 API 金鑰');
+    throw new Error('請先在管理設定中設定 AI 金鑰');
   }
 
   // Use OpenRouter endpoint
@@ -140,11 +140,14 @@ export const analyzeProductPhoto = async (
 
 4. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
 
-5. 輸出格式：僅回傳一個合法、壓縮的 JSON 物件，禁止 Markdown
+5. 輸出規範：
+   - 僅回傳一個合法且壓縮的 JSON 物件。
+   - 禁止 Markdown 標記（如 \` \` \`json）。
+   - 所有字串欄位嚴禁包含換行符或未轉義的雙引號。
+   - 數字欄位必須為純數字（不含單位）。
 
-【JSON 範例格式】
-{"name":"Classic Wooden Dining Chair","description":"A solid wood dining chair with a curved backrest and upholstered seat, suitable for dining rooms or restaurants.","categoryId":1,"subcategoryId":null,"tagIds":[],"newTags":["Rattan"],"dimensions":[{"label":"Standard","length":50,"width":45,"height":90,"unit":"cm","isAI":true}],"manualCode":null,"modelNumber":null,"note":null}
-  `;
+請確保輸出為嚴格有效的 JSON。只返回 JSON，不要任何其他文字。
+`;
 
   try {
     const headers: Record<string, string> = {
@@ -153,14 +156,6 @@ export const analyzeProductPhoto = async (
       'HTTP-Referer': window.location.href,
       'X-Title': 'Product Cataloger AI',
     };
-
-
-    
-    // Debug image
-    const isDataUri = base64Image.startsWith('data:');
-    const commaIndex = base64Image.indexOf(',');
-    const prefix = isDataUri ? base64Image.substring(0, commaIndex) : 'NO_PREFIX';
-    console.log(`Debug Image Info:\nPrefix: ${prefix}\nTotal Length: ${base64Image.length}\nFirst 50 chars: ${base64Image.substring(0, 50)}...`);
 
     const requestBody = {
       model: modelName.replace('openrouter/', ''),
@@ -176,19 +171,16 @@ export const analyzeProductPhoto = async (
           ]
         }
       ],
-      max_tokens: 300,
+      response_format: { type: "json_object" },
+      max_tokens: 1024,
     };
 
-
     const fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
-    
-    console.log("DEBUG: Final fetch URL is:", fetchUrl);
     
     console.log("DEBUG: Sending AI Request", {
         url: fetchUrl,
         model: modelName,
-        headers: Object.keys(headers),
-        imageSize: base64Image.length
+        max_tokens: 1024
     });
 
     const fetchResponse = await fetch(fetchUrl, {
@@ -212,40 +204,55 @@ export const analyzeProductPhoto = async (
     const textOutput = data.choices[0]?.message?.content;
     
     if (!textOutput) {
-      throw new Error(`AI 未回傳分析結果 (URL: ${fetchUrl})`);
+      throw new Error(`AI 未回傳分析結果`);
     }
 
-    // Safely extract JSON in case the model wraps it in markdown blocks
-    const startIndex = textOutput.indexOf('{');
-    const endIndex = textOutput.lastIndexOf('}');
-    if (startIndex === -1 || endIndex === -1) {
-      throw new Error('回傳格式錯誤，找不到 JSON');
+    // Safely extract JSON in case the model wraps it in markdown blocks or has leading/trailing fluff
+    let cleanText = textOutput.trim();
+    if (cleanText.includes('```')) {
+      const match = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (match) cleanText = match[1];
     }
     
-    const jsonStr = textOutput.substring(startIndex, endIndex + 1);
-    console.log("AI Raw Output:", jsonStr);
+    const startIndex = cleanText.indexOf('{');
+    const endIndex = cleanText.lastIndexOf('}');
+    if (startIndex === -1 || endIndex === -1) {
+      throw new Error('回傳格式錯誤，找不到 JSON 對象');
+    }
     
-    // Improved sanitize: remove control characters and attempt to fix common unescaped quotes within values
-    const saferJson = jsonStr
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, " ") // Replace control characters with space
-      .replace(/,\s*([}\]])/g, "$1") // Remove trailing commas
-      .replace(/\r?\n|\r/g, " "); // Replace line breaks with spaces inside strings
+    const jsonStr = cleanText.substring(startIndex, endIndex + 1);
+    
+    // Improved sanitization
+    // 1. Remove JavaScript-style comments
+    // 2. Remove non-printable control characters
+    // 3. Fix trailing commas
+    const minimalSanitize = jsonStr
+        .replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '') 
+        .replace(/[\u0000-\u0019]+/g, "")
+        .replace(/,\s*([\]}])/g, '$1')
+        .trim();
 
     let parsedData;
     try {
-      parsedData = JSON.parse(saferJson);
+      parsedData = JSON.parse(minimalSanitize);
     } catch (parseErr) {
-      // Emergency cleanup for common value-side syntax errors (like unescaped quotes)
+      console.error("JSON Parse Error (Minimal):", parseErr, "Content:", minimalSanitize);
+      // Fallback: try to fix unescaped line breaks and quotes within values
       try {
-        const heuristicFixed = saferJson.replace(/":\s*"(.*?)"(\s*[},])/g, (match, p1, p2) => {
-          // If the internal string p1 has unescaped double quotes, it's invalid.
-          // This is a dangerous regex but helps with simple nested quotes like "Product "Name""
-          return `": "${p1.replace(/"/g, '\\"')}"${p2}`;
-        });
-        parsedData = JSON.parse(heuristicFixed);
+          const secondPass = minimalSanitize
+            .replace(/\r?\n|\r/g, " ") 
+            .replace(/\\(?!"|u|n|r|t|b|f)/g, "\\\\");
+          parsedData = JSON.parse(secondPass);
       } catch (e) {
-        console.error("Initial JSON parse failed. URL:", fetchUrl, "Raw:", textOutput);
-        throw parseErr;
+         // Final attempt: aggressive quote escaping for value strings
+         try {
+           const heuristicFixed = minimalSanitize.replace(/":\s*"(.*?)"(\s*[},])/g, (m, p1, p2) => {
+              return `": "${p1.replace(/"/g, '\\"')}"${p2}`;
+           });
+           parsedData = JSON.parse(heuristicFixed);
+         } catch (finalErr) {
+           throw new Error(`JSON 解析失敗: ${parseErr instanceof Error ? parseErr.message : '解析格式錯誤'}`);
+         }
       }
     }
     
@@ -274,27 +281,22 @@ export const analyzeProductPhoto = async (
     }
 
     // Total tags enforcement: Ensure we have exactly 2 tags (ID or New Name)
-    let currentTagCount = parsedData.tagIds.length;
+    let currentTagIds = parsedData.tagIds;
     
     // If we have more than 2 total, trim them down
-    if (currentTagCount + newTagList.length > 2) {
-      if (currentTagCount >= 2) {
-        parsedData.tagIds = parsedData.tagIds.slice(0, 2);
+    if (currentTagIds.length + newTagList.length > 2) {
+      if (currentTagIds.length >= 2) {
+        currentTagIds = currentTagIds.slice(0, 2);
         newTagList = [];
       } else {
-        // currentTagCount is 0 or 1
-        const needed = 2 - currentTagCount;
+        // currentTagIds.length is 0 or 1
+        const needed = 2 - currentTagIds.length;
         newTagList = newTagList.slice(0, needed);
       }
     }
     
-    // De-duplicate tags by name if possible (though we handle IDs and names separately)
-    // For now, let's just make sure we don't have the same name twice in newTags
-    if (newTagList.length > 0) {
-       parsedData.newTags = Array.from(new Set(newTagList));
-    } else {
-       parsedData.newTags = [];
-    }
+    parsedData.tagIds = currentTagIds;
+    parsedData.newTags = Array.from(new Set(newTagList));
     
     // Attach the model info so the UI can log/show it
     parsedData._aiModelUsed = modelName;
