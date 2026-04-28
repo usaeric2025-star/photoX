@@ -93,6 +93,17 @@ export const updateTagInDB = async (tagId: string, name: string): Promise<boolea
 };
 
 export const deleteTagFromDB = async (tagId: string): Promise<boolean> => {
+    // 1. Delete associations first
+    try {
+        await supabase
+            .from('photo_tags')
+            .delete()
+            .eq('tag_id', tagId);
+    } catch (e) {
+        console.warn("Failed to delete tag associations, proceeding with tag deletion:", e);
+    }
+
+    // 2. Delete the tag itself
     const { error } = await supabase
         .from('tags')
         .delete()

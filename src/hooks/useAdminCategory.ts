@@ -52,36 +52,40 @@ export const useAdminCategory = () => {
     updateTagInDB(tagId, newName).catch(err => console.error("Cloud tag update failed:", err));
   };
 
-  const deleteTag = async (tagId: string, photos: any[], setPhotos: any) => {
-    console.log("DEBUG TagEditor:", { tagId, photosCount: photos?.length, setPhotosIsFunction: typeof setPhotos === 'function' });
+  const deleteTag = async (tagId: string, photos: any[], setPhotos: any, onRefresh?: () => void) => {
     try {
-        // 1. Update local states immediately
+        // 1. Cloud deletion (Service now handles join table photo_tags)
+        const success = await deleteTagFromDB(tagId);
+        if (!success) throw new Error("Cloud delete returned false");
+
+        // 2. Update local tags state
         setTags(prev => prev.filter(t => t.id !== tagId));
+
+        // 3. Update local photos state to remove the tag association immediately (UI snappy)
         if (typeof setPhotos === 'function') {
           setPhotos((prev: any[]) => {
-            const next = prev.map(p => ({
-              ...p,
-              tagIds: Array.isArray(p.tagIds) ? p.tagIds.filter((id: any) => String(id) !== String(tagId)) : []
-            }));
-            saveData('product_photos', next); // Persist local change
+            const next = prev.map(p => {
+              const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
+              if (pTagIds.includes(tagId)) {
+                return {
+                  ...p,
+                  tagIds: pTagIds.filter((id: any) => id !== tagId)
+                };
+              }
+              return p;
+            });
+            saveData('product_photos', next);
             return next;
           });
         }
         
-        // 2. Cloud deletion
-        // Delete associations first to be safe, then the tag itself
-        await supabase.from('photo_tags').delete().eq('tag_id', tagId);
-        const success = await deleteTagFromDB(tagId);
-        if (!success) throw new Error("Cloud delete returned false");
-        
-        // 3. Re-verify tags list from cloud
-        const { data: newTags } = await supabase.from('tags').select('*').order('name', { ascending: true });
-        if (newTags) {
-            setTags(newTags.map((t: any) => ({ ...t, id: String(t.id) })));
+        // 4. Trigger total refresh if provided (to re-sync with cloud truth)
+        if (onRefresh) {
+          onRefresh();
         }
     } catch (err: any) {
         console.error("Cloud tag deletion failed:", err);
-        alert("删除标签失败，请检查网络或联系管理员。");
+        alert("刪除標籤失敗，請檢查網路連線。");
     }
   };
 

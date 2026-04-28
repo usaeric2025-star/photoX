@@ -51,14 +51,15 @@ export const usePhotoManagement = (
     });
   };
 
+  const lastInitializedId = useRef<string | null>(null);
+
   useEffect(() => {
     if (editPhotoId) {
+      if (editPhotoId === lastInitializedId.current) return; // Already initialized this photo
+
       const photo = photos.find(p => p.id === editPhotoId);
       if (photo) {
         const rawTagIds = Array.isArray(photo.tagIds) && photo.tagIds.length > 0 ? photo.tagIds : [];
-        
-        console.log("Healing tags for photo", photo.id, { rawTagIds, photoTagIds: photo.tagIds });
-        
         const dims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
 
         setFormState({
@@ -76,17 +77,23 @@ export const usePhotoManagement = (
           dimW: dims[0]?.width?.toString() || '',
           dimH: dims[0]?.height?.toString() || '',
         });
+        lastInitializedId.current = editPhotoId;
       }
+    } else {
+      lastInitializedId.current = null;
     }
-  }, [editPhotoId]); // Only reset form when switching photos, not when tags/categories/manufacturers change
+  }, [editPhotoId, photos]); 
+
+  const lastInitializedBatchIds = useRef<string | null>(null);
 
   useEffect(() => {
     if (batchEditIds && batchEditIds.length > 0) {
+      const batchKey = batchEditIds.sort().join(',');
+      if (batchKey === lastInitializedBatchIds.current) return;
+
       const photosInBatch = photos.filter(p => batchEditIds.includes(p.id));
       if (photosInBatch.length > 0) {
         const firstPhoto = photosInBatch[0];
-        
-        // Find common values for tags (if all photos have the same tags)
         const allTagsSame = photosInBatch.every(p => 
           JSON.stringify([...(p.tagIds || [])].sort()) === JSON.stringify([...(firstPhoto.tagIds || [])].sort())
         );
@@ -96,9 +103,11 @@ export const usePhotoManagement = (
           categoryId: firstPhoto.categoryId || null,
           subcategoryId: firstPhoto.subcategoryId || null,
           tagIds: allTagsSame ? (firstPhoto.tagIds || []) : [],
-          // Keep other fields empty for now as they might differ
         });
+        lastInitializedBatchIds.current = batchKey;
       }
+    } else {
+      lastInitializedBatchIds.current = null;
     }
   }, [batchEditIds, photos]);
 
