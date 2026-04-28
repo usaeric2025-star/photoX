@@ -50,6 +50,9 @@ export const saveSettings = async (settings: any) => {
               : JSON.stringify(payload.manufacturers);
             delete payload.manufacturers;
         }
+
+        // Remove client-only fields
+        delete payload.categories;
         
         console.log("Saving settings to Supabase...", payload);
 

@@ -30,9 +30,20 @@ export const addTagToDB = async (name: string): Promise<Tag> => {
     
     if (error) {
         console.error("Failed to add tag to DB:", error);
-        // Safely extract error message
-        const errorMessage = error.message || 
-                             (typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error));
+        
+        let errorMessage = "Unknown tag error";
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (error.code) {
+             errorMessage = `DB Error ${error.code}: ${error.details || ''}`;
+        } else {
+            try {
+                errorMessage = JSON.stringify(error);
+            } catch (e) {
+                errorMessage = String(error);
+            }
+        }
+        
         throw new Error(errorMessage);
     }
     return { ...data, id: String(data.id) };
@@ -46,9 +57,20 @@ export const batchCreateTags = async (names: string[]): Promise<Map<string, stri
     
     if (error) {
         console.error("Failed to batch create tags:", error);
-        // Safely extract error message
-        const errorMessage = error.message || 
-                             (typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error));
+        
+        let errorMessage = "Unknown batch tag error";
+        if (error.message) {
+            errorMessage = error.message;
+        } else if (error.code) {
+             errorMessage = `DB Error ${error.code}: ${error.details || ''}`;
+        } else {
+            try {
+                errorMessage = JSON.stringify(error);
+            } catch (e) {
+                errorMessage = String(error);
+            }
+        }
+        
         throw new Error(errorMessage);
     }
     
