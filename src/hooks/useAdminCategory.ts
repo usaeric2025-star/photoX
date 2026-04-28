@@ -53,6 +53,7 @@ export const useAdminCategory = () => {
   };
 
   const deleteTag = async (tagId: string, photos: any[], setPhotos: any) => {
+    console.log("DEBUG TagEditor:", { tagId, photosCount: photos?.length, setPhotosIsFunction: typeof setPhotos === 'function' });
     try {
         setTags(prev => prev.filter(t => t.id !== tagId));
         setPhotos((prev: any[]) => prev.map(p => ({
