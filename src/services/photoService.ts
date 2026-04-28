@@ -365,7 +365,7 @@ export const syncPhotosToCloud = async (
 export const loadAllPhotosFromCloud = async (
   since?: string, 
   page: number = 0, 
-  limit: number = 50,
+  limit: number = 1000,
   categoryId?: string | null,
   tagId?: string | null
 ): Promise<Photo[]> => {
@@ -414,7 +414,7 @@ export const loadPhotosFromCloud = async (
   userId: string, 
   since?: string, 
   page: number = 0, 
-  limit: number = 50,
+  limit: number = 1000,
   categoryId?: string | null
 ): Promise<Photo[]> => {
   let query = supabase

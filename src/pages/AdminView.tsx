@@ -332,10 +332,10 @@ export default function AdminView() {
                 displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
                 setLightboxIndex={(idx) => {}}
                 isAdminMode={true}
-                onEditPhoto={(p) => { setEditPhotoId(p.id); setActiveGroupId(null); }}
+                onEditPhoto={(p) => { setEditPhotoId(p.id); }}
                 onLongPressStart={() => {}}
                 onLongPressEnd={() => {}}
-                onBatchEdit={(ids) => { setBatchEditIds(ids); setActiveGroupId(null); }}
+                onBatchEdit={(ids) => { setBatchEditIds(ids); }}
                 onUngroup={() => { handleUngroup(activeGroupId); setActiveGroupId(null); }}
                 onAddPhotoToGroup={() => {
                   const input = document.createElement('input');

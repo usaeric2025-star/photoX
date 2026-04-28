@@ -130,38 +130,38 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
 
             const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
             const cloudPhotos = user ? await loadPhotosFromCloud(user.id, lastSyncISO) : await loadAllPhotosFromCloud();
-            if (cloudPhotos) {
-                setPublicPhotos((prev: any[]) => {
-                    const localMap = new Map((prev || []).filter(p => p && p.id).map(p => [p.id, p]));
-                    
-                    cloudPhotos.forEach(cp => {
-                        const local = localMap.get(cp.id);
-                        if (local) {
-                            localMap.set(cp.id, {
-                                ...local,
-                                ...cp,
-                                // Favor cloud values for relational IDs as source of truth
-                                categoryId: cp.categoryId || local.categoryId,
-                                subcategoryId: cp.subcategoryId || local.subcategoryId,
-                                tagIds: (cp.tagIds && cp.tagIds.length > 0) ? cp.tagIds : local.tagIds,
-                                // Merge other fields preference
-                                name: cp.name || local.name,
-                                manual_code: cp.manual_code || local.manual_code,
-                                description: cp.description || local.description
-                            });
-                        } else {
-                            localMap.set(cp.id, cp);
-                        }
-                    });
-                    
-                    const final = Array.from(localMap.values());
-                    saveData('product_photos', final);
-                    return final;
+            
+            // Get current local state to merge properly and get total count
+            const localPhotos = await loadData('product_photos') || [];
+            const localMap = new Map((localPhotos as any[]).filter(p => p && p.id).map(p => [p.id, p]));
+
+            if (cloudPhotos && cloudPhotos.length > 0) {
+                cloudPhotos.forEach(cp => {
+                    const local = localMap.get(cp.id);
+                    if (local) {
+                        localMap.set(cp.id, {
+                            ...local,
+                            ...cp,
+                            categoryId: cp.categoryId || local.categoryId,
+                            subcategoryId: cp.subcategoryId || local.subcategoryId,
+                            tagIds: (cp.tagIds && cp.tagIds.length > 0) ? cp.tagIds : local.tagIds,
+                            name: cp.name || local.name,
+                            manual_code: cp.manual_code || local.manual_code,
+                            description: cp.description || local.description
+                        });
+                    } else {
+                        localMap.set(cp.id, cp);
+                    }
                 });
             }
 
-            if (cloudPhotos) {
-                setCloudCount?.(cloudPhotos.length);
+            const finalPhotos = Array.from(localMap.values());
+            setPublicPhotos(finalPhotos);
+            await saveData('product_photos', finalPhotos);
+            
+            // Always set cloud count to the total photos length
+            if (setCloudCount) {
+                setCloudCount(finalPhotos.length);
             }
             
             const now = Date.now();

@@ -106,6 +106,7 @@ export const useAdminPhotos = (
           const cloudPhotos = await loadPhotosFromCloud(user.id);
           if (cloudPhotos) {
             setPhotos(cloudPhotos);
+            setCloudCount(cloudPhotos.length);
             // Overwrite local indexedDB
             await saveData('product_photos', cloudPhotos);
           } else {
@@ -509,6 +510,7 @@ export const useAdminPhotos = (
     if (user && successCount > 0) {
       const newPhotos = photosRef.current;
       await syncPhotosToCloud(user.id, newPhotos);
+      setCloudCount(newPhotos.length);
     }
     
     setIsSyncing(false);
@@ -561,6 +563,7 @@ export const useAdminPhotos = (
       }
 
       setPhotos(newPhotos);
+      setCloudCount(newPhotos.length);
       saveData('product_photos', newPhotos);
   };
 

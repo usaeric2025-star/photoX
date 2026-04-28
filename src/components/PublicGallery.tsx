@@ -417,7 +417,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         onLongPressStart={isAdminMode ? startLongPress : undefined}
         onLongPressEnd={isAdminMode ? endLongPress : undefined}
         onBatchEdit={(ids) => {
-          setActiveGroupId(null);
           if (onBatchEdit) onBatchEdit(ids);
           else if (adminUI) adminUI.setBatchEditIds(ids);
         }}
