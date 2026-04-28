@@ -167,18 +167,43 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
   }
 
   // Upsert on photo as before
-  const { data: savedPhoto, error: dbError } = await supabase
+  let { data: savedPhoto, error: dbError } = await supabase
     .from(TABLE_NAME)
     .upsert(payload, { 
       onConflict: 'id',
       ignoreDuplicates: false 
     })
     .select('id')
-    .single();
+    .maybeSingle();
+
+  // FALLBACK: If group_order or is_group_cover columns are missing in the DB schema,
+  // we retry without them to ensure the rest of the data is saved.
+  if (dbError && dbError.message.includes('column') && 
+      (dbError.message.includes('group_order') || dbError.message.includes('is_group_cover'))) {
+    console.warn("DB Schema mismatch detected, retrying without group metadata:", dbError.message);
+    const safePayload = { ...payload };
+    delete safePayload.group_order;
+    delete safePayload.is_group_cover;
+    
+    const retry = await supabase
+      .from(TABLE_NAME)
+      .upsert(safePayload, { onConflict: 'id', ignoreDuplicates: false })
+      .select('id')
+      .maybeSingle();
+    
+    savedPhoto = retry.data;
+    dbError = retry.error;
+  }
 
   if (dbError) {
     console.error("Supabase Database Upsert Error:", dbError);
     throw new Error(`數據同步失敗: ${dbError.message}`);
+  }
+
+  if (!savedPhoto) {
+    // maybeSingle might return null if the id is new but upsert failed or returned nothing
+    // but usually upsert with select('id') returns the id.
+    throw new Error("數據保存失敗：未返回保存結果");
   }
 
   const finalPhotoId = savedPhoto.id;
