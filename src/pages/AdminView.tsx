@@ -11,7 +11,7 @@ import { AdminHeader } from '../components/admin/AdminHeader';
 import { BatchEditScreen } from '../components/admin/BatchEditScreen';
 import { PublicGallery } from '../components/PublicGallery';
 import { SettingsScreen } from '../components/SettingsScreen';
-import { GroupDetailScreen } from '../components/admin/GroupDetailScreen';
+import { GroupDetailView } from '../components/GroupDetailView';
 import { useSyncEngine } from '../hooks/useSyncEngine';
 import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
@@ -289,17 +289,18 @@ export default function AdminView() {
             )}
             
             {activeGroupId && (
-              <GroupDetailScreen
+              <GroupDetailView
                 activeGroupId={activeGroupId}
                 setActiveGroupId={setActiveGroupId}
-                focusedGroupPhotoId={focusedGroupPhotoId}
-                setFocusedGroupPhotoId={setFocusedGroupPhotoId}
-                publicPhotos={photos}
                 photos={photos}
-                setPhotos={setPhotos}
-                setPreviewUri={setPreviewUri}
-                onEditPhoto={(photo) => { setEditPhotoId(photo.id); setActiveGroupId(null); }}
+                displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
+                setLightboxIndex={(idx) => {}}
+                isAdminMode={true}
+                onEditPhoto={(p) => { setEditPhotoId(p.id); setActiveGroupId(null); }}
+                onLongPressStart={() => {}}
+                onLongPressEnd={() => {}}
                 onBatchEdit={(ids) => { setBatchEditIds(ids); setActiveGroupId(null); }}
+                onUngroup={() => { handleUngroup(activeGroupId); setActiveGroupId(null); }}
                 onAddPhotoToGroup={() => {
                   const input = document.createElement('input');
                   input.type = 'file';
@@ -308,7 +309,10 @@ export default function AdminView() {
                   input.onchange = (e) => handlePhotoImport(e as any, false, setActiveScreen);
                   input.click();
                 }}
-                onUngroup={() => { handleUngroup(activeGroupId); setActiveGroupId(null); }}
+                setPhotos={setPhotos}
+                lang={lang}
+                t={t}
+                categories={categories}
               />
             )}
       

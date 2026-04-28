@@ -428,9 +428,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
         isAdminMode={!!isAdminMode}
-        onEditPhoto={onEditPhoto}
+        onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
         onLongPressStart={startLongPress}
         onLongPressEnd={endLongPress}
+        onBatchEdit={onBatchEdit}
+        onUngroup={onGroupPhotos} // Assuming onGroupPhotos handles this or needs update
+        onAddPhotoToGroup={onAddPhoto}
+        setPhotos={context.setPhotos}
+        lang={lang}
+        t={t}
+        categories={categories}
+        tagMap={tagMap}
+        isMultiSelect={isMultiSelect}
       />
 
       {/* Dialogs */}
