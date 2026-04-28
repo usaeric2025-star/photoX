@@ -3,7 +3,8 @@ import {
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
   updatePhotosGroupInCloud,
-  addTagToDB
+  addTagToDB,
+  supabase
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 
@@ -256,16 +257,24 @@ export const useAdminCore = (
           return;
         }
         
-        const savedTag = await addTagToDB(trimmedName);
-        const newTagId = savedTag.id;
+        await addTagToDB(trimmedName);
         
-        const nextTags = [...tags, savedTag];
-        setTags(nextTags);
+        // Reload all tags from server to ensure sync
+        const { data: newTags } = await supabase.from('tags').select('*');
+        if (newTags) {
+            setTags(newTags.map((t: any) => ({ ...t, id: String(t.id) })));
+        }
+        
         updateForm((prev: any) => {
+          // Find the new tag ID
+          const latestTags = newTags || [];
+          const addedTag = latestTags.find((t: any) => t.name === trimmedName);
+          const newTagId = addedTag ? String(addedTag.id) : null;
+          
           const safeTags = Array.isArray(prev.tagIds) ? prev.tagIds : (typeof prev.tagIds === 'string' ? [prev.tagIds] : []);
-          return { ...prev, tagIds: [...safeTags, newTagId] };
+          return newTagId ? { ...prev, tagIds: [...safeTags, newTagId] } : prev;
         });
-        await saveSettings({ ...settings, categories, tags: nextTags, manufacturers });
+        await saveSettings({ ...settings, categories, tags: newTags || tags, manufacturers });
       }
     });
   }, [tags, categories, manufacturers, settings, saveSettings, setTags, updateForm, setAlertDialog, setPromptDialog]);
