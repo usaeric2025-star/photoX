@@ -384,18 +384,30 @@ export const loadAllPhotosFromCloud = async (
   page: number = 0, 
   limit: number = 1000,
   categoryId?: string | null,
-  tagId?: string | null
+  tagId?: string | null,
+  searchQuery?: string | null
 ): Promise<Photo[]> => {
-  let query = supabase
-    .from(TABLE_NAME)
-    .select(`
+  const selectQuery = tagId 
+    ? `
+      *,
+      photo_tags!inner(
+        tag_id,
+        tags(id, name)
+      ),
+      category:categories(*)
+    `
+    : `
       *,
       photo_tags(
         tag_id,
         tags!photo_tags_tag_id_fkey(id, name)
       ),
       category:categories(*)
-    `);
+    `;
+
+  let query = supabase
+    .from(TABLE_NAME)
+    .select(selectQuery);
   
   if (since) {
     query = query.gt('updated_at', since);
@@ -406,10 +418,13 @@ export const loadAllPhotosFromCloud = async (
   }
 
   if (tagId) {
-    // Note: Filters on joined tables for M-M requires a specialized approach in Supabase
-    // For now we do tag filtering if possible, or just skip if complex.
-    // Simplifying: Tag filtering in Supabase for M-M is better done via another query or specialized RPC
-    // But let's try standard EQ if we use the right syntax
+    query = query.eq('photo_tags.tag_id', tagId);
+  }
+
+  if (searchQuery && searchQuery.trim().length > 0) {
+    const q = searchQuery.trim();
+    // Use an OR condition to search either name, manual_code, or model_number
+    query = query.or(`name.ilike.%${q}%,manual_code.ilike.%${q}%,model_number.ilike.%${q}%`);
   }
 
   const from = page * limit;

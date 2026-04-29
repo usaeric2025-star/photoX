@@ -17,6 +17,7 @@ export default function PublicView() {
     hasMore, setHasMore,
     setVisibleCount,
     filterCatId,
+    filterTagIds,
     debouncedSearchQuery
   } = useGalleryContext();
   
@@ -49,7 +50,7 @@ export default function PublicView() {
 
     try {
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, 100, filterCatId),
+        loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
         loadCategoriesFromCloud(),
         loadTagsFromCloud(),
         loadManufacturersFromCloud(),
@@ -104,7 +105,7 @@ export default function PublicView() {
     const nextPage = page + 1;
     
     try {
-      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, 100, filterCatId);
+      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
       if (morePhotos && morePhotos.length > 0) {
         setPhotos(prev => [...prev, ...morePhotos]);
         setPage(nextPage);
@@ -126,7 +127,7 @@ export default function PublicView() {
     if (!isInitializing && page === 0) {
       syncWithCloud(true);
     }
-  }, [filterCatId, debouncedSearchQuery]);
+  }, [filterCatId, filterTagIds, debouncedSearchQuery]);
 
   useEffect(() => {
     syncWithCloud(false);

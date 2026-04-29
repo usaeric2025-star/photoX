@@ -151,15 +151,17 @@ export const SearchAndFilter: React.FC<Props> = ({
             )}
             
             <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth px-1">
-              {tags.map((tag: any) => (
+              {tags.map((tag: any) => {
+                const strTagId = String(tag.id);
+                return (
                 <button 
-                  key={tag.id}
-                  onClick={() => setFilterTagIds(filterTagIds.includes(tag.id) ? filterTagIds.filter(t => t !== tag.id) : [...filterTagIds, tag.id])}
-                  className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${filterTagIds.includes(tag.id) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/40 hover:bg-white'}`}
+                  key={strTagId}
+                  onClick={() => setFilterTagIds(filterTagIds.includes(strTagId) ? filterTagIds.filter(t => t !== strTagId) : [...filterTagIds, strTagId])}
+                  className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${filterTagIds.includes(strTagId) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/40 hover:bg-white'}`}
                 >
                   #{tag.name}
                 </button>
-              ))}
+              )})}
             </div>
           </motion.div>
         )}

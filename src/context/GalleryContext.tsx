@@ -155,15 +155,16 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
       
       result = result.filter(p => {
-        const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        const pTagIds = Array.isArray(p.tagIds) ? p.tagIds.map(String) : (typeof p.tagIds === 'string' ? [String(p.tagIds)] : []);
         
         // Every selected tag must match either by ID or by name
         return filterTagIds.every(tid => {
-          if (pTagIds.includes(tid)) return true;
+          const strTid = String(tid);
+          if (pTagIds.includes(strTid)) return true;
           
           const fallbackName = tagFallbackMap.get(tid);
           if (fallbackName) {
-            return pTagIds.some(pt => pt.toLowerCase() === fallbackName);
+            return pTagIds.some(pt => String(pt).toLowerCase() === fallbackName);
           }
           return false;
         });
