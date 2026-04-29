@@ -71,51 +71,31 @@ export const useAdminCategory = (adminUI: any) => {
     }
   };
 
-  const deleteTag = async (tagId: string | number) => {
-    if (!tagId) return;
+  const deleteTag = async (id: string | number) => {
+    if (!id) return;
 
     try {
-        // Ensure we pass a number if it is numeric, satisfying the requirement to pass 67 instead of "67"
-        const finalId = !isNaN(Number(tagId)) ? Number(tagId) : tagId;
+        const finalId = !isNaN(Number(id)) ? Number(id) : id;
         
-        console.log('[deleteTag] 开始删除標籤', { 
-            tagId: finalId, 
-            type: typeof finalId,
-            photosLength: photos?.length 
-        });
-        
-        // 1. Cloud deletion (Confirmed: using tagId, not tag.name)
+        // 1. 删数据库 (Cascade handles photo_tags)
         const success = await deleteTagFromDB(finalId);
-        if (!success) {
-          throw new Error("Cloud delete returned false");
-        }
+        if (!success) throw new Error("Cloud delete returned false");
 
-        const strTagId = String(finalId);
-        // 2. Update local tags state
-        const nextTags = tags.filter(t => String(t.id) !== strTagId);
-        setTags(nextTags);
+        // 2. 更新本地标签列表
+        const newTags = tags.filter(t => String(t.id) !== String(id));
+        setTags(newTags);
         
-        // 2.1 Update IndexedDB cache
-        await saveData('product_tags', nextTags);
+        // 3. 强制覆盖 IndexedDB（不合并）
+        await saveData('product_tags', newTags);
 
-        // 3. Update local photos state
-        const nextPhotos = photos.map(p => {
-          const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
-          const strPTagIds = pTagIds.map(id => String(id));
+        // 4. 更新内存里的照片 tagIds（只改内存，不同步云端）
+        setPhotos((prev: any[]) => prev.map(p => ({
+          ...p,
+          tagIds: (p.tagIds || []).filter(
+            (tid: any) => String(tid) !== String(id)
+          )
+        })));
 
-          if (strPTagIds.includes(strTagId)) {
-            return {
-              ...p,
-              tagIds: strPTagIds.filter((id: string) => id !== strTagId)
-            };
-          }
-          return p;
-        });
-        
-        setPhotos(nextPhotos);
-        await saveData('product_photos', nextPhotos);
-
-        console.log('[deleteTag] 標籤删除成功');
     } catch (err: any) {
         console.error("[deleteTag] 删除失败:", err);
         setAlertDialog({ title: '刪除失敗', message: "刪除標籤失敗，請檢查網路連線。" });

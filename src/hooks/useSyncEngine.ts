@@ -94,19 +94,10 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
 
             // --- Load Tags Relational ---
             const cloudTags = await loadTagsFromCloud();
-            if (cloudTags && cloudTags.length > 0) {
+            if (cloudTags) {
               setTags(cloudTags);
               setPublicTags?.(cloudTags);
               await saveData('product_tags', cloudTags);
-            } else if (cloudSettings?.tags && cloudSettings.tags.length > 0) {
-              // Migration fallback
-              setTags(cloudSettings.tags);
-              setPublicTags?.(cloudSettings.tags);
-              await saveData('product_tags', cloudSettings.tags);
-            } else {
-              setTags([]);
-              setPublicTags?.([]);
-              await saveData('product_tags', []);
             }
 
             const cloudCategories = await loadCategoriesFromCloud();
