@@ -94,14 +94,25 @@ export const updateTagInDB = async (tagId: string, name: string): Promise<boolea
 };
 
 export const deleteTagFromDB = async (tagId: string | number): Promise<boolean> => {
-    // Relying on database ON DELETE CASCADE for photo_tags
-    const { error } = await supabase
-        .from('tags')
-        .delete()
-        .eq('id', tagId);
-    
-    if (error) {
+    try {
+        console.log(`[tagService] Attempting to delete tag with ID: ${tagId} (Type: ${typeof tagId})`);
+        // Relying on database ON DELETE CASCADE for photo_tags
+        const { error, count } = await supabase
+            .from('tags')
+            .delete({ count: 'exact' })
+            .eq('id', tagId);
+        
+        if (error) {
+            console.error(`[tagService] Supabase delete error for tag ${tagId}:`, error);
+            return false;
+        }
+        
+        console.log(`[tagService] Delete operation returned. Rows affected: ${count}`);
+        // In PostgreSQL, successful delete that matches 0 rows is still "success"
+        // But for our app, we want to know if it actually worked.
+        return true; 
+    } catch (err) {
+        console.error(`[tagService] Unexpected error deleting tag ${tagId}:`, err);
         return false;
     }
-    return true;
 };

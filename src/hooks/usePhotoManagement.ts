@@ -169,11 +169,9 @@ export const usePhotoManagement = (
             updatedAt: new Date().toISOString()
           };
 
-          setPhotos(prev => {
-            const nextPhotos = (prev as Photo[]).map(p => p.id === editPhotoId ? updatedPhoto : p);
-            saveData('product_photos', nextPhotos);
-            return nextPhotos;
-          });
+          const nextPhotos = photos.map(p => p.id === editPhotoId ? updatedPhoto : p);
+          setPhotos(nextPhotos);
+          await saveData('product_photos', nextPhotos);
           
           if (user) {
              await savePhotoToCloud(user.id, updatedPhoto);
@@ -208,11 +206,9 @@ export const usePhotoManagement = (
             groupId: null
           };
 
-          setPhotos(prev => {
-            const nextPhotos = [newPhoto, ...(prev as Photo[])];
-            saveData('product_photos', nextPhotos);
-            return nextPhotos;
-          });
+          const nextPhotos = [newPhoto, ...photos];
+          setPhotos(nextPhotos);
+          await saveData('product_photos', nextPhotos);
           
           if (user) {
             await savePhotoToCloud(user.id, newPhoto);
@@ -240,9 +236,7 @@ export const usePhotoManagement = (
         // Resolve tag names to IDs
         const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
 
-        const updatedPhotosList: Photo[] = [];
-        setPhotos(prev => {
-          const next = prev.map(p => {
+        const nextPhotos = photos.map(p => {
              if (batchEditIds.includes(p.id)) {
                 const updated = {
                   ...p,
@@ -261,10 +255,10 @@ export const usePhotoManagement = (
                 return updated;
              }
              return p;
-          });
-          saveData('product_photos', next);
-          return next;
         });
+
+        setPhotos(nextPhotos);
+        await saveData('product_photos', nextPhotos);
         
         if (user) {
            await Promise.allSettled(

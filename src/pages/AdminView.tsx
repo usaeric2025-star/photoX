@@ -288,15 +288,15 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
 
   const [syncPercent, setSyncPercent] = useState(0);
 
-  const sessionValue = {
+  const sessionValue = React.useMemo(() => ({
     user, isAdminMode: true, 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
     viewMode, setViewMode, syncPercent, setSyncPercent,
     loginWithGoogle, logout, appLang: lang
-  };
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, syncPercent, setSyncPercent, logout, lang]);
 
-  const photoValue = {
+  const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
     manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
     handleSingleAiAnalyzeCallback,
@@ -305,13 +305,22 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
     updateCategory, deleteCategory, addCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,
     quickAddTag, quickAddManufacturer
-  };
+  }), [
+    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
+    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
+    handleSingleAiAnalyzeCallback, handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
+    quickAddTag, quickAddManufacturer
+  ]);
 
-  const uiValue = {
+  const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
-  };
+  }), [
+    activeScreen, editPhotoId, batchEditIds, confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
+  ]);
 
   return (
     <ErrorBoundary key="admin-main">

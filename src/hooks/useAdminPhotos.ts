@@ -58,8 +58,13 @@ export const useAdminPhotos = (
   const setCloudCount = adminUI?.setCloudCount || setInternalCloudCount;
 
   const [internalLoadingState, setInternalLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
-  const actualSetLoadingState = setLoadingState || setInternalLoadingState;
-  const loadingState = setLoadingState ? undefined : internalLoadingState;
+  
+  // Use provided loadingState if available, otherwise use internal
+  const currentLoadingState = adminUI?.loadingState !== undefined ? adminUI.loadingState : internalLoadingState;
+  const actualSetLoadingState = (s: any) => {
+    if (setLoadingState) setLoadingState(s);
+    setInternalLoadingState(s);
+  };
 
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
@@ -515,16 +520,16 @@ export const useAdminPhotos = (
         await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
       }
 
-      let newPhotos = photosRef.current.filter(p => !ids.includes(p.id));
+      let nextPhotosList = photosRef.current.filter(p => !ids.includes(p.id));
 
       for (const groupId of affectedGroups) {
-        const remainingGroupPhotos = newPhotos.filter(p => p.groupId === groupId);
+        const remainingGroupPhotos = nextPhotosList.filter(p => p.groupId === groupId);
         if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
           const sorted = [...remainingGroupPhotos].sort((a, b) => 
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
           const newCover = { ...sorted[0], isGroupCover: true };
-          newPhotos = newPhotos.map(p => p.id === newCover.id ? newCover : p);
+          nextPhotosList = nextPhotosList.map(p => p.id === newCover.id ? newCover : p);
           
           if (user) {
             savePhotoToCloud(user.id, newCover).catch(err => 
@@ -534,9 +539,9 @@ export const useAdminPhotos = (
         }
       }
 
-      setPhotos(newPhotos);
-      setCloudCount(newPhotos.length);
-      saveData('product_photos', newPhotos);
+      setPhotos(nextPhotosList);
+      setCloudCount(nextPhotosList.length);
+      await saveData('product_photos', nextPhotosList);
   };
 
   const updatePhoto = async (updatedPhoto: Photo) => {
@@ -554,7 +559,7 @@ export const useAdminPhotos = (
   return {
     photos, setPhotos,
     loadingState: actualSetLoadingState, // We should return the setter if needed, but the current UI uses the state
-    isImporting: (loadingState || internalLoadingState) === 'importing',
+    isImporting: currentLoadingState === 'importing',
     importProgress, importTotal, batchProgress,
     aiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount,
