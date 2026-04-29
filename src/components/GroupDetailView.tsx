@@ -46,18 +46,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
   setAlertDialog: propsSetAlertDialog,
   setLoadingState: propsSetLoadingState
 }) => {
-  const setConfirmDialog = propsSetConfirmDialog || (() => {});
-  const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
-  const setLoadingState = propsSetLoadingState || (() => {});
-  
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Inline Editing States
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
   const [modalType, setModalType] = useState<'tags' | 'dims' | 'note' | null>(null);
@@ -66,16 +59,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
   const [customDim, setCustomDim] = useState('');
   const [showMenu, setShowMenu] = useState(false);
 
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const groupIdRef = useRef(activeGroupId);
+  
   useEffect(() => {
     if (activeGroupId) groupIdRef.current = activeGroupId;
   }, [activeGroupId]);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 2000);
-  };
-  
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
     return photos
@@ -89,6 +79,19 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
   }, [activeGroupId, photos]);
+
+  const currentModalPhoto = useMemo(() => 
+    modalTargetId ? activeGroupPhotos.find(p => p.id === modalTargetId) : null
+  , [modalTargetId, activeGroupPhotos]);
+
+  const setConfirmDialog = propsSetConfirmDialog || (() => {});
+  const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
+  const setLoadingState = propsSetLoadingState || (() => {});
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2000);
+  };
 
   const persistPhotoChange = async (photoId: string, updates: Partial<Photo>) => {
     const photo = photos.find(p => p.id === photoId);
@@ -142,10 +145,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
       setAlertDialog({ title: '名稱同步失敗', message: err.message });
     }
   };
-
-  const currentModalPhoto = useMemo(() => 
-    modalTargetId ? activeGroupPhotos.find(p => p.id === modalTargetId) : null
-  , [modalTargetId, activeGroupPhotos]);
 
   const handleToggleTag = (photo: Photo, tagId: string) => {
     const currentTags = Array.isArray(photo.tagIds) ? photo.tagIds : [];

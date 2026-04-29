@@ -48,6 +48,94 @@ const obfuscateKey = (key: string) => {
   return btoa(key).split('').reverse().join('');
 };
 
+const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag }: any) => {
+  const [isPressing, setIsPressing] = useState(false);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsPressing(true);
+    timerRef.current = setTimeout(() => {
+      setIsPressing(false);
+      setActiveTagMenuId(tag.id);
+    }, 600);
+  };
+
+  const handleEnd = () => {
+    setIsPressing(false);
+    if (timerRef.current) clearTimeout(timerRef.current);
+  };
+
+  return (
+    <div 
+      className={`bg-white border border-[#1D3557]/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeTagMenuId === tag.id ? 'bg-[#D4A853]/10 border-[#D4A853]/30 scale-95' : ''}`}
+      onTouchStart={handleStart}
+      onTouchEnd={handleEnd}
+      onMouseDown={handleStart}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setActiveTagMenuId(tag.id);
+      }}
+    >
+      <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none">
+        {tag.name}
+      </span>
+      <button 
+        onClick={() => deleteTag(tag.id)} 
+        className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"
+      >
+        <X size={14} />
+      </button>
+
+      <AnimatePresence>
+        {activeTagMenuId === tag.id && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1D3557] rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[100px]"
+          >
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUpdateTagName(tag);
+                setActiveTagMenuId(null);
+              }}
+              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+            >
+              <Pencil size={12} /> 编辑
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteTag(tag.id);
+                setActiveTagMenuId(null);
+              }}
+              className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+            >
+              <Trash2 size={12} /> 删除
+            </button>
+            <div 
+              className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1D3557] rotate-45 -mt-1"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {activeTagMenuId === tag.id && (
+        <div 
+          className="fixed inset-0 z-[100]" 
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveTagMenuId(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
     settings, user, loginWithGoogle, logout, syncPercent, 
@@ -590,96 +678,19 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
-            {(tags || []).map(tag => {
-              const [isPressing, setIsPressing] = useState(false);
-              const timerRef = React.useRef<NodeJS.Timeout | null>(null);
-
-              const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
-                setIsPressing(true);
-                timerRef.current = setTimeout(() => {
-                  setIsPressing(false);
-                  setActiveTagMenuId(tag.id);
-                }, 600);
-              };
-
-              const handleEnd = () => {
-                setIsPressing(false);
-                if (timerRef.current) clearTimeout(timerRef.current);
-              };
-
-              return (
-                <div 
-                  key={tag.id} 
-                  className={`bg-white border border-[#1D3557]/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeTagMenuId === tag.id ? 'bg-[#D4A853]/10 border-[#D4A853]/30 scale-95' : ''}`}
-                  onTouchStart={handleStart}
-                  onTouchEnd={handleEnd}
-                  onMouseDown={handleStart}
-                  onMouseUp={handleEnd}
-                  onMouseLeave={handleEnd}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    setActiveTagMenuId(tag.id);
-                  }}
-                >
-                  <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none">
-                    {tag.name}
-                  </span>
-                  <button 
-                    onClick={() => deleteTag(tag.id)} 
-                    className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"
-                  >
-                    <X size={14} />
-                  </button>
-
-                  <AnimatePresence>
-                    {activeTagMenuId === tag.id && (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1D3557] rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[100px]"
-                      >
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUpdateTagName(tag);
-                            setActiveTagMenuId(null);
-                          }}
-                          className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-                        >
-                          <Pencil size={12} /> 编辑
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteTag(tag.id);
-                            setActiveTagMenuId(null);
-                          }}
-                          className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-                        >
-                          <Trash2 size={12} /> 删除
-                        </button>
-                        <div 
-                          className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1D3557] rotate-45 -mt-1"
-                        />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  
-                  {activeTagMenuId === tag.id && (
-                    <div 
-                      className="fixed inset-0 z-[100]" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveTagMenuId(null);
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+            {(tags || []).map(tag => (
+              <TagItem 
+                key={tag.id}
+                tag={tag}
+                activeTagMenuId={activeTagMenuId}
+                setActiveTagMenuId={setActiveTagMenuId}
+                handleUpdateTagName={handleUpdateTagName}
+                deleteTag={deleteTag}
+              />
+            ))}
           </div>
         </section>
+
 
         {/* Export Data */}
         <div className={cardClass}>
