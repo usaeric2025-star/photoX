@@ -381,9 +381,8 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
            <div className="flex-1 p-3 sm:p-6 pb-40">
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-4">
                 {activeGroupPhotos.map((photo) => (
-                    <motion.div 
+                    <div 
                       key={photo.id}
-                      layout
                       draggable={isAdminMode && !isMultiSelectMode}
                       onDragStart={() => setDraggedPhotoId(photo.id)}
                       onDragOver={(e) => e.preventDefault()}
@@ -419,6 +418,8 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                           src={photo.thumb_url || photo.image_url || photo.uri} 
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                           referrerPolicy="no-referrer"
+                          loading="lazy"
+                          decoding="async"
                         />
                         
                         {/* Status Badges */}
@@ -445,7 +446,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         )}
                         
                       </div>
-                    </motion.div>
+                    </div>
                 ))}
               </div>
            </div>            {/* Multi-Select Floating Bar */}
