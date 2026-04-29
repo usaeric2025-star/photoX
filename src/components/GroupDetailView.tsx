@@ -5,7 +5,6 @@ import {
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle
 } from 'lucide-react';
-import { VirtuosoGrid } from 'react-virtuoso';
 import { Photo, Tag, Category } from '../types';
 import { updatePhotosGroupInCloud, updatePhotoInCloud, savePhotoToCloud } from '../services/photoService';
 
@@ -331,16 +330,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         <Plus size={18} />
                       </button>
                     </div>
-                  )}
-                </div>
+                 )}
               </div>
+           </div>
 
            <div className="flex-1 p-3 sm:p-6 pb-40">
-              <VirtuosoGrid
-                totalCount={activeGroupPhotos.length}
-                itemContent={(index) => {
-                  const photo = activeGroupPhotos[index];
-                  return (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
+                {activeGroupPhotos.map((photo) => (
                     <motion.div 
                       key={photo.id}
                       layout
@@ -488,20 +484,8 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         </div>
                       </div>
                     </motion.div>
-                  );
-                }}
-                components={{
-                  List: React.forwardRef(({ style, children }, ref) => (
-                    <div
-                      ref={ref}
-                      style={style}
-                      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6"
-                    >
-                      {children}
-                    </div>
-                  )),
-                }}
-              />
+                ))}
+              </div>
            </div>            {/* Multi-Select Floating Bar */}
            <AnimatePresence>
              {isMultiSelectMode && selectedPhotoIds.length > 0 && (
