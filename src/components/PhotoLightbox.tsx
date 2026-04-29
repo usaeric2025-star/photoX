@@ -97,7 +97,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   }
 
   // Manufacturer lookup
-  const subId = photo.subcategoryId;
+  const subId = photo.manufacturerId;
   const mfr = manufacturers && subId ? manufacturers.find(m => m.id === subId) : null;
   const mfrName = mfr ? mfr.name : null;
 

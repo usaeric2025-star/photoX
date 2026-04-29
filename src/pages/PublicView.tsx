@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, fetchSettings, loginWithGoogle } from '../services/supabaseService';
+import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle } from '../services/supabaseService';
 import { PublicGallery } from '../components/PublicGallery';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
@@ -29,6 +29,7 @@ export default function PublicView() {
     const cachedPhotos = await loadData('cachedPhotos');
     const cachedCats = await loadData('cachedCategories');
     const cachedTags = await loadData('cachedTags');
+    const cachedManufacturers = await loadData('cachedManufacturers');
     const cachedSettings = await loadData('cachedSettings');
 
     if (cachedPhotos) {
@@ -37,21 +38,20 @@ export default function PublicView() {
     }
     if (cachedCats) setCategories(cachedCats);
     if (cachedTags) setTags(cachedTags);
+    if (cachedManufacturers) setManufacturers(cachedManufacturers);
     if (cachedSettings) {
       setSettings(cachedSettings);
-      if (cachedSettings.manufacturers) {
-        setManufacturers(cachedSettings.manufacturers);
-      }
     }
 
     if (!isBackground && !cachedPhotos) setIsInitializing(true);
     else setIsRefreshing(true);
 
     try {
-      const [cloudPhotos, cloudCats, cloudTags, cloudSettings] = await Promise.all([
+      const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings] = await Promise.all([
         loadAllPhotosFromCloud(undefined, 0, 50, filterCatId),
         loadCategoriesFromCloud(),
         loadTagsFromCloud(),
+        loadManufacturersFromCloud(),
         fetchSettings()
       ]);
 
@@ -78,11 +78,13 @@ export default function PublicView() {
         saveData('cachedTags', cloudTags);
       }
 
+      if (cloudManufacturers) {
+        setManufacturers(cloudManufacturers);
+        saveData('cachedManufacturers', cloudManufacturers);
+      }
+
       if (cloudSettings) {
         setSettings(cloudSettings);
-        if (cloudSettings.manufacturers) {
-          setManufacturers(cloudSettings.manufacturers);
-        }
         saveData('cachedSettings', cloudSettings);
       }
     } catch (e) {

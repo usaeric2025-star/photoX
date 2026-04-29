@@ -64,7 +64,7 @@ export interface Photo {
   // UI legacy fields mapping if needed
   uri?: string; // For local preview
   categoryId: string | null; // For local filter
-  subcategoryId: string | null; 
+  manufacturerId: string | null;
   tagIds: string[]; // For local filter
   price?: string;
 }
@@ -72,7 +72,7 @@ export interface Photo {
 export interface ProductFormData {
   name: string;
   categoryId: string | null;
-  subcategoryId: string | null;
+  manufacturerId: string | null;
   tagIds: string[];
   description: string;
   manual_code: string;

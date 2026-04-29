@@ -10,7 +10,8 @@ import {
     savePhotoToCloud,
     deletePhotoFromCloud,
     uploadLogo,
-    loadTagsFromCloud
+    loadTagsFromCloud,
+    loadManufacturersFromCloud
 } from '../services/supabaseService';
 
 import { useGalleryContext } from '../context/GalleryContext';
@@ -84,18 +85,20 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 if (cloudSettings.background_color) document.documentElement.style.setProperty('--custom-bg', cloudSettings.background_color);
                 if (cloudSettings.primary_color) document.documentElement.style.setProperty('--custom-text', cloudSettings.primary_color);
                 if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
+            }
 
-                if (cloudSettings.manufacturers !== undefined) {
-                    setManufacturers(cloudSettings.manufacturers);
-                    setPublicManufacturers?.(cloudSettings.manufacturers);
-                    saveData('product_manufacturers', cloudSettings.manufacturers);
-                }
+            // --- Load Manufacturers Relational ---
+            const cloudManufacturers = await loadManufacturersFromCloud();
+            if (cloudManufacturers) {
+                setManufacturers(cloudManufacturers);
+                setPublicManufacturers?.(cloudManufacturers);
+                await saveData('product_manufacturers', cloudManufacturers);
             }
 
             // --- Load Tags Relational ---
             const cloudTags = await loadTagsFromCloud();
             if (cloudTags) {
-              setTags(cloudTags);
+              setTags?.(cloudTags);
               setPublicTags?.(cloudTags);
               await saveData('product_tags', cloudTags);
             }
@@ -137,7 +140,7 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                             ...local,
                             ...cp,
                             categoryId: cp.categoryId || local.categoryId,
-                            subcategoryId: cp.subcategoryId || local.subcategoryId,
+                            manufacturerId: cp.manufacturerId || local.manufacturerId,
                             tagIds: (cp.tagIds && cp.tagIds.length > 0) ? cp.tagIds : local.tagIds,
                             name: cp.name || local.name,
                             manual_code: cp.manual_code || local.manual_code,

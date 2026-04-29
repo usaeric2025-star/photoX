@@ -58,7 +58,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
     manufacturers, tags, photos, categories,
     setTags, setCategories, setManufacturers, setPhotos,
-    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, updateManufacturer, deleteManufacturer, quickAddTag
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag
   } = useAdminPhoto();
   const { loadingState, setAlertDialog, setConfirmDialog, setPromptDialog } = useAdminUI();
 
@@ -87,29 +87,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTestResult(result);
   };
 
-  const addManufacturer = async () => {
+  const handleAddManufacturer = async () => {
     if (!newSubName.trim()) return;
-    const trimmed = newSubName.trim();
-    const newMfrId = `mfr-${Date.now()}`;
-    const newMfr = {
-      id: newMfrId,
-      name: trimmed,
-      aliases: [trimmed]
-    };
-    const nextMfrs = [...(manufacturers || []), newMfr];
-    setManufacturers(nextMfrs);
+    await addManufacturer(newSubName.trim());
     setNewSubName('');
-    
-    // Also add to categories fallback if needed
-    const nextCats = (categories || []).map(c => ({
-      ...c,
-      subcategories: Array.isArray(c.subcategories) ? [...c.subcategories, { ...newMfr }] : [{ ...newMfr }]
-    }));
-    setCategories(nextCats);
-    
-    const nextSettings = { ...settings, categories: nextCats, manufacturers: nextMfrs };
-    setSettings(nextSettings);
-    debouncedSave(nextSettings);
   };
 
   const handleAddCategory = async () => {
@@ -206,7 +187,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         <button 
            onClick={async () => {
              if (hasChanges) {
-               await saveSettings({ ...settings, categories, tags, manufacturers });
+               await saveSettings({ ...settings });
                setHasChanges(false);
                alert("保存成功 / Saved successfully");
              } else {
@@ -553,9 +534,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               className={inputClass}
               value={newSubName}
               onChange={(e) => setNewSubName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addManufacturer()}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddManufacturer()}
             />
-            <button onClick={addManufacturer} className={accentBtnClass}>
+            <button onClick={handleAddManufacturer} className={accentBtnClass}>
               <Plus size={16} />
             </button>
           </div>

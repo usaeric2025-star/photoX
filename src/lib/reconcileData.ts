@@ -8,7 +8,7 @@ export const reconcileData = (
 ) => {
   // 1. Map all used IDs
   const usedCatIds = new Set(photos.map(p => p.categoryId).filter(Boolean));
-  const usedManufacturerIds = new Set(photos.map(p => p.subcategoryId).filter(Boolean));
+  const usedManufacturerIds = new Set(photos.map(p => p.manufacturerId).filter(Boolean));
   const usedTagIds = new Set<string>();
   photos.forEach(p => {
     if (Array.isArray(p.tagIds)) p.tagIds.forEach(id => usedTagIds.add(id));

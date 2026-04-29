@@ -30,13 +30,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
 }) => {
   const mfrName = useMemo(() => {
-    const mfrId = photo.subcategoryId || (photo as any).sub_category;
+    const mfrId = photo.manufacturerId || (photo as any).sub_category;
     if (mfrId) {
       const activeMfr = manufacturers.find((m: any) => String(m.id) === String(mfrId));
       if (activeMfr) return activeMfr.name;
     }
     return '';
-  }, [photo.subcategoryId, (photo as any).sub_category, manufacturers]);
+  }, [photo.manufacturerId, (photo as any).sub_category, manufacturers]);
 
   const catName = useMemo(() => {
     const catId = photo.categoryId || (photo as any).category_id;

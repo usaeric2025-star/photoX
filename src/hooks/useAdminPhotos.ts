@@ -176,12 +176,11 @@ export const useAdminPhotos = (
             const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
             
             let finalCatId = result.categoryId || null;
-            let finalSubId = result.subcategoryId || null;
+            let finalMfrId = result.manufacturerId || null;
             
-            if (result.newSubCategoryName && !result.subcategoryId) {
-                const newMfr = { id: crypto.randomUUID(), name: result.newSubCategoryName };
-                setManufacturers(prev => [...prev, newMfr]);
-                finalSubId = newMfr.id;
+            if (result.newSubCategoryName && !result.manufacturerId) {
+                const savedMfr = await addManufacturer(result.newSubCategoryName);
+                if (savedMfr) finalMfrId = savedMfr.id;
             }
             
             const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
@@ -197,7 +196,7 @@ export const useAdminPhotos = (
                     return { 
                         ...p, 
                         categoryId: p.categoryId && p.categoryId !== 'uncategorized' ? p.categoryId : finalCatId, 
-                        subcategoryId: p.subcategoryId || finalSubId, 
+                        manufacturerId: p.manufacturerId || finalMfrId, 
                         tagIds: mergedTagIds,
                         name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                         model_number: p.model_number || result.modelNumber || null,
@@ -279,10 +278,10 @@ export const useAdminPhotos = (
       }, 3000);
 
       // Same manufacturer/tag ID creation logic as batch if new ones are suggested
-      if (result.newSubCategoryName && !result.subcategoryId) {
+      if (result.newSubCategoryName && !result.manufacturerId) {
         const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
         setManufacturers(prev => [...prev, savedMfr]);
-        result.subcategoryId = savedMfr.id;
+        result.manufacturerId = savedMfr.id;
       }
       
       let finalTagIdsFromAi = result.tagIds || [];
@@ -299,7 +298,7 @@ export const useAdminPhotos = (
           if (p.id !== editPhotoId) return p;
           
           let finalCatId = result.categoryId || p.categoryId;
-          let finalSubId = result.subcategoryId || p.subcategoryId;
+          let finalMfrId = result.manufacturerId || p.manufacturerId;
           
           const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
           const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
@@ -307,7 +306,7 @@ export const useAdminPhotos = (
           const updatedPhoto = { 
             ...p, 
             categoryId: finalCatId,
-            subcategoryId: finalSubId,
+            manufacturerId: finalMfrId,
             tagIds: mergedTagIds,
             name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
             model_number: p.model_number || result.modelNumber || null,
@@ -430,7 +429,7 @@ export const useAdminPhotos = (
             image_url: '',
             uri: compressedUri,
             categoryId: null,
-            subcategoryId: null,
+            manufacturerId: null,
             tagIds: [],
             createdAt: new Date().toISOString(),
             groupId: null,
@@ -446,7 +445,7 @@ export const useAdminPhotos = (
                 const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel);
                 
                 let finalCatId = result.categoryId || null;
-                let finalSubId = result.subcategoryId || null;
+                let finalMfrId = result.manufacturerId || null;
                 
                 const allSuggestedTags = Array.from(new Set([
                   ...(result.tagIds || []),
@@ -462,7 +461,7 @@ export const useAdminPhotos = (
                      isAnalyzing: false,
                      name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                      categoryId: finalCatId,
-                     subcategoryId: finalSubId,
+                     manufacturerId: finalMfrId,
                      tagIds: finalTagIds,
                      model_number: p.model_number || result.modelNumber || '',
                      dimensions: result.dimensions || p.dimensions
@@ -606,10 +605,10 @@ export const useAdminPhotos = (
         );
 
         // 3. Resolve tags and manufacturers as in single analysis
-        if (result.newSubCategoryName && !result.subcategoryId) {
+        if (result.newSubCategoryName && !result.manufacturerId) {
           const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
           setManufacturers(prev => [...prev, savedMfr]);
-          result.subcategoryId = savedMfr.id;
+          result.manufacturerId = savedMfr.id;
         }
 
         const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
@@ -624,7 +623,7 @@ export const useAdminPhotos = (
             ...p,
             name: result.name || p.name,
             categoryId: result.categoryId || p.categoryId,
-            subcategoryId: result.subcategoryId || p.subcategoryId,
+            manufacturerId: result.manufacturerId || p.manufacturerId,
             tagIds: finalTagIds,
             model_number: result.modelNumber || p.model_number,
             dimensions: result.dimensions || p.dimensions,

@@ -8,11 +8,8 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
         .order('name', { ascending: true });
     
     if (error) {
-        console.error("Failed to load tags from cloud:", error);
         return [];
     }
-    
-    console.log("DEBUG: loadTagsFromCloud resulting data:", data);
     
     // Ensure name is uppercase and id is string
     return (data || []).map((t: any) => ({
@@ -97,25 +94,13 @@ export const updateTagInDB = async (tagId: string, name: string): Promise<boolea
 };
 
 export const deleteTagFromDB = async (tagId: string | number): Promise<boolean> => {
-    // 1. Delete associations first
-    try {
-        console.log(`[tagService] Deleting associations for tagId:`, tagId, `(type: ${typeof tagId})`);
-        await supabase
-            .from('photo_tags')
-            .delete()
-            .eq('tag_id', tagId);
-    } catch (e) {
-        console.warn("Failed to delete tag associations, proceeding with tag deletion:", e);
-    }
-
-    // 2. Delete the tag itself
+    // Relying on database ON DELETE CASCADE for photo_tags
     const { error } = await supabase
         .from('tags')
         .delete()
         .eq('id', tagId);
     
     if (error) {
-        console.error("Failed to delete tag from cloud:", error);
         return false;
     }
     return true;

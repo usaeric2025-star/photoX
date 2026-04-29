@@ -3,7 +3,16 @@ import { Category, Tag, SubCategory } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
-import { updateTagInDB, deleteTagFromDB, updateCategoryInDB, deleteCategoryFromDB, addCategoryToDB } from '../services/supabaseService';
+import { 
+  updateTagInDB, 
+  deleteTagFromDB, 
+  updateCategoryInDB, 
+  deleteCategoryFromDB, 
+  addCategoryToDB,
+  addManufacturerToDB,
+  updateManufacturerInDB,
+  deleteManufacturerFromDB
+} from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: any) => {
   const { setAlertDialog = () => {} } = adminUI || {};
@@ -23,11 +32,11 @@ export const useAdminCategory = (adminUI: any) => {
   useEffect(() => {
     const loadInit = async () => {
       const storedCats = await loadData('product_categories');
-      if (storedCats && storedCats.length > 0) setCategories(storedCats);
+      if (Array.isArray(storedCats)) setCategories(storedCats);
       else if (categories.length === 0) setCategories(DEFAULT_CATEGORIES);
 
       const storedTags = await loadData('product_tags');
-      if (storedTags && storedTags.length > 0) setTags(storedTags);
+      if (Array.isArray(storedTags)) setTags(storedTags);
       else if (tags.length === 0) setTags(DEFAULT_TAGS);
 
       const storedMfrs = await loadData('product_manufacturers');
@@ -82,22 +91,26 @@ export const useAdminCategory = (adminUI: any) => {
         if (!success) throw new Error("Cloud delete returned false");
 
         // 2. 更新本地标签列表
-        const newTags = tags.filter(t => String(t.id) !== String(id));
+        const newTags = Array.isArray(tags)
+          ? tags.filter(t => String(t.id) !== String(id))
+          : [];
         setTags(newTags);
         
         // 3. 强制覆盖 IndexedDB（不合并）
         await saveData('product_tags', newTags);
 
         // 4. 更新内存里的照片 tagIds（只改内存，不同步云端）
-        setPhotos((prev: any[]) => prev.map(p => ({
-          ...p,
-          tagIds: (p.tagIds || []).filter(
-            (tid: any) => String(tid) !== String(id)
-          )
-        })));
-
+        setPhotos((prev: any[]) => {
+          if (!Array.isArray(prev)) return prev;
+          return prev.map(p => ({
+            ...p,
+            tagIds: Array.isArray(p.tagIds)
+              ? p.tagIds.filter((tid: any) => String(tid) !== String(id))
+              : []
+          }));
+        });
     } catch (err: any) {
-        console.error("[deleteTag] 删除失败:", err);
+        console.error("Delete tag failed:", err);
         setAlertDialog({ title: '刪除失敗', message: "刪除標籤失敗，請檢查網路連線。" });
     }
   };
@@ -148,10 +161,27 @@ export const useAdminCategory = (adminUI: any) => {
      }
   };
 
+  const addManufacturer = async (name: string) => {
+    try {
+      const saved = await addManufacturerToDB(name);
+      const newMfrs = [...manufacturers, saved];
+      setManufacturers(newMfrs);
+      await saveData('product_manufacturers', newMfrs);
+      return saved;
+    } catch (err) {
+      console.error("Add manufacturer failed:", err);
+    }
+  };
+
   const updateManufacturer = async (id: string, name: string) => {
     try {
       const trimmed = name.trim();
-      setManufacturers(prev => prev.map(m => String(m.id) === String(id) ? { ...m, name: trimmed, aliases: [trimmed] } : m));
+      await updateManufacturerInDB(id, trimmed);
+      const newMfrs = manufacturers.map(m => 
+        String(m.id) === String(id) ? { ...m, name: trimmed } : m
+      );
+      setManufacturers(newMfrs);
+      await saveData('product_manufacturers', newMfrs);
     } catch (err) {
       console.error("Update manufacturer failed:", err);
     }
@@ -160,22 +190,15 @@ export const useAdminCategory = (adminUI: any) => {
   const deleteManufacturer = async (id: string) => {
     try {
       const strId = String(id);
-      const nextManufacturers = manufacturers.filter(m => String(m.id) !== strId);
-      setManufacturers(nextManufacturers);
-      await saveData('product_manufacturers', nextManufacturers);
+      await deleteManufacturerFromDB(strId);
+      const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
+      setManufacturers(newMfrs);
+      await saveData('product_manufacturers', newMfrs);
       
-      // Also remove from category subcategories if embedded
-      const nextCategories = categories.map(c => ({
-        ...c,
-        subcategories: (c.subcategories || []).filter(sub => String(sub.id) !== strId)
-      }));
-      setCategories(nextCategories);
-      await saveData('product_categories', nextCategories);
-
-      // Update photos
-      const nextPhotos = photos.map(p => String(p.subcategoryId) === strId ? { ...p, subcategoryId: null } : p);
-      setPhotos(nextPhotos);
-      await saveData('product_photos', nextPhotos);
+      // Update photos in memory
+      setPhotos((prev: any[]) => prev.map(p => 
+        String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
+      ));
     } catch (err) {
       console.error("Delete manufacturer failed:", err);
     }
@@ -190,6 +213,7 @@ export const useAdminCategory = (adminUI: any) => {
     updateTag,
     deleteTag,
     manufacturers, setManufacturers,
+    addManufacturer,
     updateManufacturer,
     deleteManufacturer,
     publicCategories, setPublicCategories,

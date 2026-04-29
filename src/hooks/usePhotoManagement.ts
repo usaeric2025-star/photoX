@@ -7,7 +7,7 @@ import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, ge
 const INITIAL_FORM_STATE: ProductFormData = {
   name: '',
   categoryId: null,
-  subcategoryId: null,
+  manufacturerId: null,
   tagIds: [],
   description: '',
   manual_code: '',
@@ -68,7 +68,7 @@ export const usePhotoManagement = (
         setFormState({
           name: photo.name || '',
           categoryId: photo.categoryId || null,
-          subcategoryId: photo.subcategoryId || null,
+          manufacturerId: photo.manufacturerId || null,
           tagIds: rawTagIds,
           description: photo.description || '',
           manual_code: photo.manual_code || '',
@@ -105,7 +105,7 @@ export const usePhotoManagement = (
         setFormState({
           ...INITIAL_FORM_STATE,
           categoryId: firstPhoto.categoryId || null,
-          subcategoryId: firstPhoto.subcategoryId || null,
+          manufacturerId: firstPhoto.manufacturerId || null,
           tagIds: allTagsSame ? (firstPhoto.tagIds || []) : [],
         });
         lastInitializedBatchIds.current = batchKey;
@@ -125,7 +125,7 @@ export const usePhotoManagement = (
 
   const saveNewPhoto = async () => {
     const { 
-      name, categoryId, subcategoryId, tagIds, description, 
+      name, categoryId, manufacturerId, tagIds, description, 
       manual_code, model_number, dimensions, isHidden, price,
       dimL, dimW, dimH
     } = formState;
@@ -157,7 +157,7 @@ export const usePhotoManagement = (
             ...original,
             name: name || original.name,
             categoryId: categoryId,
-            subcategoryId: subcategoryId,
+            manufacturerId: manufacturerId,
             tagIds: finalTagIds,
             description: description,
             manual_code: manual_code,
@@ -199,7 +199,7 @@ export const usePhotoManagement = (
             image_url: '',
             uri: newPhotoData,
             categoryId: categoryId,
-            subcategoryId: subcategoryId,
+            manufacturerId: manufacturerId,
             tagIds: finalTagIds,
             isHidden: isHidden,
             price: price,
@@ -231,7 +231,7 @@ export const usePhotoManagement = (
   const saveBatchEdit = async (batchIsHiddenApplied: boolean = false) => {
      if (!batchEditIds) return;
      const { 
-       name, categoryId, subcategoryId, tagIds, description, 
+       name, categoryId, manufacturerId, tagIds, description, 
        manual_code, model_number, isHidden, price
      } = formState;
 
@@ -248,7 +248,7 @@ export const usePhotoManagement = (
                   ...p,
                   name: name || p.name,
                   categoryId: categoryId || p.categoryId,
-                  subcategoryId: subcategoryId || p.subcategoryId,
+                  manufacturerId: manufacturerId || p.manufacturerId,
                   tagIds: finalTagIds.length > 0 ? finalTagIds : (Array.isArray(p.tagIds) ? p.tagIds.map(String) : []),
                   description: description || p.description,
                   manual_code: manual_code || p.manual_code,

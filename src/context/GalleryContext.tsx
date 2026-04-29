@@ -143,7 +143,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     
     if (filterSubId) {
-      result = result.filter(p => p.subcategoryId === filterSubId);
+      result = result.filter(p => p.manufacturerId === filterSubId);
     }
     
     if (filterTagIds.length > 0) {

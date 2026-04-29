@@ -259,7 +259,7 @@ export const useAdminCore = (
         const nextMfrs = [...manufacturers, newMfr];
         setManufacturers(nextMfrs);
         updateForm((prev: any) => ({ 
-          ...prev, subcategoryId: newMfr.id 
+          ...prev, manufacturerId: newMfr.id 
         }));
         await saveSettings({ 
           ...settings, categories, tags, 
@@ -327,7 +327,7 @@ export const useAdminCore = (
         };
         const nextMfrs = [...manufacturers, newMfr];
         setManufacturers(nextMfrs);
-        updateForm((prev: any) => ({ ...prev, subcategoryId: newMfr.id }));
+        updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
         await saveSettings({ ...settings, categories, tags, manufacturers: nextMfrs });
       }
     });

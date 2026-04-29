@@ -291,7 +291,7 @@ export default function AdminView() {
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, 
     updateCategory, deleteCategory, addCategory,
-    updateManufacturer, deleteManufacturer,
+    addManufacturer, updateManufacturer, deleteManufacturer,
     quickAddTag, quickAddManufacturer
   };
 

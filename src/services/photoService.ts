@@ -53,7 +53,7 @@ export function mapSupabasePhoto(item: any): Photo {
       image_hash: item.image_hash,
       name: item.name,
       categoryId: item.category_id ? String(item.category_id) : null,
-      subcategoryId: item.sub_category || null,
+      manufacturerId: item.manufacturer_id || null,
       tagIds,
       description: item.description,
       image_url: item.image_url,
@@ -168,7 +168,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     image_hash: photo.image_hash,
     name: photo.name,
     category_id: photo.categoryId || null,
-    sub_category: photo.subcategoryId || '',
+    manufacturer_id: photo.manufacturerId || null,
     // Deprecating JSON tags field in favor of photo_tags table
     description: photo.description || '',
     image_url: photo.image_url,

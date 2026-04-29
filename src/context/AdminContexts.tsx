@@ -64,6 +64,7 @@ interface AdminPhotoContextType {
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addCategory: (name: string) => Promise<void>;
+  addManufacturer: (name: string) => Promise<any>;
   updateManufacturer: (id: string, name: string) => Promise<void>;
   deleteManufacturer: (id: string) => Promise<void>;
   quickAddTag: () => Promise<void>;

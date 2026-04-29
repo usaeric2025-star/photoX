@@ -75,7 +75,7 @@ export const useGallery = ({
     }
     
     if (selectedSubId) {
-      filtered = filtered.filter(p => p.subcategoryId === selectedSubId);
+      filtered = filtered.filter(p => p.manufacturerId === selectedSubId);
     }
 
     if (selectedTagIds.length > 0) {

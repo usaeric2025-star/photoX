@@ -34,10 +34,10 @@ export const migratePhotos = (
     }
 
     // Migrate Manufacturer/Subcategory
-    if (p.sub_category && !newPhoto.subcategoryId) {
+    if (p.sub_category && !newPhoto.manufacturerId) {
       const mfr = manufacturers.find(m => m.name === p.sub_category);
       if (mfr) {
-        newPhoto.subcategoryId = mfr.id;
+        newPhoto.manufacturerId = mfr.id;
       }
     }
 
