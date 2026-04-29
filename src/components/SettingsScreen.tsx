@@ -3,7 +3,7 @@ import {
   ChevronLeft, X, Cloud, LogOut, RefreshCcw, 
   Trash2, Download, Upload, MessageCircle, 
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
-  User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle, Save
+  User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
 import { SubCategory, Tag, Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
@@ -60,7 +60,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTags, setCategories, setManufacturers, setPhotos,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, updateManufacturer, deleteManufacturer, quickAddTag
   } = useAdminPhoto();
-  const { loadingState, setAlertDialog } = useAdminUI();
+  const { loadingState, setAlertDialog, setConfirmDialog, setPromptDialog } = useAdminUI();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [newSubName, setNewSubName] = useState('');
@@ -135,20 +135,39 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     }
   };
 
-  const handleUpdateTagName = async (tag: Tag) => {
-    const newName = prompt('输入新名称 / Enter new name', tag.name);
-    if (newName && newName.trim().toUpperCase() !== tag.name) {
-      await updateTag(tag.id, newName.trim());
-      setHasChanges(true); // Tag sub-component updates global photos/tags state, but settings JSON might need update too
-    }
+  const [activeTagMenuId, setActiveTagMenuId] = useState<string | null>(null);
+
+  const handleUpdateTagName = (tag: Tag) => {
+    setPromptDialog({
+      title: '编辑标签名 / Edit Tag Name',
+      message: '输入新的标签名称 / Enter new tag name:',
+      placeholder: tag.name,
+      onSubmit: async (newName) => {
+        if (newName && newName.trim().toUpperCase() !== tag.name) {
+          await updateTag(tag.id, newName.trim());
+          setHasChanges(true);
+        }
+      }
+    });
+  };
+
+  const handleLongPressTag = (tag: Tag) => {
+    // We already have activeTagMenuId to show the menu
+    setActiveTagMenuId(tag.id);
   };
 
   const handleUpdateMfrName = async (mfr: any) => {
-    const newName = prompt('输入新名称 / Enter new name', mfr.name);
-    if (newName && newName.trim() !== mfr.name) {
-      await updateManufacturer(mfr.id, newName.trim());
-      setHasChanges(true);
-    }
+    setPromptDialog({
+      title: '编辑生产商 / Edit Manufacturer',
+      message: '输入新名称 / Enter new name:',
+      placeholder: mfr.name,
+      onSubmit: async (newName) => {
+        if (newName && newName.trim() !== mfr.name) {
+          await updateManufacturer(mfr.id, newName.trim());
+          setHasChanges(true);
+        }
+      }
+    });
   };
 
   const handleUpdateCatName = async (cat: Category) => {
@@ -497,42 +516,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           </div>
         </div>
 
-        {/* Categories Section */}
+        {/* Categories Section (Read-only) */}
         <section className={cardClass} id="section-categories">
           <div className="flex items-center justify-between">
             <h3 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
               <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
-                分类 / Categories
+                分类 / Categories (只读 / Read-only)
             </h3>
             <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{categories.length} 个项目</span>
           </div>
-          <div className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="新增分类 / Add category..."
-              className={inputClass}
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
-            />
-            <button onClick={handleAddCategory} className={accentBtnClass}>
-              <Plus size={16} />
-            </button>
-          </div>
+          
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
             {categories.map(cat => (
-              <div key={cat.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
-                <span 
-                   className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
-                   onClick={() => handleUpdateCatName(cat)}
-                >
+              <div key={cat.id} className="bg-white border border-[#1D3557]/10 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+                <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">
                    {cat.name}
                 </span>
-                <button onClick={() => {
-                  if (window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) {
-                    deleteCategory(cat.id);
-                  }
-                }} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
           </div>
@@ -570,9 +569,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                    {sub.name}
                 </span>
                 <button onClick={() => {
-                  if (window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) {
-                    deleteManufacturer(sub.id);
-                  }
+                  setConfirmDialog({
+                    message: '確定要刪除這筆資料嗎？/ Are you sure you want to delete this manufacturer?',
+                    onConfirm: () => deleteManufacturer(sub.id)
+                  });
                 }} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
@@ -602,21 +602,94 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             </button>
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
-            {(tags || []).map(tag => (
-              <div key={tag.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
-                <span 
-                   className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
-                   onClick={() => handleUpdateTagName(tag)}
+            {(tags || []).map(tag => {
+              const [isPressing, setIsPressing] = useState(false);
+              const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+              const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+                setIsPressing(true);
+                timerRef.current = setTimeout(() => {
+                  setIsPressing(false);
+                  setActiveTagMenuId(tag.id);
+                }, 600);
+              };
+
+              const handleEnd = () => {
+                setIsPressing(false);
+                if (timerRef.current) clearTimeout(timerRef.current);
+              };
+
+              return (
+                <div 
+                  key={tag.id} 
+                  className={`bg-white border border-[#1D3557]/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeTagMenuId === tag.id ? 'bg-[#D4A853]/10 border-[#D4A853]/30 scale-95' : ''}`}
+                  onTouchStart={handleStart}
+                  onTouchEnd={handleEnd}
+                  onMouseDown={handleStart}
+                  onMouseUp={handleEnd}
+                  onMouseLeave={handleEnd}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setActiveTagMenuId(tag.id);
+                  }}
                 >
-                   {tag.name}
-                </span>
-                <button onClick={() => {
-                  if (window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) {
-                    deleteTag(tag.id);
-                  }
-                }} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
-              </div>
-            ))}
+                  <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none">
+                    {tag.name}
+                  </span>
+                  <button 
+                    onClick={() => deleteTag(tag.id)} 
+                    className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"
+                  >
+                    <X size={14} />
+                  </button>
+
+                  <AnimatePresence>
+                    {activeTagMenuId === tag.id && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1D3557] rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[100px]"
+                      >
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUpdateTagName(tag);
+                            setActiveTagMenuId(null);
+                          }}
+                          className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+                        >
+                          <Pencil size={12} /> 编辑
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteTag(tag.id);
+                            setActiveTagMenuId(null);
+                          }}
+                          className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+                        >
+                          <Trash2 size={12} /> 删除
+                        </button>
+                        <div 
+                          className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1D3557] rotate-45 -mt-1"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  {activeTagMenuId === tag.id && (
+                    <div 
+                      className="fixed inset-0 z-[100]" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveTagMenuId(null);
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </section>
 
