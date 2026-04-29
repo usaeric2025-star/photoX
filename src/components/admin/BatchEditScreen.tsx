@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 import { ProductFormData } from '../../types';
 import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
+import { TagEditor } from './TagEditor';
 
 export const BatchEditScreen = ({
   resetAddState,
@@ -31,7 +32,9 @@ export const BatchEditScreen = ({
     quickAddTag: quickAddT,
     categories,
     manufacturers,
-    tags
+    tags,
+    updateTag,
+    deleteTag
   } = useAdminPhoto();
   const { isSyncing, appLang } = useAdminSession();
   return (
@@ -150,31 +153,22 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品标签</h3>
-            <button onClick={quickAddT} className="text-[10px] text-purple-600 font-bold bg-purple-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
-          </div>
-          <div className="flex flex-wrap gap-2 p-1">
-            {tags.map((tag: any) => {
-              const isSelected = formState.tagIds.map(String).includes(String(tag.id));
-              return (
-              <button 
-                key={tag.id}
-                onClick={() => {
-                  const tagIdStr = String(tag.id);
-                  const exists = formState.tagIds.map(String).includes(tagIdStr);
-                  updateForm({ 
-                    tagIds: exists 
-                      ? formState.tagIds.filter((tid: string) => String(tid) !== tagIdStr) 
-                      : [...formState.tagIds, tagIdStr] 
-                  });
-                }}
-                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${isSelected ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
-              >
-                #{tag.name}
-              </button>
-            )})}
-          </div>
+          <TagEditor 
+            tags={tags}
+            selectedTagIds={formState.tagIds}
+            onToggleTag={(tag) => {
+              const tagIdStr = String(tag.id);
+              const exists = formState.tagIds.map(String).includes(tagIdStr);
+              updateForm({ 
+                tagIds: exists 
+                  ? formState.tagIds.filter((tid: string) => String(tid) !== tagIdStr) 
+                  : [...formState.tagIds, tagIdStr] 
+              });
+            }}
+            onUpdateTag={updateTag}
+            onDeleteTag={deleteTag}
+            onQuickAdd={quickAddT}
+          />
         </section>
 
         <section className="space-y-4">

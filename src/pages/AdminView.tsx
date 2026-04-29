@@ -129,7 +129,11 @@ export default function AdminView() {
 
   const handleManageClick = () => setActiveScreen('manage');
 
-  const { updateTag, deleteTag } = useAdminCategory(uiBasicValue);
+  const { 
+    updateTag, deleteTag, 
+    updateCategory, deleteCategory, 
+    updateManufacturer, deleteManufacturer 
+  } = useAdminCategory(uiBasicValue);
 
 
   const handleDeletePhotos = async (ids: string[]) => {
@@ -282,7 +286,10 @@ export default function AdminView() {
     manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
     handleSingleAiAnalyzeCallback,
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, deleteTag: handleDeleteTag, quickAddTag, quickAddManufacturer
+    updateTag, deleteTag: handleDeleteTag, 
+    updateCategory, deleteCategory, addCategory,
+    updateManufacturer, deleteManufacturer,
+    quickAddTag, quickAddManufacturer
   };
 
   const uiValue = {

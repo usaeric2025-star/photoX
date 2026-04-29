@@ -2,7 +2,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
 import { Category, Tag, ProductFormData } from '../../types';
-import { useAdminSession } from '../../context/AdminContexts';
+import { useAdminSession, useAdminPhoto } from '../../context/AdminContexts';
+import { TagEditor } from './TagEditor';
 
 interface UploadFormProps {
   onClose: () => void;
@@ -35,6 +36,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   aiDebugInfo, abortAnalysis
 }) => {
   const { appLang } = useAdminSession();
+  const { updateTag, deleteTag } = useAdminPhoto();
   
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -187,21 +189,14 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </section>
 
         <section className="space-y-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">标签 / Tags</h3>
-          <div className="flex flex-wrap gap-2 p-1">
-            {tags.map((tag: any) => (
-              <button 
-                key={tag.id}
-                onClick={() => updateForm({ tagIds: formState.tagIds.includes(tag.id) ? formState.tagIds.filter(tid => tid !== tag.id) : [...formState.tagIds, tag.id] })}
-                className={`px-4 py-2 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${formState.tagIds.includes(tag.id) ? 'bg-purple-500 border-purple-500 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
-              >
-                #{tag.name}
-              </button>
-            ))}
-            <button onClick={quickAddTag} className="px-4 py-2 rounded-full border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-2 font-bold hover:border-slate-400 hover:text-slate-600 active:scale-95 transition-all">
-              <Plus size={14} /> 新增
-            </button>
-          </div>
+          <TagEditor 
+            tags={tags}
+            selectedTagIds={formState.tagIds}
+            onToggleTag={(tag) => updateForm({ tagIds: formState.tagIds.includes(tag.id) ? formState.tagIds.filter(tid => tid !== tag.id) : [...formState.tagIds, tag.id] })}
+            onUpdateTag={updateTag}
+            onDeleteTag={deleteTag}
+            onQuickAdd={quickAddTag}
+          />
         </section>
 
         <section className="space-y-4">

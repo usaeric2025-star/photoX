@@ -61,6 +61,11 @@ interface AdminPhotoContextType {
   saveBatchEdit: () => Promise<void>;
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
+  updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+  addCategory: (name: string) => Promise<void>;
+  updateManufacturer: (id: string, name: string) => Promise<void>;
+  deleteManufacturer: (id: string) => Promise<void>;
   quickAddTag: () => Promise<void>;
   quickAddManufacturer: () => Promise<void>;
 }

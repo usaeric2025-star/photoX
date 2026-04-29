@@ -41,36 +41,24 @@ export const saveSettings = async (settings: any) => {
         // Map fields to requested columns
         if (payload.gemini_api_key) {
             payload.api_key = payload.gemini_api_key;
-            delete payload.gemini_api_key;
         }
         if (payload.custom_model) {
             payload.model_name = payload.custom_model;
-            delete payload.custom_model;
         }
         if (payload.internal_password) {
             payload.access_passcode = payload.internal_password;
-            delete payload.internal_password;
-        }
-        if (payload.manufacturers) {
-            payload.manufacturers_json = typeof payload.manufacturers === 'string'
-              ? payload.manufacturers
-              : JSON.stringify(payload.manufacturers);
-            delete payload.manufacturers;
-        }
-        if (payload.tags) {
-            payload.tags_json = typeof payload.tags === 'string'
-              ? payload.tags
-              : JSON.stringify(payload.tags);
-            delete payload.tags;
         }
 
-        // Remove client-only fields to prevent schema errors
+        // REMOVE all redundant fields that are now in separate tables
         delete payload.gemini_api_key;
         delete payload.custom_model;
         delete payload.internal_password;
         delete payload.categories;
         delete payload.tags;
         delete payload.manufacturers;
+        delete payload.tags_json;
+        delete payload.manufacturers_json;
+        delete payload.categories_json;
 
         console.log("Saving settings to Supabase (cleaned payload)...", payload);
 

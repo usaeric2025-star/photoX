@@ -3,7 +3,7 @@ import { Category, Tag, SubCategory } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
-import { updateTagInDB, deleteTagFromDB } from '../services/supabaseService';
+import { updateTagInDB, deleteTagFromDB, updateCategoryInDB, deleteCategoryFromDB, addCategoryToDB } from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: any) => {
   const { setAlertDialog = () => {} } = adminUI || {};
@@ -76,13 +76,13 @@ export const useAdminCategory = (adminUI: any) => {
         const strTagId = String(tagId);
         console.log('[deleteTag] 开始删除標籤', { tagId: strTagId, photosLength: photos?.length });
         
-        // 2. Cloud deletion
+        // 1. Cloud deletion
         const success = await deleteTagFromDB(strTagId);
         if (!success) {
           throw new Error("Cloud delete returned false");
         }
 
-        // 3. Update local tags state
+        // 2. Update local tags state
         if (typeof setTags === 'function') {
           setTags(prev => {
             const nextTags = prev.filter(t => String(t.id) !== strTagId);
@@ -91,7 +91,7 @@ export const useAdminCategory = (adminUI: any) => {
           });
         }
 
-        // 4. Update local photos state to remove the tag association immediately
+        // 3. Update local photos state to remove the tag association immediately
         setPhotos((prev: any[]) => {
           if (!Array.isArray(prev)) {
              return prev;
@@ -119,12 +119,89 @@ export const useAdminCategory = (adminUI: any) => {
     }
   };
 
+  const addCategory = async (name: string) => {
+    try {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const saved = await addCategoryToDB(trimmed);
+      if (saved) {
+        setCategories(prev => [...prev, saved]);
+      }
+    } catch (err) {
+      console.error("Add category failed:", err);
+    }
+  };
+
+  const updateCategory = async (id: string, updates: Partial<Category>) => {
+    try {
+      setCategories(prev => prev.map(c => String(c.id) === String(id) ? { ...c, ...updates } : c));
+      await updateCategoryInDB(id, updates);
+    } catch (err) {
+      console.error("Update category failed:", err);
+    }
+  };
+
+  const deleteCategory = async (id: string) => {
+     try {
+       const strId = String(id);
+       const success = await deleteCategoryFromDB(strId);
+       if (!success) throw new Error("Cloud delete failed");
+
+       setCategories(prev => prev.filter(c => String(c.id) !== strId));
+       
+       // Update photos
+       setPhotos((prev: any[]) => {
+         const next = prev.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
+         saveData('product_photos', next);
+         return next;
+       });
+     } catch (err) {
+       console.error("Delete category failed:", err);
+       setAlertDialog({ title: '刪除失敗', message: '無法刪除分類。' });
+     }
+  };
+
+  const updateManufacturer = async (id: string, name: string) => {
+    try {
+      const trimmed = name.trim();
+      setManufacturers(prev => prev.map(m => String(m.id) === String(id) ? { ...m, name: trimmed, aliases: [trimmed] } : m));
+    } catch (err) {
+      console.error("Update manufacturer failed:", err);
+    }
+  };
+
+  const deleteManufacturer = async (id: string) => {
+    try {
+      const strId = String(id);
+      setManufacturers(prev => prev.filter(m => String(m.id) !== strId));
+      
+      // Also remove from category subcategories if embedded
+      setCategories(prev => prev.map(c => ({
+        ...c,
+        subcategories: (c.subcategories || []).filter(sub => String(sub.id) !== strId)
+      })));
+
+      // Update photos
+      setPhotos((prev: any[]) => {
+        const next = prev.map(p => String(p.subcategoryId) === strId ? { ...p, subcategoryId: null } : p);
+        saveData('product_photos', next);
+        return next;
+      });
+    } catch (err) {
+      console.error("Delete manufacturer failed:", err);
+    }
+  };
+
   return {
     categories, setCategories,
+    updateCategory,
+    deleteCategory,
     tags, setTags,
     updateTag,
     deleteTag,
     manufacturers, setManufacturers,
+    updateManufacturer,
+    deleteManufacturer,
     publicCategories, setPublicCategories,
     publicTags, setPublicTags,
     publicManufacturers, setPublicManufacturers

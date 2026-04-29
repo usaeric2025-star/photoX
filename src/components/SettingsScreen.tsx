@@ -56,17 +56,30 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setSettings
   } = useAdminSession();
   const { 
-    manufacturers, tags, 
-    setManufacturers, setTags, setCategories, setPhotos, photos, categories
+    manufacturers, tags, photos, categories,
+    setTags, setCategories, setManufacturers, setPhotos,
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, updateManufacturer, deleteManufacturer, quickAddTag
   } = useAdminPhoto();
-  const { loadingState } = useAdminUI();
+  const { loadingState, setAlertDialog } = useAdminUI();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [newSubName, setNewSubName] = useState('');
   const [newTagName, setNewTagName] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [showCatOverview, setShowCatOverview] = useState(false);
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Debounced save for settings
+  const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);
+  const debouncedSave = (newSettings: any) => {
+    if (saveTimer) clearTimeout(saveTimer);
+    const timer = setTimeout(() => {
+      saveSettings(newSettings);
+      setHasChanges(false);
+    }, 1500);
+    setSaveTimer(timer);
+  };
 
   const testConnection = async () => {
     setTestResult({ loading: true });
@@ -76,54 +89,72 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const addManufacturer = async () => {
     if (!newSubName.trim()) return;
-    const newMfrId = `temp-mfr-${Date.now()}`;
+    const trimmed = newSubName.trim();
+    const newMfrId = `mfr-${Date.now()}`;
     const newMfr = {
       id: newMfrId,
-      name: newSubName.trim(),
-      aliases: [newSubName.trim()]
+      name: trimmed,
+      aliases: [trimmed]
     };
     const nextMfrs = [...(manufacturers || []), newMfr];
     setManufacturers(nextMfrs);
     setNewSubName('');
+    
+    // Also add to categories fallback if needed
     const nextCats = (categories || []).map(c => ({
       ...c,
       subcategories: Array.isArray(c.subcategories) ? [...c.subcategories, { ...newMfr }] : [{ ...newMfr }]
     }));
     setCategories(nextCats);
-    saveSettings({ ...settings, categories: nextCats, manufacturers: nextMfrs, tags });
+    
+    const nextSettings = { ...settings, categories: nextCats, manufacturers: nextMfrs };
+    setSettings(nextSettings);
+    debouncedSave(nextSettings);
   };
 
-  const deleteManufacturer = (id: string) => {
-    if (!window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) return;
-    const nextMfrs = (manufacturers || []).filter(m => m.id !== id);
-    setManufacturers(nextMfrs);
-    const nextCats = (categories || []).map(c => ({
-      ...c,
-      subcategories: Array.isArray(c.subcategories) ? c.subcategories.filter((sub: any) => sub.id !== id) : []
-    }));
-    setCategories(nextCats);
-    saveSettings({ ...settings, categories: nextCats, manufacturers: nextMfrs, tags });
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return;
+    await addCategory(newCategoryName.trim());
+    setNewCategoryName('');
   };
 
-  const addTag = async () => {
+  const handleAddTag = async () => {
     if (!newTagName.trim()) return;
     const normalized = newTagName.toUpperCase().trim();
-    const savedTag = await addTagToDB(normalized);
-    const nextTags = [...(tags || []), savedTag];
-    setTags(nextTags);
     setNewTagName('');
-    saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
+    
+    try {
+      // Use standard quickAddTag if it supports parameters, but it's usually defined elsewhere.
+      // For now keeping addTagToDB here as it was already here, but using setter is fine.
+      const savedTag = await addTagToDB(normalized);
+      if (savedTag) {
+        setTags([...(tags || []), savedTag]);
+      }
+    } catch (e) {
+      console.error('Failed to add tag:', e);
+    }
   };
 
-  const deleteTag = async (id: string) => {
-    if (!window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) return;
-    try {
-      await deleteTagFromDB(String(id));
-      const nextTags = (tags || []).filter(t => String(t.id) !== String(id));
-      setTags(nextTags);
-      saveSettings({ ...settings, categories, manufacturers, tags: nextTags });
-    } catch (e) {
-      console.error('Failed to delete tag:', e);
+  const handleUpdateTagName = async (tag: Tag) => {
+    const newName = prompt('输入新名称 / Enter new name', tag.name);
+    if (newName && newName.trim().toUpperCase() !== tag.name) {
+      await updateTag(tag.id, newName.trim());
+      setHasChanges(true); // Tag sub-component updates global photos/tags state, but settings JSON might need update too
+    }
+  };
+
+  const handleUpdateMfrName = async (mfr: any) => {
+    const newName = prompt('输入新名称 / Enter new name', mfr.name);
+    if (newName && newName.trim() !== mfr.name) {
+      await updateManufacturer(mfr.id, newName.trim());
+      setHasChanges(true);
+    }
+  };
+
+  const handleUpdateCatName = async (cat: Category) => {
+    const newName = prompt('输入新名称 / Enter new name', cat.name);
+    if (newName && newName.trim() !== cat.name) {
+      await updateCategory(cat.id, { name: newName.trim() });
     }
   };
 
@@ -131,7 +162,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     const newSettings = { ...settings, [field]: value };
     setSettings(newSettings);
     setHasChanges(true);
-    // Explicit save is required using the 'Save' button in the header
   };
 
   // Consistent Button Classes
@@ -467,6 +497,47 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           </div>
         </div>
 
+        {/* Categories Section */}
+        <section className={cardClass} id="section-categories">
+          <div className="flex items-center justify-between">
+            <h3 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
+                分类 / Categories
+            </h3>
+            <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{categories.length} 个项目</span>
+          </div>
+          <div className="flex gap-2">
+            <input 
+              type="text" 
+              placeholder="新增分类 / Add category..."
+              className={inputClass}
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+            />
+            <button onClick={handleAddCategory} className={accentBtnClass}>
+              <Plus size={16} />
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
+            {categories.map(cat => (
+              <div key={cat.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
+                <span 
+                   className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
+                   onClick={() => handleUpdateCatName(cat)}
+                >
+                   {cat.name}
+                </span>
+                <button onClick={() => {
+                  if (window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) {
+                    deleteCategory(cat.id);
+                  }
+                }} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Manufacturers Section */}
         <section className={cardClass} id="section-manufacturers">
           <div className="flex items-center justify-between">
@@ -494,18 +565,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               <div key={sub.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
                 <span 
                    className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
-                   onClick={() => {
-                     const newName = prompt('输入新名称', sub.name);
-                     if (newName && newName.trim() !== sub.name) {
-                       const nextMfrs = manufacturers.map(m => m.id === sub.id ? { ...m, name: newName.trim() } : m);
-                       setManufacturers(nextMfrs);
-                       saveSettings({ ...settings, manufacturers: nextMfrs });
-                     }
-                   }}
+                   onClick={() => handleUpdateMfrName(sub)}
                 >
                    {sub.name}
                 </span>
-                <button onClick={() => deleteManufacturer(sub.id)} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
+                <button onClick={() => {
+                  if (window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) {
+                    deleteManufacturer(sub.id);
+                  }
+                }} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
           </div>
@@ -527,9 +595,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               className={inputClass}
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addTag()}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
             />
-            <button onClick={addTag} className={accentBtnClass}>
+            <button onClick={handleAddTag} className={accentBtnClass}>
               <Plus size={16} />
             </button>
           </div>
@@ -538,19 +606,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               <div key={tag.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
                 <span 
                    className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
-                   onClick={() => {
-                     const newName = prompt('输入新名称', tag.name);
-                     if (newName && newName.trim().toUpperCase() !== tag.name) {
-                       const normalized = newName.trim().toUpperCase();
-                       const nextTags = tags.map(t => t.id === tag.id ? { ...t, name: normalized } : t);
-                       setTags(nextTags);
-                       saveSettings({ ...settings, tags: nextTags });
-                     }
-                   }}
+                   onClick={() => handleUpdateTagName(tag)}
                 >
                    {tag.name}
                 </span>
-                <button onClick={() => deleteTag(tag.id)} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
+                <button onClick={() => {
+                  if (window.confirm('確定要刪除這筆資料嗎？/ Are you sure you want to delete this data?')) {
+                    deleteTag(tag.id);
+                  }
+                }} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>
             ))}
           </div>
