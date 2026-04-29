@@ -316,10 +316,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const handleLoadMore = useCallback(() => {
     if (onLoadMore) {
       onLoadMore();
-    } else if (!isInfiniteMode && visibleCount < totalGridCount) {
-      setVisibleCount(prev => prev + 20);
     }
-  }, [onLoadMore, isInfiniteMode, setVisibleCount, visibleCount, totalGridCount]);
+  }, [onLoadMore]);
 
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">

@@ -179,8 +179,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return result;
   }, [photos, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder]);
 
-  // final grid: with grouping and pagination
-  const gridPhotosAll = useMemo(() => {
+  // final grid: with grouping
+  const gridPhotos = useMemo(() => {
     let result = [...displayPhotos];
     
     if (showGroupsCollapsed) {
@@ -194,10 +194,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
     return result;
   }, [displayPhotos, showGroupsCollapsed]);
-
-  const gridPhotos = useMemo(() => {
-    return gridPhotosAll.slice(0, visibleCount);
-  }, [gridPhotosAll, visibleCount]);
 
   const value = useMemo(() => {
     return {
@@ -245,13 +241,13 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isPhotoSelected,
       displayPhotos,
       gridPhotos,
-      totalGridCount: gridPhotosAll.length
+      totalGridCount: gridPhotos.length
     };
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
     sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, isInfiniteMode, user, isAdminMode, page, hasMore,
     tagNameToIdMap, tagIdToNameMap,
-    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, gridPhotosAll.length
+    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos
   ]);
 
   return (
