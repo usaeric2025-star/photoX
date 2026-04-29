@@ -163,7 +163,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
 
   const handleSaveNote = () => {
     if (modalTargetId) {
-      persistPhotoChange(modalTargetId, { note: noteInput });
+      persistPhotoChange(modalTargetId, { description: noteInput });
     }
   };
 
@@ -378,7 +378,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
               </div>
            </div>
 
-           <div className="flex-1 p-3 sm:p-6 pb-40">
+           <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 pb-40">
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-4">
                 {activeGroupPhotos.map((photo) => (
                     <div 
@@ -646,14 +646,14 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                           <div className="flex items-start">
                             {isAdminMode ? (
                               <button 
-                                onClick={(e) => { e.stopPropagation(); setModalType('note'); setModalTargetId(photo.id); setNoteInput(photo.note || ''); }}
-                                className={`text-sm font-bold tracking-tight text-left ${photo.note ? 'text-amber-600' : 'text-slate-300 hover:text-amber-500'}`}
+                                onClick={(e) => { e.stopPropagation(); setModalType('note'); setModalTargetId(photo.id); setNoteInput(photo.description || ''); }}
+                                className={`text-sm font-bold tracking-tight text-left ${photo.description ? 'text-amber-600' : 'text-slate-300 hover:text-amber-500'}`}
                               >
-                                 {photo.note ? `📝 ${photo.note}` : '+ 備註'}
+                                 {photo.description ? `📝 ${photo.description}` : '+ 備註'}
                               </button>
                             ) : (
                               <span className="text-sm font-bold text-slate-600 flex items-start gap-1">
-                                {photo.note ? `📝 ${photo.note}` : '-'}
+                                {photo.description ? `📝 ${photo.description}` : '-'}
                               </span>
                             )}
                           </div>

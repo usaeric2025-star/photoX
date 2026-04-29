@@ -56,7 +56,6 @@ export function mapSupabasePhoto(item: any): Photo {
       manufacturerId: item.manufacturer_id || null,
       tagIds,
       description: item.description,
-      note: item.note, // Added note field
       image_url: item.image_url,
       thumb_url: item.thumb_url,
       dimensions: item.dimensions,
@@ -178,7 +177,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     category_id: photo.categoryId || null,
     manufacturer_id: photo.manufacturerId || null,
     description: photo.description || '',
-    note: photo.note || '', // Added note field
     image_url: photo.image_url,
     thumb_url: photo.thumb_url || null,
     dimensions: photo.dimensions || null,
