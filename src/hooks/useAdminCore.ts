@@ -249,7 +249,7 @@ export const useAdminCore = (
       title: '新增厂商',
       placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
-        const trimmed = val.trim();
+        const trimmed = val.trim().toUpperCase();
         if (!trimmed) return;
         
         try {
@@ -325,7 +325,7 @@ export const useAdminCore = (
       title: '新增厂商',
       placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
-        const trimmed = val.trim();
+        const trimmed = val.trim().toUpperCase();
         if (!trimmed) return;
         
         try {
