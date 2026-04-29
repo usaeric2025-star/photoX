@@ -1,0 +1,683 @@
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  X, Edit3, Settings2, Plus, ChevronLeft, ChevronRight, ChevronDown, Layers, Pencil, Sparkles, 
+  Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
+  Maximize, MessageSquare, Type, Save, Trash, AlertCircle
+} from 'lucide-react';
+import { Photo, Tag, Category } from '../../types';
+import { updatePhotosGroupInCloud, updatePhotoInCloud, savePhotoToCloud } from '../../services/photoService';
+import { GroupGridView } from './GroupGridView';
+
+export interface GroupAdminShellProps {
+  activeGroupId: string | null;
+  setActiveGroupId: (id: string | null) => void;
+  photos: Photo[];
+  isAdminMode: boolean;
+  onEditPhoto?: (photo: Photo) => void;
+  onBatchEdit?: (ids: string[]) => void;
+  onUngroup?: (groupId: string) => void;
+  onAddPhotoToGroup?: () => void;
+  setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>;
+  updateGroupPhotos?: (ids: string[], groupId: string | null) => void;
+  onAiAnalyze?: (photo: Photo) => void;
+  onCancelAnalyze?: () => void;
+  isAnalyzing?: boolean;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
+  lang?: string;
+  t?: any;
+  categories?: any[];
+  tagMap?: Record<string, string>;
+  allTags?: Tag[];
+  isMultiSelect?: boolean;
+  setConfirmDialog?: (d: any) => void;
+  setAlertDialog?: (d: any) => void;
+  setLoadingState?: (s: string) => void;
+}
+
+const DIMENSION_PRESETS = ['120x60', '140x80', '160x90'];
+
+export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
+  activeGroupId, setActiveGroupId, photos,
+  isAdminMode, onEditPhoto,
+  onBatchEdit, onUngroup, onAddPhotoToGroup,
+  setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
+  t, categories, tagMap, allTags = [],
+  setConfirmDialog: propsSetConfirmDialog,
+  setAlertDialog: propsSetAlertDialog,
+  setLoadingState: propsSetLoadingState
+}) => {
+  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
+  const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const groupIdRef = useRef(activeGroupId);
+  
+  useEffect(() => {
+    if (activeGroupId) groupIdRef.current = activeGroupId;
+  }, [activeGroupId]);
+
+  const activeGroupPhotos = useMemo(() => {
+    if (!activeGroupId) return [];
+    return photos
+      .filter(p => p.groupId === activeGroupId)
+      .sort((a, b) => {
+        if (a.isGroupCover) return -1;
+        if (b.isGroupCover) return 1;
+        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
+          return a.groupOrder - b.groupOrder;
+        }
+        return (a.item_code || '').localeCompare(b.item_code || '');
+      });
+  }, [activeGroupId, photos]);
+
+
+
+  const setConfirmDialog = propsSetConfirmDialog || (() => {});
+  const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
+  const setLoadingState = propsSetLoadingState || (() => {});
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 2000);
+  };
+
+  const persistPhotoChange = async (photoId: string, updates: Partial<Photo>) => {
+    const photo = photos.find(p => p.id === photoId);
+    if (!photo) return;
+
+    const updatedPhoto = { ...photo, ...updates, updatedAt: new Date().toISOString() };
+    
+    // 1. Update UI
+    setPhotos?.(prev => prev.map(p => p.id === photoId ? updatedPhoto : p));
+
+    // 2. Sync to cloud
+    try {
+      if (updates.tagIds) {
+        // use local instance if available or 'default'
+        await savePhotoToCloud((photo as any).userId || 'default', updatedPhoto);
+      } else {
+        await updatePhotoInCloud(photoId, updates);
+      }
+      showToast('已保存 / Saved');
+    } catch (err: any) {
+      setAlertDialog({ title: '保存失敗', message: err.message });
+    }
+  };
+
+  const handleUpdateGroupName = async () => {
+    if (!editingGroupName.trim() || !activeGroupId) {
+      setEditingGroupId(null);
+      return;
+    }
+
+    const nextPhotos = photos.map(p => {
+      if (p.groupId === activeGroupId) return { ...p, name: editingGroupName };
+      return p;
+    });
+
+    setPhotos?.(nextPhotos);
+    setEditingGroupId(null);
+    showToast('名稱已更新 / Name updated');
+
+    // Sync to cloud for all photos in group
+    try {
+      const groupPhotos = activeGroupPhotos;
+      await Promise.all(
+        groupPhotos.map(p => updatePhotoInCloud(p.id, { name: editingGroupName }))
+      );
+    } catch (err: any) {
+      setAlertDialog({ title: '名稱同步失敗', message: err.message });
+    }
+  };
+
+  const handleToggleTag = (photo: Photo, tagId: string) => {
+    const currentTags = Array.isArray(photo.tagIds) ? photo.tagIds : [];
+    const nextTags = currentTags.includes(tagId)
+      ? currentTags.filter(id => id !== tagId)
+      : [...currentTags, tagId];
+    
+    persistPhotoChange(photo.id, { tagIds: nextTags });
+  };
+
+  const handleSetDim = (photo: Photo, label: string) => {
+    persistPhotoChange(photo.id, { 
+      dimensions: [{ label, unit: 'cm', isAI: false }] 
+    });
+  };
+
+
+
+  const handleReorder = async (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return;
+    
+    const dragIdx = activeGroupPhotos.findIndex(p => p.id === draggedId);
+    const hoverIdx = activeGroupPhotos.findIndex(p => p.id === targetId);
+    
+    if (dragIdx === -1 || hoverIdx === -1) return;
+    
+    const nextGroupPhotos = [...activeGroupPhotos];
+    const [draggedPhoto] = nextGroupPhotos.splice(dragIdx, 1);
+    nextGroupPhotos.splice(hoverIdx, 0, draggedPhoto);
+    
+    const updatedWithOrder = nextGroupPhotos.map((p, idx) => ({
+      ...p,
+      groupOrder: idx,
+      isGroupCover: p.isGroupCover // maintain cover
+    }));
+    
+    setPhotos?.(prev => prev.map(p => {
+      const updated = updatedWithOrder.find(up => up.id === p.id);
+      return updated ? updated : p;
+    }));
+    
+    try {
+      showToast('排序中...');
+      await Promise.all(
+        updatedWithOrder.map(p => updatePhotoInCloud(p.id, { group_order: p.groupOrder }))
+      );
+      showToast('排序已保存');
+    } catch (err: any) {
+      setAlertDialog({ title: '排序同步失敗', message: err.message });
+    }
+  };
+
+  const handleBulkAction = async (action: 'ai' | 'remove' | 'batch') => {
+    if (selectedPhotoIds.length === 0) return;
+    
+    if (action === 'ai') {
+      const targetPhotos = activeGroupPhotos.filter(p => selectedPhotoIds.includes(p.id));
+      onBatchAiAnalyze?.(targetPhotos);
+      setIsMultiSelectMode(false);
+      setSelectedPhotoIds([]);
+    } else if (action === 'remove') {
+      setConfirmDialog({
+        message: `確定要將選中的 ${selectedPhotoIds.length} 張照片移出群組嗎？`,
+        onConfirm: async () => {
+          setPhotos?.(prev => prev.map(p => 
+            selectedPhotoIds.includes(p.id) ? { ...p, groupId: null } : p
+          ));
+          try {
+            await updatePhotosGroupInCloud(selectedPhotoIds, null);
+            setIsMultiSelectMode(false);
+            setSelectedPhotoIds([]);
+            showToast('已移出 / Removed');
+          } catch (err: any) {
+            setAlertDialog({ title: '操作失敗', message: err.message });
+          }
+        }
+      });
+    } else if (action === 'batch') {
+      onBatchEdit?.(selectedPhotoIds);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {activeGroupId !== null && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
+          className="fixed inset-0 z-[200] bg-[#FDFAF6] overflow-y-auto pt-safe flex flex-col"
+        >
+           {/* Top Header */}
+           <div className="sticky top-0 bg-[#FDFAF6]/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setActiveGroupId(null)}
+                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                
+                {editingGroupId === activeGroupId ? (
+                   <input 
+                     autoFocus
+                     value={editingGroupName}
+                     onChange={(e) => setEditingGroupName(e.target.value)}
+                     onBlur={handleUpdateGroupName}
+                     onKeyDown={(e) => e.key === 'Enter' && handleUpdateGroupName()}
+                     className="text-lg font-black text-slate-800 bg-white border-2 border-blue-500 rounded-lg px-2 py-1 outline-none min-w-[200px]"
+                   />
+                ) : (
+                   <div 
+                     className="flex flex-col cursor-pointer group"
+                     onClick={() => {
+                        if (isAdminMode) {
+                          setEditingGroupId(activeGroupId);
+                          setEditingGroupName(activeGroupPhotos[0]?.name || '');
+                        }
+                     }}
+                   >
+                     <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-black text-slate-800 tracking-tight">
+                          {activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                        </h2>
+                        {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                     </div>
+                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{activeGroupPhotos.length} 張照片 / {activeGroupPhotos.length} Photos</p>
+                   </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                 {isAdminMode && (
+                   <div className="flex items-center gap-1.5 sm:gap-2">
+                      <button 
+                        onClick={() => {
+                          if (onBatchAiAnalyze) {
+                            onBatchAiAnalyze(activeGroupPhotos);
+                          }
+                        }}
+                        className="hidden sm:flex px-3 h-10 items-center justify-center border border-[#7A00E6]/20 rounded-xl bg-[#F3E8FF] text-[#7A00E6] font-bold shadow-sm active:scale-95 transition-all gap-1.5"
+                        title="AI 整組處理"
+                      >
+                        <Sparkles size={16} />
+                        <span className="text-xs">AI</span>
+                      </button>
+
+                      <button 
+                        onClick={() => {
+                          const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
+                          onBatchEdit?.(ids);
+                        }}
+                        className="hidden sm:flex w-10 h-10 items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all"
+                        title="批量編輯"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      
+                      <div className="relative">
+                        <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
+                          <MoreVertical size={18} />
+                        </button>
+                        {showMenu && <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
+                           <button 
+                             onClick={() => {
+                               setEditingGroupId(activeGroupId);
+                               setEditingGroupName(activeGroupPhotos[0]?.name || '');
+                               setShowMenu(false);
+                             }}
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                           >
+                             <Edit3 size={16} /> 編輯名稱 / Edit Name
+                           </button>
+                           <button 
+                             onClick={() => {
+                               setIsMultiSelectMode(true);
+                               setSelectedPhotoIds(activeGroupPhotos.map(p => p.id));
+                               setShowMenu(false);
+                             }}
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                           >
+                             <Check size={16} /> 全選照片 / Select All
+                           </button>
+                           {selectedPhotoIds.length > 0 && (
+                             <button 
+                               onClick={() => { handleBulkAction('remove'); setShowMenu(false); }}
+                               className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                             >
+                                <X size={16} /> 移出選中 / Remove Selected
+                              </button>
+                            )}
+                           <div className="h-px bg-slate-100 my-1 mx-2" />
+                           <button 
+                             onClick={() => {
+                               setConfirmDialog({
+                                 message: `確定要解散這個群組嗎？照片將變為獨立展示。`,
+                                 onConfirm: async () => {
+                                   await onUngroup?.(groupIdRef.current!);
+                                   setActiveGroupId(null);
+                                 }
+                               });
+                               setShowMenu(false);
+                             }}
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2"
+                           >
+                             <Layers size={16} /> 解散組 / Ungroup
+                           </button>
+                          </div>
+                        }
+                      </div>
+
+                      <button onClick={onAddPhotoToGroup} className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+                        <Plus size={18} />
+                      </button>
+                    </div>
+                 )}
+                 {!isAdminMode && (
+                   <button onClick={() => setActiveGroupId(null)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
+                     <X size={24} />
+                   </button>
+                 )}
+                 {isAdminMode && (
+                   <button onClick={() => setActiveGroupId(null)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-2 border border-slate-200 bg-white">
+                     <X size={20} />
+                   </button>
+                 )}
+              </div>
+           </div>
+
+           <GroupGridView 
+             photos={activeGroupPhotos}
+             isMultiSelectMode={isMultiSelectMode}
+             selectedPhotoIds={selectedPhotoIds}
+             onPhotoClick={(photo) => {
+               if (isMultiSelectMode) {
+                 setSelectedPhotoIds(prev => 
+                   prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
+                 );
+               } else {
+                 setFocusedGroupPhotoId(photo.id);
+               }
+             }}
+             onPhotoContextMenu={(e, photo) => {
+               e.preventDefault();
+               if (isAdminMode) {
+                 setIsMultiSelectMode(true);
+                 setSelectedPhotoIds([photo.id]);
+                 if ('vibrate' in navigator) navigator.vibrate(50);
+               }
+             }}
+             getPhotoProps={(photo) => ({
+               draggable: isAdminMode && !isMultiSelectMode,
+               onDragStart: () => setDraggedPhotoId(photo.id),
+               onDragOver: (e: any) => e.preventDefault(),
+               onDrop: (e: any) => {
+                 e.preventDefault();
+                 if (draggedPhotoId) {
+                   handleReorder(draggedPhotoId, photo.id);
+                   setDraggedPhotoId(null);
+                 }
+               }
+             })}
+           />
+           {/* Multi-Select Floating Bar */}
+           <AnimatePresence>
+             {isMultiSelectMode && selectedPhotoIds.length > 0 && (
+               <motion.div 
+                 initial={{ y: 100, opacity: 0 }}
+                 animate={{ y: 0, opacity: 1 }}
+                 exit={{ y: 100, opacity: 0 }}
+                 className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] bg-[#1D3557] px-5 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 min-w-[320px]"
+               >
+                  <div className="bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5">
+                    <Check size={14} className="text-white" />
+                    <span className="text-sm font-black text-white">{selectedPhotoIds.length}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 flex-1 overflow-x-auto no-scrollbar scroll-smooth">
+                     <button onClick={() => handleBulkAction('ai')} className="flex flex-col items-center gap-1 shrink-0" title="AI 分析">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/20 active:scale-95 transition-all">
+                           <Sparkles size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold text-white/60">AI 識別</span>
+                     </button>
+                     
+                     <button onClick={() => handleBulkAction('batch')} className="flex flex-col items-center gap-1 shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/10 active:scale-95 transition-all">
+                           <Pencil size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold text-white/60">批量編輯</span>
+                     </button>
+
+                     <button onClick={() => handleBulkAction('remove')} className="flex flex-col items-center gap-1 shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center border border-orange-500/20 active:scale-95 transition-all">
+                           <Layers size={18} />
+                        </div>
+                        <span className="text-[10px] font-bold text-white/60">移出組</span>
+                     </button>
+
+                     <button 
+                       onClick={() => setSelectedPhotoIds(selectedPhotoIds.length === activeGroupPhotos.length ? [] : activeGroupPhotos.map(p => p.id))} 
+                       className="flex flex-col items-center gap-1 shrink-0 px-2"
+                     >
+                        <div className="w-10 h-10 rounded-xl bg-white/5 text-white/80 flex items-center justify-center border border-white/5 active:scale-95 transition-all">
+                           {selectedPhotoIds.length === activeGroupPhotos.length ? <X size={18} /> : <Check size={18} />}
+                        </div>
+                        <span className="text-[10px] font-bold text-white/60">{selectedPhotoIds.length === activeGroupPhotos.length ? '取消' : '全選'}</span>
+                     </button>
+                  </div>
+
+                  <div className="w-px h-8 bg-white/10" />
+                  <button onClick={() => { setIsMultiSelectMode(false); setSelectedPhotoIds([]); }} className="p-2 text-white/40 hover:text-white">
+                     <X size={20} />
+                  </button>
+               </motion.div>
+             )}
+           </AnimatePresence>
+
+           {/* Floating Lightbox Overlay */}
+           <AnimatePresence>
+             {focusedGroupPhotoId && (() => {
+                 const currentIndex = activeGroupPhotos.findIndex(p => p.id === focusedGroupPhotoId);
+                 const photo = activeGroupPhotos[currentIndex];
+                 if (!photo) return null;
+
+                 const handlePrev = (e: React.MouseEvent) => {
+                   e.stopPropagation();
+                   const prevIndex = currentIndex > 0 ? currentIndex - 1 : activeGroupPhotos.length - 1;
+                   setFocusedGroupPhotoId(activeGroupPhotos[prevIndex].id);
+                 };
+
+                 const handleNext = (e: React.MouseEvent) => {
+                   e.stopPropagation();
+                   const nextIndex = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
+                   setFocusedGroupPhotoId(activeGroupPhotos[nextIndex].id);
+                 };
+
+                 return (
+               <motion.div 
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 exit={{ opacity: 0 }}
+                 className="fixed inset-0 z-[400] bg-black/95 backdrop-blur-xl flex items-center justify-center p-0 md:p-6 lg:p-12 overflow-hidden"
+                 onClick={() => setFocusedGroupPhotoId(null)}
+               >
+                 <div className="w-full h-full flex flex-col md:flex-row relative">
+                   <button className="absolute top-4 right-4 z-50 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-white/20 transition-colors backdrop-blur-md" onClick={() => setFocusedGroupPhotoId(null)}>
+                     <X size={24} />
+                   </button>
+                   
+                   <div className="flex-1 w-full h-[60vh] md:h-full flex flex-col items-center justify-center p-4 relative group">
+                     {activeGroupPhotos.length > 1 && (
+                       <button onClick={handlePrev} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-black/70">
+                         <ChevronLeft size={24} />
+                       </button>
+                     )}
+                     {activeGroupPhotos.length > 1 && (
+                       <button onClick={handleNext} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-black/70">
+                         <ChevronRight size={24} />
+                       </button>
+                     )}
+                     <img 
+                       src={photo.uri || photo.image_url} 
+                       className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                       referrerPolicy="no-referrer"
+                       onClick={(e) => e.stopPropagation()}
+                     />
+                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-white/80 text-xs font-bold font-mono z-20">
+                       {currentIndex + 1} / {activeGroupPhotos.length}
+                     </div>
+                   </div>
+
+                   <div 
+                     className="w-full md:w-80 lg:w-[400px] bg-white md:rounded-3xl p-6 flex flex-col gap-6 h-[40vh] md:h-auto md:max-h-full overflow-y-auto rounded-t-3xl shadow-2xl relative z-10"
+                     onClick={(e) => e.stopPropagation()}
+                   >
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-black text-slate-800 tracking-tight">照片資訊</h3>
+                          <div className="flex items-center gap-2">
+                            {isAdminMode && (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); onAiAnalyze?.(photo); }}
+                                className="px-3 py-1.5 rounded-xl bg-purple-50 text-purple-600 flex items-center gap-1.5 hover:bg-purple-100 transition-all text-xs font-bold" title="AI 分析"
+                              >
+                                <Sparkles size={14} /> AI
+                              </button>
+                            )}
+                            <button onClick={() => setFocusedGroupPhotoId(null)} className="md:hidden w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
+                              <ChevronDown size={18} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {isAdminMode && (
+                          <div className="flex flex-wrap items-center gap-2 border-b border-slate-50 pb-4">
+                            <button 
+                              onClick={(e) => { 
+                                e.stopPropagation(); 
+                                const nextVal = !photo.isGroupCover;
+                                import('../../services/photoService').then(m => m.updatePhotoInCloud(photo.id, { is_group_cover: nextVal })); 
+                                setPhotos?.(prev => prev.map(p => p.id === photo.id ? {...p, isGroupCover: nextVal} : (p.groupId === activeGroupId ? {...p, isGroupCover: false} : p))); 
+                                showToast(nextVal ? '已設為封面' : '已取消封面'); 
+                              }} 
+                              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-[11px] font-bold ${photo.isGroupCover ? 'bg-[#D4A853] text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            >
+                              <Star size={12} fill={photo.isGroupCover ? "currentColor" : "none"} />
+                              {photo.isGroupCover ? '封面' : '設為封面'}
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); onEditPhoto?.(photo); setFocusedGroupPhotoId(null); }} 
+                              className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 flex items-center gap-1.5 hover:bg-blue-100 transition-all text-[11px] font-bold"
+                            >
+                              <Pencil size={12} /> 詳細編輯
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-5">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">標籤 (Tags)</label>
+                          {isAdminMode ? (
+                            <div className="flex flex-wrap gap-1.5 pb-2">
+                               {allTags.map(tag => {
+                                  const isSelected = (photo.tagIds || []).includes(tag.id);
+                                  return (
+                                    <button 
+                                      key={tag.id}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleToggleTag(photo, tag.id);
+                                      }}
+                                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border-2 transition-all active:scale-95 flex items-center ${isSelected ? 'bg-blue-600 border-blue-600 text-white shadow-sm' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-300'}`}
+                                    >
+                                      {tag.name}
+                                    </button>
+                                  )
+                               })}
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-1.5 pb-2">
+                               {(photo.tagIds || []).map(tid => (
+                                 <span key={tid} className="text-xs font-bold bg-[#1D3557]/5 text-[#1D3557] rounded-md px-2 py-1 border border-[#1D3557]/10">
+                                    {tagMap?.[tid] || tid}
+                                 </span>
+                               ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-slate-50">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">型號 (Model)</label>
+                          {isAdminMode ? (
+                            <input 
+                              defaultValue={photo.model_number || ''}
+                              placeholder="輸入型號..."
+                              onBlur={(e) => {
+                                const val = e.target.value.trim();
+                                if (val !== (photo.model_number || '')) persistPhotoChange(photo.id, { model_number: val });
+                              }}
+                              className="w-full text-sm font-black text-slate-700 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 outline-none focus:border-blue-500 transition-colors placeholder:font-normal placeholder:opacity-50"
+                            />
+                          ) : (
+                            <div className="text-sm font-black text-slate-700 tracking-tight">{photo.model_number || '-'}</div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-slate-50">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">尺寸 (Dimensions)</label>
+                          {isAdminMode ? (
+                            <div className="flex flex-col gap-2">
+                              <div className="flex gap-1.5">
+                                {DIMENSION_PRESETS.map(preset => (
+                                  <button 
+                                    key={preset}
+                                    onClick={() => handleSetDim(photo, preset)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border-2 ${photo.dimensions?.[0]?.label === preset ? 'bg-green-600 border-green-600 text-white shadow-sm' : 'bg-white border-slate-100 text-slate-600'}`}
+                                  >
+                                    {preset}
+                                  </button>
+                                ))}
+                              </div>
+                              <input 
+                                defaultValue={photo.dimensions?.[0]?.label || ''}
+                                placeholder="自定義尺寸 (e.g. 150x85)"
+                                onBlur={(e) => {
+                                  let val = e.target.value.trim();
+                                  if (val !== (photo.dimensions?.[0]?.label || '')) {
+                                    handleSetDim(photo, val);
+                                  }
+                                }}
+                                className="w-full text-sm font-black text-slate-700 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 outline-none focus:border-green-500 transition-colors placeholder:text-xs placeholder:font-normal"
+                              />
+                            </div>
+                          ) : (
+                            <div className="text-sm font-black text-slate-700">{photo.dimensions?.[0] ? `📐 ${(() => { let s = photo.dimensions[0].label || ''; if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm'); return s; })()}` : '-'}</div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-slate-50">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">備註 (Notes)</label>
+                          {isAdminMode ? (
+                            <textarea 
+                              defaultValue={photo.description || ''}
+                              placeholder="輸入備註..."
+                              onBlur={(e) => {
+                                const val = e.target.value.trim();
+                                if (val !== (photo.description || '')) persistPhotoChange(photo.id, { description: val });
+                              }}
+                              className="w-full text-sm font-bold text-slate-600 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 h-24 outline-none focus:border-amber-500 transition-colors resize-none placeholder:font-normal placeholder:opacity-50"
+                            />
+                          ) : (
+                            <div className="text-sm font-bold text-slate-600 min-h-[40px]">{photo.description || '-'}</div>
+                          )}
+                        </div>
+                      </div>
+                   </div>
+                 </div>
+               </motion.div>
+                 );
+             })()}
+           </AnimatePresence>
+
+
+
+           {/* Toast Notification */}
+           <AnimatePresence>
+             {toastMessage && (
+               <motion.div 
+                 initial={{ opacity: 0, y: 50, x: '-50%' }}
+                 animate={{ opacity: 1, y: 0, x: '-50%' }}
+                 exit={{ opacity: 0, y: 50, x: '-50%' }}
+                 className="fixed bottom-24 left-1/2 z-[1000] bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-sm shadow-2xl flex items-center gap-2"
+               >
+                 <Check size={16} className="text-green-400" />
+                 {toastMessage}
+               </motion.div>
+             )}
+           </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
