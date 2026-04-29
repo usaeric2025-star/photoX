@@ -220,7 +220,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
              )}
            </AnimatePresence>
 
-           <div className="p-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 pb-32">
+           <div className="p-2 sm:p-6 grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-1.5 sm:gap-4 pb-32">
               {isAdminMode && isMultiSelectMode && (
                 <div className="bg-blue-50 border border-blue-100 p-4 rounded-3xl col-span-full mb-4 flex items-center justify-between">
                   <span className="text-sm font-bold text-blue-700">已選 {selectedPhotoIds.length} 張照片</span>
