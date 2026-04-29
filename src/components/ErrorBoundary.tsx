@@ -2,6 +2,7 @@ import React, { ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
+  key?: string | number;
 }
 
 interface State {

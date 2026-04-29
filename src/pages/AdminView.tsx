@@ -108,6 +108,9 @@ export default function AdminView() {
     setSettings
   }), [settings, setSettings, setLoadingState]);
 
+  // Stable Translations
+  const tValue = React.useMemo(() => t, [t]);
+
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 
   const { 
@@ -121,7 +124,7 @@ export default function AdminView() {
     performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
     handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
   } = useAdminCore(
-      user, updateForm, t, refreshCloudData, lastSyncTime,
+      user, updateForm, tValue, refreshCloudData, lastSyncTime,
       uiBasicValue, sessionBasicValue,
       addManufacturer
   );
@@ -168,16 +171,18 @@ export default function AdminView() {
     });
   };
   
-  const handleDeleteTag = async (id: string) => {
+  const handleDeleteTag = (id: string) => {
     const tag = tags.find(t => t.id === id);
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
-        onConfirm: async () => {
-          setLoadingState('syncing');
-          try {
-            await deleteTag(id);
-          } catch (err) {
+      onConfirm: async () => {
+        setLoadingState('syncing');
+        try {
+          await deleteTag(id);
+          showToast('标签已删除', 'success');
+        } catch (err: any) {
           console.error('[handleDeleteTag] 删除过程出错:', err);
+          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
         } finally {
           setLoadingState('idle');
         }
@@ -214,7 +219,7 @@ export default function AdminView() {
   
   if (!authChecked) {
     return (
-       <ErrorBoundary>
+       <ErrorBoundary key="auth-verifying">
         {errorContent}
         <div className="w-full h-full min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
            <div className="w-8 h-8 relative animate-spin">
@@ -229,7 +234,7 @@ export default function AdminView() {
 
   if (!user && getSafeSessionStorage('isStaffMode') !== 'true') {
     return (
-       <ErrorBoundary>
+       <ErrorBoundary key="login-gate">
         {errorContent}
         <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
            <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-sm text-center border border-slate-100">
@@ -307,7 +312,7 @@ export default function AdminView() {
   };
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary key="admin-main">
       <AdminSessionProvider value={sessionValue}>
         <AdminPhotoProvider value={photoValue}>
           <AdminUIProvider value={uiValue}>

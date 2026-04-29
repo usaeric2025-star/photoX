@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Category, Tag, SubCategory } from '../types';
+import { Category, Tag, SubCategory, Photo } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
@@ -11,7 +11,9 @@ import {
   addCategoryToDB,
   addManufacturerToDB,
   updateManufacturerInDB,
-  deleteManufacturerFromDB
+  deleteManufacturerFromDB,
+  savePhotoToCloud,
+  supabase
 } from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: any) => {
@@ -99,16 +101,34 @@ export const useAdminCategory = (adminUI: any) => {
         // 3. 强制覆盖 IndexedDB（不合并）
         await saveData('product_tags', newTags);
 
-        // 4. 更新内存里的照片 tagIds（只改内存，不同步云端）
+        // 4. 更新照片 tagIds 并保存
+        const updatedPhotos: Photo[] = [];
         setPhotos((prev: any[]) => {
           if (!Array.isArray(prev)) return prev;
-          return prev.map(p => ({
-            ...p,
-            tagIds: Array.isArray(p.tagIds)
-              ? p.tagIds.filter((tid: any) => String(tid) !== String(id))
-              : []
-          }));
+          const next = prev.map(p => {
+            if (Array.isArray(p.tagIds) && p.tagIds.some((tid: any) => String(tid) === String(id))) {
+              const updated = {
+                ...p,
+                tagIds: p.tagIds.filter((tid: any) => String(tid) !== String(id))
+              };
+              updatedPhotos.push(updated);
+              return updated;
+            }
+            return p;
+          });
+          saveData('product_photos', next);
+          return next;
         });
+
+        // 5. 同步受影响的照片到云端
+        if (updatedPhotos.length > 0) {
+          const user = (await supabase.auth.getUser()).data.user;
+          if (user) {
+            await Promise.allSettled(
+              updatedPhotos.map(p => savePhotoToCloud(user.id, p))
+            );
+          }
+        }
     } catch (err: any) {
         // Log suppressed as part of cleanup
     }
