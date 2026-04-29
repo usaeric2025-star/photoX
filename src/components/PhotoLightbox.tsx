@@ -34,10 +34,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'info' | 'specs'>('info');
 
+  const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
 
   useEffect(() => {
     setIsImageLoading(true);
+    setIsZoomed(false);
   }, [photo?.id]);
 
   useEffect(() => {
@@ -136,13 +138,35 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
              <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
           </div>
         )}
-        <img 
-          key={photo.id}
-          src={photo.image_url || photo.uri || ''} 
-          alt={photo.name}
-          className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-          onLoad={() => setIsImageLoading(false)}
-        />
+        <div className={`relative w-full h-full flex items-center justify-center overflow-hidden h-[40vh] md:h-full`}>
+          <motion.img 
+            key={photo.id}
+            src={photo.image_url || photo.uri || ''} 
+            alt={photo.name}
+            className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'} ${isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'}`}
+            onLoad={() => setIsImageLoading(false)}
+            drag={isZoomed}
+            dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            dragElastic={0.1}
+            animate={{ 
+              scale: isZoomed ? 2 : 1,
+              x: isZoomed ? undefined : 0,
+              y: isZoomed ? undefined : 0,
+            }}
+            transition={{ type: 'spring', damping: 25, stiffness: 120 }}
+            onClick={(e) => {
+              if (isZoomed) {
+                setIsZoomed(false);
+              } else {
+                setIsZoomed(true);
+              }
+            }}
+            style={{ 
+              touchAction: isZoomed ? 'none' : 'auto',
+              cursor: isZoomed ? 'zoom-out' : 'zoom-in'
+            }}
+          />
+        </div>
 
         {/* 翻页按钮 - 桌面端显示在图片两侧 */}
         <div className="absolute inset-y-0 left-0 w-16 hidden md:flex items-center justify-start pl-4 z-20 group cursor-pointer" onClick={onPrev}>
