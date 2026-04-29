@@ -26,8 +26,14 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 export const usePhotoManagement = (
-  user: any,
-  adminUI?: any,
+  user: {id: string} | null,
+  adminUI?: {
+    setAlertDialog: (d: any) => void;
+    setLoadingState: (s: any) => void;
+    setActiveScreen: (s: string) => void;
+    batchProgress?: { current: number, total: number };
+    setBatchProgress?: (p: { current: number, total: number }) => void;
+  },
   adminSession?: any
 ) => {
   const {
@@ -49,7 +55,6 @@ export const usePhotoManagement = (
   const updateForm = useCallback((updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
     setFormState(prev => {
       const next = typeof updates === 'function' ? updates(prev) : ({ ...prev, ...updates });
-      console.log("Form Updated, new state:", next);
       return next;
     });
   }, []);
@@ -129,8 +134,6 @@ export const usePhotoManagement = (
       manual_code, model_number, dimensions, isHidden, price,
       dimL, dimW, dimH
     } = formState;
-
-    console.log("Saving new photo, formState.name:", name);
 
     if (!categoryId && !name && !editPhotoId && !newPhotoData) {
        setAlertDialog({ title: '提示', message: '請填寫基本資訊或選擇分類' });
@@ -232,6 +235,10 @@ export const usePhotoManagement = (
      } = formState;
 
      setLoadingState('syncing');
+     if (adminUI?.setBatchProgress) {
+        adminUI.setBatchProgress({ current: 0, total: batchEditIds.length });
+     }
+
      try {
         // Resolve tag names to IDs
         const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
@@ -262,11 +269,17 @@ export const usePhotoManagement = (
         await saveData('product_photos', nextPhotos);
         
         if (user) {
-           await Promise.allSettled(
-             updatedPhotosList.map(photo => 
-               savePhotoToCloud(user.id, photo)
-             )
-           );
+           // Sequential save to track progress properly? 
+           // Or just chunk it. 
+           // Batch save tracking:
+           let count = 0;
+           for (const photo of updatedPhotosList) {
+             await savePhotoToCloud(user.id, photo);
+             count++;
+             if (adminUI?.setBatchProgress) {
+                adminUI.setBatchProgress({ current: count, total: updatedPhotosList.length });
+             }
+           }
         }
         
         resetAddState();
@@ -275,6 +288,9 @@ export const usePhotoManagement = (
         setAlertDialog({ title: '批量儲存失敗', message: err.message });
      } finally {
         setLoadingState('idle');
+        if (adminUI?.setBatchProgress) {
+          adminUI.setBatchProgress({ current: 0, total: 0 });
+        }
      }
   };
 

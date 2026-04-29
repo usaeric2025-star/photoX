@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
+import { useAdminUI } from '../../context/AdminContexts';
 
 interface TagEditorProps {
   tags: any[];
@@ -11,6 +12,7 @@ interface TagEditorProps {
 }
 
 export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd }) => {
+  const { setPromptDialog } = useAdminUI();
   const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const hasLongPressed = useRef<boolean>(false);
@@ -115,7 +117,19 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
               <span className="text-sm font-black text-slate-900">#{activeActionTag.name}</span>
             </div>
             <div className="space-y-2">
-                <button className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all" onClick={() => { const n = prompt("输入标签名称 / Enter Tag Name:", activeActionTag.name); if(n && n.trim()) { onUpdateTag(activeActionTag.id, n.trim()); } setActiveActionTag(null); }}>
+                <button className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all" onClick={() => { 
+                  setPromptDialog({
+                    title: '编辑标签 / Edit Tag',
+                    message: "输入标签名称 / Enter Tag Name:",
+                    placeholder: activeActionTag.name,
+                    onSubmit: (n) => {
+                      if(n && n.trim()) { 
+                        onUpdateTag(activeActionTag.id, n.trim()); 
+                      }
+                    }
+                  });
+                  setActiveActionTag(null); 
+                }}>
                    <Pencil size={18} /> 编辑 / Edit
                 </button>
                 <button className="w-full flex items-center justify-center gap-2 text-red-600 bg-red-50 font-bold py-3 rounded-2xl hover:bg-red-100 active:scale-95 transition-all" onClick={() => { onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}>

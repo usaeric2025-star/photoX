@@ -1,15 +1,15 @@
+
+export const PAGINATION = {
+  LAZY_LOAD_COUNT: 20,
+  INFINITE_MODE_COUNT: 10000,
+  PUBLIC_PAGE_SIZE: 50,
+};
+
 export const IMAGE_COMPRESS = {
   MAX_WIDTH: 1200,
-  QUALITY: 0.8,
-  THUMB_WIDTH: 300,
-  THUMB_QUALITY: 0.5,
+  QUALITY: 0.7,
 };
 
 export const AI_CONFIG = {
-  MAX_TOKENS: 1024,
-  CONCURRENCY: 5,
-};
-
-export const PAGINATION = {
-  PAGE_SIZE: 50,
+  CONCURRENCY: 3,
 };

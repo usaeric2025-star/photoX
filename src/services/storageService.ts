@@ -37,7 +37,12 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
   });
 };
 
-export const uploadImages = async (userId: string, photoId: string, base64Data: string): Promise<{imageUrl: string, thumbUrl: string}> => {
+export const uploadImages = async (
+  userId: string, 
+  photoId: string, 
+  base64Data: string,
+  onStatus?: (status: 'compressing' | 'uploading' | 'done') => void
+): Promise<{imageUrl: string, thumbUrl: string}> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
@@ -46,19 +51,20 @@ export const uploadImages = async (userId: string, photoId: string, base64Data: 
 
   try {
     // Generate versions with compression
+    onStatus?.('compressing');
     const originalBase64 = await compressImage(base64Data, 1200, 0.8);
     let thumbBase64;
     try {
         thumbBase64 = await compressImage(base64Data, 300, 0.5);
     } catch (e: any) {
         if (e.name === 'QuotaExceededError') {
-             console.warn("Storage quota exceeded, using original as thumbnail");
              thumbBase64 = originalBase64;
         } else {
              throw e;
         }
     }
 
+    onStatus?.('uploading');
     const uploadFile = async (base64: string, fileName: string) => {
       const res = await fetch(base64);
       const blob = await res.blob();

@@ -17,7 +17,7 @@ import {
 } from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: any) => {
-  const { setAlertDialog = () => {} } = adminUI || {};
+  const { setAlertDialog = () => {}, setConfirmDialog = () => {} } = adminUI || {};
 
   const {
     categories, setCategories,
@@ -173,8 +173,9 @@ export const useAdminCategory = (adminUI: any) => {
         setCategories(nextCategories);
         await saveData('product_categories', nextCategories);
       }
-    } catch (err) {
-      // Log suppressed
+    } catch (err: any) {
+      console.error("[useAdminCategory] Add category failed:", err);
+      setAlertDialog({ title: '添加分类失败', message: err.message || '网络连接或数据库权限问题' });
     }
   };
 
@@ -190,22 +191,55 @@ export const useAdminCategory = (adminUI: any) => {
   };
 
   const deleteCategory = async (id: string) => {
-     try {
-       const strId = String(id);
-       const success = await deleteCategoryFromDB(strId);
-       if (!success) throw new Error("Cloud delete failed");
+     const strId = String(id);
+     const cat = categories.find(c => String(c.id) === strId);
+     const affectedCount = photos.filter(p => String(p.categoryId) === strId).length;
 
-       const nextCategories = categories.filter(c => String(c.id) !== strId);
-       setCategories(nextCategories);
-       await saveData('product_categories', nextCategories);
-       
-       // Update photos
-       const nextPhotos = photos.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
-       setPhotos(nextPhotos);
-       await saveData('product_photos', nextPhotos);
-     } catch (err) {
-       // Log suppressed
-     }
+     setConfirmDialog({
+       title: '确认删除分类',
+       message: `此分类包含 ${affectedCount} 张照片。删除后，这些照片将变为“未分类”。确定吗？ / This category has ${affectedCount} photos. They will become "Uncategorized". Proceed?`,
+       danger: true,
+       onConfirm: async () => {
+         try {
+           // 1. Delete category from Cloud DB
+           const success = await deleteCategoryFromDB(strId);
+           if (!success) throw new Error("无法在云端删除分类。 / Unable to delete category from cloud.");
+
+           // 2. Update local state
+           const nextCategories = categories.filter(c => String(c.id) !== strId);
+           if (isMounted.current) {
+             setCategories(nextCategories);
+             await saveData('product_categories', nextCategories);
+           }
+           
+           // 3. Update photos in memory and cleanup categoryId
+           const nextPhotos = photos.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
+           
+           if (isMounted.current) {
+             setPhotos(nextPhotos);
+             await saveData('product_photos', nextPhotos);
+           }
+
+           // 4. Sync affected photos to cloud
+           const affectedPhotos = nextPhotos.filter((p, i) => 
+             String(photos[i].categoryId) === strId
+           );
+
+           if (affectedPhotos.length > 0) {
+             const { data: { user: userObj } } = await supabase.auth.getUser();
+             if (userObj) {
+               await Promise.allSettled(
+                 affectedPhotos.map(p => savePhotoToCloud(userObj.id, p))
+               );
+             }
+           }
+         } catch (err: any) {
+           if (isMounted.current) {
+             setAlertDialog({ title: '删除失败 / Delete Failed', message: err.message || '网络错误或数据库异常' });
+           }
+         }
+       }
+     });
   };
 
   const addManufacturer = async (name: string) => {
@@ -215,8 +249,9 @@ export const useAdminCategory = (adminUI: any) => {
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
       return saved;
-    } catch (err) {
-      // Log suppressed
+    } catch (err: any) {
+      console.error("[useAdminCategory] Add manufacturer failed:", err);
+      setAlertDialog({ title: '添加厂商失败', message: err.message || '网络连接或数据库权限问题' });
     }
   };
 
@@ -229,26 +264,57 @@ export const useAdminCategory = (adminUI: any) => {
       );
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
-    } catch (err) {
-      // Log suppressed
+    } catch (err: any) {
+      console.error("[useAdminCategory] Update manufacturer failed:", err);
+      setAlertDialog({ title: '更新厂商失败', message: err.message || '网络连接或数据库权限问题' });
     }
   };
 
   const deleteManufacturer = async (id: string) => {
-    try {
-      const strId = String(id);
-      await deleteManufacturerFromDB(strId);
-      const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
-      setManufacturers(newMfrs);
-      await saveData('product_manufacturers', newMfrs);
-      
-      // Update photos in memory
-      setPhotos((prev: any[]) => prev.map(p => 
-        String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
-      ));
-    } catch (err) {
-      // Log suppressed
-    }
+    const strId = String(id);
+    const affectedCount = photos.filter(p => String(p.manufacturerId) === strId).length;
+
+    setConfirmDialog({
+      title: '确认删除厂商',
+      message: `此厂商关联了 ${affectedCount} 张照片。删除后，这些照片的厂商信息将被清除。确定吗？ / This manufacturer has ${affectedCount} photos. Their manufacturer info will be cleared. Proceed?`,
+      danger: true,
+      onConfirm: async () => {
+        try {
+          const success = await deleteManufacturerFromDB(strId);
+          if (!success) throw new Error("無法刪除廠商 / Unable to delete manufacturer");
+
+          const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
+          setManufacturers(newMfrs);
+          await saveData('product_manufacturers', newMfrs);
+          
+          // Update photos in memory and handle cloud sync
+          const nextPhotos = photos.map(p => 
+            String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
+          );
+          
+          if (isMounted.current) {
+            setPhotos(nextPhotos);
+            await saveData('product_photos', nextPhotos);
+          }
+
+          // Sync affected photos to cloud
+          const affectedPhotos = nextPhotos.filter((p, i) => 
+            String(photos[i].manufacturerId) === strId
+          );
+
+          if (affectedPhotos.length > 0) {
+            const { data: { user: userObj } } = await supabase.auth.getUser();
+            if (userObj) {
+              await Promise.allSettled(
+                affectedPhotos.map(p => savePhotoToCloud(userObj.id, p))
+              );
+            }
+          }
+        } catch (err: any) {
+           setAlertDialog({ title: '删除失败', message: err.message });
+        }
+      }
+    });
   };
 
   return {

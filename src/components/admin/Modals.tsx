@@ -43,10 +43,10 @@ export const Modals = ({
               >
                 <X size={20} />
               </button>
-              <div className="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 mt-2">
-                <Trash2 size={24} />
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 mt-2 ${confirmDialog.danger ? 'bg-red-100 text-red-500' : 'bg-blue-100 text-blue-500'}`}>
+                {confirmDialog.icon || <Trash2 size={24} />}
               </div>
-              <h3 className="font-bold text-slate-800 text-base mb-2">確認操作</h3>
+              <h3 className="font-bold text-slate-800 text-base mb-2">{confirmDialog.title || '確認操作'}</h3>
               <p className="text-sm text-slate-500 mb-6 leading-relaxed">
                 {confirmDialog.message}
               </p>
@@ -55,16 +55,16 @@ export const Modals = ({
                   onClick={() => setConfirmDialog(null)}
                   className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
                 >
-                  取消
+                  {confirmDialog.cancelText || '取消'}
                 </button>
                 <button 
                   onClick={() => {
                     confirmDialog.onConfirm();
                     setConfirmDialog(null);
                   }}
-                  className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-md shadow-red-500/20 transition-colors"
+                  className={`flex-1 py-3 px-4 rounded-xl font-bold text-white transition-colors ${confirmDialog.danger !== false ? 'bg-red-500 hover:bg-red-600 shadow-md shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20'}`}
                 >
-                  确认删除
+                  {confirmDialog.confirmText || (confirmDialog.danger !== false ? '确认删除' : '确认')}
                 </button>
               </div>
             </motion.div>

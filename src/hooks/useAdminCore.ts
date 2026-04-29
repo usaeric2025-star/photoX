@@ -173,9 +173,10 @@ export const useAdminCore = (
       });
       const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
       const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
-      const now = Date.now();
-      await saveData('last_sync_time', now);
-      refreshCloudData(user, true, setCloudCount);
+      const now = new Date().toISOString();
+      localStorage.setItem('lastSyncTime', now);
+      await saveData('last_sync_time', Date.now()); // Keep for legacy if needed but primary is localStorage
+      refreshCloudData(user, false, setCloudCount); // Non-forced, using the time we just set to confirm everything is in sync
       
       setAlertDialog({ 
         title: t.pushSuccess, 

@@ -6,6 +6,7 @@ import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Tr
 import { AnimatePresence } from 'motion/react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { useGalleryContext } from '../context/GalleryContext';
+import { PAGINATION } from '../constants/config';
 import { PhotoCard } from './PhotoCard';
 import { translations, LanguageCode } from '../lib/translations';
 import { PhotoLightbox } from './PhotoLightbox';
@@ -14,7 +15,6 @@ import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
 import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
-import { useOptionalAdminSession, useOptionalAdminPhoto, useOptionalAdminUI } from '../context/AdminContexts';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -49,6 +49,14 @@ interface PublicGalleryProps {
   hideHeader?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  onAiAnalyze?: (photo: Photo) => Promise<any>;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
+  onCancelAnalyze?: () => void;
+  isAnalyzing?: boolean;
+  onSetGroupCover?: (id: string, groupId: string) => Promise<void>;
+  setAlertDialog?: (d: any) => void;
+  setConfirmDialog?: (d: any) => void;
+  setLoadingState?: (s: string) => void;
 }
 
 const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
@@ -102,20 +110,29 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   columns: propColumns, setColumns: propSetColumns,
   hideHeader,
   user: propsUser,
-  isAdminMode: propsIsAdminMode,
+  isAdminMode = false,
   settings: propsSettings,
   isRefreshing: propsIsRefreshing,
   onLoadMore,
-  hasMore
+  hasMore,
+  selectedIds = [],
+  isMultiSelect = false,
+  onToggleSelection,
+  onClearSelection,
+  onToggleMultiSelect,
+  onAiAnalyze,
+  onBatchAiAnalyze,
+  onCancelAnalyze,
+  isAnalyzing,
+  onSetGroupCover,
+  setAlertDialog: propsSetAlertDialog,
+  setConfirmDialog: propsSetConfirmDialog,
+  setLoadingState: propsSetLoadingState
 }) => {
-  const adminSession = useOptionalAdminSession();
-  const adminPhoto = useOptionalAdminPhoto();
-  const adminUI = useOptionalAdminUI();
-  const user = propsUser !== undefined ? propsUser : adminSession?.user;
-  const isAdminMode = propsIsAdminMode !== undefined ? propsIsAdminMode : !!adminSession?.isAdminMode;
-  const settings = propsSettings !== undefined ? propsSettings : adminSession?.settings;
-  const loginWithGoogle = propsLoginWithGoogle || adminSession?.loginWithGoogle;
-  const isSyncing = adminSession?.isSyncing || propsIsRefreshing;
+  const user = propsUser;
+  const settings = propsSettings;
+  const loginWithGoogle = propsLoginWithGoogle;
+  const isSyncing = propsIsRefreshing;
   
   const internalPassword = settings?.access_passcode;
 
@@ -133,22 +150,29 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
     isInfiniteMode,
-    selectedIds,
-    isMultiSelect, setIsMultiSelect,
-    togglePhotoSelection, clearSelection,
     displayPhotos, gridPhotos,
     totalGridCount
   } = context;
+  
+  // Use passed in selection state if provided (for AdminGalleryShell), otherwise use context
+  const activeSelectedIds = selectedIds.length > 0 || isMultiSelect ? selectedIds : context.selectedIds;
+  const activeIsMultiSelect = isMultiSelect || context.isMultiSelect;
+  const activeToggleSelection = onToggleSelection || context.togglePhotoSelection;
+  const activeClearSelection = onClearSelection || context.clearSelection;
+  const activeSetIsMultiSelect = onToggleMultiSelect || context.setIsMultiSelect;
+
+  const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
+  const setConfirmDialog = propsSetConfirmDialog || (() => {});
+  const setLoadingState = propsSetLoadingState || (() => {});
 
   // Handle infinite mode
   useEffect(() => {
     if (isAdminMode && isInfiniteMode) {
-      setVisibleCount(10000);
+      setVisibleCount(PAGINATION.INFINITE_MODE_COUNT);
     } else if (isAdminMode) {
       // In admin mode but not infinite, ensure we have a reasonable starting point
-      setVisibleCount(prev => prev < 20 ? 20 : prev);
+      setVisibleCount(prev => prev < PAGINATION.LAZY_LOAD_COUNT ? PAGINATION.LAZY_LOAD_COUNT : prev);
     }
-    // In public mode, we let the syncWithCloud and loadMore manage visibleCount
   }, [isAdminMode, isInfiniteMode, setVisibleCount]);
 
   const allTagIds = useMemo(() => {
@@ -296,8 +320,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     const timer = setTimeout(() => {
       if ('vibrate' in navigator) navigator.vibrate(50);
       if (isAdminMode) {
-        setIsMultiSelect(true);
-        togglePhotoSelection(photoId);
+        activeSetIsMultiSelect(true);
+        activeToggleSelection(photoId);
       }
       setLongPressTimer(null);
     }, 800);
@@ -318,6 +342,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       if (navigator.share) {
         await navigator.share({ title: t.shareTitle, text: msg, url: window.location.origin });
       } else {
+        // Fallback alert is handled by the component or set via prop?
+        // We'll keep it simple for public view
         alert(t.shareNotSupported);
       }
     } catch (e: any) {
@@ -331,7 +357,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     if (onLoadMore) {
       onLoadMore();
     } else if (!isInfiniteMode && visibleCount < totalGridCount) {
-      setVisibleCount(prev => prev + 20);
+      setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
     }
   }, [onLoadMore, isInfiniteMode, setVisibleCount, visibleCount, totalGridCount]);
 
@@ -344,14 +370,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           photos={photos}
           isAdminMode={!!isAdminMode}
           isRefreshing={!!isSyncing}
-          isMultiSelect={!!isMultiSelect}
+          isMultiSelect={!!activeIsMultiSelect}
           lang={lang}
           t={t}
           onHeaderClick={handleHeaderClick}
           onRefresh={onRefresh!}
-          onToggleMultiSelect={() => setIsMultiSelect(!isMultiSelect)}
-          clearSelection={clearSelection}
-          setIsMultiSelect={setIsMultiSelect}
+          onToggleMultiSelect={() => activeSetIsMultiSelect(!activeIsMultiSelect)}
+          clearSelection={activeClearSelection}
+          setIsMultiSelect={activeSetIsMultiSelect}
           onAddPhoto={onAddPhoto!}
           onSetLang={(l) => setLang(l)}
           onExit={() => onExit ? onExit() : navigate('/admin')}
@@ -385,7 +411,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
       {/* Grid */}
       <div ref={virtuosoRef} className="flex-1 overflow-hidden bg-[#FDFAF6]">
-        {isSyncing && photos.length === 0 ? (
+        {(isSyncing || photos.length === 0) && photos.length === 0 ? (
           <SkeletonGrid count={12} columns={columns} />
         ) : displayPhotos.length === 0 ? (                
           <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
@@ -408,16 +434,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 index={index}
                 photo={gridPhotos[index]}
                 isAdminMode={!!isAdminMode}
-                isMultiSelect={isMultiSelect}
+                isMultiSelect={activeIsMultiSelect}
                 isStaffMode={isStaffMode}
-                isSelected={!!selectedIds.includes(gridPhotos[index].id)}
+                isSelected={!!activeSelectedIds.includes(gridPhotos[index].id)}
                 showGroupsCollapsed={showGroupsCollapsed}
                 lang={lang}
                 t={t}
                 categories={categories}
                 manufacturers={manufacturers}
                 tagMap={tagMap}
-                onToggleSelection={togglePhotoSelection}
+                onToggleSelection={activeToggleSelection}
                 onEditPhoto={onEditPhoto}
                 onGroupClick={onGroupClick || setActiveGroupId}
                 onLightboxOpen={setLightboxIndex}
@@ -451,22 +477,23 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
         onLongPressStart={isAdminMode ? startLongPress : undefined}
         onLongPressEnd={isAdminMode ? endLongPress : undefined}
-        onBatchEdit={(ids) => {
-          if (onBatchEdit) onBatchEdit(ids);
-          else if (adminUI) adminUI.setBatchEditIds(ids);
-        }}
+        onBatchEdit={onBatchEdit}
         onUngroup={onGroupPhotos} 
         onAddPhotoToGroup={onAddPhoto}
-        onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
-        onCancelAnalyze={() => adminUI?.abortAnalysis()}
-        isAnalyzing={adminUI?.loadingState === 'analyzing'}
-        onBatchAiAnalyze={(photos) => adminPhoto?.handleGroupAiIdentify(photos)}
+        onAiAnalyze={onAiAnalyze}
+        onCancelAnalyze={onCancelAnalyze}
+        isAnalyzing={isAnalyzing}
+        onBatchAiAnalyze={onBatchAiAnalyze}
         setPhotos={context.setPhotos}
         lang={lang}
         t={t}
         categories={categories}
         tagMap={tagMap}
-        isMultiSelect={isMultiSelect}
+        allTags={tags}
+        isMultiSelect={activeIsMultiSelect}
+        setAlertDialog={setAlertDialog}
+        setConfirmDialog={setConfirmDialog}
+        setLoadingState={setLoadingState}
       />
 
       {/* Dialogs */}
@@ -514,9 +541,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         tagMap={tagMap}
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
-        onAiAnalyze={async (photo) => await adminPhoto?.handleSingleAiAnalyze(photo.uri!, photo.categoryId || undefined)}
-        onCancelAnalyze={() => adminUI?.abortAnalysis()}
-        isAnalyzing={adminUI?.loadingState === 'analyzing'}
+        onAiAnalyze={onAiAnalyze}
+        onCancelAnalyze={onCancelAnalyze}
+        isAnalyzing={isAnalyzing}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         onUngroup={async (id) => {
           if (onGroupPhotos) onGroupPhotos([id]);
@@ -534,7 +561,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   groupPhotos.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: p.id === id }))
                );
              } catch (err: any) {
-               alert("設置封面失敗: " + err.message);
+               setAlertDialog?.({ title: '設置封面失敗', message: err.message });
              }
           }).catch(err => {
              console.error("[ERROR] Failed to update group cover:", err);

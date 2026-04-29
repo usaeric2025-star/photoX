@@ -30,7 +30,7 @@ export const AdminHeader: React.FC<Props> = ({
   appLang = 'zh'
 }) => {
   const { settings, user, viewMode, setViewMode } = useAdminSession();
-  const { isBatchAnalyzing, batchProgress, activeScreen, showToast } = useAdminUI();
+  const { isBatchAnalyzing, batchProgress, activeScreen, showToast, setAlertDialog } = useAdminUI();
   const { isInfiniteMode, setIsInfiniteMode } = useGalleryContext();
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -95,7 +95,10 @@ export const AdminHeader: React.FC<Props> = ({
             try {
               await loginWithGoogle();
             } catch(e: any) {
-              alert('Log in failed: ' + (e.message || JSON.stringify(e)));
+              setAlertDialog({
+                title: 'Log in failed',
+                message: e.message || JSON.stringify(e)
+              });
             }
           }}
           className="px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-[#1D3557] text-[#FDFAF6] shadow-sm active:scale-95 transition-all flex items-center gap-2"

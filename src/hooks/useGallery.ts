@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Photo, Category, Tag } from '../types';
 import { sanitizePhotoTags } from '../lib/sanitizer';
+import { PAGINATION } from '../constants/config';
 
 interface UseGalleryProps {
   photos: Photo[];
@@ -25,7 +26,7 @@ export const useGallery = ({
   const [internalSelectedSubId, setInternalSelectedSubId] = useState<string | null>(null);
   const [internalSelectedTagIds, setInternalSelectedTagIds] = useState<string[]>([]);
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(15);
+  const [visibleCount, setVisibleCount] = useState(PAGINATION.LAZY_LOAD_COUNT);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [internalSortOrder, setInternalSortOrder] = useState<'desc' | 'asc'>('desc');
 
@@ -37,22 +38,22 @@ export const useGallery = ({
 
   const toggleSortOrder = () => {
     setInternalSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
-    setVisibleCount(15);
+    setVisibleCount(PAGINATION.LAZY_LOAD_COUNT);
   };
 
   const setSearchQuery = (query: string) => {
     setInternalSearchQuery(query);
-    setVisibleCount(15);
+    setVisibleCount(PAGINATION.LAZY_LOAD_COUNT);
   };
 
   const setSelectedCatCode = (code: string | null) => {
     setInternalSelectedCatCode(code);
-    setVisibleCount(15);
+    setVisibleCount(PAGINATION.LAZY_LOAD_COUNT);
   };
 
   const setSelectedSubId = (id: string | null) => {
     setInternalSelectedSubId(id);
-    setVisibleCount(15);
+    setVisibleCount(PAGINATION.LAZY_LOAD_COUNT);
   };
 
   const setSelectedTagIds = (action: string[] | ((prev: string[]) => string[])) => {
@@ -61,7 +62,7 @@ export const useGallery = ({
     } else {
       setInternalSelectedTagIds(action);
     }
-    setVisibleCount(15);
+    setVisibleCount(PAGINATION.LAZY_LOAD_COUNT);
   };
 
   const displayPhotos = useMemo(() => {
@@ -161,7 +162,7 @@ export const useGallery = ({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && visibleCount < aggregatedPhotos.length) {
-          setVisibleCount(prev => prev + 12);
+          setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
         }
       },
       { threshold: 0.1 }

@@ -1,11 +1,14 @@
 import React from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers } from 'lucide-react';
+import { useOptionalAdminUI } from '../../context/AdminContexts';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => (
+export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => {
+  const adminUI = useOptionalAdminUI();
+  return (
   <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-10 text-center">
     <div className="relative">
       <div className="w-24 h-24 bg-blue-500 rounded-3xl rotate-12 flex items-center justify-center shadow-2xl shadow-blue-500/40 relative z-10">
@@ -28,7 +31,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => 
           try {
             await loginWithGoogle();
           } catch(e: any) {
-            alert('登入失敗: ' + (e.message || JSON.stringify(e)));
+            adminUI?.setAlertDialog({ title: '登入失敗', message: e.message || JSON.stringify(e) });
           }
         }}
         className="w-full bg-slate-900 text-white py-5 rounded-[24px] text-sm font-bold flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] active:bg-black"
@@ -55,4 +58,5 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => 
       </div>
     </div>
   </div>
-);
+  );
+};

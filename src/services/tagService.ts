@@ -12,7 +12,7 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
     }
     
     // Ensure name is uppercase and id is string
-    return (data || []).map((t: any) => ({
+    return (data || []).map((t: Tag) => ({
       ...t,
       name: (t.name || '').toUpperCase(),
       id: String(t.id)

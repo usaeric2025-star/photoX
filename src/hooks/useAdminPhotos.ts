@@ -35,12 +35,22 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
 };
 
 export const useAdminPhotos = (
-  user: any, 
-  geminiApiKey: string, 
+  user: {id: string} | null, 
+  geminiApiKey: string | undefined, 
   aiProvider: string, 
   customModel: string,
-  adminUI?: any,
-  adminSession?: any,
+  adminUI?: {
+    cloudCount: number | null;
+    setCloudCount: (c: number | null) => void;
+    loadingState: string;
+    setLoadingState: (s: any) => void;
+    setAlertDialog: (d: any) => void;
+    setActiveScreen: (s: string) => void;
+    abortAnalysis: () => void;
+  },
+  adminSession?: {
+    setIsSyncing: (v: boolean) => void;
+  },
   addManufacturer?: (name: string) => Promise<any>
 ) => {
   const {
@@ -61,9 +71,9 @@ export const useAdminPhotos = (
   
   // Use provided loadingState if available, otherwise use internal
   const currentLoadingState = adminUI?.loadingState !== undefined ? adminUI.loadingState : internalLoadingState;
-  const actualSetLoadingState = (s: any) => {
+  const actualSetLoadingState = (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading') => {
     if (setLoadingState) setLoadingState(s);
-    setInternalLoadingState(s);
+    setInternalLoadingState(s as any);
   };
 
   const [importProgress, setImportProgress] = useState(0);
@@ -404,6 +414,8 @@ export const useAdminPhotos = (
           if (!rawUri) continue;
           
           const compressedUri = await compressImage(rawUri, IMAGE_COMPRESS.MAX_WIDTH, IMAGE_COMPRESS.QUALITY);
+          // Update status that we are done compressing this one if in middle of multi-upload
+          // But actually we do it per file in storageService now.
 
           // Use a temporary ID for local state, will be replaced by DB UUID after sync
           const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -485,9 +497,15 @@ export const useAdminPhotos = (
     }
     
     if (user && successCount > 0) {
-      const newPhotos = photosRef.current;
-      await syncPhotosToCloud(user.id, newPhotos);
+      const newPhotos = [...photosRef.current];
+      await syncPhotosToCloud(user.id, newPhotos, undefined, (p) => {
+          // p is 0-100
+      });
+      
+      // After sync, photosRef.current (and newPhotos) objects now have the real server IDs
+      setPhotos(newPhotos);
       setCloudCount(newPhotos.length);
+      await saveData('product_photos', newPhotos);
     }
     
     setIsSyncing(false);

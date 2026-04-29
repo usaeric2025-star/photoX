@@ -6,16 +6,16 @@ export function mapSupabasePhoto(item: any): Photo {
     if (!item) return {} as Photo;
     
     // Extract storageId from image_url if possible
-    let storageId = item.id;
+    let storageId = item.id as string;
     if (item.image_url) {
       try {
-        const parts = item.image_url.split('/');
+        const parts = (item.image_url as string).split('/');
         const lastPart = parts[parts.length - 1];
         if (lastPart) {
           storageId = lastPart.split('.')[0];
         }
       } catch (e) {
-        console.warn("Failed to parse storageId from URL:", e);
+        // Suppress warning
       }
     }
 
@@ -56,6 +56,7 @@ export function mapSupabasePhoto(item: any): Photo {
       manufacturerId: item.manufacturer_id || null,
       tagIds,
       description: item.description,
+      note: item.note, // Added note field
       image_url: item.image_url,
       thumb_url: item.thumb_url,
       dimensions: item.dimensions,
@@ -104,7 +105,7 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: stri
   }
 };
 
-export const updatePhotoInCloud = async (photoId: string, updates: Partial<any>) => {
+export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo> & Record<string, any>) => {
   const { error } = await supabase
     .from(TABLE_NAME)
     .update(updates)
@@ -115,7 +116,15 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<any>)
        // Try again without group fields if they were the cause
        const safeUpdates = { ...updates };
        let modified = false;
-       ['group_id', 'group_order', 'is_group_cover'].forEach(key => {
+       ['group_id', 'group_order', 'is_group_cover', 'is_hidden', 'updated_at'].forEach(key => {
+         if (key in safeUpdates) {
+           // Mapping internal keys to DB keys if needed or just skipping if error
+         }
+       });
+       
+       // Just basic cleanup if error
+       const groupKeys = ['group_id', 'group_order', 'is_group_cover'];
+       groupKeys.forEach(key => {
          if (key in safeUpdates) {
            delete (safeUpdates as any)[key];
            modified = true;
@@ -127,7 +136,6 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<any>)
          if (!retryError) return;
        }
     }
-    console.error("Failed to update photo in cloud:", error);
     throw new Error(error.message || JSON.stringify(error));
   }
 };
@@ -139,7 +147,7 @@ export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
   });
 };
 
-export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<string> => {
+export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
@@ -150,11 +158,11 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
   if (!photo.image_url && photo.uri) {
     try {
       const filename = photo.storageId || photo.id;
-      const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
+      const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri, onStatus);
       photo.image_url = imageUrl;
       photo.thumb_url = thumbUrl;
     } catch (e) {
-      console.warn("Failed to upload image before auto-saving to DB:", e);
+      // Ignored
     }
   }
 
@@ -169,8 +177,8 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
     name: photo.name,
     category_id: photo.categoryId || null,
     manufacturer_id: photo.manufacturerId || null,
-    // Deprecating JSON tags field in favor of photo_tags table
     description: photo.description || '',
+    note: photo.note || '', // Added note field
     image_url: photo.image_url,
     thumb_url: photo.thumb_url || null,
     dimensions: photo.dimensions || null,
@@ -225,6 +233,11 @@ export const savePhotoToCloud = async (userId: string, photo: Photo): Promise<st
 
   const finalPhotoId = savedPhoto?.id || photo.id;
 
+  // Update the photo object in-place so callers get the persistent ID
+  if (photo.id !== finalPhotoId) {
+    photo.id = finalPhotoId;
+  }
+
   // --- Relational Tags Sync ---
   if (Array.isArray(photo.tagIds) && photo.tagIds.length >= 0) {
     // 1. Delete existing associations
@@ -253,7 +266,8 @@ export const syncPhotosToCloud = async (
   userId: string, 
   photos: Photo[], 
   lastSyncTime?: string, 
-  onProgress?: (p: number) => void
+  onProgress?: (p: number) => void,
+  onStatus?: (s: string) => void
 ): Promise<{success: number, skipped: number}> => {
   let successCount = 0;
   let skippedCount = 0;
@@ -307,14 +321,13 @@ export const syncPhotosToCloud = async (
     const itemsToDelete = (cloudItems || []).filter(item => !localIds.has(item.id));
     
     if (itemsToDelete.length > 0) {
-      console.log(`Cleaning up ${itemsToDelete.length} orphan items from cloud...`);
       for (const item of itemsToDelete) {
         try {
           await supabase.from(TABLE_NAME).delete().match({ id: item.id, user_id: userId });
           const filename = item.storageId || item.id;
           await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`, `public/thumb_${filename}.webp`]);
         } catch (e) {
-          console.warn(`Failed to delete orphan ${item.id}:`, e);
+          // Ignored
         }
       }
     }
@@ -336,7 +349,7 @@ export const syncPhotosToCloud = async (
       if (!photo.image_url && photo.uri) {
         // If still no url, then upload
         const filename = photo.storageId || photo.id;
-        const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
+        const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri, onStatus);
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;
         
@@ -347,6 +360,10 @@ export const syncPhotosToCloud = async (
       
       const wasSaved = await savePhotoToCloud(userId, photo);
       if (wasSaved) {
+        // Update the ID if it was returned (already done in savePhotoToCloud but double check)
+        if (typeof wasSaved === 'string') {
+           photo.id = wasSaved;
+        }
         successCount++;
       } else {
         skippedCount++;
@@ -453,22 +470,18 @@ export const loadPhotosFromCloud = async (
 };
 
 export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
-  console.log(`Attempting to delete photo ${photo.id} for user ${userId} from cloud...`);
   const { error } = await supabase
     .from(TABLE_NAME)
     .delete()
     .match({ id: photo.id, user_id: userId });
 
   if (error) {
-    console.error(`Supabase deletion error for photo ${photo.id}:`, error);
     throw new Error(error.message || JSON.stringify(error));
   }
   
-  console.log(`Successfully deleted record ${photo.id} from database. Now removing file from storage...`);
   const filename = photo.storageId || photo.id;
   // Delete both original and thumbnail
   await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`, `public/thumb_${filename}.webp`]);
-  console.log(`Storage deletion complete for ${filename}.`);
 };
 
 export const deduplicatePhotos = async (userId?: string): Promise<{removed: number}> => {

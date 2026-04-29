@@ -1,27 +1,30 @@
 import { supabase } from './client';
+import { SubCategory as Manufacturer } from '../types';
 
 // 加载所有厂商
-export const loadManufacturersFromCloud = async () => {
+export const loadManufacturersFromCloud = async (): Promise<Manufacturer[]> => {
   const { data, error } = await supabase
     .from('manufacturers')
     .select('*')
     .order('name', { ascending: true });
   if (error) {
-    console.error("Failed to load manufacturers:", error);
     return [];
   }
-  return data || [];
+  return (data || []).map((m: any) => ({
+    ...m,
+    id: String(m.id)
+  }));
 };
 
 // 新增厂商
-export const addManufacturerToDB = async (name: string) => {
+export const addManufacturerToDB = async (name: string): Promise<Manufacturer> => {
   const { data, error } = await supabase
     .from('manufacturers')
     .insert({ name, aliases: [] })
     .select()
     .single();
   if (error) throw error;
-  return data;
+  return { ...data, id: String(data.id) };
 };
 
 // 更新厂商

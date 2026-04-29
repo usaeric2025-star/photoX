@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
 import { Category, Tag, ProductFormData } from '../../types';
-import { useAdminSession, useAdminPhoto } from '../../context/AdminContexts';
+import { useAdminSession, useAdminPhoto, useAdminUI } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
 
 interface UploadFormProps {
@@ -37,6 +37,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
 }) => {
   const { appLang } = useAdminSession();
   const { updateTag, deleteTag } = useAdminPhoto();
+  const { setConfirmDialog } = useAdminUI();
   
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -82,7 +83,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           )}
           {editPhotoId && (
             <button 
-              onClick={() => { if(window.confirm('確定要刪除這張照片嗎？')) deletePhoto(editPhotoId); }}
+              onClick={() => { 
+                setConfirmDialog({
+                  message: '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
+                  onConfirm: () => deletePhoto(editPhotoId)
+                });
+              }}
               className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 transition-all active:scale-90"
               title="刪除照片"
             >

@@ -67,6 +67,7 @@ export interface Photo {
   manufacturerId: string | null;
   tagIds: string[]; // For local filter
   price?: string;
+  note?: string;
 }
 
 export interface ProductFormData {

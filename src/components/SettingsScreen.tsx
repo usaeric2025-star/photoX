@@ -152,10 +152,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   };
 
   const handleUpdateCatName = async (cat: Category) => {
-    const newName = prompt('输入新名称 / Enter new name', cat.name);
-    if (newName && newName.trim() !== cat.name) {
-      await updateCategory(cat.id, { name: newName.trim() });
-    }
+    setPromptDialog({
+      title: '编辑分类 / Edit Category',
+      message: '输入新名称 / Enter new name:',
+      placeholder: cat.name,
+      onSubmit: async (newName) => {
+        if (newName && newName.trim() !== cat.name) {
+          await updateCategory(cat.id, { name: newName.trim() });
+          setHasChanges(true);
+        }
+      }
+    });
   };
 
   const setSettingField = (field: string, value: any) => {
@@ -189,9 +196,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
              if (hasChanges) {
                await saveSettings({ ...settings });
                setHasChanges(false);
-               alert("保存成功 / Saved successfully");
+               setAlertDialog({ message: "保存成功 / Saved successfully" });
              } else {
-               alert("没有更改需要保存 / No changes to save");
+               setAlertDialog({ message: "没有更改需要保存 / No changes to save" });
              }
            }}
            className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center ${hasChanges ? 'bg-[#D4A853] hover:bg-[#D4A853]/90 text-white' : 'bg-[#1D3557] hover:bg-[#1D3557]/90 text-white'}`}
@@ -710,9 +717,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                         if (json.photos) setPhotos(json.photos);
                         if (json.tags) setTags(json.tags);
                         if (json.manufacturers) setManufacturers(json.manufacturers);
-                        alert('数据导入成功！');
+                        setAlertDialog({ message: '数据导入成功！' });
                       } catch (err) {
-                        alert('导入失败，格式错误');
+                        setAlertDialog({ title: '导入失败', message: '格式错误' });
                       }
                     };
                     reader.readAsText(file);

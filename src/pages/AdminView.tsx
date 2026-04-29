@@ -23,7 +23,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
 import { useAdminCore } from '../hooks/useAdminCore';
 import { translations, LanguageCode } from '../lib/translations';
-
+import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 
 export default function AdminView() {
@@ -31,6 +31,8 @@ export default function AdminView() {
   const navigate = useNavigate();
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] ?? translations.en;
+
+  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
 
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -57,6 +59,33 @@ export default function AdminView() {
   const getSafeLocalStorage = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
   const getSafeSessionStorage = (key: string) => { try { return sessionStorage.getItem(key); } catch { return null; } };
 
+  // For native prompt replacement in login gate
+  const handleLocalLogin = () => {
+    setPromptDialog({
+      title: t.localLoginPrompt,
+      placeholder: 'Password...',
+      onSubmit: (pass: string) => {
+        if (pass === getSafeLocalStorage('internal_password')) {
+          try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
+          window.location.reload();
+        } else if (pass) {
+          setAlertDialog({ title: t.loginFailed, message: t.wrongPassword });
+        }
+      }
+    });
+  };
+
+  const uiValueForLogin = React.useMemo(() => ({
+    confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    activeScreen: 'login', setActiveScreen: () => {},
+    editPhotoId: null, setEditPhotoId: () => {},
+    batchEditIds: null, setBatchEditIds: () => {},
+    toast: null, showToast: () => {},
+    loadingState: 'idle' as const, setLoadingState: () => {},
+    batchProgress: { current: 0, total: 0 },
+    aiDebugInfo: null, abortAnalysis: () => {}
+  }), [confirmDialog, alertDialog, promptDialog, setConfirmDialog, setAlertDialog, setPromptDialog]);
+
   if (!authChecked) {
     return (
        <ErrorBoundary key="auth-verifying">
@@ -75,48 +104,46 @@ export default function AdminView() {
   if (!user && getSafeSessionStorage('isStaffMode') !== 'true') {
     return (
        <ErrorBoundary key="login-gate">
-        {errorContent}
-        <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
-           <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-sm text-center border border-slate-100">
-              <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">{t.adminTitle}</h2>
-              <p className="text-sm text-slate-500 mb-8">{t.adminSub}</p>
-              <button 
-                onClick={async () => {
-                  try {
-                    await loginWithGoogle();
-                  } catch(e: any) {
-                    alert(`${t.loginFailedAlert} ${e.message || JSON.stringify(e)}`);
-                  }
-                }}
-                className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
-              >
-                {t.googleLoginBtn}
-              </button>
-              <button
-                onClick={() => {
-                  const pass = prompt(t.localLoginPrompt);
-                  if (pass === getSafeLocalStorage('internal_password')) {
-                    try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
-                    window.location.reload();
-                  } else if (pass) {
-                    alert(t.wrongPassword);
-                  }
-                }}
-                className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all mb-4 text-sm"
-              >
-                {t.localLoginBtn}
-              </button>
-              <button
-                onClick={() => {
-                  try { sessionStorage.removeItem('isStaffMode'); } catch {}
-                  navigate('/');
-                }}
-                className="text-sm text-slate-400 hover:text-slate-600 font-medium"
-              >
-                {t.backToGallery}
-              </button>
-           </div>
-        </div>
+        <AdminUIProvider value={uiValueForLogin}>
+          {errorContent}
+          <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
+             <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-sm text-center border border-slate-100">
+                <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">{t.adminTitle}</h2>
+                <p className="text-sm text-slate-500 mb-8">{t.adminSub}</p>
+                <button 
+                  onClick={async () => {
+                    try {
+                      await loginWithGoogle();
+                    } catch(e: any) {
+                      setAlertDialog({ 
+                        title: t.loginFailed, 
+                        message: `${t.loginFailedAlert} ${e.message || JSON.stringify(e)}` 
+                      });
+                    }
+                  }}
+                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
+                >
+                  {t.googleLoginBtn}
+                </button>
+                <button
+                  onClick={handleLocalLogin}
+                  className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all mb-4 text-sm"
+                >
+                  {t.localLoginBtn}
+                </button>
+                <button
+                  onClick={() => {
+                    try { sessionStorage.removeItem('isStaffMode'); } catch {}
+                    navigate('/');
+                  }}
+                  className="text-sm text-slate-400 hover:text-slate-600 font-medium"
+                >
+                  {t.backToGallery}
+                </button>
+             </div>
+          </div>
+          <Modals promptValue={promptValue} setPromptValue={setPromptValue} />
+        </AdminUIProvider>
        </ErrorBoundary>
     );
   }
@@ -129,17 +156,21 @@ export default function AdminView() {
       errorContent={errorContent}
       t={t}
       lang={lang as LanguageCode}
+      dialogProps={{
+        confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue
+      }}
     />
   );
 }
 
-function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: { 
+function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, dialogProps }: { 
   user: any, 
   authChecked: boolean, 
   logout: () => void, 
   errorContent: React.ReactNode,
   t: any,
-  lang: LanguageCode
+  lang: LanguageCode,
+  dialogProps: any
 }) {
   const navigate = useNavigate();
   const { 
@@ -149,6 +180,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
     visibleCount, setVisibleCount
   } = useGalleryContext();
   
+  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = dialogProps;
+
   useEffect(() => {
     setUser(user);
     setIsAdminMode(!!user || sessionStorage.getItem('isStaffMode') === 'true');
@@ -162,7 +195,6 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
 
   const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
   const [cloudCount, setCloudCount] = useState<number | null>(null);
-  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -463,6 +495,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
                  <div className="flex-1 min-h-0 relative bg-bg">
                     <PublicGallery 
                        isAdminMode={false}
+                       settings={settings}
+                       isRefreshing={loadingState === 'syncing'}
                        onExit={() => setViewMode('private')}
                        showExit={true}
                        onRefresh={() => performPullSync()}
@@ -473,7 +507,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
                        user={undefined}
                        onLoadMore={() => {
                          if (visibleCount < gridPhotos.length) {
-                           setVisibleCount(prev => prev + 50);
+                           setVisibleCount(prev => prev + PAGINATION.PUBLIC_PAGE_SIZE);
                          } else if (photos.length < (cloudCount || 0)) {
                             // If we have less locally than on cloud, pull more? 
                             // Actually performPullSync already pulls (using force=true which I just fixed to ignore timestamps)
@@ -492,33 +526,54 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[2000] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center p-6"
+                  className="fixed inset-0 z-[2000] bg-white/70 backdrop-blur-xl flex flex-col items-center justify-center p-8"
                 >
-                  <div className="w-12 h-12 relative">
-                     <div className="absolute inset-0 border-4 border-blue-100 rounded-full"></div>
-                     <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin"></div>
+                  <div className="w-16 h-16 relative mb-8">
+                     <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+                     <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin shadow-lg shadow-blue-200"></div>
                   </div>
                   
-                  {loadingState === 'importing' && importTotal > 0 ? (
-                    <div className="w-full max-w-xs mt-8">
-                      <div className="flex justify-between text-xs font-bold text-slate-500 mb-2">
-                         <span>{t.uploadProgress}</span>
-                         <span>{importProgress} / {importTotal}</span>
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-black text-slate-800 tracking-tight mb-2">
+                       {loadingState === 'analyzing' ? 'AI 智能辨識中... / AI Analyzing...' :
+                        loadingState === 'importing' ? '正在匯入照片... / Importing...' :
+                        loadingState === 'compressing' ? '影像壓縮中... / Compressing...' :
+                        loadingState === 'uploading' ? '正在上傳雲端... / Uploading...' :
+                        '正在同步數據... / Synching...'}
+                    </h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.doNotClose}</p>
+                  </div>
+
+                  {(batchProgress.total > 0 || (loadingState === 'importing' && importTotal > 0)) && (
+                    <div className="w-full max-w-xs">
+                      <div className="flex justify-between text-xs font-black text-slate-500 mb-2 uppercase tracking-tight">
+                         <span>
+                           {loadingState === 'importing' ? '匯入進度 / Import Progress' : '處理進度 / Progress'}
+                         </span>
+                         <span>
+                           {loadingState === 'importing' ? `${importProgress} / ${importTotal}` : `${batchProgress.current} / ${batchProgress.total}`}
+                         </span>
                       </div>
-                      <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-600 transition-all duration-300 ease-out" 
-                          style={{ width: `${Math.round((importProgress / importTotal) * 100)}%` }}
+                      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner border border-slate-200">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-600" 
+                          initial={{ width: 0 }}
+                          animate={{ 
+                            width: `${Math.round(((loadingState === 'importing' ? importProgress : batchProgress.current) / (loadingState === 'importing' ? importTotal : batchProgress.total)) * 100)}%` 
+                          }}
                         />
                       </div>
                     </div>
-                  ) : (
-                    <div className="mt-6 text-center">
-                      <p className="text-sm font-bold text-slate-800 tracking-tight">{t.processing}</p>
-                      <p className="mt-1 text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.doNotClose}</p>
-                    </div>
                   )}
-                  
+
+                  {loadingState === 'analyzing' && (
+                    <button 
+                      onClick={() => abortAnalysis?.()}
+                      className="mt-12 px-8 py-3 bg-red-50 text-red-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-all border border-red-100"
+                    >
+                      取消辨識 / Cancel
+                    </button>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

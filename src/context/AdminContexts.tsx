@@ -104,8 +104,8 @@ interface AdminUIContextType {
   toast: { message: string, type: 'success' | 'error' } | null;
   showToast: (msg: string, type: 'success' | 'error') => void;
   
-  loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing';
-  setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void;
+  loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading';
+  setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading') => void;
   batchProgress: { current: number, total: number };
   aiDebugInfo: { step: string; message: string; error?: string } | null;
   abortAnalysis: () => void;

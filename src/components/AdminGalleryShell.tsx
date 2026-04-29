@@ -1,6 +1,6 @@
 import React from 'react';
 import { PublicGallery } from './PublicGallery';
-import { useOptionalAdminPhoto, useOptionalAdminUI } from '../context/AdminContexts';
+import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } from '../context/AdminContexts';
 import { useGalleryContext } from '../context/GalleryContext';
 import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
 import { translations } from '../lib/translations';
@@ -12,6 +12,7 @@ interface AdminGalleryShellProps {
 export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) => {
   const adminPhoto = useOptionalAdminPhoto();
   const adminUI = useOptionalAdminUI();
+  const adminSession = useOptionalAdminSession();
   
   const { 
     photos, 
@@ -19,11 +20,8 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     clearSelection, 
     setIsMultiSelect,
     isMultiSelect,
-    setEditPhotoId,
-    setBatchEditIds,
-    setCloudCount,
-    setUser,
-    user
+    togglePhotoSelection,
+    setPhotos
   } = useGalleryContext();
 
   const lang = (localStorage.getItem('appLang') as any) || 'en';
@@ -43,11 +41,14 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   };
 
   const handleBatchDelete = async () => {
-    if (selectedIds.length > 0 && window.confirm(t.confirmDelete(selectedIds.length))) {
-      for (const id of selectedIds) {
-        await adminPhoto?.deletePhoto(id);
-      }
-      clearSelection();
+    if (selectedIds.length > 0) {
+      adminUI?.setConfirmDialog({
+        message: t.confirmDelete(selectedIds.length),
+        onConfirm: async () => {
+          await adminPhoto?.deletePhoto(selectedIds);
+          clearSelection();
+        }
+      });
     }
   };
 
@@ -62,7 +63,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           url: window.location.origin 
         });
       } else {
-        alert(t.shareNotSupported);
+        adminUI?.setAlertDialog({ title: t.shareTitle, message: t.shareNotSupported });
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
@@ -81,6 +82,48 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         onEditPhoto={(id) => adminUI?.setEditPhotoId(id)}
         onBatchEdit={(ids) => adminUI?.setBatchEditIds(ids)}
         onGroupPhotos={(ids) => adminPhoto?.handleGroupPhotos(ids)}
+        onAddPhoto={() => {
+           const input = document.createElement('input');
+           input.type = 'file';
+           input.accept = 'image/*';
+           input.multiple = true;
+           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false);
+           input.click();
+        }}
+        selectedIds={selectedIds}
+        isMultiSelect={isMultiSelect}
+        onToggleSelection={togglePhotoSelection}
+        onClearSelection={clearSelection}
+        onToggleMultiSelect={setIsMultiSelect}
+        onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
+        onBatchAiAnalyze={(photos) => adminPhoto?.handleGroupAiIdentify(photos)}
+        onCancelAnalyze={() => adminUI?.abortAnalysis()}
+        isAnalyzing={adminUI?.loadingState === 'analyzing'}
+        setAlertDialog={(d) => adminUI?.setAlertDialog(d)}
+        setConfirmDialog={(d) => adminUI?.setConfirmDialog(d)}
+        setLoadingState={(s) => adminUI?.setLoadingState(s)}
+        onSetGroupCover={async (id, groupId) => {
+          setPhotos(prev => prev.map(p => {
+             if (p.groupId !== groupId) return p;
+             return { ...p, isGroupCover: p.id === id };
+          }));
+          const groupPhotos = photos.filter(p => p.groupId === groupId);
+          import('../services/supabaseService').then(async (m) => {
+             try {
+                await Promise.all(
+                   groupPhotos.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: p.id === id }))
+                );
+             } catch (err: any) {
+                adminUI?.setAlertDialog({ title: '設置封面失敗', message: err.message });
+             }
+          }).catch(err => {
+             console.error("[ERROR] Failed to update group cover:", err);
+          });
+        }}
+        user={adminSession?.user}
+        settings={adminSession?.settings}
+        isRefreshing={adminSession?.isSyncing}
+        onRefresh={() => adminSession?.onRefresh?.()}
       />
 
       {/* Admin Bulk Actions */}
