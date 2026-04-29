@@ -72,7 +72,9 @@ export default function AdminView() {
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   
-  const { viewMode, setViewMode, settings, setSettings, lastSyncTime, refreshCloudData, handleLogoUpload } = useSyncEngine(setLoadingState);
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(setLoadingState);
+  const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
+  const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
   const [internalPassword, setInternalPassword] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');

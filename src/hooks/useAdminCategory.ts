@@ -54,7 +54,9 @@ export const useAdminCategory = (adminUI: any) => {
       const upName = newName.toUpperCase().trim();
       if (!upName) return;
       
-      setTags(prev => prev.map(t => String(t.id) === String(tagId) ? { ...t, name: upName } : t));
+      const nextTags = tags.map(t => String(t.id) === String(tagId) ? { ...t, name: upName } : t);
+      setTags(nextTags);
+      await saveData('product_tags', nextTags);
       
       const success = await updateTagInDB(tagId, upName);
       if (!success) {
@@ -90,32 +92,28 @@ export const useAdminCategory = (adminUI: any) => {
 
         const strTagId = String(finalId);
         // 2. Update local tags state
-        if (typeof setTags === 'function') {
-          setTags(prev => {
-            const nextTags = prev.filter(t => String(t.id) !== strTagId);
-            saveData('product_tags', nextTags);
-            return nextTags;
-          });
-        }
+        const nextTags = tags.filter(t => String(t.id) !== strTagId);
+        setTags(nextTags);
+        
+        // 2.1 Update IndexedDB cache
+        await saveData('product_tags', nextTags);
 
         // 3. Update local photos state
-        setPhotos((prev: any[]) => {
-          if (!Array.isArray(prev)) return prev;
-          const next = prev.map(p => {
-            const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
-            const strPTagIds = pTagIds.map(id => String(id));
+        const nextPhotos = photos.map(p => {
+          const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
+          const strPTagIds = pTagIds.map(id => String(id));
 
-            if (strPTagIds.includes(strTagId)) {
-              return {
-                ...p,
-                tagIds: strPTagIds.filter((id: string) => id !== strTagId)
-              };
-            }
-            return p;
-          });
-          saveData('product_photos', next);
-          return next;
+          if (strPTagIds.includes(strTagId)) {
+            return {
+              ...p,
+              tagIds: strPTagIds.filter((id: string) => id !== strTagId)
+            };
+          }
+          return p;
         });
+        
+        setPhotos(nextPhotos);
+        await saveData('product_photos', nextPhotos);
 
         console.log('[deleteTag] 標籤删除成功');
     } catch (err: any) {
@@ -130,7 +128,9 @@ export const useAdminCategory = (adminUI: any) => {
       if (!trimmed) return;
       const saved = await addCategoryToDB(trimmed);
       if (saved) {
-        setCategories(prev => [...prev, saved]);
+        const nextCategories = [...categories, saved];
+        setCategories(nextCategories);
+        await saveData('product_categories', nextCategories);
       }
     } catch (err) {
       console.error("Add category failed:", err);
@@ -139,7 +139,9 @@ export const useAdminCategory = (adminUI: any) => {
 
   const updateCategory = async (id: string, updates: Partial<Category>) => {
     try {
-      setCategories(prev => prev.map(c => String(c.id) === String(id) ? { ...c, ...updates } : c));
+      const nextCategories = categories.map(c => String(c.id) === String(id) ? { ...c, ...updates } : c);
+      setCategories(nextCategories);
+      await saveData('product_categories', nextCategories);
       await updateCategoryInDB(id, updates);
     } catch (err) {
       console.error("Update category failed:", err);
@@ -152,14 +154,14 @@ export const useAdminCategory = (adminUI: any) => {
        const success = await deleteCategoryFromDB(strId);
        if (!success) throw new Error("Cloud delete failed");
 
-       setCategories(prev => prev.filter(c => String(c.id) !== strId));
+       const nextCategories = categories.filter(c => String(c.id) !== strId);
+       setCategories(nextCategories);
+       await saveData('product_categories', nextCategories);
        
        // Update photos
-       setPhotos((prev: any[]) => {
-         const next = prev.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
-         saveData('product_photos', next);
-         return next;
-       });
+       const nextPhotos = photos.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
+       setPhotos(nextPhotos);
+       await saveData('product_photos', nextPhotos);
      } catch (err) {
        console.error("Delete category failed:", err);
        setAlertDialog({ title: '刪除失敗', message: '無法刪除分類。' });
@@ -178,20 +180,22 @@ export const useAdminCategory = (adminUI: any) => {
   const deleteManufacturer = async (id: string) => {
     try {
       const strId = String(id);
-      setManufacturers(prev => prev.filter(m => String(m.id) !== strId));
+      const nextManufacturers = manufacturers.filter(m => String(m.id) !== strId);
+      setManufacturers(nextManufacturers);
+      await saveData('product_manufacturers', nextManufacturers);
       
       // Also remove from category subcategories if embedded
-      setCategories(prev => prev.map(c => ({
+      const nextCategories = categories.map(c => ({
         ...c,
         subcategories: (c.subcategories || []).filter(sub => String(sub.id) !== strId)
-      })));
+      }));
+      setCategories(nextCategories);
+      await saveData('product_categories', nextCategories);
 
       // Update photos
-      setPhotos((prev: any[]) => {
-        const next = prev.map(p => String(p.subcategoryId) === strId ? { ...p, subcategoryId: null } : p);
-        saveData('product_photos', next);
-        return next;
-      });
+      const nextPhotos = photos.map(p => String(p.subcategoryId) === strId ? { ...p, subcategoryId: null } : p);
+      setPhotos(nextPhotos);
+      await saveData('product_photos', nextPhotos);
     } catch (err) {
       console.error("Delete manufacturer failed:", err);
     }
