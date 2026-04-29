@@ -194,6 +194,7 @@ export const useAdminCategory = (adminUI: any) => {
 
   return {
     categories, setCategories,
+    addCategory,
     updateCategory,
     deleteCategory,
     tags, setTags,

@@ -5,7 +5,7 @@ import {
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
   User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle, Save
 } from 'lucide-react';
-import { SubCategory, Tag } from '../types';
+import { SubCategory, Tag, Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';

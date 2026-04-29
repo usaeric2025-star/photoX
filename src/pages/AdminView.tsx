@@ -131,7 +131,7 @@ export default function AdminView() {
 
   const { 
     updateTag, deleteTag, 
-    updateCategory, deleteCategory, 
+    addCategory, updateCategory, deleteCategory, 
     updateManufacturer, deleteManufacturer 
   } = useAdminCategory(uiBasicValue);
 
