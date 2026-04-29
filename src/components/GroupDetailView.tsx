@@ -259,38 +259,38 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                    )}
 
                     {isAdminMode && !isMultiSelectMode && (
-                     <div className="absolute top-2 right-2 flex gap-1 z-20 transition-opacity opacity-100">
+                     <div className="absolute top-2 right-2 flex gap-1 z-20 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
                         <button 
                           onClick={(e) => handleSetCover(e, photo.id)}
-                          className={`p-2 rounded-full backdrop-blur-md transition-colors ${photo.isGroupCover ? 'bg-[#D4A853] text-white' : 'bg-black/40 text-white hover:bg-[#D4A853]'}`}
+                          className={`p-1.5 rounded-full backdrop-blur-md transition-all active:scale-90 ${photo.isGroupCover ? 'bg-[#D4A853] text-white shadow-lg shadow-[#D4A853]/20' : 'bg-black/30 text-white hover:bg-[#D4A853]'}`}
                           title="設為封面"
                         >
-                          <Star size={14} fill={photo.isGroupCover ? "currentColor" : "none"} />
+                          <Star size={12} fill={photo.isGroupCover ? "currentColor" : "none"} />
                         </button>
                         <button 
                           onClick={(e) => handleRemoveFromGroup(e, photo)}
-                          className="p-2 bg-black/40 text-white rounded-full hover:bg-red-500 backdrop-blur-md transition-colors"
+                          className="p-1.5 bg-black/30 text-white rounded-full hover:bg-red-500 backdrop-blur-md transition-all active:scale-90"
                         >
-                          <X size={14} />
+                          <X size={12} />
                         </button>
                      </div>
                    )}
 
                    {isAdminMode && !isMultiSelectMode && !photo.isGroupCover && (
-                     <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-20 transition-opacity opacity-100">
+                     <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-20 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleMovePhoto(photo, 'forward'); }}
-                          className="p-2 bg-black/40 text-white rounded-full hover:bg-blue-500 backdrop-blur-md transition-colors"
+                          className="p-1.5 bg-black/30 text-white rounded-full hover:bg-blue-500 backdrop-blur-md transition-all active:scale-90"
                           title="往前移"
                         >
-                          <ArrowLeft size={14} />
+                          <ArrowLeft size={12} />
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleMovePhoto(photo, 'backward'); }}
-                          className="p-2 bg-black/40 text-white rounded-full hover:bg-blue-500 backdrop-blur-md transition-colors"
+                          className="p-1.5 bg-black/30 text-white rounded-full hover:bg-blue-500 backdrop-blur-md transition-all active:scale-90"
                           title="往後移"
                         >
-                          <ArrowRight size={14} />
+                          <ArrowRight size={12} />
                         </button>
                      </div>
                    )}

@@ -8,6 +8,7 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Modals } from '../components/admin/Modals';
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
 import { AdminHeader } from '../components/admin/AdminHeader';
+import { FloatingActionButton } from '../components/admin/FloatingActionButton';
 import { BatchEditScreen } from '../components/admin/BatchEditScreen';
 import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
@@ -408,14 +409,7 @@ export default function AdminView() {
                           }}
                           handleManageClick={handleManageClick}
                           loginWithGoogle={loginWithGoogle}
-                          onAddPhoto={() => {
-                            const input = document.createElement('input');
-                            input.type = 'file';
-                            input.accept = 'image/*';
-                            input.multiple = true;
-                            input.onchange = (e) => handlePhotoImport(e as any, false);
-                            input.click();
-                          }}
+                          onRefresh={() => performPullSync()}
                           photosCount={photos.length}
                           totalPhotosCount={photos.length}
                           cloudCount={cloudCount}
@@ -424,6 +418,17 @@ export default function AdminView() {
                        <div className="flex-1 min-h-0 relative">
                           <AdminGalleryShell 
                              onExit={() => setViewMode('public')}
+                          />
+                          <FloatingActionButton 
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.multiple = true;
+                              input.onchange = (e) => handlePhotoImport(e as any, false);
+                              input.click();
+                            }}
+                            title={t.addPhoto}
                           />
                        </div>
                     </div>

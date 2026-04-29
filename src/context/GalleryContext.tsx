@@ -19,6 +19,8 @@ interface GalleryContextType {
   isMultiSelect: boolean;
   showGroupsCollapsed: boolean;
   visibleCount: number;
+  setVisibleCount: React.Dispatch<React.SetStateAction<number>>;
+  isInfiniteMode: boolean;
   user: any;
   isAdminMode: boolean;
   page: number;
@@ -37,6 +39,7 @@ interface GalleryContextType {
   setIsMultiSelect: (is: boolean) => void;
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   setShowGroupsCollapsed: (show: boolean) => void;
+  setIsInfiniteMode: (is: boolean) => void;
   setUser: (user: any) => void;
   setIsAdminMode: (is: boolean) => void;
   setPage: React.Dispatch<React.SetStateAction<number>>;
@@ -50,6 +53,7 @@ interface GalleryContextType {
   // Derived
   displayPhotos: Photo[]; // The list used for Lightbox indexing
   gridPhotos: Photo[];    // The list after grouping and visibleCount slice
+  totalGridCount: number;
 }
 
 const GalleryContext = createContext<GalleryContextType | undefined>(undefined);
@@ -77,6 +81,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(20);
+  const [isInfiniteMode, setIsInfiniteMode] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [page, setPage] = useState(0);
@@ -174,7 +180,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [photos, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder]);
 
   // final grid: with grouping and pagination
-  const gridPhotos = useMemo(() => {
+  const gridPhotosAll = useMemo(() => {
     let result = [...displayPhotos];
     
     if (showGroupsCollapsed) {
@@ -186,9 +192,12 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return true;
       });
     }
-    
     return result;
   }, [displayPhotos, showGroupsCollapsed]);
+
+  const gridPhotos = useMemo(() => {
+    return gridPhotosAll.slice(0, visibleCount);
+  }, [gridPhotosAll, visibleCount]);
 
   const value = useMemo(() => {
     return {
@@ -207,6 +216,9 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       selectedIds,
       isMultiSelect,
       showGroupsCollapsed,
+      visibleCount,
+      setVisibleCount,
+      isInfiniteMode,
       user,
       isAdminMode,
       page,
@@ -223,6 +235,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsMultiSelect,
       setSelectedIds,
       setShowGroupsCollapsed,
+      setIsInfiniteMode,
       setUser,
       setIsAdminMode,
       setPage,
@@ -231,13 +244,14 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       clearSelection,
       isPhotoSelected,
       displayPhotos,
-      gridPhotos
+      gridPhotos,
+      totalGridCount: gridPhotosAll.length
     };
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
-    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, user, isAdminMode, page, hasMore,
+    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, isInfiniteMode, user, isAdminMode, page, hasMore,
     tagNameToIdMap, tagIdToNameMap,
-    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos
+    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, gridPhotosAll.length
   ]);
 
   return (

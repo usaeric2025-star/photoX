@@ -96,9 +96,10 @@ export const updateTagInDB = async (tagId: string, name: string): Promise<boolea
     return true;
 };
 
-export const deleteTagFromDB = async (tagId: string): Promise<boolean> => {
+export const deleteTagFromDB = async (tagId: string | number): Promise<boolean> => {
     // 1. Delete associations first
     try {
+        console.log(`[tagService] Deleting associations for tagId:`, tagId, `(type: ${typeof tagId})`);
         await supabase
             .from('photo_tags')
             .delete()

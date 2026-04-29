@@ -120,11 +120,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
+    isInfiniteMode,
     selectedIds,
     isMultiSelect, setIsMultiSelect,
     togglePhotoSelection, clearSelection,
-    displayPhotos, gridPhotos
+    displayPhotos, gridPhotos,
+    totalGridCount
   } = context;
+
+  // Handle infinite mode
+  useEffect(() => {
+    if (isInfiniteMode) {
+      setVisibleCount(10000);
+    } else {
+      setVisibleCount(20);
+    }
+  }, [isInfiniteMode, setVisibleCount]);
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
@@ -302,6 +313,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, [t.shareTitle, t.shareNotSupported]);
 
+  const handleLoadMore = useCallback(() => {
+    if (onLoadMore) {
+      onLoadMore();
+    } else if (!isInfiniteMode && visibleCount < totalGridCount) {
+      setVisibleCount(prev => prev + 20);
+    }
+  }, [onLoadMore, isInfiniteMode, setVisibleCount, visibleCount, totalGridCount]);
+
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
@@ -364,7 +383,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
             totalCount={gridPhotos.length}
-            endReached={onLoadMore}
+            endReached={handleLoadMore}
             overscan={600}
             listClassName={`grid gap-3 p-2 pb-40 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (

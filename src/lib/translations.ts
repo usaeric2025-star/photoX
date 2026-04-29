@@ -74,6 +74,7 @@ export const translations = {
     doNotClose: 'DO NOT CLOSE PAGE',
     confirmDeleteSingle: 'Are you sure you want to delete this photo?',
     saveSuccess: 'Information saved successfully!',
+    refresh: 'Refresh',
   },
   zh: {
     galleryName: '画廊',
@@ -150,6 +151,7 @@ export const translations = {
     doNotClose: '请勿关闭页面',
     confirmDeleteSingle: '确定要删除这张照片吗？',
     saveSuccess: '信息保存成功！',
+    refresh: '刷新数据',
   },
   ms: {
     galleryName: 'Galeri',
@@ -226,6 +228,7 @@ export const translations = {
     doNotClose: 'JANGAN TUTUP HALAMAN INI',
     confirmDeleteSingle: 'Adakah anda pasti mahu memadam foto ini?',
     saveSuccess: 'Maklumat berjaya disimpan!',
+    refresh: 'Segar Semula',
   }
 };
 

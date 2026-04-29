@@ -69,19 +69,26 @@ export const useAdminCategory = (adminUI: any) => {
     }
   };
 
-  const deleteTag = async (tagId: string) => {
+  const deleteTag = async (tagId: string | number) => {
     if (!tagId) return;
 
     try {
-        const strTagId = String(tagId);
-        console.log('[deleteTag] 开始删除標籤', { tagId: strTagId, photosLength: photos?.length });
+        // Ensure we pass a number if it is numeric, satisfying the requirement to pass 67 instead of "67"
+        const finalId = !isNaN(Number(tagId)) ? Number(tagId) : tagId;
         
-        // 1. Cloud deletion
-        const success = await deleteTagFromDB(strTagId);
+        console.log('[deleteTag] 开始删除標籤', { 
+            tagId: finalId, 
+            type: typeof finalId,
+            photosLength: photos?.length 
+        });
+        
+        // 1. Cloud deletion (Confirmed: using tagId, not tag.name)
+        const success = await deleteTagFromDB(finalId);
         if (!success) {
           throw new Error("Cloud delete returned false");
         }
 
+        const strTagId = String(finalId);
         // 2. Update local tags state
         if (typeof setTags === 'function') {
           setTags(prev => {
@@ -91,13 +98,11 @@ export const useAdminCategory = (adminUI: any) => {
           });
         }
 
-        // 3. Update local photos state to remove the tag association immediately
+        // 3. Update local photos state
         setPhotos((prev: any[]) => {
-          if (!Array.isArray(prev)) {
-             return prev;
-          }
+          if (!Array.isArray(prev)) return prev;
           const next = prev.map(p => {
-            const pTagIds = (Array.isArray(p.tagIds) || typeof p.tagIds === 'object') ? (Array.isArray(p.tagIds) ? p.tagIds : []) : [];
+            const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
             const strPTagIds = pTagIds.map(id => String(id));
 
             if (strPTagIds.includes(strTagId)) {
