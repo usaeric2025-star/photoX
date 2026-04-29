@@ -5,6 +5,7 @@ import {
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle
 } from 'lucide-react';
+import { VirtuosoGrid } from 'react-virtuoso';
 import { Photo, Tag, Category } from '../types';
 import { updatePhotosGroupInCloud, updatePhotoInCloud, savePhotoToCloud } from '../services/photoService';
 
@@ -319,58 +320,59 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                                onClick={() => { handleBulkAction('remove'); setShowMenu(false); }}
                                className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                              >
-                               <X size={16} /> 移出選中 / Remove Selected
-                             </button>
-                           )}
-                        </div>}
+                                <X size={16} /> 移出選中 / Remove Selected
+                              </button>
+                            )}
+                          </div>
+                        }
                       </div>
 
                       <button onClick={onAddPhotoToGroup} className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
                         <Plus size={18} />
                       </button>
-                   </div>
-                 )}
-              </div>
-           </div>
-
-           {/* Main Grid Content */}
+                    </div>
+                  </div>
+            {/* Main Grid Content */}
            <div className="flex-1 p-3 sm:p-6 pb-40">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
-                {activeGroupPhotos.map((photo) => (
-                  <motion.div 
-                    key={photo.id}
-                    layout
-                    draggable={isAdminMode && !isMultiSelectMode}
-                    onDragStart={() => setDraggedPhotoId(photo.id)}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (draggedPhotoId) {
-                        handleReorder(draggedPhotoId, photo.id);
-                        setDraggedPhotoId(null);
-                      }
-                    }}
-                    className={`bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md border p-2 flex flex-col group transition-all duration-300 relative min-h-[260px] ${photo.isGroupCover ? 'ring-4 ring-[#D4A853] border-transparent' : selectedPhotoIds.includes(photo.id) ? 'ring-4 ring-blue-500' : 'border-slate-100'}`}
-                    onClick={() => {
-                      if (isMultiSelectMode) {
-                        setSelectedPhotoIds(prev => 
-                          prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
-                        );
-                      } else {
-                        setFocusedGroupPhotoId(photo.id);
-                      }
-                    }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      if (isAdminMode) {
-                        setIsMultiSelectMode(true);
-                        setSelectedPhotoIds([photo.id]);
-                        if ('vibrate' in navigator) navigator.vibrate(50);
-                      }
-                    }}
-                  >
-                     {/* Image Container */}
-                     <div className="aspect-square rounded-2xl overflow-hidden relative mb-3">
+              <VirtuosoGrid
+                totalCount={activeGroupPhotos.length}
+                itemContent={(index) => {
+                  const photo = activeGroupPhotos[index];
+                  return (
+                    <motion.div 
+                      key={photo.id}
+                      layout
+                      draggable={isAdminMode && !isMultiSelectMode}
+                      onDragStart={() => setDraggedPhotoId(photo.id)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedPhotoId) {
+                          handleReorder(draggedPhotoId, photo.id);
+                          setDraggedPhotoId(null);
+                        }
+                      }}
+                      className={`bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md border p-2 flex flex-col group transition-all duration-300 relative min-h-[260px] ${photo.isGroupCover ? 'ring-4 ring-[#D4A853] border-transparent' : selectedPhotoIds.includes(photo.id) ? 'ring-4 ring-blue-500' : 'border-slate-100'}`}
+                      onClick={() => {
+                        if (isMultiSelectMode) {
+                          setSelectedPhotoIds(prev => 
+                            prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
+                          );
+                        } else {
+                          setFocusedGroupPhotoId(photo.id);
+                        }
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        if (isAdminMode) {
+                          setIsMultiSelectMode(true);
+                          setSelectedPhotoIds([photo.id]);
+                          if ('vibrate' in navigator) navigator.vibrate(50);
+                        }
+                      }}
+                    >
+                      {/* Image Container */}
+                      <div className="aspect-square rounded-2xl overflow-hidden relative mb-3">
                         <img 
                           src={photo.thumb_url || photo.image_url || photo.uri} 
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -417,10 +419,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                              </button>
                           </div>
                         )}
-                     </div>
+                      </div>
 
-                     {/* Info Section - Fast Editing */}
-                     <div className="flex-1 space-y-2">
+                      {/* Info Section - Fast Editing */}
+                      <div className="flex-1 space-y-2">
                         {/* Tags */}
                         <div className="flex flex-wrap gap-1 line-clamp-2">
                            {(photo.tagIds || []).map(tid => (
@@ -482,13 +484,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                                )
                              )}
                         </div>
-                     </div>
-                  </motion.div>
-                ))}
-              </div>
-           </div>
-
-           {/* Multi-Select Floating Bar */}
+                      </div>
+                    </motion.div>
+                  );
+                }}
+                listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6"
+              />
+           </div>            {/* Multi-Select Floating Bar */}
            <AnimatePresence>
              {isMultiSelectMode && selectedPhotoIds.length > 0 && (
                <motion.div 

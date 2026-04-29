@@ -252,23 +252,28 @@ export const useAdminCore = (
         const trimmed = val.trim();
         if (!trimmed) return;
         
-        if (addManufacturer) {
-          const savedMfr = await addManufacturer(trimmed);
-          if (savedMfr) {
-             updateForm((prev: any) => ({ 
-               ...prev, manufacturerId: savedMfr.id 
-             }));
-             showToast(`已新增厂商 "${trimmed}"`);
+        try {
+          if (addManufacturer) {
+            const savedMfr = await addManufacturer(trimmed);
+            if (savedMfr) {
+               updateForm((prev: any) => ({ 
+                 ...prev, manufacturerId: savedMfr.id 
+               }));
+               showToast(`已新增厂商 "${trimmed}"`);
+            }
+          } else {
+            // Fallback if not injected (unlikely but safe)
+            const newMfr = { id: crypto.randomUUID(), name: trimmed };
+            setManufacturers(prev => [...prev, newMfr]);
+            updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
           }
-        } else {
-          // Fallback if not injected (unlikely but safe)
-          const newMfr = { id: crypto.randomUUID(), name: trimmed };
-          setManufacturers(prev => [...prev, newMfr]);
-          updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
+        } catch (err: any) {
+          console.error('[API Error] 新增厂商失败:', err);
+          setAlertDialog({ title: '新增厂商失败', message: err.message });
         }
       }
     });
-  }, [setPromptDialog, addManufacturer, updateForm, showToast, setManufacturers]);
+  }, [setPromptDialog, addManufacturer, updateForm, showToast, setManufacturers, setAlertDialog]);
 
   const quickAddTag = useCallback(() => {
     setPromptDialog({
@@ -323,20 +328,25 @@ export const useAdminCore = (
         const trimmed = val.trim();
         if (!trimmed) return;
         
-        if (addManufacturer) {
-          const savedMfr = await addManufacturer(trimmed);
-          if (savedMfr) {
-            updateForm((prev: any) => ({ ...prev, manufacturerId: savedMfr.id }));
-            showToast(`已新增厂商 "${trimmed}"`);
+        try {
+          if (addManufacturer) {
+            const savedMfr = await addManufacturer(trimmed);
+            if (savedMfr) {
+              updateForm((prev: any) => ({ ...prev, manufacturerId: savedMfr.id }));
+              showToast(`已新增厂商 "${trimmed}"`);
+            }
+          } else {
+            const newMfr = { id: crypto.randomUUID(), name: trimmed };
+            setManufacturers(prev => [...prev, newMfr]);
+            updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
           }
-        } else {
-          const newMfr = { id: crypto.randomUUID(), name: trimmed };
-          setManufacturers(prev => [...prev, newMfr]);
-          updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
+        } catch (err: any) {
+          console.error('[API Error] 新增厂商失败:', err);
+          setAlertDialog({ title: '新增厂商失败', message: err.message });
         }
       }
     });
-  }, [setPromptDialog, addManufacturer, updateForm, showToast, setManufacturers]);
+  }, [setPromptDialog, addManufacturer, updateForm, showToast, setManufacturers, setAlertDialog]);
 
   return {
     toast, showToast,

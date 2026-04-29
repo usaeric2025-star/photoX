@@ -308,7 +308,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
                   <div className="space-y-3">
                     {(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim, idx) => (
-                      <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
+                      <div key={`dim-${idx}`} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
                         { (formState.dimensions && formState.dimensions.length > 1) && (
                           <button 
                             onClick={() => {

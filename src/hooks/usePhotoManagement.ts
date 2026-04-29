@@ -251,7 +251,7 @@ export const usePhotoManagement = (
                   name: name || p.name,
                   categoryId: categoryId || p.categoryId,
                   manufacturerId: manufacturerId || p.manufacturerId,
-                  tagIds: finalTagIds.length > 0 ? finalTagIds : (Array.isArray(p.tagIds) ? p.tagIds.map(String) : []),
+                  tagIds: (finalTagIds?.length || 0) > 0 ? finalTagIds : (Array.isArray(p.tagIds) ? p.tagIds.map(String) : []),
                   description: description || p.description,
                   manual_code: manual_code || p.manual_code,
                   model_number: model_number || p.model_number,
