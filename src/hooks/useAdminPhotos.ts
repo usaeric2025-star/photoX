@@ -41,7 +41,8 @@ export const useAdminPhotos = (
   aiProvider: string, 
   customModel: string,
   adminUI?: any,
-  adminSession?: any
+  adminSession?: any,
+  addManufacturer?: (name: string) => Promise<any>
 ) => {
   const {
     photos, setPhotos,
@@ -178,7 +179,7 @@ export const useAdminPhotos = (
             let finalCatId = result.categoryId || null;
             let finalMfrId = result.manufacturerId || null;
             
-            if (result.newSubCategoryName && !result.manufacturerId) {
+            if (result.newSubCategoryName && !result.manufacturerId && addManufacturer) {
                 const savedMfr = await addManufacturer(result.newSubCategoryName);
                 if (savedMfr) finalMfrId = savedMfr.id;
             }
@@ -278,10 +279,13 @@ export const useAdminPhotos = (
       }, 3000);
 
       // Same manufacturer/tag ID creation logic as batch if new ones are suggested
-      if (result.newSubCategoryName && !result.manufacturerId) {
-        const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
-        setManufacturers(prev => [...prev, savedMfr]);
-        result.manufacturerId = savedMfr.id;
+      if (result.newSubCategoryName && !result.manufacturerId && addManufacturer) {
+        const savedMfr = await addManufacturer(result.newSubCategoryName);
+        if (savedMfr) result.manufacturerId = savedMfr.id;
+      } else if (result.newSubCategoryName && !result.manufacturerId) {
+        const tempMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
+        setManufacturers(prev => [...prev, tempMfr]);
+        result.manufacturerId = tempMfr.id;
       }
       
       let finalTagIdsFromAi = result.tagIds || [];
@@ -447,6 +451,11 @@ export const useAdminPhotos = (
                 let finalCatId = result.categoryId || null;
                 let finalMfrId = result.manufacturerId || null;
                 
+                if (result.newSubCategoryName && !result.manufacturerId && addManufacturer) {
+                  const savedMfr = await addManufacturer(result.newSubCategoryName);
+                  if (savedMfr) finalMfrId = savedMfr.id;
+                }
+                
                 const allSuggestedTags = Array.from(new Set([
                   ...(result.tagIds || []),
                   ...(result.newTags || [])
@@ -605,7 +614,10 @@ export const useAdminPhotos = (
         );
 
         // 3. Resolve tags and manufacturers as in single analysis
-        if (result.newSubCategoryName && !result.manufacturerId) {
+        if (result.newSubCategoryName && !result.manufacturerId && addManufacturer) {
+          const savedMfr = await addManufacturer(result.newSubCategoryName);
+          if (savedMfr) result.manufacturerId = savedMfr.id;
+        } else if (result.newSubCategoryName && !result.manufacturerId) {
           const savedMfr = { id: `temp-mfr-${Date.now()}`, name: result.newSubCategoryName };
           setManufacturers(prev => [...prev, savedMfr]);
           result.manufacturerId = savedMfr.id;

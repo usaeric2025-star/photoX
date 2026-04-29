@@ -32,7 +32,8 @@ export const useAdminCore = (
   refreshCloudData: Function,
   lastSyncTime?: number | null,
   adminUI?: any,
-  adminSession?: any
+  adminSession?: any,
+  addManufacturer?: (name: string) => Promise<any>
 ) => {
   const {
     photos, setPhotos,
@@ -244,30 +245,29 @@ export const useAdminCore = (
   const quickAddSubCategory = useCallback((formState: any) => {
     if (!formState.categoryId) return;
     setPromptDialog({
-      title: '新增子分类',
-      placeholder: '输入新子分类名称',
+      title: '新增厂商',
+      placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
         const trimmed = val.trim();
-        // Since subcategories are still part of the category object in JSON (legacy), 
-        // but the goal is to move to tables, we'll use a hack or assume sub_categories table soon.
-        // For now, let's get a UUID from the database.
-        const newMfr = {
-          id: crypto.randomUUID(),
-          name: trimmed,
-          aliases: [trimmed]
-        };
-        const nextMfrs = [...manufacturers, newMfr];
-        setManufacturers(nextMfrs);
-        updateForm((prev: any) => ({ 
-          ...prev, manufacturerId: newMfr.id 
-        }));
-        await saveSettings({ 
-          ...settings, categories, tags, 
-          manufacturers: nextMfrs 
-        });
+        if (!trimmed) return;
+        
+        if (addManufacturer) {
+          const savedMfr = await addManufacturer(trimmed);
+          if (savedMfr) {
+             updateForm((prev: any) => ({ 
+               ...prev, manufacturerId: savedMfr.id 
+             }));
+             showToast(`已新增厂商 "${trimmed}"`);
+          }
+        } else {
+          // Fallback if not injected (unlikely but safe)
+          const newMfr = { id: crypto.randomUUID(), name: trimmed };
+          setManufacturers(prev => [...prev, newMfr]);
+          updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
+        }
       }
     });
-  }, [categories, tags, manufacturers, settings, saveSettings, updateForm, setPromptDialog]);
+  }, [setPromptDialog, addManufacturer, updateForm, showToast, setManufacturers]);
 
   const quickAddTag = useCallback(() => {
     setPromptDialog({
@@ -320,18 +320,22 @@ export const useAdminCore = (
       placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
         const trimmed = val.trim();
-        const newMfr = {
-          id: crypto.randomUUID(),
-          name: trimmed,
-          aliases: [trimmed]
-        };
-        const nextMfrs = [...manufacturers, newMfr];
-        setManufacturers(nextMfrs);
-        updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
-        await saveSettings({ ...settings, categories, tags, manufacturers: nextMfrs });
+        if (!trimmed) return;
+        
+        if (addManufacturer) {
+          const savedMfr = await addManufacturer(trimmed);
+          if (savedMfr) {
+            updateForm((prev: any) => ({ ...prev, manufacturerId: savedMfr.id }));
+            showToast(`已新增厂商 "${trimmed}"`);
+          }
+        } else {
+          const newMfr = { id: crypto.randomUUID(), name: trimmed };
+          setManufacturers(prev => [...prev, newMfr]);
+          updateForm((prev: any) => ({ ...prev, manufacturerId: newMfr.id }));
+        }
       }
     });
-  }, [manufacturers, categories, tags, settings, saveSettings, setManufacturers, updateForm, setPromptDialog]);
+  }, [setPromptDialog, addManufacturer, updateForm, showToast, setManufacturers]);
 
   return {
     toast, showToast,

@@ -108,6 +108,24 @@ export default function AdminView() {
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 
   const { 
+    updateTag, deleteTag, 
+    addCategory, updateCategory, deleteCategory, 
+    addManufacturer, updateManufacturer, deleteManufacturer 
+  } = useAdminCategory(uiBasicValue);
+
+  const { 
+    toast, showToast, saveSettings,
+    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
+    handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
+  } = useAdminCore(
+      user, updateForm, t, refreshCloudData, lastSyncTime,
+      uiBasicValue, sessionBasicValue,
+      addManufacturer
+  );
+
+  const handleManageClick = () => setActiveScreen('manage');
+
+  const { 
     batchProgress, isImporting, importProgress, importTotal, 
     aiDebugInfo, abortAnalysis, 
     handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, 
@@ -118,25 +136,9 @@ export default function AdminView() {
     settings?.provider || 'openrouter', 
     settings?.custom_model || '', 
     uiBasicValue,
-    sessionBasicValue
+    sessionBasicValue,
+    addManufacturer
   );
-
-  const { 
-    toast, showToast, saveSettings,
-    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-    handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
-  } = useAdminCore(
-      user, updateForm, t, refreshCloudData, lastSyncTime,
-      uiBasicValue, sessionBasicValue
-  );
-
-  const handleManageClick = () => setActiveScreen('manage');
-
-  const { 
-    updateTag, deleteTag, 
-    addCategory, updateCategory, deleteCategory, 
-    updateManufacturer, deleteManufacturer 
-  } = useAdminCategory(uiBasicValue);
 
 
   const handleDeletePhotos = async (ids: string[]) => {
