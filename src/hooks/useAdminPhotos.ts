@@ -19,7 +19,6 @@ import { analyzeProductPhoto } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
 import { IMAGE_COMPRESS, AI_CONFIG } from '../constants/config';
-import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name) return true;
@@ -140,7 +139,6 @@ export const useAdminPhotos = (
     });
     
     if (unProcessed.length === 0) {
-      setAlertDialog({ title: '提示', message: '所有照片都已經具備名稱、分類和 2 個標籤了，無需重複識別。' });
       return;
     }
     

@@ -90,7 +90,9 @@ export default function AdminView() {
   const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
 
   // Fix: Base setters for hooks that use context internally
-  const uiBasicValue = { 
+  // We use useMemo to provide a stable object to downstream hooks
+  // This prevents Error #300 (Rendered more/fewer hooks than previous render) and timing loops
+  const uiBasicValue = React.useMemo(() => ({ 
     setAlertDialog, 
     setPromptDialog, 
     setActiveScreen,
@@ -98,12 +100,13 @@ export default function AdminView() {
     setLoadingState,
     setCloudCount,
     cloudCount
-  };
-  const sessionBasicValue = { 
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setConfirmDialog, setLoadingState, setCloudCount, cloudCount]);
+
+  const sessionBasicValue = React.useMemo(() => ({ 
     setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
     settings,
     setSettings
-  };
+  }), [settings, setSettings, setLoadingState]);
 
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 

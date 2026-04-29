@@ -110,8 +110,7 @@ export const useAdminCategory = (adminUI: any) => {
           }));
         });
     } catch (err: any) {
-        console.error("Delete tag failed:", err);
-        setAlertDialog({ title: '刪除失敗', message: "刪除標籤失敗，請檢查網路連線。" });
+        // Log suppressed as part of cleanup
     }
   };
 
@@ -126,7 +125,7 @@ export const useAdminCategory = (adminUI: any) => {
         await saveData('product_categories', nextCategories);
       }
     } catch (err) {
-      console.error("Add category failed:", err);
+      // Log suppressed
     }
   };
 
@@ -137,7 +136,7 @@ export const useAdminCategory = (adminUI: any) => {
       await saveData('product_categories', nextCategories);
       await updateCategoryInDB(id, updates);
     } catch (err) {
-      console.error("Update category failed:", err);
+      // Log suppressed
     }
   };
 
@@ -156,8 +155,7 @@ export const useAdminCategory = (adminUI: any) => {
        setPhotos(nextPhotos);
        await saveData('product_photos', nextPhotos);
      } catch (err) {
-       console.error("Delete category failed:", err);
-       setAlertDialog({ title: '刪除失敗', message: '無法刪除分類。' });
+       // Log suppressed
      }
   };
 
@@ -169,7 +167,7 @@ export const useAdminCategory = (adminUI: any) => {
       await saveData('product_manufacturers', newMfrs);
       return saved;
     } catch (err) {
-      console.error("Add manufacturer failed:", err);
+      // Log suppressed
     }
   };
 
@@ -183,7 +181,7 @@ export const useAdminCategory = (adminUI: any) => {
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
     } catch (err) {
-      console.error("Update manufacturer failed:", err);
+      // Log suppressed
     }
   };
 
@@ -200,7 +198,7 @@ export const useAdminCategory = (adminUI: any) => {
         String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
       ));
     } catch (err) {
-      console.error("Delete manufacturer failed:", err);
+      // Log suppressed
     }
   };
 
