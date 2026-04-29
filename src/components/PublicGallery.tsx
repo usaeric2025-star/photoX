@@ -83,6 +83,18 @@ const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect
 });
 MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
+const SkeletonCard = () => (
+  <div className="aspect-square bg-slate-200 rounded-2xl animate-pulse" />
+);
+
+const SkeletonGrid = ({ count, columns }: { count: number, columns: number }) => (
+  <div className={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}>
+    {Array.from({ length: count }).map((_, i) => (
+      <SkeletonCard key={i} />
+    ))}
+  </div>
+);
+
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
   onExit, onLogin, loginWithGoogle: propsLoginWithGoogle, 
   onRefresh,
@@ -130,12 +142,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   // Handle infinite mode
   useEffect(() => {
-    if (isInfiniteMode) {
+    if (isAdminMode && isInfiniteMode) {
       setVisibleCount(10000);
     } else {
       setVisibleCount(20);
     }
-  }, [isInfiniteMode, setVisibleCount]);
+  }, [isAdminMode, isInfiniteMode, setVisibleCount]);
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
@@ -316,8 +328,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const handleLoadMore = useCallback(() => {
     if (onLoadMore) {
       onLoadMore();
+    } else if (!isInfiniteMode && visibleCount < totalGridCount) {
+      setVisibleCount(prev => prev + 20);
     }
-  }, [onLoadMore]);
+  }, [onLoadMore, isInfiniteMode, setVisibleCount, visibleCount, totalGridCount]);
 
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
@@ -369,7 +383,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
       {/* Grid */}
       <div ref={virtuosoRef} className="flex-1 overflow-hidden bg-[#FDFAF6]">
-        {displayPhotos.length === 0 ? (                
+        {isSyncing && photos.length === 0 ? (
+          <SkeletonGrid count={12} columns={columns} />
+        ) : displayPhotos.length === 0 ? (                
           <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
                 <ImageIcon size={32} className="opacity-20" />

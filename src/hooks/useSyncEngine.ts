@@ -34,7 +34,6 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
     const isSyncing = setLoadingState ? false : internalSyncing;
     const [viewMode, setViewMode] = useState<'public' | 'private'>('private');
     const [settings, setSettings] = useState<any>(null);
-    const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
 
     React.useEffect(() => {
         const initSettings = async () => {
@@ -60,8 +59,6 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 }
             }
             if (s && !settings) setSettings(s);
-            const lastSync = await loadData('last_sync_time');
-            if (lastSync) setLastSyncTime(lastSync);
         };
         initSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,14 +128,17 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 await saveData('product_categories', []);
             }
 
-            const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
-            const cloudPhotos = user ? await loadPhotosFromCloud(user.id, lastSyncISO) : await loadAllPhotosFromCloud();
+            const lastSyncTime = localStorage.getItem('lastSyncTime');
+            const cloudPhotos = user 
+                ? await loadPhotosFromCloud(user.id, lastSyncTime || undefined) 
+                : await loadAllPhotosFromCloud(lastSyncTime || undefined);
             
             // Get current local state to merge properly and get total count
             const localPhotos = await loadData('product_photos') || [];
             const localMap = new Map((localPhotos as any[]).filter(p => p && p.id).map(p => [p.id, p]));
 
             if (cloudPhotos && cloudPhotos.length > 0) {
+                console.log(`SyncEngine: Received ${cloudPhotos.length} new/updated items.`);
                 cloudPhotos.forEach(cp => {
                     const local = localMap.get(cp.id);
                     if (local) {
@@ -167,9 +167,7 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 setCloudCount(finalPhotos.length);
             }
             
-            const now = Date.now();
-            setLastSyncTime(now);
-            await saveData('last_sync_time', now);
+            localStorage.setItem('lastSyncTime', new Date().toISOString());
         } catch (err) {
             console.error("Cloud synchronization failed:", err);
         } finally {
@@ -201,7 +199,6 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
         isSyncing, setIsSyncing,
         viewMode, setViewMode,
         settings, setSettings,
-        lastSyncTime, setLastSyncTime,
         refreshCloudData,
         handleLogoUpload
     };
