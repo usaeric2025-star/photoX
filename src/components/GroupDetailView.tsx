@@ -285,6 +285,19 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                    <div className="flex items-center gap-1.5 sm:gap-2">
                       <button 
                         onClick={() => {
+                          if (onBatchAiAnalyze) {
+                            onBatchAiAnalyze(activeGroupPhotos);
+                          }
+                        }}
+                        className="hidden sm:flex px-3 h-10 items-center justify-center border border-[#7A00E6]/20 rounded-xl bg-[#F3E8FF] text-[#7A00E6] font-bold shadow-sm active:scale-95 transition-all gap-1.5"
+                        title="AI 整組處理"
+                      >
+                        <Sparkles size={16} />
+                        <span className="text-xs">AI</span>
+                      </button>
+
+                      <button 
+                        onClick={() => {
                           const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
                           onBatchEdit?.(ids);
                         }}
@@ -433,7 +446,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                                onClick={(e) => { e.stopPropagation(); setModalType('tags'); setModalTargetId(photo.id); }}
                                className="text-[10px] font-bold bg-blue-50 text-blue-600 rounded-md px-1.5 py-0.5 border border-blue-100"
                              >
-                               ➕
+                               + 標籤
                              </button>
                            )}
                         </div>
@@ -442,7 +455,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50">
                              {isAdminMode ? (
                                 <button className="text-[10px] font-black text-slate-500 hover:text-blue-600 tracking-tight" onClick={(e) => { e.stopPropagation(); /* TODO: model edit modal */ }}>
-                                  {photo.model_number || '➕'}
+                                  {photo.model_number || '+ 型號'}
                                 </button>
                              ) : (
                                 photo.model_number && <span className="text-[10px] font-black text-slate-700 tracking-tight">{photo.model_number}</span>
@@ -457,7 +470,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                                       let s = photo.dimensions[0].label || '';
                                       if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
                                       return s;
-                                    })()}` : '➕'}
+                                    })()}` : '+ 尺寸'}
                                </button>
                              ) : (
                                photo.dimensions?.[0] && (
@@ -472,9 +485,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                              {isAdminMode ? (
                                <button 
                                  onClick={(e) => { e.stopPropagation(); setModalType('note'); setModalTargetId(photo.id); setNoteInput(photo.note || ''); }}
-                                 className={`text-[10px] font-black tracking-tight ${photo.note ? 'text-amber-600' : 'text-slate-300'}`}
+                                 className={`text-[10px] font-black tracking-tight ${photo.note ? 'text-amber-600' : 'text-slate-400 hover:text-amber-500'}`}
                                >
-                                  📝{photo.note ? photo.note.slice(0,6) : ''}
+                                  {photo.note ? '📝 ' + photo.note.slice(0,6) : '+ 備註'}
                                </button>
                              ) : (
                                photo.note && (
@@ -584,14 +597,19 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                      
                      {modalType === 'tags' && currentModalPhoto && (
                        <div className="space-y-6">
-                         <div className="flex items-center gap-3 mb-6">
-                           <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
-                             <Type size={24} />
+                         <div className="flex items-center justify-between mb-6">
+                           <div className="flex items-center gap-3">
+                             <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                               <Type size={24} />
+                             </div>
+                             <div>
+                               <h3 className="text-xl font-black text-slate-800">編輯標籤 / Edit Tags</h3>
+                               <p className="text-xs font-bold text-slate-400">點擊切換選擇 / Click to toggle selection</p>
+                             </div>
                            </div>
-                           <div>
-                             <h3 className="text-xl font-black text-slate-800">編輯標籤 / Edit Tags</h3>
-                             <p className="text-xs font-bold text-slate-400">點擊切換選擇 / Click to toggle selection</p>
-                           </div>
+                           <button onClick={() => setModalType(null)} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors">
+                             <X size={20} />
+                           </button>
                          </div>
                          
                          <div className="flex flex-wrap gap-2">
@@ -614,14 +632,19 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
 
                      {modalType === 'dims' && currentModalPhoto && (
                        <div className="space-y-6">
-                         <div className="flex items-center gap-3 mb-6">
-                           <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
-                             <Maximize size={24} />
+                         <div className="flex items-center justify-between mb-6">
+                           <div className="flex items-center gap-3">
+                             <div className="p-3 bg-green-50 text-green-600 rounded-2xl">
+                               <Maximize size={24} />
+                             </div>
+                             <div>
+                               <h3 className="text-xl font-black text-slate-800">設置尺寸 / Set Dimensions</h3>
+                               <p className="text-xs font-bold text-slate-400">選擇常用尺寸或自定義 / Select preset or custom</p>
+                             </div>
                            </div>
-                           <div>
-                             <h3 className="text-xl font-black text-slate-800">設置尺寸 / Set Dimensions</h3>
-                             <p className="text-xs font-bold text-slate-400">選擇常用尺寸或自定義 / Select preset or custom</p>
-                           </div>
+                           <button onClick={() => setModalType(null)} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors">
+                             <X size={20} />
+                           </button>
                          </div>
 
                          <div className="grid grid-cols-2 gap-3">
@@ -655,14 +678,19 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
 
                      {modalType === 'note' && (
                        <div className="space-y-6">
-                         <div className="flex items-center gap-3 mb-6">
-                           <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
-                             <MessageSquare size={24} />
+                         <div className="flex items-center justify-between mb-6">
+                           <div className="flex items-center gap-3">
+                             <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
+                               <MessageSquare size={24} />
+                             </div>
+                             <div>
+                               <h3 className="text-xl font-black text-slate-800">照片備註 / Photo Notes</h3>
+                               <p className="text-xs font-bold text-slate-400">輸入備註內容，按 Enter 保存 / Enter text to save</p>
+                             </div>
                            </div>
-                           <div>
-                             <h3 className="text-xl font-black text-slate-800">照片備註 / Photo Notes</h3>
-                             <p className="text-xs font-bold text-slate-400">輸入備註內容，按 Enter 保存 / Enter text to save</p>
-                           </div>
+                           <button onClick={() => setModalType(null)} className="p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors">
+                             <X size={20} />
+                           </button>
                          </div>
 
                          <textarea 
