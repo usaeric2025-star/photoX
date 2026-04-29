@@ -15,6 +15,7 @@ export default function PublicView() {
     setManufacturers,
     page, setPage,
     hasMore, setHasMore,
+    setVisibleCount,
     filterCatId,
     debouncedSearchQuery
   } = useGalleryContext();
@@ -48,7 +49,7 @@ export default function PublicView() {
 
     try {
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, 50, filterCatId),
+        loadAllPhotosFromCloud(undefined, 0, 100, filterCatId),
         loadCategoriesFromCloud(),
         loadTagsFromCloud(),
         loadManufacturersFromCloud(),
@@ -58,7 +59,8 @@ export default function PublicView() {
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
         setPage(0);
-        setHasMore(cloudPhotos.length === 50);
+        setHasMore(cloudPhotos.length === 100);
+        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + 20));
         saveData('cachedPhotos', cloudPhotos);
       }
       
@@ -102,11 +104,12 @@ export default function PublicView() {
     const nextPage = page + 1;
     
     try {
-      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, 50, filterCatId);
+      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, 100, filterCatId);
       if (morePhotos && morePhotos.length > 0) {
         setPhotos(prev => [...prev, ...morePhotos]);
         setPage(nextPage);
-        setHasMore(morePhotos.length === 50);
+        setHasMore(morePhotos.length === 100);
+        setVisibleCount(prev => prev + morePhotos.length);
       } else {
         setHasMore(false);
       }

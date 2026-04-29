@@ -27,28 +27,11 @@ import { translations, LanguageCode } from '../lib/translations';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 
 export default function AdminView() {
+  const { user, authChecked, logout } = useAuth();
+  const navigate = useNavigate();
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] ?? translations.en;
-  const { user, authChecked, logout } = useAuth();
-  const { 
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-    gridPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
-    setUser, setIsAdminMode
-  } = useGalleryContext();
-  
-  useEffect(() => {
-    if (authChecked) {
-      setUser(user);
-      setIsAdminMode(!!user || sessionStorage.getItem('isStaffMode') === 'true');
-    }
-  }, [authChecked, user, setUser, setIsAdminMode]);
-  const cancelBatchAiRef = useRef(false);
-  
-  // Need setters to be defined or from context
-  const [publicCategories, setPublicCategories] = useState<any[]>([]);
-  const [publicTags, setPublicTags] = useState<any[]>([]);
-  const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
-  const navigate = useNavigate();
+
   const [pageError, setPageError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,152 +45,6 @@ export default function AdminView() {
     };
   }, []);
 
-  const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
-  const [cloudCount, setCloudCount] = useState<number | null>(null);
-  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
-  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
-  const [appLang] = useState('zh');
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
-  const [columns, setColumns] = useState<2 | 3 | 5>(3);
-  const [previewUri, setPreviewUri] = useState<string | null>(null);
-  
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(setLoadingState);
-  const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
-  const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
-  const [internalPassword, setInternalPassword] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
-
-  useEffect(() => {
-    if (settings) {
-      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
-      if (settings.custom_model) setCustomModel(settings.custom_model);
-      if (settings.internal_password) setInternalPassword(settings.internal_password);
-    }
-  }, [settings]);
-  
-  const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
-
-  // Fix: Base setters for hooks that use context internally
-  // We use useMemo to provide a stable object to downstream hooks
-  // This prevents Error #300 (Rendered more/fewer hooks than previous render) and timing loops
-  const uiBasicValue = React.useMemo(() => ({ 
-    setAlertDialog, 
-    setPromptDialog, 
-    setActiveScreen,
-    setConfirmDialog,
-    setLoadingState,
-    setCloudCount,
-    cloudCount
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setConfirmDialog, setLoadingState, setCloudCount, cloudCount]);
-
-  const sessionBasicValue = React.useMemo(() => ({ 
-    setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
-    settings,
-    setSettings
-  }), [settings, setSettings, setLoadingState]);
-
-  // Stable Translations
-  const tValue = React.useMemo(() => t, [t]);
-
-  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
-
-  const { 
-    updateTag, deleteTag, 
-    addCategory, updateCategory, deleteCategory, 
-    addManufacturer, updateManufacturer, deleteManufacturer 
-  } = useAdminCategory(uiBasicValue);
-
-  const { 
-    toast, showToast, saveSettings,
-    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-    handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
-  } = useAdminCore(
-      user, updateForm, tValue, refreshCloudData, lastSyncTime,
-      uiBasicValue, sessionBasicValue,
-      addManufacturer
-  );
-
-  const handleManageClick = () => setActiveScreen('manage');
-
-  const { 
-    batchProgress, isImporting, importProgress, importTotal, 
-    aiDebugInfo, abortAnalysis, 
-    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto 
-  } = useAdminPhotos(
-    user, 
-    settings?.gemini_api_key, 
-    settings?.provider || 'openrouter', 
-    settings?.custom_model || '', 
-    uiBasicValue,
-    sessionBasicValue,
-    addManufacturer
-  );
-
-
-  const handleDeletePhotos = async (ids: string[]) => {
-    setConfirmDialog({
-      message: (t as any)?.confirmDelete?.(ids.length) || `確定要刪除這 ${ids.length} 張照片嗎？`,
-      onConfirm: async () => {
-        for (const id of ids) {
-          await deletePhoto(id);
-        }
-        setEditPhotoId(null);
-        setSelectedIds([]);
-        setIsMultiSelect(false);
-      }
-    });
-  };
-  
-  const handleDeletePhoto = async (id: string) => {
-    setConfirmDialog({
-      message: (t as any)?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
-      onConfirm: async () => {
-        await deletePhoto(id);
-        setEditPhotoId(null);
-      }
-    });
-  };
-  
-  const handleDeleteTag = (id: string) => {
-    const tag = tags.find(t => t.id === id);
-    setConfirmDialog({
-      message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
-      onConfirm: async () => {
-        setLoadingState('syncing');
-        try {
-          await deleteTag(id);
-          showToast('标签已删除', 'success');
-        } catch (err: any) {
-          console.error('[handleDeleteTag] 删除过程出错:', err);
-          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
-        } finally {
-          setLoadingState('idle');
-        }
-      }
-    });
-  };
-
-  // Auto refresh
-  useEffect(() => {
-    if (authChecked && (user || sessionStorage.getItem('isStaffMode') === 'true')) {
-      refreshCloudData(user, false, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers);
-    }
-  }, [authChecked, user]);
-
-
-  // Helper for quick imports inside component
-  const getSafeSessionStorage = (key: string) => { try { return sessionStorage.getItem(key); } catch { return null; } };
-  const getSafeLocalStorage = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
-
-  const [syncPercent, setSyncPercent] = useState(0);
-  const [syncAction, setSyncAction] = useState('idle');
-  const [showManageAccess, setShowManageAccess] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
-  
   const errorContent = pageError ? (
     <div className="fixed top-0 left-0 right-0 z-[9999] bg-red-600 text-white p-4 font-bold overflow-auto max-h-[30vh]">
       <div className="flex justify-between">
@@ -216,7 +53,10 @@ export default function AdminView() {
       </div>
     </div>
   ) : null;
-  
+
+  const getSafeLocalStorage = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
+  const getSafeSessionStorage = (key: string) => { try { return sessionStorage.getItem(key); } catch { return null; } };
+
   if (!authChecked) {
     return (
        <ErrorBoundary key="auth-verifying">
@@ -256,7 +96,7 @@ export default function AdminView() {
                 onClick={() => {
                   const pass = prompt(t.localLoginPrompt);
                   if (pass === getSafeLocalStorage('internal_password')) {
-    try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
+                    try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
                     window.location.reload();
                   } else if (pass) {
                     alert(t.wrongPassword);
@@ -268,7 +108,7 @@ export default function AdminView() {
               </button>
               <button
                 onClick={() => {
-    try { sessionStorage.removeItem('isStaffMode'); } catch {}
+                  try { sessionStorage.removeItem('isStaffMode'); } catch {}
                   navigate('/');
                 }}
                 className="text-sm text-slate-400 hover:text-slate-600 font-medium"
@@ -281,13 +121,175 @@ export default function AdminView() {
     );
   }
 
+  return (
+    <AdminViewContent 
+      user={user} 
+      authChecked={authChecked} 
+      logout={logout} 
+      errorContent={errorContent}
+      t={t}
+      lang={lang as LanguageCode}
+    />
+  );
+}
 
+function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: { 
+  user: any, 
+  authChecked: boolean, 
+  logout: () => void, 
+  errorContent: React.ReactNode,
+  t: any,
+  lang: LanguageCode
+}) {
+  const navigate = useNavigate();
+  const { 
+    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
+    gridPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
+    setUser, setIsAdminMode
+  } = useGalleryContext();
   
+  useEffect(() => {
+    setUser(user);
+    setIsAdminMode(!!user || sessionStorage.getItem('isStaffMode') === 'true');
+  }, [user, setUser, setIsAdminMode]);
+  
+  const cancelBatchAiRef = useRef(false);
+  
+  const [publicCategories, setPublicCategories] = useState<any[]>([]);
+  const [publicTags, setPublicTags] = useState<any[]>([]);
+  const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
 
+  const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
+  const [cloudCount, setCloudCount] = useState<number | null>(null);
+  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  const [appLang] = useState('zh');
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+  const [columns, setColumns] = useState<2 | 3 | 5>(3);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   
-  // Context providers values
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(setLoadingState);
+  const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
+  const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
+  const [internalPassword, setInternalPassword] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
+
+  useEffect(() => {
+    if (settings) {
+      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
+      if (settings.custom_model) setCustomModel(settings.custom_model);
+      if (settings.internal_password) setInternalPassword(settings.internal_password);
+    }
+  }, [settings]);
+  
+  const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
+
+  const uiBasicValue = React.useMemo(() => ({ 
+    setAlertDialog, 
+    setPromptDialog, 
+    setActiveScreen,
+    setConfirmDialog,
+    setLoadingState,
+    setCloudCount,
+    cloudCount
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setConfirmDialog, setLoadingState, setCloudCount, cloudCount]);
+
+  const sessionBasicValue = React.useMemo(() => ({ 
+    setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
+    settings,
+    setSettings
+  }), [settings, setSettings, setLoadingState]);
+
+  const tValue = React.useMemo(() => t, [t]);
+
+  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
+
+  const { 
+    updateTag, deleteTag, 
+    addCategory, updateCategory, deleteCategory, 
+    addManufacturer, updateManufacturer, deleteManufacturer 
+  } = useAdminCategory(uiBasicValue);
+
+  const { 
+    toast, showToast, saveSettings,
+    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
+    handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
+  } = useAdminCore(
+      user, updateForm, tValue, refreshCloudData, lastSyncTime,
+      uiBasicValue, sessionBasicValue,
+      addManufacturer
+  );
+
+  const { 
+    batchProgress, isImporting, importProgress, importTotal, 
+    aiDebugInfo, abortAnalysis, 
+    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, 
+    handlePhotoImport, deletePhoto 
+  } = useAdminPhotos(
+    user, 
+    settings?.gemini_api_key, 
+    settings?.provider || 'openrouter', 
+    settings?.custom_model || '', 
+    uiBasicValue,
+    sessionBasicValue,
+    addManufacturer
+  );
+
+  const handleDeletePhotos = async (ids: string[]) => {
+    setConfirmDialog({
+      message: (t as any)?.confirmDelete?.(ids.length) || `確定要刪除這 ${ids.length} 張照片嗎？`,
+      onConfirm: async () => {
+        for (const id of ids) {
+          await deletePhoto(id);
+        }
+        setEditPhotoId(null);
+        setSelectedIds([]);
+        setIsMultiSelect(false);
+      }
+    });
+  };
+  
+  const handleDeletePhoto = async (id: string) => {
+    setConfirmDialog({
+      message: (t as any)?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
+      onConfirm: async () => {
+        await deletePhoto(id);
+        setEditPhotoId(null);
+      }
+    });
+  };
+  
+  const handleDeleteTag = (id: string) => {
+    const tag = tags.find(t => t.id === id);
+    setConfirmDialog({
+      message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
+      onConfirm: async () => {
+        setLoadingState('syncing');
+        try {
+          await deleteTag(id);
+          showToast('标签已删除 / Tag deleted', 'success');
+        } catch (err: any) {
+          console.error('[handleDeleteTag] Error during deletion:', err);
+          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+        } finally {
+          setLoadingState('idle');
+        }
+      }
+    });
+  };
+
+  // Auto refresh - ONLY on initial mount of the content component
+  useEffect(() => {
+    refreshCloudData(user, false, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [syncPercent, setSyncPercent] = useState(0);
+
   const sessionValue = {
-    user, isAdminMode: !!user || sessionStorage.getItem('isStaffMode') === 'true', 
+    user, isAdminMode: true, 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
     viewMode, setViewMode, syncPercent, setSyncPercent,
@@ -334,13 +336,13 @@ export default function AdminView() {
       
             {batchEditIds && (
               <BatchEditScreen 
-                resetAddState={() => { resetAddState(); setBatchIsHiddenApplied(false); }}
+                resetAddState={() => { resetAddState(); }}
                 saveBatchEdit={saveBatchEdit}
                 batchEditIds={batchEditIds}
                 formState={formState}
                 updateForm={updateForm}
-                batchIsHiddenApplied={batchIsHiddenApplied}
-                setBatchIsHiddenApplied={setBatchIsHiddenApplied}
+                batchIsHiddenApplied={false}
+                setBatchIsHiddenApplied={() => {}}
                 showOtherFields={showOtherFields}
                 setShowOtherFields={setShowOtherFields}
               />
@@ -352,7 +354,7 @@ export default function AdminView() {
                 setActiveGroupId={setActiveGroupId}
                 photos={photos}
                 displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
-                setLightboxIndex={(idx) => {}}
+                setLightboxIndex={() => {}}
                 isAdminMode={true}
                 onEditPhoto={(p) => { setEditPhotoId(p.id); }}
                 onLongPressStart={() => {}}
@@ -419,7 +421,7 @@ export default function AdminView() {
                               handleBatchAiIdentify(gridPhotos, () => cancelBatchAiRef.current);
                             }
                           }}
-                          handleManageClick={handleManageClick}
+                          handleManageClick={() => setActiveScreen('manage')}
                           loginWithGoogle={loginWithGoogle}
                           onRefresh={() => performPullSync()}
                           photosCount={photos.length}

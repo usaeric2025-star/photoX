@@ -84,24 +84,29 @@ export const useAdminCategory = (adminUI: any) => {
 
   const deleteTag = async (id: string | number) => {
     if (!id) return;
+    console.log(`[useAdminCategory] Deleting tag: ${id}`);
 
     try {
         const finalId = !isNaN(Number(id)) ? Number(id) : id;
         
-        // 1. 删数据库 (Cascade handles photo_tags)
+        // 1. Delete from Cloud Database first
         const success = await deleteTagFromDB(finalId);
-        if (!success) throw new Error("Cloud delete returned false");
+        if (!success) {
+          console.error(`[useAdminCategory] Cloud delete failed for tag: ${id}`);
+          throw new Error("Unable to delete tag from cloud. Please try again.");
+        }
+        console.log(`[useAdminCategory] Cloud delete success for tag: ${id}`);
 
-        // 2. 更新本地标签列表
+        // 2. Update local tags state
         const newTags = Array.isArray(tags)
           ? tags.filter(t => String(t.id) !== String(id))
           : [];
         setTags(newTags);
         
-        // 3. 强制覆盖 IndexedDB（不合并）
+        // 3. Update IndexedDB
         await saveData('product_tags', newTags);
 
-        // 4. 更新照片 tagIds 并保存
+        // 4. Cleanup tagIds from photos in memory and IndexedDB
         const updatedPhotos: Photo[] = [];
         setPhotos((prev: any[]) => {
           if (!Array.isArray(prev)) return prev;
@@ -120,17 +125,20 @@ export const useAdminCategory = (adminUI: any) => {
           return next;
         });
 
-        // 5. 同步受影响的照片到云端
+        // 5. Sync affected photos to cloud (optional but recommended for consistency)
         if (updatedPhotos.length > 0) {
-          const user = (await supabase.auth.getUser()).data.user;
-          if (user) {
+          const userObj = (await supabase.auth.getUser()).data.user;
+          if (userObj) {
+            console.log(`[useAdminCategory] Syncing ${updatedPhotos.length} affected photos to cloud...`);
             await Promise.allSettled(
-              updatedPhotos.map(p => savePhotoToCloud(user.id, p))
+              updatedPhotos.map(p => savePhotoToCloud(userObj.id, p))
             );
           }
         }
     } catch (err: any) {
-        // Log suppressed as part of cleanup
+        console.error("[useAdminCategory] Tag deletion failed:", err);
+        setAlertDialog({ title: '删除失败 / Delete Failed', message: err.message || '网络错误或数据库异常' });
+        throw err; // Re-throw to handle in UI finally block
     }
   };
 

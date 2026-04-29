@@ -144,9 +144,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   useEffect(() => {
     if (isAdminMode && isInfiniteMode) {
       setVisibleCount(10000);
-    } else {
-      setVisibleCount(20);
+    } else if (isAdminMode) {
+      // In admin mode but not infinite, ensure we have a reasonable starting point
+      setVisibleCount(prev => prev < 20 ? 20 : prev);
     }
+    // In public mode, we let the syncWithCloud and loadMore manage visibleCount
   }, [isAdminMode, isInfiniteMode, setVisibleCount]);
 
   const allTagIds = useMemo(() => {

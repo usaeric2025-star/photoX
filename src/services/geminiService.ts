@@ -134,8 +134,6 @@ export const analyzeProductPhoto = async (
    - 每組尺寸必須包含 "label"（規格名稱，例如 'Overall'、'Single-Seater'）、"length"、"width"、"height"（若僅有 1 或 2 個維度也請填入對應欄位，其餘填 0）、"unit": "cm" (默認)、"isAI": true
    - 若照片中完全找不到任何尺寸依據，返回空數組 []。
 
-3. 廠商（manufacturerId）：請從現有廠商清單中選擇最合適的一個，現有清單：${JSON.stringify(manufacturersJson)}。若不確定則填入 null。若照片中有明顯的品牌名稱但不在此清單，可在 "newSubCategoryName" 中返回該名稱（僅限一個單詞）。
-
 4. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
 
 5. 輸出規範：
