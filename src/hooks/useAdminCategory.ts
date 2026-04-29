@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Category, Tag, SubCategory, Photo } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
@@ -25,6 +25,15 @@ export const useAdminCategory = (adminUI: any) => {
     manufacturers, setManufacturers,
     photos, setPhotos
   } = useGalleryContext();
+
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const [publicCategories, setPublicCategories] = useState<Category[]>([]);
   const [publicTags, setPublicTags] = useState<Tag[]>([]);
@@ -107,8 +116,11 @@ export const useAdminCategory = (adminUI: any) => {
         const newTags = Array.isArray(tags)
           ? tags.filter(t => String(t.id) !== strId)
           : [];
-        setTags(newTags);
-        await saveData('product_tags', newTags);
+        
+        if (isMounted.current) {
+          setTags(newTags);
+          await saveData('product_tags', newTags);
+        }
 
         // 4. Update photos in memory and IndexedDB
         if (affectedPhotos.length > 0) {
@@ -123,8 +135,10 @@ export const useAdminCategory = (adminUI: any) => {
             return p;
           });
           
-          setPhotos(nextPhotos);
-          await saveData('product_photos', nextPhotos);
+          if (isMounted.current) {
+            setPhotos(nextPhotos);
+            await saveData('product_photos', nextPhotos);
+          }
 
           // 5. Sync affected photos to cloud
           const { data: { user: userObj } } = await supabase.auth.getUser();
@@ -137,10 +151,14 @@ export const useAdminCategory = (adminUI: any) => {
           }
         }
         
-        console.log(`[useAdminCategory] Tag #${id} deletion complete.`);
+        if (isMounted.current) {
+          console.log(`[useAdminCategory] Tag #${id} deletion complete.`);
+        }
     } catch (err: any) {
         console.error("[useAdminCategory] Tag deletion failed:", err);
-        setAlertDialog({ title: '删除失败 / Delete Failed', message: err.message || '网络错误或数据库异常' });
+        if (isMounted.current) {
+          setAlertDialog({ title: '删除失败 / Delete Failed', message: err.message || '网络错误或数据库异常' });
+        }
         throw err;
     }
   };
