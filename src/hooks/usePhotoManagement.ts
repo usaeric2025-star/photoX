@@ -236,6 +236,7 @@ export const usePhotoManagement = (
         // Resolve tag names to IDs
         const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
 
+        const updatedPhotosList: Photo[] = [];
         const nextPhotos = photos.map(p => {
              if (batchEditIds.includes(p.id)) {
                 const updated = {

@@ -21,7 +21,8 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
         setPhotos: setPublicPhotos, 
         setCategories, 
         setTags, 
-        setManufacturers 
+        setManufacturers,
+        setVisibleCount
     } = useGalleryContext();
 
     const [internalSyncing, setInternalSyncing] = React.useState(false);
@@ -122,7 +123,7 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 await saveData('product_categories', []);
             }
 
-            const lastSyncTime = localStorage.getItem('lastSyncTime');
+            const lastSyncTime = force ? null : localStorage.getItem('lastSyncTime');
             const cloudPhotos = user 
                 ? await loadPhotosFromCloud(user.id, lastSyncTime || undefined) 
                 : await loadAllPhotosFromCloud(lastSyncTime || undefined);
@@ -161,6 +162,11 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 setCloudCount(finalPhotos.length);
             }
             
+            if (!lastSyncTime) {
+              console.log("SyncEngine: Full sync complete, setting visibleCount to cover all photos.");
+              setVisibleCount?.(Math.max(100, finalPhotos.length + 50));
+            }
+
             localStorage.setItem('lastSyncTime', new Date().toISOString());
         } catch (err) {
             console.error("Cloud synchronization failed:", err);

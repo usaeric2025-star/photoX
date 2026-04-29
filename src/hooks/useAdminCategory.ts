@@ -93,8 +93,8 @@ export const useAdminCategory = (adminUI: any) => {
         // 1. Delete from Cloud Database first
         const success = await deleteTagFromDB(finalId);
         if (!success) {
-          console.error(`[useAdminCategory] Cloud delete returned false for tag: ${id}`);
-          throw new Error("Unable to delete tag from cloud. Please try again.");
+          console.error(`[useAdminCategory] Cloud delete failed (row count 0) for tag: ${id}. This likely means RLS (permissions) blocked the deletion or the tag was not found.`);
+          throw new Error("無法在雲端刪除標籤。請確認您有足夠的權限，或該標籤已被刪除。\nUnable to delete tag from cloud. Permission denied or tag not found.");
         }
         console.log(`[useAdminCategory] Cloud delete success for tag: ${id}`);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
@@ -145,7 +145,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     gridPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
-    setUser, setIsAdminMode
+    setUser, setIsAdminMode,
+    visibleCount, setVisibleCount
   } = useGalleryContext();
   
   useEffect(() => {
@@ -237,7 +238,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
     addManufacturer
   );
 
-  const handleDeletePhotos = async (ids: string[]) => {
+  const handleDeletePhotos = useCallback(async (ids: string[]) => {
     setConfirmDialog({
       message: (t as any)?.confirmDelete?.(ids.length) || `確定要刪除這 ${ids.length} 張照片嗎？`,
       onConfirm: async () => {
@@ -249,9 +250,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
         setIsMultiSelect(false);
       }
     });
-  };
+  }, [t, deletePhoto, setConfirmDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect]);
   
-  const handleDeletePhoto = async (id: string) => {
+  const handleDeletePhoto = useCallback(async (id: string) => {
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
       onConfirm: async () => {
@@ -259,9 +260,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
         setEditPhotoId(null);
       }
     });
-  };
+  }, [t, deletePhoto, setConfirmDialog, setEditPhotoId]);
   
-  const handleDeleteTag = (id: string) => {
+  const handleDeleteTag = useCallback((id: string) => {
     const tag = tags.find(t => t.id === id);
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
@@ -278,7 +279,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
         }
       }
     });
-  };
+  }, [tags, t, deleteTag, showToast, setConfirmDialog, setAlertDialog, setLoadingState]);
 
   // Auto refresh - ONLY on initial mount of the content component
   useEffect(() => {
@@ -470,6 +471,16 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang }: 
                        setColumns={setColumns}
                        cloudCount={cloudCount}
                        user={undefined}
+                       onLoadMore={() => {
+                         if (visibleCount < gridPhotos.length) {
+                           setVisibleCount(prev => prev + 50);
+                         } else if (photos.length < (cloudCount || 0)) {
+                            // If we have less locally than on cloud, pull more? 
+                            // Actually performPullSync already pulls (using force=true which I just fixed to ignore timestamps)
+                            performPullSync();
+                         }
+                       }}
+                       hasMore={visibleCount < gridPhotos.length || (cloudCount !== null && photos.length < cloudCount)}
                     />
                  </div>
               </div>
