@@ -220,6 +220,27 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   <p className="font-mono font-bold text-slate-700">{photo.model_number}</p>
                 </div>
               )}
+                 {isAdminMode ? (
+                   <button className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl flex items-center gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.dimensions}</span>
+                      <span className="font-mono font-bold text-slate-700">{photo.dimensions?.[0] ? `📐 ${(() => {
+                                      let s = photo.dimensions[0].label || '';
+                                      if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
+                                      return s;
+                                    })()}` : '➕'}</span>
+                   </button>
+                 ) : (
+                   photo.dimensions?.[0] && (
+                    <div className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">{t.dimensions}</span>
+                      <p className="font-mono font-bold text-slate-700">📐 {(() => {
+                                      let s = photo.dimensions[0].label || '';
+                                      if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
+                                      return s;
+                                    })()}</p>
+                    </div>
+                   )
+                 )}
            </div>
 
            {/* 3. 核心功能按钮 - WhatsApp 咨询 (高亮显示在最显眼处) */}

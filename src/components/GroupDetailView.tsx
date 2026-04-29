@@ -64,6 +64,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
   const [modalTargetId, setModalTargetId] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState('');
   const [customDim, setCustomDim] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
 
   const groupIdRef = useRef(activeGroupId);
   useEffect(() => {
@@ -294,11 +295,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         <Pencil size={18} />
                       </button>
                       
-                      <div className="relative group">
-                        <button className="w-10 h-10 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
+                      <div className="relative">
+                        <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
                           <MoreVertical size={18} />
                         </button>
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all transform translate-y-2 group-hover:translate-y-0 z-[200]">
+                        {showMenu && <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
                            <button 
                              onClick={() => {
                                setConfirmDialog({
@@ -308,6 +309,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                                    setActiveGroupId(null);
                                  }
                                });
+                               setShowMenu(false);
                              }}
                              className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2"
                            >
@@ -315,13 +317,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                            </button>
                            {selectedPhotoIds.length > 0 && (
                              <button 
-                               onClick={() => handleBulkAction('remove')}
+                               onClick={() => { handleBulkAction('remove'); setShowMenu(false); }}
                                className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                              >
                                <X size={16} /> 移出選中 / Remove Selected
                              </button>
                            )}
-                        </div>
+                        </div>}
                       </div>
 
                       <button onClick={onAddPhotoToGroup} className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
@@ -349,7 +351,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         setDraggedPhotoId(null);
                       }
                     }}
-                    className={`bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md border p-2 flex flex-col group transition-all duration-300 relative ${photo.isGroupCover ? 'ring-4 ring-[#D4A853] border-transparent' : selectedPhotoIds.includes(photo.id) ? 'ring-4 ring-blue-500' : 'border-slate-100'}`}
+                    className={`bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md border p-2 flex flex-col group transition-all duration-300 relative min-h-[260px] ${photo.isGroupCover ? 'ring-4 ring-[#D4A853] border-transparent' : selectedPhotoIds.includes(photo.id) ? 'ring-4 ring-blue-500' : 'border-slate-100'}`}
                     onClick={() => {
                       if (isMultiSelectMode) {
                         setSelectedPhotoIds(prev => 
@@ -421,44 +423,65 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                      {/* Info Section - Fast Editing */}
                      <div className="flex-1 space-y-2">
                         {/* Tags */}
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1 line-clamp-2">
                            {(photo.tagIds || []).map(tid => (
-                             <button 
-                               key={tid}
-                               onClick={(e) => { e.stopPropagation(); if (isAdminMode) handleToggleTag(photo, tid); }}
-                               className="text-[10px] sm:text-xs font-bold bg-[#1D3557]/5 hover:bg-red-50 text-[#1D3557] hover:text-red-600 rounded-md px-1.5 py-0.5 border border-[#1D3557]/10 transition-colors flex items-center gap-1"
-                             >
+                             <span key={tid} className="text-[10px] sm:text-xs font-bold bg-[#1D3557]/5 text-[#1D3557] rounded-md px-1.5 py-0.5 border border-[#1D3557]/10">
                                 {tagMap?.[tid] || tid}
-                                {isAdminMode && <X size={8} />}
-                             </button>
+                             </span>
                            ))}
                            {isAdminMode && (
                              <button 
                                onClick={(e) => { e.stopPropagation(); setModalType('tags'); setModalTargetId(photo.id); }}
-                               className="text-[10px] sm:text-xs font-bold bg-blue-50 text-blue-600 rounded-md px-1.5 py-0.5 border border-blue-100 flex items-center gap-1 active:scale-95"
+                               className="text-[10px] font-bold bg-blue-50 text-blue-600 rounded-md px-1.5 py-0.5 border border-blue-100"
                              >
-                               <Plus size={10} /> 標籤
+                               ➕
                              </button>
                            )}
                         </div>
 
-                        {/* Dimensions & Note */}
-                        <div className="flex items-center justify-between border-t border-slate-50 pt-2 pb-1">
-                           <button 
-                             onClick={(e) => { e.stopPropagation(); if (isAdminMode) { setModalType('dims'); setModalTargetId(photo.id); } }}
-                             className="text-[10px] font-black text-slate-500 hover:text-blue-600 flex items-center gap-1 lowercase tracking-tight"
-                           >
-                              <Maximize size={12} className="opacity-50" />
-                              {photo.dimensions?.[0]?.label || '----x---- cm'}
-                           </button>
+                        {/* Fields */}
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50">
+                             {isAdminMode ? (
+                                <button className="text-[10px] font-black text-slate-500 hover:text-blue-600 tracking-tight" onClick={(e) => { e.stopPropagation(); /* TODO: model edit modal */ }}>
+                                  {photo.model_number || '➕'}
+                                </button>
+                             ) : (
+                                photo.model_number && <span className="text-[10px] font-black text-slate-700 tracking-tight">{photo.model_number}</span>
+                             )}
 
-                           <button 
-                             onClick={(e) => { e.stopPropagation(); if (isAdminMode) { setModalType('note'); setModalTargetId(photo.id); setNoteInput(photo.note || ''); } }}
-                             className={`flex items-center gap-1 group/note ${photo.note ? 'text-[#D4A853]' : 'text-slate-300'}`}
-                           >
-                              <MessageSquare size={14} fill={photo.note ? "currentColor" : "none"} className={photo.note ? "opacity-100" : "opacity-30"} />
-                              {photo.note && <span className="text-[10px] font-bold max-w-[40px] truncate">{photo.note}</span>}
-                           </button>
+                             {isAdminMode ? (
+                               <button 
+                                 onClick={(e) => { e.stopPropagation(); setModalType('dims'); setModalTargetId(photo.id); }}
+                                 className="text-[10px] font-black text-slate-500 hover:text-blue-600 tracking-tight"
+                               >
+                                  {photo.dimensions?.[0] ? `📐 ${(() => {
+                                      let s = photo.dimensions[0].label || '';
+                                      if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
+                                      return s;
+                                    })()}` : '➕'}
+                               </button>
+                             ) : (
+                               photo.dimensions?.[0] && (
+                                 <span className="text-[10px] font-black text-slate-700 tracking-tight flex items-center gap-0.5">📐{(() => {
+                                      let s = photo.dimensions[0].label || '';
+                                      if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
+                                      return s;
+                                    })()}</span>
+                               )
+                             )}
+
+                             {isAdminMode ? (
+                               <button 
+                                 onClick={(e) => { e.stopPropagation(); setModalType('note'); setModalTargetId(photo.id); setNoteInput(photo.note || ''); }}
+                                 className={`text-[10px] font-black tracking-tight ${photo.note ? 'text-amber-600' : 'text-slate-300'}`}
+                               >
+                                  📝{photo.note ? photo.note.slice(0,6) : ''}
+                               </button>
+                             ) : (
+                               photo.note && (
+                                 <span className="text-[10px] font-bold text-slate-600 flex items-center gap-0.5">📝{photo.note}</span>
+                               )
+                             )}
                         </div>
                      </div>
                   </motion.div>
