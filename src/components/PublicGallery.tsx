@@ -494,9 +494,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           }));
           const groupPhotos = photos.filter(p => p.groupId === groupId);
           import('../services/supabaseService').then(async (m) => {
-             await Promise.all(
-                groupPhotos.map(p => m.updatePhotoInCloud(p.id, { isGroupCover: p.id === id }))
-             );
+             try {
+               await Promise.all(
+                  groupPhotos.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: p.id === id }))
+               );
+             } catch (err: any) {
+               alert("設置封面失敗: " + err.message);
+             }
+          }).catch(err => {
+             console.error("[ERROR] Failed to update group cover:", err);
           });
         }}
         onEditPhoto={(photo) => {

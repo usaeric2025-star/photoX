@@ -75,6 +75,7 @@ export const usePhotoManagement = (
           model_number: photo.model_number || '',
           dimensions: dims as any[],
           isHidden: !!photo.isHidden,
+          isGroupCover: !!photo.isGroupCover,
           price: photo.price || '',
           dimL: dims[0]?.length?.toString() || '',
           dimW: dims[0]?.width?.toString() || '',
@@ -162,6 +163,7 @@ export const usePhotoManagement = (
             manual_code: manual_code,
             model_number: model_number,
             isHidden: isHidden,
+            isGroupCover: formState.isGroupCover || false,
             price: price,
             dimensions: finalDimensions,
             updatedAt: new Date().toISOString()

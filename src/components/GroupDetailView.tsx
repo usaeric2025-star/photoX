@@ -82,10 +82,14 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
     setPhotos?.(newPhotos);
     
     // Sync to cloud
-    await Promise.all([
-      updatePhotoInCloud(photo.id, { group_order: targetIndex }),
-      updatePhotoInCloud(targetPhoto.id, { group_order: currentIndex })
-    ]);
+    try {
+      await Promise.all([
+        updatePhotoInCloud(photo.id, { group_order: targetIndex }),
+        updatePhotoInCloud(targetPhoto.id, { group_order: currentIndex })
+      ]);
+    } catch (err: any) {
+      alert("排序儲存失敗: " + err.message);
+    }
   };
 
   const focusedPhoto = useMemo(() => 
@@ -98,7 +102,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
       setPhotos?.(prev => prev.map(p => 
         p.id === photo.id ? { ...p, groupId: null } : p
       ));
-      await updatePhotosGroupInCloud([photo.id], null);
+      try {
+        await updatePhotosGroupInCloud([photo.id], null);
+      } catch (err: any) {
+        alert("移出群組失敗: " + err.message);
+      }
     }
   };
 
@@ -110,11 +118,15 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
     }));
     
     // Save to cloud - we need to update all in this group potentially or at least the new cover
-    await Promise.all(
-        activeGroupPhotos.map(p => 
-           updatePhotoInCloud(p.id, { isGroupCover: p.id === photoId })
-        )
-    );
+    try {
+      await Promise.all(
+          activeGroupPhotos.map(p => 
+             updatePhotoInCloud(p.id, { is_group_cover: p.id === photoId })
+          )
+      );
+    } catch (err: any) {
+      alert("設置封面失敗: " + err.message);
+    }
   };
 
   const handlePhotoClick = (photo: Photo) => {

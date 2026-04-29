@@ -100,7 +100,7 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: stri
       return;
     }
     console.error("Failed to update group id:", error);
-    throw error;
+    throw new Error(error.message || JSON.stringify(error));
   }
 };
 
@@ -128,7 +128,7 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<any>)
        }
     }
     console.error("Failed to update photo in cloud:", error);
-    throw error;
+    throw new Error(error.message || JSON.stringify(error));
   }
 };
 
@@ -461,7 +461,7 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
 
   if (error) {
     console.error(`Supabase deletion error for photo ${photo.id}:`, error);
-    throw error;
+    throw new Error(error.message || JSON.stringify(error));
   }
   
   console.log(`Successfully deleted record ${photo.id} from database. Now removing file from storage...`);
