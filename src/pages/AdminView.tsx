@@ -64,12 +64,24 @@ export default function AdminView() {
     setPromptDialog({
       title: t.localLoginPrompt,
       placeholder: 'Password...',
-      onSubmit: (pass: string) => {
-        if (pass === getSafeLocalStorage('internal_password')) {
-          try { sessionStorage.setItem('isStaffMode', 'true'); } catch {}
-          window.location.reload();
-        } else if (pass) {
-          setAlertDialog({ title: t.loginFailed, message: t.wrongPassword });
+      onSubmit: async (pass: string) => {
+        try {
+           const { fetchSettings } = await import('../services/supabaseService');
+           const cloudSettings = await fetchSettings();
+           const correctPass = cloudSettings?.access_passcode || cloudSettings?.internal_password || getSafeLocalStorage('internal_password');
+           
+           if (pass === correctPass) {
+             try { 
+               sessionStorage.setItem('isStaffMode', 'true'); 
+               localStorage.setItem('internal_password', pass);
+             } catch {}
+             window.location.reload();
+           } else if (pass) {
+             setAlertDialog({ title: t.loginFailed, message: t.wrongPassword });
+           }
+        } catch (e) {
+           console.error("Local login check failed:", e);
+           setAlertDialog({ title: 'Error', message: '無法連接到伺服器驗證密碼 / Cannot connect to server to verify password' });
         }
       }
     });

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  X, Edit3, Settings2, Plus, ChevronLeft, Layers, Pencil, Sparkles, 
+  X, Edit3, Settings2, Plus, ChevronLeft, ChevronRight, ChevronDown, Layers, Pencil, Sparkles, 
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle
 } from 'lucide-react';
@@ -314,6 +314,35 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         {showMenu && <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
                            <button 
                              onClick={() => {
+                               setEditingGroupId(activeGroupId);
+                               setEditingGroupName(activeGroupPhotos[0]?.name || '');
+                               setShowMenu(false);
+                             }}
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                           >
+                             <Edit3 size={16} /> 編輯名稱 / Edit Name
+                           </button>
+                           <button 
+                             onClick={() => {
+                               setIsMultiSelectMode(true);
+                               setSelectedPhotoIds(activeGroupPhotos.map(p => p.id));
+                               setShowMenu(false);
+                             }}
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                           >
+                             <Check size={16} /> 全選照片 / Select All
+                           </button>
+                           {selectedPhotoIds.length > 0 && (
+                             <button 
+                               onClick={() => { handleBulkAction('remove'); setShowMenu(false); }}
+                               className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                             >
+                                <X size={16} /> 移出選中 / Remove Selected
+                              </button>
+                            )}
+                           <div className="h-px bg-slate-100 my-1 mx-2" />
+                           <button 
+                             onClick={() => {
                                setConfirmDialog({
                                  message: `確定要解散這個群組嗎？照片將變為獨立展示。`,
                                  onConfirm: async () => {
@@ -327,14 +356,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                            >
                              <Layers size={16} /> 解散組 / Ungroup
                            </button>
-                           {selectedPhotoIds.length > 0 && (
-                             <button 
-                               onClick={() => { handleBulkAction('remove'); setShowMenu(false); }}
-                               className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                             >
-                                <X size={16} /> 移出選中 / Remove Selected
-                              </button>
-                            )}
                           </div>
                         }
                       </div>
@@ -344,11 +365,21 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                       </button>
                     </div>
                  )}
+                 {!isAdminMode && (
+                   <button onClick={() => setActiveGroupId(null)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors">
+                     <X size={24} />
+                   </button>
+                 )}
+                 {isAdminMode && (
+                   <button onClick={() => setActiveGroupId(null)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-2 border border-slate-200 bg-white">
+                     <X size={20} />
+                   </button>
+                 )}
               </div>
            </div>
 
            <div className="flex-1 p-3 sm:p-6 pb-40">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-4">
                 {activeGroupPhotos.map((photo) => (
                     <motion.div 
                       key={photo.id}
@@ -363,7 +394,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                           setDraggedPhotoId(null);
                         }
                       }}
-                      className={`bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md border p-2 flex flex-col group transition-all duration-300 relative min-h-[260px] ${photo.isGroupCover ? 'ring-4 ring-[#D4A853] border-transparent' : selectedPhotoIds.includes(photo.id) ? 'ring-4 ring-blue-500' : 'border-slate-100'}`}
+                      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative ${photo.isGroupCover ? 'ring-4 ring-[#D4A853] border-transparent' : selectedPhotoIds.includes(photo.id) ? 'ring-4 ring-blue-500' : 'border-slate-100'}`}
                       onClick={() => {
                         if (isMultiSelectMode) {
                           setSelectedPhotoIds(prev => 
@@ -383,7 +414,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                       }}
                     >
                       {/* Image Container */}
-                      <div className="aspect-square rounded-2xl overflow-hidden relative mb-3">
+                      <div className="aspect-square rounded-xl overflow-hidden relative">
                         <img 
                           src={photo.thumb_url || photo.image_url || photo.uri} 
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -391,14 +422,14 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         />
                         
                         {/* Status Badges */}
-                        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
-                           {photo.isGroupCover && (
-                             <div className="bg-[#D4A853] text-white p-1.5 rounded-lg shadow-lg">
+                        <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+                           {photo.isGroupCover && !isMultiSelectMode && (
+                             <div className="bg-[#D4A853] text-white p-1 rounded-lg flex items-center justify-center shadow-lg">
                                <Star size={12} fill="currentColor" />
                              </div>
                            )}
                            {photo.isAnalyzing && (
-                             <div className="bg-purple-600 text-white p-1.5 rounded-lg shadow-lg animate-pulse">
+                             <div className="bg-purple-600 text-white p-1 rounded-lg flex items-center justify-center shadow-lg animate-pulse">
                                <Sparkles size={12} />
                              </div>
                            )}
@@ -406,95 +437,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
 
                         {/* Quick Selection Toggle */}
                         {isMultiSelectMode && (
-                          <div className={`absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity`}>
-                             <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${selectedPhotoIds.includes(photo.id) ? 'bg-blue-600 border-blue-600 scale-110' : 'bg-white/10 border-white'}`}>
+                          <div className={`absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity z-20`}>
+                             <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${selectedPhotoIds.includes(photo.id) ? 'bg-blue-600 border-blue-600 scale-110' : 'bg-white/20 border-white'}`}>
                                 {selectedPhotoIds.includes(photo.id) && <Check size={16} className="text-white" />}
                              </div>
                           </div>
                         )}
                         
-                        {/* Hover Overlay Menu for Admin */}
-                        {isAdminMode && !isMultiSelectMode && (
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity duration-200">
-                             <button 
-                               onClick={(e) => { e.stopPropagation(); import('../services/photoService').then(m => m.updatePhotoInCloud(photo.id, { is_group_cover: !photo.isGroupCover })); setPhotos?.(prev => prev.map(p => p.id === photo.id ? {...p, isGroupCover: !p.isGroupCover} : (p.groupId === activeGroupId ? {...p, isGroupCover: false} : p))); showToast(photo.isGroupCover ? '已取消封面' : '已設為封面'); }}
-                               className="w-10 h-10 rounded-full bg-white text-[#D4A853] flex items-center justify-center hover:scale-110 transform transition-all active:scale-95"
-                             >
-                                <Star size={20} fill={photo.isGroupCover ? "currentColor" : "none"} />
-                             </button>
-                             <button 
-                               onClick={(e) => { e.stopPropagation(); onEditPhoto?.(photo); }}
-                               className="w-10 h-10 rounded-full bg-white text-slate-700 flex items-center justify-center hover:scale-110 transform transition-all active:scale-95"
-                             >
-                                <Pencil size={20} />
-                             </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Info Section - Fast Editing */}
-                      <div className="flex-1 space-y-2">
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-1 line-clamp-2">
-                           {(photo.tagIds || []).map(tid => (
-                             <span key={tid} className="text-[10px] sm:text-xs font-bold bg-[#1D3557]/5 text-[#1D3557] rounded-md px-1.5 py-0.5 border border-[#1D3557]/10">
-                                {tagMap?.[tid] || tid}
-                             </span>
-                           ))}
-                           {isAdminMode && (
-                             <button 
-                               onClick={(e) => { e.stopPropagation(); setModalType('tags'); setModalTargetId(photo.id); }}
-                               className="text-[10px] font-bold bg-blue-50 text-blue-600 rounded-md px-1.5 py-0.5 border border-blue-100"
-                             >
-                               + 標籤
-                             </button>
-                           )}
-                        </div>
-
-                        {/* Fields */}
-                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-50">
-                             {isAdminMode ? (
-                                <button className="text-[10px] font-black text-slate-500 hover:text-blue-600 tracking-tight" onClick={(e) => { e.stopPropagation(); /* TODO: model edit modal */ }}>
-                                  {photo.model_number || '+ 型號'}
-                                </button>
-                             ) : (
-                                photo.model_number && <span className="text-[10px] font-black text-slate-700 tracking-tight">{photo.model_number}</span>
-                             )}
-
-                             {isAdminMode ? (
-                               <button 
-                                 onClick={(e) => { e.stopPropagation(); setModalType('dims'); setModalTargetId(photo.id); }}
-                                 className="text-[10px] font-black text-slate-500 hover:text-blue-600 tracking-tight"
-                               >
-                                  {photo.dimensions?.[0] ? `📐 ${(() => {
-                                      let s = photo.dimensions[0].label || '';
-                                      if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
-                                      return s;
-                                    })()}` : '+ 尺寸'}
-                               </button>
-                             ) : (
-                               photo.dimensions?.[0] && (
-                                 <span className="text-[10px] font-black text-slate-700 tracking-tight flex items-center gap-0.5">📐{(() => {
-                                      let s = photo.dimensions[0].label || '';
-                                      if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
-                                      return s;
-                                    })()}</span>
-                               )
-                             )}
-
-                             {isAdminMode ? (
-                               <button 
-                                 onClick={(e) => { e.stopPropagation(); setModalType('note'); setModalTargetId(photo.id); setNoteInput(photo.note || ''); }}
-                                 className={`text-[10px] font-black tracking-tight ${photo.note ? 'text-amber-600' : 'text-slate-400 hover:text-amber-500'}`}
-                               >
-                                  {photo.note ? '📝 ' + photo.note.slice(0,6) : '+ 備註'}
-                               </button>
-                             ) : (
-                               photo.note && (
-                                 <span className="text-[10px] font-bold text-slate-600 flex items-center gap-0.5">📝{photo.note}</span>
-                               )
-                             )}
-                        </div>
                       </div>
                     </motion.div>
                 ))}
@@ -556,24 +505,164 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
 
            {/* Floating Lightbox Overlay */}
            <AnimatePresence>
-             {focusedGroupPhotoId && (
+             {focusedGroupPhotoId && (() => {
+                 const currentIndex = activeGroupPhotos.findIndex(p => p.id === focusedGroupPhotoId);
+                 const photo = activeGroupPhotos[currentIndex];
+                 if (!photo) return null;
+
+                 const handlePrev = (e: React.MouseEvent) => {
+                   e.stopPropagation();
+                   const prevIndex = currentIndex > 0 ? currentIndex - 1 : activeGroupPhotos.length - 1;
+                   setFocusedGroupPhotoId(activeGroupPhotos[prevIndex].id);
+                 };
+
+                 const handleNext = (e: React.MouseEvent) => {
+                   e.stopPropagation();
+                   const nextIndex = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
+                   setFocusedGroupPhotoId(activeGroupPhotos[nextIndex].id);
+                 };
+
+                 return (
                <motion.div 
                  initial={{ opacity: 0 }}
                  animate={{ opacity: 1 }}
                  exit={{ opacity: 0 }}
-                 className="fixed inset-0 z-[400] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-12"
+                 className="fixed inset-0 z-[400] bg-black/95 backdrop-blur-xl flex items-center justify-center p-0 md:p-6 lg:p-12 overflow-hidden"
                  onClick={() => setFocusedGroupPhotoId(null)}
                >
-                 <img 
-                   src={activeGroupPhotos.find(p => p.id === focusedGroupPhotoId)?.uri || activeGroupPhotos.find(p => p.id === focusedGroupPhotoId)?.image_url} 
-                   className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
-                   referrerPolicy="no-referrer"
-                 />
-                 <button className="absolute top-8 right-8 w-12 h-12 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition-colors">
-                   <Plus size={24} className="rotate-45" />
-                 </button>
+                 <div className="w-full h-full flex flex-col md:flex-row relative">
+                   <button className="absolute top-4 right-4 z-50 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-white/20 transition-colors backdrop-blur-md" onClick={() => setFocusedGroupPhotoId(null)}>
+                     <X size={24} />
+                   </button>
+                   
+                   <div className="flex-1 w-full h-[60vh] md:h-full flex flex-col items-center justify-center p-4 relative group">
+                     {activeGroupPhotos.length > 1 && (
+                       <button onClick={handlePrev} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-black/70">
+                         <ChevronLeft size={24} />
+                       </button>
+                     )}
+                     {activeGroupPhotos.length > 1 && (
+                       <button onClick={handleNext} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-black/70">
+                         <ChevronRight size={24} />
+                       </button>
+                     )}
+                     <img 
+                       src={photo.uri || photo.image_url} 
+                       className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
+                       referrerPolicy="no-referrer"
+                       onClick={(e) => e.stopPropagation()}
+                     />
+                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-white/80 text-xs font-bold font-mono z-20">
+                       {currentIndex + 1} / {activeGroupPhotos.length}
+                     </div>
+                   </div>
+
+                   <div 
+                     className="w-full md:w-80 lg:w-96 bg-white md:rounded-3xl p-6 flex flex-col gap-6 h-[40vh] md:h-auto md:max-h-full overflow-y-auto rounded-t-3xl shadow-2xl relative z-10"
+                     onClick={(e) => e.stopPropagation()}
+                   >
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-xl font-black text-slate-800 tracking-tight">照片資訊</h3>
+                          <button onClick={() => setFocusedGroupPhotoId(null)} className="md:hidden w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
+                            <ChevronDown size={18} />
+                          </button>
+                        </div>
+                        {isAdminMode && (
+                          <div className="flex items-center gap-2">
+                            <button onClick={(e) => { e.stopPropagation(); import('../services/photoService').then(m => m.updatePhotoInCloud(photo.id, { is_group_cover: !photo.isGroupCover })); setPhotos?.(prev => prev.map(p => p.id === photo.id ? {...p, isGroupCover: !p.isGroupCover} : (p.groupId === activeGroupId ? {...p, isGroupCover: false} : p))); showToast(photo.isGroupCover ? '已取消封面' : '已設為封面'); }} className={`px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all text-xs font-bold ${photo.isGroupCover ? 'bg-[#D4A853] text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} title="設為封面">
+                              <Star size={14} fill={photo.isGroupCover ? "currentColor" : "none"} />
+                              {photo.isGroupCover ? '取消封面' : '設為封面'}
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); onEditPhoto?.(photo); setFocusedGroupPhotoId(null); }} className="px-3 py-2 rounded-xl bg-blue-50 text-blue-600 flex items-center gap-1.5 hover:bg-blue-100 transition-all text-xs font-bold" title="編輯">
+                              <Pencil size={14} /> 完整編輯
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">標籤</label>
+                          <div className="flex flex-wrap gap-1.5 border-b border-slate-50 pb-4">
+                             {(photo.tagIds || []).map(tid => (
+                               <span key={tid} className="text-xs font-bold bg-[#1D3557]/5 text-[#1D3557] rounded-md px-2 py-1 border border-[#1D3557]/10">
+                                  {tagMap?.[tid] || tid}
+                               </span>
+                             ))}
+                             {isAdminMode && (
+                               <button 
+                                 onClick={(e) => { e.stopPropagation(); setModalType('tags'); setModalTargetId(photo.id); }}
+                                 className="text-xs font-bold bg-blue-50 text-blue-600 rounded-md px-2 py-1 border border-blue-100"
+                               >
+                                 + 標籤
+                               </button>
+                             )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">型號</label>
+                          <div className="flex items-center">
+                            {isAdminMode ? (
+                               <button className="text-sm font-black text-slate-700 hover:text-blue-600 tracking-tight text-left">
+                                 {photo.model_number || <span className="text-slate-300 font-bold">+ 型號</span>}
+                               </button>
+                            ) : (
+                               <span className="text-sm font-black text-slate-700 tracking-tight">{photo.model_number || '-'}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-1 border-t border-slate-50">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">尺寸</label>
+                          <div className="flex items-center">
+                            {isAdminMode ? (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setModalType('dims'); setModalTargetId(photo.id); }}
+                                className="text-sm font-black text-slate-700 hover:text-blue-600 tracking-tight text-left"
+                              >
+                                 {photo.dimensions?.[0] ? `📐 ${(() => {
+                                     let s = photo.dimensions[0].label || '';
+                                     if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
+                                     return s;
+                                   })()}` : <span className="text-slate-300 font-bold">+ 尺寸</span>}
+                              </button>
+                            ) : (
+                              <span className="text-sm font-black text-slate-700 tracking-tight flex items-center gap-1">
+                                 {photo.dimensions?.[0] ? `📐 ${(() => {
+                                     let s = photo.dimensions[0].label || '';
+                                     if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
+                                     return s;
+                                   })()}` : '-'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-1 border-t border-slate-50">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">備註</label>
+                          <div className="flex items-start">
+                            {isAdminMode ? (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setModalType('note'); setModalTargetId(photo.id); setNoteInput(photo.note || ''); }}
+                                className={`text-sm font-bold tracking-tight text-left ${photo.note ? 'text-amber-600' : 'text-slate-300 hover:text-amber-500'}`}
+                              >
+                                 {photo.note ? `📝 ${photo.note}` : '+ 備註'}
+                              </button>
+                            ) : (
+                              <span className="text-sm font-bold text-slate-600 flex items-start gap-1">
+                                {photo.note ? `📝 ${photo.note}` : '-'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                   </div>
+                 </div>
                </motion.div>
-             )}
+                 );
+             })()}
            </AnimatePresence>
 
            {/* Quick Action Modals */}

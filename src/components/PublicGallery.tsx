@@ -142,6 +142,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     categories,
     manufacturers,
     tags: contextTags,
+    sortedTags,
     searchQuery, setSearchQuery,
     filterCatId: selectedCatCode, setFilterCatId: setSelectedCatCode,
     filterSubId: selectedSubId, setFilterSubId: setSelectedSubId,
@@ -151,7 +152,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     visibleCount, setVisibleCount,
     isInfiniteMode,
     displayPhotos, gridPhotos,
-    totalGridCount
+    totalGridCount,
+    page
   } = context;
   
   // Use passed in selection state if provided (for AdminGalleryShell), otherwise use context
@@ -217,23 +219,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const [headerClickCount, setHeaderClickCount] = useState(0);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
-  const tagCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    photos.forEach(p => {
-      const ids = Array.isArray(p.tagIds) ? p.tagIds : [];
-      ids.forEach(id => {
-        counts[id] = (counts[id] || 0) + 1;
-      });
-    });
-    return counts;
-  }, [photos]);
-
-  const sortedTags = useMemo(() => {
-    return [...tags].sort((a, b) => {
-      return (tagCounts[b.id] || 0) - (tagCounts[a.id] || 0);
-    });
-  }, [tags, tagCounts]);
 
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -410,16 +395,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       />
 
       {/* Grid */}
-      <div ref={virtuosoRef} className="flex-1 overflow-hidden bg-[#FDFAF6]">
-        {(isSyncing || photos.length === 0) && photos.length === 0 ? (
-          <SkeletonGrid count={12} columns={columns} />
-        ) : displayPhotos.length === 0 ? (                
-          <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
-            <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
-                <ImageIcon size={32} className="opacity-20" />
+      <div ref={virtuosoRef} className="flex-1 overflow-hidden bg-[#FDFAF6] relative">
+        {displayPhotos.length === 0 ? (
+          isSyncing ? (
+            <SkeletonGrid count={12} columns={columns} />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
+              <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
+                  <ImageIcon size={32} className="opacity-20" />
+              </div>
+              <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
             </div>
-            <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
-          </div>
+          )
         ) : (
           <VirtuosoGrid
             ref={virtuosoRef}

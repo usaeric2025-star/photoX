@@ -111,32 +111,50 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
       </div>
 
       {activeActionTag && (
-        <div className="fixed inset-0 z-[200] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm" onClick={() => setActiveActionTag(null)}>
-          <div className="bg-white rounded-3xl p-6 w-full max-w-[240px] shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="fixed inset-0 z-[200] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm cursor-pointer" 
+          onClick={() => setActiveActionTag(null)}
+          onPointerDown={(e) => { if (e.target === e.currentTarget) setActiveActionTag(null); }}
+        >
+          <div className="bg-white rounded-3xl p-6 w-full max-w-[240px] shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200 cursor-default" onClick={(e) => e.stopPropagation()}>
             <div className="text-center">
               <span className="text-sm font-black text-slate-900">#{activeActionTag.name}</span>
             </div>
             <div className="space-y-2">
-                <button className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all" onClick={() => { 
-                  setPromptDialog({
-                    title: '编辑标签 / Edit Tag',
-                    message: "输入标签名称 / Enter Tag Name:",
-                    placeholder: activeActionTag.name,
-                    onSubmit: (n) => {
-                      if(n && n.trim()) { 
-                        onUpdateTag(activeActionTag.id, n.trim()); 
+                <button 
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all cursor-pointer" 
+                  onClick={() => { 
+                    setPromptDialog({
+                      title: '编辑标签 / Edit Tag',
+                      message: "输入标签名称 / Enter Tag Name:",
+                      placeholder: activeActionTag.name,
+                      onSubmit: (n) => {
+                        if(n && n.trim()) { 
+                          onUpdateTag(activeActionTag.id, n.trim()); 
+                        }
                       }
-                    }
-                  });
-                  setActiveActionTag(null); 
-                }}>
+                    });
+                    setActiveActionTag(null); 
+                  }}
+                >
                    <Pencil size={18} /> 编辑 / Edit
                 </button>
-                <button className="w-full flex items-center justify-center gap-2 text-red-600 bg-red-50 font-bold py-3 rounded-2xl hover:bg-red-100 active:scale-95 transition-all" onClick={() => { onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}>
+                <button 
+                  type="button"
+                  className="w-full flex items-center justify-center gap-2 text-red-600 bg-red-50 font-bold py-3 rounded-2xl hover:bg-red-100 active:scale-95 transition-all cursor-pointer" 
+                  onClick={() => { onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}
+                >
                    <Trash2 size={18} /> 删除 / Delete
                 </button>
             </div>
-            <button className="w-full text-slate-400 text-xs font-bold pt-2 active:text-slate-600" onClick={() => setActiveActionTag(null)}>取消 / Cancel</button>
+            <button 
+              type="button"
+              className="w-full text-slate-400 text-xs font-bold pt-2 active:text-slate-600 cursor-pointer" 
+              onClick={() => setActiveActionTag(null)}
+            >
+              取消 / Cancel
+            </button>
           </div>
         </div>
       )}

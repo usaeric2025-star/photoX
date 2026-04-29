@@ -6,6 +6,7 @@ interface GalleryContextType {
   photos: Photo[];
   categories: Category[];
   tags: Tag[];
+  sortedTags: Tag[];
   tagNameToIdMap: Map<string, string>;
   tagIdToNameMap: Map<string, string>;
   manufacturers: any[];
@@ -200,11 +201,38 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return gridPhotosFull.slice(0, visibleCount);
   }, [gridPhotosFull, visibleCount]);
 
+  const [stableTagCounts, setStableTagCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (filterTagIds.length === 0 && !debouncedSearchQuery && !filterCatId && !filterSubId) {
+      const counts: Record<string, number> = {};
+      photosState.forEach(p => {
+        const ids = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+        ids.forEach(id => {
+          counts[String(id)] = (counts[String(id)] || 0) + 1;
+        });
+      });
+      if (Object.keys(counts).length > 0) {
+         setStableTagCounts(counts);
+      }
+    }
+  }, [photosState, filterTagIds, debouncedSearchQuery, filterCatId, filterSubId]);
+
+  const sortedTags = useMemo(() => {
+    return [...tags].sort((a, b) => {
+      const bCount = stableTagCounts[String(b.id)] || 0;
+      const aCount = stableTagCounts[String(a.id)] || 0;
+      if (bCount !== aCount) return bCount - aCount;
+      return a.name.localeCompare(b.name, undefined, { numeric: true });
+    });
+  }, [tags, stableTagCounts]);
+
   const value = useMemo(() => {
     return {
       photos,
       categories,
       tags,
+      sortedTags,
       tagNameToIdMap,
       tagIdToNameMap,
       manufacturers,
@@ -251,7 +279,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
     sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, isInfiniteMode, user, isAdminMode, page, hasMore,
-    tagNameToIdMap, tagIdToNameMap,
+    tagNameToIdMap, tagIdToNameMap, sortedTags,
     togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, gridPhotosFull.length
   ]);
 

@@ -151,7 +151,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 return (
                   <button 
                     key={strTagId}
-                    onClick={() => { setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]); onScrollToTop(); }}
+                    onClick={() => { setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]); }}
                     className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(strTagId) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
                   >
                     #{toTitleCase(tag.name)}

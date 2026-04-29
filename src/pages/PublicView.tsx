@@ -26,6 +26,23 @@ export default function PublicView() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
 
+  const fetchFilteredPhotos = async () => {
+    setIsRefreshing(true);
+    try {
+      const cloudPhotos = await loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
+      if (cloudPhotos) {
+        setPhotos(cloudPhotos);
+        setPage(0);
+        setHasMore(cloudPhotos.length === 100);
+        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + 20));
+      }
+    } catch (e) {
+      console.error("Critical error in fetchFilteredPhotos:", e);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const syncWithCloud = async (isBackground = false) => {
     // 1. 先读本地缓存
     const cachedPhotos = await loadData('cachedPhotos');
@@ -34,7 +51,7 @@ export default function PublicView() {
     const cachedManufacturers = await loadData('cachedManufacturers');
     const cachedSettings = await loadData('cachedSettings');
 
-    if (cachedPhotos) {
+    if (cachedPhotos && !filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
       setPhotos(cachedPhotos);
       if (!isBackground) setIsInitializing(false);
     }
@@ -62,7 +79,9 @@ export default function PublicView() {
         setPage(0);
         setHasMore(cloudPhotos.length === 100);
         setVisibleCount(prev => Math.max(prev, cloudPhotos.length + 20));
-        saveData('cachedPhotos', cloudPhotos);
+        if (!filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
+          saveData('cachedPhotos', cloudPhotos);
+        }
       }
       
       if (cloudCats) {
@@ -122,10 +141,9 @@ export default function PublicView() {
   };
 
   useEffect(() => {
-    // When filters change and we are on page 0, it means the reset from context happened.
-    // We should trigger a fresh fetch if it's not the initial mount (isInitializing is false).
-    if (!isInitializing && page === 0) {
-      syncWithCloud(true);
+    // When filters change, we should trigger a fresh fetch if it's not the initial mount.
+    if (!isInitializing) {
+      fetchFilteredPhotos();
     }
   }, [filterCatId, filterTagIds, debouncedSearchQuery]);
 

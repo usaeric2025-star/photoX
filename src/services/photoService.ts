@@ -392,7 +392,7 @@ export const loadAllPhotosFromCloud = async (
       *,
       photo_tags!inner(
         tag_id,
-        tags(id, name)
+        tags!photo_tags_tag_id_fkey(id, name)
       ),
       category:categories(*)
     `
