@@ -331,8 +331,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = ({
                         <Plus size={18} />
                       </button>
                     </div>
-                  </div>
-            {/* Main Grid Content */}
+                  )}
+                </div>
+              </div>
+
            <div className="flex-1 p-3 sm:p-6 pb-40">
               <VirtuosoGrid
                 totalCount={activeGroupPhotos.length}
