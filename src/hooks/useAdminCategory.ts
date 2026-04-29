@@ -4,11 +4,9 @@ import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
 import { updateTagInDB, deleteTagFromDB } from '../services/supabaseService';
-import { useOptionalAdminUI } from '../context/AdminContexts';
 
-export const useAdminCategory = (externalUI?: any) => {
-  const adminUI = useOptionalAdminUI() || externalUI;
-  const setAlertDialog = adminUI?.setAlertDialog || (() => {});
+export const useAdminCategory = (adminUI: any) => {
+  const { setAlertDialog = () => {} } = adminUI || {};
 
   const {
     categories, setCategories,

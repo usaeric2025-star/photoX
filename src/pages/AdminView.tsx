@@ -97,7 +97,9 @@ export default function AdminView() {
     cloudCount
   };
   const sessionBasicValue = { 
-    setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle') 
+    setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
+    settings,
+    setSettings
   };
 
   const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
@@ -112,7 +114,6 @@ export default function AdminView() {
     settings?.gemini_api_key, 
     settings?.provider || 'openrouter', 
     settings?.custom_model || '', 
-    setLoadingState,
     uiBasicValue,
     sessionBasicValue
   );

@@ -40,9 +40,8 @@ export const useAdminPhotos = (
   geminiApiKey: string, 
   aiProvider: string, 
   customModel: string,
-  setLoadingState?: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void,
-  externalUI?: any,
-  externalSession?: any
+  adminUI?: any,
+  adminSession?: any
 ) => {
   const {
     photos, setPhotos,
@@ -51,11 +50,8 @@ export const useAdminPhotos = (
     manufacturers, setManufacturers
   } = useGalleryContext();
 
-  const adminSession = useOptionalAdminSession() || externalSession;
-  const adminUI = useOptionalAdminUI() || externalUI;
-  const setIsSyncing = adminSession?.setIsSyncing || (() => {});
-  const setAlertDialog = adminUI?.setAlertDialog || (() => {});
-  const setActiveScreen = adminUI?.setActiveScreen || (() => {});
+  const { setIsSyncing = () => {} } = adminSession || {};
+  const { setAlertDialog = () => {}, setActiveScreen = () => {}, setLoadingState = () => {} } = adminUI || {};
   
   const [internalCloudCount, setInternalCloudCount] = useState<number | null>(null);
   const cloudCount = adminUI?.cloudCount ?? internalCloudCount;

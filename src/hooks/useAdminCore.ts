@@ -31,23 +31,18 @@ export const useAdminCore = (
   t: any,
   refreshCloudData: Function,
   lastSyncTime?: number | null,
-  externalUI?: any,
-  externalSession?: any
+  adminUI?: any,
+  adminSession?: any
 ) => {
   const {
     photos, setPhotos,
-    settings, setSettings,
     categories, setCategories,
     tags, setTags,
     manufacturers, setManufacturers
   } = useGalleryContext();
 
-  const adminSession = useOptionalAdminSession() || externalSession;
-  const adminUI = useOptionalAdminUI() || externalUI;
-  const setIsSyncing = adminSession?.setIsSyncing || (() => {});
-  const setAlertDialog = adminUI?.setAlertDialog || (() => {});
-  const setPromptDialog = adminUI?.setPromptDialog || (() => {});
-  const setCloudCount = adminUI?.setCloudCount || (() => {});
+  const { settings, setSettings = () => {}, setIsSyncing = () => {} } = adminSession || {};
+  const { setAlertDialog = () => {}, setPromptDialog = () => {}, setCloudCount = () => {} } = adminUI || {};
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
