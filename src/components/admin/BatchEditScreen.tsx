@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ProductFormData } from '../../types';
 import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
+import { useAdminUI } from '../../context/AdminContexts';
 
 export const BatchEditScreen = ({
   resetAddState,
@@ -36,6 +37,7 @@ export const BatchEditScreen = ({
     updateTag,
     deleteTag
   } = useAdminPhoto();
+  const { setPromptDialog } = useAdminUI();
   const { isSyncing, appLang } = useAdminSession();
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -168,6 +170,18 @@ export const BatchEditScreen = ({
             onUpdateTag={updateTag}
             onDeleteTag={deleteTag}
             onQuickAdd={quickAddT}
+            onRenameTagRequest={(tag) => {
+              setPromptDialog({
+                title: '编辑标签 / Edit Tag',
+                message: "输入标签名称 / Enter Tag Name:",
+                placeholder: tag.name,
+                onSubmit: (n) => {
+                  if(n && n.trim()) { 
+                    updateTag(tag.id, n.trim()); 
+                  }
+                }
+              });
+            }}
           />
         </section>
 

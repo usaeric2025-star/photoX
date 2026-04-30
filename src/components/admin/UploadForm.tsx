@@ -4,6 +4,16 @@ import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save 
 import { Category, Tag, ProductFormData } from '../../types';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface UploadFormProps {
   onClose: () => void;
@@ -37,7 +47,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
 }) => {
   const { appLang } = useAdminSession();
   const { updateTag, deleteTag } = useAdminPhoto();
-  const { setConfirmDialog } = useAdminUI();
+  const { setPromptDialog, setAlertDialog } = useAdminUI();
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -83,12 +94,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           )}
           {editPhotoId && (
             <button 
-              onClick={() => { 
-                setConfirmDialog({
-                  message: '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
-                  onConfirm: () => deletePhoto(editPhotoId)
-                });
-              }}
+              onClick={() => setShowDeleteConfirm(true)}
               className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 transition-all active:scale-90"
               title="刪除照片"
             >
@@ -202,6 +208,18 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             onUpdateTag={updateTag}
             onDeleteTag={deleteTag}
             onQuickAdd={quickAddTag}
+            onRenameTagRequest={(tag) => {
+              setPromptDialog({
+                title: '编辑标签 / Edit Tag',
+                message: "输入标签名称 / Enter Tag Name:",
+                placeholder: tag.name,
+                onSubmit: (n) => {
+                  if(n && n.trim()) { 
+                    updateTag(tag.id, n.trim()); 
+                  }
+                }
+              });
+            }}
           />
         </section>
 
@@ -362,6 +380,33 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           </AnimatePresence>
         </section>
       </div>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除产品</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除这张照片吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" size="default">取消</AlertDialogCancel>
+            <AlertDialogAction 
+              variant="destructive"
+              size="default"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (editPhotoId) {
+                  deletePhoto(editPhotoId);
+                  setShowDeleteConfirm(false);
+                }
+              }}
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

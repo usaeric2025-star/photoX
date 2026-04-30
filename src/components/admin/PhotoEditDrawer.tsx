@@ -245,6 +245,18 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     onSubmit: (name) => addTag(name)
                   });
                 }}
+                onRenameTagRequest={(tag) => {
+                  setPromptDialog({
+                    title: '编辑标签 / Edit Tag',
+                    message: "输入标签名称 / Enter Tag Name:",
+                    placeholder: tag.name,
+                    onSubmit: (n) => {
+                      if(n && n.trim()) { 
+                        updateTag(tag.id, n.trim()); 
+                      }
+                    }
+                  });
+                }}
              />
           </section>
 

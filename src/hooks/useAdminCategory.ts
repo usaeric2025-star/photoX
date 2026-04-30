@@ -205,36 +205,26 @@ export const useAdminCategory = (adminUI: any) => {
   };
 
   const deleteCategory = async (id: string) => {
-    setConfirmDialog({
-      title: '确认删除分类',
-      message: '确定要删除这个分类吗？删除后，关联照片将变为「未分类」。',
-      danger: true,
-      onConfirm: async () => {
-        setConfirmDialog(null);
-        const closeLoading = showLoadingToast('正在处理分类删除...');
-        try {
-          const strId = String(id);
-          const { count } = await supabase
-            .from('furniture_items')
-            .select('*', { count: 'exact', head: true })
-            .eq('category_id', strId);
-  
-          if (count && count > 0) {
-            const { error } = await supabase
-              .from('furniture_items')
-              .update({ category_id: null })
-              .eq('category_id', strId);
-            if (error) throw error;
-          }
-          await performDeleteCategory(strId);
-          showToast('分类删除成功');
-        } catch (err: any) {
-          setAlertDialog({ title: '删除失败', message: err.message });
-        } finally {
-          closeLoading();
-        }
+    // UI should confirm before calling!
+    try {
+      const strId = String(id);
+      const { count } = await supabase
+        .from('furniture_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('category_id', strId);
+
+      if (count && count > 0) {
+        const { error } = await supabase
+          .from('furniture_items')
+          .update({ category_id: null })
+          .eq('category_id', strId);
+        if (error) throw error;
       }
-    });
+      await performDeleteCategory(strId);
+      showToast('分类删除成功');
+    } catch (err: any) {
+      setAlertDialog({ title: '删除失败', message: err.message });
+    }
   };
 
   const performDeleteCategory = async (strId: string) => {
@@ -296,36 +286,26 @@ export const useAdminCategory = (adminUI: any) => {
   };
 
   const deleteManufacturer = async (id: string | number) => {
-    setConfirmDialog({
-      title: '确认删除厂商',
-      message: '确定要删除这个厂商吗？删除后，关联照片将变为「未选择」。',
-      danger: true,
-      onConfirm: async () => {
-        setConfirmDialog(null);
-        const closeLoading = showLoadingToast('正在处理厂商删除...');
-        try {
-          const strId = String(id);
-          const { count } = await supabase
-            .from('furniture_items')
-            .select('*', { count: 'exact', head: true })
-            .eq('manufacturer_id', strId);
-          
-          if (count && count > 0) {
-            const { error } = await supabase
-              .from('furniture_items')
-              .update({ manufacturer_id: null })
-              .eq('manufacturer_id', strId);
-            if (error) throw error;
-          }
-          await performDeleteManufacturer(strId, id);
-          showToast('厂商删除成功');
-        } catch (err: any) {
-          setAlertDialog({ title: '删除失败', message: err.message });
-        } finally {
-          closeLoading();
-        }
+    // UI should confirm before calling!
+    try {
+      const strId = String(id);
+      const { count } = await supabase
+        .from('furniture_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('manufacturer_id', strId);
+      
+      if (count && count > 0) {
+        const { error } = await supabase
+          .from('furniture_items')
+          .update({ manufacturer_id: null })
+          .eq('manufacturer_id', strId);
+        if (error) throw error;
       }
-    });
+      await performDeleteManufacturer(strId, id);
+      showToast('厂商删除成功');
+    } catch (err: any) {
+      setAlertDialog({ title: '删除失败', message: err.message });
+    }
   };
 
   const performDeleteManufacturer = async (strId: string, id: string | number) => {

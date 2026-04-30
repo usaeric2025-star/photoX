@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "./ui/alert-dialog"
 import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
 import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
@@ -177,6 +177,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const [showCatOverview, setShowCatOverview] = useState(false);
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
 
   // Debounced save for settings
   const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);

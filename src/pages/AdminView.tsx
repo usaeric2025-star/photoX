@@ -333,58 +333,42 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
   );
 
   const handleDeletePhotos = useCallback(async (ids: string[]) => {
-    setConfirmDialog({
-      message: (t as any)?.confirmDelete?.(ids.length) || `確定要刪除這 ${ids.length} 張照片嗎？`,
-      onConfirm: async () => {
-        try {
-          for (const id of ids) {
-            await deletePhoto(id, true);
-          }
-          showToast('批量刪除成功', 'success');
-          setEditPhotoId(null);
-          setSelectedIds([]);
-          setIsMultiSelect(false);
-        } catch (err: any) {
-          console.error("[ERROR] Batch delete failed:", err);
-          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
-        }
+    try {
+      for (const id of ids) {
+        await deletePhoto(id, true);
       }
-    });
-  }, [t, deletePhoto, setConfirmDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast]);
+      showToast('批量刪除成功', 'success');
+      setEditPhotoId(null);
+      setSelectedIds([]);
+      setIsMultiSelect(false);
+    } catch (err: any) {
+      console.error("[ERROR] Batch delete failed:", err);
+      setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+    }
+  }, [deletePhoto, setAlertDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast]);
   
   const handleDeletePhoto = useCallback(async (id: string) => {
-    setConfirmDialog({
-      message: (t as any)?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
-      onConfirm: async () => {
-        try {
-          await deletePhoto(id);
-          setEditPhotoId(null);
-        } catch (err: any) {
-          console.error("[ERROR] Delete failed:", err);
-          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
-        }
-      }
-    });
-  }, [t, deletePhoto, setConfirmDialog, setEditPhotoId]);
+    try {
+      await deletePhoto(id);
+      setEditPhotoId(null);
+    } catch (err: any) {
+      console.error("[ERROR] Delete failed:", err);
+      setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+    }
+  }, [deletePhoto, setAlertDialog, setEditPhotoId]);
   
-  const handleDeleteTag = useCallback((id: string) => {
-    const tag = tags.find(t => t.id === id);
-    setConfirmDialog({
-      message: (t as any)?.deleteConfirm || `確定要刪除標籤 #${tag?.name || id} 嗎？ / Are you sure you want to delete tag #${tag?.name || id}?`,
-      onConfirm: async () => {
-        setLoadingState('syncing');
-        try {
-          await deleteTag(id);
-          showToast('标签已删除 / Tag deleted', 'success');
-        } catch (err: any) {
-          console.error('[handleDeleteTag] Error during deletion:', err);
-          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
-        } finally {
-          setLoadingState('idle');
-        }
-      }
-    });
-  }, [tags, t, deleteTag, showToast, setConfirmDialog, setAlertDialog, setLoadingState]);
+  const handleDeleteTag = useCallback(async (id: string) => {
+    setLoadingState('syncing');
+    try {
+      await deleteTag(id);
+      showToast('标签已删除 / Tag deleted', 'success');
+    } catch (err: any) {
+      console.error('[handleDeleteTag] Error during deletion:', err);
+      setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+    } finally {
+      setLoadingState('idle');
+    }
+  }, [deleteTag, showToast, setAlertDialog, setLoadingState]);
 
   // Auto refresh - ONLY on initial mount of the content component
   useEffect(() => {

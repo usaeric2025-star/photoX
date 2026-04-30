@@ -17,7 +17,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "../ui/alert-dialog";
 
 export interface GroupAdminShellProps {
   activeGroupId: string | null;
@@ -52,8 +52,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   onBatchEdit, onUngroup, onAddPhotoToGroup,
   setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
   t, categories, tagMap, allTags = [],
-  setAlertDialog: propsSetAlertDialog,
-  setLoadingState: propsSetLoadingState
+  setAlertDialog,
+  setLoadingState
 }) => {
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -123,7 +123,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       }
       showToast('已保存 / Saved');
     } catch (err: any) {
-      setAlertDialog({ title: '保存失敗', message: err.message });
+      setAlertDialog?.({ title: '保存失敗', message: err.message });
     }
   };
 
@@ -149,7 +149,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
         groupPhotos.map(p => updatePhotoInCloud(p.id, { name: editingGroupName }))
       );
     } catch (err: any) {
-      setAlertDialog({ title: '名稱同步失敗', message: err.message });
+      setAlertDialog?.({ title: '名稱同步失敗', message: err.message });
     }
   };
 
@@ -167,8 +167,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       dimensions: [{ label, unit: 'cm', isAI: false }] 
     });
   };
-
-
 
   const handleReorder = async (draggedId: string, targetId: string) => {
     if (draggedId === targetId) return;
@@ -200,7 +198,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       );
       showToast('排序已保存');
     } catch (err: any) {
-      setAlertDialog({ title: '排序同步失敗', message: err.message });
+      setAlertDialog?.({ title: '排序同步失敗', message: err.message });
     }
   };
 
@@ -222,14 +220,45 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   };
 
   return (
-    <AnimatePresence>
-      {activeGroupId !== null && (
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.98 }}
-          className="fixed inset-0 z-[200] bg-[#FDFAF6] overflow-y-auto pt-safe flex flex-col"
-        >
+    <>
+      <AlertDialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认批量移出</AlertDialogTitle>
+            <AlertDialogDescription>
+              確定要將選中的 {confirmDelete?.ids.length} 張照片移出群組嗎？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" size="default" onClick={() => setConfirmDelete(null)}>取消</AlertDialogCancel>
+            <AlertDialogAction variant="default" size="default" onClick={async () => {
+              if (confirmDelete) {
+                  setPhotos?.(prev => prev.map(p => 
+                    confirmDelete.ids.includes(p.id) ? { ...p, groupId: null } : p
+                  ));
+                  try {
+                    await updatePhotosGroupInCloud(confirmDelete.ids, null);
+                    setIsMultiSelectMode(false);
+                    setSelectedPhotoIds([]);
+                    showToast('已移出 / Removed');
+                  } catch (err: any) {
+                    setAlertDialog?.({ title: '操作失败', message: err.message });
+                  }
+                  setConfirmDelete(null);
+              }
+            }}>确定</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AnimatePresence mode="wait">
+        {activeGroupId !== null && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="fixed inset-0 z-[200] bg-[#FDFAF6] overflow-y-auto pt-safe flex flex-col"
+          >
            {/* Top Header */}
            <div className="sticky top-0 bg-[#FDFAF6]/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
               <div className="flex items-center gap-3">
@@ -668,5 +697,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 };

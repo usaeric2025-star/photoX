@@ -39,8 +39,8 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({ dialog, onClose }) =
           />
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose}>取消</AlertDialogCancel>
-          <AlertDialogAction onClick={() => {
+          <AlertDialogCancel variant="outline" size="default" onClick={onClose}>取消</AlertDialogCancel>
+          <AlertDialogAction variant="default" size="default" onClick={() => {
             if (dialog) dialog.onSubmit(value);
             onClose();
           }}>确定</AlertDialogAction>

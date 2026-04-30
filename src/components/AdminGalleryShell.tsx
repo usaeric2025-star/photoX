@@ -6,6 +6,17 @@ import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
 import { translations } from '../lib/translations';
 import { updatePhotoInCloud } from '../services/photoService';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 interface AdminGalleryShellProps {
   onExit: () => void;
 }
@@ -14,6 +25,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   const adminPhoto = useOptionalAdminPhoto();
   const adminUI = useOptionalAdminUI();
   const adminSession = useOptionalAdminSession();
+  const [confirmDelete, setConfirmDelete] = React.useState<boolean>(false);
   
   const { 
     photos, 
@@ -76,8 +88,15 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
 
   const handleBatchDelete = async () => {
     if (selectedIds.length > 0) {
+      setConfirmDelete(true);
+    }
+  };
+
+  const executeBatchDelete = async () => {
+    if (selectedIds.length > 0) {
       await adminPhoto?.deletePhoto(selectedIds);
       clearSelection();
+      setConfirmDelete(false);
     }
   };
 
@@ -171,6 +190,28 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
            <button onClick={clearSelection} className="p-2 text-white/40 hover:text-white transition-colors"><X size={18} /></button>
         </div>
       )}
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除选中的 {selectedIds.length} 张照片吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" size="default">取消</AlertDialogCancel>
+            <AlertDialogAction 
+              variant="destructive"
+              size="default"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={executeBatchDelete}
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

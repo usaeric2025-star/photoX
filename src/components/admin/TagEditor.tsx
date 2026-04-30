@@ -1,6 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useAdminUI } from '../../context/AdminContexts';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TagEditorProps {
   tags: any[];
@@ -9,11 +18,14 @@ interface TagEditorProps {
   onUpdateTag: (id: string, name: string) => void;
   onDeleteTag: (id: string) => void;
   onQuickAdd: () => void;
+  onRenameTagRequest?: (tag: any) => void;
 }
 
-export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd }) => {
-  const { setPromptDialog } = useAdminUI();
+export const TagEditor: React.FC<TagEditorProps> = ({ 
+  tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd, onRenameTagRequest 
+}) => {
   const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
+  const [confirmDeleteTag, setConfirmDeleteTag] = useState<any | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const hasLongPressed = useRef<boolean>(false);
 
@@ -125,16 +137,12 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
                   type="button"
                   className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all cursor-pointer" 
                   onClick={() => { 
-                    setPromptDialog({
-                      title: '编辑标签 / Edit Tag',
-                      message: "输入标签名称 / Enter Tag Name:",
-                      placeholder: activeActionTag.name,
-                      onSubmit: (n) => {
-                        if(n && n.trim()) { 
-                          onUpdateTag(activeActionTag.id, n.trim()); 
-                        }
-                      }
-                    });
+                    if (onRenameTagRequest) {
+                      onRenameTagRequest(activeActionTag);
+                    } else {
+                      // Fallback or legacy if needed
+                      console.warn("onRenameTagRequest not provided");
+                    }
                     setActiveActionTag(null); 
                   }}
                 >
@@ -143,7 +151,10 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
                 <button 
                   type="button"
                   className="w-full flex items-center justify-center gap-2 text-red-600 bg-red-50 font-bold py-3 rounded-2xl hover:bg-red-100 active:scale-95 transition-all cursor-pointer" 
-                  onClick={() => { onDeleteTag(activeActionTag.id); setActiveActionTag(null); }}
+                  onClick={() => { 
+                    setConfirmDeleteTag(activeActionTag);
+                    setActiveActionTag(null); 
+                  }}
                 >
                    <Trash2 size={18} /> 删除 / Delete
                 </button>
@@ -158,6 +169,33 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
           </div>
         </div>
       )}
+
+      <AlertDialog open={!!confirmDeleteTag} onOpenChange={(open) => !open && setConfirmDeleteTag(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除标签</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除标签 #{confirmDeleteTag?.name} 吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel variant="outline" size="default">取消</AlertDialogCancel>
+            <AlertDialogAction 
+              variant="destructive"
+              size="default"
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (confirmDeleteTag) {
+                  onDeleteTag(confirmDeleteTag.id);
+                  setConfirmDeleteTag(null);
+                }
+              }}
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
