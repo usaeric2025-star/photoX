@@ -1,4 +1,3 @@
-import { VitePWA } from 'vite-plugin-pwa';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'url';
@@ -20,9 +19,10 @@ export default defineConfig(({mode}) => {
       assetsDir: 'assets',
       minify: 'esbuild',
       sourcemap: false,
+      emptyOutDir: true,
     },
     define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || ''),
     },
     resolve: {
       alias: {

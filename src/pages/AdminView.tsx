@@ -37,6 +37,13 @@ export default function AdminView() {
 
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
 
+  // Lift UI states to the top level AdminView to avoid ReferenceErrors in login gate
+  const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
+  const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
+  const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
+  const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading'>('idle');
+  const [cloudCount, setCloudCount] = useState<number | null>(null);
+
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'loading' = 'success', persistent = false) => {
@@ -102,14 +109,14 @@ export default function AdminView() {
 
   const uiValueForLogin = React.useMemo(() => ({
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    activeScreen: 'login', setActiveScreen: () => {},
-    editPhotoId: null, setEditPhotoId: () => {},
-    batchEditIds: null, setBatchEditIds: () => {},
+    activeScreen, setActiveScreen: (s: any) => setActiveScreen(s),
+    editPhotoId, setEditPhotoId,
+    batchEditIds, setBatchEditIds,
     toast: null, showToast: () => {},
-    loadingState: 'idle' as const, setLoadingState: () => {},
+    loadingState, setLoadingState: (s: any) => setLoadingState(s),
     batchProgress: { current: 0, total: 0 },
     aiDebugInfo: null, abortAnalysis: () => {}
-  }), [alertDialog, setAlertDialog, promptDialog, setPromptDialog]);
+  }), [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen, editPhotoId, batchEditIds, loadingState]);
 
   if (!authChecked) {
     return (
@@ -182,6 +189,13 @@ export default function AdminView() {
       errorContent={errorContent}
       t={t}
       lang={lang as LanguageCode}
+      uiProps={{
+        activeScreen, setActiveScreen,
+        editPhotoId, setEditPhotoId,
+        batchEditIds, setBatchEditIds,
+        loadingState, setLoadingState,
+        cloudCount, setCloudCount
+      }}
       dialogProps={{
         alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue,
         toast, showToast
@@ -190,13 +204,14 @@ export default function AdminView() {
   );
 }
 
-function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, dialogProps }: { 
+function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, uiProps, dialogProps }: { 
   user: any, 
   authChecked: boolean, 
   logout: () => void, 
   errorContent: React.ReactNode,
   t: any,
   lang: LanguageCode,
+  uiProps: any,
   dialogProps: any
 }) {
   const navigate = useNavigate();
@@ -208,6 +223,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
   } = useGalleryContext();
   
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
+  const { activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, loadingState, setLoadingState, cloudCount, setCloudCount } = uiProps;
 
   useEffect(() => {
     setUser(user);
@@ -220,8 +236,6 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
   const [publicTags, setPublicTags] = useState<any[]>([]);
   const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
 
-  const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing'>('idle');
-  const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
   const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -244,8 +258,6 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     }
   }, [settings]);
   
-  const [activeScreen, setActiveScreen] = useState<'home'|'manage'>('home');
-
   const uiBasicValue = React.useMemo(() => ({ 
     setAlertDialog, 
     setPromptDialog, 
@@ -253,8 +265,10 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     setLoadingState,
     setCloudCount,
     cloudCount,
-    showToast
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, setCloudCount, cloudCount, showToast]);
+    showToast,
+    editPhotoId, setEditPhotoId,
+    batchEditIds, setBatchEditIds
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
@@ -264,7 +278,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
 
   const tValue = React.useMemo(() => t, [t]);
 
-  const { newPhotoData, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
+  const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 
   const { 
     updateTag, deleteTag, 

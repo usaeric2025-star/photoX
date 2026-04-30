@@ -31,6 +31,10 @@ export const usePhotoManagement = (
     setAlertDialog: (d: any) => void;
     setLoadingState: (s: any) => void;
     setActiveScreen: (s: string) => void;
+    editPhotoId?: string | null;
+    setEditPhotoId?: (id: string | null) => void;
+    batchEditIds?: string[] | null;
+    setBatchEditIds?: (ids: string[] | null) => void;
     batchProgress?: { current: number, total: number };
     setBatchProgress?: (p: { current: number, total: number }) => void;
   },
@@ -43,11 +47,25 @@ export const usePhotoManagement = (
     manufacturers
   } = useGalleryContext();
 
-  const { setAlertDialog = () => {}, setLoadingState = () => {}, setActiveScreen = () => {} } = adminUI || {};
+  const { 
+    setAlertDialog = () => {}, 
+    setLoadingState = () => {}, 
+    setActiveScreen = () => {},
+    editPhotoId: externalEditPhotoId,
+    setEditPhotoId: externalSetEditPhotoId,
+    batchEditIds: externalBatchEditIds,
+    setBatchEditIds: externalSetBatchEditIds
+  } = adminUI || {};
+
+  const [internalEditPhotoId, internalSetEditPhotoId] = useState<string | null>(null);
+  const [internalBatchEditIds, internalSetBatchEditIds] = useState<string[] | null>(null);
+
+  const editPhotoId = externalSetEditPhotoId ? externalEditPhotoId : internalEditPhotoId;
+  const setEditPhotoId = externalSetEditPhotoId || internalSetEditPhotoId;
+  const batchEditIds = externalSetBatchEditIds ? externalBatchEditIds : internalBatchEditIds;
+  const setBatchEditIds = externalSetBatchEditIds || internalSetBatchEditIds;
 
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
-  const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
-  const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
   const [formState, setFormState] = useState<ProductFormData>(INITIAL_FORM_STATE);
   const [showOtherFields, setShowOtherFields] = useState(false);
 
