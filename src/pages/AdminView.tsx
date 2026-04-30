@@ -108,15 +108,24 @@ export default function AdminView() {
   };
 
   const uiValueForLogin = React.useMemo(() => ({
-    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    activeScreen, setActiveScreen: (s: any) => setActiveScreen(s),
-    editPhotoId, setEditPhotoId,
-    batchEditIds, setBatchEditIds,
-    toast: null, showToast: () => {},
-    loadingState, setLoadingState: (s: any) => setLoadingState(s),
+    alertDialog,
+    setAlertDialog,
+    promptDialog,
+    setPromptDialog,
+    activeScreen,
+    setActiveScreen: (_: any) => {},
+    editPhotoId,
+    setEditPhotoId: (_: string | null) => {},
+    batchEditIds: null,
+    setBatchEditIds: (_: string[] | null) => {},
+    toast: null,
+    showToast: (_msg: string, _type: 'success' | 'error' = 'success') => {},
+    loadingState: 'idle' as const,
+    setLoadingState: (_: any) => {},
     batchProgress: { current: 0, total: 0 },
-    aiDebugInfo: null, abortAnalysis: () => {}
-  }), [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen, editPhotoId, batchEditIds, loadingState]);
+    aiDebugInfo: null,
+    abortAnalysis: () => {}
+  }), [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen]);
 
   if (!authChecked) {
     return (

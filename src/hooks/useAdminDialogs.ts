@@ -16,6 +16,6 @@ export const useAdminDialogs = () => {
     return {
         alertDialog, setAlertDialog,
         promptDialog, setPromptDialog: wrappedSetPromptDialog,
-        promptValue, setPromptValue,
+        promptValue, setPromptValue
     };
 };
