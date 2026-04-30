@@ -25,7 +25,7 @@ export const useAdminCore = (
   } = useGalleryContext();
 
   const { settings, setSettings = () => {}, setIsSyncing = () => {} } = adminSession || {};
-  const { setAlertDialog = () => {}, setCloudCount = () => {}, showToast = () => {} } = adminUI || {};
+  const { setAlertDialog = () => {}, setCloudCount = () => {}, showToast = () => {}, setConfirmDialog = () => {} } = adminUI || {};
 
   const showLoadingToast = useCallback((message: string) => {
     return showToast(message, 'loading', true);

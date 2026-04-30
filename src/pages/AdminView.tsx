@@ -276,7 +276,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
     handleUngroup, handleGroupPhotos 
   } = useAdminCore(
-      user, updateForm, tValue, refreshCloudData, lastSyncTime
+      user, updateForm, tValue, refreshCloudData, lastSyncTime, uiBasicValue, sessionBasicValue
   );
 
   const quickAddTag = useCallback(() => {
