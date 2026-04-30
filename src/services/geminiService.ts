@@ -123,15 +123,17 @@ export const analyzeProductPhoto = async (
    - 強制選取或新增 2-3 個標籤以描述產品。
    - 【極其重要】語義去重：請仔細對比現有標籤清單 ${JSON.stringify(tagsJson)}。
    - 如果你想新增的標籤與現有標籤意思接近（例如：Marble 與 Marblelook、Sofa 與 Couches、Leather 與 Faux-leather）、或是包含關係，必須優先選擇現有標籤清單中的詞，嚴禁新增語義重複的標籤。
+   - 現有標籤請直接填入該標籤的 id 到 "tagIds" 數組中。
    - 標籤側重：家具用途/性質、風格、材質、顏色等。
    - 若現有標籤完全無關聯，才可以填入 "newTags"。
-   - 強制規範：每個標籤必須是單一英文單詞，不得包含空格、符號或數字，且必須全部大写 (UPPERCASE)。
+   - 強制規範：新標籤每個必須是單一英文單詞，不得包含空格、符號或數字，且必須全部大写 (UPPERCASE)。
    - 新增標籤填入 "newTags" 字段，格式為數組（如 ["RATTAN"]），若不新增則返回 []。
 
 2. 尺寸（Dimensions）：
    - 仔細從照片或標籤中尋找尺寸信息。
    - 如果識別出照片中有多個組成部分或多組尺寸，請全部列出。
-   - 每組尺寸必須包含 "label"（規格名稱，例如 'Overall'、'Single-Seater'）、"length"、"width"、"height"（若僅有 1 或 2 個維度也請填入對應欄位，其餘填 0）、"unit": "cm" (默認)、"isAI": true
+   - 【智能單位判斷】：如果在照片上沒有明確的單位標示，若長寬高的數值高達三位數甚至是四位數（例如 450, 800 等）很有可能是 'mm'。如果數值是兩位數且相對正常（如 40, 80），優先考慮 'cm'；再仔細檢查旁邊有沒有雙引號 '"' 或 'inch'、'in' 的符號，有的話單位必須設定為 'inc'。
+   - 每組尺寸必須包含 "label"（規格名稱，例如 'Overall'、'Single-Seater'）、"length"、"width"、"height"（若僅有 1 或 2 個維度也請填入對應欄位，其餘填 0）、"unit": "單位" (根據上述判斷填入 'cm', 'mm' 或 'inc')、"isAI": true
    - 若照片中完全找不到任何尺寸依據，返回空數組 []。
 
 4. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
@@ -264,11 +266,16 @@ export const analyzeProductPhoto = async (
     // Normalize tagIds to always be an array of strings
     let safeTagIds: string[] = [];
     if (Array.isArray(parsedData.tagIds)) {
-      safeTagIds = parsedData.tagIds.map(String);
+      safeTagIds = parsedData.tagIds.map((item: any) => {
+        if (typeof item === 'object' && item !== null) {
+          return String(item.id || item.name || '');
+        }
+        return String(item);
+      });
     } else if (typeof parsedData.tagIds === 'string') {
       safeTagIds = parsedData.tagIds.split(',').map((s: string) => s.trim()).filter(Boolean);
     }
-    parsedData.tagIds = safeTagIds;
+    parsedData.tagIds = safeTagIds.filter(Boolean);
 
     // Normalize newTags to always be an array of strings
     let newTagList: string[] = [];
