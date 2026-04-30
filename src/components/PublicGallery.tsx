@@ -343,6 +343,23 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, [t.shareTitle, t.shareNotSupported]);
 
+  const shareGroup = useCallback(async (photos: Photo[]) => {
+    const msg = photos.map(p => p.name || 'Furniture').join(', ');
+    const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView more: ${window.location.origin}`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: t.shareTitle, text: shareText, url: window.location.origin });
+      } else {
+        alert(t.shareNotSupported);
+      }
+    } catch (e: any) {
+      if (e.name !== 'AbortError') {
+        console.error("Group share failed:", e);
+      }
+    }
+  }, [t]);
+
   const handleLoadMore = useCallback(() => {
     if (onLoadMore) {
       onLoadMore();
@@ -488,6 +505,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         setAlertDialog={setAlertDialog}
         setConfirmDialog={setConfirmDialog}
         setLoadingState={setLoadingState}
+        shareGroup={shareGroup}
       />
 
       {/* Dialogs */}

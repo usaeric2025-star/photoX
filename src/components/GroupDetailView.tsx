@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronLeft, ChevronRight, X, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
 import { Photo, Tag, Category } from '../types';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
@@ -11,10 +11,11 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
   setLightboxIndex?: (idx: number) => void;
   onLongPressStart?: (photo: Photo) => void;
   onLongPressEnd?: () => void;
+  shareGroup?: (photos: Photo[]) => void;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
-  const { activeGroupId, setActiveGroupId, photos, isAdminMode } = props;
+  const { activeGroupId, setActiveGroupId, photos, isAdminMode, shareGroup } = props;
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
@@ -65,13 +66,23 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{activeGroupPhotos.length} 張照片 / {activeGroupPhotos.length} Photos</p>
                 </div>
               </div>
-              <button 
-                  onClick={() => setActiveGroupId(null)}
-                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-              >
-                  <X size={24} />
-              </button>
-           </div>
+              <div className="flex items-center gap-2">
+                {shareGroup && (
+                  <button 
+                    onClick={() => shareGroup(activeGroupPhotos)}
+                    className="w-10 h-10 flex items-center justify-center text-blue-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
+                  >
+                    <Share2 size={24} />
+                  </button>
+                )}
+                <button 
+                    onClick={() => setActiveGroupId(null)}
+                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+                >
+                    <X size={24} />
+                </button>
+              </div>
+            </div>
 
            <GroupGridView 
              photos={activeGroupPhotos} 
