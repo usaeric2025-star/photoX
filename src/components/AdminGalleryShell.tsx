@@ -76,13 +76,8 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
 
   const handleBatchDelete = async () => {
     if (selectedIds.length > 0) {
-      adminUI?.setConfirmDialog({
-        message: t.confirmDelete(selectedIds.length),
-        onConfirm: async () => {
-          await adminPhoto?.deletePhoto(selectedIds);
-          clearSelection();
-        }
-      });
+      await adminPhoto?.deletePhoto(selectedIds);
+      clearSelection();
     }
   };
 

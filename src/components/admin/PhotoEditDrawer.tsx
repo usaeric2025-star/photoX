@@ -15,6 +15,7 @@ interface Props {
   setShowOtherFields: (s: boolean) => void;
   editPhotoPreview?: string | null;
   onDelete?: (id: string) => void;
+  setConfirmDialog?: (d: any) => void;
   newPhotoData?: string | null;
   abortAnalysis?: () => void;
 }
@@ -434,7 +435,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
            {props.editPhotoId && props.onDelete && (
             <div className="pt-2 pb-6">
               <button 
-                onClick={() => props.onDelete!(props.editPhotoId!)}
+                onClick={() => props.setConfirmDialog({ title: '确认删除', message: '确定要删除吗？', danger: true, onConfirm: () => props.onDelete!(props.editPhotoId!) })}
                 className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
               >
                 删除此照片

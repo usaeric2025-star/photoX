@@ -524,6 +524,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
                     setShowOtherFields={setShowOtherFields}
                     newPhotoData={newPhotoData} 
                     onDelete={handleDeletePhoto}
+                    setConfirmDialog={setConfirmDialog}
                     editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
                     abortAnalysis={abortAnalysis}
                 />
