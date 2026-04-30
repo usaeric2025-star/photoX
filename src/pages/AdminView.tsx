@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
 import { loginWithGoogle, saveSettings } from '../services/supabaseService';
+import { updatePhotoInCloud } from '../services/photoService';
 // Removed Tag import
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { Modals } from '../components/admin/Modals';
@@ -516,7 +517,32 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
               <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
                  <div className="flex-1 min-h-0 relative bg-bg">
                     <PublicGallery 
-                       isAdminMode={false}
+                       isAdminMode={true}
+                       onTogglePinned={async (photo) => {
+                         const newStatus = !photo.isPinned;
+                         const affectedPhotos = photo.groupId 
+                           ? photos.filter(p => p.groupId === photo.groupId)
+                           : [photo];
+                         setPhotos(prev => prev.map(p => 
+                           affectedPhotos.some(ap => ap.id === p.id) 
+                             ? { ...p, isPinned: newStatus } 
+                             : p
+                         ));
+                         try {
+                           await Promise.all(
+                             affectedPhotos.map(p => 
+                               updatePhotoInCloud(p.id, { is_pinned: newStatus, updated_at: new Date().toISOString() })
+                             )
+                           );
+                         } catch (e: any) {
+                           console.error("[ERROR] Failed to toggle pinned:", e);
+                           setPhotos(prev => prev.map(p => 
+                             affectedPhotos.some(ap => ap.id === p.id) 
+                               ? { ...p, isPinned: !newStatus } 
+                               : p
+                           ));
+                         }
+                       }}
                        settings={settings}
                        isRefreshing={loadingState === 'syncing'}
                        onExit={() => setViewMode('private')}

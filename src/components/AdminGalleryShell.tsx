@@ -4,6 +4,7 @@ import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } fr
 import { useGalleryContext } from '../context/GalleryContext';
 import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
 import { translations } from '../lib/translations';
+import { updatePhotoInCloud } from '../services/photoService';
 
 interface AdminGalleryShellProps {
   onExit: () => void;
@@ -26,6 +27,39 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
 
   const lang = (localStorage.getItem('appLang') as any) || 'en';
   const t = translations[lang] || translations['en'];
+
+  const handleTogglePinned = async (photo: any) => {
+    const newStatus = !photo.isPinned;
+    
+    // Identify affected photos (the photo itself + any other photos in the same group)
+    const affectedPhotos = photo.groupId 
+      ? photos.filter(p => p.groupId === photo.groupId)
+      : [photo];
+      
+    // Optimistic update for all affected photos
+    setPhotos(prev => prev.map(p => 
+      affectedPhotos.some(ap => ap.id === p.id) 
+        ? { ...p, isPinned: newStatus } 
+        : p
+    ));
+    
+    try {
+      await Promise.all(
+        affectedPhotos.map(p => 
+          updatePhotoInCloud(p.id, { is_pinned: newStatus, updated_at: new Date().toISOString() })
+        )
+      );
+    } catch (e: any) {
+      console.error("[ERROR] Failed to toggle pinned:", e);
+      // Revert changes
+      setPhotos(prev => prev.map(p => 
+        affectedPhotos.some(ap => ap.id === p.id) 
+          ? { ...p, isPinned: !newStatus } 
+          : p
+      ));
+      adminUI?.setAlertDialog({ title: '置顶失败', message: '无法同步到服务器。' });
+    }
+  };
 
   const handleGroup = () => {
     if (selectedIds.length > 0) {
@@ -76,6 +110,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     <div className="relative h-full w-full">
       <PublicGallery 
         isAdminMode={true}
+        onTogglePinned={handleTogglePinned}
         onExit={onExit}
         showExit={true}
         hideHeader={true}
