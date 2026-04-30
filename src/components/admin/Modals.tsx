@@ -60,9 +60,10 @@ export const Modals = ({
                 <button 
                   onClick={async () => {
                     alert('确认按钮被点击');
-                    if (confirmDialog.onConfirm) {
+                    const handler = confirmDialog.onConfirm;
+                    if (handler) {
                       alert('onConfirm 存在');
-                      await confirmDialog.onConfirm();
+                      await handler();
                     } else {
                       alert('onConfirm 不存在！');
                     }
