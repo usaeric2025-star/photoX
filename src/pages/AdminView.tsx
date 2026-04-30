@@ -663,7 +663,10 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
 
                   {loadingState === 'analyzing' && (
                     <button 
-                      onClick={() => abortAnalysis?.()}
+                      onClick={() => {
+                        abortAnalysis?.();
+                        cancelBatchAiRef.current = true;
+                      }}
                       className="mt-12 px-8 py-3 bg-red-50 text-red-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-all border border-red-100"
                     >
                       取消辨識 / Cancel
