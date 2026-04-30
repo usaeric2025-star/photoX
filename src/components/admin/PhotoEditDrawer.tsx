@@ -237,11 +237,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto content-start">
             {(manufacturers || []).map((mfr: any) => {
-              const isSelected = formState.manufacturerId === mfr.id;
+              const isSelected = String(formState.manufacturerId) === String(mfr.id);
               return (
               <button 
                 key={mfr.id}
-                onClick={() => updateForm({ manufacturerId: isSelected ? null : mfr.id })}
+                onClick={() => updateForm({ manufacturerId: isSelected ? null : String(mfr.id) })}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${isSelected ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600'}`}
               >
                 {mfr.name}

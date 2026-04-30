@@ -255,12 +255,13 @@ export const useAdminCategory = (adminUI: any) => {
     }
   };
 
-  const updateManufacturer = async (id: string, name: string) => {
+  const updateManufacturer = async (id: string | number, name: string) => {
     try {
+      const strId = String(id);
       const trimmed = name.trim();
-      await updateManufacturerInDB(id, trimmed);
+      await updateManufacturerInDB(strId, trimmed);
       const newMfrs = manufacturers.map(m => 
-        String(m.id) === String(id) ? { ...m, name: trimmed } : m
+        String(m.id) === strId ? { ...m, name: trimmed } : m
       );
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
@@ -270,7 +271,7 @@ export const useAdminCategory = (adminUI: any) => {
     }
   };
 
-  const deleteManufacturer = async (id: string) => {
+  const deleteManufacturer = async (id: string | number) => {
     console.log(`[useAdminCategory] Starting deletion for manufacturer: ${id}`);
     const strId = String(id);
     const affectedCount = photos.filter(p => String(p.manufacturerId) === strId).length;

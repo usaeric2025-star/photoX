@@ -235,7 +235,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       onSubmit: async (newName) => {
         const normalized = normalizeManufacturerName(newName);
         if (normalized && normalized !== mfr.name) {
-          await updateManufacturer(mfr.id, normalized);
+          await updateManufacturer(String(mfr.id), normalized);
           setHasChanges(true);
         }
       }
@@ -650,7 +650,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 <button onClick={() => {
                   setConfirmDialog({
                     message: '確定要刪除這筆資料嗎？/ Are you sure you want to delete this manufacturer?',
-                    onConfirm: () => deleteManufacturer(sub.id)
+                    onConfirm: () => deleteManufacturer(String(sub.id))
                   });
                 }} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
               </div>

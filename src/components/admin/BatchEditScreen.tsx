@@ -143,7 +143,7 @@ export const BatchEditScreen = ({
             {(manufacturers || []).map((mfr: any) => (
               <button 
                 key={mfr.id}
-                onClick={() => updateForm({ manufacturerId: mfr.id })}
+                onClick={() => updateForm({ manufacturerId: String(mfr.id) })}
                 className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${String(formState.manufacturerId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
               >
                 {mfr.name}
