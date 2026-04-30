@@ -134,7 +134,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           <X size={10} />
         </div>
       )}
-      {onTogglePinned && (
+      {isAdminMode && onTogglePinned && (
          <button 
            onClick={(e) => {
              e.stopPropagation();
