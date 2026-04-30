@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,6 +89,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {Array.from(new Map(tags.map(t => [t.id, t])).values()).map((tag: any) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
+          const isHot = (tag.count || 0) > 5 || tag.name?.length > 6; // 简单的热门逻辑判定
+
           return (
             <div key={tag.id} className="relative">
               <button 
@@ -96,7 +99,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   WebkitTouchCallout: 'none', 
                   WebkitUserSelect: 'none', 
                   userSelect: 'none',
-                  touchAction: 'manipulation' // Prevents double-tap zoom delay
+                  touchAction: 'manipulation'
                 }}
                 onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onMouseDown={(e) => startPress(tag, e)}
@@ -113,9 +116,21 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                     onToggleTag(tag); 
                   }
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer select-none ${isSelected ? 'bg-black text-white border-black' : 'bg-slate-100 text-slate-800 border-transparent hover:bg-slate-200'}`}
+                className={cn(
+                  "px-3 py-2 rounded-xl text-[11px] font-bold transition-all border select-none flex items-center gap-1.5",
+                  isSelected 
+                    ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 scale-105 z-10" 
+                    : "bg-white/60 text-slate-600 border-slate-200/50 hover:bg-white hover:border-slate-300 hover:text-slate-800",
+                  isHot && !isSelected && "border-amber-200/50 bg-amber-50/30 text-amber-700/80 hot-tag-breath",
+                  isHot && isSelected && "ring-2 ring-amber-400/30"
+                )}
               >
+                <span className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  isSelected ? "bg-amber-400 animate-pulse" : (isHot ? "bg-amber-400/60" : "bg-slate-300")
+                )} />
                 #{tag.name}
+                {isHot && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter">HOT</span>}
               </button>
             </div>
           );
@@ -124,47 +139,45 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
       {activeActionTag && (
         <div 
-          className="fixed inset-0 z-[200] bg-slate-950/40 flex items-center justify-center p-6 backdrop-blur-sm cursor-pointer" 
+          className="fixed inset-0 z-[200] bg-slate-950/20 flex items-center justify-center p-6 backdrop-blur-md cursor-pointer animate-in fade-in duration-300" 
           onClick={() => setActiveActionTag(null)}
           onPointerDown={(e) => { if (e.target === e.currentTarget) setActiveActionTag(null); }}
         >
-          <div className="bg-white rounded-3xl p-6 w-full max-w-[240px] shadow-2xl space-y-4 animate-in fade-in zoom-in duration-200 cursor-default" onClick={(e) => e.stopPropagation()}>
-            <div className="text-center">
-              <span className="text-sm font-black text-slate-900">#{activeActionTag.name}</span>
+          <div className="glass-morphism rounded-3xl p-8 w-full max-w-[280px] shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200 cursor-default" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center space-y-1">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">标签管理 / TAG</span>
+              <div className="text-lg font-black text-slate-900">#{activeActionTag.name}</div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
                 <button 
                   type="button"
-                  className="w-full flex items-center justify-center gap-2 text-blue-600 bg-blue-50 font-bold py-3 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all cursor-pointer" 
+                  className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all cursor-pointer shadow-sm shadow-blue-500/5" 
                   onClick={() => { 
                     if (onRenameTagRequest) {
                       onRenameTagRequest(activeActionTag);
-                    } else {
-                      // Fallback or legacy if needed
-                      console.warn("onRenameTagRequest not provided");
                     }
                     setActiveActionTag(null); 
                   }}
                 >
-                   <Pencil size={18} /> 编辑 / Edit
+                   <Pencil size={18} strokeWidth={2.5} /> 编辑名称 / Rename
                 </button>
                 <button 
                   type="button"
-                  className="w-full flex items-center justify-center gap-2 text-red-600 bg-red-50 font-bold py-3 rounded-2xl hover:bg-red-100 active:scale-95 transition-all cursor-pointer" 
+                  className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 active:scale-95 transition-all cursor-pointer shadow-sm shadow-red-500/5" 
                   onClick={() => { 
                     setConfirmDeleteTag(activeActionTag);
                     setActiveActionTag(null); 
                   }}
                 >
-                   <Trash2 size={18} /> 删除 / Delete
+                   <Trash2 size={18} strokeWidth={2.5} /> 彻底删除 / Delete
                 </button>
             </div>
             <button 
               type="button"
-              className="w-full text-slate-400 text-xs font-bold pt-2 active:text-slate-600 cursor-pointer" 
+              className="w-full text-slate-400 text-[10px] font-black uppercase tracking-tighter pt-2 active:text-slate-600 cursor-pointer" 
               onClick={() => setActiveActionTag(null)}
             >
-              取消 / Cancel
+              取消操作 / CANCEL
             </button>
           </div>
         </div>

@@ -28,6 +28,16 @@ import { useAdminCore } from '../hooks/useAdminCore';
 import { translations, LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 
 export default function AdminView() {
   const { user, authChecked, logout } = useAuth();
