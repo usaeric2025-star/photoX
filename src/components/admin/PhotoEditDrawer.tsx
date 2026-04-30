@@ -265,6 +265,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     }
                   });
                 }}
+                showHotEffects={false}
              />
           </section>
 

@@ -220,6 +220,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                 }
               });
             }}
+            showHotEffects={false}
           />
         </section>
 

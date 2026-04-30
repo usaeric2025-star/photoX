@@ -20,10 +20,12 @@ interface TagEditorProps {
   onDeleteTag: (id: string) => void;
   onQuickAdd: () => void;
   onRenameTagRequest?: (tag: any) => void;
+  showHotEffects?: boolean;
 }
 
 export const TagEditor: React.FC<TagEditorProps> = ({ 
-  tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd, onRenameTagRequest 
+  tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd, onRenameTagRequest,
+  showHotEffects = false
 }) => {
   const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
   const [confirmDeleteTag, setConfirmDeleteTag] = useState<any | null>(null);
@@ -89,7 +91,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {Array.from(new Map(tags.map(t => [t.id, t])).values()).map((tag: any) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
-          const isHot = (tag.count || 0) > 5 || tag.name?.length > 6; // 简单的热门逻辑判定
+          const isHot = showHotEffects && ((tag.count || 0) > 5 || tag.name?.length > 6); // 简单的热门逻辑判定, 仅在 showHotEffects 为 true 时生效
 
           return (
             <div key={tag.id} className="relative">
@@ -127,7 +129,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
               >
                 <span className={cn(
                   "w-1.5 h-1.5 rounded-full",
-                  isSelected ? "bg-amber-400 animate-pulse" : (isHot ? "bg-amber-400/60" : "bg-slate-300")
+                  isSelected ? (showHotEffects ? "bg-amber-400 animate-pulse" : "bg-slate-400") : (isHot ? "bg-amber-400/60" : "bg-slate-300")
                 )} />
                 #{tag.name}
                 {isHot && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter">HOT</span>}

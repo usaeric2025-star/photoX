@@ -2,6 +2,7 @@ import React, { useTransition } from 'react';
 import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Tag } from '../types';
+import { cn } from '../lib/utils';
 
 interface PublicGalleryFiltersProps {
   searchQuery: string;
@@ -23,13 +24,15 @@ interface PublicGalleryFiltersProps {
   lang: string;
   t: any;
   onScrollToTop: () => void;
+  showHotEffects?: boolean;
 }
 
 export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   searchQuery, setSearchQuery, sortOrder, toggleSortOrder, columns, setColumns,
   showGroupsCollapsed, setShowGroupsCollapsed, categories,
   selectedCatCode, setSelectedCatCode, selectedSubId, setSelectedSubId,
-  selectedTagIds, setSelectedTagIds, sortedTags, lang, t, onScrollToTop
+  selectedTagIds, setSelectedTagIds, sortedTags, lang, t, onScrollToTop,
+  showHotEffects = true
 }) => {
   const [isPending, startTransition] = useTransition();
   
@@ -146,6 +149,9 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           <div className="flex flex-wrap gap-1 items-start max-h-[5rem] overflow-y-auto pb-1 content-start pr-1">
               {sortedTags.map(tag => {
                 const strTagId = String(tag.id);
+                const isSelected = selectedTagIds.includes(strTagId);
+                const isHot = showHotEffects && ((tag.count || 0) > 5 || (tag.name?.length || 0) > 6);
+                
                 const toTitleCase = (str: string) => {
                   if (!str) return '';
                   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -158,9 +164,21 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                         setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]);
                       });
                     }}
-                    className={`px-3 py-1 rounded-lg text-xs font-normal transition-all border shadow-sm ${selectedTagIds.includes(strTagId) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                    className={cn(
+                      "px-3 py-1 rounded-lg text-xs font-normal transition-all border shadow-sm flex items-center gap-1.5",
+                      isSelected 
+                        ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' 
+                        : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60',
+                      isHot && !isSelected && "border-amber-200/50 bg-amber-50/30 text-amber-700/80 hot-tag-breath",
+                      isHot && isSelected && "ring-2 ring-amber-400/30"
+                    )}
                   >
+                    <span className={cn(
+                      "w-1 h-1 rounded-full",
+                      isSelected ? (showHotEffects ? "bg-amber-400 animate-pulse" : "bg-slate-400") : (isHot ? "bg-amber-400/60" : "bg-[#1D3557]/20")
+                    )} />
                     #{toTitleCase(tag.name)}
+                    {isHot && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter">HOT</span>}
                   </button>
                 );
               })}

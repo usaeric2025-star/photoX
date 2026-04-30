@@ -154,7 +154,7 @@ export const BatchEditScreen = ({
           </div>
         </section>
 
-        <section className="space-y-4">
+         <section className="space-y-4">
           <TagEditor 
             tags={tags}
             selectedTagIds={formState.tagIds}
@@ -182,6 +182,7 @@ export const BatchEditScreen = ({
                 }
               });
             }}
+            showHotEffects={false}
           />
         </section>
 

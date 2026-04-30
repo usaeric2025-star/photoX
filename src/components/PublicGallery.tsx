@@ -412,6 +412,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         lang={lang}
         t={t}
         onScrollToTop={scrollToTop}
+        showHotEffects={!isAdminMode}
       />
 
       {/* Grid */}
