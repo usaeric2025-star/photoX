@@ -380,6 +380,15 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
   ]);
 
+  const handleBatchAiIdentifyTrigger = useCallback(() => {
+    if (loadingState === 'analyzing') {
+      cancelBatchAiRef.current = true;
+    } else {
+      cancelBatchAiRef.current = false;
+      handleBatchAiIdentify(gridPhotos, () => cancelBatchAiRef.current);
+    }
+  }, [loadingState, handleBatchAiIdentify, gridPhotos]);
+  
   return (
     <ErrorBoundary key="admin-main">
       <AdminSessionProvider value={sessionValue}>
@@ -480,14 +489,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
                           filteredPhotos={gridPhotos}
                           setSelectedIds={setSelectedIds}
                           setIsMultiSelect={setIsMultiSelect}
-                          handleBatchAiIdentifyTrigger={() => {
-                            if (loadingState === 'analyzing') {
-                              cancelBatchAiRef.current = true;
-                            } else {
-                              cancelBatchAiRef.current = false;
-                              handleBatchAiIdentify(gridPhotos, () => cancelBatchAiRef.current);
-                            }
-                          }}
+                          handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
                           handleManageClick={() => setActiveScreen('manage')}
                           loginWithGoogle={loginWithGoogle}
                           onRefresh={() => performPullSync()}
