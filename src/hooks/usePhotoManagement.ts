@@ -103,15 +103,18 @@ export const usePhotoManagement = (
       const photosInBatch = photos.filter(p => batchEditIds.includes(p.id));
       if (photosInBatch.length > 0) {
         const firstPhoto = photosInBatch[0];
-        const allTagsSame = photosInBatch.every(p => 
-          JSON.stringify([...(p.tagIds || [])].sort()) === JSON.stringify([...(firstPhoto.tagIds || [])].sort())
-        );
+        
+        // Calculate intersection of tags present in all photos
+        const intersectionTagIds = photosInBatch.reduce((acc, photo) => {
+            const photoTagIds = (photo.tagIds || []).map(String);
+            return acc.filter(tagId => photoTagIds.includes(String(tagId)));
+        }, (firstPhoto.tagIds || []).map(String));
 
         setFormState({
           ...INITIAL_FORM_STATE,
           categoryId: firstPhoto.categoryId || null,
           manufacturerId: firstPhoto.manufacturerId || null,
-          tagIds: allTagsSame ? (firstPhoto.tagIds || []) : [],
+          tagIds: intersectionTagIds,
         });
         lastInitializedBatchIds.current = batchKey;
       }
