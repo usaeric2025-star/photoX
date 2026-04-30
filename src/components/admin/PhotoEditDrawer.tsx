@@ -28,8 +28,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     photos, 
     setPhotos,
     manufacturers, 
-    quickAddTag, 
-    quickAddManufacturer,
+    addTag, 
+    addManufacturer,
     updateTag,
     deleteTag
   } = useAdminPhoto();
@@ -226,14 +226,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 onToggleTag={handleToggleTag}
                 onUpdateTag={updateTag}
                 onDeleteTag={deleteTag}
-                onQuickAdd={quickAddTag}
+                onQuickAdd={addTag}
              />
           </section>
 
         <section className="space-y-2">
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">厂商 / Manufacturer</h3>
-            <button onClick={quickAddManufacturer} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增</button>
+            <button onClick={() => addManufacturer('新厂商')} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增</button>
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto content-start">
             {(manufacturers || []).map((mfr: any) => {
