@@ -68,6 +68,8 @@ interface AdminPhotoContextType {
   addManufacturer: (name: string) => Promise<any>;
   updateManufacturer: (id: string, name: string) => Promise<void>;
   deleteManufacturer: (id: string) => Promise<void>;
+  quickAddTag: () => void;
+  quickAddManufacturer: () => void;
 }
 
 const AdminPhotoContext = createContext<AdminPhotoContextType | undefined>(undefined);

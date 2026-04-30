@@ -84,9 +84,9 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between pl-1">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">标签 / Tags</h3>
-        <button type="button" onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
+      <div className="flex items-center justify-between px-1 mb-3">
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">標籤 / TAGS</h3>
+        <button type="button" onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors">+ 新增</button>
       </div>
       <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {Array.from(new Map(tags.map(t => [t.id, t])).values()).map((tag: any) => {
@@ -121,8 +121,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                 className={cn(
                   "px-3 py-2 rounded-xl text-[11px] font-bold transition-all border select-none flex items-center gap-1.5",
                   isSelected 
-                    ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 scale-105 z-10" 
-                    : "bg-white/60 text-slate-600 border-slate-200/50 hover:bg-white hover:border-slate-300 hover:text-slate-800",
+                    ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 z-10" 
+                    : "bg-white/60 text-slate-600 border-slate-200/50 hover:bg-white hover:border-slate-300 hover:text-slate-800 active:bg-slate-50",
                   isHot && !isSelected && "border-amber-200/50 bg-amber-50/30 text-amber-700/80 hot-tag-breath",
                   isHot && isSelected && "ring-2 ring-amber-400/30"
                 )}
@@ -153,7 +153,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
             <div className="space-y-3">
                 <button 
                   type="button"
-                  className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 active:scale-95 transition-all cursor-pointer shadow-sm shadow-blue-500/5" 
+                  className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5" 
                   onClick={() => { 
                     if (onRenameTagRequest) {
                       onRenameTagRequest(activeActionTag);
@@ -165,7 +165,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                 </button>
                 <button 
                   type="button"
-                  className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 active:scale-95 transition-all cursor-pointer shadow-sm shadow-red-500/5" 
+                  className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5" 
                   onClick={() => { 
                     setConfirmDeleteTag(activeActionTag);
                     setActiveActionTag(null); 

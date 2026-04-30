@@ -73,7 +73,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               {isAnalyzing && abortAnalysis && (
                 <button 
                   onClick={abortAnalysis}
-                  className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center shadow-sm active:scale-90"
+                  className="w-10 h-10 rounded-2xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center shadow-sm"
                   title="取消识别"
                 >
                   <X size={20} />
@@ -85,7 +85,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined);
                 }}
                 disabled={isAnalyzing && !abortAnalysis}
-                className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-90 ${isAnalyzing ? 'bg-slate-50 border-slate-100 text-slate-400' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-100'}`}
+                className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm ${isAnalyzing ? 'bg-slate-50 border-slate-100 text-slate-400' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-100 active:bg-purple-200'}`}
                 title="AI 辨識"
               >
                 {isAnalyzing ? <RefreshCcw size={20} className="animate-spin" /> : <Sparkles size={20} />}
@@ -95,7 +95,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           {editPhotoId && (
             <button 
               onClick={() => setShowDeleteConfirm(true)}
-              className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 transition-all active:scale-90"
+              className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 transition-all active:bg-red-200"
               title="刪除照片"
             >
               <Trash2 size={20} />
@@ -104,14 +104,14 @@ export const UploadForm: React.FC<UploadFormProps> = ({
           <button 
             onClick={saveNewPhoto}
             disabled={isSyncing}
-            className={`bg-slate-800 text-white w-10 h-10 rounded-2xl shadow-lg shadow-slate-800/10 transition-all active:scale-95 flex items-center justify-center ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`bg-slate-800 text-white w-10 h-10 rounded-2xl shadow-lg shadow-slate-800/10 transition-all flex items-center justify-center ${isSyncing ? 'opacity-50 pointer-events-none' : 'active:bg-slate-700'}`}
             title="完成儲存"
           >
             {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
           </button>
           <button 
             onClick={onClose} 
-            className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full active:scale-95 ml-1"
+            className="w-10 h-10 flex items-center justify-center text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full ml-1 active:bg-slate-300"
             title="關閉"
           >
             <X size={20} />
@@ -171,7 +171,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 key={cat.id}
                 onClick={() => { updateForm({ categoryId: cat.id }); }}
-                className={`p-3 rounded-2xl border-2 text-center transition-all active:scale-[0.98] ${formState.categoryId === cat.id ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200'}`}
+                className={`p-3 rounded-2xl border-2 text-center transition-all ${formState.categoryId === cat.id ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 active:bg-slate-50'}`}
               >
                 <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.id ? 'text-white' : 'text-slate-800'}`}>{displayName}</span>
               </button>
@@ -189,12 +189,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ manufacturerId: String(mfr.id) })}
-                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${String(formState.manufacturerId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
+                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all ${String(formState.manufacturerId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm active:bg-slate-50'}`}
               >
                 {mfr.name}
               </button>
             ))}
-            <button onClick={quickAddManufacturer} className="px-4 py-2 rounded-full border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-2 font-bold hover:border-slate-400 hover:text-slate-600 active:scale-95 transition-all">
+            <button onClick={quickAddManufacturer} className="px-4 py-2 rounded-full border border-dashed border-slate-300 text-slate-400 text-xs flex items-center gap-2 font-bold hover:border-slate-400 hover:text-slate-600 transition-all active:bg-slate-50">
               <Plus size={14} /> 新增
             </button>
           </div>

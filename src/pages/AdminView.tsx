@@ -315,35 +315,37 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   );
 
   const quickAddTag = useCallback(() => {
+    console.log('[AdminView] quickAddTag triggered');
     setPromptDialog({
-      title: '自定义标签',
-      placeholder: '输入新标签名称 (例如 清货)',
+      title: '自定義標籤 / Custom Tag',
+      placeholder: '輸入新標籤名稱 (例如: 清貨)',
       onSubmit: async (val: string) => {
         const normalized = val.trim();
         if (!normalized) return;
         const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
           updateForm((prev: any) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
-          showToast(`标签 "${normalized}" 已存在`);
+          showToast(`標籤 "${normalized}" 已存在`);
           return;
         }
         await addTag(normalized);
-        showToast(`已新增标签 "${normalized}"`);
+        showToast(`已新增標籤 "${normalized}"`);
       }
     });
   }, [setPromptDialog, tags, addTag, updateForm, showToast]);
 
   const quickAddManufacturer = useCallback(() => {
+    console.log('[AdminView] quickAddManufacturer triggered');
     setPromptDialog({
-      title: '新增厂商',
-      placeholder: '输入新厂商名称',
+      title: '新增廠商 / New Manufacturer',
+      placeholder: '輸入新廠商名稱',
       onSubmit: async (val: string) => {
         const trimmed = val.trim();
         if (!trimmed) return;
         const saved = await addManufacturer(trimmed);
         if (saved) {
            updateForm((prev: any) => ({ ...prev, manufacturerId: saved.id }));
-           showToast(`已新增厂商 "${trimmed}"`);
+           showToast(`已新增廠商 "${trimmed}"`);
         }
       }
     });
@@ -427,13 +429,15 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     updateTag, deleteTag: handleDeleteTag, 
     updateCategory, deleteCategory, addCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag
+    addTag,
+    quickAddTag,
+    quickAddManufacturer
   }), [
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
     handleSingleAiAnalyzeCallback, handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag
+    addTag, quickAddTag, quickAddManufacturer
   ]);
 
   const uiValue = React.useMemo(() => ({
@@ -461,8 +465,6 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
       <AdminSessionProvider value={sessionValue}>
         <AdminPhotoProvider value={photoValue}>
           <AdminUIProvider value={uiValue}>
-            <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
-            
             {/* 全局动态 AlertDialog 渲染器 */}
             <AlertDialog 
               open={!!alertDialog} 
@@ -730,6 +732,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
             </AnimatePresence>
       
 
+            <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
           </AdminUIProvider>
         </AdminPhotoProvider>
       </AdminSessionProvider>

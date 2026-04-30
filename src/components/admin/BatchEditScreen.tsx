@@ -6,6 +6,7 @@ import { ProductFormData } from '../../types';
 import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
 import { useAdminUI } from '../../context/AdminContexts';
+import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 
 export const BatchEditScreen = ({
   resetAddState,
@@ -52,13 +53,13 @@ export const BatchEditScreen = ({
           <button onClick={() => saveBatchEdit(batchIsHiddenApplied)}
             className={`w-10 h-10 bg-blue-600 text-white 
             rounded-xl flex items-center justify-center 
-            shadow-md active:scale-95 ${isSyncing ? 'opacity-50 pointer-events-none' : ''}`}>
+            shadow-md ${isSyncing ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
             {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
           </button>
           <button onClick={resetAddState}
             className="w-10 h-10 bg-slate-100 text-slate-600 
             rounded-xl flex items-center justify-center 
-            active:scale-95">
+            active:bg-slate-200">
             <CloseIcon size={18} />
           </button>
         </div>
@@ -73,7 +74,7 @@ export const BatchEditScreen = ({
         </div>
 
         <section className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品名称 / Product Name</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">產品名稱 / PRODUCT NAME</h3>
             <input 
               type="text" 
               placeholder="输入统一产品名称..."
@@ -84,7 +85,7 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一产品编号 / Item Code</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">產品編號 / ITEM CODE</h3>
             <input 
               type="text" 
               placeholder="输入统一编号 (如: SK-2024)..."
@@ -95,7 +96,7 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一型号编号 / Model Number</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">型號 / MODEL NUMBER</h3>
             <input 
               type="text" 
               placeholder="输入统一型号编号 (如: MOD-123)..."
@@ -106,7 +107,7 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一价格 / Price</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">價格 / PRICE</h3>
             <input 
               type="text" 
               placeholder="输入统一价格..."
@@ -117,41 +118,26 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目標主目录 *</h3>
-          <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-4 gap-2">
-              {categories.map((cat: any) => {
-                const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
-                return (
-                  <button 
-                    key={cat.id}
-                    onClick={() => { updateForm({ categoryId: cat.id }); }}
-                    className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-2xl border-2 transition-all active:scale-[0.95] ${formState.categoryId === cat.id ? 'bg-blue-50 border-blue-600 shadow-lg shadow-blue-600/10' : 'bg-white border-slate-100'}`}
-                  >
-                    <span className={`font-black text-[11px] leading-tight text-center ${formState.categoryId === cat.id ? 'text-blue-700' : 'text-slate-700'}`}>{displayName}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <FormSectionHeader title="產品目錄" subtitle="CATEGORY *" />
+          <CategoryGrid 
+            categories={categories}
+            selectedId={formState.categoryId}
+            onSelect={(id) => updateForm({ categoryId: id })}
+            appLang={appLang}
+          />
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between pl-1">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一厂商名称</h3>
-            <button onClick={quickAddMfr} className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full active:scale-95 transition-transform">+ 新增</button>
-          </div>
-          <div className="flex flex-wrap gap-2 p-1">
-            {(manufacturers || []).map((mfr: any) => (
-              <button 
-                key={mfr.id}
-                onClick={() => updateForm({ manufacturerId: String(mfr.id) })}
-                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all active:scale-[0.97] ${String(formState.manufacturerId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm'}`}
-              >
-                {mfr.name}
-              </button>
-            ))}
-          </div>
+          <FormSectionHeader 
+            title="廠商名稱" 
+            subtitle="MANUFACTURER" 
+            onAction={quickAddMfr} 
+          />
+          <ManufacturerList 
+            manufacturers={manufacturers}
+            selectedId={formState.manufacturerId}
+            onSelect={(id) => updateForm({ manufacturerId: id })}
+          />
         </section>
 
          <section className="space-y-4">
@@ -189,7 +175,7 @@ export const BatchEditScreen = ({
         <section className="space-y-4">
           <button 
             onClick={() => setShowOtherFields(!showOtherFields)}
-            className="w-full flex items-center justify-between p-5 bg-white border border-slate-200 rounded-3xl text-sm font-bold text-slate-800 shadow-sm active:scale-[0.99] transition-all"
+            className="w-full flex items-center justify-between p-5 bg-white border border-slate-200 rounded-3xl text-sm font-bold text-slate-800 shadow-sm transition-all"
           >
             <div className="flex items-center gap-3">
               <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`}>
