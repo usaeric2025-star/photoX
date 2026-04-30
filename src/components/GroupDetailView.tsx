@@ -58,7 +58,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 </button>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                     <h2 className="text-lg font-black text-slate-800 tracking-tight">
+                     <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
                        {activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
                      </h2>
                   </div>

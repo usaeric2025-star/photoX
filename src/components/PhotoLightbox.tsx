@@ -185,7 +185,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         </div>
       </div>
 
-    return (
       <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative">
         <div className="flex-1 overflow-y-auto no-scrollbar p-5 pb-24 md:pb-6 space-y-5">
            {/* 1. 标题与动作条 */}

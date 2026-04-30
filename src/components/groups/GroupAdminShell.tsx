@@ -265,7 +265,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                      }}
                    >
                      <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-black text-slate-800 tracking-tight">
+                        <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
                           {activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
                         </h2>
                         {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}

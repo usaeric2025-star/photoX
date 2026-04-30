@@ -208,7 +208,7 @@ export const useAdminPhotos = (
                         tagIds: mergedTagIds,
                         name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                         model_number: p.model_number || result.modelNumber || null,
-                        dimensions: (!p.dimensions || p.dimensions.length === 0) ? (result.dimensions || null) : p.dimensions,
+                        dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
                         updatedAt: new Date().toISOString(),
                         isAnalyzing: false 
                     };
@@ -310,8 +310,8 @@ export const useAdminPhotos = (
             tagIds: mergedTagIds,
             name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
             model_number: p.model_number || result.modelNumber || null,
-            dimensions: (!p.dimensions || p.dimensions.length === 0)
-              ? (result.dimensions || null)
+            dimensions: (result.dimensions && result.dimensions.length > 0)
+              ? result.dimensions
               : p.dimensions,
             updatedAt: new Date().toISOString(),
             isAnalyzing: false 
@@ -465,7 +465,7 @@ export const useAdminPhotos = (
                      // manufacturerId is deliberately NOT updated by AI
                      tagIds: finalTagIds,
                      model_number: p.model_number || result.modelNumber || '',
-                     dimensions: result.dimensions || p.dimensions
+                     dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions
                    };
                    
                    if (user) {
@@ -626,7 +626,7 @@ export const useAdminPhotos = (
             // manufacturerId stays as is
             tagIds: finalTagIds,
             model_number: result.modelNumber || p.model_number,
-            dimensions: result.dimensions || p.dimensions,
+            dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
             updatedAt: new Date().toISOString()
           };
         });
