@@ -616,7 +616,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
               <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
                  <div className="flex-1 min-h-0 relative bg-bg">
                     <PublicGallery 
-                       isAdminMode={true}
+                       isAdminMode={false}
                        onTogglePinned={async (photo) => {
                          const newStatus = !photo.isPinned;
                          const affectedPhotos = photo.groupId 

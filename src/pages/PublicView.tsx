@@ -21,8 +21,17 @@ export default function PublicView() {
     totalCloudCount,
     filterCatId,
     filterTagIds,
-    debouncedSearchQuery
+    debouncedSearchQuery,
+    setIsAdminMode,
+    setIsMultiSelect,
+    setSelectedIds
   } = useGalleryContext();
+
+  useEffect(() => {
+    setIsAdminMode(false);
+    setIsMultiSelect(false);
+    setSelectedIds([]);
+  }, [setIsAdminMode, setIsMultiSelect, setSelectedIds]);
   
   const [settings, setSettings] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
