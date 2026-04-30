@@ -273,8 +273,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
     handleUngroup, handleGroupPhotos 
   } = useAdminCore(
-      user, updateForm, tValue, refreshCloudData, lastSyncTime,
-      uiBasicValue, sessionBasicValue
+      user, updateForm, tValue, refreshCloudData, lastSyncTime
   );
 
   const quickAddTag = useCallback(() => {
@@ -405,12 +404,14 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, 
     updateCategory, deleteCategory, addCategory,
-    addManufacturer, updateManufacturer, deleteManufacturer
+    addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag
   }), [
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
     handleSingleAiAnalyzeCallback, handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer
+    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag
   ]);
 
   const uiValue = React.useMemo(() => ({
