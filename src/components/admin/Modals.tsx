@@ -19,6 +19,7 @@ export const Modals = ({
   promptValue, setPromptValue
 }: any) => {
   const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminUI();
+  console.log('Modals render: promptDialog=', promptDialog);
   return (
     <>
       <AnimatePresence>

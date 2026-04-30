@@ -35,7 +35,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag,
     removeTagFromPhoto
   } = useAdminPhoto();
-  const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
+  const { isAnalyzing, aiDebugInfo, setPromptDialog, setConfirmDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
   const isSyncing = sessionSyncing;
@@ -240,11 +240,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           <div className="flex items-center justify-between pl-1">
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">厂商 / Manufacturer</h3>
             <button 
-              onClick={() => setPromptDialog({
-                title: '新增厂商',
-                placeholder: '输入厂商名称',
-                onSubmit: (name) => addManufacturer(name)
-              })} 
+              onClick={() => {
+                console.log('Adding manufacturer...');
+                setPromptDialog({
+                  title: '新增厂商',
+                  placeholder: '输入厂商名称',
+                  onSubmit: (name) => addManufacturer(name)
+                })
+              }} 
               className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
             >
               + 新增
@@ -435,7 +438,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
            {props.editPhotoId && props.onDelete && (
             <div className="pt-2 pb-6">
               <button 
-                onClick={() => props.setConfirmDialog({ title: '确认删除', message: '确定要删除吗？', danger: true, onConfirm: () => props.onDelete!(props.editPhotoId!) })}
+                onClick={() => setConfirmDialog({ title: '确认删除', message: '确定要删除吗？', danger: true, onConfirm: () => props.onDelete!(props.editPhotoId!) })}
                 className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
               >
                 删除此照片
