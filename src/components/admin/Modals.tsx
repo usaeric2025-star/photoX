@@ -59,7 +59,13 @@ export const Modals = ({
                 </button>
                 <button 
                   onClick={async () => {
-                    await confirmDialog.onConfirm();
+                    alert('确认按钮被点击');
+                    if (confirmDialog.onConfirm) {
+                      alert('onConfirm 存在');
+                      await confirmDialog.onConfirm();
+                    } else {
+                      alert('onConfirm 不存在！');
+                    }
                     setConfirmDialog(null);
                   }}
                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-white transition-colors ${confirmDialog.danger !== false ? 'bg-red-500 hover:bg-red-600 shadow-md shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20'}`}

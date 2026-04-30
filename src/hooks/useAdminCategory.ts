@@ -94,6 +94,7 @@ export const useAdminCategory = (adminUI: any) => {
   const deleteTag = async (id: string | number) => {
     if (!id) return;
 
+    alert('准备弹出确认框，onConfirm type：' + typeof (async () => {}));
     setConfirmDialog({
       title: '确认删除标签 / Confirm Delete Tag',
       message: '确定要删除这个标签吗？ / Are you sure you want to delete this tag?',
