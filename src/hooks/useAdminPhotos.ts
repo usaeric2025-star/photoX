@@ -288,7 +288,7 @@ export const useAdminPhotos = (
 
       setAiDebugInfo({ step: '发送请求', message: `图片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
       
-      const result = await analyzeProductPhoto(imageData, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel, catId, originalName, signal);
+      const result = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
       
       if (signal.aborted) throw new Error('Aborted');
 

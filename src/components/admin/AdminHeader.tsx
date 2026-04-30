@@ -30,7 +30,7 @@ export const AdminHeader: React.FC<Props> = ({
   appLang = 'zh'
 }) => {
   const { settings, user, viewMode, setViewMode } = useAdminSession();
-  const { isBatchAnalyzing, batchProgress, activeScreen, showToast, setAlertDialog } = useAdminUI();
+  const { isAnalyzing, batchProgress, activeScreen, showToast, setAlertDialog } = useAdminUI();
   const { isInfiniteMode, setIsInfiniteMode } = useGalleryContext();
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -175,11 +175,11 @@ export const AdminHeader: React.FC<Props> = ({
           
           <button 
             onClick={handleBatchAiIdentifyTrigger}
-            disabled={isBatchAnalyzing}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isBatchAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
+            disabled={isAnalyzing}
+            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
             title={t.batchAi}
           >
-            {isBatchAnalyzing ? (
+            {isAnalyzing ? (
               <span className="animate-pulse text-[9px] font-bold">{batchProgress.current}</span>
             ) : (
               <Sparkles size={18} />

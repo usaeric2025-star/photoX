@@ -440,7 +440,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast: toast, showToast: showToast,
-    loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
+    loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis,
+    isAnalyzing: loadingState === 'analyzing'
   }), [
     activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis

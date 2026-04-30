@@ -108,11 +108,16 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 )}
                 <button 
                   onClick={() => {
+                    console.log('AI Identify Clicked', { isAnalyzing, hasNewData: !!props.newPhotoData, hasPreview: !!props.editPhotoPreview });
                     if (isAnalyzing) return;
                     const data = props.newPhotoData || props.editPhotoPreview;
-                    if (!data) return;
+                    if (!data) {
+                      console.warn('AI Identify failed: No image data found');
+                      return;
+                    }
                     
                     if (handleSingleAiAnalyzeCallback) {
+                      console.log('Calling handleSingleAiAnalyzeCallback');
                       handleSingleAiAnalyzeCallback(
                         data, 
                         formState.categoryId || undefined, 
@@ -121,8 +126,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                         updateForm, 
                         handleSingleAiAnalyze
                       );
+                    } else if (handleSingleAiAnalyze) {
+                      console.log('Calling handleSingleAiAnalyze');
+                      handleSingleAiAnalyze(data, formState.categoryId || undefined);
                     } else {
-                      handleSingleAiAnalyze!(data, formState.categoryId || undefined);
+                      console.error('AI Identification methods are missing from context');
                     }
                   }}
                   disabled={isAnalyzing && !props.abortAnalysis}
