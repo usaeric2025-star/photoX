@@ -8,6 +8,7 @@ import {
   deleteTagFromDB, 
   updateCategoryInDB, 
   deleteCategoryFromDB, 
+  addTagToDB,
   addCategoryToDB,
   addManufacturerToDB,
   updateManufacturerInDB,
@@ -306,12 +307,28 @@ export const useAdminCategory = (adminUI: any) => {
   };
 
 
+  const addTag = async (name: string) => {
+    try {
+      const saved = await addTagToDB(name);
+      if(saved) {
+        setTags(prev => [...prev, saved]);
+        await saveData('product_tags', [...tags, saved]);
+      }
+      return saved;
+    } catch(err: any) {
+      console.error("[useAdminCategory] Add tag failed:", err);
+      // setAlertDialog is available via adminUI passed in constructor
+      setAlertDialog({ title: '添加标签失败', message: err.message || '网络连接或数据库权限问题' });
+    }
+  };
+  
   return {
     categories, setCategories,
     addCategory,
     updateCategory,
     deleteCategory,
     tags, setTags,
+    addTag,
     updateTag,
     deleteTag,
     manufacturers, setManufacturers,

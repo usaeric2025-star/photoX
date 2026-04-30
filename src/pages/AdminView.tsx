@@ -161,6 +161,13 @@ export default function AdminView() {
     );
   }
 
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
   return (
     <AdminViewContent 
       user={user} 
@@ -170,7 +177,8 @@ export default function AdminView() {
       t={t}
       lang={lang as LanguageCode}
       dialogProps={{
-        confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue
+        confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue,
+        toast, showToast
       }}
     />
   );
@@ -193,7 +201,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     visibleCount, setVisibleCount
   } = useGalleryContext();
   
-  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = dialogProps;
+  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
 
   useEffect(() => {
     setUser(user);
@@ -256,18 +264,54 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
   const { 
     updateTag, deleteTag, 
     addCategory, updateCategory, deleteCategory, 
-    addManufacturer, updateManufacturer, deleteManufacturer 
+    addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag 
   } = useAdminCategory(uiBasicValue);
 
   const { 
-    toast, showToast, saveSettings,
+    saveSettings,
     performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-    handleUngroup, handleGroupPhotos, quickAddSubCategory, quickAddTag, quickAddManufacturer 
+    handleUngroup, handleGroupPhotos 
   } = useAdminCore(
       user, updateForm, tValue, refreshCloudData, lastSyncTime,
-      uiBasicValue, sessionBasicValue,
-      addManufacturer
+      uiBasicValue, sessionBasicValue
   );
+
+  const quickAddTag = useCallback(() => {
+    setPromptDialog({
+      title: '自定义标签',
+      placeholder: '输入新标签名称 (例如 清货)',
+      onSubmit: async (val: string) => {
+        const normalized = val.trim();
+        if (!normalized) return;
+        const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
+        if (existing) {
+          updateForm((prev: any) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
+          showToast(`标签 "${normalized}" 已存在`);
+          return;
+        }
+        await addTag(normalized);
+        showToast(`已新增标签 "${normalized}"`);
+      }
+    });
+  }, [setPromptDialog, tags, addTag, updateForm, showToast]);
+
+  const quickAddManufacturer = useCallback(() => {
+    setPromptDialog({
+      title: '新增厂商',
+      placeholder: '输入新厂商名称',
+      onSubmit: async (val: string) => {
+        const trimmed = val.trim();
+        if (!trimmed) return;
+        const saved = await addManufacturer(trimmed);
+        if (saved) {
+           updateForm((prev: any) => ({ ...prev, manufacturerId: saved.id }));
+           showToast(`已新增厂商 "${trimmed}"`);
+        }
+      }
+    });
+  }, [setPromptDialog, addManufacturer, updateForm, showToast]);
+
 
   const { 
     batchProgress, isImporting, importProgress, importTotal, 
@@ -361,33 +405,31 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, 
     updateCategory, deleteCategory, addCategory,
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    quickAddTag, quickAddManufacturer
+    addManufacturer, updateManufacturer, deleteManufacturer
   }), [
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
     handleSingleAiAnalyzeCallback, handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    quickAddTag, quickAddManufacturer
+    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer
   ]);
 
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
+    toast: toast, showToast: showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
   }), [
     activeScreen, editPhotoId, batchEditIds, confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
   ]);
 
-  const handleBatchAiIdentifyTrigger = useCallback(() => {
+  const handleBatchAiIdentifyTrigger = () => {
     if (loadingState === 'analyzing') {
       cancelBatchAiRef.current = true;
     } else {
       cancelBatchAiRef.current = false;
       handleBatchAiIdentify(gridPhotos, () => cancelBatchAiRef.current);
     }
-  }, [loadingState, handleBatchAiIdentify, gridPhotos]);
+  };
   
   return (
     <ErrorBoundary key="admin-main">
