@@ -58,9 +58,10 @@ interface PublicGalleryProps {
   setConfirmDialog?: (d: any) => void;
   setLoadingState?: (s: string) => void;
   totalCount?: number;
+  onTogglePinned?: (photo: Photo) => void;
 }
 
-const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
+const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos, onTogglePinned }: any) => {
   const handleOpenLightbox = useCallback(() => {
     const realIndex = displayPhotos.findIndex((p: any) => p.id === gridPhotos[index].id);
     if (realIndex !== -1) onLightboxOpen(realIndex);
@@ -87,6 +88,7 @@ const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect
       onLongPressStart={onLongPressStart}
       onLongPressEnd={onLongPressEnd}
       shareSinglePhoto={shareSinglePhoto}
+      onTogglePinned={onTogglePinned}
     />
   );
 });
@@ -129,7 +131,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   setAlertDialog: propsSetAlertDialog,
   setConfirmDialog: propsSetConfirmDialog,
   setLoadingState: propsSetLoadingState,
-  totalCount
+  totalCount,
+  onTogglePinned
 }) => {
   const user = propsUser;
   const settings = propsSettings;
@@ -440,6 +443,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 onLongPressStart={startLongPress}
                 onLongPressEnd={endLongPress}
                 shareSinglePhoto={shareSinglePhoto}
+                onTogglePinned={onTogglePinned}
                 displayPhotos={displayPhotos}
                 gridPhotos={gridPhotos}
               />

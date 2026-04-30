@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Photo, Category } from '../types';
-import { X, Layers } from 'lucide-react';
+import { X, Layers, Heart } from 'lucide-react';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -22,12 +22,13 @@ interface PhotoCardProps {
   onLongPressStart: (id: string) => void;
   onLongPressEnd: () => void;
   shareSinglePhoto: (photo: Photo) => void;
+  onTogglePinned?: (photo: Photo) => void;
 }
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   photo, index, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
-  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto
+  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned
 }) => {
   const mfrName = useMemo(() => {
     const mfrId = photo.manufacturerId || (photo as any).sub_category;
@@ -132,6 +133,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         <div className="absolute top-1 right-1 bg-blue-600 text-white p-0.5 rounded-full shadow-lg z-10">
           <X size={10} />
         </div>
+      )}
+      {onTogglePinned && (
+         <button 
+           onClick={(e) => {
+             e.stopPropagation();
+             onTogglePinned(photo);
+           }}
+           className={`absolute top-1 ${isAdminMode && isMultiSelect && isSelected ? 'right-7' : 'right-1'} bg-black/50 backdrop-blur-sm p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''}`}
+         >
+           <Heart size={12} className={photo.isPinned ? 'fill-current' : ''} />
+         </button>
       )}
       {photo.groupId && (
          <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">

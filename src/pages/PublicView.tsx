@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
+import { updatePhotoInCloud } from '../services/photoService';
 import { PublicGallery } from '../components/PublicGallery';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
@@ -181,6 +182,15 @@ export default function PublicView() {
           onLoadMore={loadMore}
           hasMore={hasMore}
           totalCount={totalCloudCount}
+          onTogglePinned={async (photo) => {
+            const newStatus = !photo.isPinned;
+            try {
+              await updatePhotoInCloud(photo.id, { is_pinned: newStatus, updated_at: new Date().toISOString() });
+              setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isPinned: newStatus } : p));
+            } catch (e) {
+              console.error("[ERROR] Failed to toggle pinned:", e);
+            }
+          }}
         />
       )}
     </div>
