@@ -174,9 +174,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { loadingState, setAlertDialog, setConfirmDialog, setPromptDialog } = useAdminUI();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
-  const [newSubName, setNewSubName] = useState('');
-  const [newTagName, setNewTagName] = useState('');
-  const [newCategoryName, setNewCategoryName] = useState('');
   const [showCatOverview, setShowCatOverview] = useState(false);
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -198,10 +195,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTestResult(result);
   };
 
-  const handleAddManufacturer = async () => {
-    if (!newSubName.trim()) return;
-    await addManufacturer(newSubName.trim());
-    setNewSubName('');
+  const handleAddManufacturer = () => {
+    setPromptDialog({
+      title: '新增生产商',
+      message: '输入生产商名称:',
+      onSubmit: async (name: string) => {
+        if (!name.trim()) return;
+        await addManufacturer(name.trim());
+      }
+    });
   };
 
   const handleAddCategory = async () => {
@@ -210,21 +212,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setNewCategoryName('');
   };
 
-  const handleAddTag = async () => {
-    if (!newTagName.trim()) return;
-    const normalized = newTagName.toUpperCase().trim();
-    setNewTagName('');
-    
-    try {
-      // Use standard quickAddTag if it supports parameters, but it's usually defined elsewhere.
-      // For now keeping addTagToDB here as it was already here, but using setter is fine.
-      const savedTag = await addTagToDB(normalized);
-      if (savedTag) {
-        setTags([...(tags || []), savedTag]);
+  const handleAddTag = () => {
+    setPromptDialog({
+      title: '新增标签',
+      message: '输入标签名称:',
+      onSubmit: async (name: string) => {
+        if (!name.trim()) return;
+        const normalized = name.trim().toUpperCase();
+        try {
+          const newTag = await addTagToDB(normalized);
+          if (newTag) {
+            setTags(prev => [...prev, newTag]);
+          }
+        } catch (error: any) {
+          setAlertDialog({ title: '添加失败', message: error.message });
+        }
       }
-    } catch (e) {
-      console.error('Failed to add tag:', e);
-    }
+    });
   };
 
   const [activeTagMenuId, setActiveTagMenuId] = useState<string | null>(null);
@@ -648,16 +652,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(manufacturers || []).length} 个项目</span>
           </div>
           <div className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="新增生产商..."
-              className={inputClass}
-              value={newSubName}
-              onChange={(e) => setNewSubName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddManufacturer()}
-            />
             <button onClick={handleAddManufacturer} className={accentBtnClass}>
-              <Plus size={16} />
+              <Plus size={16} /> 新增生产商
             </button>
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
@@ -698,16 +694,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(tags || []).length} 个项目</span>
           </div>
           <div className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="新增标签 (例如 清货)..."
-              className={inputClass}
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-            />
             <button onClick={handleAddTag} className={accentBtnClass}>
-              <Plus size={16} />
+              <Plus size={16} /> 新增标签
             </button>
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">

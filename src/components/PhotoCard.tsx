@@ -154,18 +154,19 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       
       <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/70 to-transparent">
          {!isUncategorized && displayCatName && (
-          <p className="text-xs font-semibold tracking-tight text-white/90 drop-shadow-sm mb-0.5 truncate">
+          <p className="text-xs font-semibold tracking-tight text-white/90 drop-shadow-md mb-0.5 truncate">
             {displayCatName}
           </p>
         )}
         
         {photoTags.length > 0 && (
           <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {photoTags.map((tagName, idx) => (
-              <span key={idx} className="bg-white/20 backdrop-blur-sm text-white/90 text-[10px] px-1 py-0.5 rounded-sm font-normal whitespace-nowrap">
+            {photoTags.slice(0, 3).map((tagName, idx) => (
+              <span key={idx} className="bg-white/20 backdrop-blur-sm text-white/90 text-[9px] px-1 rounded-sm font-normal whitespace-nowrap">
                 {tagName}
               </span>
             ))}
+            {photoTags.length > 3 && <span className="text-[9px] text-white/70 px-1">...</span>}
           </div>
         )}
       </div>

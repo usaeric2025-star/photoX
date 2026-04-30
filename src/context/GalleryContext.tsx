@@ -129,62 +129,66 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return map;
   }, [tags]);
 
-  // Intermediate: Raw Filtered and Sorted
-  const displayPhotos = useMemo(() => {    let result = [...photos];
-    
-    if (debouncedSearchQuery) {
-      const q = debouncedSearchQuery.toLowerCase();
-      result = result.filter(p => 
-        (p.name || '').toLowerCase().includes(q) || 
-        (p.manual_code || '').toLowerCase().includes(q) ||
-        (p.model_number || '').toLowerCase().includes(q)
-      );
-    }
-    
-    if (filterCatId) {
-      result = result.filter(p => String(p.categoryId) === String(filterCatId));
-    }
-    
-    if (filterSubId) {
-      result = result.filter(p => p.manufacturerId === filterSubId);
-    }
-    
-    if (filterTagIds.length > 0) {
-      // Pre-compute tag mapping for fallback logic to avoid repeated tag finds
-      const tagFallbackMap = new Map<string, string>();
-      filterTagIds.forEach(tid => {
-        const tagObj = tags.find(t => String(t.id) === String(tid));
-        if (tagObj) tagFallbackMap.set(tid, tagObj.name.toLowerCase());
-      });
+    // Use pre-computed time to avoid repeated Date parsing during sort
+    const photosWithTime = useMemo(() => {
+      return photos.map(p => ({
+        ...p,
+        _time: new Date(p.createdAt || (p as any).created_at || 0).getTime()
+      }));
+    }, [photos]);
+
+    const displayPhotos = useMemo(() => {
+      let result = [...photosWithTime];
       
-      result = result.filter(p => {
-        const pTagIds = Array.isArray(p.tagIds) ? p.tagIds.map(String) : (typeof p.tagIds === 'string' ? [String(p.tagIds)] : []);
-        
-        // Every selected tag must match either by ID or by name
-        return filterTagIds.every(tid => {
-          const strTid = String(tid);
-          if (pTagIds.includes(strTid)) return true;
-          
-          const fallbackName = tagFallbackMap.get(tid);
-          if (fallbackName) {
-            return pTagIds.some(pt => String(pt).toLowerCase() === fallbackName);
-          }
-          return false;
+      if (debouncedSearchQuery) {
+        const q = debouncedSearchQuery.toLowerCase();
+        result = result.filter(p => 
+          (p.name || '').toLowerCase().includes(q) || 
+          (p.manual_code || '').toLowerCase().includes(q) ||
+          (p.model_number || '').toLowerCase().includes(q)
+        );
+      }
+      
+      if (filterCatId) {
+        result = result.filter(p => String(p.categoryId) === String(filterCatId));
+      }
+      
+      if (filterSubId) {
+        result = result.filter(p => p.manufacturerId === filterSubId);
+      }
+      
+      if (filterTagIds.length > 0) {
+        const tagFallbackMap = new Map<string, string>();
+        filterTagIds.forEach(tid => {
+          const tagObj = tags.find(t => String(t.id) === String(tid));
+          if (tagObj) tagFallbackMap.set(tid, tagObj.name.toLowerCase());
         });
+        
+        result = result.filter(p => {
+          const pTagIds = Array.isArray(p.tagIds) ? p.tagIds.map(String) : (typeof p.tagIds === 'string' ? [String(p.tagIds)] : []);
+          
+          return filterTagIds.every(tid => {
+            const strTid = String(tid);
+            if (pTagIds.includes(strTid)) return true;
+            
+            const fallbackName = tagFallbackMap.get(tid);
+            if (fallbackName) {
+              return pTagIds.some(pt => String(pt).toLowerCase() === fallbackName);
+            }
+            return false;
+          });
+        });
+      }
+  
+      result.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        
+        return sortOrder === 'desc' ? b._time - a._time : a._time - b._time;
       });
-    }
-
-    result.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      
-      const timeA = new Date(a.createdAt || (a as any).created_at || 0).getTime();
-      const timeB = new Date(b.createdAt || (b as any).created_at || 0).getTime();
-      return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;
-    });
-
-    return result;
-  }, [photos, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder]);
+  
+      return result;
+    }, [photosWithTime, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, tags]);
 
   // final grid: with grouping
   const gridPhotosFull = useMemo(() => {

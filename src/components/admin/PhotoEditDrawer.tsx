@@ -239,11 +239,14 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 onToggleTag={handleToggleTag}
                 onUpdateTag={updateTag}
                 onDeleteTag={(tagId) => removeTagFromPhoto(editPhotoId!, tagId)}
-                onQuickAdd={() => setPromptDialog({
-                  title: '新增标签',
-                  placeholder: '输入标签名称',
-                  onSubmit: (name) => addTag(name)
-                })}
+                onQuickAdd={() => {
+                  alert('PhotoEditDrawer 的 onQuickAdd 被调用了');
+                  setPromptDialog({
+                    title: '新增标签',
+                    message: '输入标签名称',
+                    onSubmit: (name) => addTag(name)
+                  });
+                }}
              />
           </section>
 

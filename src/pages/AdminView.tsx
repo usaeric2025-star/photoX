@@ -100,7 +100,7 @@ export default function AdminView() {
   };
 
   const uiValueForLogin = React.useMemo(() => ({
-    confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     activeScreen: 'login', setActiveScreen: () => {},
     editPhotoId: null, setEditPhotoId: () => {},
     batchEditIds: null, setBatchEditIds: () => {},
@@ -108,7 +108,7 @@ export default function AdminView() {
     loadingState: 'idle' as const, setLoadingState: () => {},
     batchProgress: { current: 0, total: 0 },
     aiDebugInfo: null, abortAnalysis: () => {}
-  }), [confirmDialog, alertDialog, promptDialog, setConfirmDialog, setAlertDialog, setPromptDialog]);
+  }), [alertDialog, setAlertDialog, promptDialog, setPromptDialog]);
 
   if (!authChecked) {
     return (
@@ -182,7 +182,7 @@ export default function AdminView() {
       t={t}
       lang={lang as LanguageCode}
       dialogProps={{
-        confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue,
+        alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue,
         toast, showToast
       }}
     />
@@ -206,7 +206,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     visibleCount, setVisibleCount
   } = useGalleryContext();
   
-  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
+  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
 
   useEffect(() => {
     setUser(user);
@@ -249,12 +249,11 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     setAlertDialog, 
     setPromptDialog, 
     setActiveScreen,
-    setConfirmDialog,
     setLoadingState,
     setCloudCount,
     cloudCount,
     showToast
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setConfirmDialog, setLoadingState, setCloudCount, cloudCount, showToast]);
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, setCloudCount, cloudCount, showToast]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
@@ -527,7 +526,6 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
                     setShowOtherFields={setShowOtherFields}
                     newPhotoData={newPhotoData} 
                     onDelete={handleDeletePhoto}
-                    setConfirmDialog={setConfirmDialog}
                     editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
                     abortAnalysis={abortAnalysis}
                 />

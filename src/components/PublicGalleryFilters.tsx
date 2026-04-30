@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useTransition } from 'react';
 import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Tag } from '../types';
@@ -31,6 +31,8 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   selectedCatCode, setSelectedCatCode, selectedSubId, setSelectedSubId,
   selectedTagIds, setSelectedTagIds, sortedTags, lang, t, onScrollToTop
 }) => {
+  const [isPending, startTransition] = useTransition();
+  
   return (
     <div className="shrink-0 p-3 z-40 bg-[#FDFAF6] space-y-2">
       <div className="flex gap-2">
@@ -151,7 +153,11 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 return (
                   <button 
                     key={strTagId}
-                    onClick={() => { setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]); }}
+                    onClick={() => { 
+                      startTransition(() => {
+                        setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]);
+                      });
+                    }}
                     className={`px-3 py-1 rounded-lg text-xs font-normal transition-all border shadow-sm ${selectedTagIds.includes(strTagId) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
                   >
                     #{toTitleCase(tag.name)}
