@@ -71,10 +71,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({ tags, selectedTagIds, onTo
     <div className="space-y-2">
       <div className="flex items-center justify-between pl-1">
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">标签 / Tags</h3>
-        <button type="button" onClick={() => {
-          alert('onQuickAdd 被调用了');
-          onQuickAdd();
-        }} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
+        <button type="button" onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100">+ 新增 / NEW</button>
       </div>
       <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {Array.from(new Map(tags.map(t => [t.id, t])).values()).map((tag: any) => {

@@ -9,6 +9,7 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 // Removed Modals import
 
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
+import { PromptDialog } from '../components/admin/PromptDialog';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { FloatingActionButton } from '../components/admin/FloatingActionButton';
 import { BatchEditScreen } from '../components/admin/BatchEditScreen';
@@ -442,6 +443,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
       <AdminSessionProvider value={sessionValue}>
         <AdminPhotoProvider value={photoValue}>
           <AdminUIProvider value={uiValue}>
+            <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
             {errorContent}
             
             <AnimatePresence>
