@@ -35,6 +35,13 @@ export default function AdminView() {
 
   const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
 
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
+
   const [pageError, setPageError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -160,13 +167,6 @@ export default function AdminView() {
        </ErrorBoundary>
     );
   }
-
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }, []);
 
   return (
     <AdminViewContent 

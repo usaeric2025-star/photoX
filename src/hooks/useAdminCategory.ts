@@ -142,7 +142,7 @@ export const useAdminCategory = (adminUI: any) => {
         await saveData('product_photos', nextPhotos);
       }
     } catch (err: any) {
-      if (isMounted.current) alert('标签删除失败：' + err.message);
+      if (isMounted.current) setAlertDialog({ title: '标签删除失败', message: err.message });
       throw err;
     }
   };
@@ -221,7 +221,7 @@ export const useAdminCategory = (adminUI: any) => {
             if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err: any) {
-        if (isMounted.current) alert('分类删除失败：' + err.message);
+        if (isMounted.current) setAlertDialog({ title: '分类删除失败', message: err.message });
       }
   };
 
@@ -302,7 +302,7 @@ export const useAdminCategory = (adminUI: any) => {
           if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err: any) {
-         if (isMounted.current) alert('删除失败：' + err.message);
+         if (isMounted.current) setAlertDialog({ title: '删除厂商失败', message: err.message });
       }
   };
 

@@ -39,7 +39,6 @@ export const updateManufacturerInDB = async (id: string, name: string) => {
 
 // 删除厂商
 export const deleteManufacturerFromDB = async (id: string) => {
-  console.log(`[manufacturerService] Attempting to delete manufacturer: ${id}`);
   const { error } = await supabase
     .from('manufacturers')
     .delete()
@@ -49,6 +48,5 @@ export const deleteManufacturerFromDB = async (id: string) => {
     console.error(`[manufacturerService] Error deleting manufacturer: ${id}`, error);
     throw error;
   }
-  console.log(`[manufacturerService] Manufacturer deleted successfully: ${id}`);
   return true;
 };
