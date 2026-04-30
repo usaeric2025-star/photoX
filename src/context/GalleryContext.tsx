@@ -186,12 +186,27 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let result = [...displayPhotos];
     
     if (showGroupsCollapsed) {
+      const groupCovers = new Map<string, any>();
+      result.forEach(p => {
+         if (p.groupId) {
+             const existing = groupCovers.get(p.groupId);
+             if (!existing || (p.isGroupCover && !existing.isGroupCover)) {
+                 groupCovers.set(p.groupId, p);
+             }
+         }
+      });
+      
       const groupsSeen = new Set<string>();
       result = result.filter(p => {
         if (!p.groupId) return true;
         if (groupsSeen.has(p.groupId)) return false;
         groupsSeen.add(p.groupId);
         return true;
+      }).map(p => {
+        if (p.groupId && groupCovers.has(p.groupId)) {
+           return groupCovers.get(p.groupId)!;
+        }
+        return p;
       });
     }
     return result;

@@ -1,6 +1,8 @@
 import { supabase, BUCKET_NAME, TABLE_NAME } from './client';
 import { Photo } from '../types';
 import { uploadImages } from './storageService';
+import { validateDimension } from '../utils/dimensionValidator';
+import { normalizeSearchQuery } from '../utils/stringHelper';
 
 export function mapSupabasePhoto(item: any): Photo {
     if (!item) return {} as Photo;
@@ -70,6 +72,21 @@ export function mapSupabasePhoto(item: any): Photo {
     };
 }
 
+function normalizeDimensionsBeforeSave(dimensions: any[] | null | undefined) {
+  if (Array.isArray(dimensions)) {
+    dimensions.forEach((dim) => {
+      if (dim && typeof dim === 'object') {
+        const maxVal = Math.max(Number(dim.length) || 0, Number(dim.width) || 0, Number(dim.height) || 0);
+        // Create a temporary object matching Dimension structure for validation if value is missing
+        const validated = validateDimension({ ...dim, value: maxVal });
+        if (validated?.unit) {
+          dim.unit = validated.unit;
+        }
+      }
+    });
+  }
+}
+
 export const checkImageHashExists = async (hash: string): Promise<{image_url: string, manual_code: string} | null> => {
   try {
     const { data, error } = await supabase
@@ -105,6 +122,10 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: stri
 };
 
 export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo> & Record<string, any>) => {
+  if (updates.dimensions !== undefined) {
+    normalizeDimensionsBeforeSave(updates.dimensions);
+  }
+
   const { error } = await supabase
     .from(TABLE_NAME)
     .update(updates)
@@ -168,6 +189,8 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   // Ensure ID is UUID format
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
   
+  normalizeDimensionsBeforeSave(photo.dimensions);
+
   const payload: any = {
     user_id: session.user.id,
     item_code: photo.item_code,
@@ -289,6 +312,9 @@ export const savePhotosToCloudBatch = async (
 
   const payloads = photos.map(photo => {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
+    
+    normalizeDimensionsBeforeSave(photo.dimensions);
+
     const payload: any = {
       user_id: session.user.id,
       item_code: photo.item_code,
@@ -529,8 +555,9 @@ export const loadAllPhotosFromCloud = async (
     query = query.eq('photo_tags.tag_id', tagId);
   }
 
-  if (searchQuery && searchQuery.trim().length > 0) {
-    const q = searchQuery.trim();
+  const normSearchQuery = normalizeSearchQuery(searchQuery || '');
+  if (normSearchQuery) {
+    const q = normSearchQuery;
     // Use an OR condition to search either name, manual_code, or model_number
     query = query.or(`name.ilike.%${q}%,manual_code.ilike.%${q}%,model_number.ilike.%${q}%`);
   }

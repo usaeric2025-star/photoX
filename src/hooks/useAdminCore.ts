@@ -10,6 +10,7 @@ import { saveData } from '../utils/indexedDB';
 
 import { useGalleryContext } from '../context/GalleryContext';
 import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
+import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name) return true;
@@ -249,7 +250,7 @@ export const useAdminCore = (
       title: '新增厂商',
       placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
-        const trimmed = val.trim().toUpperCase();
+        const trimmed = normalizeManufacturerName(val);
         if (!trimmed) return;
         
         try {
@@ -280,7 +281,7 @@ export const useAdminCore = (
       title: '自定义标签',
       placeholder: '输入新标签名称 (例如 清货)',
       onSubmit: async (val: string) => {
-        const normalized = val.trim().toUpperCase();
+        const normalized = normalizeTagName(val);
         if (!normalized) return;
 
         const existing = tags.find(t => t.name.toUpperCase() === normalized);
@@ -325,7 +326,7 @@ export const useAdminCore = (
       title: '新增厂商',
       placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
-        const trimmed = val.trim().toUpperCase();
+        const trimmed = normalizeManufacturerName(val);
         if (!trimmed) return;
         
         try {

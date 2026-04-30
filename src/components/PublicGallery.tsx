@@ -542,7 +542,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
              return { ...p, isGroupCover: p.id === id };
           }));
           const groupPhotos = photos.filter(p => p.groupId === groupId);
-          import('../services/supabaseService').then(async (m) => {
+          import('../services/photoService').then(async (m) => {
              try {
                await Promise.all(
                   groupPhotos.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: p.id === id }))

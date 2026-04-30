@@ -565,7 +565,16 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                               onClick={(e) => { 
                                 e.stopPropagation(); 
                                 const nextVal = !photo.isGroupCover;
-                                import('../../services/photoService').then(m => m.updatePhotoInCloud(photo.id, { is_group_cover: nextVal })); 
+                                import('../../services/photoService').then(m => {
+                                  if (nextVal) {
+                                    const others = activeGroupPhotos.filter(p => p.id !== photo.id);
+                                    Promise.all(others.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: false }))).then(() => {
+                                      m.updatePhotoInCloud(photo.id, { is_group_cover: true });
+                                    });
+                                  } else {
+                                    m.updatePhotoInCloud(photo.id, { is_group_cover: false });
+                                  }
+                                }); 
                                 setPhotos?.(prev => prev.map(p => p.id === photo.id ? {...p, isGroupCover: nextVal} : (p.groupId === activeGroupId ? {...p, isGroupCover: false} : p))); 
                                 showToast(nextVal ? '已設為封面' : '已取消封面'); 
                               }} 

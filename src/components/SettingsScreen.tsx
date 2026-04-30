@@ -9,6 +9,7 @@ import { SubCategory, Tag, Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
+import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 
 interface SettingsScreenProps {
@@ -212,8 +213,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       message: '输入新的标签名称 / Enter new tag name:',
       placeholder: tag.name,
       onSubmit: async (newName) => {
-        if (newName && newName.trim().toUpperCase() !== tag.name) {
-          await updateTag(tag.id, newName.trim());
+        const normalized = normalizeTagName(newName);
+        if (normalized && normalized !== tag.name) {
+          await updateTag(tag.id, normalized);
           setHasChanges(true);
         }
       }
@@ -231,8 +233,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       message: '输入新名称 / Enter new name:',
       placeholder: mfr.name,
       onSubmit: async (newName) => {
-        if (newName && newName.trim() !== mfr.name) {
-          await updateManufacturer(mfr.id, newName.trim());
+        const normalized = normalizeManufacturerName(newName);
+        if (normalized && normalized !== mfr.name) {
+          await updateManufacturer(mfr.id, normalized);
           setHasChanges(true);
         }
       }

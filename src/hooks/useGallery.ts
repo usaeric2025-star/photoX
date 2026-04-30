@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Photo, Category, Tag } from '../types';
 import { sanitizePhotoTags } from '../lib/sanitizer';
+import { normalizeSearchQuery } from '../utils/stringHelper';
 import { PAGINATION } from '../constants/config';
 
 interface UseGalleryProps {
@@ -96,8 +97,9 @@ export const useGallery = ({
       });
     }
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+    const normSearchQuery = normalizeSearchQuery(searchQuery);
+    if (normSearchQuery) {
+      const q = normSearchQuery.toLowerCase();
       filtered = filtered.filter(p => {
         const rawTagIds = (Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : [])).map(String);
         const mappedTagNames = rawTagIds.map(tid => tags.find(t => String(t.id) === tid)?.name).filter(Boolean);
