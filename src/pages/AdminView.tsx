@@ -533,7 +533,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
                           setSelectedIds={setSelectedIds}
                           setIsMultiSelect={setIsMultiSelect}
                           handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
-                          handleManageClick={() => setActiveScreen('manage')}
+                          handleManageClick={() => setActiveScreen(prev => prev === 'manage' ? 'home' : 'manage')}
                           loginWithGoogle={loginWithGoogle}
                           onRefresh={() => performPullSync()}
                           photosCount={photos.length}
