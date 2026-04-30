@@ -137,13 +137,34 @@ export const analyzeProductPhoto = async (
    - 每組尺寸必須包含 "label"（規格名稱，例如 'Overall'、'Single-Seater'）、"length"、"width"、"height"（若僅有 1 或 2 個維度也請填入對應欄位，其餘填 0）、"unit": "單位" (根據上述判斷填入 'cm', 'mm' 或 'inc')、"isAI": true
    - 若照片中完全找不到任何尺寸依據，返回空數組 []。
 
-4. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
+3. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
 
-5. 輸出規範：
+4. 輸出規範：
    - 僅回傳一個合法且壓縮的 JSON 物件。
    - 禁止 Markdown 標記（如 \` \` \`json）。
    - 所有字串欄位嚴禁包含換行符或未轉義的雙引號。
    - 數字欄位必須為純數字（不含單位）。
+
+【JSON 輸出格式範例】
+{
+  "manualCode": "A-1234",
+  "modelNumber": "M-5566",
+  "name": "Modern Leather Sofa",
+  "description": "A sleek modern leather sofa with metal legs.",
+  "categoryId": "123e4567-e89b-12d3... (存在清單中的 UUID)",
+  "tagIds": ["abc-123...", "def-456..."],
+  "newTags": ["MINIMALIST"],
+  "dimensions": [
+    {
+      "label": "Overall",
+      "length": 210,
+      "width": 90,
+      "height": 85,
+      "unit": "cm",
+      "isAI": true
+    }
+  ]
+}
 
 請確保輸出為嚴格有效的 JSON。只返回 JSON，不要任何其他文字。
 `;
