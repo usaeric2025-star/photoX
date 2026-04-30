@@ -574,20 +574,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
              console.error("[ERROR] Failed to toggle hidden:", e);
            }
         }}
-        onTogglePinned={async (photo) => {
-          const newStatus = !photo.isPinned;
-          // Optimistic update
-          context.setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isPinned: newStatus } : p));
-          
-          try {
-            await updatePhotoInCloud(photo.id, { is_pinned: newStatus, updated_at: new Date().toISOString() });
-          } catch (e: any) {
-            console.error("[ERROR] Failed to toggle pinned:", e);
-            // Revert changes
-            context.setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isPinned: photo.isPinned } : p));
-            setAlertDialog?.({ title: '置顶失败', message: '数据库列不存在，无法同步到服务器。' });
-          }
-        }}
       />
 
       <WhatsAppChoiceDialog 

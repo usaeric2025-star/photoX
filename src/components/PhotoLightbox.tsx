@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles, Heart } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { Photo, Category } from '../types';
 
 interface PhotoLightboxProps {
@@ -22,7 +22,6 @@ interface PhotoLightboxProps {
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   onEditPhoto?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
-  onTogglePinned?: (photo: Photo) => void;
   onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
@@ -31,7 +30,7 @@ interface PhotoLightboxProps {
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   photo, displayPhotos, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
   isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto, onToggleHidden,
-  onTogglePinned, onAiAnalyze, onCancelAnalyze, isAnalyzing
+  onAiAnalyze, onCancelAnalyze, isAnalyzing
 }) => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
@@ -126,13 +125,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                 title="编辑此照片"
               >
                 <Edit3 size={20} />
-              </button>
-              <button 
-                onClick={() => onTogglePinned?.(photo!)}
-                className={`w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all ${photo?.isPinned ? 'text-red-500' : ''}`}
-                title="置顶"
-              >
-                <Heart size={20} className={photo?.isPinned ? 'fill-current' : ''} />
               </button>
             </>
           )}

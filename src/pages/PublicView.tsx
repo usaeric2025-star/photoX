@@ -184,11 +184,33 @@ export default function PublicView() {
           totalCount={totalCloudCount}
           onTogglePinned={async (photo) => {
             const newStatus = !photo.isPinned;
+            
+            // Identify affected photos (the photo itself + any other photos in the same group)
+            const affectedPhotos = photo.groupId 
+              ? photos.filter(p => p.groupId === photo.groupId)
+              : [photo];
+              
+            // Optimistic update for all affected photos
+            setPhotos(prev => prev.map(p => 
+              affectedPhotos.some(ap => ap.id === p.id) 
+                ? { ...p, isPinned: newStatus } 
+                : p
+            ));
+            
             try {
-              await updatePhotoInCloud(photo.id, { is_pinned: newStatus, updated_at: new Date().toISOString() });
-              setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isPinned: newStatus } : p));
-            } catch (e) {
+              await Promise.all(
+                affectedPhotos.map(p => 
+                  updatePhotoInCloud(p.id, { is_pinned: newStatus, updated_at: new Date().toISOString() })
+                )
+              );
+            } catch (e: any) {
               console.error("[ERROR] Failed to toggle pinned:", e);
+              // Revert changes
+              setPhotos(prev => prev.map(p => 
+                affectedPhotos.some(ap => ap.id === p.id) 
+                  ? { ...p, isPinned: !newStatus } 
+                  : p
+              ));
             }
           }}
         />

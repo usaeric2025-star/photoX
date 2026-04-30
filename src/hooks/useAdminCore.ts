@@ -6,6 +6,7 @@ import {
   addTagToDB,
   supabase
 } from '../services/supabaseService';
+import { updatePhotoInCloud } from '../services/photoService';
 import { saveData } from '../utils/indexedDB';
 
 import { useGalleryContext } from '../context/GalleryContext';
@@ -209,14 +210,15 @@ export const useAdminCore = (
       
       if (photoIds.length > 0) {
         await updatePhotosGroupInCloud(photoIds, null);
-        setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null } : p));
-        showToast('已解除群組', 'success');
+        await Promise.all(photoIds.map(id => updatePhotoInCloud(id, { is_pinned: false })));
+        setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null, isPinned: false } : p));
+        showToast('已解除群組並清除置頂', 'success');
       }
     } catch (err: any) {
       console.error('Ungroup error:', err);
       setAlertDialog({ title: '解除群組失敗', message: err?.message || '未知錯誤' });
     }
-  }, [photos, setPhotos, showToast, setAlertDialog]);
+  }, [photos, setPhotos, showToast, setAlertDialog, updatePhotoInCloud]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;
