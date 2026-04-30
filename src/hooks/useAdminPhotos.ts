@@ -55,7 +55,9 @@ export const useAdminPhotos = (
     loadingState: string;
     setLoadingState: (s: any) => void;
     setAlertDialog: (d: any) => void;
+    setConfirmDialog: (d: any) => void;
     showToast: (msg: string, type?: 'success' | 'error') => void;
+    showLoadingToast: (msg: string) => () => void;
     setActiveScreen: (s: string) => void;
     abortAnalysis: () => void;
   },
@@ -74,9 +76,11 @@ export const useAdminPhotos = (
   const { setIsSyncing = () => {} } = adminSession || {};
   const { 
     setAlertDialog = () => {}, 
+    setConfirmDialog = () => {},
     setActiveScreen = () => {}, 
     setLoadingState = () => {},
-    showToast = (m: string) => {}
+    showToast = (m: string) => {},
+    showLoadingToast = () => () => {}
   } = adminUI || {};
   
   const [internalCloudCount, setInternalCloudCount] = useState<number | null>(null);

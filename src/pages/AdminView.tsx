@@ -420,7 +420,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast: toast, showToast: showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
+    toast: toast, showToast: showToast, showLoadingToast: (m: string) => showToast(m, 'loading', true), 
+    loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
   }), [
     activeScreen, editPhotoId, batchEditIds, confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis

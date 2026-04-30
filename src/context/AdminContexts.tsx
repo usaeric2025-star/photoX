@@ -102,6 +102,7 @@ interface AdminUIContextType {
   
   toast: { message: string, type: 'success' | 'error' } | null;
   showToast: (msg: string, type: 'success' | 'error') => void;
+  showLoadingToast: (msg: string) => () => void;
   
   loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading';
   setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading') => void;

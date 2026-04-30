@@ -18,7 +18,7 @@ import {
 } from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: any) => {
-  const { setAlertDialog = () => {}, setConfirmDialog = () => {} } = adminUI || {};
+  const { setAlertDialog = () => {}, setConfirmDialog = () => {}, showLoadingToast = () => {}, showToast = () => {} } = adminUI || {};
 
   const {
     categories, setCategories,
