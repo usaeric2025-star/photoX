@@ -7,6 +7,17 @@ import {
 } from 'lucide-react';
 import { SubCategory, Tag, Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
 import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
@@ -82,12 +93,23 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
       <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none">
         {tag.name}
       </span>
-      <button 
-        onClick={() => deleteTag(tag.id)} 
-        className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"
-      >
-        <X size={14} />
-      </button>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <button className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full">
+            <X size={14} />
+          </button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>确定要删除标签 #{tag.name} 吗？</AlertDialogTitle>
+             <AlertDialogDescription>无法撤销且会从所有照片中移除。</AlertDialogDescription>
+           </AlertDialogHeader>
+           <AlertDialogFooter>
+              <AlertDialogCancel variant="outline" size="default">关闭</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" size="default" onClick={() => deleteTag(tag.id)}>删除</AlertDialogAction>
+           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AnimatePresence>
         {activeTagMenuId === tag.id && (
@@ -647,7 +669,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 >
                    {sub.name}
                 </span>
-                <button onClick={() => deleteManufacturer(String(sub.id))} className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>确定要删除生产商 #{sub.name} 吗？</AlertDialogTitle>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel variant="outline" size="default">关闭</AlertDialogCancel>
+                        <AlertDialogAction variant="destructive" size="default" onClick={() => deleteManufacturer(String(sub.id))}>删除</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ))}
           </div>

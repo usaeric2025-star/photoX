@@ -4,6 +4,18 @@ import { TagEditor } from './TagEditor';
 import { Photo, ProductFormData } from '../../types';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight } from 'lucide-react';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 
 interface Props {
   editPhotoId: string | null;
@@ -437,12 +449,27 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
            {props.editPhotoId && props.onDelete && (
             <div className="pt-2 pb-6">
-              <button 
-                onClick={() => setConfirmDialog({ title: '确认删除', message: '确定要删除吗？', danger: true, onConfirm: () => props.onDelete!(props.editPhotoId!) })}
-                className="w-full py-4 rounded-3xl bg-red-50 text-red-600 text-xs font-bold border border-red-100 active:bg-red-200 transition-all flex items-center justify-center gap-2"
-              >
-                删除此照片
-              </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full py-4 rounded-3xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                       删除此照片
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>确定要删除此照片吗？</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        删除后将无法撤销。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel variant="outline" size="default">取消</AlertDialogCancel>
+                      <AlertDialogAction variant="destructive" size="default" onClick={() => props.onDelete!(props.editPhotoId!)}>
+                        继续删除
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
             </div>
            )}
        </div>
