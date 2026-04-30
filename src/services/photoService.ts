@@ -260,6 +260,116 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   return finalPhotoId;
 };
 
+// Bulk save photos (much faster than individual calls)
+export const savePhotosToCloudBatch = async (
+  userId: string, 
+  photos: Photo[],
+  onProgress?: (count: number) => void
+): Promise<void> => {
+  if (photos.length === 0) return;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) {
+    throw new Error('No active session for database');
+  }
+
+  // Handle any pending uploads (unlikely in batch edit, but just in case)
+  for (const photo of photos) {
+    if (!photo.image_url && photo.uri) {
+      try {
+        const filename = photo.storageId || photo.id;
+        const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
+        photo.image_url = imageUrl;
+        photo.thumb_url = thumbUrl;
+      } catch (e) {
+        // Ignored
+      }
+    }
+  }
+
+  const payloads = photos.map(photo => {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
+    const payload: any = {
+      user_id: session.user.id,
+      item_code: photo.item_code,
+      manual_code: photo.manual_code || '',
+      image_hash: photo.image_hash,
+      name: photo.name,
+      category_id: photo.categoryId || null,
+      manufacturer_id: photo.manufacturerId || null,
+      description: photo.description || '',
+      image_url: photo.image_url,
+      thumb_url: photo.thumb_url || null,
+      dimensions: photo.dimensions || null,
+      model_number: photo.model_number || '',
+      created_at: photo.createdAt,
+      group_id: photo.groupId || null,
+      is_group_cover: photo.isGroupCover || false,
+      group_order: photo.groupOrder || 0,
+      updated_at: photo.updatedAt || new Date().toISOString()
+    };
+    if (isUUID) {
+      payload.id = photo.id;
+    }
+    return payload;
+  });
+
+  // 1. Bulk Upsert Photos
+  const chunkSize = 100;
+  for (let i = 0; i < payloads.length; i += chunkSize) {
+    const chunk = payloads.slice(i, i + chunkSize);
+    let { error: dbError } = await supabase
+      .from(TABLE_NAME)
+      .upsert(chunk, { onConflict: 'id', ignoreDuplicates: false });
+
+    // FALLBACK for schema mismatch
+    if (dbError && dbError.message.includes('column')) {
+       console.warn("DB Schema mismatch, retrying chunk without group columns...");
+       const safeChunk = chunk.map(p => {
+         const cp = { ...p };
+         delete cp.group_id;
+         delete cp.group_order;
+         delete cp.is_group_cover;
+         return cp;
+       });
+       const retry = await supabase.from(TABLE_NAME).upsert(safeChunk, { onConflict: 'id' });
+       dbError = retry.error;
+    }
+
+    if (dbError) {
+      console.error("Bulk Upsert Error:", dbError);
+      throw new Error(`批量同步失敗: ${dbError.message}`);
+    }
+    
+    if (onProgress) onProgress(Math.min(i + chunkSize, payloads.length));
+  }
+
+  // 2. Bulk Sync Tags
+  const photoIdsToUpdate = photos.map(p => p.id);
+  
+  // Wipe existing tags for these photos
+  for (let i = 0; i < photoIdsToUpdate.length; i += 100) {
+     const chunkIds = photoIdsToUpdate.slice(i, i + 100);
+     await supabase.from('photo_tags').delete().in('photo_id', chunkIds);
+  }
+
+  // Insert new tags
+  const newTagAssociations: any[] = [];
+  photos.forEach(p => {
+    if (Array.isArray(p.tagIds) && p.tagIds.length > 0) {
+      p.tagIds.forEach(tid => {
+        if (tid) newTagAssociations.push({ photo_id: p.id, tag_id: tid });
+      });
+    }
+  });
+
+  for (let i = 0; i < newTagAssociations.length; i += 200) {
+    const chunk = newTagAssociations.slice(i, i + 200);
+    const { error: tagError } = await supabase.from('photo_tags').insert(chunk);
+    if (tagError) console.warn("Failed to bulk sync photo tags:", tagError);
+  }
+};
+
 export const syncPhotosToCloud = async (
   userId: string, 
   photos: Photo[], 

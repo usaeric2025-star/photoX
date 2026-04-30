@@ -269,16 +269,29 @@ export const usePhotoManagement = (
         await saveData('product_photos', nextPhotos);
         
         if (user) {
-           // Sequential save to track progress properly? 
-           // Or just chunk it. 
-           // Batch save tracking:
-           let count = 0;
-           for (const photo of updatedPhotosList) {
-             await savePhotoToCloud(user.id, photo);
-             count++;
-             if (adminUI?.setBatchProgress) {
-                adminUI.setBatchProgress({ current: count, total: updatedPhotosList.length });
-             }
+           try {
+              const m = await import('../services/photoService');
+              if (m.savePhotosToCloudBatch) {
+                 await m.savePhotosToCloudBatch(user.id, updatedPhotosList, (count) => {
+                    if (adminUI?.setBatchProgress) {
+                       adminUI.setBatchProgress({ current: count, total: updatedPhotosList.length });
+                    }
+                 });
+              } else {
+                let count = 0;
+                const chunkSize = 5;
+                for (let i = 0; i < updatedPhotosList.length; i += chunkSize) {
+                  const chunk = updatedPhotosList.slice(i, i + chunkSize);
+                  await Promise.all(chunk.map(photo => savePhotoToCloud(user.id, photo)));
+                  count += chunk.length;
+                  if (adminUI?.setBatchProgress) {
+                     adminUI.setBatchProgress({ current: count, total: updatedPhotosList.length });
+                  }
+                }
+              }
+           } catch (err: any) {
+              console.error("Batch save error:", err);
+              throw err;
            }
         }
         

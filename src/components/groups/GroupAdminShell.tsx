@@ -63,6 +63,12 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     if (activeGroupId) groupIdRef.current = activeGroupId;
   }, [activeGroupId]);
 
+  useEffect(() => {
+    if (isMultiSelectMode && selectedPhotoIds.length === 0) {
+      setIsMultiSelectMode(false);
+    }
+  }, [selectedPhotoIds.length, isMultiSelectMode]);
+
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
     return photos
@@ -215,6 +221,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       });
     } else if (action === 'batch') {
       onBatchEdit?.(selectedPhotoIds);
+      setIsMultiSelectMode(false);
+      setSelectedPhotoIds([]);
     }
   };
 
@@ -318,6 +326,27 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                              className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                            >
                              <Check size={16} /> 全選照片 / Select All
+                           </button>
+                           <button 
+                             onClick={() => {
+                               const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
+                               onBatchEdit?.(ids);
+                               setIsMultiSelectMode(false);
+                               setSelectedPhotoIds([]);
+                               setShowMenu(false);
+                             }}
+                             className="sm:hidden w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                           >
+                             <Pencil size={16} /> 批量編輯 / Batch Edit
+                           </button>
+                           <button 
+                             onClick={() => {
+                               if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);
+                               setShowMenu(false);
+                             }}
+                             className="sm:hidden w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                           >
+                             <Sparkles size={16} /> AI 識別 / AI Identify
                            </button>
                            {selectedPhotoIds.length > 0 && (
                              <button 
