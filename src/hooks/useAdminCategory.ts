@@ -246,6 +246,35 @@ export const useAdminCategory = (adminUI: any) => {
       }
   };
 
+  const addManufacturer = async (name: string) => {
+    try {
+      const saved = await addManufacturerToDB(name);
+      const newMfrs = [...manufacturers, saved];
+      setManufacturers(newMfrs);
+      await saveData('product_manufacturers', newMfrs);
+      return saved;
+    } catch (err: any) {
+      console.error("[useAdminCategory] Add manufacturer failed:", err);
+      setAlertDialog({ title: '添加厂商失败', message: err.message || '网络连接或数据库权限问题' });
+    }
+  };
+
+  const updateManufacturer = async (id: string | number, name: string) => {
+    try {
+      const strId = String(id);
+      const trimmed = name.trim();
+      await updateManufacturerInDB(strId, trimmed);
+      const newMfrs = manufacturers.map(m => 
+        String(m.id) === strId ? { ...m, name: trimmed } : m
+      );
+      setManufacturers(newMfrs);
+      await saveData('product_manufacturers', newMfrs);
+    } catch (err: any) {
+      console.error("[useAdminCategory] Update manufacturer failed:", err);
+      setAlertDialog({ title: '更新厂商失败', message: err.message || '网络连接或数据库权限问题' });
+    }
+  };
+
   const deleteManufacturer = async (id: string | number) => {
     setConfirmDialog({
       title: '确认删除厂商 / Confirm Delete Manufacturer',
@@ -259,22 +288,14 @@ export const useAdminCategory = (adminUI: any) => {
           .eq('manufacturer_id', strId);
         
         if (count && count > 0) {
-          setConfirmDialog({
-            title: '确认清空关联 / Confirm Association Clear',
-            message: `此厂商关联了 ${count} 张照片，删除后这些照片的厂商将变为「未选择」。确定继续吗？ / This manufacturer has ${count} photos. Their manufacturer info will be cleared. Proceed?`,
-            danger: true,
-            onConfirm: async () => {
-              const { error } = await supabase
-                .from('furniture_items')
-                .update({ manufacturer_id: null })
-                .eq('manufacturer_id', strId);
-              if (error) throw error;
-              await performDeleteManufacturer(strId, id);
-            }
-          });
-        } else {
-          await performDeleteManufacturer(strId, id);
+          alert(`此厂商关联了 ${count} 张照片，将自动清空这些照片的厂商信息。`);
+          const { error } = await supabase
+            .from('furniture_items')
+            .update({ manufacturer_id: null })
+            .eq('manufacturer_id', strId);
+          if (error) throw error;
         }
+        await performDeleteManufacturer(strId, id);
       }
     });
   };
