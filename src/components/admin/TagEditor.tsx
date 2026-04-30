@@ -179,11 +179,11 @@ export const TagEditor: React.FC<TagEditorProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel variant="outline" size="default">取消</AlertDialogCancel>
+            <AlertDialogCancel>
+              取消 / CANCEL
+            </AlertDialogCancel>
             <AlertDialogAction 
               variant="destructive"
-              size="default"
-              className="bg-red-600 hover:bg-red-700"
               onClick={() => {
                 if (confirmDeleteTag) {
                   onDeleteTag(confirmDeleteTag.id);
@@ -191,7 +191,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                 }
               }}
             >
-              确认删除
+              确认删除 / DELETE
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

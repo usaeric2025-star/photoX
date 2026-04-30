@@ -475,9 +475,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel variant="outline" size="default">取消</AlertDialogCancel>
-                      <AlertDialogAction variant="destructive" size="default" onClick={() => props.onDelete!(props.editPhotoId!)}>
-                        继续删除
+                      <AlertDialogCancel>
+                        取消 / CANCEL
+                      </AlertDialogCancel>
+                      <AlertDialogAction variant="destructive" onClick={() => props.onDelete!(props.editPhotoId!)}>
+                        继续删除 / DELETE
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

@@ -31,19 +31,28 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({ dialog, onClose }) =
           <AlertDialogDescription>
             {dialog?.message}
           </AlertDialogDescription>
-          <Input 
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={dialog?.placeholder}
-            autoFocus
-          />
+          <div className="mt-4">
+            <Input 
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              placeholder={dialog?.placeholder}
+              autoFocus
+              className="rounded-xl border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all h-11"
+            />
+          </div>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel variant="outline" size="default" onClick={onClose}>取消</AlertDialogCancel>
-          <AlertDialogAction variant="default" size="default" onClick={() => {
-            if (dialog) dialog.onSubmit(value);
-            onClose();
-          }}>确定</AlertDialogAction>
+          <AlertDialogCancel onClick={onClose}>
+            取消 / CANCEL
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={() => {
+              if (dialog) dialog.onSubmit(value);
+              onClose();
+            }}
+          >
+            确定 / OK
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

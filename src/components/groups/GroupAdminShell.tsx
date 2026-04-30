@@ -230,23 +230,29 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel variant="outline" size="default" onClick={() => setConfirmDelete(null)}>取消</AlertDialogCancel>
-            <AlertDialogAction variant="default" size="default" onClick={async () => {
-              if (confirmDelete) {
-                  setPhotos?.(prev => prev.map(p => 
-                    confirmDelete.ids.includes(p.id) ? { ...p, groupId: null } : p
-                  ));
-                  try {
-                    await updatePhotosGroupInCloud(confirmDelete.ids, null);
-                    setIsMultiSelectMode(false);
-                    setSelectedPhotoIds([]);
-                    showToast('已移出 / Removed');
-                  } catch (err: any) {
-                    setAlertDialog?.({ title: '操作失败', message: err.message });
-                  }
-                  setConfirmDelete(null);
-              }
-            }}>确定</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setConfirmDelete(null)}>
+              取消 / CANCEL
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={async () => {
+                if (confirmDelete) {
+                    setPhotos?.(prev => prev.map(p => 
+                      confirmDelete.ids.includes(p.id) ? { ...p, groupId: null } : p
+                    ));
+                    try {
+                      await updatePhotosGroupInCloud(confirmDelete.ids, null);
+                      setIsMultiSelectMode(false);
+                      setSelectedPhotoIds([]);
+                      showToast('已移出 / Removed');
+                    } catch (err: any) {
+                      setAlertDialog?.({ title: '操作失败', message: err.message });
+                    }
+                    setConfirmDelete(null);
+                }
+              }}
+            >
+              确定移出 / CONFIRM
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

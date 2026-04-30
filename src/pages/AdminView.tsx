@@ -451,6 +451,32 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
         <AdminPhotoProvider value={photoValue}>
           <AdminUIProvider value={uiValue}>
             <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
+            
+            {/* 全局动态 AlertDialog 渲染器 */}
+            <AlertDialog 
+              open={!!alertDialog} 
+              onOpenChange={(open) => !open && setAlertDialog(null)}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {alertDialog?.message}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>
+                    取消 / CANCEL
+                  </AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => setAlertDialog(null)}
+                  >
+                    确定 / OK
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
             {errorContent}
             
             <AnimatePresence>
