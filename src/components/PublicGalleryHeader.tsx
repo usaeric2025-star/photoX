@@ -20,11 +20,12 @@ interface PublicGalleryHeaderProps {
   onExit?: () => void;
   onLogin?: () => void;
   onOpenSettings?: () => void;
+  totalCount?: number;
 }
 
 export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
   settings, photos, isAdminMode, isRefreshing, isMultiSelect, lang, t,
-  onHeaderClick, onRefresh, onToggleMultiSelect, clearSelection, setIsMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings
+  onHeaderClick, onRefresh, onToggleMultiSelect, clearSelection, setIsMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings, totalCount
 }) => {
   return (
     <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
@@ -39,7 +40,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
         
         <div className="flex items-center gap-1 bg-[#1D3557]/5 px-2 py-0.5 rounded-full border border-[#1D3557]/10 shrink-0 cursor-pointer" onClick={onRefresh}>
           <span className="text-[8px] sm:text-[9px] font-black text-[#1D3557]/60 italic">
-            {t.gallerySub(photos.filter(p => !p.isHidden).length)}
+            {t.gallerySub(totalCount !== undefined ? totalCount : photos.filter(p => !p.isHidden).length)}
           </span>
         </div>
       </div>

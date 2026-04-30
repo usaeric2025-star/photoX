@@ -57,6 +57,7 @@ interface PublicGalleryProps {
   setAlertDialog?: (d: any) => void;
   setConfirmDialog?: (d: any) => void;
   setLoadingState?: (s: string) => void;
+  totalCount?: number;
 }
 
 const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos }: any) => {
@@ -127,7 +128,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   onSetGroupCover,
   setAlertDialog: propsSetAlertDialog,
   setConfirmDialog: propsSetConfirmDialog,
-  setLoadingState: propsSetLoadingState
+  setLoadingState: propsSetLoadingState,
+  totalCount
 }) => {
   const user = propsUser;
   const settings = propsSettings;
@@ -351,6 +353,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       {/* Header */}
       {lightboxIndex === null && !hideHeader && (
         <PublicGalleryHeader 
+          totalCount={totalCount}
           settings={settings}
           photos={photos}
           isAdminMode={!!isAdminMode}

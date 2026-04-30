@@ -577,6 +577,39 @@ export const loadAllPhotosFromCloud = async (
   return (data || []).map(item => mapSupabasePhoto(item));
 };
 
+export const getPhotoCount = async (
+  categoryId?: string | null,
+  tagId?: string | null,
+  searchQuery?: string | null
+): Promise<number> => {
+  let query = supabase
+    .from(TABLE_NAME)
+    .select('*', { count: 'exact', head: true });
+  
+  if (categoryId) {
+    query = query.eq('category_id', categoryId);
+  }
+
+  if (tagId) {
+    query = query.eq('photo_tags.tag_id', tagId);
+  }
+
+  const normSearchQuery = normalizeSearchQuery(searchQuery || '');
+  if (normSearchQuery) {
+    const q = normSearchQuery;
+    query = query.or(`name.ilike.%${q}%,manual_code.ilike.%${q}%,model_number.ilike.%${q}%`);
+  }
+
+  const { count, error } = await query;
+  
+  if (error) {
+    console.error("[ERROR] Supabase Count Error:", error);
+    return 0;
+  }
+
+  return count || 0;
+};
+
 export const loadPhotosFromCloud = async (
   userId: string, 
   since?: string, 

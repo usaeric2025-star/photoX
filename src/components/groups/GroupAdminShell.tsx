@@ -309,33 +309,13 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         {showMenu && <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
                            <button 
                              onClick={() => {
-                               setEditingGroupId(activeGroupId);
-                               setEditingGroupName(activeGroupPhotos[0]?.name || '');
-                               setShowMenu(false);
-                             }}
-                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                           >
-                             <Edit3 size={16} /> 編輯名稱 / Edit Name
-                           </button>
-                           <button 
-                             onClick={() => {
-                               setIsMultiSelectMode(true);
-                               setSelectedPhotoIds(activeGroupPhotos.map(p => p.id));
-                               setShowMenu(false);
-                             }}
-                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                           >
-                             <Check size={16} /> 全選照片 / Select All
-                           </button>
-                           <button 
-                             onClick={() => {
                                const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
                                onBatchEdit?.(ids);
                                setIsMultiSelectMode(false);
                                setSelectedPhotoIds([]);
                                setShowMenu(false);
                              }}
-                             className="sm:hidden w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                            >
                              <Pencil size={16} /> 批量編輯 / Batch Edit
                            </button>
@@ -344,55 +324,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                                if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);
                                setShowMenu(false);
                              }}
-                             className="sm:hidden w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                           >
-                             <Sparkles size={16} /> AI 識別 / AI Identify
-                           </button>
-                           {selectedPhotoIds.length > 0 && (
-                             <button 
-                               onClick={() => { handleBulkAction('remove'); setShowMenu(false); }}
-                               className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                             >
-                                <X size={16} /> 移出選中 / Remove Selected
-                              </button>
-                            )}
-                           <button 
-                             onClick={() => {
-                               const ids = activeGroupPhotos.map(p => p.id);
-                               setConfirmDialog({
-                                 message: `確定要刪除此群組內的所有 ${ids.length} 張照片嗎？此操作不可撤銷。`,
-                                 onConfirm: async () => {
-                                   for (const id of ids) {
-                                      // Import directly to avoid missing ref if not in scope
-                                      const m = await import('../../services/photoService');
-                                      await m.deletePhotoFromCloud(id);
-                                   }
-                                   setPhotos?.(prev => prev.filter(p => !ids.includes(p.id)));
-                                   setActiveGroupId(null);
-                                   showToast('已刪除所有照片 / Deleted all photos');
-                                 }
-                               });
-                               setShowMenu(false);
-                             }}
-                             className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2"
-                           >
-                             <Trash2 size={16} /> 刪除所有照片 / Delete All Photos
-                           </button>
-                           <div className="h-px bg-slate-100 my-1 mx-2" />
-                           <button 
-                             onClick={() => {
-                               setConfirmDialog({
-                                 message: `確定要解散這個群組嗎？照片將變為獨立展示。`,
-                                 onConfirm: async () => {
-                                   await onUngroup?.(groupIdRef.current!);
-                                   setActiveGroupId(null);
-                                 }
-                               });
-                               setShowMenu(false);
-                             }}
                              className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                            >
-                             <Layers size={16} /> 解散組 / Ungroup
+                             <Sparkles size={16} /> AI 識別 / AI Identify
                            </button>
                          </div>
                        }

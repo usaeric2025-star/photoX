@@ -55,6 +55,7 @@ interface GalleryContextType {
   displayPhotos: Photo[]; // The list used for Lightbox indexing
   gridPhotos: Photo[];    // The list after grouping and visibleCount slice
   totalGridCount: number;
+  totalCloudCount: number; // For total count display
 }
 
 const GalleryContext = createContext<GalleryContextType | undefined>(undefined);
@@ -88,6 +89,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [totalCloudCount, setTotalCloudCount] = useState(0);
 
   // Debounce search query
   useEffect(() => {
@@ -287,18 +289,20 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setIsAdminMode,
       setPage,
       setHasMore,
+      setTotalCloudCount,
       togglePhotoSelection,
       clearSelection,
       isPhotoSelected,
       displayPhotos,
       gridPhotos,
-      totalGridCount: gridPhotosFull.length
+      totalGridCount: gridPhotosFull.length,
+      totalCloudCount
     };
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
     sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, isInfiniteMode, user, isAdminMode, page, hasMore,
     tagNameToIdMap, tagIdToNameMap, sortedTags,
-    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, gridPhotosFull.length
+    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, gridPhotosFull.length, totalCloudCount
   ]);
 
   return (

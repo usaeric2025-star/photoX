@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle } from '../services/supabaseService';
+import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
 import { PublicGallery } from '../components/PublicGallery';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
@@ -16,6 +16,7 @@ export default function PublicView() {
     page, setPage,
     hasMore, setHasMore,
     setVisibleCount,
+    setTotalCloudCount,
     filterCatId,
     filterTagIds,
     debouncedSearchQuery
@@ -29,12 +30,16 @@ export default function PublicView() {
   const fetchFilteredPhotos = async () => {
     setIsRefreshing(true);
     try {
-      const cloudPhotos = await loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
+      const [cloudPhotos, total] = await Promise.all([
+        loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
+        getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery)
+      ]);
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
         setPage(0);
         setHasMore(cloudPhotos.length === 100);
         setVisibleCount(prev => Math.max(prev, cloudPhotos.length + 20));
+        setTotalCloudCount(total);
       }
     } catch (e) {
       console.error("Critical error in fetchFilteredPhotos:", e);
@@ -66,12 +71,13 @@ export default function PublicView() {
     else setIsRefreshing(true);
 
     try {
-      const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings] = await Promise.all([
+      const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
         loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
         loadCategoriesFromCloud(),
         loadTagsFromCloud(),
         loadManufacturersFromCloud(),
-        fetchSettings()
+        fetchSettings(),
+        getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery)
       ]);
 
       if (cloudPhotos) {
@@ -79,6 +85,7 @@ export default function PublicView() {
         setPage(0);
         setHasMore(cloudPhotos.length === 100);
         setVisibleCount(prev => Math.max(prev, cloudPhotos.length + 20));
+        setTotalCloudCount(total);
         if (!filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
           saveData('cachedPhotos', cloudPhotos);
         }
@@ -172,6 +179,7 @@ export default function PublicView() {
           onRefresh={() => syncWithCloud(true)}
           onLoadMore={loadMore}
           hasMore={hasMore}
+          totalCount={totalCloudCount}
         />
       )}
     </div>
