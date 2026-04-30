@@ -1,5 +1,19 @@
 import { Category, Tag } from '../types';
 
+function normalizeTagIds(input: any): string[] {
+  if (!input) return [];
+  if (Array.isArray(input)) {
+    return input.map(item => {
+      if (typeof item === 'object' && item !== null) return String(item.id || '');
+      return String(item);
+    }).filter(id => id && id !== '[object Object]');
+  }
+  if (typeof input === 'string') {
+    return input.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000): Promise<string> => {
   return new Promise((resolve, reject) => {
     // We can canvas-convert data:, blob:, or http(s): (if CORS allows).
@@ -264,18 +278,7 @@ export const analyzeProductPhoto = async (
     parsedData.dimensions = safeDims;
 
     // Normalize tagIds to always be an array of strings
-    let safeTagIds: string[] = [];
-    if (Array.isArray(parsedData.tagIds)) {
-      safeTagIds = parsedData.tagIds.map((item: any) => {
-        if (typeof item === 'object' && item !== null) {
-          return String(item.id || item.name || '');
-        }
-        return String(item);
-      });
-    } else if (typeof parsedData.tagIds === 'string') {
-      safeTagIds = parsedData.tagIds.split(',').map((s: string) => s.trim()).filter(Boolean);
-    }
-    parsedData.tagIds = safeTagIds.filter(Boolean);
+    parsedData.tagIds = normalizeTagIds(parsedData.tagIds);
 
     // Normalize newTags to always be an array of strings
     let newTagList: string[] = [];
