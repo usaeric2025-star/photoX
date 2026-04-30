@@ -661,10 +661,28 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
   if (error) {
     throw new Error(error.message || JSON.stringify(error));
   }
+};
+
+export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
+  if (photos.length === 0) return;
   
-  const filename = photo.storageId || photo.id;
-  // Delete both original and thumbnail
-  await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`, `public/thumb_${filename}.webp`]);
+  // 1. Delete DB records
+  const ids = photos.map(p => p.id);
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .delete()
+    .in('id', ids)
+    .eq('user_id', userId);
+  
+  if (error) throw new Error(error.message || JSON.stringify(error));
+  
+  // 2. Delete files
+  const filePaths = photos.flatMap(p => {
+    const filename = p.storageId || p.id;
+    return [`public/${filename}.webp`, `public/thumb_${filename}.webp`];
+  });
+  
+  await supabase.storage.from(BUCKET_NAME).remove(filePaths);
 };
 
 export const deduplicatePhotos = async (userId?: string): Promise<{removed: number}> => {

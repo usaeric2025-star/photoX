@@ -60,11 +60,10 @@ export const Modals = ({
                 <button 
                   onClick={async () => {
                     const handler = confirmDialog.onConfirm;
+                    setConfirmDialog(null); // Close immediately
                     if (handler) {
                       await handler();
                     }
-                    // Only close if the dialog wasn't replaced by the handler
-                    setConfirmDialog((prev: any) => (prev === confirmDialog ? null : prev));
                   }}
                   className={`flex-1 py-3 px-4 rounded-xl font-bold text-white transition-colors ${confirmDialog.danger !== false ? 'bg-red-500 hover:bg-red-600 shadow-md shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20'}`}
                 >

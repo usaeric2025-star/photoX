@@ -31,7 +31,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     addTag,
     addManufacturer,
     updateTag,
-    deleteTag
+    deleteTag,
+    removeTagFromPhoto
   } = useAdminPhoto();
   const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
@@ -225,7 +226,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 selectedTagIds={formState.tagIds} 
                 onToggleTag={handleToggleTag}
                 onUpdateTag={updateTag}
-                onDeleteTag={deleteTag}
+                onDeleteTag={(tagId) => removeTagFromPhoto(editPhotoId!, tagId)}
                 onQuickAdd={() => setPromptDialog({
                   title: '新增标签',
                   placeholder: '输入标签名称',

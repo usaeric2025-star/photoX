@@ -12,7 +12,8 @@ import {
   loadAllPhotosFromCloud,
   loadPhotosFromCloud,
   batchCreateTags,
-  syncPhotosToCloud
+  syncPhotosToCloud,
+  deletePhotosBatch
 } from '../services/supabaseService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto } from '../services/geminiService';
@@ -539,61 +540,66 @@ export const useAdminPhotos = (
   };
   
   const deletePhoto = async (idOrIds: string | string[], suppressAlert: boolean = false) => {
-      const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-      const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
-      
-      const affectedGroups = new Set<string>();
-      photosToDelete.forEach(p => {
-        if (p.groupId && p.isGroupCover) {
-          affectedGroups.add(p.groupId);
-        }
-      });
-
-      try {
-        const previousPhotos = photosRef.current;
-        let nextPhotosList = photosRef.current.filter(p => !ids.includes(p.id));
-
-        // Optimistic Group Cover handling
-        const affectedGroups = new Set<string>();
-        photosToDelete.forEach(p => {
-          if (p.groupId && p.isGroupCover) {
-            affectedGroups.add(p.groupId);
-          }
-        });
-        
-        for (const groupId of affectedGroups) {
-          const remainingGroupPhotos = nextPhotosList.filter(p => p.groupId === groupId);
-          if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
-            const sorted = [...remainingGroupPhotos].sort((a, b) => 
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-            );
-            const newCover = { ...sorted[0], isGroupCover: true };
-            nextPhotosList = nextPhotosList.map(p => p.id === newCover.id ? newCover : p);
-          }
-        }
-
-        // Apply optimistic UI
-        setPhotos(nextPhotosList);
-        setCloudCount(nextPhotosList.length);
-        await saveData('product_photos', nextPhotosList);
-
-        // Perform cloud sync
-        if (user) {
-          await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
-          // Re-sync group covers if any
+    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+    const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
+    
+    setConfirmDialog({
+      title: '确认删除',
+      message: `确定要删除这 ${ids.length} 张照片吗？此操作无法撤销。`,
+      danger: true,
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        const closeLoading = showLoadingToast('正在处理照片删除...');
+        try {
+          const previousPhotos = photosRef.current;
+          let nextPhotosList = photosRef.current.filter(p => !ids.includes(p.id));
+  
+          // Optimistic Group Cover handling
+          const affectedGroups = new Set<string>();
+          photosToDelete.forEach(p => {
+            if (p.groupId && p.isGroupCover) {
+              affectedGroups.add(p.groupId);
+            }
+          });
+          
           for (const groupId of affectedGroups) {
-             const photo = nextPhotosList.find(p => p.groupId === groupId && p.isGroupCover);
-             if (photo && user) savePhotoToCloud(user.id, photo).catch(console.error);
+            const remainingGroupPhotos = nextPhotosList.filter(p => p.groupId === groupId);
+            if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
+              const sorted = [...remainingGroupPhotos].sort((a, b) => 
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+              );
+              const newCover = { ...sorted[0], isGroupCover: true };
+              nextPhotosList = nextPhotosList.map(p => p.id === newCover.id ? newCover : p);
+            }
           }
+  
+          // Apply optimistic UI
+          setPhotos(nextPhotosList);
+          setCloudCount(nextPhotosList.length);
+          await saveData('product_photos', nextPhotosList);
+  
+          // Perform bulk cloud sync
+          if (user) {
+            await deletePhotosBatch(user.id, photosToDelete);
+            // Re-sync group covers if any
+            for (const groupId of affectedGroups) {
+               const photo = nextPhotosList.find(p => p.groupId === groupId && p.isGroupCover);
+               if (photo && user) savePhotoToCloud(user.id, photo).catch(console.error);
+            }
+          }
+  
+          if (!suppressAlert) showToast('删除成功', 'success');
+        } catch (err: any) {
+          console.error("[ERROR] Delete photo failed:", err);
+          // Rollback
+          setPhotos(photosRef.current);
+          if (!suppressAlert) showToast('删除失败：' + err.message, 'error');
+          setAlertDialog({ title: '删除失败', message: err.message });
+        } finally {
+          closeLoading();
         }
-
-        if (!suppressAlert) showToast('删除成功', 'success');
-      } catch (err: any) {
-        console.error("[ERROR] Delete photo failed:", err);
-        // Rollback
-        setPhotos(photosRef.current);
-        if (!suppressAlert) showToast('删除失败：' + err.message, 'error');
       }
+    });
   };
 
   const updatePhoto = async (updatedPhoto: Photo) => {

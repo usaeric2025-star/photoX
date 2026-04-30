@@ -35,11 +35,14 @@ export default function AdminView() {
 
   const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
 
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
 
-  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'loading' = 'success', persistent = false) => {
     setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+    if (!persistent) {
+      setTimeout(() => setToast(null), 3000);
+    }
+    return () => setToast(null); // Return close function
   }, []);
 
   const [pageError, setPageError] = useState<string | null>(null);
@@ -447,7 +450,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
                   exit={{ opacity: 0, y: -50 }}
                   className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
                 >
-                  {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : <X size={18} className="text-red-400" />}
+                  {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : 
+                   toast.type === 'loading' ? <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> : 
+                   <X size={18} className="text-red-400" />}
                   {toast.message}
                 </motion.div>
               )}

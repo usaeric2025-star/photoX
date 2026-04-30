@@ -25,7 +25,11 @@ export const useAdminCore = (
   } = useGalleryContext();
 
   const { settings, setSettings = () => {}, setIsSyncing = () => {} } = adminSession || {};
-  const { setAlertDialog = () => {}, setCloudCount = () => {} } = adminUI || {};
+  const { setAlertDialog = () => {}, setCloudCount = () => {}, showToast = () => {} } = adminUI || {};
+
+  const showLoadingToast = useCallback((message: string) => {
+    return showToast(message, 'loading', true);
+  }, [showToast]);
 
   const saveSettings = useCallback(async (s: any) => {
     try {
@@ -155,20 +159,31 @@ export const useAdminCore = (
   }, [user, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
-    try {
-      const photosToUngroup = photos.filter(p => p.groupId === groupId);
-      const photoIds = photosToUngroup.map(p => p.id);
-      
-      if (photoIds.length > 0) {
-        await updatePhotosGroupInCloud(photoIds, null);
-        await Promise.all(photoIds.map(id => updatePhotoInCloud(id, { is_pinned: false })));
-        setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null, isPinned: false } : p));
+    setConfirmDialog({
+      message: '确定要解散这个群组吗？',
+      danger: true,
+      onConfirm: async () => {
+        setConfirmDialog(null);
+        const closeLoading = showLoadingToast('正在解散群组...');
+        try {
+          const photosToUngroup = photos.filter(p => p.groupId === groupId);
+          const photoIds = photosToUngroup.map(p => p.id);
+          
+          if (photoIds.length > 0) {
+            await updatePhotosGroupInCloud(photoIds, null);
+            await Promise.all(photoIds.map(id => updatePhotoInCloud(id, { is_pinned: false })));
+            setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null, isPinned: false } : p));
+          }
+          closeLoading();
+          showToast('解除群组成功');
+        } catch (err: any) {
+          closeLoading();
+          console.error('Ungroup error:', err);
+          setAlertDialog({ title: '解除群組失敗', message: err?.message || '未知錯誤' });
+        }
       }
-    } catch (err: any) {
-      console.error('Ungroup error:', err);
-      setAlertDialog({ title: '解除群組失敗', message: err?.message || '未知錯誤' });
-    }
-  }, [photos, setPhotos, setAlertDialog, updatePhotoInCloud]);
+    });
+  }, [photos, setPhotos, setAlertDialog, updatePhotoInCloud, setConfirmDialog, showLoadingToast, showToast]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;
@@ -199,7 +214,8 @@ export const useAdminCore = (
     saveSettings,
     performPushSync, performPullSync,
     handleSingleAiAnalyzeCallback,
-    handleUngroup, handleGroupPhotos
+    handleUngroup, handleGroupPhotos,
+    showLoadingToast
   };
 };
 
