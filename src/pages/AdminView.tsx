@@ -239,8 +239,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     setConfirmDialog,
     setLoadingState,
     setCloudCount,
-    cloudCount
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setConfirmDialog, setLoadingState, setCloudCount, cloudCount]);
+    cloudCount,
+    showToast
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setConfirmDialog, setLoadingState, setCloudCount, cloudCount, showToast]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
@@ -289,8 +290,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
       onConfirm: async () => {
         try {
           for (const id of ids) {
-            await deletePhoto(id);
+            await deletePhoto(id, true);
           }
+          showToast('批量刪除成功', 'success');
           setEditPhotoId(null);
           setSelectedIds([]);
           setIsMultiSelect(false);
@@ -300,7 +302,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
         }
       }
     });
-  }, [t, deletePhoto, setConfirmDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect]);
+  }, [t, deletePhoto, setConfirmDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast]);
   
   const handleDeletePhoto = useCallback(async (id: string) => {
     setConfirmDialog({

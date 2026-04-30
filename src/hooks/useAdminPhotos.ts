@@ -54,6 +54,7 @@ export const useAdminPhotos = (
     loadingState: string;
     setLoadingState: (s: any) => void;
     setAlertDialog: (d: any) => void;
+    showToast: (msg: string, type?: 'success' | 'error') => void;
     setActiveScreen: (s: string) => void;
     abortAnalysis: () => void;
   },
@@ -70,7 +71,12 @@ export const useAdminPhotos = (
   } = useGalleryContext();
 
   const { setIsSyncing = () => {} } = adminSession || {};
-  const { setAlertDialog = () => {}, setActiveScreen = () => {}, setLoadingState = () => {} } = adminUI || {};
+  const { 
+    setAlertDialog = () => {}, 
+    setActiveScreen = () => {}, 
+    setLoadingState = () => {},
+    showToast = (m: string) => {}
+  } = adminUI || {};
   
   const [internalCloudCount, setInternalCloudCount] = useState<number | null>(null);
   const cloudCount = adminUI?.cloudCount ?? internalCloudCount;
@@ -532,7 +538,7 @@ export const useAdminPhotos = (
     }
   };
   
-  const deletePhoto = async (idOrIds: string | string[]) => {
+  const deletePhoto = async (idOrIds: string | string[], suppressAlert: boolean = false) => {
       const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
       const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
       
@@ -544,12 +550,17 @@ export const useAdminPhotos = (
       });
 
       try {
-        if (user) {
-          await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
-        }
-
+        const previousPhotos = photosRef.current;
         let nextPhotosList = photosRef.current.filter(p => !ids.includes(p.id));
 
+        // Optimistic Group Cover handling
+        const affectedGroups = new Set<string>();
+        photosToDelete.forEach(p => {
+          if (p.groupId && p.isGroupCover) {
+            affectedGroups.add(p.groupId);
+          }
+        });
+        
         for (const groupId of affectedGroups) {
           const remainingGroupPhotos = nextPhotosList.filter(p => p.groupId === groupId);
           if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
@@ -558,22 +569,30 @@ export const useAdminPhotos = (
             );
             const newCover = { ...sorted[0], isGroupCover: true };
             nextPhotosList = nextPhotosList.map(p => p.id === newCover.id ? newCover : p);
-            
-            if (user) {
-              savePhotoToCloud(user.id, newCover).catch(err => 
-                console.error(`[ERROR] Failed to reassign group cover for group ${groupId}:`, err)
-              );
-            }
           }
         }
 
+        // Apply optimistic UI
         setPhotos(nextPhotosList);
         setCloudCount(nextPhotosList.length);
         await saveData('product_photos', nextPhotosList);
-        alert('删除成功');
+
+        // Perform cloud sync
+        if (user) {
+          await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
+          // Re-sync group covers if any
+          for (const groupId of affectedGroups) {
+             const photo = nextPhotosList.find(p => p.groupId === groupId && p.isGroupCover);
+             if (photo && user) savePhotoToCloud(user.id, photo).catch(console.error);
+          }
+        }
+
+        if (!suppressAlert) showToast('删除成功', 'success');
       } catch (err: any) {
         console.error("[ERROR] Delete photo failed:", err);
-        alert('删除失败：' + err.message);
+        // Rollback
+        setPhotos(photosRef.current);
+        if (!suppressAlert) showToast('删除失败：' + err.message, 'error');
       }
   };
 
