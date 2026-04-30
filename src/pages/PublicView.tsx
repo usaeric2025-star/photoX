@@ -17,6 +17,7 @@ export default function PublicView() {
     hasMore, setHasMore,
     setVisibleCount,
     setTotalCloudCount,
+    totalCloudCount,
     filterCatId,
     filterTagIds,
     debouncedSearchQuery
