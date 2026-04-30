@@ -130,7 +130,6 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         onCancelAnalyze={() => adminUI?.abortAnalysis()}
         isAnalyzing={adminUI?.loadingState === 'analyzing'}
         setAlertDialog={(d) => adminUI?.setAlertDialog(d)}
-        setConfirmDialog={(d) => adminUI?.setConfirmDialog(d)}
         setLoadingState={(s) => adminUI?.setLoadingState(s)}
         onSetGroupCover={async (id, groupId) => {
           setPhotos(prev => prev.map(p => {

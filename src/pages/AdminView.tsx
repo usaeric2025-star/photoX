@@ -6,7 +6,8 @@ import { loginWithGoogle, saveSettings } from '../services/supabaseService';
 import { updatePhotoInCloud } from '../services/photoService';
 // Removed Tag import
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { Modals } from '../components/admin/Modals';
+// Removed Modals import
+
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { FloatingActionButton } from '../components/admin/FloatingActionButton';
@@ -33,7 +34,7 @@ export default function AdminView() {
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] ?? translations.en;
 
-  const { confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
+  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
 
@@ -165,7 +166,8 @@ export default function AdminView() {
                 </button>
              </div>
           </div>
-          <Modals promptValue={promptValue} setPromptValue={setPromptValue} />
+          // Removed Modals usage
+
         </AdminUIProvider>
        </ErrorBoundary>
     );
@@ -419,11 +421,11 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
 
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
-    confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast: toast, showToast: showToast, showLoadingToast: (m: string) => showToast(m, 'loading', true), 
+    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    toast: toast, showToast: showToast,
     loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
   }), [
-    activeScreen, editPhotoId, batchEditIds, confirmDialog, setConfirmDialog, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
   ]);
 
@@ -683,9 +685,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
               )}
             </AnimatePresence>
       
-            <Modals 
-                promptValue={promptValue} setPromptValue={setPromptValue}
-            />
+
           </AdminUIProvider>
         </AdminPhotoProvider>
       </AdminSessionProvider>

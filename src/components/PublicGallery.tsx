@@ -55,7 +55,6 @@ interface PublicGalleryProps {
   isAnalyzing?: boolean;
   onSetGroupCover?: (id: string, groupId: string) => Promise<void>;
   setAlertDialog?: (d: any) => void;
-  setConfirmDialog?: (d: any) => void;
   setLoadingState?: (s: string) => void;
   totalCount?: number;
   onTogglePinned?: (photo: Photo) => void;
@@ -129,7 +128,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   isAnalyzing,
   onSetGroupCover,
   setAlertDialog: propsSetAlertDialog,
-  setConfirmDialog: propsSetConfirmDialog,
   setLoadingState: propsSetLoadingState,
   totalCount,
   onTogglePinned
@@ -169,7 +167,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const activeSetIsMultiSelect = onToggleMultiSelect || context.setIsMultiSelect;
 
   const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
-  const setConfirmDialog = propsSetConfirmDialog || (() => {});
   const setLoadingState = propsSetLoadingState || (() => {});
 
   // Handle infinite mode
@@ -503,7 +500,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         allTags={tags}
         isMultiSelect={activeIsMultiSelect}
         setAlertDialog={setAlertDialog}
-        setConfirmDialog={setConfirmDialog}
         setLoadingState={setLoadingState}
         shareGroup={shareGroup}
       />

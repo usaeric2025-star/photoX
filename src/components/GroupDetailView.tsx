@@ -59,11 +59,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 </button>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                     <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
+                     <h2 className="text-lg font-bold text-slate-800 tracking-tight">
                        {activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
                      </h2>
                   </div>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{activeGroupPhotos.length} 張照片 / {activeGroupPhotos.length} Photos</p>
+                  <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                        referrerPolicy="no-referrer"
                        onClick={(e) => e.stopPropagation()}
                      />
-                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-white/80 text-xs font-bold font-mono z-20">
+                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-white/80 text-xs font-normal font-mono z-20">
                        {currentIndex + 1} / {activeGroupPhotos.length}
                      </div>
                    </div>
@@ -149,7 +149,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                    >
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-xl font-black text-slate-800 tracking-tight">照片資訊</h3>
+                          <h3 className="text-base font-semibold text-slate-800 tracking-tight">照片資訊</h3>
                           <button onClick={() => setFocusedGroupPhotoId(null)} className="md:hidden w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
                             <ChevronDown size={18} />
                           </button>
@@ -157,28 +157,28 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                       </div>
 
                       <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">標籤</label>
+                        <div className="space-y-1">
+                          <label className="text-xs font-medium text-slate-400">標籤</label>
                           <div className="flex flex-wrap gap-1.5 border-b border-slate-50 pb-4">
                              {photo.tagIds && photo.tagIds.length > 0 ? photo.tagIds.map(tid => (
-                               <span key={tid} className="text-xs font-bold bg-[#1D3557]/5 text-[#1D3557] rounded-md px-2 py-1 border border-[#1D3557]/10">
+                               <span key={tid} className="text-xs font-normal text-slate-600 bg-slate-100 rounded px-2 py-0.5">
                                   {props.tagMap?.[tid] || tid}
                                </span>
-                             )) : <span className="text-sm font-bold text-slate-600">-</span>}
+                             )) : <span className="text-sm font-normal text-slate-600">-</span>}
                           </div>
                         </div>
 
-                        <div className="space-y-2 pt-1">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">型號</label>
+                        <div className="space-y-1 pt-1">
+                          <label className="text-xs font-medium text-slate-400">型號</label>
                           <div className="flex items-center">
-                             <span className="text-sm font-black text-slate-700 tracking-tight">{photo.model_number || '-'}</span>
+                             <span className="text-sm font-normal text-slate-700">{photo.model_number || '-'}</span>
                           </div>
                         </div>
 
-                        <div className="space-y-2 pt-1 border-t border-slate-50">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">尺寸</label>
+                        <div className="space-y-1 pt-1 border-t border-slate-50">
+                          <label className="text-xs font-medium text-slate-400">尺寸</label>
                           <div className="flex items-center">
-                             <span className="text-sm font-black text-slate-700 tracking-tight flex items-center gap-1">
+                             <span className="text-sm font-normal text-slate-700 flex items-center gap-1">
                                 {photo.dimensions?.[0] ? `📐 ${(() => {
                                     let s = photo.dimensions[0].label || '';
                                     if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
@@ -188,10 +188,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                           </div>
                         </div>
 
-                        <div className="space-y-2 pt-1 border-t border-slate-50">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">備註</label>
+                        <div className="space-y-1 pt-1 border-t border-slate-50">
+                          <label className="text-xs font-medium text-slate-400">備註</label>
                           <div className="flex items-start">
-                             <span className="text-sm font-bold text-slate-600 flex items-start gap-1">
+                             <span className="text-sm font-normal text-slate-600 flex items-start gap-1">
                                {photo.description ? `📝 ${photo.description}` : '-'}
                              </span>
                           </div>

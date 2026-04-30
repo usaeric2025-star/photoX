@@ -27,7 +27,6 @@ interface Props {
   setShowOtherFields: (s: boolean) => void;
   editPhotoPreview?: string | null;
   onDelete?: (id: string) => void;
-  setConfirmDialog?: (d: any) => void;
   newPhotoData?: string | null;
   abortAnalysis?: () => void;
 }
@@ -47,7 +46,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag,
     removeTagFromPhoto
   } = useAdminPhoto();
-  const { isAnalyzing, aiDebugInfo, setPromptDialog, setConfirmDialog } = useAdminUI();
+  const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
   const isSyncing = sessionSyncing;
@@ -185,28 +184,28 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           )}
           <div className="flex-1 space-y-3">
              <div className="space-y-1">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品名称 / Product Name</h3>
+                <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide pl-1">产品名称 / Product Name</h3>
                 <input 
                   key={editPhotoId || 'new'}
                   type="text" 
                   placeholder="輸入名稱..." 
                   defaultValue={formState.name} 
                   onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
-                  className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold uppercase" 
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-normal" 
                 />
              </div>
              <div className="flex w-full gap-2 overflow-x-auto">
                 <div className="flex-1 min-w-[30%] space-y-1">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 whitespace-nowrap">编号 / Code</h3>
+                  <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide pl-1 whitespace-nowrap">编号 / Code</h3>
                   <input type="text" placeholder="编号..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200 text-xs" />
                 </div>
                 <div className="flex-1 min-w-[30%] space-y-1">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 whitespace-nowrap">型号 / Model</h3>
+                  <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide pl-1 whitespace-nowrap">型号 / Model</h3>
                   <input type="text" placeholder="型号..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200 text-xs" />
                 </div>
                 <div className="flex-1 min-w-[30%] space-y-1">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 whitespace-nowrap">价格 / Price</h3>
-                  <input type="text" placeholder="价格..." value={formState.price||''} onChange={e => updateForm({ price: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200 text-xs font-bold text-blue-600" />
+                  <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wide pl-1 whitespace-nowrap">价格 / Price</h3>
+                  <input type="text" placeholder="价格..." value={formState.price||''} onChange={e => updateForm({ price: e.target.value })} className="w-full p-2 rounded-xl border border-slate-200 text-xs font-medium text-blue-600" />
                 </div>
              </div>
           </div>

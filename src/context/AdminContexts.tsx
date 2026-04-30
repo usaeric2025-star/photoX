@@ -93,8 +93,6 @@ interface AdminUIContextType {
   batchEditIds: string[] | null;
   setBatchEditIds: (ids: string[] | null) => void;
   
-  confirmDialog: { message: string, onConfirm: () => void } | null;
-  setConfirmDialog: (d: { message: string, onConfirm: () => void } | null) => void;
   alertDialog: { title: string, message: string } | null;
   setAlertDialog: (d: { title: string, message: string } | null) => void;
   promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
@@ -102,7 +100,6 @@ interface AdminUIContextType {
   
   toast: { message: string, type: 'success' | 'error' } | null;
   showToast: (msg: string, type: 'success' | 'error') => void;
-  showLoadingToast: (msg: string) => () => void;
   
   loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading';
   setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading') => void;

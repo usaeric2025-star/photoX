@@ -154,7 +154,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       
       <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/70 to-transparent">
          {!isUncategorized && displayCatName && (
-          <p className="text-[11px] font-bold tracking-tight leading-none text-white drop-shadow-md mb-0.5 uppercase truncate">
+          <p className="text-xs font-semibold tracking-tight text-white/90 drop-shadow-sm mb-0.5 truncate">
             {displayCatName}
           </p>
         )}
@@ -162,7 +162,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         {photoTags.length > 0 && (
           <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {photoTags.map((tagName, idx) => (
-              <span key={idx} className="bg-white/30 backdrop-blur-sm text-white/90 text-[8px] px-1 py-0 rounded-sm uppercase tracking-tighter font-medium whitespace-nowrap">
+              <span key={idx} className="bg-white/20 backdrop-blur-sm text-white/90 text-[10px] px-1 py-0.5 rounded-sm font-normal whitespace-nowrap">
                 {tagName}
               </span>
             ))}

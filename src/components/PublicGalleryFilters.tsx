@@ -84,7 +84,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           </button>
           
            {/* Unified categories system (from table) */}
-          {categories
+            {categories
             .filter(c => c.name && c.name.trim())
             .filter(c => {
               const n = (c.name || '').toLowerCase();
@@ -101,14 +101,14 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     setSelectedSubId(null);
                     onScrollToTop();
                   }}
-                  className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                  className={`w-full py-2 rounded-xl text-sm font-medium uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                 >
                   {displayName}
                 </button>
               );
             })}
       </div>
-
+      
       <div className="space-y-2">
         <AnimatePresence>
           {selectedCatCode && (
@@ -130,7 +130,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     <button 
                       key={sub.id}
                       onClick={() => { setSelectedSubId(selectedSubId === sub.id ? null : sub.id); onScrollToTop(); }}
-                      className={`px-2 py-0.5 rounded-lg text-[8px] font-black tracking-widest whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/40 font-medium'}`}
+                      className={`px-3 py-1 rounded-lg text-xs font-normal tracking-wide whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/60'}`}
                     >
                       {sub.name}
                     </button>
@@ -141,7 +141,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           </AnimatePresence>
 
         <div className="relative">
-          <div className="flex flex-wrap gap-0.5 items-start max-h-[5rem] overflow-y-auto pb-1 content-start pr-1">
+          <div className="flex flex-wrap gap-1 items-start max-h-[5rem] overflow-y-auto pb-1 content-start pr-1">
               {sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const toTitleCase = (str: string) => {
@@ -152,7 +152,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   <button 
                     key={strTagId}
                     onClick={() => { setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]); }}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all border shadow-sm ${selectedTagIds.includes(strTagId) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                    className={`px-3 py-1 rounded-lg text-xs font-normal transition-all border shadow-sm ${selectedTagIds.includes(strTagId) ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white/40 border-[#1D3557]/10 text-[#1D3557]/60'}`}
                   >
                     #{toTitleCase(tag.name)}
                   </button>
