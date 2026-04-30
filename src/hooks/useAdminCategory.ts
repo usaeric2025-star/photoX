@@ -93,86 +93,69 @@ export const useAdminCategory = (adminUI: any) => {
 
   const deleteTag = async (id: string | number) => {
     if (!id) return;
+    const strId = String(id);
 
-    alert('准备弹出确认框，onConfirm type：' + typeof (async () => {}));
     setConfirmDialog({
       title: '确认删除标签 / Confirm Delete Tag',
       message: '确定要删除这个标签吗？ / Are you sure you want to delete this tag?',
       danger: true,
       onConfirm: async () => {
-        alert('0. onConfirm 开始执行 deleteTag');
-        try {
-          alert('1. 准备获取标记 ID ' + id);
-          const strId = String(id);
-          
-          // 1. 统计有多少照片包含这个标签
-          alert('2. 准备统计关联照片');
-          const { data: photosWithTag } = await supabase
-            .from('furniture_items')
-            .select('id, tagIds')
-            .contains('tagIds', [strId]);
+        const { data: photosWithTag } = await supabase
+          .from('furniture_items')
+          .select('id, tagIds')
+          .contains('tagIds', [strId]);
 
-          const count = photosWithTag?.length || 0;
-          alert('3. 统计到关联照片数量：' + count);
-          
-          if (count > 0 && photosWithTag) {
-            alert('4. 准备清空标签关联');
-            const confirmAgain = confirm(`此标签关联了 ${count} 张照片，删除后会从这些照片的标签列表中移除。确定继续吗？ / This tag is associated with ${count} photos. Removing it will update those photos. Proceed?`);
-            if (!confirmAgain) return;
+        const count = photosWithTag?.length || 0;
 
-            for (const photo of photosWithTag) {
-              const newTagIds = (photo.tagIds || []).filter(tid => String(tid) !== strId);
-              const { error } = await supabase
-                .from('furniture_items')
-                .update({ tagIds: newTagIds })
-                .eq('id', photo.id);
-              if (error) throw error;
+        if (count > 0) {
+          setConfirmDialog({
+            title: '确认清空关联 / Confirm Association Clear',
+            message: `此标签关联了 ${count} 张照片，删除后会从这些照片的标签列表中移除。确定继续吗？ / This tag is associated with ${count} photos. Removing it will update those photos. Proceed?`,
+            danger: true,
+            onConfirm: async () => {
+              for (const photo of photosWithTag!) {
+                const newTagIds = (photo.tagIds || []).filter(tid => String(tid) !== strId);
+                const { error } = await supabase
+                  .from('furniture_items')
+                  .update({ tagIds: newTagIds })
+                  .eq('id', photo.id);
+                if (error) throw error;
+              }
+              await performDeleteTag(strId, id);
             }
-            alert('5. 已清空标签关联');
-          }
-
-          // 3. 删除标签
-          alert('6. 准备删除标签记录');
-          const finalId = !isNaN(Number(id)) ? Number(id) : id;
-          const success = await deleteTagFromDB(finalId);
-          
-          if (!success) {
-            throw new Error("无法在云端删除标签。请确认您有足够的权限，或该标签已被删除。 / Unable to delete tag from cloud.");
-          }
-          alert('7. 标签数据库删除完成');
-
-          // 4. 更新本地状态
-          const newTags = Array.isArray(tags)
-            ? tags.filter(t => String(t.id) !== strId)
-            : [];
-          
-          if (isMounted.current) {
-            setTags(newTags);
-            await saveData('product_tags', newTags);
-          }
-
-          // 5. Update local photo state
-          const nextPhotos = photos.map(p => ({
-            ...p,
-            tagIds: (p.tagIds || []).filter(tid => String(tid) !== strId)
-          }));
-          
-          if (isMounted.current) {
-            setPhotos(nextPhotos);
-            await saveData('product_photos', nextPhotos);
-          }
-
-          alert('删除成功 / Delete success');
-        } catch (err: any) {
-          console.error("[useAdminCategory] Tag deletion failed:", err);
-          if (isMounted.current) {
-            alert('标签删除失败：' + err.message);
-          }
-          throw err;
+          });
+        } else {
+          await performDeleteTag(strId, id);
         }
-        alert('99. onConfirm 执行完毕');
       }
     });
+  };
+
+  const performDeleteTag = async (strId: string, id: string | number) => {
+    try {
+      const finalId = !isNaN(Number(id)) ? Number(id) : id;
+      const success = await deleteTagFromDB(finalId);
+      if (!success) throw new Error("无法在云端删除标签。 / Unable to delete tag.");
+
+      const newTags = Array.isArray(tags) ? tags.filter(t => String(t.id) !== strId) : [];
+      if (isMounted.current) {
+        setTags(newTags);
+        await saveData('product_tags', newTags);
+      }
+
+      const nextPhotos = photos.map(p => ({
+        ...p,
+        tagIds: (p.tagIds || []).filter(tid => String(tid) !== strId)
+      }));
+      if (isMounted.current) {
+        setPhotos(nextPhotos);
+        await saveData('product_photos', nextPhotos);
+      }
+      alert('删除成功 / Delete success');
+    } catch (err: any) {
+      if (isMounted.current) alert('标签删除失败：' + err.message);
+      throw err;
+    }
   };
 
   const addCategory = async (name: string) => {
@@ -208,105 +191,59 @@ export const useAdminCategory = (adminUI: any) => {
       message: '确定要删除这个分类吗？ / Are you sure you want to delete this category?',
       danger: true,
       onConfirm: async () => {
-        alert('0. onConfirm 开始执行 deleteCategory');
-        try {
-          alert('1. 准备统计目录 ID ' + id);
-          const strId = String(id);
-          
-          // 1. 统计有多少照片关联这个分类
-          alert('2. 准备查询关联照片');
-          const { count } = await supabase
-            .from('furniture_items')
-            .select('*', { count: 'exact', head: true })
-            .eq('category_id', strId);
+        const strId = String(id);
+        const { count } = await supabase
+          .from('furniture_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('category_id', strId);
 
-          // 2. 清空照片的 category_id
-          if (count && count > 0) {
-            alert('3. 发现关联照片，准备清空');
-            const confirmAgain = confirm(`此分类关联了 ${count} 张照片，删除后这些照片的分类将变为「未分类」。确定继续吗？ / This category has ${count} photos. They will become "Uncategorized". Proceed?`);
-            if (!confirmAgain) return;
-
-            const { error } = await supabase
-              .from('furniture_items')
-              .update({ category_id: null })
-              .eq('category_id', strId);
-            if (error) throw error;
-            alert('4. 已清空照片关联');
-          }
-
-          // 3. 删除分类
-          alert('5. 准备删除分类记录');
-          const success = await deleteCategoryFromDB(strId);
-          if (!success) throw new Error("无法在云端删除分类。 / Unable to delete category from cloud.");
-          alert('6. 分类数据库删除完成');
-
-          // 4. 更新本地状态
-          const nextCategories = categories.filter(c => String(c.id) !== strId);
-          if (isMounted.current) {
-            setCategories(nextCategories);
-            await saveData('product_categories', nextCategories);
-          }
-          
-          // 5. 更新照片在内存中的状态
-          const nextPhotos = photos.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
-          
-          if (isMounted.current) {
-            setPhotos(nextPhotos);
-            await saveData('product_photos', nextPhotos);
-          }
-
-          // 6. Sync affected photos to cloud
-          const affectedPhotos = nextPhotos.filter((p, i) => 
-            String(photos[i].categoryId) === strId
-          );
-
-          if (affectedPhotos.length > 0) {
-            const { data: { user: userObj } } = await supabase.auth.getUser();
-            if (userObj) {
-              await Promise.allSettled(
-                affectedPhotos.map(p => savePhotoToCloud(userObj.id, p))
-              );
+        if (count && count > 0) {
+          setConfirmDialog({
+            title: '确认清空关联 / Confirm Association Clear',
+            message: `此分类关联了 ${count} 张照片，删除后这些照片的分类将变为「未分类」。确定继续吗？ / This category has ${count} photos. They will become "Uncategorized". Proceed?`,
+            danger: true,
+            onConfirm: async () => {
+              const { error } = await supabase
+                .from('furniture_items')
+                .update({ category_id: null })
+                .eq('category_id', strId);
+              if (error) throw error;
+              await performDeleteCategory(strId);
             }
-          }
-          alert('分类删除成功 / Category deleted successfully');
-        } catch (err: any) {
-          console.error("[useAdminCategory] Category deletion failed:", err);
-          if (isMounted.current) {
-            alert('分类删除失败：' + err.message);
-          }
+          });
+        } else {
+          await performDeleteCategory(strId);
         }
-        alert('99. onConfirm 执行完毕');
       }
     });
   };
 
-  const addManufacturer = async (name: string) => {
-    try {
-      const saved = await addManufacturerToDB(name);
-      const newMfrs = [...manufacturers, saved];
-      setManufacturers(newMfrs);
-      await saveData('product_manufacturers', newMfrs);
-      return saved;
-    } catch (err: any) {
-      console.error("[useAdminCategory] Add manufacturer failed:", err);
-      setAlertDialog({ title: '添加厂商失败', message: err.message || '网络连接或数据库权限问题' });
-    }
-  };
+  const performDeleteCategory = async (strId: string) => {
+      try {
+        const success = await deleteCategoryFromDB(strId);
+        if (!success) throw new Error("无法在云端删除分类。 / Unable to delete category.");
 
-  const updateManufacturer = async (id: string | number, name: string) => {
-    try {
-      const strId = String(id);
-      const trimmed = name.trim();
-      await updateManufacturerInDB(strId, trimmed);
-      const newMfrs = manufacturers.map(m => 
-        String(m.id) === strId ? { ...m, name: trimmed } : m
-      );
-      setManufacturers(newMfrs);
-      await saveData('product_manufacturers', newMfrs);
-    } catch (err: any) {
-      console.error("[useAdminCategory] Update manufacturer failed:", err);
-      setAlertDialog({ title: '更新厂商失败', message: err.message || '网络连接或数据库权限问题' });
-    }
+        const nextCategories = categories.filter(c => String(c.id) !== strId);
+        if (isMounted.current) {
+            setCategories(nextCategories);
+            await saveData('product_categories', nextCategories);
+        }
+        
+        const nextPhotos = photos.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
+        if (isMounted.current) {
+            setPhotos(nextPhotos);
+            await saveData('product_photos', nextPhotos);
+        }
+
+        const affectedPhotos = nextPhotos.filter((p, i) => String(photos[i].categoryId) === strId);
+        if (affectedPhotos.length > 0) {
+            const { data: { user: userObj } } = await supabase.auth.getUser();
+            if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
+        }
+        alert('分类删除成功 / Category deleted successfully');
+      } catch (err: any) {
+        if (isMounted.current) alert('分类删除失败：' + err.message);
+      }
   };
 
   const deleteManufacturer = async (id: string | number) => {
@@ -315,78 +252,62 @@ export const useAdminCategory = (adminUI: any) => {
       message: '确定要删除这个厂商吗？ / Are you sure you want to delete this manufacturer?',
       danger: true,
       onConfirm: async () => {
-        alert('0. onConfirm 开始执行 deleteManufacturer');
-        try {
-          console.log(`[useAdminCategory] Confirm deletion for manufacturer: ${id}`);
-          alert('1. 准备获取厂商 ID ' + id);
-          const strId = String(id);
-          
-          // 1. 统计有多少照片关联这个厂商
-          alert('2. 准备统计关联照片');
-          const { count } = await supabase
-            .from('furniture_items')
-            .select('*', { count: 'exact', head: true })
-            .eq('manufacturer_id', strId);
-          
-          // 2. 清空照片的 manufacturer_id
-          if (count && count > 0) {
-            alert('3. 发现关联照片，需二次确认');
-            const confirmAgain = confirm(`此厂商关联了 ${count} 张照片，删除后这些照片的厂商将变为「未选择」。确定继续吗？ / This manufacturer has ${count} photos. Their manufacturer info will be cleared. Proceed?`);
-            if (!confirmAgain) return;
-            alert('4. 准备清空照片关联');
-
-            const { error } = await supabase
-              .from('furniture_items')
-              .update({ manufacturer_id: null })
-              .eq('manufacturer_id', strId);
-            if (error) throw error;
-            alert('5. 已清空照片关联');
-          }
-
-          // 3. Delete manufacturer
-          alert('6. 准备删除厂商记录');
-          const success = await deleteManufacturerFromDB(strId);
-          console.log(`[useAdminCategory] Cloud delete result for manufacturer ${id}:`, success);
-          if (!success) throw new Error("無法刪除廠商 / Unable to delete manufacturer");
-          alert('7. 厂商数据库删除完成');
-
-          // 4. Update local state
-          const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
-          setManufacturers(newMfrs);
-          await saveData('product_manufacturers', newMfrs);
-          
-          // Update photos in memory
-          const nextPhotos = photos.map(p => 
-            String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
-          );
-          
-          if (isMounted.current) {
-            setPhotos(nextPhotos);
-            await saveData('product_photos', nextPhotos);
-          }
-
-          // Sync affected photos to cloud
-          const affectedPhotos = nextPhotos.filter((p, i) => 
-            String(photos[i].manufacturerId) === strId
-          );
-
-          if (affectedPhotos.length > 0) {
-            const { data: { user: userObj } } = await supabase.auth.getUser();
-            if (userObj) {
-              await Promise.allSettled(
-                affectedPhotos.map(p => savePhotoToCloud(userObj.id, p))
-              );
+        const strId = String(id);
+        const { count } = await supabase
+          .from('furniture_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('manufacturer_id', strId);
+        
+        if (count && count > 0) {
+          setConfirmDialog({
+            title: '确认清空关联 / Confirm Association Clear',
+            message: `此厂商关联了 ${count} 张照片，删除后这些照片的厂商将变为「未选择」。确定继续吗？ / This manufacturer has ${count} photos. Their manufacturer info will be cleared. Proceed?`,
+            danger: true,
+            onConfirm: async () => {
+              const { error } = await supabase
+                .from('furniture_items')
+                .update({ manufacturer_id: null })
+                .eq('manufacturer_id', strId);
+              if (error) throw error;
+              await performDeleteManufacturer(strId, id);
             }
-          }
-          alert('删除成功 / Manufacturer deleted successfully');
-        } catch (err: any) {
-           console.error("[useAdminCategory] Manufacturer deletion failed:", err);
-           alert('删除失败：' + err.message);
+          });
+        } else {
+          await performDeleteManufacturer(strId, id);
         }
-        alert('99. onConfirm 执行完毕');
       }
     });
   };
+
+  const performDeleteManufacturer = async (strId: string, id: string | number) => {
+    try {
+        const success = await deleteManufacturerFromDB(strId);
+        if (!success) throw new Error("無法刪除廠商 / Unable to delete manufacturer");
+
+        const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
+        setManufacturers(newMfrs);
+        await saveData('product_manufacturers', newMfrs);
+        
+        const nextPhotos = photos.map(p => 
+          String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
+        );
+        
+        if (isMounted.current) {
+          setPhotos(nextPhotos);
+          await saveData('product_photos', nextPhotos);
+        }
+
+        const affectedPhotos = nextPhotos.filter((p, i) => String(photos[i].manufacturerId) === strId);
+        if (affectedPhotos.length > 0) {
+          const { data: { user: userObj } } = await supabase.auth.getUser();
+          if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
+        }
+        alert('删除成功 / Manufacturer deleted successfully');
+      } catch (err: any) {
+         if (isMounted.current) alert('删除失败：' + err.message);
+      }
+  };
+
 
   return {
     categories, setCategories,
