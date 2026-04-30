@@ -58,6 +58,7 @@ export interface Photo {
   groupId?: string | null;
   isGroupCover?: boolean; // New field
   groupOrder?: number; // Order within group
+  isPinned?: boolean; // Pinned to top
   isAnalyzing?: boolean;
   isHidden?: boolean;
   userId?: string;

@@ -78,7 +78,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
             {/* Center: Title */}
         <div className="flex-shrink-0">
-          <h2 className="font-black text-base text-slate-800 tracking-tight leading-tight text-center truncate px-2">{props.editPhotoId ? '编辑信息' : '新增信息'}</h2>
+          <h2 className="font-black text-base text-slate-800 tracking-tight leading-tight text-center truncate px-2 uppercase">{props.editPhotoId ? '編輯信息' : '新增信息'}</h2>
         </div>
 
         {/* Right: Actions */}
@@ -175,10 +175,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 <input 
                   key={editPhotoId || 'new'}
                   type="text" 
-                  placeholder="输入名称..." 
+                  placeholder="輸入名稱..." 
                   defaultValue={formState.name} 
                   onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
-                  className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold" 
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-sm font-bold uppercase" 
                 />
              </div>
              <div className="flex w-full gap-2 overflow-x-auto">

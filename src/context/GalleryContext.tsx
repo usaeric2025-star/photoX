@@ -173,6 +173,9 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     result.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      
       const timeA = new Date(a.createdAt || (a as any).created_at || 0).getTime();
       const timeB = new Date(b.createdAt || (b as any).created_at || 0).getTime();
       return sortOrder === 'desc' ? timeB - timeA : timeA - timeB;

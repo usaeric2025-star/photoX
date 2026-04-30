@@ -21,17 +21,26 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { IMAGE_COMPRESS, AI_CONFIG } from '../constants/config';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
-  if (!name) return true;
-  const lower = name.toLowerCase();
-  return (
+  if (!name || name.trim() === '') return true;
+  const trimmed = name.trim();
+  const lower = trimmed.toLowerCase();
+  
+  // If it's a number (including spaces/dashes), allow it to be updated with a better descriptive name
+  if (/^[\d\s\-_]+$/.test(trimmed)) return true;
+
+  // Common placeholders or file-extension-heavy names
+  if (
     lower === 'furniture' ||
     lower === '未命名产品' ||
     lower === 'furniture record' ||
-    /^[\d\s\-_]+$/.test(name) ||
-    /\.(jpg|jpeg|png|heic|webp)$/i.test(name) ||
-    /^(img|image|photo|dsc|pic)[\s_-]?\d+/i.test(lower) ||
-    name.length < 3
-  );
+    /\.(jpg|jpeg|png|heic|webp)$/i.test(trimmed) ||
+    /^(img|image|photo|dsc|pic)[\s_-]?\d+/i.test(lower)
+  ) return true;
+
+  // If name length is very small and likely not descriptive, or if it was just a placeholder
+  if (trimmed.length < 3) return true;
+
+  return false; // Otherwise, preserve the existing name
 };
 
 export const useAdminPhotos = (

@@ -356,6 +356,28 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                                 <X size={16} /> 移出選中 / Remove Selected
                               </button>
                             )}
+                           <button 
+                             onClick={() => {
+                               const ids = activeGroupPhotos.map(p => p.id);
+                               setConfirmDialog({
+                                 message: `確定要刪除此群組內的所有 ${ids.length} 張照片嗎？此操作不可撤銷。`,
+                                 onConfirm: async () => {
+                                   for (const id of ids) {
+                                      // Import directly to avoid missing ref if not in scope
+                                      const m = await import('../../services/photoService');
+                                      await m.deletePhotoFromCloud(id);
+                                   }
+                                   setPhotos?.(prev => prev.filter(p => !ids.includes(p.id)));
+                                   setActiveGroupId(null);
+                                   showToast('已刪除所有照片 / Deleted all photos');
+                                 }
+                               });
+                               setShowMenu(false);
+                             }}
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2"
+                           >
+                             <Trash2 size={16} /> 刪除所有照片 / Delete All Photos
+                           </button>
                            <div className="h-px bg-slate-100 my-1 mx-2" />
                            <button 
                              onClick={() => {
@@ -368,13 +390,13 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                                });
                                setShowMenu(false);
                              }}
-                             className="w-full px-4 py-2 text-left text-sm font-bold text-red-600 hover:bg-red-50 flex items-center gap-2"
+                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                            >
                              <Layers size={16} /> 解散組 / Ungroup
                            </button>
-                          </div>
-                        }
-                      </div>
+                         </div>
+                       }
+                     </div>
 
                       <button onClick={onAddPhotoToGroup} className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
                         <Plus size={18} />

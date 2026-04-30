@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updatePhotoHidden } from '../services/supabaseService';
+import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoService';
 import { Photo, Category, Tag } from '../types';
 import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -566,6 +566,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
            } catch (e) {
              console.error("[ERROR] Failed to toggle hidden:", e);
            }
+        }}
+        onTogglePinned={async (photo) => {
+          const newStatus = !photo.isPinned;
+          try {
+            await updatePhotoInCloud(photo.id, { is_pinned: newStatus, updated_at: new Date().toISOString() });
+            context.setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isPinned: newStatus } : p));
+          } catch (e) {
+            console.error("[ERROR] Failed to toggle pinned:", e);
+          }
         }}
       />
 
