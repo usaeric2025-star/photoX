@@ -18,7 +18,7 @@ import {
 } from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: any) => {
-  const { setAlertDialog = () => {}, setConfirmDialog = () => {}, showLoadingToast = () => {}, showToast = () => {} } = adminUI || {};
+  const { setAlertDialog = () => {}, showToast = () => {} } = adminUI || {};
 
   const {
     categories, setCategories,
@@ -130,13 +130,6 @@ export const useAdminCategory = (adminUI: any) => {
 
   // 彻底删除标签（设置页面用）
   const deleteTagPermanently = async (tagId: string) => {
-    setConfirmDialog({
-      title: '确认删除',
-      message: '确定要彻底删除该标签吗？此操作不可逆。',
-      danger: true,
-      onConfirm: async () => {
-        setConfirmDialog(null);
-        const closeLoading = showLoadingToast('正在处理标签删除...');
         try {
           const strId = String(tagId);
           
@@ -176,25 +169,12 @@ export const useAdminCategory = (adminUI: any) => {
         } catch (err: any) {
           setAlertDialog({ title: '标签删除失败', message: err.message });
           throw err;
-        } finally {
-          closeLoading();
         }
-      }
-    });
   };
 
   const deleteTag = async (id: string | number) => {
-    if (!id) return;
-    const strId = String(id);
-
-    setConfirmDialog({
-      title: '确认删除标签',
-      message: '确定要删除这个标签吗？删除后将从关联照片中移除。',
-      danger: true,
-      onConfirm: async () => {
-        await deleteTagPermanently(strId);
-      }
-    });
+    // Component should confirm before calling!
+    await deleteTagPermanently(String(id));
   };
 
   const addCategory = async (name: string) => {

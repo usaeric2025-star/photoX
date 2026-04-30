@@ -171,7 +171,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTags, setCategories, setManufacturers, setPhotos,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag
   } = useAdminPhoto();
-  const { loadingState, setAlertDialog, setConfirmDialog, setPromptDialog } = useAdminUI();
+  const { loadingState, setAlertDialog, setPromptDialog } = useAdminUI();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [showCatOverview, setShowCatOverview] = useState(false);

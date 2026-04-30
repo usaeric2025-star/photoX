@@ -48,8 +48,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   } = useAdminPhoto();
   const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
-  const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;
-  const isSyncing = sessionSyncing;
+  const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  const isSyncing = sessionSyncing;
 
   const isPartOfGroup = useMemo(() => {
     if (!editPhotoId) return false;

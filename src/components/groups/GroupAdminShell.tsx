@@ -8,6 +8,16 @@ import {
 import { Photo, Tag, Category } from '../../types';
 import { updatePhotosGroupInCloud, updatePhotoInCloud, savePhotoToCloud } from '../../services/photoService';
 import { GroupGridView } from './GroupGridView';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export interface GroupAdminShellProps {
   activeGroupId: string | null;
@@ -30,7 +40,6 @@ export interface GroupAdminShellProps {
   tagMap?: Record<string, string>;
   allTags?: Tag[];
   isMultiSelect?: boolean;
-  setConfirmDialog?: (d: any) => void;
   setAlertDialog?: (d: any) => void;
   setLoadingState?: (s: string) => void;
 }
@@ -43,7 +52,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   onBatchEdit, onUngroup, onAddPhotoToGroup,
   setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
   t, categories, tagMap, allTags = [],
-  setConfirmDialog: propsSetConfirmDialog,
   setAlertDialog: propsSetAlertDialog,
   setLoadingState: propsSetLoadingState
 }) => {
@@ -85,9 +93,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
 
 
 
-  const setConfirmDialog = propsSetConfirmDialog || (() => {});
-  const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
-  const setLoadingState = propsSetLoadingState || (() => {});
+  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[] } | null>(null);
+
+  const confirmBulkRemove = (ids: string[]) => {
+    setConfirmDelete({ ids });
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -203,22 +213,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       setIsMultiSelectMode(false);
       setSelectedPhotoIds([]);
     } else if (action === 'remove') {
-      setConfirmDialog({
-        message: `確定要將選中的 ${selectedPhotoIds.length} 張照片移出群組嗎？`,
-        onConfirm: async () => {
-          setPhotos?.(prev => prev.map(p => 
-            selectedPhotoIds.includes(p.id) ? { ...p, groupId: null } : p
-          ));
-          try {
-            await updatePhotosGroupInCloud(selectedPhotoIds, null);
-            setIsMultiSelectMode(false);
-            setSelectedPhotoIds([]);
-            showToast('已移出 / Removed');
-          } catch (err: any) {
-            setAlertDialog({ title: '操作失敗', message: err.message });
-          }
-        }
-      });
+      confirmBulkRemove(selectedPhotoIds);
     } else if (action === 'batch') {
       onBatchEdit?.(selectedPhotoIds);
       setIsMultiSelectMode(false);
