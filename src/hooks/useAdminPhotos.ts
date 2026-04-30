@@ -543,32 +543,38 @@ export const useAdminPhotos = (
         }
       });
 
-      if (user) {
-        await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
-      }
+      try {
+        if (user) {
+          await Promise.all(photosToDelete.map(photo => deletePhotoFromCloud(user.id, photo)));
+        }
 
-      let nextPhotosList = photosRef.current.filter(p => !ids.includes(p.id));
+        let nextPhotosList = photosRef.current.filter(p => !ids.includes(p.id));
 
-      for (const groupId of affectedGroups) {
-        const remainingGroupPhotos = nextPhotosList.filter(p => p.groupId === groupId);
-        if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
-          const sorted = [...remainingGroupPhotos].sort((a, b) => 
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-          const newCover = { ...sorted[0], isGroupCover: true };
-          nextPhotosList = nextPhotosList.map(p => p.id === newCover.id ? newCover : p);
-          
-          if (user) {
-            savePhotoToCloud(user.id, newCover).catch(err => 
-              console.error(`[ERROR] Failed to reassign group cover for group ${groupId}:`, err)
+        for (const groupId of affectedGroups) {
+          const remainingGroupPhotos = nextPhotosList.filter(p => p.groupId === groupId);
+          if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
+            const sorted = [...remainingGroupPhotos].sort((a, b) => 
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
             );
+            const newCover = { ...sorted[0], isGroupCover: true };
+            nextPhotosList = nextPhotosList.map(p => p.id === newCover.id ? newCover : p);
+            
+            if (user) {
+              savePhotoToCloud(user.id, newCover).catch(err => 
+                console.error(`[ERROR] Failed to reassign group cover for group ${groupId}:`, err)
+              );
+            }
           }
         }
-      }
 
-      setPhotos(nextPhotosList);
-      setCloudCount(nextPhotosList.length);
-      await saveData('product_photos', nextPhotosList);
+        setPhotos(nextPhotosList);
+        setCloudCount(nextPhotosList.length);
+        await saveData('product_photos', nextPhotosList);
+        alert('删除成功');
+      } catch (err: any) {
+        console.error("[ERROR] Delete photo failed:", err);
+        alert('删除失败：' + err.message);
+      }
   };
 
   const updatePhoto = async (updatedPhoto: Photo) => {

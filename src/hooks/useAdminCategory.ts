@@ -274,24 +274,41 @@ export const useAdminCategory = (adminUI: any) => {
   const deleteManufacturer = async (id: string | number) => {
     console.log(`[useAdminCategory] Starting deletion for manufacturer: ${id}`);
     const strId = String(id);
-    const affectedCount = photos.filter(p => String(p.manufacturerId) === strId).length;
-
+    const { count } = await supabase
+      .from('furniture_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('manufacturer_id', strId);
+    
     setConfirmDialog({
       title: '确认删除厂商',
-      message: `此厂商关联了 ${affectedCount} 张照片。删除后，这些照片的厂商信息将被清除。确定吗？ / This manufacturer has ${affectedCount} photos. Their manufacturer info will be cleared. Proceed?`,
+      message: count && count > 0 
+        ? `此厂商关联了 ${count} 张照片，删除后这些照片的厂商将变为「未选择」。确定删除吗？ / This manufacturer has ${count} photos. Their manufacturer info will be cleared. Proceed?`
+        : `确定要删除这个厂商吗？ / Are you sure you want to delete this manufacturer?`,
       danger: true,
       onConfirm: async () => {
         try {
           console.log(`[useAdminCategory] Confirm deletion for manufacturer: ${id}`);
+          
+          // 1. Clear manufacturer_id in furniture_items
+          if (count && count > 0) {
+            const { error } = await supabase
+              .from('furniture_items')
+              .update({ manufacturer_id: null })
+              .eq('manufacturer_id', strId);
+            if (error) throw error;
+          }
+
+          // 2. Delete manufacturer
           const success = await deleteManufacturerFromDB(strId);
           console.log(`[useAdminCategory] Cloud delete result for manufacturer ${id}:`, success);
           if (!success) throw new Error("無法刪除廠商 / Unable to delete manufacturer");
 
+          // 3. Update local state
           const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
           setManufacturers(newMfrs);
           await saveData('product_manufacturers', newMfrs);
           
-          // Update photos in memory and handle cloud sync
+          // Update photos in memory
           const nextPhotos = photos.map(p => 
             String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
           );
@@ -314,9 +331,10 @@ export const useAdminCategory = (adminUI: any) => {
               );
             }
           }
+          alert('删除成功');
         } catch (err: any) {
            console.error("[useAdminCategory] Manufacturer deletion failed:", err);
-           setAlertDialog({ title: '删除失败', message: err.message });
+           alert('删除失败：' + err.message);
         }
       }
     });
