@@ -286,12 +286,17 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     setConfirmDialog({
       message: (t as any)?.confirmDelete?.(ids.length) || `確定要刪除這 ${ids.length} 張照片嗎？`,
       onConfirm: async () => {
-        for (const id of ids) {
-          await deletePhoto(id);
+        try {
+          for (const id of ids) {
+            await deletePhoto(id);
+          }
+          setEditPhotoId(null);
+          setSelectedIds([]);
+          setIsMultiSelect(false);
+        } catch (err: any) {
+          console.error("[ERROR] Batch delete failed:", err);
+          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
         }
-        setEditPhotoId(null);
-        setSelectedIds([]);
-        setIsMultiSelect(false);
       }
     });
   }, [t, deletePhoto, setConfirmDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect]);
@@ -300,8 +305,13 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, di
     setConfirmDialog({
       message: (t as any)?.deleteConfirm || '確定要刪除這張照片嗎？ / Are you sure you want to delete this photo?',
       onConfirm: async () => {
-        await deletePhoto(id);
-        setEditPhotoId(null);
+        try {
+          await deletePhoto(id);
+          setEditPhotoId(null);
+        } catch (err: any) {
+          console.error("[ERROR] Delete failed:", err);
+          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+        }
       }
     });
   }, [t, deletePhoto, setConfirmDialog, setEditPhotoId]);
