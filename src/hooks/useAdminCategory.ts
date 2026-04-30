@@ -271,6 +271,7 @@ export const useAdminCategory = (adminUI: any) => {
   };
 
   const deleteManufacturer = async (id: string) => {
+    console.log(`[useAdminCategory] Starting deletion for manufacturer: ${id}`);
     const strId = String(id);
     const affectedCount = photos.filter(p => String(p.manufacturerId) === strId).length;
 
@@ -280,7 +281,9 @@ export const useAdminCategory = (adminUI: any) => {
       danger: true,
       onConfirm: async () => {
         try {
+          console.log(`[useAdminCategory] Confirm deletion for manufacturer: ${id}`);
           const success = await deleteManufacturerFromDB(strId);
+          console.log(`[useAdminCategory] Cloud delete result for manufacturer ${id}:`, success);
           if (!success) throw new Error("無法刪除廠商 / Unable to delete manufacturer");
 
           const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
@@ -311,6 +314,7 @@ export const useAdminCategory = (adminUI: any) => {
             }
           }
         } catch (err: any) {
+           console.error("[useAdminCategory] Manufacturer deletion failed:", err);
            setAlertDialog({ title: '删除失败', message: err.message });
         }
       }
