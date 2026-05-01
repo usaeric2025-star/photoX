@@ -119,21 +119,15 @@ export const analyzeProductPhoto = async (
 - 如果原本名稱是純數字或編號：直接替換為專業英文名稱
 - 名稱格式：英文，首字母大寫，簡潔專業
 
-【優先級 3：多語系說明 - 核心要求】
-- 分別生成三種語言的產品說明：中文 (zh)、英文 (en)、馬來文 (ms)
-- 說明家具的外觀、材質、風格或用途
-- **必須**同時提供這三種語言，不得缺失。
-- 格式要求：
-  - "description_translations": { "zh": "...", "en": "...", "ms": "..." }
-  - 同時將 "zh" 的內容複製到根級別的 "description" 欄位。
+【優先級 3：外觀特徵分析】
+- 生成一份詳細且專業的中文產品說明，說明家具的外觀、材質、風格或用途。
+- 務必僅使用中文 (Chinese) 生成初步描述，填入 "description" 字段。
 
 【核心規則 - 必須遵守】
 
 1. 語言規範：
    - "zh": 專業中文描述
-   - "en": Professional English description
-   - "ms": Penerangan profesional dalam Bahasa Melayu
-   - 【強制要求】三種語言必須完整提供，不得為空。
+   - 【強制要求】中文描述必須完整提供，不得為空。
 
 2. 標籤（Tags）：
    - 強制選取或新增 2-3 個標籤以描述產品。
@@ -174,12 +168,7 @@ export const analyzeProductPhoto = async (
   "manualCode": "A-1234",
   "modelNumber": "M-5566",
   "name": "Modern Leather Sofa",
-  "description": "這是一款帶有金屬腿的現代簡約真皮沙發，設計優雅且耐用。",
-  "description_translations": {
-    "zh": "這是一款帶有金屬腿的現代簡約真皮沙發，設計優雅且耐用。",
-    "en": "A sleek modern leather sofa with metal legs, designed for elegance and durability.",
-    "ms": "Sofa kulit moden yang kemas dengan kaki logam, direka untuk keanggunan dan ketahanan."
-  },
+  "description": "這是一款採用義大利進口大理石打造的餐桌，設計優雅且耐用。",
   "categoryId": "123e4567-e89b-12d3... (存在清單中的 UUID)",
   "tagIds": ["abc-123...", "def-456..."],
   "newTags": ["MINIMALIST"],
@@ -308,15 +297,10 @@ export const analyzeProductPhoto = async (
       }
     }
     
-    // Validate translations
-    const translations = parsedData.description_translations;
-    // Make translation validation more resilient: fill missing ones instead of failing
-    const zh = translations?.zh || parsedData.description || (parsedData.name || '家具产品');
-    const en = translations?.en || (zh ? `Product: ${parsedData.name || 'Furniture'}` : 'Furniture product');
-    const ms = translations?.ms || (zh ? `Produk: ${parsedData.name || 'Perabot'}` : 'Produk perabot');
-    
-    parsedData.description_translations = { zh, en, ms };
-    if (!parsedData.description) parsedData.description = zh;
+    // description_translations initialization
+    const zh = parsedData.description || (parsedData.name || '家具产品');
+    parsedData.description_translations = { zh, en: '', ms: '' };
+    parsedData.description = zh;
 
     // Normalize dimensions: Always an array
     let safeDims: any[] = [];
@@ -392,6 +376,68 @@ export const analyzeProductPhoto = async (
     }, null, 2));
 
     throw new Error(`AI_FAIL|${status}|${errorMsg}`);
+  }
+};
+
+export const translateDescription = async (
+  zhText: string,
+  apiKey: string,
+  customModel?: string,
+  signal?: AbortSignal
+): Promise<{ en: string; ms: string }> => {
+  const modelName = customModel;
+  if (!modelName) throw new Error('請在設置中配置 AI 模型 (Model Name)');
+
+  const prompt = `
+你是一個專業的家具貿易翻譯官。
+請將以下中文產品描述翻譯成【英文】和【馬來文】。
+
+【待翻譯中文】：
+${zhText}
+
+【要求】：
+1. 翻譯風格：專業、商務、吸引人。英譯應符合歐美電商水平。馬來文應符合馬來西亞在地口語與專業術語。
+2. 保持專業術語的一致性（例如：Marble -> Guli/Marmar, Extendable -> Boleh dipanjangkan）。
+3. 僅返回 JSON 格式。
+
+【返回格式】：
+{
+  "en": "...",
+  "ms": "..."
+}
+  `;
+
+  try {
+    const fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    const response = await fetch(fetchUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': window.location.origin,
+      },
+      body: JSON.stringify({
+        model: modelName.includes('/') ? modelName : `google/${modelName}`,
+        messages: [{ role: 'user', content: prompt }],
+        response_format: { type: 'json_object' },
+        max_tokens: 1024
+      }),
+      signal
+    });
+
+    if (!response.ok) throw new Error(`翻譯失敗: ${response.statusText}`);
+    
+    const result = await response.json();
+    const content = result.choices?.[0]?.message?.content;
+    const parsed = JSON.parse(content || '{}');
+    
+    return {
+      en: parsed.en || '',
+      ms: parsed.ms || ''
+    };
+  } catch (err) {
+    console.error("Translation error:", err);
+    return { en: '', ms: '' };
   }
 };
 

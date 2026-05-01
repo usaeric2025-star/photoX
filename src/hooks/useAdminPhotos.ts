@@ -17,7 +17,7 @@ import {
   savePhotosToCloudBatch
 } from '../services/supabaseService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
-import { analyzeProductPhoto } from '../services/geminiService';
+import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
 import { IMAGE_COMPRESS, AI_CONFIG } from '../constants/config';
@@ -215,6 +215,20 @@ export const useAdminPhotos = (
         try {
             const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
             
+            // Step 2: Separate Translation call
+            if (result.description) {
+              try {
+                const translations = await translateDescription(result.description, effectiveKey, customModel);
+                result.description_translations = {
+                  zh: result.description,
+                  en: translations.en,
+                  ms: translations.ms
+                };
+              } catch (transErr) {
+                console.warn("Translation sub-step failed:", transErr);
+              }
+            }
+
             let finalCatId = result.categoryId || null;
             
             const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
@@ -305,13 +319,28 @@ export const useAdminPhotos = (
           originalName = photo?.name;
       }
 
-      setAiDebugInfo({ step: '发送请求', message: `图片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
+      setAiDebugInfo({ step: '內容分析', message: `圖片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
       
       const result = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
       
       if (signal.aborted) throw new Error('Aborted');
 
-      setAiDebugInfo({ step: '完成', message: 'AI 识别成功' });
+      // Step 2: Translation
+      if (result.description) {
+        setAiDebugInfo({ step: '正在翻譯', message: '正在生成英馬文描述...' });
+        try {
+          const translations = await translateDescription(result.description, apiKey, customModel, signal);
+          result.description_translations = {
+            zh: result.description,
+            en: translations.en,
+            ms: translations.ms
+          };
+        } catch (transErr) {
+          console.warn("Translation sub-step failed:", transErr);
+        }
+      }
+
+      setAiDebugInfo({ step: '完成', message: 'AI 識別成功' });
       
       setTimeout(() => {
         if (currentAnalysisController.current === controller) {
@@ -479,6 +508,18 @@ export const useAdminPhotos = (
               try {
                 const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel);
                 
+                // Translation sub-step
+                if (result.description && geminiApiKey) {
+                  try {
+                    const translations = await translateDescription(result.description, geminiApiKey, customModel);
+                    result.description_translations = {
+                      zh: result.description,
+                      en: translations.en,
+                      ms: translations.ms
+                    };
+                  } catch (e) {}
+                }
+
                 let finalCatId = result.categoryId || null;
                 
                 const allSuggestedTags = Array.from(new Set([
@@ -625,6 +666,11 @@ export const useAdminPhotos = (
     aiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount,
     handleSingleAiAnalyze,
+    handleTranslate: async (zhText: string) => {
+      const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
+      if (!apiKey) throw new Error('請先在設定中設定 AI 金鑰');
+      return await translateDescription(zhText, apiKey, customModel);
+    },
     handleBatchAiIdentify, 
     handleGroupAiIdentify: async (groupPhotos: Photo[]) => {
       if (groupPhotos.length === 0) return;
@@ -657,6 +703,19 @@ export const useAdminPhotos = (
           effectiveKey, aiProvider, customModel, 
           firstPhoto.categoryId
         );
+
+        // 3. Translation sub-step
+        if (result.description) {
+          setAiDebugInfo({ step: '語言翻譯', message: '正在完成多語言描述...' });
+          try {
+            const translations = await translateDescription(result.description, effectiveKey, customModel);
+            result.description_translations = {
+              zh: result.description,
+              en: translations.en,
+              ms: translations.ms
+            };
+          } catch (e) {}
+        }
 
         const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
         const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);

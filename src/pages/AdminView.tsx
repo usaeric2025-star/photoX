@@ -447,7 +447,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
-    manufacturers, setManufacturers, handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
+    manufacturers, setManufacturers, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
     handleSingleAiAnalyzeCallback,
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, 

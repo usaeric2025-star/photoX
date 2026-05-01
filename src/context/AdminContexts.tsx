@@ -50,6 +50,7 @@ interface AdminPhotoContextType {
   
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
+  handleTranslate: (zhText: string) => Promise<{ en: string, ms: string }>;
   handleSingleAiAnalyzeCallback?: (data: string, catId?: string, editPhotoId?: string, formState?: any, updateFormFn?: any, service?: any) => Promise<void>;
   handleBatchAiIdentify: (photos: Photo[], isCancelled: () => boolean) => Promise<void>;
   handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;

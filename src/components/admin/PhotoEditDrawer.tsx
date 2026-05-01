@@ -35,6 +35,7 @@ interface Props {
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { 
     handleSingleAiAnalyze, 
+    handleTranslate,
     handleSingleAiAnalyzeCallback,
     categories, 
     tags, 
@@ -458,6 +459,32 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">多语言说明 / MULTI-LANG DESCRIPTIONS</span>
+                      <button 
+                        onClick={async () => {
+                          const zhText = formState.description_translations?.zh || formState.description;
+                          if (!zhText) return;
+                          try {
+                             const res = await handleTranslate(zhText);
+                             updateForm({
+                               description_translations: { 
+                                 ...formState.description_translations, 
+                                 zh: zhText,
+                                 en: res.en, 
+                                 ms: res.ms 
+                               }
+                             });
+                          } catch (e: any) {
+                             console.error('Translation failed:', e);
+                          }
+                        }}
+                        className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 flex items-center gap-1"
+                      >
+                        <Sparkles size={10} /> 自動翻譯 / AUTO TRANSLATE
+                      </button>
+                    </div>
+
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 px-1">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">中文说明</span>
