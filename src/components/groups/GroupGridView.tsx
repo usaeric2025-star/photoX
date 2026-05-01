@@ -136,6 +136,30 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Info Area */}
+              <div className="mt-2.5 px-1 pb-1 space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="text-[11px] font-black text-slate-800 truncate tracking-tight">
+                    {photo.name || '未命名'}
+                  </h4>
+                  {photo.isHidden && (
+                    <span className="shrink-0 bg-orange-100 text-orange-600 px-1 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">
+                      已隱藏
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between">
+                  <p className="text-[9px] font-bold text-slate-400 font-mono">
+                    {photo.model_number || photo.item_code || '-'}
+                  </p>
+                  {photo.dimensions?.[0] && (
+                    <span className="text-[8px] font-black text-slate-300">
+                      {photo.dimensions[0].label}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           );
         })}

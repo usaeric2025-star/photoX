@@ -238,9 +238,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   const navigate = useNavigate();
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-    gridPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
+    gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode,
-    visibleCount, setVisibleCount
+    visibleCount, setVisibleCount, tagIdToNameMap
   } = useGalleryContext();
   
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
@@ -480,7 +480,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
       cancelBatchAiRef.current = true;
     } else {
       cancelBatchAiRef.current = false;
-      handleBatchAiIdentify(gridPhotos, () => cancelBatchAiRef.current);
+      handleBatchAiIdentify(displayPhotos, () => cancelBatchAiRef.current);
     }
   };
   
@@ -591,7 +591,12 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 lang={lang}
                 t={t}
                 categories={categories}
+                allTags={tags}
+                tagMap={tagIdToNameMap as any}
                 onBatchAiAnalyze={handleGroupAiIdentify}
+                onAiAnalyze={(p) => {
+                  handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id);
+                }}
               />
             )}
       
