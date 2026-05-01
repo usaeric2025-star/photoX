@@ -395,6 +395,8 @@ export const useAdminPhotos = (
 
     const CHUNK_SIZE = 1; // Drop to 1 to save memory on mobile mapping
     let processed = 0;
+    const allAddedPhotos: Photo[] = [];
+    
     for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
       const chunk = fileArray.slice(i, i + CHUNK_SIZE);
       const newPhotosDraft: Photo[] = [];
@@ -441,8 +443,6 @@ export const useAdminPhotos = (
           if (!rawUri) continue;
           
           const compressedUri = await compressImage(rawUri, IMAGE_COMPRESS.MAX_WIDTH, IMAGE_COMPRESS.QUALITY);
-          // Update status that we are done compressing this one if in middle of multi-upload
-          // But actually we do it per file in storageService now.
 
           // Use a temporary ID for local state, will be replaced by DB UUID after sync
           const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -466,6 +466,7 @@ export const useAdminPhotos = (
           };
           
           newPhotosDraft.push(newPhoto);
+          allAddedPhotos.push(newPhoto);
           successCount++;
           
           if (useAi) {
@@ -489,7 +490,6 @@ export const useAdminPhotos = (
                      isAnalyzing: false,
                      name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                      categoryId: finalCatId,
-                     // manufacturerId is deliberately NOT updated by AI
                      tagIds: finalTagIds,
                      model_number: p.model_number || result.modelNumber || '',
                      dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions
@@ -523,23 +523,25 @@ export const useAdminPhotos = (
       }
     }
     
-    if (user && successCount > 0) {
-      const newPhotos = [...photosRef.current];
-      await syncPhotosToCloud(user.id, newPhotos, undefined, (p) => {
-          // p is 0-100
-      });
-      
-      // After sync, photosRef.current (and newPhotos) objects now have the real server IDs
-      setPhotos(newPhotos);
-      setCloudCount(newPhotos.length);
-      await saveData('product_photos', newPhotos);
+    if (user && successCount > 0 && allAddedPhotos.length > 0) {
+      try {
+        const { savePhotosToCloudBatch } = await import('../services/photoService');
+        await savePhotosToCloudBatch(user.id, allAddedPhotos);
+        
+        // After syncing, they are saved.
+        setCloudCount(photosRef.current.length);
+        await saveData('product_photos', photosRef.current);
+      } catch (e: any) {
+         console.error('Cloud upload block failed:', e);
+         showToast('云端同步过程出现问题，但已保存在本地 / Cloud upload had some issues', 'error');
+      }
     }
     
     setIsSyncing(false);
     
     if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
-       let msg = `成功處理了 ${successCount} 張照片。`;
-       if (duplicateCount > 0) msg += ` 跳過了 ${duplicateCount} 張重複照片。`;
+       let msg = `成功處理并压缩了 ${successCount} 張照片。`;
+       if (duplicateCount > 0) msg += ` 跳過了 ${duplicateCount} 張重複。`;
        if (failCount > 0) msg += ` 有 ${failCount} 張失敗: ${failedFiles.join(', ')}`;
        
        showToast(msg, successCount > 0 ? 'success' : 'error');

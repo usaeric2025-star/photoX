@@ -10,6 +10,8 @@ export function useLoading(initialState: LoadingState = 'idle') {
 
   const withLoading = async <T,>(state: LoadingState, fn: () => Promise<T>): Promise<T> => {
     startLoading(state);
+    // Yield to browser so the loading spinner actually renders
+    await new Promise(resolve => setTimeout(resolve, 50));
     try {
       return await fn();
     } finally {

@@ -283,12 +283,15 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     setPromptDialog, 
     setActiveScreen,
     setLoadingState,
+    loadingState,
+    withLoading,
     setCloudCount,
     cloudCount,
     showToast,
     editPhotoId, setEditPhotoId,
-    batchEditIds, setBatchEditIds
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
+    batchEditIds, setBatchEditIds,
+    abortAnalysis: errorGuard('abortAnalysis')
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     settings,
@@ -535,7 +538,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                   initial={{ opacity: 0, y: -50 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -50 }}
-                  className="fixed top-24 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
+                  className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
                 >
                   {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : 
                    toast.type === 'loading' ? <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> : 

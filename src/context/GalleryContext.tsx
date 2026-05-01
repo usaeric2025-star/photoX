@@ -227,25 +227,20 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [displayPhotos, showGroupsCollapsed]);
 
   const gridPhotos = useMemo(() => {
+    if (isAdminMode) return gridPhotosFull;
     return gridPhotosFull.slice(0, visibleCount);
-  }, [gridPhotosFull, visibleCount]);
+  }, [gridPhotosFull, visibleCount, isAdminMode]);
 
-  const [stableTagCounts, setStableTagCounts] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    if (filterTagIds.length === 0 && !debouncedSearchQuery && !filterCatId && !filterSubId) {
-      const counts: Record<string, number> = {};
-      photosState.forEach(p => {
-        const ids = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-        ids.forEach(id => {
-          counts[String(id)] = (counts[String(id)] || 0) + 1;
-        });
+  const stableTagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    photosState.forEach(p => {
+      const ids = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+      ids.forEach(id => {
+        counts[String(id)] = (counts[String(id)] || 0) + 1;
       });
-      if (Object.keys(counts).length > 0) {
-         setStableTagCounts(counts);
-      }
-    }
-  }, [photosState, filterTagIds, debouncedSearchQuery, filterCatId, filterSubId]);
+    });
+    return counts;
+  }, [photosState]);
 
   const sortedTags = useMemo(() => {
     return [...tags].sort((a, b) => {

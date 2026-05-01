@@ -185,7 +185,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { loadingState, setAlertDialog, setPromptDialog, showToast } = useAdminUI();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
-  const [showCatOverview, setShowCatOverview] = useState(false);
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -525,48 +524,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             </div>
         </div>
 
-        {/* Category Overview */}
-        <div className={cardClass} id="section-categories-view">
-            <button 
-                onClick={() => setShowCatOverview(!showCatOverview)}
-                className="w-full flex items-center justify-between group"
-            >
-                <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-                    <Layout size={16} className="text-[#1D3557]" />
-                    分类一览
-                </h4>
-                <motion.div animate={{ rotate: showCatOverview ? 90 : 0 }}>
-                    <ChevronRight size={18} className="text-[#1D3557]/20 group-hover:text-[#1D3557] transition-colors" />
-                </motion.div>
-            </button>
-            
-            <AnimatePresence>
-                {showCatOverview && (
-                    <motion.div 
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden space-y-3 pt-2"
-                    >
-                        <p className="text-[10px] text-[#1D3557]/40 font-black uppercase tracking-tight bg-[#1D3557]/5 p-2 rounded-xl italic">
-                            结构派生自云端配置（只读）。
-                        </p>
-                        <div className="grid grid-cols-2 gap-2">
-                            {(categories || []).map(cat => {
-                                const displayName = cat.zh || cat.name; // Keep as zh/name or use appLang? Admin usually is zh-focused here
-                                return (
-                                <div key={cat.id} className="p-3 bg-[#FDFAF6] border border-[#1D3557]/10 rounded-2xl shadow-sm hover:border-[#D4A853] transition-all">
-                                    <p className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">{displayName}</p>
-                                    <p className="text-[8px] text-[#1D3557]/40 font-black uppercase truncate tracking-widest">{cat.id}</p>
-                                </div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-
         {/* AI & Password Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className={cardClass} id="section-ai">
@@ -732,9 +689,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                  min={1}
                  max={50}
                  className="w-12 text-center bg-white border border-[#1D3557]/10 text-xs font-black text-[#1D3557] rounded-md py-1 outline-none focus:border-[#D4A853]"
-                 value={settings?.hotTagsCount || 9}
+                 value={settings?.hotTagsCount !== undefined ? settings.hotTagsCount : 9}
                  onChange={(e) => {
-                   const num = parseInt(e.target.value) || 9;
+                   let num: any = parseInt(e.target.value);
+                   if (isNaN(num)) num = '';
                    const nextSettings = { ...settings, hotTagsCount: num };
                    setSettings(nextSettings);
                    setHasChanges(true);

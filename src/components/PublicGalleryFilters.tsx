@@ -170,7 +170,16 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="relative overflow-hidden">
           <div className="flex flex-wrap gap-1.5 items-start max-h-[80px] overflow-y-auto pb-4 content-start scrollbar-hide">
-              {sortedTags.map(tag => {
+              {React.useMemo(() => {
+                return [...sortedTags].sort((a, b) => {
+                  const aPinned = (settings?.pinnedTags || []).includes(String(a.id));
+                  const bPinned = (settings?.pinnedTags || []).includes(String(b.id));
+                  if (aPinned && !bPinned) return -1;
+                  if (!aPinned && bPinned) return 1;
+                  
+                  return 0;
+                });
+              }, [sortedTags, settings?.pinnedTags, hotTagsSet]).map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = selectedTagIds.includes(strTagId);
                 const isHot = hotTagsSet.has(strTagId);
@@ -191,7 +200,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       isSelected 
                         ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6] shadow-md z-10' 
                         : 'bg-white border-slate-100 text-[#1D3557]/40 hover:text-[#1D3557] hover:border-[#1D3557]/20',
-                      isHot && !isSelected && "border-transparent bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md shadow-orange-500/20"
+                      isHot && !isSelected && "border-[#D4A853]/30 bg-[#D4A853]/5 text-[#D4A853] hover:border-[#D4A853]/50 hover:bg-[#D4A853]/10"
                     )}
                   >
                     {!isHot && <span className={cn(
@@ -199,13 +208,13 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       isSelected ? "bg-white" : "bg-slate-200"
                     )} />}
                     {toTitleCase(tag.name)}
-                    {isPinned && !isSelected && <span className="text-[8px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-black tracking-tighter shadow-sm flex items-center gap-0.5"><Heart size={8} className="fill-white"/> 置顶</span>}
-                    {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-white/20 text-white px-1.5 py-[1px] rounded font-black tracking-tighter">HOT</span>}
+                    {isPinned && !isSelected && <span className="bg-[#D4A853] text-white p-0.5 rounded-full shadow-sm flex items-center justify-center"><Heart size={8} className="fill-white"/></span>}
+                    {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-[#D4A853]/20 text-[#D4A853] px-1.5 py-[1px] rounded font-black tracking-tighter">HOT</span>}
                   </button>
                 );
               })}
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-slate-100/80 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#FDFAF6]/90 to-transparent pointer-events-none" />
         </div>
       </div>
     </div>
