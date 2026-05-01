@@ -119,7 +119,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   }
                 }}
                 className={cn(
-                  "px-3 py-2 rounded-xl text-[11px] font-bold transition-all border select-none flex items-center gap-1.5",
+                  "px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border select-none flex items-center gap-1.5",
                   isSelected 
                     ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 z-10" 
                     : "bg-white/60 text-slate-600 border-slate-200/50 hover:bg-white hover:border-slate-300 hover:text-slate-800 active:bg-slate-50",

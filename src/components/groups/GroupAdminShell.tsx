@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Edit3, Settings2, Plus, ChevronLeft, ChevronRight, ChevronDown, Layers, Pencil, Sparkles, 
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
-  Maximize, MessageSquare, Type, Save, Trash, AlertCircle
+  Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon
 } from 'lucide-react';
-import { Photo, Tag, Category } from '../../types';
+import { Photo, Tag, Category, ProductGroup } from '../../types';
 import { updatePhotosGroupInCloud, updatePhotoInCloud, savePhotoToCloud } from '../../services/photoService';
+import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { GroupGridView } from './GroupGridView';
 import {
   AlertDialog,
@@ -62,20 +63,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const groupIdRef = useRef(activeGroupId);
-  
-  useEffect(() => {
-    if (activeGroupId) groupIdRef.current = activeGroupId;
-  }, [activeGroupId]);
-
-  useEffect(() => {
-    if (isMultiSelectMode && selectedPhotoIds.length === 0) {
-      setIsMultiSelectMode(false);
-    }
-  }, [selectedPhotoIds.length, isMultiSelectMode]);
+  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
@@ -91,7 +81,42 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       });
   }, [activeGroupId, photos]);
 
+  const groupCover = useMemo(() => activeGroupPhotos.find(p => p.isGroupCover) || activeGroupPhotos[0], [activeGroupPhotos]);
+  
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const groupIdRef = useRef(activeGroupId);
+  
+  useEffect(() => {
+    if (activeGroupId) {
+      groupIdRef.current = activeGroupId;
+      // Fetch group data
+      getGroupById(activeGroupId).then(data => {
+        if (data) {
+          setGroupData(data);
+        } else {
+          setGroupData({
+            id: activeGroupId,
+            name: '',
+            description: '',
+            colors: [],
+            materials: [],
+            cover_photo_id: groupCover?.id || null,
+            user_id: groupCover?.userId || 'default',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      });
+    } else {
+      setGroupData(null);
+    }
+  }, [activeGroupId, groupCover?.id, groupCover?.userId]);
 
+  useEffect(() => {
+    if (isMultiSelectMode && selectedPhotoIds.length === 0) {
+      setIsMultiSelectMode(false);
+    }
+  }, [selectedPhotoIds.length, isMultiSelectMode]);
 
   const [confirmDelete, setConfirmDelete] = useState<{ ids: string[] } | null>(null);
 
@@ -127,29 +152,18 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     }
   };
 
-  const handleUpdateGroupName = async () => {
-    if (!editingGroupName.trim() || !activeGroupId) {
-      setEditingGroupId(null);
-      return;
-    }
+  const handleUpdateGroupData = async (updates: Partial<ProductGroup>) => {
+    if (!activeGroupId || !groupData) return;
 
-    const nextPhotos = photos.map(p => {
-      if (p.groupId === activeGroupId) return { ...p, name: editingGroupName };
-      return p;
-    });
+    const nextGroupData = { ...groupData, ...updates };
+    setGroupData(nextGroupData);
+    
+    showToast('群組資料已更新 / Group info updated');
 
-    setPhotos?.(nextPhotos);
-    setEditingGroupId(null);
-    showToast('名稱已更新 / Name updated');
-
-    // Sync to cloud for all photos in group
     try {
-      const groupPhotos = activeGroupPhotos;
-      await Promise.all(
-        groupPhotos.map(p => updatePhotoInCloud(p.id, { name: editingGroupName }))
-      );
+      await saveGroupToCloud(nextGroupData);
     } catch (err: any) {
-      setAlertDialog?.({ title: '名稱同步失敗', message: err.message });
+      setAlertDialog?.({ title: '保存失敗', message: err.message });
     }
   };
 
@@ -275,34 +289,25 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                   <ChevronLeft size={24} />
                 </button>
                 
-                {editingGroupId === activeGroupId ? (
-                   <input 
-                     autoFocus
-                     value={editingGroupName}
-                     onChange={(e) => setEditingGroupName(e.target.value)}
-                     onBlur={handleUpdateGroupName}
-                     onKeyDown={(e) => e.key === 'Enter' && handleUpdateGroupName()}
-                     className="text-lg font-black text-slate-800 bg-white border-2 border-blue-500 rounded-lg px-2 py-1 outline-none min-w-[200px]"
-                   />
-                ) : (
-                   <div 
-                     className="flex flex-col cursor-pointer group"
-                     onClick={() => {
-                        if (isAdminMode) {
-                          setEditingGroupId(activeGroupId);
-                          setEditingGroupName(activeGroupPhotos[0]?.name || '');
-                        }
-                     }}
-                   >
-                     <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
-                          {activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
-                        </h2>
-                        {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
-                     </div>
-                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{activeGroupPhotos.length} 張照片 / {activeGroupPhotos.length} Photos</p>
-                   </div>
-                )}
+                <div 
+                  className="flex flex-col cursor-pointer group"
+                  onClick={() => {
+                    if (isAdminMode) {
+                      setShowGroupSettings(true);
+                      setEditingGroupName(groupData?.name || activeGroupPhotos[0]?.name || '');
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
+                      {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                    </h2>
+                    {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    {groupData?.name ? `封面產品: ${activeGroupPhotos[0]?.name || ''}` : `${activeGroupPhotos.length} 張照片 / Photos`}
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -321,17 +326,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         <span className="text-xs">AI</span>
                       </button>
 
-                      <button 
-                        onClick={() => {
-                          const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
-                          onBatchEdit?.(ids);
-                        }}
-                        className="hidden sm:flex w-10 h-10 items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all"
-                        title="批量編輯"
-                      >
-                        <Pencil size={18} />
-                      </button>
-                      
+                        <button onClick={() => setShowGroupSettings(true)} className="w-10 h-10 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all" title="群組資料庫">
+                          <Settings2 size={18} />
+                        </button>
                       <div className="relative">
                         <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
                           <MoreVertical size={18} />
@@ -468,6 +465,198 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                </motion.div>
              )}
            </AnimatePresence>
+
+            {/* Group Settings Drawer */}
+            <AnimatePresence>
+              {showGroupSettings && (
+                <motion.div 
+                  initial={{ x: '100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '100%' }}
+                  className="fixed inset-y-0 right-0 z-[500] w-full sm:w-[400px] bg-white shadow-2xl flex flex-col border-l border-slate-100"
+                >
+                  <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-indigo-600 text-white">
+                    <div className="flex items-center gap-3">
+                      <Settings2 size={20} />
+                      <h3 className="font-black text-lg tracking-tight">群組資料庫 / DB</h3>
+                    </div>
+                    <button onClick={() => setShowGroupSettings(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors">
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
+                    {/* Series Identity */}
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列基本信息 / Series Identity</h4>
+                      </div>
+                      
+                      <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列正式名稱 (Group Display Name)</label>
+                          <input 
+                            value={groupData?.name || ''}
+                            onChange={(e) => handleUpdateGroupData({ name: e.target.value })}
+                            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                            placeholder="例如: 意式極簡沙發系列..."
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">共同故事/說明 (Series Story)</label>
+                          <textarea 
+                            value={groupData?.description || ''}
+                            onChange={(e) => handleUpdateGroupData({ description: e.target.value })}
+                            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                            placeholder="描述這個系列的設計理念..."
+                          />
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* DNA Elements */}
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles size={16} className="text-indigo-500" />
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列DNA / DNA Elements</h4>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 gap-4">
+                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase block mb-3">系列配色库 (Colors)</label>
+                           <div className="flex flex-wrap gap-2">
+                              {(groupData?.colors || []).map((color: string, idx: number) => (
+                                <div key={idx} className="group relative">
+                                  <div className="w-8 h-8 rounded-lg border-2 border-white shadow-sm" style={{ backgroundColor: color }} />
+                                  <button 
+                                    onClick={() => {
+                                      const next = (groupData?.colors || []).filter((_, i) => i !== idx);
+                                      handleUpdateGroupData({ colors: next });
+                                    }}
+                                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <X size={8} />
+                                  </button>
+                                </div>
+                              ))}
+                              <button 
+                                onClick={() => {
+                                  const c = prompt('Color Code:');
+                                  if (c) handleUpdateGroupData({ colors: [...(groupData?.colors || []), c] });
+                                }}
+                                className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:text-indigo-400"
+                              >
+                                <Plus size={16} />
+                              </button>
+                           </div>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase block mb-3">系列材質庫 (Materials)</label>
+                           <div className="flex flex-wrap gap-1.5">
+                             {['實木', '真皮', '金屬', '布藝', '岩板', '鋼化玻璃'].map(mat => {
+                               const isSelected = (groupData?.materials || []).includes(mat);
+                               return (
+                                 <button 
+                                   key={mat}
+                                   onClick={() => {
+                                     const current = groupData?.materials || [];
+                                     const next = isSelected ? current.filter(m => m !== mat) : [...current, mat];
+                                     handleUpdateGroupData({ materials: next });
+                                   }}
+                                   className={`px-2.5 py-1 rounded-lg text-[9px] font-black border-2 transition-all ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
+                                 >
+                                   {mat}
+                                 </button>
+                               )
+                             })}
+                           </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    {/* Batch Actions (The "Sync" part you requested) */}
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Layers size={16} className="text-blue-500" />
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">統一管理與同步 / Global Sync</h4>
+                      </div>
+                      
+                      <div className="p-4 bg-blue-50/50 rounded-2xl border-2 border-blue-100/50 space-y-4">
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-bold text-blue-400 uppercase">強制同步分类 (Global Category)</label>
+                           <select 
+                            value={groupCover?.categoryId || ''}
+                            onChange={async (e) => {
+                              const catId = e.target.value;
+                              if (confirm('是否將此分類同步到整個群組的所有照片？')) {
+                                setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: catId } : p));
+                                try {
+                                  await Promise.all(activeGroupPhotos.map(p => updatePhotoInCloud(p.id, { category_id: catId })));
+                                  showToast('全組分類已同步');
+                                } catch (err: any) {
+                                  setAlertDialog?.({ title: '同步失敗', message: err.message });
+                                }
+                              }
+                            }}
+                            className="w-full bg-white border-2 border-blue-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none"
+                          >
+                            <option value="">選擇分類...</option>
+                            {categories?.map(cat => (
+                              <option key={cat.id} value={cat.id}>{cat.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-bold text-blue-400 uppercase">標籤庫同步 (Tag Sync)</label>
+                           <button 
+                            onClick={async () => {
+                              if (confirm('這將把當前封面的所有標籤同步到群組內的所有照片，確定嗎？')) {
+                                const coverTags = groupCover?.tagIds || [];
+                                setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, tagIds: coverTags } : p));
+                                try {
+                                  // Update photo_tags service would be better but batching updatePhotoInCloud is legacy compatible
+                                  await Promise.all(activeGroupPhotos.map(p => savePhotoToCloud(p.userId || 'default', { ...p, tagIds: coverTags })));
+                                  showToast('全組標籤已同步');
+                                } catch (err: any) {
+                                  setAlertDialog?.({ title: '同步失敗', message: err.message });
+                                }
+                              }
+                            }}
+                            className="w-full py-3 bg-white border-2 border-blue-200 rounded-xl text-blue-600 text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                          >
+                            依據封面標籤同步到全組 / SYNC ALL BY COVER
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-slate-400 pl-1 leading-relaxed">
+                        注意：同步操作會直接覆蓋組內其他照片的分類與標籤设置。
+                      </p>
+                    </section>
+
+                    <section className="pt-6 border-t border-slate-100 space-y-4">
+                       <button 
+                         onClick={() => {
+                           if (onUngroup && activeGroupId) {
+                             if (confirm('確定要解散整個群組嗎？照片將變回單張展示。')) {
+                               onUngroup(activeGroupId);
+                               setActiveGroupId(null);
+                               setShowGroupSettings(false);
+                             }
+                           }
+                         }}
+                         className="w-full py-4 rounded-2xl border-2 border-red-50 border-dashed text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center gap-2 font-black text-xs uppercase"
+                       >
+                         <Trash2 size={16} /> 解散群組 / Disband Group
+                       </button>
+                    </section>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
            {/* Floating Lightbox Overlay */}
            <AnimatePresence>

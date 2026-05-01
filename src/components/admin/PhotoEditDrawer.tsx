@@ -90,8 +90,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
 
             {/* Center: Title */}
-        <div className="flex-shrink-0">
-          <h2 className="font-black text-base text-slate-800 tracking-tight leading-tight text-center truncate px-2 uppercase">{props.editPhotoId ? '編輯信息' : '新增信息'}</h2>
+        <div className="flex-shrink-0 flex flex-col items-center">
+          <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase">
+            {props.editPhotoId ? '編輯產品信息' : '分析新產品'}
+          </h2>
+          <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">Product Individual Details</p>
         </div>
 
         {/* Right: Actions */}

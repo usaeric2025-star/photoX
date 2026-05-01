@@ -40,11 +40,13 @@ export default function PublicView() {
 
   const fetchFilteredPhotos = async () => {
     setIsRefreshing(true);
+    console.log("[DEBUG] Fetching filtered photos for PublicView...", { filterCatId, filterTagIds, debouncedSearchQuery });
     try {
       const [cloudPhotos, total] = await Promise.all([
         loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
         getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery)
       ]);
+      console.log("[DEBUG] Results:", { count: cloudPhotos?.length, total });
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
         setPage(0);
@@ -84,11 +86,11 @@ export default function PublicView() {
     try {
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
         loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
-        loadCategoriesFromCloud(),
-        loadTagsFromCloud(),
-        loadManufacturersFromCloud(),
-        fetchSettings(),
-        getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery)
+        loadCategoriesFromCloud().catch(() => []),
+        loadTagsFromCloud().catch(() => []),
+        loadManufacturersFromCloud().catch(() => []),
+        fetchSettings().catch(() => ({})),
+        getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery).catch(() => 0)
       ]);
 
       if (cloudPhotos) {

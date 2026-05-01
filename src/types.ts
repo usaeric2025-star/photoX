@@ -71,6 +71,18 @@ export interface Photo {
   note?: string;
 }
 
+export interface ProductGroup {
+  id: string;
+  name: string;
+  description: string | null;
+  colors: string[];
+  materials: string[];
+  cover_photo_id?: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProductFormData {
   name: string;
   categoryId: string | null;

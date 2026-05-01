@@ -1,9 +1,10 @@
 import React from 'react';
-import { Photo } from '../../types';
-import { Star, Sparkles, Check } from 'lucide-react';
+import { Photo, ProductGroup } from '../../types';
+import { Star, Sparkles, Check, Info, Palette, Layers, Quote } from 'lucide-react';
 
 interface GroupGridViewProps {
   photos: Photo[];
+  groupData?: ProductGroup | null;
   onPhotoClick: (photo: Photo) => void;
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
   isMultiSelectMode?: boolean;
@@ -13,6 +14,7 @@ interface GroupGridViewProps {
 
 export const GroupGridView: React.FC<GroupGridViewProps> = ({
   photos,
+  groupData,
   onPhotoClick,
   onPhotoContextMenu,
   isMultiSelectMode = false,
@@ -20,8 +22,55 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
   getPhotoProps
 }) => {
   return (
-    <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 pb-40">
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-4">
+    <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 pb-40 scrollbar-hide">
+      {/* Series Summary Card */}
+      {groupData && (groupData.description || (groupData.colors && groupData.colors.length > 0) || (groupData.materials && groupData.materials.length > 0)) && (
+        <div className="mb-8 p-6 bg-white rounded-[2rem] border-2 border-indigo-50 shadow-sm relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-8 opacity-5 text-indigo-600">
+            <Quote size={80} />
+          </div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row gap-8">
+            <div className="flex-1 space-y-4">
+               <div>
+                  <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1">系列故事 / Series Story</h3>
+                  <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl">
+                    {groupData.description || '暫無系列說明 / No description yet.'}
+                  </p>
+               </div>
+               
+               <div className="flex flex-wrap gap-4 pt-2">
+                 {groupData.materials && groupData.materials.length > 0 && (
+                   <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
+                      <Layers size={14} className="text-indigo-400" />
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                        {groupData.materials.join(' • ')}
+                      </span>
+                   </div>
+                 )}
+               </div>
+            </div>
+
+            {groupData.colors && groupData.colors.length > 0 && (
+              <div className="md:w-48 space-y-3">
+                 <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">系列配比 / DNA Colors</h3>
+                 <div className="flex flex-wrap gap-2">
+                    {groupData.colors.map((c, i) => (
+                      <div 
+                        key={i} 
+                        className="w-8 h-8 rounded-lg border-2 border-white shadow-sm transition-transform hover:scale-125"
+                        style={{ backgroundColor: c }}
+                        title={c}
+                      />
+                    ))}
+                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-6">
         {photos.map((photo) => {
           const isSelected = selectedPhotoIds.includes(photo.id);
           const extraProps = getPhotoProps ? getPhotoProps(photo) : {};

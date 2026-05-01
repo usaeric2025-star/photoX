@@ -83,7 +83,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
         <div className="grid grid-cols-5 gap-1 px-0.5">
             <button 
               onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); onScrollToTop(); }}
-              className={`w-full py-1 rounded-lg text-[8px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+              className={`w-full py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
             >
               {t.allCats}
             </button>
@@ -105,7 +105,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       setSelectedSubId(null);
                       onScrollToTop();
                     }}
-                    className={`w-full py-1 rounded-lg text-[9px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                    className={`w-full py-0.5 rounded-md text-[8px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                   >
                     {displayName}
                   </button>
@@ -135,7 +135,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     <button 
                       key={sub.id}
                       onClick={() => { setSelectedSubId(selectedSubId === sub.id ? null : sub.id); onScrollToTop(); }}
-                      className={`px-4 py-1.5 rounded-xl text-[10px] font-bold tracking-wide whitespace-nowrap border-2 transition-all ${selectedSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white/80 border-slate-100 text-slate-500 hover:border-slate-300'}`}
+                      className={`px-3 py-1 rounded-xl text-[9px] font-bold tracking-wide whitespace-nowrap border-2 transition-all ${selectedSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white/80 border-slate-100 text-slate-500 hover:border-slate-300'}`}
                     >
                       {sub.name}
                     </button>
@@ -165,7 +165,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       });
                     }}
                     className={cn(
-                      "px-3.5 py-2 rounded-2xl text-[11px] font-black transition-all border-2 shadow-sm flex items-center gap-2",
+                      "px-3 py-1.5 rounded-xl text-[10px] font-black transition-all border-2 shadow-sm flex items-center gap-1.5",
                       isSelected 
                         ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6] scale-105 z-10' 
                         : 'bg-white border-slate-100 text-[#1D3557]/40 hover:text-[#1D3557] hover:border-[#1D3557]/20',

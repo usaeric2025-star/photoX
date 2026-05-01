@@ -52,15 +52,16 @@ export function mapSupabasePhoto(item: any): Photo {
       storageId: storageId,
       item_code: item.item_code,
       manual_code: item.manual_code,
+      model_number: item.model_number,
       image_hash: item.image_hash,
-      name: item.name,
+      name: item.name || 'Unnamed Product',
       categoryId: item.category_id ? String(item.category_id) : null,
       manufacturerId: item.manufacturer_id || null,
       tagIds,
       description: item.description,
       image_url: item.image_url,
-      thumb_url: item.thumb_url,
-      dimensions: item.dimensions,
+      thumb_url: item.thumb_url || item.image_url,
+      dimensions: Array.isArray(item.dimensions) ? item.dimensions : [],
       exif_data: item.exif_data,
       createdAt: item.created_at,
       groupId: item.group_id,
@@ -68,7 +69,8 @@ export function mapSupabasePhoto(item: any): Photo {
       groupOrder: item.group_order || 0,
       isHidden: item.is_hidden || false,
       userId: item.user_id,
-      uri: item.image_url
+      uri: item.image_url,
+      price: item.price || ''
     };
 }
 
@@ -143,7 +145,7 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
        });
        
        // Just basic cleanup if error
-       const groupKeys = ['group_id', 'group_order', 'is_group_cover'];
+       const groupKeys = ['group_id', 'group_order', 'is_group_cover', 'group_metadata'];
        groupKeys.forEach(key => {
          if (key in safeUpdates) {
            delete (safeUpdates as any)[key];
@@ -356,6 +358,7 @@ export const savePhotosToCloudBatch = async (
          delete cp.group_id;
          delete cp.group_order;
          delete cp.is_group_cover;
+         delete cp.group_metadata;
          return cp;
        });
        const retry = await supabase.from(TABLE_NAME).upsert(safeChunk, { onConflict: 'id' });
@@ -524,18 +527,12 @@ export const loadAllPhotosFromCloud = async (
   const selectQuery = tagId 
     ? `
       *,
-      photo_tags!inner(
-        tag_id,
-        tags!photo_tags_tag_id_fkey(id, name)
-      ),
+      photo_tags!inner(*),
       category:categories(*)
     `
     : `
       *,
-      photo_tags(
-        tag_id,
-        tags!photo_tags_tag_id_fkey(id, name)
-      ),
+      photo_tags(*),
       category:categories(*)
     `;
 
