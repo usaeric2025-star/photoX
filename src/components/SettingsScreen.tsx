@@ -322,7 +322,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-[#1D3557]/10 space-y-4";
 
   return (
-    <div className="fixed inset-0 z-[100] bg-[#FDFAF6] flex flex-col pt-safe">
+    <div className="fixed inset-0 z-[500] bg-[#FDFAF6] flex flex-col pt-safe">
       {/* Header */}
       <div className="px-6 py-4 flex items-center gap-3 bg-[#FDFAF6] sticky top-0 z-10">
         <button 

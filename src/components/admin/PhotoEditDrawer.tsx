@@ -70,7 +70,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe pb-safe">
+    <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
       <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
         {/* Left: AI/Status Info */}
         <div className="flex-1 flex items-center gap-2 overflow-hidden">

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, Edit3, Settings2, Plus, ChevronLeft, ChevronRight, ChevronDown, Layers, Pencil, Sparkles, 
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
-  Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon
+  Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon, Eye, EyeOff
 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup } from '../../types';
 import { updatePhotosGroupInCloud, updatePhoto, savePhotoToCloud } from '../../services/photoService';
@@ -72,7 +72,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
     return photos
-      .filter(p => p.groupId === activeGroupId)
+      .filter(p => p.groupId === activeGroupId && (isAdminMode || !p.isHidden))
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
@@ -745,12 +745,48 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                             >
                               <Pencil size={12} /> 詳細編輯
                             </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); persistPhotoChange(photo.id, { isHidden: !photo.isHidden }); }} 
+                              className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-[11px] font-bold ${photo.isHidden ? 'bg-orange-50 text-orange-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            >
+                              {photo.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+                              {photo.isHidden ? '已隱藏/不顯示' : '隱藏/不顯示'}
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); confirmBulkRemove([photo.id]); setFocusedGroupPhotoId(null); }} 
+                              className="px-3 py-1.5 rounded-xl bg-red-50 text-red-500 flex items-center gap-1.5 hover:bg-red-100 transition-all text-[11px] font-bold"
+                            >
+                              <Layers size={12} /> 移出組
+                            </button>
                           </div>
                         )}
                       </div>
 
                       <div className="space-y-5">
                         <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">產品編號 / Item Code</label>
+                          <div className="text-xs font-mono font-bold text-[#1D3557] bg-slate-100 px-2 py-1 rounded-lg inline-block">{photo.item_code}</div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">分類目錄 / Category</label>
+                          {isAdminMode ? (
+                            <select 
+                              value={photo.categoryId || ''}
+                              onChange={(e) => persistPhotoChange(photo.id, { categoryId: e.target.value || null })}
+                              className="w-full text-sm font-black text-slate-700 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 outline-none focus:border-blue-500 transition-colors"
+                            >
+                              <option value="">選擇分類...</option>
+                              {categories?.map(cat => (
+                                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <div className="text-sm font-black text-slate-700">{categories?.find(c => c.id === photo.categoryId)?.name || '-'}</div>
+                          )}
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-slate-50">
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">標籤 (Tags)</label>
                           {isAdminMode ? (
                             <div className="flex flex-wrap gap-1.5 pb-2">
@@ -831,11 +867,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         </div>
 
                         <div className="space-y-2 pt-2 border-t border-slate-50">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">備註 (Notes)</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">產品說明 (Description)</label>
                           {isAdminMode ? (
                             <textarea 
                               defaultValue={photo.description || ''}
-                              placeholder="輸入備註..."
+                              placeholder="輸入產品說明..."
                               onBlur={(e) => {
                                 const val = e.target.value.trim();
                                 if (val !== (photo.description || '')) persistPhotoChange(photo.id, { description: val });
@@ -843,7 +879,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                               className="w-full text-sm font-bold text-slate-600 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 h-24 outline-none focus:border-amber-500 transition-colors resize-none placeholder:font-normal placeholder:opacity-50"
                             />
                           ) : (
-                            <div className="text-sm font-bold text-slate-600 min-h-[40px]">{photo.description || '-'}</div>
+                            <div className="text-sm font-bold text-slate-600 min-h-[40px] whitespace-pre-wrap">{photo.description || '-'}</div>
                           )}
                         </div>
                       </div>

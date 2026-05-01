@@ -41,7 +41,7 @@ export const BatchEditScreen = ({
   const { setPromptDialog } = useAdminUI();
   const { isSyncing, appLang } = useAdminSession();
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
+    <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe">
       <div className="px-4 py-3 border-b border-slate-200 
         bg-white flex items-center justify-between gap-3">
         

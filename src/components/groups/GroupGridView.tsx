@@ -96,7 +96,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
                 onTouchStart={() => {
                    longPressTimers.current[photo.id] = setTimeout(() => {
                         onPhotoContextMenu?.({} as any, photo);
-                   }, 500);
+                   }, 350);
                 }}
                 onTouchMove={() => {
                    if (longPressTimers.current[photo.id]) clearTimeout(longPressTimers.current[photo.id]);
