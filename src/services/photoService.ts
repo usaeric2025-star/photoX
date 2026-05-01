@@ -110,10 +110,11 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
 };
 
 export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from(TABLE_NAME)
     .update(updates)
-    .in('id', photoIds);
+    .in('id', photoIds)
+    .select('id');
     
   if (error) {
     if (error.message.includes('group_id') && error.message.includes('column')) {
@@ -122,6 +123,12 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
     }
     console.error("Failed to update group photos:", error);
     throw new Error(error.message || JSON.stringify(error));
+  }
+  
+  if (!data || data.length === 0) {
+    console.warn("No photos were updated in cloud. Possible ID mismatch.", photoIds);
+  } else {
+    console.log(`Successfully updated ${data.length} photos in cloud.`);
   }
 };
 
@@ -411,13 +418,17 @@ export const savePhotosToCloudBatch = async (
       throw new Error(`批量同步失敗: ${dbError.message}`);
     }
     
-    // Update IDs in results array
+    // Update IDs in results array - more robust matching using usedIndexes to handle same-hash duplicates
     if (savedRows) {
+      const usedIndexes = new Set<number>();
       savedRows.forEach((row: any) => {
-        // Find by image_hash in the results
-        const photoIndex = results.findIndex(p => p.image_hash === row.image_hash);
+        // Find by image_hash in the results, ensuring we don't map two DB rows to the same local item
+        const photoIndex = results.findIndex((p, idx) => 
+          p.image_hash === row.image_hash && !usedIndexes.has(idx)
+        );
         if (photoIndex !== -1) {
           results[photoIndex].id = row.id;
+          usedIndexes.add(photoIndex);
         }
       });
     }

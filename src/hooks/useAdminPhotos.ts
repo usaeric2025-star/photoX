@@ -573,11 +573,21 @@ export const useAdminPhotos = (
     if (user && successCount > 0 && allAddedPhotos.length > 0) {
       try {
         const { savePhotosToCloudBatch } = await import('../services/photoService');
-        await savePhotosToCloudBatch(user.id, allAddedPhotos);
+        const syncedPhotos = await savePhotosToCloudBatch(user.id, allAddedPhotos);
         
-        // After syncing, they are saved.
+        // Update state with confirmed IDs from cloud
+        setPhotos(prev => {
+          const next = prev.map(p => {
+             // Match by storageId as it's the most reliable unique identifier for newly imported items
+             const found = syncedPhotos.find(s => s.storageId === p.storageId || (p.image_hash && s.image_hash === p.image_hash));
+             return found ? { ...p, id: found.id } : p;
+          });
+          photosRef.current = next;
+          saveData('product_photos', next);
+          return next;
+        });
+        
         setCloudCount(photosRef.current.length);
-        await saveData('product_photos', photosRef.current);
       } catch (e: any) {
          console.error('Cloud upload block failed:', e);
          showToast('云端同步过程出现问题，但已保存在本地 / Cloud upload had some issues', 'error');
@@ -744,20 +754,22 @@ export const useAdminPhotos = (
         }
 
         // 6. Update local state with synced data
-        const nextPhotos = photosRef.current.map(p => {
-          // If this photo was in the input list
-          const originalPhoto = updatedGroupPhotos.find(up => up.id === p.id);
-          if (!originalPhoto) return p;
+          const nextPhotos = photosRef.current.map(p => {
+            // If this photo was in the input list
+            const originalPhoto = updatedGroupPhotos.find(up => up.id === p.id);
+            if (!originalPhoto) return p;
 
-          // Find the synced version - STRICT MATCHING
-          const synced = syncedPhotos.find(sp => 
-            (sp.id === p.id && p.id.length > 10) || // UUID match
-            (p.storageId && sp.storageId === p.storageId) || // Local ID match
-            (p.image_hash && sp.image_hash === p.image_hash) // Hash match fallback
-          );
+            // Find the synced version - STRICT MATCHING using a more precise UUID test
+            const isUUID = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+            
+            const synced = syncedPhotos.find(sp => 
+              (sp.id === p.id && isUUID(p.id)) || // Real UUID match
+              (p.storageId && sp.storageId === p.storageId) || // Local ID match
+              (p.image_hash && sp.image_hash === p.image_hash) // Hash match fallback
+            );
 
-          return synced || originalPhoto;
-        });
+            return synced || originalPhoto;
+          });
 
         setPhotos(nextPhotos);
         photosRef.current = nextPhotos;

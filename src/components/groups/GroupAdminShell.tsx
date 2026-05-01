@@ -67,7 +67,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   t, categories, tagMap, allTags = [],
   setAlertDialog
 }) => {
-  const { syncCategory, syncTags, setCover } = useGroupSync(activeGroupId);
+  const { setCover } = useGroupSync(activeGroupId);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
