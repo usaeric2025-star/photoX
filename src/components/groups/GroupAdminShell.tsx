@@ -637,9 +637,13 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                                message: '解散後，群組關係、排序信息及DNA數據將被移除，照片將變回單張展示。',
                                onConfirm: async () => {
                                  try {
-                                   if (onUngroup) await (onUngroup(activeGroupId) as any);
-                                   setActiveGroupId(null);
-                                   setShowGroupSettings(false);
+                                   if (onUngroup) {
+                                     await (onUngroup(activeGroupId) as any);
+                                     setTimeout(() => {
+                                       setActiveGroupId(null);
+                                       setShowGroupSettings(false);
+                                     }, 800);
+                                   }
                                    setAlertDialog?.(null);
                                  } catch (e) {
                                    console.error('Failed to ungroup:', e);

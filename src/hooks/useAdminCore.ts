@@ -5,6 +5,7 @@ import {
   updatePhotosGroupInCloud,
   supabase
 } from '../services/supabaseService';
+import { deleteGroupFromCloud } from '../services/groupService';
 import { saveData } from '../utils/indexedDB';
 
 import { useGalleryContext } from '../context/GalleryContext';
@@ -156,14 +157,35 @@ export const useAdminCore = (
         const photosToUngroup = photos.filter(p => p.groupId === groupId);
         const photoIds = photosToUngroup.map(p => p.id);
         
+        // 1. Update photos to remove groupId and group-specific markers
         if (photoIds.length > 0) {
-          await updatePhotosGroupInCloud(photoIds, { group_id: null, is_pinned: false });
-          setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null, isPinned: false } : p));
+          await updatePhotosGroupInCloud(photoIds, { 
+            group_id: null, 
+            is_pinned: false,
+            is_group_cover: false,
+            group_order: 0
+          });
+          setPhotos(prev => prev.map(p => p.groupId === groupId ? { 
+            ...p, 
+            groupId: null, 
+            isPinned: false,
+            isGroupCover: false,
+            groupOrder: 0
+          } : p));
         }
-        showToast('解除群组成功', 'success');
+
+        // 2. Delete group metadata permanently
+        try {
+          await deleteGroupFromCloud(groupId);
+        } catch (e) {
+          console.warn("Failed to delete group metadata (might be already deleted or table missing):", e);
+        }
+
+        showToast('解除群組成功 / Group Disbanded', 'success');
       } catch (err: any) {
         console.error('Ungroup error:', err);
         showToast(`解除群組失敗: ${err?.message || '未知錯誤'}`, 'error');
+        throw err; // Re-throw to prevent UI from closing/navigating
       }
   }, [photos, setPhotos, setAlertDialog, showToast]);
 
