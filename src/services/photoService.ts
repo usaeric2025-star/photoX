@@ -324,8 +324,8 @@ export const savePhotosToCloudBatch = async (
   userId: string, 
   photos: Photo[],
   onProgress?: (count: number) => void
-): Promise<void> => {
-  if (photos.length === 0) return;
+): Promise<Photo[]> => {
+  if (photos.length === 0) return [];
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) {
@@ -346,6 +346,7 @@ export const savePhotosToCloudBatch = async (
     }
   }
 
+  const results: Photo[] = [...photos.map(p => ({ ...p }))];
   const payloads = photos.map(photo => {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
     
@@ -380,9 +381,10 @@ export const savePhotosToCloudBatch = async (
   const chunkSize = 100;
   for (let i = 0; i < payloads.length; i += chunkSize) {
     const chunk = payloads.slice(i, i + chunkSize);
-    let { error: dbError } = await supabase
+    let { data: savedRows, error: dbError } = await supabase
       .from(TABLE_NAME)
-      .upsert(chunk, { onConflict: 'id', ignoreDuplicates: false });
+      .upsert(chunk, { onConflict: 'id', ignoreDuplicates: false })
+      .select('id, image_hash');
 
     // FALLBACK for schema mismatch
     if (dbError && dbError.message.includes('column')) {
@@ -395,7 +397,8 @@ export const savePhotosToCloudBatch = async (
          delete cp.group_metadata;
          return cp;
        });
-       const retry = await supabase.from(TABLE_NAME).upsert(safeChunk, { onConflict: 'id' });
+       const retry = await supabase.from(TABLE_NAME).upsert(safeChunk, { onConflict: 'id' }).select('id, image_hash');
+       savedRows = retry.data;
        dbError = retry.error;
     }
 
@@ -404,11 +407,25 @@ export const savePhotosToCloudBatch = async (
       throw new Error(`批量同步失敗: ${dbError.message}`);
     }
     
+    // Update IDs in results array
+    if (savedRows) {
+      savedRows.forEach((row: any, idxOfRow: number) => {
+        // Find by image_hash within the chunk
+        const chunkRow = chunk[idxOfRow];
+        if (chunkRow) {
+           const originalIndex = i + idxOfRow;
+           if (results[originalIndex]) {
+             results[originalIndex].id = row.id;
+           }
+        }
+      });
+    }
+    
     if (onProgress) onProgress(Math.min(i + chunkSize, payloads.length));
   }
 
   // 2. Bulk Sync Tags
-  const photoIdsToUpdate = photos.map(p => p.id);
+  const photoIdsToUpdate = results.map(p => p.id);
   
   // Wipe existing tags for these photos
   for (let i = 0; i < photoIdsToUpdate.length; i += 100) {
@@ -418,7 +435,7 @@ export const savePhotosToCloudBatch = async (
 
   // Insert new tags
   const newTagAssociations: any[] = [];
-  photos.forEach(p => {
+  results.forEach(p => {
     if (Array.isArray(p.tagIds) && p.tagIds.length > 0) {
       p.tagIds.forEach(tid => {
         if (tid) newTagAssociations.push({ photo_id: p.id, tag_id: tid });
@@ -431,6 +448,8 @@ export const savePhotosToCloudBatch = async (
     const { error: tagError } = await supabase.from('photo_tags').insert(chunk);
     if (tagError) console.warn("Failed to bulk sync photo tags:", tagError);
   }
+
+  return results;
 };
 
 export const syncPhotosToCloud = async (

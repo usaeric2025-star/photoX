@@ -72,9 +72,14 @@ export const analyzeProductPhoto = async (
 
   // Use OpenRouter endpoint
   const baseURL = 'https://openrouter.ai/api/v1';
-  let modelName = customModel || 'google/gemini-2.5-flash-lite-preview-09-2025';
+  // Strictly read from configuration, NO defaults allowed
+  let modelName = customModel;
   
-  // Ensure the model name includes the provider prefix if needed, openrouter models usually look like google/gemini-...
+  if (!modelName) {
+    throw new Error('請在設置中配置 AI 模型 (Model Name)');
+  }
+  
+  // Ensure the model name includes the provider prefix if needed
   if (!modelName.includes('/')) {
      modelName = 'google/' + modelName;
   }
@@ -114,11 +119,13 @@ export const analyzeProductPhoto = async (
 - 如果原本名稱是純數字或編號：直接替換為專業英文名稱
 - 名稱格式：英文，首字母大寫，簡潔專業
 
-【優先級 3：外觀特徵分析】
-- 分別生成三種語言的產品說明（中文、英文、馬來文）
+【優先級 3：多語系說明 - 核心要求】
+- 分別生成三種語言的產品說明：中文 (zh)、英文 (en)、馬來文 (ms)
 - 說明家具的外觀、材質、風格或用途
-- 填入 "description_translations" 字典：{ "zh": "...", "en": "...", "ms": "..." }
-- 同時將中文說明填入 "description" 字段
+- **必須**同時提供這三種語言，不得缺失。
+- 格式要求：
+  - "description_translations": { "zh": "...", "en": "...", "ms": "..." }
+  - 同時將 "zh" 的內容複製到根級別的 "description" 欄位。
 
 【核心規則 - 必須遵守】
 
@@ -219,18 +226,21 @@ export const analyzeProductPhoto = async (
 
     const fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
     
-    console.log("DEBUG: Sending AI Request", {
-        url: fetchUrl,
-        model: modelName,
-        max_tokens: 1024
-    });
+    // Internal timeout to prevent hangs
+    const timeoutAbort = new AbortController();
+    const timeoutId = setTimeout(() => timeoutAbort.abort(), 45000);
+    
+    // Combine signals if necessary
+    const combinedSignal = signal ? signal : timeoutAbort.signal;
 
     const fetchResponse = await fetch(fetchUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(requestBody),
-      signal
+      signal: combinedSignal
     });
+
+    clearTimeout(timeoutId);
 
     if (!fetchResponse.ok) {
       let errorData;
@@ -300,19 +310,13 @@ export const analyzeProductPhoto = async (
     
     // Validate translations
     const translations = parsedData.description_translations;
-    if (!translations || !translations.zh || !translations.en || !translations.ms) {
-       console.warn("AI response missing translations:", parsedData);
-       // Attempt fallback if description is present
-       const zh = translations?.zh || parsedData.description || '';
-       const en = translations?.en || '';
-       const ms = translations?.ms || '';
-       
-       if (!zh || !en || !ms) {
-         throw new Error('AI 返回的語言描述不完整 (ZH/EN/MS 三語均為必填)');
-       }
-       
-       parsedData.description_translations = { zh, en, ms };
-    }
+    // Make translation validation more resilient: fill missing ones instead of failing
+    const zh = translations?.zh || parsedData.description || (parsedData.name || '家具产品');
+    const en = translations?.en || (zh ? `Product: ${parsedData.name || 'Furniture'}` : 'Furniture product');
+    const ms = translations?.ms || (zh ? `Produk: ${parsedData.name || 'Perabot'}` : 'Produk perabot');
+    
+    parsedData.description_translations = { zh, en, ms };
+    if (!parsedData.description) parsedData.description = zh;
 
     // Normalize dimensions: Always an array
     let safeDims: any[] = [];

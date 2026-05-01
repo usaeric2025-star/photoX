@@ -13,7 +13,8 @@ import {
   loadPhotosFromCloud,
   batchCreateTags,
   syncPhotosToCloud,
-  deletePhotosBatch
+  deletePhotosBatch,
+  savePhotosToCloudBatch
 } from '../services/supabaseService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto } from '../services/geminiService';
@@ -178,6 +179,7 @@ export const useAdminPhotos = (
     });
     
     if (unProcessed.length === 0) {
+      showToast('選中的照片已經包含完整的類別、標籤和翻譯，無需重新識別。', 'success');
       return;
     }
     
@@ -218,39 +220,35 @@ export const useAdminPhotos = (
             const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
             const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
 
+            const safeOldTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
+            const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
+
+            let updatedPhoto = { 
+                ...photo, 
+                categoryId: photo.categoryId && photo.categoryId !== 'uncategorized' ? photo.categoryId : finalCatId, 
+                tagIds: mergedTagIds,
+                name: shouldUpdateName(photo.name) ? (result.name || photo.name) : photo.name,
+                description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
+                description_translations: result.description_translations || photo.description_translations,
+                manual_code: (result.manualCode && (!photo.manual_code || !photo.manual_code.trim())) ? result.manualCode : photo.manual_code,
+                model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
+                dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : photo.dimensions,
+                updatedAt: new Date().toISOString(),
+                isAnalyzing: false 
+            };
+
+            // Sync to cloud FIRST to get persistent ID
+            if (user) {
+                const finalId = await savePhotoToCloud(user.id, updatedPhoto);
+                updatedPhoto.id = finalId;
+            }
+
             setPhotos(prev => {
-                const next = prev.map(p => {
-                    if (p.id !== photo.id) return p;
-
-                    const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-                    const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
-
-                    return { 
-                        ...p, 
-                        categoryId: p.categoryId && p.categoryId !== 'uncategorized' ? p.categoryId : finalCatId, 
-                        // manufacturerId is deliberately NOT updated by AI automatically
-                        tagIds: mergedTagIds,
-                        name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
-                        description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
-                        description_translations: result.description_translations || p.description_translations,
-                        manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
-                        model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
-                        dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
-                        updatedAt: new Date().toISOString(),
-                        isAnalyzing: false 
-                    };
-                });
+                const next = prev.map(p => p.id === photo.id ? updatedPhoto : p);
                 photosRef.current = next;
                 saveData('product_photos', next);
                 return next;
             });
-
-            if (user) {
-                const updatedPhoto = photosRef.current.find(p => p.id === photo.id);
-                if (updatedPhoto) {
-                    await savePhotoToCloud(user.id, updatedPhoto);
-                }
-            }
         } catch (err: any) {
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
             throw err; 
@@ -264,15 +262,25 @@ export const useAdminPhotos = (
             const batch = unProcessed.slice(i, i + CONCURRENCY);
             const batchResults = await Promise.allSettled(batch.map(p => processPhoto(p)));
             
-            completedCount += batchResults.filter(r => r.status === 'fulfilled').length;
+            const fulfilledCount = batchResults.filter(r => r.status === 'fulfilled').length;
+            completedCount += fulfilledCount;
+            
             setBatchProgress(prev => ({ ...prev, current: Math.min(i + CONCURRENCY, unProcessed.length) }));
+        }
+        
+        const total = unProcessed.length;
+        const failedCount = total - completedCount;
+        
+        if (completedCount > 0) {
+            showToast(`AI 識別完成！成功處理 ${completedCount} 張照片${failedCount > 0 ? `，${failedCount} 張失敗` : ''}。`, 'success');
+        } else if (total > 0) {
+            showToast(`AI 識別失敗：所有 ${total} 張照片均未成功識別，請檢查網路或金鑰。`, 'error');
         }
     } finally {
         setBatchProgress({ current: 0, total: 0 });
         setPhotos(prev => prev.map(p => 
             p.isAnalyzing ? { ...p, isAnalyzing: false } : p
         ));
-        showToast(`处理终止或完成！共处理了 ${completedCount} 张照片。`, 'success');
     }
     });
   };
@@ -321,47 +329,41 @@ export const useAdminPhotos = (
       finalTagIdsFromAi = await resolveTagIdsBatch(allSuggestedTags, tags, tagNameToIdMap, setTags);
 
       if (editPhotoId) {
-        // Calculate new photos list
-        const nextPhotos = photosRef.current.map(p => {
-          if (p.id !== editPhotoId) return p;
-          
-          let finalCatId = result.categoryId || p.categoryId;
-          
-          const safeOldTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-          const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
+        // 1. Calculate updated object (locally)
+        const photo = photosRef.current.find(p => p.id === editPhotoId);
+        if (!photo) throw new Error('Photo not found');
 
-          const updatedPhoto = { 
-            ...p, 
-            categoryId: finalCatId,
-            // manufacturerId stays as is
-            tagIds: mergedTagIds,
-            name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
-            description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
-            description_translations: result.description_translations || p.description_translations,
-            manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
-            model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
-            dimensions: (result.dimensions && result.dimensions.length > 0)
-              ? result.dimensions
-              : p.dimensions,
-            updatedAt: new Date().toISOString(),
-            isAnalyzing: false 
-          };
-          
-          return updatedPhoto;
-        });
+        let finalCatId = result.categoryId || photo.categoryId;
+        const safeOldTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
+        const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
 
-        // Update state and persistence
+        let updatedPhoto = { 
+          ...photo, 
+          categoryId: finalCatId,
+          tagIds: mergedTagIds,
+          name: shouldUpdateName(photo.name) ? (result.name || photo.name) : photo.name,
+          description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
+          description_translations: result.description_translations || photo.description_translations,
+          manual_code: (result.manualCode && (!photo.manual_code || !photo.manual_code.trim())) ? result.manualCode : photo.manual_code,
+          model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
+          dimensions: (result.dimensions && result.dimensions.length > 0)
+            ? result.dimensions
+            : photo.dimensions,
+          updatedAt: new Date().toISOString(),
+          isAnalyzing: false 
+        };
+        
+        // 2. Sync to cloud FIRST to get persistent ID
+        if (user) {
+          const finalId = await savePhotoToCloud(user.id, updatedPhoto);
+          updatedPhoto.id = finalId;
+        }
+
+        // 3. Update state and persistence with the FINAL photo object
+        const nextPhotos = photosRef.current.map(p => p.id === editPhotoId ? updatedPhoto : p);
         setPhotos(nextPhotos);
         photosRef.current = nextPhotos;
         await saveData('product_photos', nextPhotos);
-        
-        // Backup to cloud outside state updater
-        if (user) {
-          const updatedPhoto = nextPhotos.find(p => p.id === editPhotoId);
-          if (updatedPhoto) {
-            await savePhotoToCloud(user.id, updatedPhoto);
-          }
-        }
       }
       // Populate form state properties to return them
       result.tagIds = finalTagIdsFromAi;
@@ -634,6 +636,10 @@ export const useAdminPhotos = (
 
       return runWithLoading('analyzing', async () => {
       setAiDebugInfo({ step: '群組識別', message: '正在分析第一張照片...' });
+      
+      // Show analyzing status on all photos in group
+      const groupIds = groupPhotos.map(p => p.id);
+      setPhotos(prev => prev.map(p => groupIds.includes(p.id) ? { ...p, isAnalyzing: true } : p));
 
       try {
         // 1. Sort to find the cover or first photo
@@ -655,43 +661,50 @@ export const useAdminPhotos = (
         const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
         const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
 
-        // 4. Apply results to ALL photos in the group
-        const groupIds = groupPhotos.map(p => p.id);
-        const nextPhotos = photosRef.current.map(p => {
-          if (!groupIds.includes(p.id)) return p;
-
+        // 4. Create updated objects
+        const updatedGroupPhotos: Photo[] = groupPhotos.map(p => {
           return {
             ...p,
-            name: result.name || p.name,
-            categoryId: result.categoryId || p.categoryId,
-            // manufacturerId stays as is
+            name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
+            categoryId: result.categoryId && (p.categoryId === null || p.categoryId === 'uncategorized') ? result.categoryId : p.categoryId,
             tagIds: finalTagIds,
             description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
             description_translations: result.description_translations || p.description_translations,
             manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
             model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
             dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
+            isAnalyzing: false
           };
+        });
+
+        // 5. Sync all to cloud FIRST to get persistent IDs if they were temp
+        let syncedPhotos = updatedGroupPhotos;
+        if (user) {
+          syncedPhotos = await savePhotosToCloudBatch(user.id, updatedGroupPhotos);
+        }
+
+        // 6. Update local state with synced data
+        const syncedIds = syncedPhotos.map(p => p.id);
+        const nextPhotos = photosRef.current.map(p => {
+          // If this photo was in the input list (check by original ID if it changed)
+          const originalPhoto = updatedGroupPhotos.find(up => up.id === p.id);
+          if (!originalPhoto) return p;
+
+          // Find the synced version
+          const synced = syncedPhotos.find(sp => sp.storageId === p.storageId || sp.image_hash === p.image_hash);
+          return synced || originalPhoto;
         });
 
         setPhotos(nextPhotos);
         photosRef.current = nextPhotos;
         await saveData('product_photos', nextPhotos);
 
-        // 5. Sync all to cloud
-        if (user) {
-          await Promise.all(
-            nextPhotos
-              .filter(p => groupIds.includes(p.id))
-              .map(p => savePhotoToCloud(user.id, p))
-          );
-        }
-
         setAiDebugInfo(null);
-        showToast(`群組識別完成: 已將第一張照片的識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。`, 'success');
+        showToast(`群組識別完成: 已將識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。`, 'success');
       } catch (err: any) {
         console.error("[ERROR] Group AI analysis failed:", err);
+        setPhotos(prev => prev.map(p => groupIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
         showToast(`識別失敗: ${err.message || '群組識別過程出現問題'}`, 'error');
         throw err;
       }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles } from 'lucide-react';
-import { Photo, Category } from '../types';
+import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles, BookOpen } from 'lucide-react';
+import { Photo, Category, ProductGroup } from '../types';
 
 interface PhotoLightboxProps {
   photo: Photo | null;
@@ -34,11 +34,23 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 }) => {
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
 
   useEffect(() => {
     setIsImageLoading(true);
     setIsZoomed(false);
-  }, [photo?.id]);
+    
+    // Fetch group context if part of a group
+    if (photo?.groupId) {
+      import('../services/groupService').then(m => {
+        m.getGroupById(photo.groupId!).then(data => {
+          setGroupData(data);
+        });
+      });
+    } else {
+      setGroupData(null);
+    }
+  }, [photo?.id, photo?.groupId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -292,20 +304,40 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                </div>
              )}
 
-             {/* 5. 描述内容 */}
-             {photo.description && (
-               <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5 pt-2">
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
-                    <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
-                      <Sparkles size={8} /> AI
+             {/* 5. 描述内容 - 优先显示个人描述 */}
+             {(photo.description || (groupData && (groupData.description || groupData.description_translations))) && (
+               <div className="space-y-4">
+                  {/* Photo Description if exists */}
+                  {photo.description && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
+                        <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
+                          <Sparkles size={8} /> AI
+                        </div>
+                      </div>
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                        <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
+                          {photo.description_translations?.[lang as 'zh'|'en'|'ms'] || photo.description}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
-                      {photo.description_translations?.[lang as 'zh'|'en'|'ms'] || photo.description}
-                    </p>
-                  </div>
+                  )}
+
+                  {/* Group Story (Series Story) if exists and photo is in group */}
+                  {groupData && (groupData.description || groupData.description_translations) && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-3 bg-blue-600 rounded-full" />
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.seriesStory || 'Series Context'}</h3>
+                      </div>
+                      <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md">
+                        <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic opacity-80">
+                          {groupData.description_translations?.[lang as 'zh'|'en'|'ms'] || groupData.description}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                </div>
              )}
 
