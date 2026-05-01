@@ -60,7 +60,7 @@ const obfuscateKey = (key: string) => {
   return btoa(key).split('').reverse().join('');
 };
 
-const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag }: any) => {
+const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin }: any) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -90,7 +90,8 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
         setActiveTagMenuId(tag.id);
       }}
     >
-      <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none">
+      <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none flex items-center gap-1">
+        {isPinned && <Heart size={10} className="text-[#D4A853] fill-[#D4A853] shrink-0" />}
         {tag.name}
       </span>
       <AlertDialog>
@@ -117,8 +118,18 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1D3557] rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[100px]"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1D3557] rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[120px]"
           >
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePin(tag.id);
+                setActiveTagMenuId(null);
+              }}
+              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+            >
+              <Heart size={12} className={isPinned ? "fill-white" : ""} /> {isPinned ? '取消推荐' : '设为推荐'}
+            </button>
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -171,7 +182,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTags, setCategories, setManufacturers, setPhotos,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag
   } = useAdminPhoto();
-  const { loadingState, setAlertDialog, setPromptDialog } = useAdminUI();
+  const { loadingState, setAlertDialog, setPromptDialog, showToast } = useAdminUI();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [showCatOverview, setShowCatOverview] = useState(false);
@@ -226,7 +237,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             setTags(prev => [...prev, newTag]);
           }
         } catch (error: any) {
-          setAlertDialog({ title: '添加失败', message: error.message });
+          showToast(`添加失败: ${error.message}`, 'error');
         }
       }
     });
@@ -243,10 +254,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         const normalized = normalizeTagName(newName);
         if (normalized && normalized !== tag.name) {
           await updateTag(tag.id, normalized);
-          setHasChanges(true);
+          setHasChanges(true); // Optional: if updateTag does not sync it itself
         }
       }
     });
+  };
+
+  const togglePin = (tagId: string) => {
+    const currentPinned = settings?.pinnedTags || [];
+    let nextPinned;
+    if (currentPinned.includes(tagId)) {
+      nextPinned = currentPinned.filter((id: string) => id !== tagId);
+    } else {
+      nextPinned = [...currentPinned, tagId];
+    }
+    const nextSettings = { ...settings, pinnedTags: nextPinned };
+    setSettings(nextSettings);
+    setHasChanges(true);
+    debouncedSave(nextSettings);
   };
 
   const handleLongPressTag = (tag: Tag) => {
@@ -314,9 +339,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
              if (hasChanges) {
                await saveSettings({ ...settings });
                setHasChanges(false);
-               setAlertDialog({ message: "保存成功 / Saved successfully" });
+               showToast("保存成功 / Saved successfully", "success");
              } else {
-               setAlertDialog({ message: "没有更改需要保存 / No changes to save" });
+               showToast("没有更改需要保存 / No changes to save", "success");
              }
            }}
            className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center ${hasChanges ? 'bg-[#D4A853] hover:bg-[#D4A853]/90 text-white' : 'bg-[#1D3557] hover:bg-[#1D3557]/90 text-white'}`}
@@ -354,7 +379,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                     </span>
                     <input 
                       type="file" 
-                      onChange={handleLogoUpload} 
+                      onChange={(e) => handleLogoUpload(e, categories, tags, manufacturers, showToast)} 
                       className="absolute inset-0 opacity-0 cursor-pointer" 
                       accept="image/*" 
                     />
@@ -694,13 +719,37 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             </h3>
             <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(tags || []).length} 个项目</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <button onClick={handleAddTag} className={accentBtnClass}>
               <Plus size={16} /> 新增标签
             </button>
+            <div className="flex items-center gap-2 bg-[#1D3557]/5 px-3 py-1.5 rounded-full border border-[#1D3557]/10 ml-auto h-full">
+               <span className="text-[10px] font-black text-[#1D3557] uppercase tracking-widest flex items-center gap-1">
+                 <Heart size={12} className="text-[#D4A853] fill-[#D4A853]" /> 推荐数量
+               </span>
+               <input 
+                 type="number"
+                 min={1}
+                 max={50}
+                 className="w-12 text-center bg-white border border-[#1D3557]/10 text-xs font-black text-[#1D3557] rounded-md py-1 outline-none focus:border-[#D4A853]"
+                 value={settings?.hotTagsCount || 9}
+                 onChange={(e) => {
+                   const num = parseInt(e.target.value) || 9;
+                   const nextSettings = { ...settings, hotTagsCount: num };
+                   setSettings(nextSettings);
+                   setHasChanges(true);
+                   debouncedSave(nextSettings);
+                 }}
+               />
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
-            {(tags || []).map(tag => (
+            {(Array.from(tags || []) as any[]).sort((a: any, b: any) => {
+               const ap = (settings?.pinnedTags || []).includes(a.id) ? 1 : 0;
+               const bp = (settings?.pinnedTags || []).includes(b.id) ? 1 : 0;
+               if (ap !== bp) return bp - ap;
+               return String(a.name).localeCompare(String(b.name));
+            }).map((tag: any) => (
               <TagItem 
                 key={tag.id}
                 tag={tag}
@@ -708,6 +757,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 setActiveTagMenuId={setActiveTagMenuId}
                 handleUpdateTagName={handleUpdateTagName}
                 deleteTag={deleteTag}
+                isPinned={(settings?.pinnedTags || []).includes(tag.id)}
+                togglePin={togglePin}
               />
             ))}
           </div>
@@ -750,9 +801,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                         if (json.photos) setPhotos(json.photos);
                         if (json.tags) setTags(json.tags);
                         if (json.manufacturers) setManufacturers(json.manufacturers);
-                        setAlertDialog({ message: '数据导入成功！' });
+                        showToast('数据导入成功！', 'success');
                       } catch (err) {
-                        setAlertDialog({ title: '导入失败', message: '格式错误' });
+                        showToast('导入失败: 格式错误', 'error');
                       }
                     };
                     reader.readAsText(file);

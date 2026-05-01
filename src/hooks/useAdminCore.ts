@@ -5,7 +5,6 @@ import {
   updatePhotosGroupInCloud,
   supabase
 } from '../services/supabaseService';
-import { updatePhotoInCloud } from '../services/photoService';
 import { saveData } from '../utils/indexedDB';
 
 import { useGalleryContext } from '../context/GalleryContext';
@@ -24,7 +23,7 @@ export const useAdminCore = (
     categories, tags, manufacturers
   } = useGalleryContext();
 
-  const { settings, setSettings = () => {}, setIsSyncing = () => {} } = adminSession || {};
+  const { settings, setSettings = () => {} } = adminSession || {};
   const { setAlertDialog = () => {}, setCloudCount = () => {}, showToast = () => {} } = adminUI || {};
 
   const saveSettings = useCallback(async (s: any) => {
@@ -40,13 +39,13 @@ export const useAdminCore = (
             manufacturers: mfrs || manufacturers
           }).catch((err: any) => {
             console.error(err);
-            setAlertDialog({ title: '保存设置失败', message: err.message });
+            showToast(`保存设置失败: ${err.message}`, 'error');
           });
         }, 0);
       }
     } catch (err: any) {
       console.error(err);
-      setAlertDialog({ title: '保存数据失败', message: err.message });
+      showToast(`保存数据失败: ${err.message}`, 'error');
     }
   }, [user, categories, tags, manufacturers, setSettings, setAlertDialog]);
 
@@ -69,7 +68,7 @@ export const useAdminCore = (
         ];
         const resultMessage = `✅ AI 识别完成\n\n名称：${result.name || '未识别'}\n分类：${catNameStr}\n标签：${tagNamesStr.join(', ') || '无'}`;
         
-        setAlertDialog({ title: 'AI 识别结果 / AI Analysis Result', message: resultMessage });
+        showToast(resultMessage, 'success');
 
         const updates: Partial<any> = {};
         // Placeholder for shouldUpdateName logic - kept for simplicity
@@ -102,57 +101,51 @@ export const useAdminCore = (
         
         updateFormFn(updates);
         
-        setAlertDialog({ title: 'AI 分析结果', message: 'AI 已帮您自动填入数据。' });
+        showToast('AI 已帮您自动填入数据。', 'success');
       } else {
-        setAlertDialog({ title: 'AI 分析', message: '未能从图片分析出有效数据。' });
+        showToast('未能从图片分析出有效数据。', 'error');
       }
     } catch (err: any) {
       console.error(err);
-      setAlertDialog({ 
-        title: 'AI 识别失败', 
-        message: err.message || '请检查网络或 API 密钥' 
-      });
+      showToast(`AI 识别失败: ${err.message || '请检查网络或 API 密钥'}`, 'error');
     }
   }, [setAlertDialog, categories, tags]);
 
   const performPushSync = useCallback(async () => {
     if (!user) return;
-    setIsSyncing(true);
-    try {
-      await saveSettingsCloud({
-        ...settings,
-        categories,
-        manufacturers
-      });
-      const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
-      const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
-      const now = new Date().toISOString();
-      localStorage.setItem('lastSyncTime', now);
-      await saveData('last_sync_time', Date.now());
-      refreshCloudData(user, false, setCloudCount);
-      
-      setAlertDialog({ 
-        title: t.pushSuccess, 
-        message: t.pushSuccessMsg(result.skipped) 
-      });
-    } catch (err: any) {
-      setAlertDialog({ title: t.pushFail, message: err.message });
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [user, photos, settings, categories, tags, manufacturers, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount, lastSyncTime]);
+    const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn: any) => fn();
+    await run(async () => {
+      try {
+        await saveSettingsCloud({
+          ...settings,
+          categories,
+          manufacturers
+        });
+        const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
+        const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
+        const now = new Date().toISOString();
+        localStorage.setItem('lastSyncTime', now);
+        await saveData('last_sync_time', Date.now());
+        refreshCloudData(user, false, setCloudCount);
+        
+        showToast(`${t.pushSuccess}: ${t.pushSuccessMsg(result.skipped)}`, 'success');
+      } catch (err: any) {
+        showToast(`${t.pushFail}: ${err.message}`, 'error');
+      }
+    });
+  }, [user, photos, settings, categories, tags, manufacturers, setAlertDialog, t, refreshCloudData, setCloudCount, lastSyncTime, adminUI]);
 
   const performPullSync = useCallback(async () => {
-    setIsSyncing(true);
-    try {
-      await refreshCloudData(user, true, setCloudCount);
-      setAlertDialog({ title: t.pullSuccess, message: t.pullSuccessMsg });
-    } catch (err: any) {
-      setAlertDialog({ title: t.pullFail, message: err.message });
-    } finally {
-      setIsSyncing(false);
-    }
-  }, [user, setIsSyncing, setAlertDialog, t, refreshCloudData, setCloudCount]);
+    const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn: any) => fn();
+    await run(async () => {
+      try {
+        await refreshCloudData(user, true, setCloudCount);
+        showToast(`${t.pullSuccess}: ${t.pullSuccessMsg}`, 'success');
+      } catch (err: any) {
+        showToast(`${t.pullFail}: ${err.message}`, 'error');
+      }
+    });
+  }, [user, setAlertDialog, t, refreshCloudData, setCloudCount, adminUI]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
       try {
@@ -160,16 +153,15 @@ export const useAdminCore = (
         const photoIds = photosToUngroup.map(p => p.id);
         
         if (photoIds.length > 0) {
-          await updatePhotosGroupInCloud(photoIds, null);
-          await Promise.all(photoIds.map(id => updatePhotoInCloud(id, { is_pinned: false })));
+          await updatePhotosGroupInCloud(photoIds, { group_id: null, is_pinned: false });
           setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, groupId: null, isPinned: false } : p));
         }
         showToast('解除群组成功', 'success');
       } catch (err: any) {
         console.error('Ungroup error:', err);
-        setAlertDialog({ title: '解除群組失敗', message: err?.message || '未知錯誤' });
+        showToast(`解除群組失敗: ${err?.message || '未知錯誤'}`, 'error');
       }
-  }, [photos, setPhotos, setAlertDialog, updatePhotoInCloud, showToast]);
+  }, [photos, setPhotos, setAlertDialog, showToast]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;
@@ -189,10 +181,10 @@ export const useAdminCore = (
     const updatedPhotos = photos.map(p => photoIdsToUpdate.includes(p.id) ? { ...p, groupId: groupIdToUse } : p);
     setPhotos(updatedPhotos);
     try {
-      await updatePhotosGroupInCloud(photoIdsToUpdate, groupIdToUse);
+      await updatePhotosGroupInCloud(photoIdsToUpdate, { group_id: groupIdToUse });
     } catch (err: any) {
       console.error('Group photos error:', err);
-      setAlertDialog({ title: '群組失敗', message: err?.message || '未知錯誤' });
+      showToast(`群組失敗: ${err?.message || '未知錯誤'}`, 'error');
     }
   }, [photos, setPhotos, setAlertDialog]);
 

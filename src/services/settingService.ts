@@ -19,6 +19,14 @@ export const fetchSettings = async () => {
         if (data.api_key) data.gemini_api_key = data.api_key;
         if (data.model_name) data.custom_model = data.model_name;
         if (data.access_passcode) data.internal_password = data.access_passcode;
+        
+        if (data.tags_json) {
+            try {
+                const parsed = JSON.parse(data.tags_json);
+                if (parsed.pinnedTags) data.pinnedTags = parsed.pinnedTags;
+                if (parsed.hotTagsCount !== undefined) data.hotTagsCount = parsed.hotTagsCount;
+            } catch (e) {}
+        }
     }
     
     return data;
@@ -39,16 +47,26 @@ export const saveSettings = async (settings: any) => {
             payload.access_passcode = payload.internal_password;
         }
 
+        // Handle hot tags
+        if (payload.pinnedTags || payload.hotTagsCount !== undefined) {
+            payload.tags_json = JSON.stringify({
+                pinnedTags: payload.pinnedTags || [],
+                hotTagsCount: payload.hotTagsCount || 9,
+            });
+        }
+
         // REMOVE all redundant fields that are now in separate tables
         delete payload.gemini_api_key;
         delete payload.custom_model;
         delete payload.internal_password;
         delete payload.categories;
-        delete payload.tags;
+        delete payload.tags; // Keep tags_json!
         delete payload.manufacturers;
-        delete payload.tags_json;
         delete payload.manufacturers_json;
         delete payload.categories_json;
+        
+        delete payload.pinnedTags;
+        delete payload.hotTagsCount;
 
         console.log("Saving settings to Supabase (cleaned payload)...", payload);
 

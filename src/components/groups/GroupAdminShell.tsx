@@ -6,7 +6,7 @@ import {
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon
 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup } from '../../types';
-import { updatePhotosGroupInCloud, updatePhotoInCloud, savePhotoToCloud } from '../../services/photoService';
+import { updatePhotosGroupInCloud, updatePhoto, savePhotoToCloud } from '../../services/photoService';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { GroupGridView } from './GroupGridView';
 import {
@@ -42,8 +42,10 @@ export interface GroupAdminShellProps {
   allTags?: Tag[];
   isMultiSelect?: boolean;
   setAlertDialog?: (d: any) => void;
-  setLoadingState?: (s: string) => void;
 }
+
+import { useGroupSync } from '../../hooks/useGroupSync';
+import { useAdminUI } from '../../context/AdminContexts';
 
 const DIMENSION_PRESETS = ['120x60', '140x80', '160x90'];
 
@@ -53,9 +55,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   onBatchEdit, onUngroup, onAddPhotoToGroup,
   setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
   t, categories, tagMap, allTags = [],
-  setAlertDialog,
-  setLoadingState
+  setAlertDialog
 }) => {
+  const { syncCategory, syncTags, setCover } = useGroupSync(activeGroupId);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
@@ -144,11 +146,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
         // use local instance if available or 'default'
         await savePhotoToCloud((photo as any).userId || 'default', updatedPhoto);
       } else {
-        await updatePhotoInCloud(photoId, updates);
+        await updatePhoto(photoId, updates);
       }
       showToast('已保存 / Saved');
     } catch (err: any) {
-      setAlertDialog?.({ title: '保存失敗', message: err.message });
+      showToast(`保存失敗: ${err.message}`);
     }
   };
 
@@ -163,7 +165,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     try {
       await saveGroupToCloud(nextGroupData);
     } catch (err: any) {
-      setAlertDialog?.({ title: '保存失敗', message: err.message });
+      showToast(`保存失敗: ${err.message}`);
     }
   };
 
@@ -208,11 +210,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     try {
       showToast('排序中...');
       await Promise.all(
-        updatedWithOrder.map(p => updatePhotoInCloud(p.id, { group_order: p.groupOrder }))
+        updatedWithOrder.map(p => updatePhoto(p.id, { groupOrder: p.groupOrder }))
       );
       showToast('排序已保存');
     } catch (err: any) {
-      setAlertDialog?.({ title: '排序同步失敗', message: err.message });
+      showToast(`排序同步失敗: ${err.message}`);
     }
   };
 
@@ -254,12 +256,12 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                       confirmDelete.ids.includes(p.id) ? { ...p, groupId: null } : p
                     ));
                     try {
-                      await updatePhotosGroupInCloud(confirmDelete.ids, null);
+                      await updatePhotosGroupInCloud(confirmDelete.ids, { group_id: null });
                       setIsMultiSelectMode(false);
                       setSelectedPhotoIds([]);
                       showToast('已移出 / Removed');
                     } catch (err: any) {
-                      setAlertDialog?.({ title: '操作失败', message: err.message });
+                      showToast(`操作失败: ${err.message}`);
                     }
                     setConfirmDelete(null);
                 }
@@ -589,22 +591,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                            <label className="text-[10px] font-bold text-blue-400 uppercase">強制同步分类 (Global Category)</label>
                            <select 
                             value={groupCover?.categoryId || ''}
-                            onChange={async (e) => {
-                              const catId = e.target.value;
-                              setAlertDialog?.({
-                                title: '強制同步分類 / Category Sync',
-                                message: '是否將此分類同步到整個群組的所有照片？這將覆蓋現有設置。',
-                                onConfirm: async () => {
-                                  setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: catId } : p));
-                                  try {
-                                    await Promise.all(activeGroupPhotos.map(p => updatePhotoInCloud(p.id, { category_id: catId })));
-                                    showToast('全組分類已同步');
-                                  } catch (err: any) {
-                                    setAlertDialog?.({ title: '同步失敗', message: err.message });
-                                  }
-                                }
-                              });
-                            }}
+                            onChange={(e) => syncCategory(e.target.value)}
                             className="w-full bg-white border-2 border-blue-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none"
                           >
                             <option value="">選擇分類...</option>
@@ -617,22 +604,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         <div className="space-y-2">
                            <label className="text-[10px] font-bold text-blue-400 uppercase">標籤庫同步 (Tag Sync)</label>
                            <button 
-                            onClick={async () => {
-                              setAlertDialog?.({
-                                title: '標籤庫同步 / Tag Sync',
-                                message: '這將把當前封面的所有標籤同步到群組內的所有照片，確定嗎？',
-                                onConfirm: async () => {
-                                  const coverTags = groupCover?.tagIds || [];
-                                  setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, tagIds: coverTags } : p));
-                                  try {
-                                    await Promise.all(activeGroupPhotos.map(p => savePhotoToCloud(p.userId || 'default', { ...p, tagIds: coverTags })));
-                                    showToast('全組標籤已同步');
-                                  } catch (err: any) {
-                                    setAlertDialog?.({ title: '同步失敗', message: err.message });
-                                  }
-                                }
-                              });
-                            }}
+                            onClick={syncTags}
                             className="w-full py-3 bg-white border-2 border-blue-200 rounded-xl text-blue-600 text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                           >
                             依據封面標籤同步到全組 / SYNC ALL BY COVER
@@ -750,19 +722,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                             <button 
                               onClick={(e) => { 
                                 e.stopPropagation(); 
-                                const nextVal = !photo.isGroupCover;
-                                import('../../services/photoService').then(m => {
-                                  if (nextVal) {
-                                    const others = activeGroupPhotos.filter(p => p.id !== photo.id);
-                                    Promise.all(others.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: false }))).then(() => {
-                                      m.updatePhotoInCloud(photo.id, { is_group_cover: true });
-                                    });
-                                  } else {
-                                    m.updatePhotoInCloud(photo.id, { is_group_cover: false });
-                                  }
-                                }); 
-                                setPhotos?.(prev => prev.map(p => p.id === photo.id ? {...p, isGroupCover: nextVal} : (p.groupId === activeGroupId ? {...p, isGroupCover: false} : p))); 
-                                showToast(nextVal ? '已設為封面' : '已取消封面'); 
+                                if (!photo.isGroupCover) {
+                                  setCover(photo.id);
+                                }
                               }} 
                               className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-[11px] font-bold ${photo.isGroupCover ? 'bg-[#D4A853] text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                             >

@@ -78,7 +78,7 @@ export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
                     try {
                       await loginWithGoogle();
                     } catch (e: any) { 
-                      adminUI?.setAlertDialog({ title: t.loginFailed, message: e.message || String(e) });
+                      adminUI?.showToast(`${t.loginFailed}: ${e.message || String(e)}`, 'error');
                     }
                   }}
                   className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"

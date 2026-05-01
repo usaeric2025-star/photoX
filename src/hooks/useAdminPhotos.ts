@@ -52,12 +52,12 @@ export const useAdminPhotos = (
   adminUI?: {
     cloudCount: number | null;
     setCloudCount: (c: number | null) => void;
-    loadingState: string;
-    setLoadingState: (s: any) => void;
+    loadingState?: string;
     setAlertDialog: (d: any) => void;
     showToast: (msg: string, type?: 'success' | 'error') => void;
     setActiveScreen: (s: string) => void;
     abortAnalysis: () => void;
+    withLoading?: <T>(state: any, fn: () => Promise<T>) => Promise<T>;
   },
   adminSession?: {
     setIsSyncing: (v: boolean) => void;
@@ -75,7 +75,6 @@ export const useAdminPhotos = (
   const { 
     setAlertDialog = () => {}, 
     setActiveScreen = () => {}, 
-    setLoadingState = () => {},
     showToast = (m: string) => {},
   } = adminUI || {};
   
@@ -87,9 +86,17 @@ export const useAdminPhotos = (
   
   // Use provided loadingState if available, otherwise use internal
   const currentLoadingState = adminUI?.loadingState !== undefined ? adminUI.loadingState : internalLoadingState;
-  const actualSetLoadingState = (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading') => {
-    if (setLoadingState) setLoadingState(s);
-    setInternalLoadingState(s as any);
+
+  const runWithLoading = async <T,>(state: string, fn: () => Promise<T>): Promise<T> => {
+      if (adminUI?.withLoading) {
+          return adminUI.withLoading(state as any, fn);
+      }
+      setInternalLoadingState(state as any);
+      try {
+          return await fn();
+      } finally {
+          setInternalLoadingState('idle');
+      }
   };
 
   const [importProgress, setImportProgress] = useState(0);
@@ -109,7 +116,7 @@ export const useAdminPhotos = (
       setAiDebugInfo({ step: '已取消', message: '用戶中斷了 AI 識別任务' });
       
       // Stop the UI loading state
-      actualSetLoadingState('idle');
+      setInternalLoadingState('idle');
       
       setTimeout(() => setAiDebugInfo(null), 3000);
     }
@@ -174,16 +181,16 @@ export const useAdminPhotos = (
     }
     
     if (!effectiveKey) {
-      setAlertDialog({ title: '提示', message: '請先在設定中設定 AI 金鑰' });
+      showToast('請先在設定中設定 AI 金鑰', 'error');
       return;
     }
 
     setBatchProgress({ current: 0, total: unProcessed.length });
-    actualSetLoadingState('analyzing');
-    
+    return runWithLoading('analyzing', async () => {
     const CONCURRENCY = AI_CONFIG.CONCURRENCY;
     let completedCount = 0;
     
+    // duplicate logic and processPhoto definition
     const processPhoto = async (photo: Photo): Promise<void> => {
         // --- Duplicate check logic ---
         if (photo.uri && !photo.image_hash) {
@@ -259,18 +266,18 @@ export const useAdminPhotos = (
             setBatchProgress(prev => ({ ...prev, current: Math.min(i + CONCURRENCY, unProcessed.length) }));
         }
     } finally {
-        actualSetLoadingState('idle');
         setBatchProgress({ current: 0, total: 0 });
         setPhotos(prev => prev.map(p => 
             p.isAnalyzing ? { ...p, isAnalyzing: false } : p
         ));
-        setAlertDialog({ title: '处理完成', message: `处理终止或完成！共处理了 ${completedCount} 张照片。` });
+        showToast(`处理终止或完成！共处理了 ${completedCount} 张照片。`, 'success');
     }
+    });
   };
 
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
     if (!imageData) return;
-    actualSetLoadingState('analyzing');
+    return runWithLoading('analyzing', async () => {
     setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
     
     const controller = new AbortController();
@@ -359,10 +366,10 @@ export const useAdminPhotos = (
     } catch (err: any) {
       console.error("[ERROR] Single AI analysis failed:", err);
       setAiDebugInfo({ step: '错误', message: '识别失败', error: err.message });
-      setAlertDialog({ title: 'AI 识别失败', message: err.message || '识别过程出现问题' });
-    } finally {
-      actualSetLoadingState('idle');
+      showToast(`AI 识别失败: ${err.message || '识别过程出现问题'}`, 'error');
+      throw err;
     }
+    });
   };
 
   const handlePhotoImport = async (
@@ -374,7 +381,7 @@ export const useAdminPhotos = (
     
     const fileArray = Array.from(files) as File[];
     
-    actualSetLoadingState('importing');
+    return runWithLoading('importing', async () => {
     setIsSyncing(true); // Global loading overlay
     setImportTotal(fileArray.length);
     setImportProgress(0);
@@ -529,18 +536,15 @@ export const useAdminPhotos = (
     }
     
     setIsSyncing(false);
-    actualSetLoadingState('idle');
     
     if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
        let msg = `成功處理了 ${successCount} 張照片。`;
-       if (duplicateCount > 0) msg += `\n跳過了 ${duplicateCount} 張重複照片。`;
-       if (failCount > 0) msg += `\n有 ${failCount} 張失敗: ${failedFiles.join(', ')}`;
+       if (duplicateCount > 0) msg += ` 跳過了 ${duplicateCount} 張重複照片。`;
+       if (failCount > 0) msg += ` 有 ${failCount} 張失敗: ${failedFiles.join(', ')}`;
        
-       setAlertDialog({ 
-         title: '上傳完成', 
-         message: msg
-       });
+       showToast(msg, successCount > 0 ? 'success' : 'error');
     }
+    }); // runWithLoading end
   };
   
   const deletePhoto = async (idOrIds: string | string[], suppressAlert: boolean = false) => {
@@ -591,7 +595,6 @@ export const useAdminPhotos = (
       // Rollback
       setPhotos(photosRef.current);
       if (!suppressAlert) showToast('删除失败：' + err.message, 'error');
-      setAlertDialog({ title: '删除失败', message: err.message });
     }
   };
 
@@ -609,7 +612,6 @@ export const useAdminPhotos = (
 
   return {
     photos, setPhotos,
-    loadingState: actualSetLoadingState, // We should return the setter if needed, but the current UI uses the state
     isImporting: currentLoadingState === 'importing',
     importProgress, importTotal, batchProgress,
     aiDebugInfo, abortAnalysis,
@@ -620,11 +622,11 @@ export const useAdminPhotos = (
       if (groupPhotos.length === 0) return;
       const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
       if (!effectiveKey) {
-        setAlertDialog({ title: '提示', message: '請先在設定中設定 AI 金鑰' });
+        showToast('請先在設定中設定 AI 金鑰', 'error');
         return;
       }
 
-      actualSetLoadingState('analyzing');
+      return runWithLoading('analyzing', async () => {
       setAiDebugInfo({ step: '群組識別', message: '正在分析第一張照片...' });
 
       try {
@@ -680,13 +682,13 @@ export const useAdminPhotos = (
         }
 
         setAiDebugInfo(null);
-        setAlertDialog({ title: '群組識別完成', message: `已將第一張照片的識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。` });
+        showToast(`群組識別完成: 已將第一張照片的識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。`, 'success');
       } catch (err: any) {
         console.error("[ERROR] Group AI analysis failed:", err);
-        setAlertDialog({ title: '識別失敗', message: err.message || '群組識別過程出現問題' });
-      } finally {
-        actualSetLoadingState('idle');
+        showToast(`識別失敗: ${err.message || '群組識別過程出現問題'}`, 'error');
+        throw err;
       }
+      });
     },
     handlePhotoImport, deletePhoto, updatePhoto
   };

@@ -4,7 +4,8 @@ import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } fr
 import { useGalleryContext } from '../context/GalleryContext';
 import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
 import { translations } from '../lib/translations';
-import { updatePhotoInCloud } from '../services/photoService';
+import { updatePhoto } from '../services/photoService';
+import { usePhotoUpdate } from '../hooks/usePhotoUpdate';
 
 import {
   AlertDialog,
@@ -39,6 +40,8 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   const lang = (localStorage.getItem('appLang') as any) || 'en';
   const t = translations[lang] || translations['en'];
 
+  const { updatePhoto } = usePhotoUpdate();
+
   const handleTogglePinned = async (photo: any) => {
     const newStatus = !photo.isPinned;
     
@@ -46,29 +49,16 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     const affectedPhotos = photo.groupId 
       ? photos.filter(p => p.groupId === photo.groupId)
       : [photo];
-      
-    // Optimistic update for all affected photos
-    setPhotos(prev => prev.map(p => 
-      affectedPhotos.some(ap => ap.id === p.id) 
-        ? { ...p, isPinned: newStatus } 
-        : p
-    ));
     
     try {
       await Promise.all(
         affectedPhotos.map(p => 
-          updatePhotoInCloud(p.id, { is_pinned: newStatus, updated_at: new Date().toISOString() })
+          updatePhoto(p.id, { isPinned: newStatus })
         )
       );
     } catch (e: any) {
       console.error("[ERROR] Failed to toggle pinned:", e);
-      // Revert changes
-      setPhotos(prev => prev.map(p => 
-        affectedPhotos.some(ap => ap.id === p.id) 
-          ? { ...p, isPinned: !newStatus } 
-          : p
-      ));
-      adminUI?.setAlertDialog({ title: '置顶失败', message: '无法同步到服务器。' });
+      adminUI?.showToast(`置顶失败: 无法同步到服务器。`, 'error');
     }
   };
 
@@ -97,7 +87,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           clearSelection();
           adminUI?.showToast(`已成功刪除 ${selectedIds.length} 張照片`, 'success');
         } catch (e: any) {
-          adminUI?.setAlertDialog({ title: '刪除失敗', message: e.message });
+          adminUI?.showToast(`刪除失敗: ${e.message}`, 'error');
         }
       }
     });
@@ -107,16 +97,12 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     if (selectedIds.length === 0) return;
     
     const count = selectedIds.length;
-    // Optimistic UI
-    setPhotos(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, isHidden: hidden } : p));
     
     try {
-      await Promise.all(selectedIds.map(id => updatePhotoInCloud(id, { is_hidden: hidden, updated_at: new Date().toISOString() })));
+      await Promise.all(selectedIds.map(id => updatePhoto(id, { isHidden: hidden })));
       adminUI?.showToast(`已${hidden ? '隱藏' : '顯示'} ${count} 張照片`, 'success');
     } catch (e: any) {
-      // Revert
-      setPhotos(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, isHidden: !hidden } : p));
-      adminUI?.setAlertDialog({ title: '操作失敗', message: '部分照片更新失敗。' });
+      adminUI?.showToast(`操作失敗: 部分照片更新失敗。`, 'error');
     }
   };
 
@@ -131,7 +117,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           url: window.location.origin 
         });
       } else {
-        adminUI?.setAlertDialog({ title: t.shareTitle, message: t.shareNotSupported });
+        adminUI?.showToast(`${t.shareTitle}: ${t.shareNotSupported}`, 'error');
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
@@ -169,24 +155,19 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         onCancelAnalyze={() => adminUI?.abortAnalysis()}
         isAnalyzing={adminUI?.loadingState === 'analyzing'}
         setAlertDialog={(d) => adminUI?.setAlertDialog(d)}
-        setLoadingState={(s) => adminUI?.setLoadingState(s)}
         onSetGroupCover={async (id, groupId) => {
           setPhotos(prev => prev.map(p => {
              if (p.groupId !== groupId) return p;
              return { ...p, isGroupCover: p.id === id };
           }));
           const groupPhotos = photos.filter(p => p.groupId === groupId);
-          import('../services/supabaseService').then(async (m) => {
-             try {
-                await Promise.all(
-                   groupPhotos.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: p.id === id }))
-                );
-             } catch (err: any) {
-                adminUI?.setAlertDialog({ title: '設置封面失敗', message: err.message });
-             }
-          }).catch(err => {
-             console.error("[ERROR] Failed to update group cover:", err);
-          });
+          try {
+             await Promise.all(
+                groupPhotos.map(p => updatePhoto(p.id, { isGroupCover: p.id === id }))
+             );
+          } catch (err: any) {
+             adminUI?.showToast(`設置封面失敗: ${err.message}`, 'error');
+          }
         }}
         user={adminSession?.user}
         settings={adminSession?.settings}

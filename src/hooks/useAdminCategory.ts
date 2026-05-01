@@ -88,7 +88,7 @@ export const useAdminCategory = (adminUI: any) => {
       // Revert local state if cloud failed
       const storedTags = await loadData('product_tags');
       if (storedTags) setTags(storedTags);
-      setAlertDialog({ title: '更新失敗', message: '無法同步更新到雲端。' });
+      showToast(`更新失敗: 無法同步更新到雲端。`, 'error');
     }
   };
 
@@ -107,7 +107,7 @@ export const useAdminCategory = (adminUI: any) => {
       setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
       await saveData('product_photos', photos.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
     } catch (err: any) {
-      setAlertDialog({ title: '移除标签失败', message: err.message });
+      showToast(`移除标签失败: ${err.message}`, 'error');
       throw err;
     }
   };
@@ -123,7 +123,7 @@ export const useAdminCategory = (adminUI: any) => {
       setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, categoryId: null } : p));
       await saveData('product_photos', photos.map(p => p.id === photoId ? { ...p, categoryId: null } : p));
     } catch (err: any) {
-      setAlertDialog({ title: '移除分类失败', message: err.message });
+      showToast(`移除分类失败: ${err.message}`, 'error');
       throw err;
     }
   };
@@ -167,7 +167,7 @@ export const useAdminCategory = (adminUI: any) => {
           
           showToast('标签删除成功');
         } catch (err: any) {
-          setAlertDialog({ title: '标签删除失败', message: err.message });
+          showToast(`标签删除失败: ${err.message}`, 'error');
           throw err;
         }
   };
@@ -189,7 +189,7 @@ export const useAdminCategory = (adminUI: any) => {
       }
     } catch (err: any) {
       console.error("[useAdminCategory] Add category failed:", err);
-      setAlertDialog({ title: '添加分类失败', message: err.message || '网络连接或数据库权限问题' });
+      showToast(`添加分类失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };
 
@@ -223,7 +223,7 @@ export const useAdminCategory = (adminUI: any) => {
       await performDeleteCategory(strId);
       showToast('分类删除成功');
     } catch (err: any) {
-      setAlertDialog({ title: '删除失败', message: err.message });
+      showToast(`删除失败: ${err.message}`, 'error');
     }
   };
 
@@ -250,7 +250,7 @@ export const useAdminCategory = (adminUI: any) => {
             if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err: any) {
-        if (isMounted.current) setAlertDialog({ title: '分类删除失败', message: err.message });
+        if (isMounted.current) showToast(`分类删除失败: ${err.message}`, 'error');
       }
   };
 
@@ -265,7 +265,7 @@ export const useAdminCategory = (adminUI: any) => {
       return saved;
     } catch (err: any) {
       console.error("[useAdminCategory] Add manufacturer failed:", err);
-      setAlertDialog({ title: '添加厂商失败', message: err.message || '网络连接或数据库权限问题' });
+      showToast(`添加厂商失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };
 
@@ -281,7 +281,7 @@ export const useAdminCategory = (adminUI: any) => {
       await saveData('product_manufacturers', newMfrs);
     } catch (err: any) {
       console.error("[useAdminCategory] Update manufacturer failed:", err);
-      setAlertDialog({ title: '更新厂商失败', message: err.message || '网络连接或数据库权限问题' });
+      showToast(`更新厂商失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };
 
@@ -304,7 +304,7 @@ export const useAdminCategory = (adminUI: any) => {
       await performDeleteManufacturer(strId, id);
       showToast('厂商删除成功');
     } catch (err: any) {
-      setAlertDialog({ title: '删除失败', message: err.message });
+      showToast(`删除失败: ${err.message}`, 'error');
     }
   };
 
@@ -332,7 +332,7 @@ export const useAdminCategory = (adminUI: any) => {
           if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err: any) {
-         if (isMounted.current) setAlertDialog({ title: '删除厂商失败', message: err.message });
+         if (isMounted.current) showToast(`删除厂商失败: ${err.message}`, 'error');
       }
   };
 
@@ -348,7 +348,7 @@ export const useAdminCategory = (adminUI: any) => {
     } catch(err: any) {
       console.error("[useAdminCategory] Add tag failed:", err);
       // setAlertDialog is available via adminUI passed in constructor
-      setAlertDialog({ title: '添加标签失败', message: err.message || '网络连接或数据库权限问题' });
+      showToast(`添加标签失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };
   

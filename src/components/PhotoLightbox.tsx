@@ -108,7 +108,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     >
       {/* --- 左侧/上方：图片展示区 --- */}
       <div 
-        className={`relative ${isZoomed ? 'flex-1' : 'flex-none md:flex-1'} bg-black flex items-center justify-center h-[35vh] md:h-full`}
+        className={`relative ${isZoomed ? 'flex-1' : 'flex-none md:flex-1'} bg-black flex items-center justify-center h-[42vh] md:h-full`}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -175,12 +175,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
       {!isZoomed && (
         <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative">
-          <div className="flex-1 overflow-y-auto no-scrollbar p-5 pb-24 md:pb-6 space-y-5">
+          <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4">
              {/* 1. 标题与动作条 */}
              <div className="flex justify-between items-start gap-4">
                 <div className="flex-1">
                   <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
-                  <h2 className="text-xl font-black text-[#1D3557] leading-tight uppercase">
+                  <h2 className="text-lg font-black text-[#1D3557] leading-tight uppercase">
                     {photo.name || t.unnamed}
                   </h2>
                 </div>
@@ -326,7 +326,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   (window as any)._pendingPhoto = photo;
                   contactWhatsApp(photo);
                 }}
-               className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
+               className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
              >
                <MessageCircle size={20} fill="currentColor" />
                {t.whatsAppInquiry}

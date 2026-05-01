@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
 import { loginWithGoogle, saveSettings } from '../services/supabaseService';
-import { updatePhotoInCloud } from '../services/photoService';
 // Removed Tag import
 import { ErrorBoundary } from '../components/ErrorBoundary';
 // Removed Modals import
@@ -21,6 +20,7 @@ import { useSyncEngine } from '../hooks/useSyncEngine';
 import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
 import { useAdminDialogs } from '../hooks/useAdminDialogs';
+import { useLoading } from '../hooks/useLoading';
 import { usePhotoManagement } from '../hooks/usePhotoManagement';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
@@ -51,7 +51,7 @@ export default function AdminView() {
   const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
-  const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading'>('idle');
+  const { loadingState, setLoadingState, startLoading, stopLoading, withLoading } = useLoading();
   const [cloudCount, setCloudCount] = useState<number | null>(null);
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
@@ -107,11 +107,11 @@ export default function AdminView() {
              } catch {}
              window.location.reload();
            } else if (pass) {
-             setAlertDialog({ title: t.loginFailed, message: t.wrongPassword });
+             showToast(`${t.loginFailed}: ${t.wrongPassword}`, 'error');
            }
         } catch (e) {
            console.error("Local login check failed:", e);
-           setAlertDialog({ title: 'Error', message: '無法連接到伺服器驗證密碼 / Cannot connect to server to verify password' });
+           showToast('無法連接到伺服器驗證密碼 / Cannot connect to server to verify password', 'error');
         }
       }
     });
@@ -129,16 +129,17 @@ export default function AdminView() {
       setEditPhotoId: errorGuard('setEditPhotoId'),
       batchEditIds: null,
       setBatchEditIds: errorGuard('setBatchEditIds'),
-      toast: null,
-      showToast: errorGuard('showToast'),
+      toast,
+      showToast,
       loadingState: 'idle' as const,
       setLoadingState: errorGuard('setLoadingState'),
+      withLoading: errorGuard('withLoading') as any,
       isAnalyzing: false,
       batchProgress: { current: 0, total: 0 },
       aiDebugInfo: null,
       abortAnalysis: errorGuard('abortAnalysis')
     };
-  }, [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen, editPhotoId]);
+  }, [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen, editPhotoId, toast, showToast]);
 
   if (!authChecked) {
     return (
@@ -169,10 +170,7 @@ export default function AdminView() {
                     try {
                       await loginWithGoogle();
                     } catch(e: any) {
-                      setAlertDialog({ 
-                        title: t.loginFailed, 
-                        message: `${t.loginFailedAlert} ${e.message || JSON.stringify(e)}` 
-                      });
+                      showToast(`${t.loginFailedAlert} ${e.message || JSON.stringify(e)}`, 'error');
                     }
                   }}
                   className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
@@ -215,7 +213,7 @@ export default function AdminView() {
         activeScreen, setActiveScreen,
         editPhotoId, setEditPhotoId,
         batchEditIds, setBatchEditIds,
-        loadingState, setLoadingState,
+        loadingState, setLoadingState, withLoading,
         cloudCount, setCloudCount
       }}
       dialogProps={{
@@ -245,7 +243,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   } = useGalleryContext();
   
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
-  const { activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, loadingState, setLoadingState, cloudCount, setCloudCount } = uiProps;
+  const { activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, loadingState, setLoadingState, withLoading, cloudCount, setCloudCount } = uiProps;
 
   useEffect(() => {
     setUser(user);
@@ -265,7 +263,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(setLoadingState);
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(withLoading);
   const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
   const [internalPassword, setInternalPassword] = useState('');
@@ -293,10 +291,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
-    setIsSyncing: (v: boolean) => setLoadingState(v ? 'syncing' : 'idle'),
     settings,
     setSettings
-  }), [settings, setSettings, setLoadingState]);
+  }), [settings, setSettings]);
 
   const tValue = React.useMemo(() => t, [t]);
 
@@ -393,7 +390,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
           setIsMultiSelect(false);
         } catch (err: any) {
           console.error("[ERROR] Batch delete failed:", err);
-          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+          showToast(`删除失败: ${err.message || String(err)}`, 'error');
         }
       }
     });
@@ -410,24 +407,23 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
           showToast('刪除成功', 'success');
         } catch (err: any) {
           console.error("[ERROR] Delete failed:", err);
-          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+          showToast(`删除失败: ${err.message || String(err)}`, 'error');
         }
       }
     });
   }, [deletePhoto, setAlertDialog, setEditPhotoId, showToast]);
   
-  const handleDeleteTag = useCallback(async (id: string) => {
-    setLoadingState('syncing');
-    try {
-      await deleteTag(id);
-      showToast('标签已删除 / Tag deleted', 'success');
-    } catch (err: any) {
-      console.error('[handleDeleteTag] Error during deletion:', err);
-      setAlertDialog({ title: '删除失败', message: err.message || String(err) });
-    } finally {
-      setLoadingState('idle');
-    }
-  }, [deleteTag, showToast, setAlertDialog, setLoadingState]);
+  const handleDeleteTag = useCallback((id: string) => {
+    withLoading('syncing', async () => {
+      try {
+        await deleteTag(id);
+        showToast('标签已删除 / Tag deleted', 'success');
+      } catch (err: any) {
+        console.error('[handleDeleteTag] Error during deletion:', err);
+        showToast(`删除失败: ${err.message || String(err)}`, 'error');
+      }
+    });
+  }, [deleteTag, showToast, setAlertDialog, withLoading]);
 
   // Auto refresh - ONLY on initial mount of the content component
   useEffect(() => {
@@ -468,11 +464,11 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast: toast, showToast: showToast,
-    loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis,
+    loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis,
     isAnalyzing: loadingState === 'analyzing'
   }), [
     activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast, loadingState, setLoadingState, batchProgress, aiDebugInfo, abortAnalysis
+    toast, showToast, loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis
   ]);
 
   const handleBatchAiIdentifyTrigger = () => {
@@ -666,25 +662,18 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                          const affectedPhotos = photo.groupId 
                            ? photos.filter(p => p.groupId === photo.groupId)
                            : [photo];
-                         setPhotos(prev => prev.map(p => 
-                           affectedPhotos.some(ap => ap.id === p.id) 
-                             ? { ...p, isPinned: newStatus } 
-                             : p
-                         ));
-                         try {
-                           await Promise.all(
-                             affectedPhotos.map(p => 
-                               updatePhotoInCloud(p.id, { is_pinned: newStatus, updated_at: new Date().toISOString() })
-                             )
-                           );
-                         } catch (e: any) {
-                           console.error("[ERROR] Failed to toggle pinned:", e);
-                           setPhotos(prev => prev.map(p => 
-                             affectedPhotos.some(ap => ap.id === p.id) 
-                               ? { ...p, isPinned: !newStatus } 
-                               : p
-                           ));
-                         }
+                         import('../services/photoService').then(async (m) => {
+                           try {
+                             await Promise.all(
+                               affectedPhotos.map(p => 
+                                 m.updatePhoto(p.id, { isPinned: newStatus }, setPhotos)
+                               )
+                             );
+                           } catch (e: any) {
+                             console.error("[ERROR] Failed to toggle pinned:", e);
+                             showToast('Failed to toggle pin status', 'error');
+                           }
+                         });
                        }}
                        settings={settings}
                        isRefreshing={loadingState === 'syncing'}

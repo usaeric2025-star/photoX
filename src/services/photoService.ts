@@ -1,3 +1,4 @@
+import React from 'react';
 import { supabase, BUCKET_NAME, TABLE_NAME } from './client';
 import { Photo } from '../types';
 import { uploadImages } from './storageService';
@@ -107,10 +108,10 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
   }
 };
 
-export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: string | null) => {
+export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {
   const { error } = await supabase
     .from(TABLE_NAME)
-    .update({ group_id: groupId })
+    .update(updates)
     .in('id', photoIds);
     
   if (error) {
@@ -118,8 +119,41 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], groupId: stri
       console.warn("Skipping group sync as group_id column appears missing in DB");
       return;
     }
-    console.error("Failed to update group id:", error);
+    console.error("Failed to update group photos:", error);
     throw new Error(error.message || JSON.stringify(error));
+  }
+};
+
+export const updatePhoto = async (
+  photoId: string, 
+  updates: Partial<Photo>, 
+  setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>
+): Promise<void> => {
+  if (setPhotos) {
+    setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
+  }
+  
+  const dbUpdates: any = {};
+  if ('categoryId' in updates) dbUpdates.category_id = updates.categoryId;
+  if ('manufacturerId' in updates) dbUpdates.manufacturer_id = updates.manufacturerId;
+  if ('tagIds' in updates) dbUpdates.tags = updates.tagIds;
+  if ('isGroupCover' in updates) dbUpdates.is_group_cover = updates.isGroupCover;
+  if ('groupOrder' in updates) dbUpdates.group_order = updates.groupOrder;
+  if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
+  if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
+  
+  // Also copy all other standard string fields
+  const standardFields = ['name', 'description', 'manual_code', 'model_number', 'dimensions'];
+  standardFields.forEach(f => {
+    if (f in updates) dbUpdates[f] = (updates as any)[f];
+  });
+  
+  dbUpdates.updated_at = new Date().toISOString();
+
+  try {
+    await updatePhotoInCloud(photoId, dbUpdates);
+  } catch (err) {
+    throw err;
   }
 };
 

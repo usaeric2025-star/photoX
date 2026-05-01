@@ -29,7 +29,7 @@ export const usePhotoManagement = (
   user: {id: string} | null,
   adminUI?: {
     setAlertDialog: (d: any) => void;
-    setLoadingState: (s: any) => void;
+    showToast?: (msg: string, type: 'success'|'error') => void;
     setActiveScreen: (s: string) => void;
     editPhotoId?: string | null;
     setEditPhotoId?: (id: string | null) => void;
@@ -37,6 +37,7 @@ export const usePhotoManagement = (
     setBatchEditIds?: (ids: string[] | null) => void;
     batchProgress?: { current: number, total: number };
     setBatchProgress?: (p: { current: number, total: number }) => void;
+    withLoading?: <T>(state: string, fn: () => Promise<T>) => Promise<T>;
   },
   adminSession?: any
 ) => {
@@ -49,7 +50,7 @@ export const usePhotoManagement = (
 
   const { 
     setAlertDialog = () => {}, 
-    setLoadingState = () => {}, 
+    showToast = () => {},
     setActiveScreen = () => {},
     editPhotoId: externalEditPhotoId,
     setEditPhotoId: externalSetEditPhotoId,
@@ -157,14 +158,15 @@ export const usePhotoManagement = (
     } = formState;
 
     if (!categoryId && !name && !editPhotoId && !newPhotoData) {
-       setAlertDialog({ title: '提示', message: '請填寫基本資訊或選擇分類' });
+       showToast('請填寫基本資訊或選擇分類', 'error');
        return;
     }
 
-    setLoadingState('syncing');
-    try {
-        // Resolve tag names to IDs
-       const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+    const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn:any) => fn();
+    await run(async () => {
+       try {
+           // Resolve tag names to IDs
+          const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
 
        if (editPhotoId) {
           const original = photos.find(p => p.id === editPhotoId);
@@ -241,11 +243,10 @@ export const usePhotoManagement = (
        
        resetAddState();
        setActiveScreen('home');
-    } catch (err: any) {
-       setAlertDialog({ title: '儲存失敗', message: err.message });
-    } finally {
-       setLoadingState('idle');
-    }
+       } catch (err: any) {
+          showToast(`儲存失敗: ${err.message}`, 'error');
+       }
+    });
   };
 
   const saveBatchEdit = async (batchIsHiddenApplied: boolean = false) => {
@@ -255,14 +256,15 @@ export const usePhotoManagement = (
        manual_code, model_number, isHidden, price
      } = formState;
 
-     setLoadingState('syncing');
+     const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn:any) => fn();
      if (adminUI?.setBatchProgress) {
         adminUI.setBatchProgress({ current: 0, total: batchEditIds.length });
      }
 
-     try {
-        // Resolve tag names to IDs
-        const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+     await run(async () => {
+        try {
+           // Resolve tag names to IDs
+           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
 
         const updatedPhotosList: Photo[] = [];
         const nextPhotos = photos.map(p => {
@@ -316,16 +318,16 @@ export const usePhotoManagement = (
            }
         }
         
-        resetAddState();
-        setActiveScreen('home');
-     } catch (err: any) {
-        setAlertDialog({ title: '批量儲存失敗', message: err.message });
-     } finally {
-        setLoadingState('idle');
-        if (adminUI?.setBatchProgress) {
-          adminUI.setBatchProgress({ current: 0, total: 0 });
+           resetAddState();
+           setActiveScreen('home');
+        } catch (err: any) {
+           showToast(`批量儲存失敗: ${err.message}`, 'error');
+        } finally {
+           if (adminUI?.setBatchProgress) {
+             adminUI.setBatchProgress({ current: 0, total: 0 });
+           }
         }
-     }
+     });
   };
 
   return {

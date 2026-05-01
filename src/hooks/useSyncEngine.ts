@@ -16,7 +16,7 @@ import {
 
 import { useGalleryContext } from '../context/GalleryContext';
 
-export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyzing' | 'importing') => void) => {
+export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzing' | 'importing', fn: () => Promise<T>) => Promise<T>) => {
     const { 
         setPhotos: setPublicPhotos, 
         setCategories, 
@@ -26,14 +26,23 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
     } = useGalleryContext();
 
     const [internalSyncing, setInternalSyncing] = React.useState(false);
-    const setIsSyncing = (val: boolean) => {
-        if (setLoadingState) {
-            setLoadingState(val ? 'syncing' : 'idle');
+
+    // wrapper that executes with withLoading if provided
+    const runWithSyncing = async <T,>(fn: () => Promise<T>): Promise<T> => {
+        if (withLoading) {
+            return await withLoading('syncing', fn);
         } else {
-            setInternalSyncing(val);
+            setInternalSyncing(true);
+            try {
+                return await fn();
+            } finally {
+                setInternalSyncing(false);
+            }
         }
     };
-    const isSyncing = setLoadingState ? false : internalSyncing;
+
+    const isSyncing = withLoading ? false : internalSyncing;
+    const setIsSyncing = (v: boolean) => setInternalSyncing(v);
     const [viewMode, setViewMode] = useState<'public' | 'private'>('private');
     const [settings, setSettings] = useState<any>(null);
 
@@ -74,7 +83,7 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
         setPublicTags?: (t: any) => void,
         setPublicManufacturers?: (m: any) => void
     ) => {
-        setIsSyncing(true);
+        return runWithSyncing(async () => {
         console.log("SyncEngine: Refreshing data (Force:", force, ")...");
         try {
             const cloudSettings = await fetchSettings();
@@ -170,12 +179,12 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
             localStorage.setItem('lastSyncTime', new Date().toISOString());
         } catch (err) {
             console.error("Cloud synchronization failed:", err);
-        } finally {
-            setIsSyncing(false);
+            throw err;
         }
+        });
     };
 
-    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, categories: any[], tags: any[], manufacturers: any[], setAlertDialog: (a: any) => void) => {
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, categories: any[], tags: any[], manufacturers: any[], showToast: (msg: string, type: 'success'|'error') => void) => {
         if (e.target.files && e.target.files[0]) {
             try {
                 const url = await uploadLogo(e.target.files[0]);
@@ -187,10 +196,10 @@ export const useSyncEngine = (setLoadingState?: (s: 'idle' | 'syncing' | 'analyz
                 tags,
                 manufacturers
                 });
-                setAlertDialog({ title: '上傳成功', message: '品牌 Logo 已更新' });
+                showToast('上傳成功: 品牌 Logo 已更新', 'success');
             } catch (err: any) {
                 console.error("Logo upload failed:", err);
-                setAlertDialog({ title: '上傳失敗', message: err.message || '請檢查網路連線或儲存空間權限' });
+                showToast(`上傳失敗: ${err.message || '請檢查網路連線或儲存空間權限'}`, 'error');
             }
         }
     };

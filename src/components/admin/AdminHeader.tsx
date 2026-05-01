@@ -95,10 +95,7 @@ export const AdminHeader: React.FC<Props> = ({
             try {
               await loginWithGoogle();
             } catch(e: any) {
-              setAlertDialog({
-                title: 'Log in failed',
-                message: e.message || JSON.stringify(e)
-              });
+              showToast(`Log in failed: ${e.message || JSON.stringify(e)}`, 'error');
             }
           }}
           className="px-4 py-2 rounded-2xl text-xs font-medium uppercase tracking-wide bg-[#1D3557] text-[#FDFAF6] shadow-sm active:scale-95 transition-all flex items-center gap-2"

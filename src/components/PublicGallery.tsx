@@ -55,7 +55,6 @@ interface PublicGalleryProps {
   isAnalyzing?: boolean;
   onSetGroupCover?: (id: string, groupId: string) => Promise<void>;
   setAlertDialog?: (d: any) => void;
-  setLoadingState?: (s: string) => void;
   totalCount?: number;
   onTogglePinned?: (photo: Photo) => void;
 }
@@ -128,7 +127,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   isAnalyzing,
   onSetGroupCover,
   setAlertDialog: propsSetAlertDialog,
-  setLoadingState: propsSetLoadingState,
   totalCount,
   onTogglePinned
 }) => {
@@ -167,7 +165,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const activeSetIsMultiSelect = onToggleMultiSelect || context.setIsMultiSelect;
 
   const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
-  const setLoadingState = propsSetLoadingState || (() => {});
 
   // Handle infinite mode
   useEffect(() => {
@@ -365,6 +362,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, [onLoadMore, isInfiniteMode, setVisibleCount, visibleCount, totalGridCount]);
 
+  const prevPhotosRef = useRef<any[]>([]);
+  useEffect(() => {
+    if (!isSyncing) {
+      prevPhotosRef.current = gridPhotos;
+    }
+  }, [gridPhotos, isSyncing]);
+
+  const photosToShow = isSyncing && gridPhotos.length === 0
+    ? prevPhotosRef.current
+    : gridPhotos;
+
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
@@ -393,6 +401,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
       {/* Filter & Search */}
       <PublicGalleryFilters 
+        settings={settings}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         sortOrder={sortOrder}
@@ -417,22 +426,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
       {/* Grid */}
       <div ref={virtuosoRef} className="flex-1 overflow-hidden bg-[#FDFAF6] relative">
-        {displayPhotos.length === 0 ? (
-          isSyncing ? (
-            <SkeletonGrid count={12} columns={columns} />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
-              <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
-                  <ImageIcon size={32} className="opacity-20" />
-              </div>
-              <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
+        {isSyncing && (
+          <div className="absolute top-3 right-3 z-10 w-6 h-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+        )}
+        {photosToShow.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
+            <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
+                <ImageIcon size={32} className="opacity-20" />
             </div>
-          )
+            <p className="text-xs font-black uppercase tracking-widest">{t.empty}</p>
+          </div>
         ) : (
           <VirtuosoGrid
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
-            totalCount={gridPhotos.length}
+            totalCount={photosToShow.length}
             endReached={handleLoadMore}
             overscan={600}
             listClassName={`grid gap-3 p-2 pb-40 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
@@ -440,11 +448,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               <MemoizedPhotoCard
                 key={index}
                 index={index}
-                photo={gridPhotos[index]}
+                photo={photosToShow[index]}
                 isAdminMode={!!isAdminMode}
                 isMultiSelect={activeIsMultiSelect}
                 isStaffMode={isStaffMode}
-                isSelected={!!activeSelectedIds.includes(gridPhotos[index].id)}
+                isSelected={!!activeSelectedIds.includes(photosToShow[index].id)}
                 showGroupsCollapsed={showGroupsCollapsed}
                 lang={lang}
                 t={t}
@@ -460,7 +468,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 shareSinglePhoto={shareSinglePhoto}
                 onTogglePinned={onTogglePinned}
                 displayPhotos={displayPhotos}
-                gridPhotos={gridPhotos}
+                gridPhotos={photosToShow}
               />
             )}
           />
@@ -501,7 +509,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         allTags={tags}
         isMultiSelect={activeIsMultiSelect}
         setAlertDialog={setAlertDialog}
-        setLoadingState={setLoadingState}
         shareGroup={shareGroup}
       />
 
@@ -559,15 +566,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           setLightboxIndex(null);
         }}
         onSetGroupCover={async (id, groupId) => {
-          context.setPhotos(prev => prev.map(p => {
-             if (p.groupId !== groupId) return p;
-             return { ...p, isGroupCover: p.id === id };
-          }));
           const groupPhotos = photos.filter(p => p.groupId === groupId);
           import('../services/photoService').then(async (m) => {
              try {
                await Promise.all(
-                  groupPhotos.map(p => m.updatePhotoInCloud(p.id, { is_group_cover: p.id === id }))
+                  groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
                );
              } catch (err: any) {
                setAlertDialog?.({ title: '設置封面失敗', message: err.message });
@@ -582,12 +585,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onToggleHidden={async (photo) => {
            const newStatus = !photo.isHidden;
-           try {
-             await updatePhotoHidden(photo.id, newStatus);
-             context.setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
-           } catch (e) {
-             console.error("[ERROR] Failed to toggle hidden:", e);
-           }
+           import('../services/photoService').then(async (m) => {
+              try {
+                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+              } catch (e) {
+                console.error("[ERROR] Failed to toggle hidden:", e);
+              }
+           });
         }}
       />
 

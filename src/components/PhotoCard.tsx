@@ -120,7 +120,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           onLightboxOpen(index);
         }
       }}
-      className={`aspect-square bg-white rounded-lg overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.95] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-2 ring-blue-500 scale-[0.95]' : ''}`}
+      className={`aspect-square bg-white rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.95] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-2 ring-blue-500 scale-[0.95]' : ''}`}
     >
       <img 
         draggable={false}
@@ -152,9 +152,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
          </div>
        )}
       
-      <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/70 to-transparent">
+      <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
          {!isUncategorized && displayCatName && (
-          <p className="text-xs font-semibold tracking-tight text-white/90 drop-shadow-md mb-0.5 truncate">
+          <p className="text-[11px] font-bold tracking-tight text-white drop-shadow-lg mb-0.5 truncate">
             {displayCatName}
           </p>
         )}
@@ -162,7 +162,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         {photoTags.length > 0 && (
           <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {photoTags.slice(0, 3).map((tagName, idx) => (
-              <span key={idx} className="bg-white/20 backdrop-blur-sm text-white/90 text-[9px] px-1 rounded-sm font-normal whitespace-nowrap">
+              <span key={idx} className="bg-black/30 backdrop-blur-sm text-white text-[9px] px-1.5 rounded font-medium whitespace-nowrap">
                 {tagName}
               </span>
             ))}

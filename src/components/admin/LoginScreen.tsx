@@ -31,7 +31,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => 
           try {
             await loginWithGoogle();
           } catch(e: any) {
-            adminUI?.setAlertDialog({ title: '登入失敗', message: e.message || JSON.stringify(e) });
+            adminUI?.showToast(`登入失敗: ${e.message || JSON.stringify(e)}`, 'error');
           }
         }}
         className="w-full bg-slate-900 text-white py-5 rounded-[24px] text-sm font-bold flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] active:bg-black"

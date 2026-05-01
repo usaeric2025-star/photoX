@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
-import { updatePhotoInCloud } from '../services/photoService';
+import { updatePhoto } from '../services/photoService';
 import { PublicGallery } from '../components/PublicGallery';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
@@ -211,7 +211,7 @@ export default function PublicView() {
             try {
               await Promise.all(
                 affectedPhotos.map(p => 
-                  updatePhotoInCloud(p.id, { is_pinned: newStatus, updated_at: new Date().toISOString() })
+                  updatePhoto(p.id, { isPinned: newStatus })
                 )
               );
             } catch (e: any) {

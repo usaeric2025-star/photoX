@@ -1,5 +1,5 @@
-import React, { useTransition } from 'react';
-import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers } from 'lucide-react';
+import React from 'react';
+import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Tag } from '../types';
 import { cn } from '../lib/utils';
@@ -25,6 +25,7 @@ interface PublicGalleryFiltersProps {
   t: any;
   onScrollToTop: () => void;
   showHotEffects?: boolean;
+  settings?: any;
 }
 
 export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
@@ -32,10 +33,32 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   showGroupsCollapsed, setShowGroupsCollapsed, categories,
   selectedCatCode, setSelectedCatCode, selectedSubId, setSelectedSubId,
   selectedTagIds, setSelectedTagIds, sortedTags, lang, t, onScrollToTop,
-  showHotEffects = true
+  showHotEffects = true, settings
 }) => {
-  const [isPending, startTransition] = useTransition();
-  
+  // Pick random fallback hot tags if needed
+  const hotTagsSet = React.useMemo(() => {
+    if (!showHotEffects) return new Set<string>();
+    const count = settings?.hotTagsCount || 9;
+    const pinned = settings?.pinnedTags || [];
+    const set = new Set<string>(pinned);
+    
+    if (set.size < count && sortedTags.length > 0) {
+      const candidates = sortedTags.filter(t => !set.has(String(t.id)));
+      
+      // Use stable picking based on ID sum to avoid flicker on every render/fetch
+      const sortedCandidates = [...candidates].sort((a, b) => {
+        const aNum = String(a.id).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+        const bNum = String(b.id).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+        return aNum - bNum;
+      });
+      const needed = count - set.size;
+      for (let i = 0; i < needed && i < sortedCandidates.length; i++) {
+        set.add(String(sortedCandidates[i].id));
+      }
+    }
+    return set;
+  }, [settings?.hotTagsCount, settings?.pinnedTags, sortedTags, showHotEffects]);
+
   return (
     <div className="shrink-0 p-3 z-40 bg-[#FDFAF6] border-b border-[#1D3557]/5">
       <div className="space-y-2.5 pb-2">
@@ -80,10 +103,10 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-1 px-0.5">
+        <div className="grid grid-cols-4 gap-1.5 px-0.5">
             <button 
               onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); onScrollToTop(); }}
-              className={`w-full py-0.5 rounded-md text-[8px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+              className={`w-full h-[34px] rounded-md text-[11px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
             >
               {t.allCats}
             </button>
@@ -105,7 +128,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       setSelectedSubId(null);
                       onScrollToTop();
                     }}
-                    className={`w-full py-0.5 rounded-md text-[8px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                    className={`w-full h-[34px] rounded-md text-[11px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                   >
                     {displayName}
                   </button>
@@ -114,7 +137,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
         </div>
       </div>
       
-      <div className="pt-3 border-t-2 border-[#1D3557]/5 space-y-3">
+      <div className="pt-1.5 border-t border-[#1D3557]/5 space-y-1.5">
         <AnimatePresence>
           {selectedCatCode && (
               <motion.div 
@@ -145,12 +168,13 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             )}
           </AnimatePresence>
 
-        <div className="relative bg-slate-100/50 rounded-[2rem] p-2 border-2 border-white shadow-[inner_0_2px_4px_rgba(0,0,0,0.02)] overflow-hidden">
-          <div className="flex flex-wrap gap-1.5 items-start max-h-[8rem] overflow-y-auto pb-6 content-start px-2 pt-2 scrollbar-hide">
+        <div className="relative overflow-hidden">
+          <div className="flex flex-wrap gap-1.5 items-start max-h-[80px] overflow-y-auto pb-4 content-start scrollbar-hide">
               {sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = selectedTagIds.includes(strTagId);
-                const isHot = showHotEffects && ((tag.count || 0) > 5 || (tag.name?.length || 0) > 6);
+                const isHot = hotTagsSet.has(strTagId);
+                const isPinned = (settings?.pinnedTags || []).includes(strTagId);
                 
                 const toTitleCase = (str: string) => {
                   if (!str) return '';
@@ -160,25 +184,23 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   <button 
                     key={strTagId}
                     onClick={() => { 
-                      startTransition(() => {
-                        setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]);
-                      });
+                      setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]);
                     }}
                     className={cn(
-                      "px-3 py-1.5 rounded-xl text-[10px] font-black transition-all border-2 shadow-sm flex items-center gap-1.5",
+                      "px-2.5 py-1 rounded-xl text-[9px] font-black transition-colors border-2 shadow-sm flex items-center gap-1",
                       isSelected 
-                        ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6] scale-105 z-10' 
+                        ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6] shadow-md z-10' 
                         : 'bg-white border-slate-100 text-[#1D3557]/40 hover:text-[#1D3557] hover:border-[#1D3557]/20',
-                      isHot && !isSelected && "border-amber-200/50 bg-amber-50/80 text-amber-700/80 hot-tag-breath",
-                      isHot && isSelected && "ring-4 ring-amber-400/20"
+                      isHot && !isSelected && "border-transparent bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md shadow-orange-500/20"
                     )}
                   >
-                    <span className={cn(
-                      "w-2 h-2 rounded-full",
-                      isSelected ? (showHotEffects ? "bg-amber-400 animate-pulse" : "bg-white") : (isHot ? "bg-amber-400" : "bg-slate-200")
-                    )} />
+                    {!isHot && <span className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      isSelected ? "bg-white" : "bg-slate-200"
+                    )} />}
                     {toTitleCase(tag.name)}
-                    {isHot && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-2 py-0.5 rounded-full font-black tracking-tighter">HOT</span>}
+                    {isPinned && !isSelected && <span className="text-[8px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-black tracking-tighter shadow-sm flex items-center gap-0.5"><Heart size={8} className="fill-white"/> 置顶</span>}
+                    {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-white/20 text-white px-1.5 py-[1px] rounded font-black tracking-tighter">HOT</span>}
                   </button>
                 );
               })}

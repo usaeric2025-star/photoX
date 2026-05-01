@@ -103,8 +103,8 @@ export interface AdminUIContextType {
   toast: { message: string, type: 'success' | 'error' } | null;
   showToast: (msg: string, type: 'success' | 'error') => void;
   
-  loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading';
-  setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading') => void;
+  loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
+  withLoading: <T>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;
   isAnalyzing: boolean;
   batchProgress: { current: number, total: number };
   aiDebugInfo: { step: string; message: string; error?: string } | null;

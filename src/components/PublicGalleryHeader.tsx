@@ -28,10 +28,10 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
   onHeaderClick, onRefresh, onToggleMultiSelect, clearSelection, setIsMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings, totalCount
 }) => {
   return (
-    <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
+    <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
       <div className="flex items-center gap-2 sm:gap-4 min-w-0" onClick={onHeaderClick}>
         {settings?.logo_url ? (
-          <img src={settings.logo_url} alt="Logo" className="h-12 sm:h-14 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm cursor-pointer" />
+          <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-12 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm cursor-pointer" />
         ) : (
           <div className="shrink-0 cursor-pointer">
             <h1 className="text-sm sm:text-lg font-black tracking-tighter text-[#1D3557] italic leading-none">GALLERY</h1>
@@ -56,14 +56,14 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
                     setIsMultiSelect(true);
                   }
                 }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white border-slate-200 text-slate-400'}`}
+                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white border-slate-200 text-slate-400'}`}
                 title={t.selectMode}
               >
                 <Grid3X3 size={20} />
               </button>
               <button 
                 onClick={onAddPhoto}
-                className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-lg hover:bg-blue-700 active:scale-95"
+                className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-lg hover:bg-blue-700 active:scale-95"
                 title={t.addPhoto}
               >
                 <Plus size={20} />
@@ -71,13 +71,13 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest">
+          <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
             {[
               { code: 'zh', label: '中文' },
               { code: 'en', label: 'EN' },
               { code: 'ms', label: 'BM' }
             ].map(l => (
-              <button key={l.code} onClick={() => onSetLang(l.code as any)} className={`${lang === l.code ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-2 sm:px-3 h-10 flex items-center justify-center rounded-xl transition-all shadow-sm active:scale-95`}>
+              <button key={l.code} onClick={() => onSetLang(l.code as any)} className={`${lang === l.code ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-2 h-9 flex items-center justify-center rounded-xl transition-all shadow-sm active:scale-95`}>
                 {l.label}
               </button>
             ))}
@@ -85,7 +85,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className={`w-10 h-10 flex items-center justify-center rounded-xl bg-[#1D3557]/5 text-[#1D3557] hover:bg-[#1D3557]/10 transition-all shadow-sm ${isRefreshing ? 'animate-spin opacity-50' : 'active:scale-90'}`}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl bg-[#1D3557]/5 text-[#1D3557] hover:bg-[#1D3557]/10 transition-all shadow-sm ${isRefreshing ? 'animate-spin opacity-50' : 'active:scale-90'}`}
           >
             <RefreshCcw size={18} />
           </button>
@@ -94,7 +94,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
             onExit && (
               <button 
                 onClick={onExit}
-                className="w-10 h-10 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1"
+                className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1"
                 title="Globe"
               >
                 <Globe size={18} />
@@ -103,7 +103,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           ) : (
             <button
                onClick={onExit}
-               className="w-10 h-10 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
+               className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
                title={t.login}
             >
               <Globe size={20} />
@@ -113,7 +113,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           {isAdminMode && (
             <button 
               onClick={onOpenSettings}
-              className="w-10 h-10 rounded-xl bg-slate-800 text-white flex items-center justify-center transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95"
+              className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95"
               title={t.settings}
             >
               <Settings2 size={18} />

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useMemo } from 'react';
+import { Pencil, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -11,6 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAdminSession } from '../../context/AdminContexts';
+import { saveSettings } from '../../services/supabaseService';
 
 interface TagEditorProps {
   tags: any[];
@@ -82,6 +84,36 @@ export const TagEditor: React.FC<TagEditorProps> = ({
     touchStartPoint.current = null;
   };
 
+  const { settings, setSettings } = useAdminSession();
+
+  const togglePin = async (tagId: string) => {
+    const pinnedTags = settings?.pinnedTags || [];
+    const newPinned = pinnedTags.includes(tagId)
+      ? pinnedTags.filter((id: string) => id !== tagId)
+      : [...pinnedTags, tagId];
+    
+    const nextSettings = { ...settings, pinnedTags: newPinned };
+    setSettings(nextSettings);
+    await saveSettings(nextSettings);
+  };
+
+  const hotTagsSet = useMemo(() => {
+    if (!showHotEffects) return new Set<string>();
+    const count = settings?.hotTagsCount || 9;
+    const pinned = settings?.pinnedTags || [];
+    const set = new Set<string>(pinned);
+    
+    if (set.size < count && tags.length > 0) {
+      const candidates = tags.filter(t => !set.has(String(t.id)));
+      const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+      const needed = count - set.size;
+      for (let i = 0; i < needed && i < shuffled.length; i++) {
+         set.add(String(shuffled[i].id));
+      }
+    }
+    return set;
+  }, [settings?.hotTagsCount, settings?.pinnedTags, tags, showHotEffects]);
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1 mb-3">
@@ -91,7 +123,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
         {Array.from(new Map(tags.map(t => [t.id, t])).values()).map((tag: any) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
-          const isHot = showHotEffects && ((tag.count || 0) > 5 || tag.name?.length > 6); // 简单的热门逻辑判定, 仅在 showHotEffects 为 true 时生效
+          const isHot = hotTagsSet.has(String(tag.id));
+          const isPinned = (settings?.pinnedTags || []).includes(String(tag.id));
 
           return (
             <div key={tag.id} className="relative">
@@ -119,7 +152,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   }
                 }}
                 className={cn(
-                  "px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border select-none flex items-center gap-1.5",
+                  "px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border select-none flex items-center gap-1.5 w-auto",
                   isSelected 
                     ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 z-10" 
                     : "bg-white/60 text-slate-600 border-slate-200/50 hover:bg-white hover:border-slate-300 hover:text-slate-800 active:bg-slate-50",
@@ -131,8 +164,11 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   "w-1.5 h-1.5 rounded-full",
                   isSelected ? (showHotEffects ? "bg-amber-400 animate-pulse" : "bg-slate-400") : (isHot ? "bg-amber-400/60" : "bg-slate-300")
                 )} />
-                #{tag.name}
-                {isHot && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter">HOT</span>}
+                <span className="flex-1 text-left whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
+                  #{tag.name}
+                </span>
+                {isPinned && !isSelected && <span className="text-[8px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter shadow-sm flex items-center pl-1 gap-0.5"><Heart size={8} className="fill-white"/> 置顶</span>}
+                {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter">HOT</span>}
               </button>
             </div>
           );
@@ -151,6 +187,17 @@ export const TagEditor: React.FC<TagEditorProps> = ({
               <div className="text-lg font-black text-slate-900">#{activeActionTag.name}</div>
             </div>
             <div className="space-y-3">
+                <button 
+                  type="button"
+                  className="w-full flex items-center justify-center gap-3 text-amber-600 bg-amber-50/50 backdrop-blur-sm border border-amber-100/50 font-bold py-4 rounded-2xl hover:bg-amber-100 transition-all cursor-pointer shadow-sm shadow-amber-500/5" 
+                  onClick={() => { 
+                    togglePin(String(activeActionTag.id));
+                    setActiveActionTag(null); 
+                  }}
+                >
+                   <Heart size={18} strokeWidth={2.5} className={(settings?.pinnedTags || []).includes(String(activeActionTag.id)) ? "fill-amber-600" : ""} /> 
+                   {(settings?.pinnedTags || []).includes(String(activeActionTag.id)) ? '取消置顶 / Unpin' : '设为置顶 / Pin as Hot'}
+                </button>
                 <button 
                   type="button"
                   className="w-full flex items-center justify-center gap-3 text-blue-600 bg-blue-50/50 backdrop-blur-sm border border-blue-100/50 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-all cursor-pointer shadow-sm shadow-blue-500/5" 
