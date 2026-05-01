@@ -567,6 +567,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
               <GroupDetailView
                 activeGroupId={activeGroupId}
                 setActiveGroupId={setActiveGroupId}
+                setAlertDialog={setAlertDialog}
                 photos={photos}
                 displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
                 setLightboxIndex={() => {}}
@@ -575,7 +576,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 onLongPressStart={() => {}}
                 onLongPressEnd={() => {}}
                 onBatchEdit={(ids) => { setBatchEditIds(ids); }}
-                onUngroup={() => { handleUngroup(activeGroupId); setActiveGroupId(null); }}
+                onUngroup={async (groupId) => { 
+                  await handleUngroup(groupId); 
+                }}
                 onAddPhotoToGroup={() => {
                   const input = document.createElement('input');
                   input.type = 'file';

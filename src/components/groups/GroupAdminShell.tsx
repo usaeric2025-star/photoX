@@ -623,10 +623,18 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                              setAlertDialog?.({
                                title: '確定要解散整個群組？',
                                message: '解散後，群組關係、排序信息及DNA數據將被移除，照片將變回單張展示。',
-                               onConfirm: () => {
-                                 onUngroup(activeGroupId);
-                                 setActiveGroupId(null);
-                                 setShowGroupSettings(false);
+                               onConfirm: async () => {
+                                 try {
+                                   if (onUngroup) await (onUngroup(activeGroupId) as any);
+                                   setActiveGroupId(null);
+                                   setShowGroupSettings(false);
+                                   setAlertDialog?.(null);
+                                 } catch (e) {
+                                   console.error('Failed to ungroup:', e);
+                                   // Error toast should be handled by the onUngroup function itself usually
+                                   // but ensuring dialog closes or shows error state might be good.
+                                   setAlertDialog?.(null);
+                                 }
                                }
                              });
                            }
