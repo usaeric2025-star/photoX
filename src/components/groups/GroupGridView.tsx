@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Photo, ProductGroup } from '../../types';
 import { Star, Sparkles, Check, Info, Palette, Layers, Quote } from 'lucide-react';
 
@@ -21,6 +21,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
   selectedPhotoIds = [],
   getPhotoProps
 }) => {
+  const longPressTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   return (
     <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 pb-40 scrollbar-hide">
       {/* Series Summary Card */}
@@ -90,7 +91,20 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
               }}
             >
               {/* Image Container */}
-              <div className="aspect-square rounded-xl overflow-hidden relative">
+              <div 
+                className="aspect-square rounded-xl overflow-hidden relative"
+                onTouchStart={() => {
+                   longPressTimers.current[photo.id] = setTimeout(() => {
+                        onPhotoContextMenu?.({} as any, photo);
+                   }, 500);
+                }}
+                onTouchMove={() => {
+                   if (longPressTimers.current[photo.id]) clearTimeout(longPressTimers.current[photo.id]);
+                }}
+                onTouchEnd={() => {
+                   if (longPressTimers.current[photo.id]) clearTimeout(longPressTimers.current[photo.id]);
+                }}
+              >
                 <img 
                   src={photo.thumb_url || photo.image_url || photo.uri} 
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
