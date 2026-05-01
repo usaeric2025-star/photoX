@@ -96,9 +96,9 @@ export const useAdminCore = (
           }
         }
 
-        if (result.modelNumber && !formState.model_number) updates.model_number = result.modelNumber;
-        if (result.manualCode && !formState.manual_code) updates.manual_code = result.manualCode;
-        if (result.description && !formState.description) updates.description = result.description;
+        if (result.modelNumber && (!formState.model_number || !formState.model_number.trim())) updates.model_number = result.modelNumber;
+        if (result.manualCode && (!formState.manual_code || !formState.manual_code.trim())) updates.manual_code = result.manualCode;
+        if (result.description && (!formState.description || !formState.description.trim())) updates.description = result.description;
         
         updateFormFn(updates);
         

@@ -181,7 +181,7 @@ export const BatchEditScreen = ({
               <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${showOtherFields ? 'rotate-90' : ''}`}>
                 <ChevronRight size={16} />
               </div>
-              <span>其他詳細資訊 (編號、尺寸、备注)</span>
+              <span>其他詳細資訊 (編號、備註)</span>
             </div>
             <div className="w-2 h-2 rounded-full bg-slate-200"></div>
           </button>
@@ -194,33 +194,6 @@ export const BatchEditScreen = ({
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden space-y-4 pt-2"
               >
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">統一尺寸 (長 x 寬 x 高) cm</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <input 
-                      type="number"
-                      placeholder="長"
-                      value={formState.dimL}
-                      onChange={(e) => updateForm({ dimL: e.target.value })}
-                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
-                    />
-                    <input 
-                      type="number"
-                      placeholder="寬"
-                      value={formState.dimW}
-                      onChange={(e) => updateForm({ dimW: e.target.value })}
-                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
-                    />
-                    <input 
-                      type="number"
-                      placeholder="高"
-                      value={formState.dimH}
-                      onChange={(e) => updateForm({ dimH: e.target.value })}
-                      className="w-full bg-slate-100/50 border border-slate-200 p-3.5 rounded-2xl text-center text-sm font-bold shadow-inner outline-none focus:bg-white focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
                 <div className="space-y-2">
                     <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一產品備註</h3>
                     <textarea 

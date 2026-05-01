@@ -223,7 +223,9 @@ export const useAdminPhotos = (
                         // manufacturerId is deliberately NOT updated by AI automatically
                         tagIds: mergedTagIds,
                         name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
-                        model_number: p.model_number || result.modelNumber || null,
+                        description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+                        manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
+                        model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
                         dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
                         updatedAt: new Date().toISOString(),
                         isAnalyzing: false 
@@ -325,7 +327,9 @@ export const useAdminPhotos = (
             // manufacturerId stays as is
             tagIds: mergedTagIds,
             name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
-            model_number: p.model_number || result.modelNumber || null,
+            description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+            manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
+            model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
             dimensions: (result.dimensions && result.dimensions.length > 0)
               ? result.dimensions
               : p.dimensions,
@@ -654,7 +658,9 @@ export const useAdminPhotos = (
             categoryId: result.categoryId || p.categoryId,
             // manufacturerId stays as is
             tagIds: finalTagIds,
-            model_number: result.modelNumber || p.model_number,
+            description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+            manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
+            model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
             dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
             updatedAt: new Date().toISOString()
           };

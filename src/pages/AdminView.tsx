@@ -328,8 +328,14 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
           showToast(`標籤 "${normalized}" 已存在`);
           return;
         }
-        await addTag(normalized);
-        showToast(`已新增標籤 "${normalized}"`);
+        const saved = await addTag(normalized);
+        if (saved) {
+           updateForm((prev: any) => ({ 
+             ...prev, 
+             tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
+           }));
+           showToast(`已新增標籤 "${normalized}"`);
+        }
       }
     });
   }, [setPromptDialog, tags, addTag, updateForm, showToast]);

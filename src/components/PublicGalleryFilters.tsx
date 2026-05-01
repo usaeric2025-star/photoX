@@ -80,10 +80,10 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-1.5 px-0.5">
+        <div className="grid grid-cols-5 gap-1 px-0.5">
             <button 
               onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); onScrollToTop(); }}
-              className={`w-full py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+              className={`w-full py-1 rounded-lg text-[8px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
             >
               {t.allCats}
             </button>
@@ -105,7 +105,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       setSelectedSubId(null);
                       onScrollToTop();
                     }}
-                    className={`w-full py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                    className={`w-full py-1 rounded-lg text-[9px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
                   >
                     {displayName}
                   </button>
@@ -114,28 +114,28 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
         </div>
       </div>
       
-      <div className="pt-2 border-t border-[#1D3557]/5 space-y-2">
+      <div className="pt-3 border-t-2 border-[#1D3557]/5 space-y-3">
         <AnimatePresence>
           {selectedCatCode && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }} 
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex flex-wrap gap-1.5 pb-1"
+                className="flex flex-wrap gap-2 pb-2 px-1"
               >
                 {(() => {
-                  const currentCat = categories.find(c => c.id === selectedCatCode || c.code === selectedCatCode);
+                  const currentCat = categories.find(c => (c.id === selectedCatCode || c.code === selectedCatCode));
                   const subList = currentCat?.subcategories || [];
                   return Array.from(new Map(subList.map((s: any) => [s.id, s])).values())
                     .filter((s: any) => {
                       const n = (s.name || '').toLowerCase();
-                      return !['all', '全部', '全部产品'].includes(n);
+                      return !['all', '全部', '全部產品', '全部产品'].includes(n);
                     })
                     .map((sub: any) => (
                     <button 
                       key={sub.id}
                       onClick={() => { setSelectedSubId(selectedSubId === sub.id ? null : sub.id); onScrollToTop(); }}
-                      className={`px-3 py-1 rounded-lg text-[10px] font-medium tracking-wide whitespace-nowrap border transition-all ${selectedSubId === sub.id ? 'bg-[#D4A853] border-[#D4A853] text-white' : 'bg-white/50 border-[#1D3557]/5 text-[#1D3557]/60'}`}
+                      className={`px-4 py-1.5 rounded-xl text-[10px] font-bold tracking-wide whitespace-nowrap border-2 transition-all ${selectedSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white/80 border-slate-100 text-slate-500 hover:border-slate-300'}`}
                     >
                       {sub.name}
                     </button>
@@ -145,8 +145,8 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             )}
           </AnimatePresence>
 
-        <div className="relative bg-white/40 rounded-2xl p-1.5 border border-white shadow-sm overflow-hidden">
-          <div className="flex flex-wrap gap-1 items-start max-h-[4.5rem] overflow-y-auto pb-1 content-start pr-1">
+        <div className="relative bg-slate-100/50 rounded-[2rem] p-2 border-2 border-white shadow-[inner_0_2px_4px_rgba(0,0,0,0.02)] overflow-hidden">
+          <div className="flex flex-wrap gap-1.5 items-start max-h-[8rem] overflow-y-auto pb-6 content-start px-2 pt-2 scrollbar-hide">
               {sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = selectedTagIds.includes(strTagId);
@@ -165,25 +165,25 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       });
                     }}
                     className={cn(
-                      "px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all border shadow-sm flex items-center gap-1.5",
+                      "px-3.5 py-2 rounded-2xl text-[11px] font-black transition-all border-2 shadow-sm flex items-center gap-2",
                       isSelected 
-                        ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' 
-                        : 'bg-white/80 border-[#1D3557]/10 text-[#1D3557]/60 hover:bg-white',
+                        ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6] scale-105 z-10' 
+                        : 'bg-white border-slate-100 text-[#1D3557]/40 hover:text-[#1D3557] hover:border-[#1D3557]/20',
                       isHot && !isSelected && "border-amber-200/50 bg-amber-50/80 text-amber-700/80 hot-tag-breath",
-                      isHot && isSelected && "ring-2 ring-amber-400/30"
+                      isHot && isSelected && "ring-4 ring-amber-400/20"
                     )}
                   >
                     <span className={cn(
-                      "w-1 h-1 rounded-full",
-                      isSelected ? (showHotEffects ? "bg-amber-400 animate-pulse" : "bg-slate-400") : (isHot ? "bg-amber-400/60" : "bg-[#1D3557]/20")
+                      "w-2 h-2 rounded-full",
+                      isSelected ? (showHotEffects ? "bg-amber-400 animate-pulse" : "bg-white") : (isHot ? "bg-amber-400" : "bg-slate-200")
                     )} />
-                    #{toTitleCase(tag.name)}
-                    {isHot && !isSelected && <span className="text-[7px] bg-amber-400 text-white px-1 py-0.5 rounded-full scale-90 origin-left font-black tracking-tighter">HOT</span>}
+                    {toTitleCase(tag.name)}
+                    {isHot && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-2 py-0.5 rounded-full font-black tracking-tighter">HOT</span>}
                   </button>
                 );
               })}
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-white/40 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-slate-100/80 to-transparent pointer-events-none" />
         </div>
       </div>
     </div>

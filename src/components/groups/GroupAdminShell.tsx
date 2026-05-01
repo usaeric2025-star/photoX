@@ -260,9 +260,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       <AnimatePresence mode="wait">
         {activeGroupId !== null && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[200] bg-[#FDFAF6] overflow-y-auto pt-safe flex flex-col"
           >
            {/* Top Header */}

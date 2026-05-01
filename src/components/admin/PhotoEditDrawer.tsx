@@ -240,7 +240,19 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   setPromptDialog({
                     title: '新增标签',
                     message: '输入标签名称',
-                    onSubmit: (name) => addTag(name)
+                    onSubmit: async (name) => {
+                      const trimmed = name.trim();
+                      if (!trimmed) return;
+                      const saved = await addTag(trimmed);
+                      if (saved) {
+                         const nextTagIds = [...new Set([...(formState.tagIds || []), String(saved.id)])];
+                         updateForm({ tagIds: nextTagIds });
+                         if (props.editPhotoId) {
+                           // If we are editing, we also want to persist this specifically to the photo
+                           // but Save button will handle it.
+                         }
+                      }
+                    }
                   });
                 }}
                 onRenameTagRequest={(tag) => {
