@@ -177,6 +177,11 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   if (aPinned && !bPinned) return -1;
                   if (!aPinned && bPinned) return 1;
                   
+                  const aHot = hotTagsSet.has(String(a.id));
+                  const bHot = hotTagsSet.has(String(b.id));
+                  if (aHot && !bHot) return -1;
+                  if (!aHot && bHot) return 1;
+                  
                   return 0;
                 });
               }, [sortedTags, settings?.pinnedTags, hotTagsSet]).map(tag => {
