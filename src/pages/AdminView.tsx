@@ -572,6 +572,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
                 setLightboxIndex={() => {}}
                 isAdminMode={true}
+                isStaffMode={true}
                 onEditPhoto={(p) => { setEditPhotoId(p.id); }}
                 onLongPressStart={() => {}}
                 onLongPressEnd={() => {}}
@@ -591,11 +592,22 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 lang={lang}
                 t={t}
                 categories={categories}
+                manufacturers={manufacturers}
                 allTags={tags}
                 tagMap={tagIdToNameMap as any}
                 onBatchAiAnalyze={handleGroupAiIdentify}
                 onAiAnalyze={(p) => {
                   handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id);
+                }}
+                onToggleHidden={async (photo) => {
+                  const newStatus = !photo.isHidden;
+                  import('../services/photoService').then(async (m) => {
+                    try {
+                      await m.updatePhoto(photo.id, { isHidden: newStatus }, setPhotos);
+                    } catch (e) {
+                      console.error("[ERROR] Failed to toggle hidden in AdminView:", e);
+                    }
+                  });
                 }}
               />
             )}

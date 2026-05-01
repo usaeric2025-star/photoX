@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup } from '../types';
+import { PhotoLightbox } from './PhotoLightbox';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
 
@@ -114,117 +115,41 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
              onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
            />
 
-           {/* Public Lightbox overlay */}
+           {/* Unified Photo Lightbox */}
            <AnimatePresence>
              {focusedGroupPhotoId && (() => {
                  const currentIndex = activeGroupPhotos.findIndex(p => p.id === focusedGroupPhotoId);
                  const photo = activeGroupPhotos[currentIndex];
                  if (!photo) return null;
 
-                 const handlePrev = (e: React.MouseEvent) => {
-                   e.stopPropagation();
-                   const prevIndex = currentIndex > 0 ? currentIndex - 1 : activeGroupPhotos.length - 1;
-                   setFocusedGroupPhotoId(activeGroupPhotos[prevIndex].id);
-                 };
-
-                 const handleNext = (e: React.MouseEvent) => {
-                   e.stopPropagation();
-                   const nextIndex = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
-                   setFocusedGroupPhotoId(activeGroupPhotos[nextIndex].id);
-                 };
-
                  return (
-               <motion.div 
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 1 }}
-                 exit={{ opacity: 0 }}
-                 className="fixed inset-0 z-[400] bg-black/95 backdrop-blur-xl flex items-center justify-center p-0 md:p-6 lg:p-12 overflow-hidden"
-                 onClick={() => setFocusedGroupPhotoId(null)}
-               >
-                 <div className="w-full h-full flex flex-col md:flex-row relative">
-                   <button className="absolute top-4 right-4 z-50 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-white/20 transition-colors backdrop-blur-md" onClick={() => setFocusedGroupPhotoId(null)}>
-                     <X size={24} />
-                   </button>
-                   
-                   <div className="flex-1 w-full h-[60vh] md:h-full flex flex-col items-center justify-center p-4 relative group">
-                     {activeGroupPhotos.length > 1 && (
-                       <button onClick={handlePrev} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-black/70">
-                         <ChevronLeft size={24} />
-                       </button>
-                     )}
-                     {activeGroupPhotos.length > 1 && (
-                       <button onClick={handleNext} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity z-20 hover:bg-black/70">
-                         <ChevronRight size={24} />
-                       </button>
-                     )}
-                     <img 
-                       src={photo.uri || photo.image_url} 
-                       className="max-w-full max-h-full object-contain shadow-2xl rounded-lg"
-                       referrerPolicy="no-referrer"
-                       onClick={(e) => e.stopPropagation()}
-                     />
-                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-white/80 text-xs font-normal font-mono z-20">
-                       {currentIndex + 1} / {activeGroupPhotos.length}
-                     </div>
-                   </div>
-
-                   <div 
-                     className="w-full md:w-80 lg:w-96 bg-white md:rounded-3xl p-6 flex flex-col gap-6 h-[40vh] md:h-auto md:max-h-full overflow-y-auto rounded-t-3xl shadow-2xl relative z-10"
-                     onClick={(e) => e.stopPropagation()}
-                   >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-base font-semibold text-slate-800 tracking-tight">照片資訊</h3>
-                          <button onClick={() => setFocusedGroupPhotoId(null)} className="md:hidden w-8 h-8 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center">
-                            <ChevronDown size={18} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-1">
-                          <label className="text-xs font-medium text-slate-400">標籤</label>
-                          <div className="flex flex-wrap gap-1.5 border-b border-slate-50 pb-4">
-                             {photo.tagIds && photo.tagIds.length > 0 ? photo.tagIds.map(tid => (
-                               <span key={tid} className="text-xs font-normal text-slate-600 bg-slate-100 rounded px-2 py-0.5">
-                                  {props.tagMap?.[tid] || tid}
-                               </span>
-                             )) : <span className="text-sm font-normal text-slate-600">-</span>}
-                          </div>
-                        </div>
-
-                        <div className="space-y-1 pt-1">
-                          <label className="text-xs font-medium text-slate-400">型號</label>
-                          <div className="flex items-center">
-                             <span className="text-sm font-normal text-slate-700">{photo.model_number || '-'}</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1 pt-1 border-t border-slate-50">
-                          <label className="text-xs font-medium text-slate-400">尺寸</label>
-                          <div className="flex items-center">
-                             <span className="text-sm font-normal text-slate-700 flex items-center gap-1">
-                                {photo.dimensions?.[0] ? `📐 ${(() => {
-                                    let s = photo.dimensions[0].label || '';
-                                    if (!/(cm|mm|inch)/i.test(s)) s += ' ' + (photo.dimensions[0].unit || 'cm');
-                                    return s;
-                                  })()}` : '-'}
-                             </span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1 pt-1 border-t border-slate-50">
-                          <label className="text-xs font-medium text-slate-400">備註</label>
-                          <div className="flex items-start">
-                             <div className="text-sm font-normal text-slate-600 flex items-start gap-1 whitespace-pre-wrap">
-                               {photo.description_translations?.[props.lang as 'zh'|'en'|'ms'] || photo.description ? `📝 ${photo.description_translations?.[props.lang as 'zh'|'en'|'ms'] || photo.description}` : '-'}
-                             </div>
-                          </div>
-                        </div>
-                      </div>
-                   </div>
-                 </div>
-               </motion.div>
+                    <PhotoLightbox 
+                      photo={photo}
+                      displayPhotos={activeGroupPhotos}
+                      index={currentIndex}
+                      onClose={() => setFocusedGroupPhotoId(null)}
+                      onPrev={() => {
+                        const prev = currentIndex > 0 ? currentIndex - 1 : activeGroupPhotos.length - 1;
+                        setFocusedGroupPhotoId(activeGroupPhotos[prev].id);
+                      }}
+                      onNext={() => {
+                        const next = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
+                        setFocusedGroupPhotoId(activeGroupPhotos[next].id);
+                      }}
+                      t={props.t}
+                      lang={props.lang || 'zh'}
+                      categories={props.categories || []}
+                      manufacturers={props.manufacturers || []}
+                      tagMap={props.tagMap || {}}
+                      isAdminMode={isAdminMode}
+                      isStaffMode={props.isStaffMode || false}
+                      contactWhatsApp={props.contactWhatsApp || (() => {})}
+                      onEditPhoto={props.onEditPhoto}
+                      onToggleHidden={props.onToggleHidden}
+                      onAiAnalyze={props.onAiAnalyze}
+                      onCancelAnalyze={props.onCancelAnalyze}
+                      isAnalyzing={props.isAnalyzing}
+                    />
                  );
              })()}
            </AnimatePresence>

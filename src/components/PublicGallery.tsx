@@ -491,6 +491,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
         isAdminMode={!!isAdminMode}
+        isStaffMode={isStaffMode}
         onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
         onLongPressStart={isAdminMode ? startLongPress : undefined}
         onLongPressEnd={isAdminMode ? endLongPress : undefined}
@@ -505,11 +506,23 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         lang={lang}
         t={t}
         categories={categories}
+        manufacturers={context.manufacturers}
         tagMap={tagMap}
         allTags={tags}
         isMultiSelect={activeIsMultiSelect}
         setAlertDialog={setAlertDialog}
         shareGroup={shareGroup}
+        contactWhatsApp={() => setShowWhatsAppChoice(true)}
+        onToggleHidden={async (photo) => {
+           const newStatus = !photo.isHidden;
+           import('../services/photoService').then(async (m) => {
+              try {
+                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+              } catch (e) {
+                console.error("[ERROR] Failed to toggle hidden:", e);
+              }
+           });
+        }}
       />
 
       {/* Dialogs */}
