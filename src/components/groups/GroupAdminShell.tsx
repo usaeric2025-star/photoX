@@ -591,15 +591,19 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                             value={groupCover?.categoryId || ''}
                             onChange={async (e) => {
                               const catId = e.target.value;
-                              if (confirm('是否將此分類同步到整個群組的所有照片？')) {
-                                setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: catId } : p));
-                                try {
-                                  await Promise.all(activeGroupPhotos.map(p => updatePhotoInCloud(p.id, { category_id: catId })));
-                                  showToast('全組分類已同步');
-                                } catch (err: any) {
-                                  setAlertDialog?.({ title: '同步失敗', message: err.message });
+                              setAlertDialog?.({
+                                title: '強制同步分類 / Category Sync',
+                                message: '是否將此分類同步到整個群組的所有照片？這將覆蓋現有設置。',
+                                onConfirm: async () => {
+                                  setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, categoryId: catId } : p));
+                                  try {
+                                    await Promise.all(activeGroupPhotos.map(p => updatePhotoInCloud(p.id, { category_id: catId })));
+                                    showToast('全組分類已同步');
+                                  } catch (err: any) {
+                                    setAlertDialog?.({ title: '同步失敗', message: err.message });
+                                  }
                                 }
-                              }
+                              });
                             }}
                             className="w-full bg-white border-2 border-blue-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none"
                           >
@@ -614,17 +618,20 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                            <label className="text-[10px] font-bold text-blue-400 uppercase">標籤庫同步 (Tag Sync)</label>
                            <button 
                             onClick={async () => {
-                              if (confirm('這將把當前封面的所有標籤同步到群組內的所有照片，確定嗎？')) {
-                                const coverTags = groupCover?.tagIds || [];
-                                setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, tagIds: coverTags } : p));
-                                try {
-                                  // Update photo_tags service would be better but batching updatePhotoInCloud is legacy compatible
-                                  await Promise.all(activeGroupPhotos.map(p => savePhotoToCloud(p.userId || 'default', { ...p, tagIds: coverTags })));
-                                  showToast('全組標籤已同步');
-                                } catch (err: any) {
-                                  setAlertDialog?.({ title: '同步失敗', message: err.message });
+                              setAlertDialog?.({
+                                title: '標籤庫同步 / Tag Sync',
+                                message: '這將把當前封面的所有標籤同步到群組內的所有照片，確定嗎？',
+                                onConfirm: async () => {
+                                  const coverTags = groupCover?.tagIds || [];
+                                  setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, tagIds: coverTags } : p));
+                                  try {
+                                    await Promise.all(activeGroupPhotos.map(p => savePhotoToCloud(p.userId || 'default', { ...p, tagIds: coverTags })));
+                                    showToast('全組標籤已同步');
+                                  } catch (err: any) {
+                                    setAlertDialog?.({ title: '同步失敗', message: err.message });
+                                  }
                                 }
-                              }
+                              });
                             }}
                             className="w-full py-3 bg-white border-2 border-blue-200 rounded-xl text-blue-600 text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all shadow-sm"
                           >
@@ -641,11 +648,15 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                        <button 
                          onClick={() => {
                            if (onUngroup && activeGroupId) {
-                             if (confirm('確定要解散整個群組嗎？照片將變回單張展示。')) {
-                               onUngroup(activeGroupId);
-                               setActiveGroupId(null);
-                               setShowGroupSettings(false);
-                             }
+                             setAlertDialog?.({
+                               title: '確定要解散整個群組？',
+                               message: '解散後，群組關係、排序信息及DNA數據將被移除，照片將變回單張展示。',
+                               onConfirm: () => {
+                                 onUngroup(activeGroupId);
+                                 setActiveGroupId(null);
+                                 setShowGroupSettings(false);
+                               }
+                             });
                            }
                          }}
                          className="w-full py-4 rounded-2xl border-2 border-red-50 border-dashed text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center gap-2 font-black text-xs uppercase"

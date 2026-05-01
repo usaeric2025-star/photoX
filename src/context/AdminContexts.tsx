@@ -87,7 +87,7 @@ export const useAdminPhoto = () => {
 export const useOptionalAdminPhoto = () => useContext(AdminPhotoContext);
 
 // --- AdminUIContext ---
-interface AdminUIContextType {
+export interface AdminUIContextType {
   activeScreen: string;
   setActiveScreen: (s: string) => void;
   editPhotoId: string | null;
@@ -95,8 +95,8 @@ interface AdminUIContextType {
   batchEditIds: string[] | null;
   setBatchEditIds: (ids: string[] | null) => void;
   
-  alertDialog: { title: string, message: string } | null;
-  setAlertDialog: (d: { title: string, message: string } | null) => void;
+  alertDialog: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void } | null;
+  setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void } | null) => void;
   promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
   setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
   

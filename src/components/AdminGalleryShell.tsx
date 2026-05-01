@@ -25,7 +25,6 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   const adminPhoto = useOptionalAdminPhoto();
   const adminUI = useOptionalAdminUI();
   const adminSession = useOptionalAdminSession();
-  const [confirmDelete, setConfirmDelete] = React.useState<boolean>(false);
   
   const { 
     photos, 
@@ -86,17 +85,38 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     }
   };
 
-  const handleBatchDelete = async () => {
-    if (selectedIds.length > 0) {
-      setConfirmDelete(true);
-    }
+  const handleBatchDelete = () => {
+    if (selectedIds.length === 0) return;
+    
+    adminUI?.setAlertDialog({
+      title: `確定要刪除這 ${selectedIds.length} 張照片嗎？`,
+      message: '刪除後無法恢復，雲端的文件也將被移除。',
+      onConfirm: async () => {
+        try {
+          await adminPhoto?.deletePhoto(selectedIds);
+          clearSelection();
+          adminUI?.showToast(`已成功刪除 ${selectedIds.length} 張照片`, 'success');
+        } catch (e: any) {
+          adminUI?.setAlertDialog({ title: '刪除失敗', message: e.message });
+        }
+      }
+    });
   };
 
-  const executeBatchDelete = async () => {
-    if (selectedIds.length > 0) {
-      await adminPhoto?.deletePhoto(selectedIds);
-      clearSelection();
-      setConfirmDelete(false);
+  const handleBatchToggleVisibility = async (hidden: boolean) => {
+    if (selectedIds.length === 0) return;
+    
+    const count = selectedIds.length;
+    // Optimistic UI
+    setPhotos(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, isHidden: hidden } : p));
+    
+    try {
+      await Promise.all(selectedIds.map(id => updatePhotoInCloud(id, { is_hidden: hidden, updated_at: new Date().toISOString() })));
+      adminUI?.showToast(`已${hidden ? '隱藏' : '顯示'} ${count} 張照片`, 'success');
+    } catch (e: any) {
+      // Revert
+      setPhotos(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, isHidden: !hidden } : p));
+      adminUI?.setAlertDialog({ title: '操作失敗', message: '部分照片更新失敗。' });
     }
   };
 
@@ -190,28 +210,6 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
            <button onClick={clearSelection} className="p-2 text-white/40 hover:text-white transition-colors"><X size={18} /></button>
         </div>
       )}
-
-      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认批量删除</AlertDialogTitle>
-            <AlertDialogDescription>
-              确定要删除选中的 {selectedIds.length} 张照片吗？此操作无法撤销。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>
-              取消 / CANCEL
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              variant="destructive"
-              onClick={executeBatchDelete}
-            >
-              确认删除 / DELETE
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

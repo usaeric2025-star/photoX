@@ -27,7 +27,7 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { useAdminCore } from '../hooks/useAdminCore';
 import { translations, LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
-import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
+import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, AdminUIContextType } from '../context/AdminContexts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -117,25 +117,28 @@ export default function AdminView() {
     });
   };
 
-  const uiValueForLogin = React.useMemo(() => ({
-    alertDialog,
-    setAlertDialog,
-    promptDialog,
-    setPromptDialog,
-    activeScreen,
-    setActiveScreen: (_: any) => {},
-    editPhotoId,
-    setEditPhotoId: (_: string | null) => {},
-    batchEditIds: null,
-    setBatchEditIds: (_: string[] | null) => {},
-    toast: null,
-    showToast: (_msg: string, _type: 'success' | 'error' = 'success') => {},
-    loadingState: 'idle' as const,
-    setLoadingState: (_: any) => {},
-    batchProgress: { current: 0, total: 0 },
-    aiDebugInfo: null,
-    abortAnalysis: () => {}
-  }), [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen]);
+  const uiValueForLogin = React.useMemo<AdminUIContextType>(() => {
+    const errorGuard = (name: string) => () => {
+      console.error(`Blocked call to ${name} in login context`);
+      throw new Error(`[Architecture Error] Illegal call to "${name}" before login.`);
+    };
+    return {
+      alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen,
+      setActiveScreen: errorGuard('setActiveScreen'),
+      editPhotoId,
+      setEditPhotoId: errorGuard('setEditPhotoId'),
+      batchEditIds: null,
+      setBatchEditIds: errorGuard('setBatchEditIds'),
+      toast: null,
+      showToast: errorGuard('showToast'),
+      loadingState: 'idle' as const,
+      setLoadingState: errorGuard('setLoadingState'),
+      isAnalyzing: false,
+      batchProgress: { current: 0, total: 0 },
+      aiDebugInfo: null,
+      abortAnalysis: errorGuard('abortAnalysis')
+    };
+  }, [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen, editPhotoId]);
 
   if (!authChecked) {
     return (
@@ -374,29 +377,44 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   );
 
   const handleDeletePhotos = useCallback(async (ids: string[]) => {
-    try {
-      for (const id of ids) {
-        await deletePhoto(id, true);
+    if (ids.length === 0) return;
+    
+    setAlertDialog({
+      title: `確定要批量刪除 ${ids.length} 張照片嗎？`,
+      message: '這將永久刪除選中的照片，此操作不可撤銷。',
+      onConfirm: async () => {
+        try {
+          for (const id of ids) {
+            await deletePhoto(id, true);
+          }
+          showToast('批量刪除成功', 'success');
+          setEditPhotoId(null);
+          setSelectedIds([]);
+          setIsMultiSelect(false);
+        } catch (err: any) {
+          console.error("[ERROR] Batch delete failed:", err);
+          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+        }
       }
-      showToast('批量刪除成功', 'success');
-      setEditPhotoId(null);
-      setSelectedIds([]);
-      setIsMultiSelect(false);
-    } catch (err: any) {
-      console.error("[ERROR] Batch delete failed:", err);
-      setAlertDialog({ title: '删除失败', message: err.message || String(err) });
-    }
+    });
   }, [deletePhoto, setAlertDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast]);
   
   const handleDeletePhoto = useCallback(async (id: string) => {
-    try {
-      await deletePhoto(id);
-      setEditPhotoId(null);
-    } catch (err: any) {
-      console.error("[ERROR] Delete failed:", err);
-      setAlertDialog({ title: '删除失败', message: err.message || String(err) });
-    }
-  }, [deletePhoto, setAlertDialog, setEditPhotoId]);
+    setAlertDialog({
+      title: '確定要刪除這張照片嗎？',
+      message: '這將永久刪除該產品信息及雲端資源。',
+      onConfirm: async () => {
+        try {
+          await deletePhoto(id);
+          setEditPhotoId(null);
+          showToast('刪除成功', 'success');
+        } catch (err: any) {
+          console.error("[ERROR] Delete failed:", err);
+          setAlertDialog({ title: '删除失败', message: err.message || String(err) });
+        }
+      }
+    });
+  }, [deletePhoto, setAlertDialog, setEditPhotoId, showToast]);
   
   const handleDeleteTag = useCallback(async (id: string) => {
     setLoadingState('syncing');
@@ -474,7 +492,12 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
             {/* 全局动态 AlertDialog 渲染器 */}
             <AlertDialog 
               open={!!alertDialog} 
-              onOpenChange={(open) => !open && setAlertDialog(null)}
+              onOpenChange={(open) => {
+                if (!open) {
+                  if (alertDialog?.onCancel) alertDialog.onCancel();
+                  setAlertDialog(null);
+                }
+              }}
             >
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -484,14 +507,26 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>
-                    取消 / CANCEL
-                  </AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={() => setAlertDialog(null)}
-                  >
-                    确定 / OK
-                  </AlertDialogAction>
+                  {alertDialog?.onConfirm ? (
+                    <>
+                      <AlertDialogCancel onClick={() => {
+                        if (alertDialog.onCancel) alertDialog.onCancel();
+                      }}>
+                        取消 / CANCEL
+                      </AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => {
+                          if (alertDialog.onConfirm) alertDialog.onConfirm();
+                        }}
+                      >
+                        确定 / OK
+                      </AlertDialogAction>
+                    </>
+                  ) : (
+                    <AlertDialogAction onClick={() => setAlertDialog(null)}>
+                      确定 / OK
+                    </AlertDialogAction>
+                  )}
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
