@@ -14,6 +14,7 @@ export default defineConfig(({mode}) => {
       react(), 
       tailwindcss(),
     ],
+    base: './',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',

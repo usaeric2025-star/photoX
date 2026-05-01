@@ -95,7 +95,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
                 className="aspect-square rounded-xl overflow-hidden relative"
                 onTouchStart={() => {
                    longPressTimers.current[photo.id] = setTimeout(() => {
-                        onPhotoContextMenu?.({} as any, photo);
+                        onPhotoContextMenu?.({ preventDefault: () => {} } as any, photo);
                    }, 350);
                 }}
                 onTouchMove={() => {

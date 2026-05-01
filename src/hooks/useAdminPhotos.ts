@@ -173,7 +173,8 @@ export const useAdminPhotos = (
     const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
     const unProcessed = photos.filter(p => {
        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
-       return (!p.categoryId || rawTagIds.length < 2 || !p.name) && !p.isAnalyzing;
+       const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
+       return (!p.categoryId || rawTagIds.length < 2 || !p.name || !hasAllTranslations) && !p.isAnalyzing;
     });
     
     if (unProcessed.length === 0) {

@@ -298,6 +298,22 @@ export const analyzeProductPhoto = async (
       }
     }
     
+    // Validate translations
+    const translations = parsedData.description_translations;
+    if (!translations || !translations.zh || !translations.en || !translations.ms) {
+       console.warn("AI response missing translations:", parsedData);
+       // Attempt fallback if description is present
+       const zh = translations?.zh || parsedData.description || '';
+       const en = translations?.en || '';
+       const ms = translations?.ms || '';
+       
+       if (!zh || !en || !ms) {
+         throw new Error('AI 返回的語言描述不完整 (ZH/EN/MS 三語均為必填)');
+       }
+       
+       parsedData.description_translations = { zh, en, ms };
+    }
+
     // Normalize dimensions: Always an array
     let safeDims: any[] = [];
     if (Array.isArray(parsedData.dimensions)) {

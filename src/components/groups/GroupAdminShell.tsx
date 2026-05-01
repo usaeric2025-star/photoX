@@ -394,7 +394,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                }
              }}
              onPhotoContextMenu={(e, photo) => {
-               e.preventDefault();
+               if (e && typeof e.preventDefault === 'function') e.preventDefault();
                if (isAdminMode) {
                  setIsMultiSelectMode(true);
                  setSelectedPhotoIds([photo.id]);
@@ -406,7 +406,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                onDragStart: () => setDraggedPhotoId(photo.id),
                onDragOver: (e: any) => e.preventDefault(),
                onDrop: (e: any) => {
-                 e.preventDefault();
+                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
                  if (draggedPhotoId) {
                    handleReorder(draggedPhotoId, photo.id);
                    setDraggedPhotoId(null);
