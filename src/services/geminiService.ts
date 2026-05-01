@@ -120,14 +120,15 @@ export const analyzeProductPhoto = async (
 - 名稱格式：英文，首字母大寫，簡潔專業
 
 【優先級 3：外觀特徵分析】
-- 生成一份詳細且專業的中文產品說明，說明家具的外觀、材質、風格或用途。
-- 務必僅使用中文 (Chinese) 生成初步描述，填入 "description" 字段。
+- 生成一份詳細且專業的【繁體中文 (Traditional Chinese)】產品說明，說明家具的外觀、材質、風格或用途。
+- 【絕對限制】：務必僅使用【繁體中文】生成初步描述，禁止使用英文，填入 "description" 字段。
 
 【核心規則 - 必須遵守】
 
 1. 語言規範：
-   - "zh": 專業中文描述
-   - 【強制要求】中文描述必須完整提供，不得為空。
+    - "description": 必須填寫專業【繁體中文】描述。不得包含任何英文句子，除非是不可翻譯的品牌名或專有名詞。
+    - 【重要】：如果 AI 模型默認生成英文，請務必將其翻譯為【繁體中文】後再填入 "description"。
+    - 【強制要求】：中文描述必須完整提供，不得為空，不得填入產品名稱，必須是描述性語句。
 
 2. 標籤（Tags）：
    - 強制選取或新增 2-3 個標籤以描述產品。
@@ -298,8 +299,12 @@ export const analyzeProductPhoto = async (
     }
     
     // description_translations initialization
-    const zh = parsedData.description || (parsedData.name || '家具产品');
-    parsedData.description_translations = { zh, en: '', ms: '' };
+    const zh = parsedData.description || '';
+    parsedData.description_translations = { 
+      zh: zh, 
+      en: '', 
+      ms: '' 
+    };
     parsedData.description = zh;
 
     // Normalize dimensions: Always an array

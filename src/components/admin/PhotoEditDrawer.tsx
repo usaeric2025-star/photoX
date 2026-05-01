@@ -239,7 +239,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 selectedTagIds={formState.tagIds} 
                 onToggleTag={handleToggleTag}
                 onUpdateTag={updateTag}
-                onDeleteTag={(tagId) => removeTagFromPhoto(editPhotoId!, tagId)}
+                onDeleteTag={(tagId) => deleteTag(tagId)}
                 onQuickAdd={() => {
                   setPromptDialog({
                     title: '新增标签',
@@ -496,8 +496,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                         onChange={e => {
                           const zh = e.target.value;
                           updateForm({ 
-                            description: zh, // Sync with main description for legacy support
-                            description_translations: { ...formState.description_translations, zh } 
+                            description: zh, 
+                            description_translations: { ...(formState.description_translations || {}), zh } 
                           });
                         }} 
                         className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
@@ -515,7 +515,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                         onChange={e => {
                           const en = e.target.value;
                           updateForm({ 
-                            description_translations: { ...formState.description_translations, en } 
+                            description_translations: { ...(formState.description_translations || {}), en } 
                           });
                         }} 
                         className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
@@ -533,7 +533,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                         onChange={e => {
                           const ms = e.target.value;
                           updateForm({ 
-                            description_translations: { ...formState.description_translations, ms } 
+                            description_translations: { ...(formState.description_translations || {}), ms } 
                           });
                         }} 
                         className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 

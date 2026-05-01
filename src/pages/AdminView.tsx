@@ -307,7 +307,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     updateTag, deleteTag, 
     addCategory, updateCategory, deleteCategory, 
     addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag 
+    addTag, removeTagFromPhoto
   } = useAdminCategory(uiBasicValue);
 
   const { 
@@ -365,7 +365,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   const { 
     batchProgress, isImporting, importProgress, importTotal, 
     aiDebugInfo, abortAnalysis, 
-    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, 
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
     handlePhotoImport, deletePhoto 
   } = useAdminPhotos(
     user, 
@@ -453,7 +453,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     updateTag, deleteTag: handleDeleteTag, 
     updateCategory, deleteCategory, addCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag,
+    addTag, removeTagFromPhoto,
     quickAddTag,
     quickAddManufacturer
   }), [

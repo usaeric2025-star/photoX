@@ -99,6 +99,10 @@ export const useAdminCore = (
         if (result.manualCode && (!formState.manual_code || !formState.manual_code.trim())) updates.manual_code = result.manualCode;
         if (result.description && (!formState.description || !formState.description.trim())) updates.description = result.description;
         
+        if (result.description_translations) {
+          updates.description_translations = result.description_translations;
+        }
+        
         updateFormFn(updates);
         
         showToast('AI 已帮您自动填入数据。', 'success');

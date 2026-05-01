@@ -71,7 +71,8 @@ export function mapSupabasePhoto(item: any): Photo {
       isHidden: item.is_hidden || false,
       userId: item.user_id,
       uri: item.image_url,
-      price: item.price || ''
+      price: item.price || '',
+      description_translations: item.description_translations || null
     };
 }
 
@@ -141,6 +142,7 @@ export const updatePhoto = async (
   if ('groupOrder' in updates) dbUpdates.group_order = updates.groupOrder;
   if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
   if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
+  if ('description_translations' in updates) dbUpdates.description_translations = updates.description_translations;
   
   // Also copy all other standard string fields
   const standardFields = ['name', 'description', 'manual_code', 'model_number', 'dimensions'];
@@ -240,6 +242,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     thumb_url: photo.thumb_url || null,
     dimensions: photo.dimensions || null,
     model_number: photo.model_number || '',
+    description_translations: photo.description_translations || null,
     created_at: photo.createdAt,
     group_id: photo.groupId || null,
     is_group_cover: photo.isGroupCover || false,
@@ -365,6 +368,7 @@ export const savePhotosToCloudBatch = async (
       thumb_url: photo.thumb_url || null,
       dimensions: photo.dimensions || null,
       model_number: photo.model_number || '',
+      description_translations: photo.description_translations || null,
       created_at: photo.createdAt,
       group_id: photo.groupId || null,
       is_group_cover: photo.isGroupCover || false,
