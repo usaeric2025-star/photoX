@@ -54,6 +54,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   isAdminMode, onEditPhoto,
   onBatchEdit, onUngroup, onAddPhotoToGroup,
   setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
+  lang = 'zh',
   t, categories, tagMap, allTags = [],
   setAlertDialog
 }) => {
@@ -506,14 +507,52 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">共同故事/說明 (Series Story)</label>
-                          <textarea 
-                            value={groupData?.description || ''}
-                            onChange={(e) => handleUpdateGroupData({ description: e.target.value })}
-                            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
-                            placeholder="描述這個系列的設計理念..."
-                          />
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列共同故事 (中文)</label>
+                            <textarea 
+                              value={groupData?.description_translations?.zh || groupData?.description || ''}
+                              onChange={(e) => {
+                                const zh = e.target.value;
+                                handleUpdateGroupData({ 
+                                  description: zh, 
+                                  description_translations: { ...groupData?.description_translations, zh } 
+                                });
+                              }}
+                              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                              placeholder="描述這個系列的設計理念 (中文)..."
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Series Story (English)</label>
+                            <textarea 
+                              value={groupData?.description_translations?.en || ''}
+                              onChange={(e) => {
+                                const en = e.target.value;
+                                handleUpdateGroupData({ 
+                                  description_translations: { ...groupData?.description_translations, en } 
+                                });
+                              }}
+                              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                              placeholder="Describe the series design concept (English)..."
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Cerita Siri (Malay)</label>
+                            <textarea 
+                              value={groupData?.description_translations?.ms || ''}
+                              onChange={(e) => {
+                                const ms = e.target.value;
+                                handleUpdateGroupData({ 
+                                  description_translations: { ...groupData?.description_translations, ms } 
+                                });
+                              }}
+                              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                              placeholder="Terangkan konsep reka bentuk siri (Bahasa Melayu)..."
+                            />
+                          </div>
                         </div>
                       </div>
                     </section>
@@ -865,20 +904,65 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                           )}
                         </div>
 
-                        <div className="space-y-2 pt-2 border-t border-slate-50">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">產品說明 (Description)</label>
+                        <div className="space-y-4 pt-2 border-t border-slate-50">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">產品說明 (Description)</label>
                           {isAdminMode ? (
-                            <textarea 
-                              defaultValue={photo.description || ''}
-                              placeholder="輸入產品說明..."
-                              onBlur={(e) => {
-                                const val = e.target.value.trim();
-                                if (val !== (photo.description || '')) persistPhotoChange(photo.id, { description: val });
-                              }}
-                              className="w-full text-sm font-bold text-slate-600 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 h-24 outline-none focus:border-amber-500 transition-colors resize-none placeholder:font-normal placeholder:opacity-50"
-                            />
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-slate-300 uppercase ml-1">中文说明</span>
+                                <textarea 
+                                  defaultValue={photo.description_translations?.zh || photo.description || ''}
+                                  placeholder="輸入產品中文說明..."
+                                  onBlur={(e) => {
+                                    const val = e.target.value.trim();
+                                    const current = photo.description_translations?.zh || photo.description || '';
+                                    if (val !== current) {
+                                      persistPhotoChange(photo.id, { 
+                                        description: val,
+                                        description_translations: { ...photo.description_translations, zh: val } 
+                                      });
+                                    }
+                                  }}
+                                  className="w-full text-xs font-bold text-slate-600 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 h-20 outline-none focus:border-amber-500 transition-colors resize-none"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-slate-300 uppercase ml-1">English</span>
+                                <textarea 
+                                  defaultValue={photo.description_translations?.en || ''}
+                                  placeholder="Enter English description..."
+                                  onBlur={(e) => {
+                                    const val = e.target.value.trim();
+                                    if (val !== (photo.description_translations?.en || '')) {
+                                      persistPhotoChange(photo.id, { 
+                                        description_translations: { ...photo.description_translations, en: val } 
+                                      });
+                                    }
+                                  }}
+                                  className="w-full text-xs font-bold text-slate-600 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 h-20 outline-none focus:border-amber-500 transition-colors resize-none"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <span className="text-[9px] font-bold text-slate-300 uppercase ml-1">Malay</span>
+                                <textarea 
+                                  defaultValue={photo.description_translations?.ms || ''}
+                                  placeholder="Masukkan keterangan Bahasa Melayu..."
+                                  onBlur={(e) => {
+                                    const val = e.target.value.trim();
+                                    if (val !== (photo.description_translations?.ms || '')) {
+                                      persistPhotoChange(photo.id, { 
+                                        description_translations: { ...photo.description_translations, ms: val } 
+                                      });
+                                    }
+                                  }}
+                                  className="w-full text-xs font-bold text-slate-600 bg-slate-50 border-2 border-slate-100 rounded-xl px-3 py-2 h-20 outline-none focus:border-amber-500 transition-colors resize-none"
+                                />
+                              </div>
+                            </div>
                           ) : (
-                            <div className="text-sm font-bold text-slate-600 min-h-[40px] whitespace-pre-wrap">{photo.description || '-'}</div>
+                            <div className="text-sm font-bold text-slate-600 min-h-[40px] whitespace-pre-wrap">
+                              {photo.description_translations?.[lang as 'zh'|'en'|'ms'] || photo.description || '-'}
+                            </div>
                           )}
                         </div>
                       </div>

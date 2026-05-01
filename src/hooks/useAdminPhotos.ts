@@ -231,6 +231,7 @@ export const useAdminPhotos = (
                         tagIds: mergedTagIds,
                         name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                         description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+                        description_translations: result.description_translations || p.description_translations,
                         manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
                         model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
                         dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
@@ -335,6 +336,7 @@ export const useAdminPhotos = (
             tagIds: mergedTagIds,
             name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
             description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+            description_translations: result.description_translations || p.description_translations,
             manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
             model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
             dimensions: (result.dimensions && result.dimensions.length > 0)
@@ -491,6 +493,7 @@ export const useAdminPhotos = (
                      name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                      categoryId: finalCatId,
                      tagIds: finalTagIds,
+                     description_translations: result.description_translations || p.description_translations,
                      model_number: p.model_number || result.modelNumber || '',
                      dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions
                    };
@@ -663,6 +666,7 @@ export const useAdminPhotos = (
             // manufacturerId stays as is
             tagIds: finalTagIds,
             description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+            description_translations: result.description_translations || p.description_translations,
             manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
             model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
             dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,

@@ -55,6 +55,11 @@ export interface Photo {
   exif_data?: any | null;
   createdAt: string;
   updatedAt?: string;
+  description_translations?: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  };
   groupId?: string | null;
   isGroupCover?: boolean; // New field
   groupOrder?: number; // Order within group
@@ -75,6 +80,11 @@ export interface ProductGroup {
   id: string;
   name: string;
   description: string | null;
+  description_translations?: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  };
   colors: string[];
   materials: string[];
   cover_photo_id?: string | null;
@@ -89,6 +99,11 @@ export interface ProductFormData {
   manufacturerId: string | null;
   tagIds: string[];
   description: string;
+  description_translations: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  };
   manual_code: string;
   model_number: string;
   dimensions: {

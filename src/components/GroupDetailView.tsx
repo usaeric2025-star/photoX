@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
-import { Photo, Tag, Category } from '../types';
+import { Photo, Tag, Category, ProductGroup } from '../types';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
 
@@ -18,6 +18,18 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { activeGroupId, setActiveGroupId, photos, isAdminMode, shareGroup } = props;
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+
+  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+
+  useEffect(() => {
+    if (activeGroupId) {
+      import('../services/groupService').then(m => {
+        m.getGroupById(activeGroupId).then(data => {
+          if (data) setGroupData(data);
+        });
+      });
+    }
+  }, [activeGroupId]);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
@@ -83,6 +95,19 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 </button>
               </div>
             </div>
+            
+            {/* Series Story Section */}
+            {(groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description) && (
+              <div className="px-5 py-4 bg-white border-b border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1 h-3 bg-blue-600 rounded-full" />
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{props.t?.seriesStory || 'Series Story'}</span>
+                </div>
+                <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
+                  {groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description}
+                </p>
+              </div>
+            )}
 
            <GroupGridView 
              photos={activeGroupPhotos} 
@@ -191,9 +216,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                         <div className="space-y-1 pt-1 border-t border-slate-50">
                           <label className="text-xs font-medium text-slate-400">備註</label>
                           <div className="flex items-start">
-                             <span className="text-sm font-normal text-slate-600 flex items-start gap-1">
-                               {photo.description ? `📝 ${photo.description}` : '-'}
-                             </span>
+                             <div className="text-sm font-normal text-slate-600 flex items-start gap-1 whitespace-pre-wrap">
+                               {photo.description_translations?.[props.lang as 'zh'|'en'|'ms'] || photo.description ? `📝 ${photo.description_translations?.[props.lang as 'zh'|'en'|'ms'] || photo.description}` : '-'}
+                             </div>
                           </div>
                         </div>
                       </div>

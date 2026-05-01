@@ -115,12 +115,20 @@ export const analyzeProductPhoto = async (
 - 名稱格式：英文，首字母大寫，簡潔專業
 
 【優先級 3：外觀特徵分析】
-- 填寫一句英文描述，說明家具的外觀、材質、風格或用途
-- 填入 "description" 字段，不能為空
+- 分別生成三種語言的產品說明（中文、英文、馬來文）
+- 說明家具的外觀、材質、風格或用途
+- 填入 "description_translations" 字典：{ "zh": "...", "en": "...", "ms": "..." }
+- 同時將中文說明填入 "description" 字段
 
 【核心規則 - 必須遵守】
 
-1. 標籤（Tags）：
+1. 語言規範：
+   - "zh": 專業中文描述
+   - "en": Professional English description
+   - "ms": Penerangan profesional dalam Bahasa Melayu
+   - 【強制要求】三種語言必須完整提供，不得為空。
+
+2. 標籤（Tags）：
    - 強制選取或新增 2-3 個標籤以描述產品。
    - 【極其重要】語義去重：請仔細對比現有標籤清單 ${JSON.stringify(tagsJson)}。
    - 如果你想新增的標籤與現有標籤意思接近（例如：Marble 與 Marblelook、Sofa 與 Couches、Leather 與 Faux-leather）、或是包含關係，必須優先選擇現有標籤清單中的詞，嚴禁新增語義重複的標籤。
@@ -159,7 +167,12 @@ export const analyzeProductPhoto = async (
   "manualCode": "A-1234",
   "modelNumber": "M-5566",
   "name": "Modern Leather Sofa",
-  "description": "A sleek modern leather sofa with metal legs.",
+  "description": "這是一款帶有金屬腿的現代簡約真皮沙發，設計優雅且耐用。",
+  "description_translations": {
+    "zh": "這是一款帶有金屬腿的現代簡約真皮沙發，設計優雅且耐用。",
+    "en": "A sleek modern leather sofa with metal legs, designed for elegance and durability.",
+    "ms": "Sofa kulit moden yang kemas dengan kaki logam, direka untuk keanggunan dan ketahanan."
+  },
   "categoryId": "123e4567-e89b-12d3... (存在清單中的 UUID)",
   "tagIds": ["abc-123...", "def-456..."],
   "newTags": ["MINIMALIST"],

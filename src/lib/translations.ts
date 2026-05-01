@@ -75,6 +75,7 @@ export const translations = {
     confirmDeleteSingle: 'Are you sure you want to delete this photo?',
     saveSuccess: 'Information saved successfully!',
     refresh: 'Refresh',
+    seriesStory: 'Series Story',
   },
   zh: {
     galleryName: '画廊',
@@ -152,6 +153,7 @@ export const translations = {
     confirmDeleteSingle: '确定要删除这张照片吗？',
     saveSuccess: '信息保存成功！',
     refresh: '刷新数据',
+    seriesStory: '系列故事',
   },
   ms: {
     galleryName: 'Galeri',
@@ -229,6 +231,7 @@ export const translations = {
     confirmDeleteSingle: 'Adakah anda pasti mahu memadam foto ini?',
     saveSuccess: 'Maklumat berjaya disimpan!',
     refresh: 'Segar Semula',
+    seriesStory: 'Kisah Siri',
   }
 };
 

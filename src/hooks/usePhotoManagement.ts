@@ -10,6 +10,7 @@ const INITIAL_FORM_STATE: ProductFormData = {
   manufacturerId: null,
   tagIds: [],
   description: '',
+  description_translations: { zh: '', en: '', ms: '' },
   manual_code: '',
   model_number: '',
   dimensions: [],
@@ -95,6 +96,7 @@ export const usePhotoManagement = (
           manufacturerId: photo.manufacturerId || null,
           tagIds: rawTagIds,
           description: photo.description || '',
+          description_translations: photo.description_translations || { zh: photo.description || '', en: '', ms: '' },
           manual_code: photo.manual_code || '',
           model_number: photo.model_number || '',
           dimensions: dims as any[],
@@ -152,7 +154,7 @@ export const usePhotoManagement = (
 
   const saveNewPhoto = async () => {
     const { 
-      name, categoryId, manufacturerId, tagIds, description, 
+      name, categoryId, manufacturerId, tagIds, description, description_translations,
       manual_code, model_number, dimensions, isHidden, price,
       dimL, dimW, dimH
     } = formState;
@@ -186,6 +188,7 @@ export const usePhotoManagement = (
             manufacturerId: manufacturerId,
             tagIds: finalTagIds,
             description: description,
+            description_translations: description_translations,
             manual_code: manual_code,
             model_number: model_number,
             isHidden: isHidden,
@@ -220,6 +223,7 @@ export const usePhotoManagement = (
             image_hash: calculateMD5(newPhotoData),
             name: name || '未命名产品',
             description: description,
+            description_translations: description_translations,
             image_url: '',
             uri: newPhotoData,
             categoryId: categoryId,
@@ -252,7 +256,7 @@ export const usePhotoManagement = (
   const saveBatchEdit = async (batchIsHiddenApplied: boolean = false) => {
      if (!batchEditIds) return;
      const { 
-       name, categoryId, manufacturerId, tagIds, description, 
+       name, categoryId, manufacturerId, tagIds, description, description_translations,
        manual_code, model_number, isHidden, price
      } = formState;
 
@@ -276,6 +280,7 @@ export const usePhotoManagement = (
                   manufacturerId: manufacturerId || p.manufacturerId,
                   tagIds: (finalTagIds?.length || 0) > 0 ? finalTagIds : (Array.isArray(p.tagIds) ? p.tagIds.map(String) : []),
                   description: description || p.description,
+                  description_translations: (description_translations?.zh || description_translations?.en || description_translations?.ms) ? description_translations : p.description_translations,
                   manual_code: manual_code || p.manual_code,
                   model_number: model_number || p.model_number,
                   isHidden: batchIsHiddenApplied ? isHidden : p.isHidden,

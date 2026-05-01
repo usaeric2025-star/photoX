@@ -457,7 +457,62 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     ))}
                   </div>
 
-                  <textarea placeholder="备注信息..." value={formState.description} onChange={e => updateForm({ description: e.target.value })} className="w-full p-4 rounded-2xl border border-slate-200 h-24" />
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">中文说明</span>
+                        <div className="flex-1 h-[1px] bg-slate-100"></div>
+                      </div>
+                      <textarea 
+                        placeholder="输入中文产品说明..." 
+                        value={formState.description_translations?.zh || ''} 
+                        onChange={e => {
+                          const zh = e.target.value;
+                          updateForm({ 
+                            description: zh, // Sync with main description for legacy support
+                            description_translations: { ...formState.description_translations, zh } 
+                          });
+                        }} 
+                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">English Description</span>
+                        <div className="flex-1 h-[1px] bg-slate-100"></div>
+                      </div>
+                      <textarea 
+                        placeholder="Enter English description..." 
+                        value={formState.description_translations?.en || ''} 
+                        onChange={e => {
+                          const en = e.target.value;
+                          updateForm({ 
+                            description_translations: { ...formState.description_translations, en } 
+                          });
+                        }} 
+                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 px-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Penerangan Bahasa Melayu</span>
+                        <div className="flex-1 h-[1px] bg-slate-100"></div>
+                      </div>
+                      <textarea 
+                        placeholder="Masukkan penerangan Bahasa Melayu..." 
+                        value={formState.description_translations?.ms || ''} 
+                        onChange={e => {
+                          const ms = e.target.value;
+                          updateForm({ 
+                            description_translations: { ...formState.description_translations, ms } 
+                          });
+                        }} 
+                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
+                      />
+                    </div>
+                  </div>
 
                </div>
              )}

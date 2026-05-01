@@ -303,7 +303,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   </div>
                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                     <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
-                      {photo.description}
+                      {photo.description_translations?.[lang as 'zh'|'en'|'ms'] || photo.description}
                     </p>
                   </div>
                </div>
