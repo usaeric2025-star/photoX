@@ -39,6 +39,11 @@ import {
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
 
+const errorGuard = (name: string) => () => {
+  console.error(`Blocked call to ${name}`);
+  throw new Error(`[Architecture Error] Illegal call to "${name}".`);
+};
+
 export default function AdminView() {
   const { user, authChecked, logout } = useAuth();
   const navigate = useNavigate();
@@ -118,10 +123,6 @@ export default function AdminView() {
   };
 
   const uiValueForLogin = React.useMemo<AdminUIContextType>(() => {
-    const errorGuard = (name: string) => () => {
-      console.error(`Blocked call to ${name} in login context`);
-      throw new Error(`[Architecture Error] Illegal call to "${name}" before login.`);
-    };
     return {
       alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen,
       setActiveScreen: errorGuard('setActiveScreen'),
