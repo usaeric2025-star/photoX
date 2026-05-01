@@ -126,7 +126,9 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
   }
   
   if (!data || data.length === 0) {
-    console.warn("No photos were updated in cloud. Possible ID mismatch.", photoIds);
+    const errorMsg = "解散失敗：在雲端找不到對應的照片 ID。請嘗試重新同步或刷新頁面。 (Database match failed)";
+    console.error(errorMsg, photoIds);
+    throw new Error(errorMsg);
   } else {
     console.log(`Successfully updated ${data.length} photos in cloud.`);
   }

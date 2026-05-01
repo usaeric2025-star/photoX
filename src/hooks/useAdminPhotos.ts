@@ -578,12 +578,19 @@ export const useAdminPhotos = (
         // Update state with confirmed IDs from cloud
         setPhotos(prev => {
           const next = prev.map(p => {
-             // Match by storageId as it's the most reliable unique identifier for newly imported items
-             const found = syncedPhotos.find(s => s.storageId === p.storageId || (p.image_hash && s.image_hash === p.image_hash));
-             return found ? { ...p, id: found.id } : p;
+             // Match by storageId (local unique ref) or image_hash
+             const found = syncedPhotos.find(s => 
+               (p.storageId && s.storageId === p.storageId) || 
+               (p.image_hash && s.image_hash === p.image_hash)
+             );
+             if (found) {
+               console.log(`[Sync] Mapping local ${p.id} to cloud ${found.id}`);
+               return { ...p, id: found.id };
+             }
+             return p;
           });
           photosRef.current = next;
-          saveData('product_photos', next);
+          saveData('product_photos', next); // Force save to local storage
           return next;
         });
         

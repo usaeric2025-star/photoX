@@ -164,7 +164,11 @@ export const useAdminCore = (
         if (photoIds.length > 0) {
           // Alert if any are temp IDs
           const temps = photoIds.filter(id => String(id).startsWith('temp-'));
-          if (temps.length > 0) console.warn('[Ungroup] Found temporary IDs during disband!', temps);
+          if (temps.length > 0) {
+             console.warn('[Ungroup] Found temporary IDs during disband!', temps);
+             // If we have temp IDs, searching by image_hash as a backup might be needed in future, 
+             // but for now we expect IDs to be synced.
+          }
 
           await updatePhotosGroupInCloud(photoIds, { 
             group_id: null, 
@@ -172,13 +176,20 @@ export const useAdminCore = (
             is_group_cover: false,
             group_order: 0
           });
-          setPhotos(prev => prev.map(p => p.groupId === groupId ? { 
-            ...p, 
-            groupId: null, 
-            isPinned: false,
-            isGroupCover: false,
-            groupOrder: 0
-          } : p));
+
+          setPhotos(prev => {
+            const next = prev.map(p => p.groupId === groupId ? { 
+              ...p, 
+              groupId: null, 
+              isPinned: false,
+              isGroupCover: false,
+              groupOrder: 0
+            } : p);
+            
+            // Persist immediately to prevent state revert after refresh
+            saveData('product_photos', next);
+            return next;
+          });
         }
 
         // 2. Delete group metadata permanently
