@@ -413,14 +413,11 @@ export const savePhotosToCloudBatch = async (
     
     // Update IDs in results array
     if (savedRows) {
-      savedRows.forEach((row: any, idxOfRow: number) => {
-        // Find by image_hash within the chunk
-        const chunkRow = chunk[idxOfRow];
-        if (chunkRow) {
-           const originalIndex = i + idxOfRow;
-           if (results[originalIndex]) {
-             results[originalIndex].id = row.id;
-           }
+      savedRows.forEach((row: any) => {
+        // Find by image_hash in the results
+        const photoIndex = results.findIndex(p => p.image_hash === row.image_hash);
+        if (photoIndex !== -1) {
+          results[photoIndex].id = row.id;
         }
       });
     }

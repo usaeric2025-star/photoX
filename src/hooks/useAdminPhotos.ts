@@ -744,14 +744,18 @@ export const useAdminPhotos = (
         }
 
         // 6. Update local state with synced data
-        const syncedIds = syncedPhotos.map(p => p.id);
         const nextPhotos = photosRef.current.map(p => {
-          // If this photo was in the input list (check by original ID if it changed)
+          // If this photo was in the input list
           const originalPhoto = updatedGroupPhotos.find(up => up.id === p.id);
           if (!originalPhoto) return p;
 
-          // Find the synced version
-          const synced = syncedPhotos.find(sp => sp.storageId === p.storageId || sp.image_hash === p.image_hash);
+          // Find the synced version - STRICT MATCHING
+          const synced = syncedPhotos.find(sp => 
+            (sp.id === p.id && p.id.length > 10) || // UUID match
+            (p.storageId && sp.storageId === p.storageId) || // Local ID match
+            (p.image_hash && sp.image_hash === p.image_hash) // Hash match fallback
+          );
+
           return synced || originalPhoto;
         });
 

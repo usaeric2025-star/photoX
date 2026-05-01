@@ -627,43 +627,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                       </div>
                     </section>
 
-                    {/* Batch Actions (The "Sync" part you requested) */}
-                    <section className="space-y-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Layers size={16} className="text-blue-500" />
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">統一管理與同步 / Global Sync</h4>
-                      </div>
-                      
-                      <div className="p-4 bg-blue-50/50 rounded-2xl border-2 border-blue-100/50 space-y-4">
-                        <div className="space-y-2">
-                           <label className="text-[10px] font-bold text-blue-400 uppercase">強制同步分类 (Global Category)</label>
-                           <select 
-                            value={groupCover?.categoryId || ''}
-                            onChange={(e) => syncCategory(e.target.value)}
-                            className="w-full bg-white border-2 border-blue-100 rounded-xl p-3 text-sm font-bold text-slate-700 outline-none"
-                          >
-                            <option value="">選擇分類...</option>
-                            {categories?.map(cat => (
-                              <option key={cat.id} value={cat.id}>{cat.name}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="space-y-2">
-                           <label className="text-[10px] font-bold text-blue-400 uppercase">標籤庫同步 (Tag Sync)</label>
-                           <button 
-                            onClick={syncTags}
-                            className="w-full py-3 bg-white border-2 border-blue-200 rounded-xl text-blue-600 text-[10px] font-black hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                          >
-                            依據封面標籤同步到全組 / SYNC ALL BY COVER
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-slate-400 pl-1 leading-relaxed">
-                        注意：同步操作會直接覆蓋組內其他照片的分類與標籤设置。
-                      </p>
-                    </section>
-
+                    {/* Disband Actions */}
                     <section className="pt-6 border-t border-slate-100 space-y-4">
                        <button 
                          onClick={() => {
@@ -679,8 +643,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                                    setAlertDialog?.(null);
                                  } catch (e) {
                                    console.error('Failed to ungroup:', e);
-                                   // Error toast should be handled by the onUngroup function itself usually
-                                   // but ensuring dialog closes or shows error state might be good.
                                    setAlertDialog?.(null);
                                  }
                                }

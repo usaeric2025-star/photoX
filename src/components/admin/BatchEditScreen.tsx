@@ -194,14 +194,76 @@ export const BatchEditScreen = ({
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden space-y-4 pt-2"
               >
-                <div className="space-y-2">
-                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">統一產品備註</h3>
-                    <textarea 
-                      placeholder="輸入統一修改的備註內容..."
-                      className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium min-h-[100px]"
-                      value={formState.description}
-                      onChange={(e) => updateForm({ description: e.target.value })}
-                    />
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                      <div className="flex items-center justify-between pl-1">
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">統一產品描述 (中文) / CHINESE DESCRIPTION</h3>
+                        <button 
+                          onClick={() => updateForm({ description: '', description_translations: { ...(formState.description_translations || {}), zh: '' } })}
+                          className="text-[10px] font-bold text-red-500 hover:text-red-600 active:scale-95 transition-all"
+                        >
+                          清除 / CLEAR
+                        </button>
+                      </div>
+                      <textarea 
+                        placeholder="輸入統一修改的中文描述..."
+                        className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium min-h-[100px]"
+                        value={formState.description_translations?.zh || formState.description}
+                        onChange={(e) => {
+                          const zh = e.target.value;
+                          updateForm({ 
+                            description: zh,
+                            description_translations: { ...(formState.description_translations || {}), zh } 
+                          });
+                        }}
+                      />
+                  </div>
+
+                  <div className="space-y-2">
+                      <div className="flex items-center justify-between pl-1">
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">統一產品描述 (英文) / ENGLISH DESCRIPTION</h3>
+                        <button 
+                          onClick={() => updateForm({ description_translations: { ...(formState.description_translations || {}), en: '' } })}
+                          className="text-[10px] font-bold text-red-500 hover:text-red-600 active:scale-95 transition-all"
+                        >
+                          清除 / CLEAR
+                        </button>
+                      </div>
+                      <textarea 
+                        placeholder="輸入統一修改的英文描述..."
+                        className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium min-h-[100px]"
+                        value={formState.description_translations?.en || ''}
+                        onChange={(e) => {
+                          const en = e.target.value;
+                          updateForm({ 
+                            description_translations: { ...(formState.description_translations || {}), en } 
+                          });
+                        }}
+                      />
+                  </div>
+
+                  <div className="space-y-2">
+                      <div className="flex items-center justify-between pl-1">
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">統一產品描述 (馬來文) / MALAY DESCRIPTION</h3>
+                        <button 
+                          onClick={() => updateForm({ description_translations: { ...(formState.description_translations || {}), ms: '' } })}
+                          className="text-[10px] font-bold text-red-500 hover:text-red-600 active:scale-95 transition-all"
+                        >
+                          清除 / CLEAR
+                        </button>
+                      </div>
+                      <textarea 
+                        placeholder="輸入統一修改的馬來文描述..."
+                        className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium min-h-[100px]"
+                        value={formState.description_translations?.ms || ''}
+                        onChange={(e) => {
+                          const ms = e.target.value;
+                          updateForm({ 
+                            description_translations: { ...(formState.description_translations || {}), ms } 
+                          });
+                        }}
+                      />
+                  </div>
                 </div>
               </motion.div>
             )}
