@@ -20,6 +20,8 @@ interface TaskContextType {
   updateTask: (id: string, updates: Partial<BackgroundTask>) => void;
   removeTask: (id: string) => void;
   clearCompleted: () => void;
+  setAvoidingSelection: (isAvoiding: boolean) => void;
+  isAvoidingSelection: boolean;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -43,6 +45,8 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return [];
   });
+
+  const [isAvoidingSelection, setAvoidingSelection] = useState(false);
 
   const saveTasks = (newTasks: BackgroundTask[]) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newTasks));
@@ -112,7 +116,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <TaskContext.Provider value={{ tasks, addTask, updateTask, removeTask, clearCompleted }}>
+    <TaskContext.Provider value={{ tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection }}>
       {children}
       <BackgroundTaskPanel />
     </TaskContext.Provider>
@@ -126,7 +130,7 @@ export const useTasks = () => {
 };
 
 const BackgroundTaskPanel: React.FC = () => {
-  const { tasks, removeTask, clearCompleted } = useTasks();
+  const { tasks, removeTask, clearCompleted, isAvoidingSelection } = useTasks();
   const [isExpanded, setIsExpanded] = useState(false);
   
   const activeTasks = tasks.filter(t => t.status === 'running');
@@ -135,7 +139,7 @@ const BackgroundTaskPanel: React.FC = () => {
   if (!hasTasks) return null;
 
   return (
-    <div className="fixed bottom-6 left-6 z-[100] flex flex-col items-start gap-3">
+    <div className={`fixed ${isAvoidingSelection ? 'bottom-24' : 'bottom-6'} left-6 z-[100] flex flex-col items-start gap-3 transition-all duration-300`}>
       <AnimatePresence>
         {isExpanded && (
           <motion.div
