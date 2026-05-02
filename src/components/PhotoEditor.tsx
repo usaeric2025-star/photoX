@@ -2,15 +2,45 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as fabric from 'fabric';
 import { Upload, Download, Layout, Type, Palette, Image as ImageIcon, Sparkles, Move, X, Layers, Save, Info, Plus, ChevronDown, CheckCircle2, FileText, Package, Trash2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAdminSession } from '../context/AdminContexts';
+import { useAdminSession, useAdminUI } from '../context/AdminContexts';
 import JSZip from 'jszip';
+
+// Types for UVTS-1.1 Standard
+interface UVTSTemplate {
+  version: string;
+  style_name: string;
+  canvas: {
+    ratio: string;
+    background: string;
+  };
+  structure: {
+    info_layer: { width_pct: number; align: 'left' | 'right'; padding_pct: number };
+    image_layer: { width_pct: number; position: 'left' | 'right'; fit: string };
+  };
+  typography: {
+    [key: string]: {
+      font: string;
+      size_em: number;
+      weight: string;
+      color?: string;
+      decoration?: string;
+      symbol_logic?: { content: string; scale: number; valign: string };
+    };
+  };
+  rules: {
+    auto_shrink_text: boolean;
+    currency_symbol_spacing: string;
+  };
+}
 
 // Types for our templates
 interface AdTemplate {
   id: string;
   name: string;
   description: string;
-  apply: (canvas: fabric.Canvas, data: AdData) => void;
+  apply: (canvas: fabric.Canvas, data: AdData, uvtsData?: UVTSTemplate) => void;
+  isUVTS?: boolean;
+  uvtsData?: UVTSTemplate;
 }
 
 interface AdData {
@@ -234,10 +264,15 @@ const TEMPLATES: AdTemplate[] = [
 
 export default function PhotoEditor() {
   const { settings } = useAdminSession();
+  const { showToast } = useAdminUI();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const [activeTemplate, setActiveTemplate] = useState<string>(TEMPLATES[0].id);
   const [activeTab, setActiveTab] = useState<'templates' | 'batch' | 'content' | 'style' | 'layers'>('templates');
+  const [customTemplates, setCustomTemplates] = useState<AdTemplate[]>([]);
+  const [templateInput, setTemplateInput] = useState('');
+  
+  const allTemplates = [...TEMPLATES, ...customTemplates];
   
   // Batch Data State
   const [batchItems, setBatchItems] = useState<AdData[]>([{
@@ -281,10 +316,103 @@ export default function PhotoEditor() {
     fabricCanvas.clear();
     fabricCanvas.backgroundColor = '#ffffff';
     if (bg) fabricCanvas.backgroundImage = bg;
-    const template = TEMPLATES.find(t => t.id === activeTemplate);
-    if (template) template.apply(fabricCanvas, currentItem);
+    
+    const template = allTemplates.find(t => t.id === activeTemplate);
+    if (template) {
+      if (template.isUVTS && template.uvtsData) {
+        applyUVTSTemplate(fabricCanvas, currentItem, template.uvtsData);
+      } else {
+        template.apply(fabricCanvas, currentItem);
+      }
+    }
     fabricCanvas.renderAll();
-  }, [fabricCanvas, activeTemplate, currentItem]);
+  }, [fabricCanvas, activeTemplate, currentItem, allTemplates]);
+
+  const applyUVTSTemplate = (canvas: fabric.Canvas, data: AdData, uvts: UVTSTemplate) => {
+    const canvasWidth = canvas.width || 1000;
+    const canvasHeight = canvas.height || 1000;
+    
+    // Background color
+    canvas.backgroundColor = uvts.canvas.background;
+
+    // Info Layer Calculation
+    const infoWidth = (uvts.structure.info_layer.width_pct / 100) * canvasWidth;
+    const padding = (uvts.structure.info_layer.padding_pct / 100) * canvasWidth;
+    const align = uvts.structure.info_layer.align;
+    const startX = align === 'left' ? padding : canvasWidth - infoWidth + padding;
+
+    // 1. Render Product Name
+    const nameSpec = uvts.typography['#Product_Name'];
+    if (nameSpec) {
+      const nameText = new fabric.IText(data.productName, {
+        left: startX,
+        top: canvasHeight * 0.2,
+        fontSize: canvasWidth * 0.06 * nameSpec.size_em,
+        fontFamily: nameSpec.font,
+        fontWeight: nameSpec.weight as any,
+        fill: nameSpec.color || '#000000',
+        name: 'productName'
+      });
+      canvas.add(nameText);
+    }
+
+    // 2. Render Price
+    const priceSpec = uvts.typography['#Price_Now'];
+    if (priceSpec) {
+      const symbol = priceSpec.symbol_logic?.content || '';
+      const fullPrice = `${symbol}${data.price}`;
+      const priceText = new fabric.IText(fullPrice, {
+        left: startX,
+        top: canvasHeight * 0.4,
+        fontSize: canvasWidth * 0.1 * priceSpec.size_em,
+        fontFamily: priceSpec.font,
+        fontWeight: priceSpec.weight as any,
+        fill: priceSpec.color || '#000000',
+        name: 'price'
+      });
+      canvas.add(priceText);
+    }
+
+    // 3. Render Tagline/Spec
+    const specSpec = uvts.typography['#Product_Spec'];
+    if (specSpec) {
+      const specText = new fabric.IText(data.tagline, {
+        left: startX,
+        top: canvasHeight * 0.35,
+        fontSize: canvasWidth * 0.04 * specSpec.size_em,
+        fontFamily: specSpec.font,
+        fontWeight: specSpec.weight as any,
+        fill: specSpec.color || '#333333',
+        name: 'tagline'
+      });
+      canvas.add(specText);
+    }
+  };
+
+  const handleTemplateImport = () => {
+    try {
+      const uvts = JSON.parse(templateInput) as UVTSTemplate;
+      if (uvts.version !== 'UVTS-1.1') {
+        throw new Error('不支持的版本');
+      }
+      
+      const newTemplate: AdTemplate = {
+        id: `uvts-${Date.now()}`,
+        name: uvts.style_name,
+        description: `UVTS-1.1 导入模板 (${uvts.style_name})`,
+        isUVTS: true,
+        uvtsData: uvts,
+        apply: () => {} // Placeholder, handled in refreshCanvas
+      };
+
+      setCustomTemplates(prev => [...prev, newTemplate]);
+      setActiveTemplate(newTemplate.id);
+      setTemplateInput('');
+      showToast('模板导入成功！', 'success');
+    } catch (err) {
+      showToast('模板格式错误，请检查 JSON', 'error');
+    }
+  };
 
   useEffect(() => {
     refreshCanvas();
@@ -392,17 +520,40 @@ export default function PhotoEditor() {
       <div className="w-full lg:w-80 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col gap-6 overflow-y-auto max-h-[800px] shrink-0">
         <AnimatePresence mode="wait">
           {activeTab === 'templates' && (
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key="templates">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">选择海报布局</h3>
-              <div className="space-y-3">
-                {TEMPLATES.map((t) => (
-                  <button key={t.id} onClick={() => setActiveTemplate(t.id)}
-                    className={`w-full p-4 rounded-2xl text-left border-2 transition-all ${activeTemplate === t.id ? 'border-blue-600 bg-blue-50' : 'border-slate-50 hover:border-slate-100'}`}
-                  >
-                    <div className="font-bold text-xs mb-1 text-slate-900 uppercase">{t.name}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">{t.description}</div>
-                  </button>
-                ))}
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key="templates" className="space-y-6">
+              <div>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">选择海报布局</h3>
+                <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                  {allTemplates.map((t) => (
+                    <button key={t.id} onClick={() => setActiveTemplate(t.id)}
+                      className={`w-full p-4 rounded-2xl text-left border-2 transition-all ${activeTemplate === t.id ? 'border-blue-600 bg-blue-50' : 'border-slate-50 hover:border-slate-100'}`}
+                    >
+                      <div className="flex items-center justify-between">
+                         <div className="font-bold text-xs mb-1 text-slate-900 uppercase">{t.name}</div>
+                         {t.isUVTS && <span className="text-[8px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full font-black">UVTS</span>}
+                      </div>
+                      <div className="text-[10px] text-slate-500 font-medium">{t.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                   <FileText size={14} /> 导入 UVTS 模板
+                </h3>
+                <textarea 
+                  className="w-full h-32 p-3 text-[10px] bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 font-mono"
+                  placeholder="粘贴 UVTS-1.1 JSON 定义..."
+                  value={templateInput}
+                  onChange={(e) => setTemplateInput(e.target.value)}
+                />
+                <button 
+                  onClick={handleTemplateImport}
+                  className="w-full mt-2 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
+                >
+                  确认导入模板
+                </button>
               </div>
             </motion.div>
           )}
