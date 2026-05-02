@@ -371,7 +371,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品说明 / 备註</label>
                     <textarea 
                       placeholder="输入产品特色、说明回其他备注..."
-                      className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 transition-all shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
+                      className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
                       value={formState.description}
                       onChange={e => updateForm({ description: e.target.value })}
                     />

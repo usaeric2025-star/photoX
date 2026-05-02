@@ -78,7 +78,7 @@ export const BatchEditScreen = ({
             <input 
               type="text" 
               placeholder="输入统一产品名称..."
-              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
               value={formState.name}
               onChange={(e) => updateForm({ name: e.target.value })}
             />
@@ -89,7 +89,7 @@ export const BatchEditScreen = ({
             <input 
               type="text" 
               placeholder="输入统一编号 (如: SK-2024)..."
-              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
               value={formState.manual_code}
               onChange={(e) => updateForm({ manual_code: e.target.value })}
             />
@@ -100,7 +100,7 @@ export const BatchEditScreen = ({
             <input 
               type="text" 
               placeholder="输入统一型号编号 (如: MOD-123)..."
-              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300"
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
               value={formState.model_number}
               onChange={(e) => updateForm({ model_number: e.target.value })}
             />
@@ -111,7 +111,7 @@ export const BatchEditScreen = ({
             <input 
               type="text" 
               placeholder="输入统一价格..."
-              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 transition-all shadow-sm font-bold placeholder:text-slate-300 text-blue-600"
+              className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300 text-blue-600"
               value={formState.price}
               onChange={(e) => updateForm({ price: e.target.value })}
             />

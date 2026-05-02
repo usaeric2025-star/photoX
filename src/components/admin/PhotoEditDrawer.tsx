@@ -203,7 +203,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   placeholder="輸入名稱..." 
                   defaultValue={formState.name} 
                   onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
-                  className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 transition-all shadow-sm" 
+                  className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
                 />
              </div>
              <div className="flex w-full gap-2 pt-1">
@@ -500,7 +500,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                             description_translations: { ...(formState.description_translations || {}), zh } 
                           });
                         }} 
-                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
+                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium outline-none focus:border-blue-500" 
                       />
                     </div>
 
@@ -518,7 +518,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                             description_translations: { ...(formState.description_translations || {}), en } 
                           });
                         }} 
-                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
+                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium outline-none focus:border-blue-500" 
                       />
                     </div>
 
@@ -536,7 +536,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                             description_translations: { ...(formState.description_translations || {}), ms } 
                           });
                         }} 
-                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium" 
+                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium outline-none focus:border-blue-500" 
                       />
                     </div>
                   </div>
