@@ -2,36 +2,9 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as fabric from 'fabric';
 import { Upload, Download, Layout, Type, Palette, Image as ImageIcon, Sparkles, Move, X, Layers, Save, Info, Plus, ChevronDown, CheckCircle2, FileText, Package, Trash2, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAdminSession, useAdminUI } from '../context/AdminContexts';
+import { useAdminSession, useAdminUI, useAdminPhoto } from '../context/AdminContexts';
 import JSZip from 'jszip';
-
-// Types for UVTS-1.1 Standard
-interface UVTSTemplate {
-  version: string;
-  style_name: string;
-  canvas: {
-    ratio: string;
-    background: string;
-  };
-  structure: {
-    info_layer: { width_pct: number; align: 'left' | 'right'; padding_pct: number };
-    image_layer: { width_pct: number; position: 'left' | 'right'; fit: string };
-  };
-  typography: {
-    [key: string]: {
-      font: string;
-      size_em: number;
-      weight: string;
-      color?: string;
-      decoration?: string;
-      symbol_logic?: { content: string; scale: number; valign: string };
-    };
-  };
-  rules: {
-    auto_shrink_text: boolean;
-    currency_symbol_spacing: string;
-  };
-}
+import { UVTSTemplate } from '../types/uvts';
 
 // Types for our templates
 interface AdTemplate {
@@ -264,15 +237,24 @@ const TEMPLATES: AdTemplate[] = [
 
 export default function PhotoEditor() {
   const { settings } = useAdminSession();
+  const { adTemplates } = useAdminPhoto();
   const { showToast } = useAdminUI();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const [activeTemplate, setActiveTemplate] = useState<string>(TEMPLATES[0].id);
   const [activeTab, setActiveTab] = useState<'templates' | 'batch' | 'content' | 'style' | 'layers'>('templates');
-  const [customTemplates, setCustomTemplates] = useState<AdTemplate[]>([]);
-  const [templateInput, setTemplateInput] = useState('');
   
-  const allTemplates = [...TEMPLATES, ...customTemplates];
+  // Convert DB templates to AdTemplate format
+  const dbTemplates: AdTemplate[] = (adTemplates || []).map(t => ({
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    isUVTS: true,
+    uvtsData: t.uvts_json,
+    apply: () => {}
+  }));
+
+  const allTemplates = [...TEMPLATES, ...dbTemplates];
   
   // Batch Data State
   const [batchItems, setBatchItems] = useState<AdData[]>([{
@@ -389,31 +371,6 @@ export default function PhotoEditor() {
     }
   };
 
-  const handleTemplateImport = () => {
-    try {
-      const uvts = JSON.parse(templateInput) as UVTSTemplate;
-      if (uvts.version !== 'UVTS-1.1') {
-        throw new Error('不支持的版本');
-      }
-      
-      const newTemplate: AdTemplate = {
-        id: `uvts-${Date.now()}`,
-        name: uvts.style_name,
-        description: `UVTS-1.1 导入模板 (${uvts.style_name})`,
-        isUVTS: true,
-        uvtsData: uvts,
-        apply: () => {} // Placeholder, handled in refreshCanvas
-      };
-
-      setCustomTemplates(prev => [...prev, newTemplate]);
-      setActiveTemplate(newTemplate.id);
-      setTemplateInput('');
-      showToast('模板导入成功！', 'success');
-    } catch (err) {
-      showToast('模板格式错误，请检查 JSON', 'error');
-    }
-  };
-
   useEffect(() => {
     refreshCanvas();
   }, [refreshCanvas]);
@@ -520,40 +477,73 @@ export default function PhotoEditor() {
       <div className="w-full lg:w-80 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col gap-6 overflow-y-auto max-h-[800px] shrink-0">
         <AnimatePresence mode="wait">
           {activeTab === 'templates' && (
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key="templates" className="space-y-6">
+            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key="templates" className="space-y-8 pr-2 custom-scrollbar overflow-y-auto max-h-[700px]">
               <div>
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">选择海报布局</h3>
-                <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                  {allTemplates.map((t) => (
-                    <button key={t.id} onClick={() => setActiveTemplate(t.id)}
-                      className={`w-full p-4 rounded-2xl text-left border-2 transition-all ${activeTemplate === t.id ? 'border-blue-600 bg-blue-50' : 'border-slate-50 hover:border-slate-100'}`}
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between">
+                  <span>系统预设 / PRESETS</span>
+                  <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
+                </h3>
+                <div className="space-y-3">
+                  {TEMPLATES.map((t) => (
+                    <button key={t.id} onClick={() => {
+                        setActiveTemplate(t.id);
+                        if (fabricCanvas) t.apply(fabricCanvas, currentItem);
+                      }}
+                      className={`w-full p-4 rounded-2xl text-left border-2 transition-all group ${activeTemplate === t.id ? 'border-blue-600 bg-blue-50 shadow-sm' : 'border-slate-50 hover:border-slate-100 flex items-center gap-3 bg-white'}`}
                     >
-                      <div className="flex items-center justify-between">
-                         <div className="font-bold text-xs mb-1 text-slate-900 uppercase">{t.name}</div>
-                         {t.isUVTS && <span className="text-[8px] bg-blue-600 text-white px-1.5 py-0.5 rounded-full font-black">UVTS</span>}
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${activeTemplate === t.id ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'}`}>
+                        <Layout size={18} />
                       </div>
-                      <div className="text-[10px] text-slate-500 font-medium">{t.description}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-black text-[10px] uppercase truncate ${activeTemplate === t.id ? 'text-blue-600' : 'text-slate-900'}`}>{t.name}</div>
+                        <div className="text-[9px] text-slate-400 font-medium truncate">{t.description}</div>
+                      </div>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                   <FileText size={14} /> 导入 UVTS 模板
-                </h3>
-                <textarea 
-                  className="w-full h-32 p-3 text-[10px] bg-slate-50 border border-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-100 font-mono"
-                  placeholder="粘贴 UVTS-1.1 JSON 定义..."
-                  value={templateInput}
-                  onChange={(e) => setTemplateInput(e.target.value)}
-                />
-                <button 
-                  onClick={handleTemplateImport}
-                  className="w-full mt-2 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all"
-                >
-                  确认导入模板
-                </button>
+              {dbTemplates.length > 0 && (
+                <div>
+                  <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-4 flex items-center justify-between">
+                    <span>我的海报库 / MY LIBRARY</span>
+                    <Sparkles size={12} className="text-blue-400" />
+                  </h3>
+                  <div className="space-y-3">
+                    {dbTemplates.map((t) => (
+                      <button key={t.id} onClick={() => setActiveTemplate(t.id)}
+                        className={`w-full p-4 rounded-2xl text-left border-2 transition-all group ${activeTemplate === t.id ? 'border-blue-600 bg-blue-50 shadow-sm' : 'border-slate-50 hover:border-slate-100 flex items-center gap-3 bg-white'}`}
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${activeTemplate === t.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-blue-50 text-blue-400 opacity-60'}`}>
+                          <Sparkles size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-black text-[10px] uppercase truncate ${activeTemplate === t.id ? 'text-blue-600' : 'text-slate-900'}`}>{t.name}</div>
+                          <div className="text-[9px] text-slate-400 font-medium truncate leading-tight">Supabase 同步模板</div>
+                        </div>
+                        {activeTemplate === t.id && (
+                          <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl mt-4">
+                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center leading-relaxed">
+                    管理或添加新模板请前往 <br/>
+                    <button 
+                      onClick={() => {
+                        // This would ideally open settings tab, 
+                        // for now we trust user to navigate
+                        showToast('请前往 [设置 - 广告与海报] 进行管理', 'loading');
+                      }}
+                      className="text-blue-600 hover:underline"
+                    >
+                      [ 设置与管理 ]
+                    </button>
+                 </p>
               </div>
             </motion.div>
           )}

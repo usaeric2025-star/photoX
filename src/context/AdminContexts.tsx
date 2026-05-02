@@ -47,6 +47,8 @@ interface AdminPhotoContextType {
   setTags: (t: Tag[]) => void;
   manufacturers: any[];
   setManufacturers: (m: any[]) => void;
+  adTemplates: any[];
+  setAdTemplates: (t: any[]) => void;
   
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;

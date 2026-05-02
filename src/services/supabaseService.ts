@@ -5,5 +5,6 @@ export * from './categoryService';
 export * from './manufacturerService';
 export * from './settingService';
 export * from './storageService';
+export * from './templateService';
 export * from './utils';
 export { supabase } from './client';

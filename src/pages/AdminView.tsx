@@ -59,7 +59,6 @@ export default function AdminView() {
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
   const { loadingState, setLoadingState, startLoading, stopLoading, withLoading } = useLoading();
   const [cloudCount, setCloudCount] = useState<number | null>(null);
-
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'loading' = 'success', persistent = false) => {
@@ -236,6 +235,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   uiProps: any,
   dialogProps: any
 }) {
+  const [adTemplatesDB, setAdTemplatesDB] = useState<any[]>([]);
   const navigate = useNavigate();
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
@@ -433,6 +433,18 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   // Auto refresh - ONLY on initial mount of the content component
   useEffect(() => {
     refreshCloudData(user, false, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers);
+    
+    // Fetch Ad Templates
+    const fetchTemplates = async () => {
+      try {
+        const { templateService } = await import('../services/supabaseService');
+        const data = await templateService.getTemplates();
+        setAdTemplatesDB(data);
+      } catch (err) {
+        console.error('Failed to fetch ad templates:', err);
+      }
+    };
+    fetchTemplates();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -448,7 +460,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
-    manufacturers, setManufacturers, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
+    manufacturers, setManufacturers, adTemplates: adTemplatesDB, setAdTemplates: setAdTemplatesDB,
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
     handleSingleAiAnalyzeCallback,
     deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, 
@@ -458,7 +471,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     quickAddTag,
     quickAddManufacturer
   }), [
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
+    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, adTemplatesDB, setAdTemplatesDB,
     handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
     handleSingleAiAnalyzeCallback, handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
