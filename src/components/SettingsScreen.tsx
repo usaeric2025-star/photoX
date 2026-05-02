@@ -570,7 +570,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                   >
                     {testResult?.loading ? '检测中...' : '测试 AI 连接'}
                   </button>
-                  {testResult && (
+                  {testResult && !testResult.loading && (
                     <div className={`mt-2 p-3 rounded-xl text-[10px] flex items-center gap-2 ${testResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                       {testResult.success ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
                       {testResult.success ? '连接成功！' : `连接失败: ${testResult.error}`}
