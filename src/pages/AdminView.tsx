@@ -760,7 +760,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                        columns={columns}
                        setColumns={setColumns}
                        cloudCount={cloudCount}
-                       user={undefined}
+                       user={user}
+                       loginWithGoogle={loginWithGoogle}
                        onLoadMore={() => {
                          if (visibleCount < gridPhotos.length) {
                            setVisibleCount(prev => prev + PAGINATION.PUBLIC_PAGE_SIZE);

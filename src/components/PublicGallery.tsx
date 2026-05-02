@@ -239,7 +239,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [selectedCatCode, selectedSubId, selectedTagIds]);
 
   const handleLoginClick = () => {
-    if (!isAdminMode) {
+    if (!isAdminMode && !user) {
       setShowPassPrompt(true);
     } else if (onExit) {
       onExit();
