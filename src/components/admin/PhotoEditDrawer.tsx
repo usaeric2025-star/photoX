@@ -90,17 +90,17 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
               {formState.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
-              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.isHidden ? '公开屏蔽' : '公开显示'}</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.isHidden ? '屏蔽' : '显示'}</span>
             </div>
           )}
         </div>
 
-            {/* Center: Title */}
-        <div className="flex-shrink-0 flex flex-col items-center">
-          <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase">
+        {/* Center: Title */}
+        <div className="flex-shrink-0 flex flex-col items-center justify-center min-w-0">
+          <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate">
             {props.editPhotoId ? '編輯產品信息' : '分析新產品'}
           </h2>
-          <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">Product Individual Details</p>
+          <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">Product Details</p>
         </div>
 
         {/* Right: Actions */}
@@ -198,7 +198,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
         <div className="flex gap-4 items-start">
           {(props.newPhotoData || props.editPhotoPreview) && (
             <div className="w-1/3 shrink-0">
@@ -539,6 +539,19 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 </Button>
             </div>
            )}
+       </div>
+       
+       {/* Bottom Actions Footer */}
+       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-white flex items-center justify-between z-10">
+            <div 
+              onClick={() => updateForm({ isHidden: !formState.isHidden })}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border transition-all cursor-pointer whitespace-nowrap ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+            >
+              {formState.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+              <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{formState.isHidden ? '产品已屏蔽' : '产品已显示'}</span>
+            </div>
+            {/* Space for future buttons */}
+            <div />
        </div>
     </div>
   );
