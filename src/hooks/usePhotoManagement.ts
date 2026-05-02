@@ -48,6 +48,12 @@ export const usePhotoManagement = (
 ) => {
   const { handleError } = useErrorHandler();
   const { validatePhotoForm } = useFormValidation();
+  const {
+    photos, setPhotos,
+    categories,
+    tags, setTags, tagNameToIdMap, tagIdToNameMap,
+    manufacturers
+  } = useGalleryContext();
 
   const { 
     setAlertDialog = () => {}, 

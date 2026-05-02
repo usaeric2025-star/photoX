@@ -24,6 +24,7 @@ import { useAdminDialogs } from '../hooks/useAdminDialogs';
 import { useLoading } from '../hooks/useLoading';
 import { usePhotoManagement } from '../hooks/usePhotoManagement';
 import { useAuth } from '../hooks/useAuth';
+import { useGalleryContext } from '../context/GalleryContext';
 import { useErrorHandler } from '../utils/errorHandler';
 import { usePermission } from '../hooks/usePermission';
 import { useDelete } from '../hooks/useDelete';
