@@ -540,19 +540,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             </div>
            )}
        </div>
-       
-       {/* Bottom Actions Footer */}
-       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-white flex items-center justify-between z-10">
-            <div 
-              onClick={() => updateForm({ isHidden: !formState.isHidden })}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full border transition-all cursor-pointer whitespace-nowrap ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
-            >
-              {formState.isHidden ? <EyeOff size={14} /> : <Eye size={14} />}
-              <span className="text-[10px] font-bold uppercase tracking-widest leading-none">{formState.isHidden ? '产品已屏蔽' : '产品已显示'}</span>
-            </div>
-            {/* Space for future buttons */}
-            <div />
-       </div>
     </div>
   );
 };
