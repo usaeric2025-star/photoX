@@ -178,12 +178,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         </div>
 
         {/* 翻页按钮 - 底下 */}
-        <div className="absolute bottom-4 left-4 z-20 flex items-center justify-start z-20 group cursor-pointer" onClick={onPrev}>
+        <div className="absolute bottom-4 left-4 z-20 flex items-center justify-start group cursor-pointer" onClick={onPrev}>
           <div className="w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
             <ChevronLeft size={24} />
           </div>
         </div>
-        <div className="absolute bottom-4 right-4 z-20 flex items-center justify-end z-20 group cursor-pointer" onClick={onNext}>
+        <div className="absolute bottom-4 right-4 z-20 flex items-center justify-end group cursor-pointer" onClick={onNext}>
           <div className="flex w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full items-center justify-center text-white transition-all ml-auto">
             <ChevronRight size={24} />
           </div>

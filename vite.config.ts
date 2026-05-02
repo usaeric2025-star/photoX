@@ -16,7 +16,7 @@ export default defineConfig(({mode}) => {
     ],
     base: './',
     build: {
-      outDir: 'dist',
+      outDir: path.resolve(__dirname, 'dist'),
       assetsDir: 'assets',
       minify: 'esbuild',
       sourcemap: false,
