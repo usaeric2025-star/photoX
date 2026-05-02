@@ -641,6 +641,15 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                     <section className="pt-6 border-t border-slate-100 space-y-4">
                        <button 
                          onClick={() => {
+                           setShowGroupSettings(false);
+                         }}
+                         className="w-full py-4 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-black text-xs uppercase"
+                       >
+                         <Save size={16} /> 保存 / SAVE
+                       </button>
+
+                       <button 
+                         onClick={() => {
                            if (onUngroup && activeGroupId) {
                              setAlertDialog?.({
                                title: '確定要解散整個群組？',
