@@ -1,6 +1,7 @@
 import React from 'react';
-import { RefreshCcw, Grid3X3, Plus, Globe, Settings2 } from 'lucide-react';
+import { RefreshCcw, Grid3X3, Plus, Globe, Settings2, Sparkles } from 'lucide-react';
 import { Photo } from '../types';
+import { useNavigate } from 'react-router-dom';
 
 interface PublicGalleryHeaderProps {
   settings: any;
@@ -27,6 +28,8 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
   settings, photos, isAdminMode, isRefreshing, isMultiSelect, lang, t,
   onHeaderClick, onRefresh, onToggleMultiSelect, clearSelection, setIsMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings, totalCount
 }) => {
+  const navigate = useNavigate();
+
   return (
     <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
       <div className="flex items-center gap-2 sm:gap-4 min-w-0" onClick={onHeaderClick}>

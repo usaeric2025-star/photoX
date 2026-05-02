@@ -463,6 +463,50 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           )}
         </div>
 
+        {/* Ad Maker Section */}
+        <div className={cardClass} id="section-ad-maker">
+            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
+                广告制作设定 / AD MAKER
+              </span>
+            </h4>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">品牌主色调 (默认显示颜色)</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                   {['#1D3557', '#E63946', '#457B9D', '#2A9D8F', '#F4A261', '#E76F51', '#000000', '#FFD700'].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setSettingField('ad_brand_color', c)}
+                      className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                        (settings?.ad_brand_color || '#1D3557') === c ? 'border-blue-600 ring-2 ring-blue-100' : 'border-white shadow-sm'
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                  <input 
+                    type="color" 
+                    value={settings?.ad_brand_color || '#1D3557'}
+                    onChange={(e) => setSettingField('ad_brand_color', e.target.value)}
+                    className="w-8 h-8 rounded-full overflow-hidden border-none cursor-pointer appearance-none bg-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">默认宣传标语 / TAGLINE</label>
+                <input 
+                  type="text" 
+                  placeholder="例如: Step into the future..."
+                  className={inputClass}
+                  value={settings?.ad_default_tagline || ''}
+                  onChange={(e) => setSettingField('ad_default_tagline', e.target.value)}
+                />
+              </div>
+            </div>
+        </div>
+
         {/* WhatsApp Section */}
         <div className={cardClass} id="section-whatsapp">
             <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">

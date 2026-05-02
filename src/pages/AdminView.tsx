@@ -12,6 +12,7 @@ import { PromptDialog } from '../components/admin/PromptDialog';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { FloatingActionButton } from '../components/admin/FloatingActionButton';
 import { BatchEditScreen } from '../components/admin/BatchEditScreen';
+import PhotoEditor from '../components/PhotoEditor';
 import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
 import { SettingsScreen } from '../components/SettingsScreen';
@@ -53,7 +54,7 @@ export default function AdminView() {
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
 
   // Lift UI states to the top level AdminView to avoid ReferenceErrors in login gate
-  const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
+  const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'editor' | 'login'>('home');
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
   const { loadingState, setLoadingState, startLoading, stopLoading, withLoading } = useLoading();
@@ -622,6 +623,26 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                  cloudCount={cloudCount}
                  lastSyncTime={lastSyncTime}
                />
+            )}
+
+            {activeScreen === 'editor' && (
+               <div className="flex flex-col fixed inset-0 bg-[#F5F5F5] z-[120] overflow-auto">
+                 <div className="max-w-7xl mx-auto w-full p-4 md:p-8">
+                   <header className="mb-8 flex justify-between items-center">
+                     <div>
+                       <h1 className="text-3xl font-black tracking-tight text-slate-900">广告海报制作 / AD MAKER</h1>
+                       <p className="text-slate-500 font-medium">为您的产品创建精美的视觉宣传图片。</p>
+                     </div>
+                     <button 
+                       onClick={() => setActiveScreen('home')}
+                       className="w-12 h-12 rounded-2xl bg-white border border-slate-200 text-slate-400 flex items-center justify-center hover:text-red-500 transition-all shadow-sm"
+                     >
+                       <X size={24} />
+                     </button>
+                   </header>
+                   <PhotoEditor />
+                 </div>
+               </div>
             )}
       
             {(editPhotoId || newPhotoData) && (
