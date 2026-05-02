@@ -50,6 +50,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   } = useAdminPhoto();
   const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
+  const [activeDescLang, setActiveDescLang] = useState<'zh'|'en'|'ms'>('zh');
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  const isSyncing = sessionSyncing;
 
   const isPartOfGroup = useMemo(() => {
@@ -207,7 +208,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 />
              </div>
              <div className="flex w-full gap-2 pt-1">
-                <div className="flex-1 space-y-1.5">
+                 <div className="flex-1 space-y-1.5">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">編號 / CODE</h3>
                   <input type="text" placeholder="編號..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-[11px] font-bold outline-none focus:border-blue-500" />
                 </div>
@@ -485,59 +486,48 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       </button>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 px-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">中文说明</span>
-                        <div className="flex-1 h-[1px] bg-slate-100"></div>
+                    <div className="bg-slate-50 border border-slate-100 rounded-[28px] overflow-hidden">
+                      <div className="flex bg-slate-100/50 p-1">
+                        {[
+                          { key: 'zh', label: '中文' },
+                          { key: 'en', label: 'EN' },
+                          { key: 'ms', label: 'BM' }
+                        ].map((lang) => (
+                          <button
+                            key={lang.key}
+                            onClick={() => setActiveDescLang(lang.key as any)}
+                            className={`flex-1 py-2 text-[10px] font-black rounded-2xl transition-all ${
+                              activeDescLang === lang.key 
+                                ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' 
+                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'
+                            }`}
+                          >
+                            {lang.label}
+                          </button>
+                        ))}
                       </div>
-                      <textarea 
-                        placeholder="输入中文产品说明..." 
-                        value={formState.description_translations?.zh || ''} 
-                        onChange={e => {
-                          const zh = e.target.value;
-                          updateForm({ 
-                            description: zh, 
-                            description_translations: { ...(formState.description_translations || {}), zh } 
-                          });
-                        }} 
-                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium outline-none focus:border-blue-500" 
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 px-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">English Description</span>
-                        <div className="flex-1 h-[1px] bg-slate-100"></div>
+                      
+                      <div className="p-3">
+                        <textarea 
+                          placeholder={
+                            activeDescLang === 'zh' ? "输入中文产品说明..." :
+                            activeDescLang === 'en' ? "Enter English description..." :
+                            "Masukkan penerangan Bahasa Melayu..."
+                          }
+                          value={formState.description_translations?.[activeDescLang] || (activeDescLang === 'zh' ? formState.description : '')} 
+                          onChange={e => {
+                            const val = e.target.value;
+                            const newTranslations = { ...(formState.description_translations || {}), [activeDescLang]: val };
+                            
+                            const updates: any = { description_translations: newTranslations };
+                            if (activeDescLang === 'zh') {
+                              updates.description = val;
+                            }
+                            updateForm(updates);
+                          }} 
+                          className="w-full p-4 rounded-2xl border border-slate-200/50 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-inner" 
+                        />
                       </div>
-                      <textarea 
-                        placeholder="Enter English description..." 
-                        value={formState.description_translations?.en || ''} 
-                        onChange={e => {
-                          const en = e.target.value;
-                          updateForm({ 
-                            description_translations: { ...(formState.description_translations || {}), en } 
-                          });
-                        }} 
-                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium outline-none focus:border-blue-500" 
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2 px-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Penerangan Bahasa Melayu</span>
-                        <div className="flex-1 h-[1px] bg-slate-100"></div>
-                      </div>
-                      <textarea 
-                        placeholder="Masukkan penerangan Bahasa Melayu..." 
-                        value={formState.description_translations?.ms || ''} 
-                        onChange={e => {
-                          const ms = e.target.value;
-                          updateForm({ 
-                            description_translations: { ...(formState.description_translations || {}), ms } 
-                          });
-                        }} 
-                        className="w-full p-4 rounded-2xl border border-slate-200 h-24 text-sm font-medium outline-none focus:border-blue-500" 
-                      />
                     </div>
                   </div>
 

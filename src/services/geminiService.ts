@@ -108,8 +108,8 @@ export const analyzeProductPhoto = async (
 
 【優先級 1：圖片文字識別】
 - 仔細觀察照片中是否有任何標籤、吊牌、包裝盒、說明書上的文字
-- 識別標價牌或標籤上的手寫/列印代號，填入 "manualCode"
-- 識別規格標籤上的產品型號（Model No / SKU），填入 "modelNumber"，若無則填 null
+- **【核心指令】識別照片中出現的任何編號、代碼、型號或代號（如 Model No, SKU, Code, No. 等），一律填入 "modelNumber"**
+- **【嚴格禁止】禁止識別或填寫 "manualCode" 欄位，該欄位必須保持為 null。AI 識別不准填寫此欄位，它僅供人工手寫填入。**
 - 識別尺寸信息（H/W/L），如有測量標註、吊牌上的尺寸請務必識別
 
 【優先級 2：名稱規則 - 強制執行】
@@ -166,8 +166,8 @@ export const analyzeProductPhoto = async (
 
 【JSON 輸出格式範例】
 {
-  "manualCode": "A-1234",
-  "modelNumber": "M-5566",
+  "manualCode": null,
+  "modelNumber": "SK-2024 (或其他識別到的編號/型號)",
   "name": "Modern Leather Sofa",
   "description": "這是一款採用義大利進口大理石打造的餐桌，設計優雅且耐用。",
   "categoryId": "123e4567-e89b-12d3... (存在清單中的 UUID)",
@@ -306,6 +306,9 @@ export const analyzeProductPhoto = async (
       ms: '' 
     };
     parsedData.description = zh;
+    
+    // AI MUST NOT fill manualCode, manual control only
+    parsedData.manualCode = null;
 
     // Normalize dimensions: Always an array
     let safeDims: any[] = [];

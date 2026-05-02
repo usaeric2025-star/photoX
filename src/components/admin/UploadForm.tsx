@@ -49,6 +49,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   const { updateTag, deleteTag } = useAdminPhoto();
   const { setPromptDialog, setAlertDialog } = useAdminUI();
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [activeDescLang, setActiveDescLang] = React.useState<'zh'|'en'|'ms'>('zh');
   
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -144,12 +145,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">手动编号 / Code</h3>
-                  <input type="text" placeholder="SK-2024..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-bold shadow-sm" />
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">编号 / Code</h3>
+                  <input type="text" placeholder="编号..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-bold shadow-sm" />
               </div>
               <div className="space-y-2">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">型号 / Model</h3>
-                  <input type="text" placeholder="MOD-123..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-bold shadow-sm" />
+                  <input type="text" placeholder="识别到的型号..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full bg-white border border-slate-200 p-4 rounded-[20px] text-sm font-bold shadow-sm" />
               </div>
            </div>
            <div className="space-y-2">
@@ -366,15 +367,54 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   </div>
                 </div>
 
-                <div className="space-y-2">
-
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">产品说明 / 备註</label>
-                    <textarea 
-                      placeholder="输入产品特色、说明回其他备注..."
-                      className="w-full bg-slate-100/50 border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:bg-white focus:border-blue-500 shadow-inner font-medium placeholder:text-slate-400 min-h-[120px]"
-                      value={formState.description}
-                      onChange={e => updateForm({ description: e.target.value })}
-                    />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">产品说明 / 備註</label>
+                  </div>
+                  
+                  <div className="bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
+                    <div className="flex bg-slate-50 p-1.5 border-b border-slate-100">
+                      {[
+                        { key: 'zh', label: '中文' },
+                        { key: 'en', label: 'English' },
+                        { key: 'ms', label: 'Melayu' }
+                      ].map((lang) => (
+                        <button
+                          key={lang.key}
+                          onClick={() => setActiveDescLang(lang.key as any)}
+                          className={`flex-1 py-2 text-[10px] font-black rounded-2xl transition-all ${
+                            activeDescLang === lang.key 
+                              ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' 
+                              : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          {lang.label}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <div className="p-4">
+                      <textarea 
+                        placeholder={
+                          activeDescLang === 'zh' ? "输入中文产品说明..." :
+                          activeDescLang === 'en' ? "Enter English description..." :
+                          "Masukkan penerangan Bahasa Melayu..."
+                        }
+                        className="w-full bg-transparent p-0 text-sm outline-none font-medium placeholder:text-slate-300 min-h-[140px] resize-none"
+                        value={formState.description_translations?.[activeDescLang] || (activeDescLang === 'zh' ? formState.description : '')}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const newTranslations = { ...(formState.description_translations || {}), [activeDescLang]: val };
+                          
+                          const updates: any = { description_translations: newTranslations };
+                          if (activeDescLang === 'zh') {
+                            updates.description = val;
+                          }
+                          updateForm(updates);
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}

@@ -267,7 +267,8 @@ export const useAdminPhotos = (
                 name: shouldUpdateName(photo.name) ? (result.name || photo.name) : photo.name,
                 description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
                 description_translations: result.description_translations || photo.description_translations,
-                manual_code: (result.manualCode && (!photo.manual_code || !photo.manual_code.trim())) ? result.manualCode : photo.manual_code,
+                // manual_code is strictly manual, AI result is forced null in service
+                manual_code: photo.manual_code,
                 model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
                 dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : photo.dimensions,
                 updatedAt: new Date().toISOString(),
@@ -410,7 +411,8 @@ export const useAdminPhotos = (
           name: shouldUpdateName(photo.name) ? (result.name || photo.name) : photo.name,
           description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
           description_translations: result.description_translations || photo.description_translations,
-          manual_code: (result.manualCode && (!photo.manual_code || !photo.manual_code.trim())) ? result.manualCode : photo.manual_code,
+          // manual_code is strictly manual, AI result is forced null in service
+          manual_code: photo.manual_code,
           model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
           dimensions: (result.dimensions && result.dimensions.length > 0)
             ? result.dimensions
@@ -807,7 +809,8 @@ export const useAdminPhotos = (
             tagIds: finalTagIds,
             description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
             description_translations: result.description_translations || p.description_translations,
-            manual_code: (result.manualCode && (!p.manual_code || !p.manual_code.trim())) ? result.manualCode : p.manual_code,
+            // manual_code is strictly manual, AI result is forced null in service
+            manual_code: p.manual_code,
             model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
             dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
             updatedAt: new Date().toISOString(),

@@ -6,43 +6,49 @@ export const reconcileData = (
   tags: Tag[], 
   manufacturers: Manufacturer[]
 ) => {
-  // 1. Map all used IDs
-  const usedCatIds = new Set(photos.map(p => p.categoryId).filter(Boolean));
-  const usedManufacturerIds = new Set(photos.map(p => p.manufacturerId).filter(Boolean));
-  const usedTagIds = new Set<string>();
-  photos.forEach(p => {
-    if (Array.isArray(p.tagIds)) p.tagIds.forEach(id => usedTagIds.add(id));
-  });
+  const catIds = new Set(categories.map(c => String(c.id)));
+  const tagIds = new Set(tags.map(t => String(t.id)));
+  const mfrIds = new Set(manufacturers.map(m => String(m.id)));
 
-  // 2. Add missing items to the lists
-  const reconciledCategories = [...categories];
-  usedCatIds.forEach(id => {
-    if (id && !reconciledCategories.find(c => c.id === id)) {
-      reconciledCategories.push({ id, name: id, aliases: [], subcategories: [] } as Category);                
-    }
-  });
+  let hasChanged = false;
 
-  const reconciledTags = [...tags];
-  usedTagIds.forEach(tid => {
-    if (!reconciledTags.find(t => t.id === tid)) {
-      reconciledTags.push({ id: tid, name: tid, aliases: [] } as Tag); 
-    }
-  });
+  const cleanedPhotos = photos.map(p => {
+    let photoChanged = false;
+    const updates: Partial<Photo> = {};
 
-  const reconciledManufacturers = [...manufacturers];
-  usedManufacturerIds.forEach(id => {
-    if (id && !reconciledManufacturers.find(m => m.id === id)) {
-      reconciledManufacturers.push({ id, name: id, aliases: [] } as Manufacturer); 
+    // Check category
+    if (p.categoryId && !catIds.has(String(p.categoryId))) {
+      updates.categoryId = null;
+      photoChanged = true;
     }
+
+    // Check manufacturer
+    if (p.manufacturerId && !mfrIds.has(String(p.manufacturerId))) {
+      updates.manufacturerId = null;
+      photoChanged = true;
+    }
+
+    // Check tags
+    if (Array.isArray(p.tagIds)) {
+      const validTags = p.tagIds.filter(id => tagIds.has(String(id)));
+      if (validTags.length !== p.tagIds.length) {
+        updates.tagIds = validTags;
+        photoChanged = true;
+      }
+    }
+
+    if (photoChanged) {
+      hasChanged = true;
+      return { ...p, ...updates };
+    }
+    return p;
   });
 
   return {
-    reconciledCategories,
-    reconciledTags,
-    reconciledManufacturers,
-    hasChanged: 
-      reconciledCategories.length !== categories.length ||
-      reconciledTags.length !== tags.length ||
-      reconciledManufacturers.length !== manufacturers.length
+    reconciledPhotos: cleanedPhotos,
+    reconciledCategories: categories,
+    reconciledTags: tags,
+    reconciledManufacturers: manufacturers,
+    hasChanged
   };
 };

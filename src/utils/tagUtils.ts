@@ -36,10 +36,22 @@ export const resolveTagIdsBatch = async (
 
   for (const item of tagNamesOrIds) {
     const strItem = String(item).toUpperCase().trim();
+    if (!strItem) continue;
     
     // Check if it's already a known ID
     if (tags.some(t => String(t.id) === strItem)) {
       resolvedIds.push(strItem);
+      continue;
+    }
+
+    // NEW: Security fix to prevent re-creating deleted tags
+    // If it looks like an ID (numeric or UUID) but is NOT in the current tags list, 
+    // we should NOT treat it as a name to create. We skip it.
+    const isNumericId = /^\d+$/.test(strItem);
+    const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(strItem);
+    
+    if (isNumericId || isUuid) {
+      console.warn(`[resolveTagIdsBatch] Skipping potential stale ID: ${strItem}`);
       continue;
     }
 
@@ -91,8 +103,12 @@ export const resolveTagIdsBatch = async (
       } else if (newTagsMap.has(strItem)) {
         finalResults.push(newTagsMap.get(strItem)!);
       } else {
-        // Fallback
-        finalResults.push(strItem);
+        // Fallback: only push if NOT a suspected stale ID
+        const isNumericId = /^\d+$/.test(strItem);
+        const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(strItem);
+        if (!isNumericId && !isUuid) {
+           finalResults.push(strItem);
+        }
       }
     }
   }
