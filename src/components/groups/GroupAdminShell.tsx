@@ -174,6 +174,19 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
 
     try {
       await saveGroupToCloud(nextGroupData);
+      
+      // If isHidden changed, update all photos in this group
+      if (updates.hasOwnProperty('isHidden')) {
+        const isHidden = updates.isHidden;
+        const groupPhotos = photos.filter(p => p.groupId === activeGroupId);
+        if (groupPhotos.length > 0) {
+           await Promise.all(
+             groupPhotos.map(p => updatePhoto(p.id, { isHidden }))
+           );
+           setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isHidden: isHidden! } : p));
+           showToast(`群組內照片已${isHidden ? '屏蔽' : '顯示'}`);
+        }
+      }
     } catch (err: any) {
       showToast(`保存失敗: ${err.message}`);
     }
@@ -645,7 +658,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                          }}
                          className="w-full py-4 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-black text-xs uppercase"
                        >
-                         <Save size={16} /> 保存 / SAVE
+                         <Save size={20} />
                        </button>
 
                        <button 
