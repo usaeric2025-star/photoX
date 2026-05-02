@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "./ui/alert-dialog"
+} from "@/components/ui/alert-dialog"
 import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
 import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
