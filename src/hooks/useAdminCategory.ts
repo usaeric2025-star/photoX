@@ -207,7 +207,12 @@ export const useAdminCategory = (adminUI: any) => {
   };
 
   const deleteCategory = async (id: string) => {
-    deleteCategoryHook(id);
+    const { success, error } = await deleteCategoryHook(id);
+    if (!success) {
+      handleError(error, '刪除分類失敗');
+    } else {
+      showToast('分類已成功刪除', 'success');
+    }
   };
 
   const performDeleteCategory = async (strId: string) => {

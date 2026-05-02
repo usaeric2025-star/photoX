@@ -683,7 +683,12 @@ export const useAdminPhotos = (
   };
   
   const deletePhoto = async (idOrIds: string | string[]) => {
-    deletePhotos(idOrIds, user?.id);
+    const { success, error } = await deletePhotos(idOrIds);
+    if (!success) {
+      handleError(error, '刪除照片失敗');
+    } else {
+      showToast('照片已成功刪除', 'success');
+    }
   };
 
   const updatePhoto = async (updatedPhoto: Photo) => {

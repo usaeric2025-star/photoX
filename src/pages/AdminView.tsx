@@ -174,9 +174,7 @@ export default function AdminView() {
     saveSettings,
     performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
     handleUngroup, handleGroupPhotos 
-  } = useAdminCore(
-      user, updateForm, tValue, refreshCloudData, lastSyncTime, uiBasicValue, sessionBasicValue
-  );
+  } = useAdminCore(user);
 
   const { 
     batchProgress, isImporting, importProgress, importTotal, 
@@ -420,9 +418,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     saveSettings,
     performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
     handleUngroup, handleGroupPhotos 
-  } = useAdminCore(
-      user, updateForm, tValue, refreshCloudData, lastSyncTime, uiBasicValue, sessionBasicValue
-  );
+  } = useAdminCore(user);
 
   const quickAddTag = useCallback(() => {
     console.log('[AdminView] quickAddTag triggered');
@@ -485,21 +481,44 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
 
   const handleDeletePhotos = useCallback(async (ids: string[]) => {
     if (ids.length === 0) return;
-    deletePhotos(ids, user?.id);
-    clearSelection();
-    setEditPhotoId(null);
-    setSelectedIds([]);
-    setIsMultiSelect(false);
-  }, [deletePhotos, user, clearSelection, setEditPhotoId, setSelectedIds, setIsMultiSelect]);
+    const { success, error } = await deletePhotos(ids);
+    if (success) {
+        showToast(`已成功刪除 ${ids.length} 張照片`, 'success');
+        clearSelection();
+        setEditPhotoId(null);
+        setSelectedIds([]);
+        setIsMultiSelect(false);
+    } else {
+        handleError(error, '刪除照片失敗');
+    }
+  }, [deletePhotos, user, clearSelection, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast, handleError]);
   
   const handleDeletePhoto = useCallback(async (id: string) => {
-    deletePhotos(id, user?.id);
-    setEditPhotoId(null);
-  }, [deletePhotos, user, setEditPhotoId]);
+     const { success, error } = await deletePhotos(id);
+     if (success) {
+         showToast('照片已成功刪除', 'success');
+         setEditPhotoId(null);
+     } else {
+         handleError(error, '刪除照片失敗');
+     }
+  }, [deletePhotos, setEditPhotoId, showToast, handleError]);
+  const handleDeleteTag = useCallback(async (id: string) => {
+    const { success, error } = await deleteTagHook(id);
+    if (success) {
+        showToast('標籤已成功刪除', 'success');
+    } else {
+        handleError(error, '刪除標籤失敗');
+    }
+  }, [deleteTagHook, showToast, handleError]);
   
-  const handleDeleteTag = useCallback((id: string) => {
-    deleteTagHook(id);
-  }, [deleteTagHook]);
+  const handleDeleteCategory = useCallback(async (id: string) => {
+    const { success, error } = await deleteCategoryHook(id);
+    if (success) {
+        showToast('分類已成功刪除', 'success');
+    } else {
+        handleError(error, '刪除分類失敗');
+    }
+  }, [deleteCategoryHook, showToast, handleError]);
 
   // Auto refresh - ONLY on initial mount of the content component
   useEffect(() => {
