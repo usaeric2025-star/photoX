@@ -25,6 +25,7 @@ export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[
     colors: item.colors || [],
     materials: item.materials || [],
     cover_photo_id: item.cover_photo_id,
+    isHidden: item.isHidden,
     created_at: item.created_at,
     updated_at: item.updated_at,
     user_id: item.user_id
@@ -39,6 +40,7 @@ export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: stri
     colors: group.colors,
     materials: group.materials,
     cover_photo_id: group.cover_photo_id,
+    isHidden: group.isHidden,
     user_id: group.user_id,
     updated_at: new Date().toISOString()
   };
@@ -69,6 +71,7 @@ export const getGroupById = async (id: string): Promise<ProductGroup | null> => 
     colors: data.colors || [],
     materials: data.materials || [],
     cover_photo_id: data.cover_photo_id,
+    isHidden: data.isHidden,
     created_at: data.created_at,
     updated_at: data.updated_at,
     user_id: data.user_id

@@ -88,6 +88,7 @@ export interface ProductGroup {
   colors: string[];
   materials: string[];
   cover_photo_id?: string | null;
+  isHidden?: boolean;
   user_id: string;
   created_at: string;
   updated_at: string;

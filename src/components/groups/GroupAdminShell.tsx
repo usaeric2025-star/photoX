@@ -498,14 +498,24 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
-                    {/* Series Identity */}
-                    <section className="space-y-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列基本信息 / Series Identity</h4>
-                      </div>
-                      
-                      <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      {/* Series Identity */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 mb-1 justify-between">
+                          <div className="flex items-center gap-2">
+                             <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
+                             <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列基本信息 / Series Identity</h4>
+                          </div>
+                          
+                          <button 
+                            onClick={() => handleUpdateGroupData({ isHidden: !groupData?.isHidden })}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${groupData?.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+                          >
+                             {groupData?.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+                             <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{groupData?.isHidden ? '屏蔽中' : '显示中'}</span>
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列正式名稱 (Group Display Name)</label>
                           <input 

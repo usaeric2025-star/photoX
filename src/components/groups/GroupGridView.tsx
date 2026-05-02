@@ -23,18 +23,18 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
 }) => {
   const longPressTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   return (
-    <div className="flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 pb-40 scrollbar-hide">
+    <div className={`flex-1 overflow-y-auto min-h-0 p-3 sm:p-6 pb-40 scrollbar-hide ${groupData?.isHidden ? 'grayscale opacity-70' : ''}`}>
       {/* Series Summary Card */}
       {groupData && (groupData.description || (groupData.colors && groupData.colors.length > 0) || (groupData.materials && groupData.materials.length > 0)) && (
-        <div className="mb-8 p-6 bg-white rounded-[2rem] border-2 border-indigo-50 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-5 text-indigo-600">
+        <div className={`mb-8 p-6 rounded-[2rem] border-2 shadow-sm relative overflow-hidden group ${groupData.isHidden ? 'bg-slate-50 border-slate-200' : 'bg-white border-indigo-50'}`}>
+          <div className={`absolute top-0 right-0 p-8 opacity-5 ${groupData.isHidden ? 'text-slate-400' : 'text-indigo-600'}`}>
             <Quote size={80} />
           </div>
           
           <div className="relative z-10 flex flex-col md:flex-row gap-8">
             <div className="flex-1 space-y-4">
                <div>
-                  <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1">系列故事 / Series Story</h3>
+                  <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${groupData.isHidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列故事 / Series Story</h3>
                   <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl">
                     {groupData.description || '暫無系列說明 / No description yet.'}
                   </p>
@@ -43,7 +43,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
                <div className="flex flex-wrap gap-4 pt-2">
                  {groupData.materials && groupData.materials.length > 0 && (
                    <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
-                      <Layers size={14} className="text-indigo-400" />
+                      <Layers size={14} className={groupData.isHidden ? 'text-slate-400' : 'text-indigo-400'} />
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
                         {groupData.materials.join(' • ')}
                       </span>
@@ -54,7 +54,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
 
             {groupData.colors && groupData.colors.length > 0 && (
               <div className="md:w-48 space-y-3">
-                 <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">系列配比 / DNA Colors</h3>
+                 <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${groupData.isHidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列配比 / DNA Colors</h3>
                  <div className="flex flex-wrap gap-2">
                     {groupData.colors.map((c, i) => (
                       <div 

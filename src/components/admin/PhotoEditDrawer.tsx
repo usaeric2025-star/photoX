@@ -79,9 +79,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
       <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
         {/* Left: AI/Status Info */}
-        <div className="flex-1 flex items-center gap-2 overflow-hidden">
+        <div className="flex-none flex items-center gap-2">
           {aiDebugInfo?.error ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-xl text-[10px] font-bold truncate">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-xl text-[10px] font-bold truncate max-w-[100px]">
               AI: {aiDebugInfo.error}
             </div>
           ) : (
@@ -89,15 +89,15 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
               onClick={() => updateForm({ isHidden: !formState.isHidden })}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
-              {formState.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+              {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
               <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.isHidden ? '屏蔽' : '显示'}</span>
             </div>
           )}
         </div>
 
         {/* Center: Title */}
-        <div className="flex-shrink-0 flex flex-col items-center justify-center min-w-0">
-          <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate">
+        <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-2">
+          <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-center">
             {props.editPhotoId ? '編輯產品信息' : '分析新產品'}
           </h2>
           <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">Product Details</p>
