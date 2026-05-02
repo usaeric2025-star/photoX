@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useErrorHandler } from '../../utils/errorHandler';
 import { saveSettings } from '../../services/supabaseService';
+import { useAdminSession } from '../../context/AdminContexts';
 
 interface TagEditorProps {
   tags: any[];

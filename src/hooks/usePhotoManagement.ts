@@ -175,9 +175,9 @@ export const usePhotoManagement = (
     const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn:any) => fn();
     await run(async () => {
        try {
-           const errors = validatePhotoForm(formState);
-           if (Object.keys(errors).length > 0) {
-             throw new Error(Object.values(errors)[0]);
+           const { valid, errors } = validatePhotoForm(formState);
+           if (!valid) {
+             throw new Error(errors[0]);
            }
 
            // Resolve tag names to IDs

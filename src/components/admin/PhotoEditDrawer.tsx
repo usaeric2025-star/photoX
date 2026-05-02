@@ -6,6 +6,7 @@ import { Photo, ProductFormData } from '../../types';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight } from 'lucide-react';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
+import { TagEditor } from './TagEditor';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -160,12 +161,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             )}
             <button 
               onClick={async () => {
-                const errors = validatePhotoForm(formState);
-                if (Object.keys(errors).length > 0) {
+                const { valid, errors } = validatePhotoForm(formState);
+                if (!valid) {
                   // The validation hook handles visual feedback if integrated with a form library,
                   // but here we just block and show toast for simplicity since it's a raw object.
-                  const firstError = Object.values(errors)[0];
-                  handleError(new Error(firstError), '表單驗證失敗');
+                  handleError(new Error(errors[0]), '表單驗證失敗');
                   return;
                 }
 

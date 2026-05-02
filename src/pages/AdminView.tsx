@@ -259,7 +259,7 @@ export default function AdminView() {
     );
   }
 
-  if (!user && getSafeSessionStorage('isStaffMode') !== 'true') {
+  if (!user && sessionStorage.getItem('isStaffMode') !== 'true') {
     return (
       <AdminUIProvider value={uiValue}>
         <AdminSessionProvider value={sessionValue}>
