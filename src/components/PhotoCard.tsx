@@ -69,14 +69,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       }
     }
     
-    // 2. If truly uncategorized (no catId) but has a manufacturer name, 
-    // many users treat manufacturer as the "directory". 
-    if (!catId && mfrName) {
-      return mfrName;
-    }
-
+    // 2. If truly uncategorized (no catId), use the default
     return catName || t.uncategorized;
-  }, [catName, mfrName, t.uncategorized, photo.categoryId, (photo as any).category_id]);
+  }, [catName, t.uncategorized, photo.categoryId, (photo as any).category_id]);
 
   const isUncategorized = displayCatName === t.uncategorized;
   

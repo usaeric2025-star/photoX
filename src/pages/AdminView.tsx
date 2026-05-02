@@ -515,16 +515,19 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                         取消 / CANCEL
                       </AlertDialogCancel>
                       <AlertDialogAction 
-                        onClick={() => {
-                          if (alertDialog.onConfirm) alertDialog.onConfirm();
+                        onClick={async () => {
+                          if (alertDialog.onConfirm) {
+                            await alertDialog.onConfirm();
+                          }
+                          setAlertDialog(null);
                         }}
                       >
-                        确定 / OK
+                        確定 / OK
                       </AlertDialogAction>
                     </>
                   ) : (
                     <AlertDialogAction onClick={() => setAlertDialog(null)}>
-                      确定 / OK
+                      確定 / OK
                     </AlertDialogAction>
                   )}
                 </AlertDialogFooter>

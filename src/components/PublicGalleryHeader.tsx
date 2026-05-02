@@ -34,9 +34,9 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
     <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
       <div className="flex items-center gap-2 sm:gap-4 min-w-0" onClick={onHeaderClick}>
         {settings?.logo_url ? (
-          <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-12 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm cursor-pointer" />
+          <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-12 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
         ) : (
-          <div className="shrink-0 cursor-pointer">
+          <div className="shrink-0">
             <h1 className="text-sm sm:text-lg font-black tracking-tighter text-[#1D3557] italic leading-none">GALLERY</h1>
           </div>
         )}

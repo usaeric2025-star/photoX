@@ -215,7 +215,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(3);
   const columns = propColumns || internalColumns;
   const setColumns = propSetColumns || setInternalColumns;
-  const [headerClickCount, setHeaderClickCount] = useState(0);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -239,15 +238,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     scrollToTop();
   }, [selectedCatCode, selectedSubId, selectedTagIds]);
 
-  const handleHeaderClick = () => {
-    const next = headerClickCount + 1;
-    if (next >= 3) {
-        setShowPassPrompt(true);
-        setHeaderClickCount(0);
+  const handleLoginClick = () => {
+    if (!isAdminMode) {
+      setShowPassPrompt(true);
+    } else if (onExit) {
+      onExit();
     } else {
-        setHeaderClickCount(next);
+      navigate('/admin');
     }
-  }
+  };
 
   const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);
 
@@ -386,14 +385,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           isMultiSelect={!!activeIsMultiSelect}
           lang={lang}
           t={t}
-          onHeaderClick={handleHeaderClick}
+          onHeaderClick={() => {}}
           onRefresh={onRefresh!}
           onToggleMultiSelect={() => activeSetIsMultiSelect(!activeIsMultiSelect)}
           clearSelection={activeClearSelection}
           setIsMultiSelect={activeSetIsMultiSelect}
           onAddPhoto={onAddPhoto!}
           onSetLang={(l) => setLang(l)}
-          onExit={() => onExit ? onExit() : navigate('/admin')}
+          onExit={handleLoginClick}
           onLogin={onLogin}
           onOpenSettings={onOpenSettings}
         />

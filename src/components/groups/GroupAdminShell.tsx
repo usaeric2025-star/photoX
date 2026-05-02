@@ -262,11 +262,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
             <AlertDialogAction 
               onClick={async () => {
                 if (confirmDelete) {
-                    setPhotos?.(prev => prev.map(p => 
-                      confirmDelete.ids.includes(p.id) ? { ...p, groupId: null } : p
-                    ));
                     try {
                       await updatePhotosGroupInCloud(confirmDelete.ids, { group_id: null });
+                      setPhotos?.(prev => prev.map(p => 
+                        confirmDelete.ids.includes(p.id) ? { ...p, groupId: null } : p
+                      ));
                       setIsMultiSelectMode(false);
                       setSelectedPhotoIds([]);
                       showToast('已移出 / Removed');
@@ -277,7 +277,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                 }
               }}
             >
-              确定移出 / CONFIRM
+              確定移出 / CONFIRM
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
