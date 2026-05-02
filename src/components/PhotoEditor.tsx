@@ -25,212 +25,328 @@ interface AdData {
 
 const TEMPLATES: AdTemplate[] = [
   {
-    id: 'price-focused',
-    name: 'Price Focused',
-    description: 'Large price center, product name top',
+    id: 'swiss-typographic',
+    name: '瑞士几何 / SWISS',
+    description: '非对称排版，极具视觉冲击力',
     apply: (canvas, data) => {
-      const name = new fabric.IText(data.productName || 'PRODUCT NAME', {
-        left: canvas.width! / 2,
-        top: 80,
-        fontSize: 48,
-        fontWeight: 'bold',
-        fontFamily: 'Noto Sans SC',
-        fill: '#000000',
-        originX: 'center',
-        textAlign: 'center',
-      });
-      (name as any).name = 'productName';
-      
-      const price = new fabric.IText(`$${data.price || '99'}`, {
-        left: canvas.width! / 2,
-        top: canvas.height! / 2,
-        fontSize: 160,
-        fontWeight: '900',
-        fontFamily: 'Noto Sans SC',
-        fill: data.brandColor,
-        originX: 'center',
-        originY: 'center',
-        textAlign: 'center',
-      });
-      (price as any).name = 'price';
-
-      const tagline = new fabric.IText(data.tagline || 'Limited Offer', {
-        left: canvas.width! / 2,
-        top: canvas.height! - 100,
-        fontSize: 32,
-        fontFamily: 'Noto Sans SC',
-        fill: '#666666',
-        originX: 'center',
-        textAlign: 'center',
-      });
-      (tagline as any).name = 'tagline';
-
-      canvas.add(name, price, tagline);
-    }
-  },
-  {
-    id: 'name-focused',
-    name: 'Name Focused',
-    description: 'Big product name, price bottom right',
-    apply: (canvas, data) => {
-      const name = new fabric.IText(data.productName || 'PRODUCT NAME', {
-        left: 60,
-        top: 60,
-        fontSize: 80,
-        fontWeight: '900',
-        fontFamily: 'Noto Sans SC',
-        fill: '#000000',
-        width: canvas.width! - 120,
-      });
-      (name as any).name = 'productName';
-
-      const price = new fabric.IText(`$${data.price || '99'}`, {
-        left: canvas.width! - 60,
-        top: canvas.height! - 60,
-        fontSize: 64,
-        fontWeight: 'bold',
-        fontFamily: 'Noto Sans SC',
-        fill: data.brandColor,
-        originX: 'right',
-        originY: 'bottom',
-      });
-      (price as any).name = 'price';
-
-      canvas.add(name, price);
-    }
-  },
-  {
-    id: 'minimal',
-    name: 'Minimal',
-    description: 'Small logo area, price badge corner',
-    apply: (canvas, data) => {
-      const rect = new fabric.Rect({
-        width: 250,
-        height: 100,
-        fill: data.brandColor,
-        rx: 50,
-        ry: 50,
-      });
-      (rect as any).name = 'bg-badge';
-
-      const priceText = new fabric.IText(`$${data.price || '99'}`, {
-        fontSize: 48,
-        fill: '#FFFFFF',
-        fontFamily: 'Noto Sans SC',
-        fontWeight: 'bold',
-        originX: 'center',
-        originY: 'center',
-      });
-      (priceText as any).name = 'price-internal';
-
-      const badge = new fabric.Group([rect, priceText], {
-        left: canvas.width! - 280,
-        top: 40,
-      });
-      (badge as any).name = 'badge-group';
-
-      const name = new fabric.IText(data.productName || 'Product Name', {
-        left: 40,
-        top: canvas.height! - 80,
-        fontSize: 36,
-        fontFamily: 'Noto Sans SC',
-        fill: '#333333',
-      });
-      (name as any).name = 'productName';
-
-      canvas.add(badge, name);
-    }
-  },
-  {
-    id: 'promotion',
-    name: 'Promotion',
-    description: 'SALE banner + price + name',
-    apply: (canvas, data) => {
-      const banner = new fabric.Rect({
-        width: canvas.width!,
-        height: 120,
-        fill: '#FF0000',
-        top: 0,
+      // Decorative bar
+      const bar = new fabric.Rect({
         left: 0,
-        selectable: false,
-      });
-      (banner as any).name = 'banner';
-
-      const saleText = new fabric.IText('SALE', {
-        left: canvas.width! / 2,
-        top: 60,
-        fontSize: 80,
-        fontWeight: '900',
-        fill: '#FFFFFF',
-        fontFamily: 'Noto Sans SC',
-        originX: 'center',
-        originY: 'center',
+        top: 0,
+        width: 60,
+        height: canvas.height!,
+        fill: data.brandColor || '#1D3557',
         selectable: false
       });
 
-      const name = new fabric.IText(data.productName || 'PRODUCT NAME', {
-        left: canvas.width! / 2,
-        top: canvas.height! / 2,
-        fontSize: 64,
-        fontWeight: 'bold',
-        fontFamily: 'Noto Sans SC',
-        originX: 'center',
+      const name = new fabric.IText((data.productName || 'MODERN DESIGN').toUpperCase(), {
+        left: 100,
+        top: 120,
+        fontSize: 110,
+        fontWeight: '900',
+        fontFamily: 'Impact, sans-serif',
+        fill: '#000000',
+        lineHeight: 0.8,
+        charSpacing: -40
       });
       (name as any).name = 'productName';
+      
+      const priceTag = new fabric.IText('VALUE //', {
+        left: 105,
+        top: 380,
+        fontSize: 22,
+        fontWeight: '900',
+        fill: '#000000',
+        charSpacing: 200
+      });
 
-      const price = new fabric.IText(`NOW $${data.price || '99'}`, {
-        left: canvas.width! / 2,
-        top: canvas.height! / 2 + 100,
-        fontSize: 48,
-        fontFamily: 'Noto Sans SC',
-        fill: '#FF0000',
-        originX: 'center',
+      const price = new fabric.IText(`${data.price || '99.00'}`, {
+        left: 100,
+        top: 400,
+        fontSize: 260,
+        fontWeight: '900',
+        fontFamily: 'Helvetica, Arial, sans-serif',
+        fill: data.brandColor || '#1D3557',
+        lineHeight: 1,
+        charSpacing: -10
       });
       (price as any).name = 'price';
 
-      canvas.add(banner, saleText, name, price);
+      const tagline = new fabric.IText(data.tagline || 'LIMITED RELEASE / SPEC_2024', {
+        left: 105,
+        top: canvas.height! - 100,
+        fontSize: 18,
+        fontWeight: 'bold',
+        fontFamily: 'monospace',
+        fill: '#000000',
+        charSpacing: 150
+      });
+      (tagline as any).name = 'tagline';
+
+      canvas.add(bar, name, priceTag, price, tagline);
     }
   },
   {
-    id: 'clean-white',
-    name: 'Clean White',
-    description: 'White overlay card with name + price',
+    id: 'editorial-cover',
+    name: '期刊杂志 / COVER',
+    description: '经典画报感，优雅且平衡',
     apply: (canvas, data) => {
-      const card = new fabric.Rect({
-        width: 500,
-        height: 300,
-        fill: 'rgba(255, 255, 255, 0.9)',
-        left: canvas.width! / 2 - 250,
-        top: canvas.height! - 400,
-        rx: 20,
-        ry: 20,
-        shadow: new fabric.Shadow({ blur: 20, color: 'rgba(0,0,0,0.1)', offsetX: 0, offsetY: 10 }),
+      const frame = new fabric.Rect({
+        left: 50,
+        top: 50,
+        width: canvas.width! - 100,
+        height: canvas.height! - 100,
+        fill: 'transparent',
+        stroke: '#FFFFFF',
+        strokeWidth: 2,
+        selectable: false
       });
-      (card as any).name = 'card';
 
-      const name = new fabric.IText(data.productName || 'Product Name', {
+      const header = new fabric.IText('PHOTOX COLLECTIVE', {
         left: canvas.width! / 2,
-        top: canvas.height! - 330,
-        fontSize: 40,
-        fontWeight: 'bold',
-        fontFamily: 'Noto Sans SC',
-        fill: '#000000',
+        top: 100,
+        fontSize: 28,
+        fontWeight: '900',
+        fontFamily: 'Georgia, serif',
+        fill: '#FFFFFF',
         originX: 'center',
+        charSpacing: 500
+      });
+
+      const name = new fabric.IText(data.productName || 'The New Standard', {
+        left: canvas.width! / 2,
+        top: canvas.height! / 2 - 40,
+        fontSize: 84,
+        fontWeight: 'bold',
+        fontFamily: 'Georgia, serif',
+        fill: '#FFFFFF',
+        originX: 'center',
+        textAlign: 'center',
+        fontStyle: 'italic'
       });
       (name as any).name = 'productName';
 
-      const price = new fabric.IText(`$${data.price || '99'}`, {
+      const priceCircle = new fabric.Circle({
+        radius: 80,
+        fill: data.brandColor || '#E63946',
         left: canvas.width! / 2,
-        top: canvas.height! - 250,
-        fontSize: 60,
-        fontWeight: '900',
-        fontFamily: 'Noto Sans SC',
-        fill: data.brandColor,
+        top: canvas.height! / 2 + 150,
         originX: 'center',
+        originY: 'center'
+      });
+      
+      const priceVal = new fabric.IText(`$${data.price || '29'}`, {
+        fontSize: 48,
+        fontWeight: 'bold',
+        fill: '#FFFFFF',
+        originX: 'center',
+        originY: 'center',
+        left: canvas.width! / 2,
+        top: canvas.height! / 2 + 150
+      });
+
+      const tagline = new fabric.IText((data.tagline || 'Essential aesthetic for refined living').toUpperCase(), {
+        left: canvas.width! / 2,
+        top: canvas.height! - 110,
+        fontSize: 12,
+        fontWeight: 'bold',
+        fill: '#FFFFFF',
+        originX: 'center',
+        charSpacing: 300
+      });
+      (tagline as any).name = 'tagline';
+
+      canvas.add(frame, header, name, priceCircle, priceVal, tagline);
+    }
+  },
+  {
+    id: 'retro-brutalist',
+    name: '街头潮流 / BRUTAL',
+    description: '硬核工业感，适合个性表达',
+    apply: (canvas, data) => {
+      const darkBg = new fabric.Rect({
+        left: 0,
+        top: canvas.height! - 320,
+        width: canvas.width!,
+        height: 320,
+        fill: '#000000',
+        selectable: false
+      });
+
+      const stripe = new fabric.Rect({
+        left: 0,
+        top: 200,
+        width: canvas.width!,
+        height: 140,
+        fill: data.brandColor || '#F4A261',
+        stroke: '#000000',
+        strokeWidth: 4
+      });
+
+      const name = new fabric.IText(data.productName || 'MANIFESTO', {
+        left: 40,
+        top: 215,
+        fontSize: 96,
+        fontWeight: '900',
+        fill: '#000000',
+        fontFamily: 'Arial Black'
+      });
+      (name as any).name = 'productName';
+
+      const priceLabel = new fabric.IText('COST //', {
+        left: 45,
+        top: canvas.height! - 260,
+        fontSize: 40,
+        fontWeight: '900',
+        fill: data.brandColor || '#F4A261'
+      });
+
+      const price = new fabric.IText(`${data.price || '10K'}`, {
+        left: 40,
+        top: canvas.height! - 220,
+        fontSize: 180,
+        fontWeight: '900',
+        fill: '#FFFFFF',
+        fontFamily: 'Impact'
       });
       (price as any).name = 'price';
 
-      canvas.add(card, name, price);
+      const tagline = new fabric.IText(data.tagline || 'NO COMPROMISE // 2024_FW', {
+        left: 45,
+        top: canvas.height! - 65,
+        fontSize: 20,
+        fontWeight: 'bold',
+        fill: '#FFFFFF',
+        charSpacing: 200
+      });
+      (tagline as any).name = 'tagline';
+
+      canvas.add(darkBg, stripe, name, priceLabel, price, tagline);
+    }
+  },
+  {
+    id: 'modern-minimal',
+    name: '雅致极简 / ZEN',
+    description: '通透感与大量留白，宁静奢华',
+    apply: (canvas, data) => {
+      const lineTop = new fabric.Rect({
+        left: canvas.width! / 2 - 100,
+        top: 150,
+        width: 200,
+        height: 1,
+        fill: '#333',
+        originX: 'center'
+      });
+
+      const name = new fabric.IText(data.productName || 'Serenity', {
+        left: canvas.width! / 2,
+        top: 200,
+        fontSize: 64,
+        fontWeight: '200',
+        fill: '#222',
+        originX: 'center',
+        charSpacing: 400
+      });
+      (name as any).name = 'productName';
+
+      const priceBox = new fabric.Rect({
+        width: 140,
+        height: 60,
+        fill: 'transparent',
+        stroke: data.brandColor || '#2A9D8F',
+        strokeWidth: 1,
+        originX: 'center',
+        originY: 'center',
+        left: canvas.width! / 2,
+        top: canvas.height! - 200
+      });
+
+      const price = new fabric.IText(`${data.price || '49'}`, {
+        left: canvas.width! / 2,
+        top: canvas.height! - 200,
+        fontSize: 28,
+        fontWeight: '300',
+        fill: '#222',
+        originX: 'center',
+        originY: 'center'
+      });
+      (price as any).name = 'price';
+
+      const tagline = new fabric.IText(data.tagline || 'The art of simplicity', {
+        left: canvas.width! / 2,
+        top: canvas.height! - 140,
+        fontSize: 16,
+        fontWeight: '300',
+        fill: '#999',
+        originX: 'center'
+      });
+      (tagline as any).name = 'tagline';
+
+      canvas.add(lineTop, name, priceBox, price, tagline);
+    }
+  },
+  {
+    id: 'technical-data',
+    name: '工业参数 / TECH',
+    description: '硬连接布局，展现极致专业性',
+    apply: (canvas, data) => {
+      const topBar = new fabric.Rect({
+        left: 0,
+        top: 0,
+        width: canvas.width!,
+        height: 40,
+        fill: '#000000'
+      });
+
+      const title = new fabric.IText('DEVICEX_PRTCL // SYSTEM_OVERRIDE', {
+        left: 20,
+        top: 12,
+        fontSize: 16,
+        fontWeight: 'bold',
+        fill: '#FFFFFF',
+        fontFamily: 'monospace'
+      });
+
+      const name = new fabric.IText(data.productName || 'QUANTUM_CORE', {
+        left: 40,
+        top: 100,
+        fontSize: 84,
+        fontWeight: '900',
+        fill: data.brandColor || '#1D3557',
+        fontFamily: 'Impact'
+      });
+      (name as any).name = 'productName';
+
+      const priceGroup = new fabric.Rect({
+        left: 40,
+        top: 220,
+        width: 380,
+        height: 90,
+        fill: '#000000'
+      });
+
+      const priceVal = new fabric.IText(`$${data.price || '499.00'}`, {
+        left: 65,
+        top: 240,
+        fontSize: 56,
+        fontWeight: 'bold',
+        fill: '#FFFFFF',
+        fontFamily: 'monospace'
+      });
+      (priceVal as any).name = 'price';
+
+      const tagline = new fabric.IText(`[ DATA_LOG: ${data.tagline || 'HIGH PERFORMANCE UNIT'} ]\n[ STATUS: ACTIVE ]\n[ COORDS: 35.6895_N 139.6917_E ]`, {
+        left: 40,
+        top: canvas.height! - 160,
+        fontSize: 18,
+        lineHeight: 1.4,
+        fill: '#333333',
+        fontFamily: 'monospace',
+        fontWeight: 'bold'
+      });
+      (tagline as any).name = 'tagline';
+
+      canvas.add(topBar, title, name, priceGroup, priceVal, tagline);
     }
   }
 ];
@@ -480,6 +596,59 @@ export default function PhotoEditor() {
     showToast('高清海报已导出', 'success');
   };
 
+  const [editingText, setEditingText] = useState<{ id: string; text: string; top: number; left: number; width: number } | null>(null);
+
+  // Handle fabric events for smooth editing
+  useEffect(() => {
+    if (!fabricCanvas) return;
+
+    const handleSelection = (e: any) => {
+      const selected = e.selected?.[0];
+      if (selected && (selected.type === 'i-text' || selected.type === 'text')) {
+        const boundingRect = selected.getBoundingRect();
+        const canvasRect = canvasRef.current?.getBoundingClientRect();
+        
+        if (canvasRect) {
+          setEditingText({
+            id: selected.id || selected.name || 'text',
+            text: selected.text || '',
+            top: canvasRect.top + boundingRect.top,
+            left: canvasRect.left + boundingRect.left,
+            width: boundingRect.width
+          });
+        }
+      } else {
+        setEditingText(null);
+      }
+    };
+
+    fabricCanvas.on('selection:created', handleSelection);
+    fabricCanvas.on('selection:updated', handleSelection);
+    fabricCanvas.on('selection:cleared', () => setEditingText(null));
+    fabricCanvas.on('object:moving', () => setEditingText(null));
+    fabricCanvas.on('mouse:down', (e) => {
+      if (!e.target) setEditingText(null);
+    });
+
+    return () => {
+      fabricCanvas.off('selection:created');
+      fabricCanvas.off('selection:updated');
+      fabricCanvas.off('selection:cleared');
+      fabricCanvas.off('object:moving');
+      fabricCanvas.off('mouse:down');
+    };
+  }, [fabricCanvas]);
+
+  const handleTextChange = (newText: string) => {
+    if (!fabricCanvas || !editingText) return;
+    const activeObject = fabricCanvas.getActiveObject();
+    if (activeObject && (activeObject.type === 'i-text' || activeObject.type === 'text')) {
+      (activeObject as any).set('text', newText);
+      fabricCanvas.renderAll();
+      setEditingText({ ...editingText, text: newText });
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-slate-50 flex flex-col overflow-hidden z-50">
       {/* Top Header */}
@@ -521,6 +690,41 @@ export default function PhotoEditor() {
             <canvas ref={canvasRef} />
           </div>
         </div>
+
+        {/* Text Editing Overlay */}
+        <AnimatePresence>
+          {editingText && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              style={{ 
+                position: 'fixed',
+                top: editingText.top - 10,
+                left: editingText.left - 10,
+                zIndex: 60,
+              }}
+            >
+              <div className="bg-white rounded-xl shadow-2xl border border-blue-100 p-2 min-w-[200px]">
+                <textarea
+                  autoFocus
+                  className="w-full bg-slate-50 border-none outline-none p-3 text-sm font-bold text-slate-900 rounded-lg resize-none min-h-[60px]"
+                  value={editingText.text}
+                  onChange={(e) => handleTextChange(e.target.value)}
+                  placeholder="输入文字内容..."
+                />
+                <div className="flex justify-end gap-2 mt-2 px-1">
+                  <button 
+                    onClick={() => setEditingText(null)}
+                    className="px-3 py-1.5 bg-blue-600 text-white text-[10px] font-black uppercase rounded-lg shadow-lg shadow-blue-200"
+                  >
+                    确定完成
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Floating Controls for multi-photo context */}
         {batchItems.length > 1 && (
