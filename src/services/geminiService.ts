@@ -323,10 +323,16 @@ export const analyzeProductPhoto = async (
     parsedData.dimensions = safeDims.filter(d => {
       if (!d || typeof d !== 'object') return false;
       const label = String(d.label || '').toLowerCase();
-      // If AI enters "Overall" but no real numbers, skip it.
-      if (label.includes('overall') && (!d.h && !d.w && !d.l)) return false;
-      if (label === 'overall') return false; // Strict "Overall" check
-      return true;
+      
+      // Strict removal of "overall" labels
+      if (label.includes('overall')) return false;
+      
+      // Also ensure there's at least one numeric value
+      const hasValue = (d.h && String(d.h).trim() !== '' && String(d.h) !== '-') || 
+                       (d.w && String(d.w).trim() !== '' && String(d.w) !== '-') || 
+                       (d.l && String(d.l).trim() !== '' && String(d.l) !== '-');
+      
+      return hasValue;
     });
 
     // Normalize tagIds to always be an array of strings
