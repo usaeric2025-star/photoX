@@ -369,12 +369,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-scrollbar pb-32">
-        
-        {activeTab === 'photo' ? (
-          <>
-            {/* Logo Section */}
-        <div className={cardClass} id="section-logo">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
+        <AnimatePresence mode="wait">
+          {activeTab === 'photo' ? (
+            <motion.div 
+              key="photo-tab"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              className="space-y-6"
+            >
+              {/* Logo Section */}
+              <div className={cardClass} id="section-logo">
             <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
               <span className="flex items-center gap-2">
                 <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
@@ -761,9 +767,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 </div>
               </div>
           </div>
-        </>
-      ) : (
-        <>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="ad-tab"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              className="space-y-6"
+            >
           {/* Ad Maker System Config (Ad Design Tab) */}
           <div className={cardClass} id="section-ad-maker">
               <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2 mb-6">
@@ -819,8 +831,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 </div>
               </div>
           </div>
-        </>
-      )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

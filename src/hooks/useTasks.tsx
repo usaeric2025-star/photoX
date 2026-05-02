@@ -24,36 +24,74 @@ interface TaskContextType {
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'photox_background_tasks';
+
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tasks, setTasks] = useState<BackgroundTask[]>([]);
+  const [tasks, setTasks] = useState<BackgroundTask[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Only keep recent tasks, and mark running ones as potentially needing resume
+        return parsed.map((t: any) => ({
+          ...t,
+          // We don't mark them as running immediately if we want to wait for the resume logic
+        }));
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  const saveTasks = (newTasks: BackgroundTask[]) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newTasks));
+  };
 
   const addTask = useCallback((taskData: Omit<BackgroundTask, 'id' | 'status' | 'progress'>) => {
     const id = Math.random().toString(36).substring(2, 9);
-    setTasks(prev => [...prev, { ...taskData, id, status: 'running', progress: 0 }]);
+    const newTask: BackgroundTask = { ...taskData, id, status: 'running', progress: 0 };
+    setTasks(prev => {
+      const updated = [...prev, newTask];
+      saveTasks(updated);
+      return updated;
+    });
     return id;
   }, []);
 
   const updateTask = useCallback((id: string, updates: Partial<BackgroundTask>) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === id) {
-        const newStatus = updates.status || t.status;
-        const isFinished = newStatus !== 'running';
-        return { 
-          ...t, 
-          ...updates, 
-          finishedAt: isFinished && !t.finishedAt ? Date.now() : t.finishedAt 
-        };
-      }
-      return t;
-    }));
+    setTasks(prev => {
+      const updated = prev.map(t => {
+        if (t.id === id) {
+          const newStatus = updates.status || t.status;
+          const isFinished = newStatus !== 'running';
+          return { 
+            ...t, 
+            ...updates, 
+            finishedAt: isFinished && !t.finishedAt ? Date.now() : t.finishedAt 
+          };
+        }
+        return t;
+      });
+      saveTasks(updated);
+      return updated;
+    });
   }, []);
 
   const removeTask = useCallback((id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
+    setTasks(prev => {
+      const updated = prev.filter(t => t.id !== id);
+      saveTasks(updated);
+      return updated;
+    });
   }, []);
 
   const clearCompleted = useCallback(() => {
-    setTasks(prev => prev.filter(t => t.status === 'running'));
+    setTasks(prev => {
+      const updated = prev.filter(t => t.status === 'running');
+      saveTasks(updated);
+      return updated;
+    });
   }, []);
 
   // Auto-remove completed/cancelled tasks after 8 seconds
@@ -61,11 +99,13 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const timer = setInterval(() => {
       setTasks(prev => {
         const now = Date.now();
-        return prev.filter(t => {
+        const next = prev.filter(t => {
           if (t.status === 'running') return true;
           if (t.finishedAt && now - t.finishedAt > 8000) return false;
           return true;
         });
+        if (next.length !== prev.length) saveTasks(next);
+        return next;
       });
     }, 2000);
     return () => clearInterval(timer);
@@ -117,25 +157,51 @@ const BackgroundTaskPanel: React.FC = () => {
               {tasks.length === 0 ? (
                 <div className="py-8 text-center text-slate-400 text-[10px]">没有进行中的任务</div>
               ) : (
-                tasks.map(task => (
-                  <div key={task.id} className="p-3 bg-white rounded-2xl border border-slate-50 hover:border-slate-100 transition-all group">
+                tasks.map((task, index) => (
+                  <motion.div 
+                    key={task.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="p-3 bg-white rounded-2xl border border-slate-50 hover:border-slate-100 transition-all group relative overflow-hidden"
+                  >
+                    {task.status === 'running' && (
+                      <motion.div 
+                        className="absolute bottom-0 left-0 h-[2px] bg-blue-500/20 w-full"
+                        initial={{ scaleX: 0 }}
+                        animate={{ scaleX: 1 }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    )}
                     <div className="flex items-center justify-between mb-2">
-                       <span className="text-[11px] font-bold text-slate-700 truncate mr-2">{task.name}</span>
+                       <div className="flex items-center gap-2 truncate flex-1 mr-2">
+                         {task.status === 'running' ? (
+                           <Loader2 size={12} className="animate-spin text-blue-500 shrink-0" />
+                         ) : task.status === 'completed' ? (
+                           <CheckCircle2 size={12} className="text-green-500 shrink-0" />
+                         ) : (
+                           <AlertCircle size={12} className="text-red-500 shrink-0" />
+                         )}
+                         <span className="text-[11px] font-bold text-slate-700 truncate">{task.name}</span>
+                       </div>
                        <div className="flex items-center gap-2">
-                         {task.status === 'running' && (
+                         {task.status === 'running' ? (
                            <button 
                             onClick={() => task.onCancel?.()}
-                            className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-colors"
+                            title="取消任务"
+                            className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-colors scale-90"
+                           >
+                            <X size={12} />
+                           </button>
+                         ) : (
+                           <button 
+                            onClick={() => removeTask(task.id)}
+                            title="移除记录"
+                            className="p-1 hover:bg-slate-100 text-slate-300 hover:text-slate-500 rounded-lg transition-colors scale-90"
                            >
                             <X size={12} />
                            </button>
                          )}
-                         <button 
-                          onClick={() => removeTask(task.id)}
-                          className="p-1 hover:bg-slate-100 text-slate-300 hover:text-slate-500 rounded-lg transition-colors"
-                         >
-                          <X size={12} />
-                         </button>
                        </div>
                     </div>
                     
@@ -144,25 +210,30 @@ const BackgroundTaskPanel: React.FC = () => {
                         <motion.div 
                           className={`h-full rounded-full ${
                             task.status === 'completed' ? 'bg-green-500' : 
-                            task.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                            task.status === 'error' ? 'bg-red-500' : 
+                            task.status === 'cancelled' ? 'bg-slate-400' :
+                            'bg-blue-500'
                           }`}
                           initial={{ width: 0 }}
                           animate={{ width: `${task.progress}%` }}
+                          transition={{ type: 'spring', damping: 20, stiffness: 100 }}
                         />
                       </div>
-                      <span className="text-[9px] font-black text-slate-400 w-8 text-right">
+                      <span className="text-[9px] font-black text-slate-400 w-8 text-right tabular-nums">
                         {Math.round(task.progress)}%
                       </span>
                     </div>
 
                     {task.message && (
-                      <p className={`mt-1.5 text-[9px] font-medium ${
-                        task.status === 'error' ? 'text-red-500' : 'text-slate-400'
+                      <p className={`mt-1.5 text-[9px] font-medium leading-tight ${
+                        task.status === 'error' ? 'text-red-500' : 
+                        task.status === 'cancelled' ? 'text-slate-400' :
+                        'text-slate-400'
                       }`}>
                         {task.message}
                       </p>
                     )}
-                  </div>
+                  </motion.div>
                 ))
               )}
             </div>

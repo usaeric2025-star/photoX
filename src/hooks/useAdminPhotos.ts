@@ -104,7 +104,7 @@ export const useAdminPhotos = (
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
-  const { addTask, updateTask } = useTasks();
+  const { tasks, addTask, updateTask } = useTasks();
   
   const photosRef = useRef(photos);
   
@@ -112,15 +112,35 @@ export const useAdminPhotos = (
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const currentAnalysisController = useRef<AbortController | null>(null);
 
-  const abortAnalysis = () => {
+  // Auto-resume logic: If there's a running batch task on mount, restart it
+  useEffect(() => {
+    if (!isInitializing && photos.length > 0) {
+      const runningBatchTask = tasks.find(t => t.status === 'running' && t.name.includes('批量 AI 識別'));
+      if (runningBatchTask && !currentAnalysisController.current) {
+        console.log('Resuming background task:', runningBatchTask.id);
+        handleBatchAiIdentify(photos, runningBatchTask.id);
+      }
+    }
+  }, [isInitializing, photos.length]);
+
+  const abortAnalysis = (taskId?: string) => {
     if (currentAnalysisController.current) {
       currentAnalysisController.current.abort();
       currentAnalysisController.current = null;
       setAiDebugInfo({ step: '已取消', message: '用戶中斷了 AI 識別任务' });
       
-      // Stop the UI loading state
+      // Update background task status if taskId is known
+      if (taskId) {
+        updateTask(taskId, { status: 'cancelled', message: '用戶已取消任務' });
+      } else {
+        // Fallback: find any running AI task
+        const runningAiTask = tasks.find(t => t.status === 'running' && t.name.includes('AI 識別'));
+        if (runningAiTask) {
+          updateTask(runningAiTask.id, { status: 'cancelled', message: '用戶已取消任務' });
+        }
+      }
+
       setInternalLoadingState('idle');
-      
       setTimeout(() => setAiDebugInfo(null), 3000);
     }
   };
@@ -140,10 +160,12 @@ export const useAdminPhotos = (
           // ALWAYS fetch from cloud on init, as per requirement
           const cloudPhotos = await loadPhotosFromCloud(user.id);
           if (cloudPhotos) {
-            setPhotos(cloudPhotos);
-            setCloudCount(cloudPhotos.length);
+            // Reset isAnalyzing flag in case it was saved to cloud or stale locally
+            const cleanPhotos = cloudPhotos.map(p => ({ ...p, isAnalyzing: false }));
+            setPhotos(cleanPhotos);
+            setCloudCount(cleanPhotos.length);
             // Overwrite local indexedDB
-            await saveData('product_photos', cloudPhotos);
+            await saveData('product_photos', cleanPhotos);
           } else {
              // Fallback/sync from local if cloud failed or empty?
              // User requested overwriting by cloud, if cloud is empty, local becomes empty.
@@ -170,25 +192,29 @@ export const useAdminPhotos = (
   }, [user]);
 
   const handleBatchAiIdentify = async (
-      photos: Photo[], 
-      isCancelled: () => boolean
+      photosToProcess: Photo[], 
+      existingTaskId?: string
   ) => {
     const effectiveKey = geminiApiKey || process.env.GEMINI_API_KEY;
-    const unProcessed = photos.filter(p => {
+    const unProcessed = photosToProcess.filter(p => {
        const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
        const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
        return (!p.categoryId || rawTagIds.length < 2 || !p.name || !hasAllTranslations) && !p.isAnalyzing;
     });
     
     if (unProcessed.length === 0) {
-      showToast('選中的照片已經包含完整的類別、標籤和翻譯，無需重新識別。', 'success');
+      if (existingTaskId) {
+        updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已識別完成' });
+      } else {
+        showToast('選中的照片已經包含完整的類別、標籤和翻譯，無需重新識別。', 'success');
+      }
       return;
     }
     
     setBatchProgress({ current: 0, total: unProcessed.length });
     
-    // Create a background task
-    const taskId = addTask({
+    // Use existing task ID or create a new one
+    const taskId = existingTaskId || addTask({
       name: `批量 AI 識別 (${unProcessed.length} 張)`,
       onCancel: () => abortAnalysis()
     });

@@ -478,10 +478,9 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
 
   const handleBatchAiIdentifyTrigger = () => {
     if (loadingState === 'analyzing') {
-      cancelBatchAiRef.current = true;
+      abortAnalysis();
     } else {
-      cancelBatchAiRef.current = false;
-      handleBatchAiIdentify(displayPhotos, () => cancelBatchAiRef.current);
+      handleBatchAiIdentify(displayPhotos);
     }
   };
   
