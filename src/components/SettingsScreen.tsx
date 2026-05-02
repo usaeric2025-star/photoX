@@ -171,6 +171,8 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
   );
 };
 
+import { SYSTEM_TEMPLATES } from '../constants/systemTemplates';
+
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
     settings, user, loginWithGoogle, logout, syncPercent, 
@@ -191,6 +193,34 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const [hasChanges, setHasChanges] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [uvtsInput, setUvtsInput] = useState('');
+
+  const seedTemplates = async () => {
+    await withLoading('saving', async () => {
+      try {
+        const results = [];
+        for (const t of SYSTEM_TEMPLATES) {
+          // Check if already exists by style_name
+          const exists = adTemplates.find(existing => existing.name === t.style_name);
+          if (!exists) {
+            const newT = await templateService.saveTemplate(
+              t.style_name,
+              t.description || "System Template",
+              t
+            );
+            results.push(newT);
+          }
+        }
+        if (results.length > 0) {
+          setAdTemplates(prev => [...results, ...prev]);
+          showToast(`成功初始化 ${results.length} 个模板 / Seeded ${results.length} templates`, 'success');
+        } else {
+          showToast('模板库已是最新 / Templates are already up to date', 'success');
+        }
+      } catch (err: any) {
+        showToast(`初始化失败: ${err.message}`, 'error');
+      }
+    });
+  };
 
   // Debounced save for settings
   const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);
@@ -827,6 +857,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                           className="flex-1 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2"
                         >
                           <Plus size={14} /> 新置模板
+                        </button>
+                        <button 
+                          onClick={seedTemplates}
+                          disabled={loadingState.saving}
+                          className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                        >
+                          <Sparkles size={14} className="text-blue-600" /> 初始化预设
                         </button>
                         <button className="px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center">
                           <RefreshCcw size={14} />

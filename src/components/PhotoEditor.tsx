@@ -23,333 +23,16 @@ interface AdData {
   brandColor: string;
 }
 
-const TEMPLATES: AdTemplate[] = [
-  {
-    id: 'swiss-typographic',
-    name: '瑞士几何 / SWISS',
-    description: '非对称排版，极具视觉冲击力',
-    apply: (canvas, data) => {
-      // Decorative bar
-      const bar = new fabric.Rect({
-        left: 0,
-        top: 0,
-        width: 60,
-        height: canvas.height!,
-        fill: data.brandColor || '#1D3557',
-        selectable: false
-      });
+import { SYSTEM_TEMPLATES } from '../constants/systemTemplates';
 
-      const name = new fabric.IText((data.productName || 'MODERN DESIGN').toUpperCase(), {
-        left: 100,
-        top: 120,
-        fontSize: 110,
-        fontWeight: '900',
-        fontFamily: 'Impact, sans-serif',
-        fill: '#000000',
-        lineHeight: 0.8,
-        charSpacing: -40
-      });
-      (name as any).name = 'productName';
-      
-      const priceTag = new fabric.IText('VALUE //', {
-        left: 105,
-        top: 380,
-        fontSize: 22,
-        fontWeight: '900',
-        fill: '#000000',
-        charSpacing: 200
-      });
-
-      const price = new fabric.IText(`${data.price || '99.00'}`, {
-        left: 100,
-        top: 400,
-        fontSize: 260,
-        fontWeight: '900',
-        fontFamily: 'Helvetica, Arial, sans-serif',
-        fill: data.brandColor || '#1D3557',
-        lineHeight: 1,
-        charSpacing: -10
-      });
-      (price as any).name = 'price';
-
-      const tagline = new fabric.IText(data.tagline || 'LIMITED RELEASE / SPEC_2024', {
-        left: 105,
-        top: canvas.height! - 100,
-        fontSize: 18,
-        fontWeight: 'bold',
-        fontFamily: 'monospace',
-        fill: '#000000',
-        charSpacing: 150
-      });
-      (tagline as any).name = 'tagline';
-
-      canvas.add(bar, name, priceTag, price, tagline);
-    }
-  },
-  {
-    id: 'editorial-cover',
-    name: '期刊杂志 / COVER',
-    description: '经典画报感，优雅且平衡',
-    apply: (canvas, data) => {
-      const frame = new fabric.Rect({
-        left: 50,
-        top: 50,
-        width: canvas.width! - 100,
-        height: canvas.height! - 100,
-        fill: 'transparent',
-        stroke: '#FFFFFF',
-        strokeWidth: 2,
-        selectable: false
-      });
-
-      const header = new fabric.IText('PHOTOX COLLECTIVE', {
-        left: canvas.width! / 2,
-        top: 100,
-        fontSize: 28,
-        fontWeight: '900',
-        fontFamily: 'Georgia, serif',
-        fill: '#FFFFFF',
-        originX: 'center',
-        charSpacing: 500
-      });
-
-      const name = new fabric.IText(data.productName || 'The New Standard', {
-        left: canvas.width! / 2,
-        top: canvas.height! / 2 - 40,
-        fontSize: 84,
-        fontWeight: 'bold',
-        fontFamily: 'Georgia, serif',
-        fill: '#FFFFFF',
-        originX: 'center',
-        textAlign: 'center',
-        fontStyle: 'italic'
-      });
-      (name as any).name = 'productName';
-
-      const priceCircle = new fabric.Circle({
-        radius: 80,
-        fill: data.brandColor || '#E63946',
-        left: canvas.width! / 2,
-        top: canvas.height! / 2 + 150,
-        originX: 'center',
-        originY: 'center'
-      });
-      
-      const priceVal = new fabric.IText(`$${data.price || '29'}`, {
-        fontSize: 48,
-        fontWeight: 'bold',
-        fill: '#FFFFFF',
-        originX: 'center',
-        originY: 'center',
-        left: canvas.width! / 2,
-        top: canvas.height! / 2 + 150
-      });
-
-      const tagline = new fabric.IText((data.tagline || 'Essential aesthetic for refined living').toUpperCase(), {
-        left: canvas.width! / 2,
-        top: canvas.height! - 110,
-        fontSize: 12,
-        fontWeight: 'bold',
-        fill: '#FFFFFF',
-        originX: 'center',
-        charSpacing: 300
-      });
-      (tagline as any).name = 'tagline';
-
-      canvas.add(frame, header, name, priceCircle, priceVal, tagline);
-    }
-  },
-  {
-    id: 'retro-brutalist',
-    name: '街头潮流 / BRUTAL',
-    description: '硬核工业感，适合个性表达',
-    apply: (canvas, data) => {
-      const darkBg = new fabric.Rect({
-        left: 0,
-        top: canvas.height! - 320,
-        width: canvas.width!,
-        height: 320,
-        fill: '#000000',
-        selectable: false
-      });
-
-      const stripe = new fabric.Rect({
-        left: 0,
-        top: 200,
-        width: canvas.width!,
-        height: 140,
-        fill: data.brandColor || '#F4A261',
-        stroke: '#000000',
-        strokeWidth: 4
-      });
-
-      const name = new fabric.IText(data.productName || 'MANIFESTO', {
-        left: 40,
-        top: 215,
-        fontSize: 96,
-        fontWeight: '900',
-        fill: '#000000',
-        fontFamily: 'Arial Black'
-      });
-      (name as any).name = 'productName';
-
-      const priceLabel = new fabric.IText('COST //', {
-        left: 45,
-        top: canvas.height! - 260,
-        fontSize: 40,
-        fontWeight: '900',
-        fill: data.brandColor || '#F4A261'
-      });
-
-      const price = new fabric.IText(`${data.price || '10K'}`, {
-        left: 40,
-        top: canvas.height! - 220,
-        fontSize: 180,
-        fontWeight: '900',
-        fill: '#FFFFFF',
-        fontFamily: 'Impact'
-      });
-      (price as any).name = 'price';
-
-      const tagline = new fabric.IText(data.tagline || 'NO COMPROMISE // 2024_FW', {
-        left: 45,
-        top: canvas.height! - 65,
-        fontSize: 20,
-        fontWeight: 'bold',
-        fill: '#FFFFFF',
-        charSpacing: 200
-      });
-      (tagline as any).name = 'tagline';
-
-      canvas.add(darkBg, stripe, name, priceLabel, price, tagline);
-    }
-  },
-  {
-    id: 'modern-minimal',
-    name: '雅致极简 / ZEN',
-    description: '通透感与大量留白，宁静奢华',
-    apply: (canvas, data) => {
-      const lineTop = new fabric.Rect({
-        left: canvas.width! / 2 - 100,
-        top: 150,
-        width: 200,
-        height: 1,
-        fill: '#333',
-        originX: 'center'
-      });
-
-      const name = new fabric.IText(data.productName || 'Serenity', {
-        left: canvas.width! / 2,
-        top: 200,
-        fontSize: 64,
-        fontWeight: '200',
-        fill: '#222',
-        originX: 'center',
-        charSpacing: 400
-      });
-      (name as any).name = 'productName';
-
-      const priceBox = new fabric.Rect({
-        width: 140,
-        height: 60,
-        fill: 'transparent',
-        stroke: data.brandColor || '#2A9D8F',
-        strokeWidth: 1,
-        originX: 'center',
-        originY: 'center',
-        left: canvas.width! / 2,
-        top: canvas.height! - 200
-      });
-
-      const price = new fabric.IText(`${data.price || '49'}`, {
-        left: canvas.width! / 2,
-        top: canvas.height! - 200,
-        fontSize: 28,
-        fontWeight: '300',
-        fill: '#222',
-        originX: 'center',
-        originY: 'center'
-      });
-      (price as any).name = 'price';
-
-      const tagline = new fabric.IText(data.tagline || 'The art of simplicity', {
-        left: canvas.width! / 2,
-        top: canvas.height! - 140,
-        fontSize: 16,
-        fontWeight: '300',
-        fill: '#999',
-        originX: 'center'
-      });
-      (tagline as any).name = 'tagline';
-
-      canvas.add(lineTop, name, priceBox, price, tagline);
-    }
-  },
-  {
-    id: 'technical-data',
-    name: '工业参数 / TECH',
-    description: '硬连接布局，展现极致专业性',
-    apply: (canvas, data) => {
-      const topBar = new fabric.Rect({
-        left: 0,
-        top: 0,
-        width: canvas.width!,
-        height: 40,
-        fill: '#000000'
-      });
-
-      const title = new fabric.IText('DEVICEX_PRTCL // SYSTEM_OVERRIDE', {
-        left: 20,
-        top: 12,
-        fontSize: 16,
-        fontWeight: 'bold',
-        fill: '#FFFFFF',
-        fontFamily: 'monospace'
-      });
-
-      const name = new fabric.IText(data.productName || 'QUANTUM_CORE', {
-        left: 40,
-        top: 100,
-        fontSize: 84,
-        fontWeight: '900',
-        fill: data.brandColor || '#1D3557',
-        fontFamily: 'Impact'
-      });
-      (name as any).name = 'productName';
-
-      const priceGroup = new fabric.Rect({
-        left: 40,
-        top: 220,
-        width: 380,
-        height: 90,
-        fill: '#000000'
-      });
-
-      const priceVal = new fabric.IText(`$${data.price || '499.00'}`, {
-        left: 65,
-        top: 240,
-        fontSize: 56,
-        fontWeight: 'bold',
-        fill: '#FFFFFF',
-        fontFamily: 'monospace'
-      });
-      (priceVal as any).name = 'price';
-
-      const tagline = new fabric.IText(`[ DATA_LOG: ${data.tagline || 'HIGH PERFORMANCE UNIT'} ]\n[ STATUS: ACTIVE ]\n[ COORDS: 35.6895_N 139.6917_E ]`, {
-        left: 40,
-        top: canvas.height! - 160,
-        fontSize: 18,
-        lineHeight: 1.4,
-        fill: '#333333',
-        fontFamily: 'monospace',
-        fontWeight: 'bold'
-      });
-      (tagline as any).name = 'tagline';
-
-      canvas.add(topBar, title, name, priceGroup, priceVal, tagline);
-    }
-  }
-];
+const TEMPLATES: AdTemplate[] = SYSTEM_TEMPLATES.map(t => ({
+  id: `sys-${t.style_name}`,
+  name: t.style_name,
+  description: t.description || 'System Template',
+  isUVTS: true,
+  uvtsData: t,
+  apply: () => {}
+}));
 
 export default function PhotoEditor() {
   const { settings } = useAdminSession();
@@ -361,14 +44,24 @@ export default function PhotoEditor() {
   const [activeTab, setActiveTab] = useState<'templates' | 'batch' | 'content' | 'style' | 'layers'>('templates');
   
   // Convert DB templates to AdTemplate format
-  const dbTemplates: AdTemplate[] = (adTemplates || []).map(t => ({
-    id: t.id,
-    name: t.name,
-    description: t.description,
-    isUVTS: true,
-    uvtsData: t.uvts_json,
-    apply: () => {}
-  }));
+  const dbTemplates: AdTemplate[] = (adTemplates || []).map(t => {
+    let parsedUVTS = t.uvts_json;
+    if (typeof parsedUVTS === 'string') {
+      try {
+        parsedUVTS = JSON.parse(parsedUVTS);
+      } catch (e) {
+        console.error('Failed to parse UVTS JSON', e);
+      }
+    }
+    return {
+      id: t.id,
+      name: t.name,
+      description: t.description,
+      isUVTS: true,
+      uvtsData: parsedUVTS,
+      apply: () => {}
+    };
+  });
 
   const allTemplates = [...TEMPLATES, ...dbTemplates];
   
@@ -427,63 +120,147 @@ export default function PhotoEditor() {
   }, [fabricCanvas, activeTemplate, currentItem, allTemplates]);
 
   const applyUVTSTemplate = (canvas: fabric.Canvas, data: AdData, uvts: UVTSTemplate) => {
+    if (!uvts || !uvts.canvas) {
+      console.warn('Invalid UVTS template structure:', uvts);
+      canvas.backgroundColor = '#ffffff';
+      return;
+    }
+    
     const canvasWidth = canvas.width || 1000;
     const canvasHeight = canvas.height || 1000;
     
     // Background color
-    canvas.backgroundColor = uvts.canvas.background;
+    canvas.backgroundColor = uvts.canvas.background || '#ffffff';
 
-    // Info Layer Calculation
-    const infoWidth = (uvts.structure.info_layer.width_pct / 100) * canvasWidth;
-    const padding = (uvts.structure.info_layer.padding_pct / 100) * canvasWidth;
-    const align = uvts.structure.info_layer.align;
-    const startX = align === 'left' ? padding : canvasWidth - infoWidth + padding;
+    // Helper to resolve values (percentages or reserved keys)
+    const resolve = (val: any, dim: number, isX = false) => {
+      if (typeof val === 'string' && val.endsWith('%')) {
+        return (parseFloat(val) / 100) * dim;
+      }
+      if (val === 'center') return dim / 2;
+      return val;
+    };
 
-    // 1. Render Product Name
-    const nameSpec = uvts.typography['#Product_Name'];
-    if (nameSpec) {
-      const nameText = new fabric.IText(data.productName, {
-        left: startX,
-        top: canvasHeight * 0.2,
-        fontSize: canvasWidth * 0.06 * nameSpec.size_em,
-        fontFamily: nameSpec.font,
-        fontWeight: nameSpec.weight as any,
-        fill: nameSpec.color || '#000000',
-        name: 'productName'
+    const resolveColor = (color?: string) => {
+      if (color === 'brandColor') return data.brandColor;
+      return color;
+    };
+
+    const resolveContent = (content?: string) => {
+      if (!content) return '';
+      if (content === 'productName') return data.productName;
+      if (content === 'price') return data.price;
+      if (content === 'tagline') return data.tagline;
+      return content;
+    };
+
+    // 1. Process New Layer System (V2)
+    if (uvts.layers && uvts.layers.length > 0) {
+      uvts.layers.forEach(l => {
+        let obj: fabric.Object | null = null;
+        
+        const commonProps = {
+          left: resolve(l.left, canvasWidth, true),
+          top: resolve(l.top, canvasHeight, false),
+          fill: resolveColor(l.fill),
+          opacity: l.opacity ?? 1,
+          originX: l.originX || 'left',
+          originY: l.originY || 'top',
+          selectable: l.selectable ?? true,
+          stroke: resolveColor(l.stroke),
+          strokeWidth: l.strokeWidth
+        };
+
+        if (l.type === 'text') {
+          obj = new fabric.IText(resolveContent(l.content), {
+            ...commonProps,
+            fontSize: l.fontSize,
+            fontFamily: l.fontFamily,
+            fontWeight: l.fontWeight as any,
+            charSpacing: l.charSpacing,
+            lineHeight: l.lineHeight,
+            fontStyle: l.fontStyle,
+            textAlign: (l.originX === 'center' ? 'center' : l.originX === 'right' ? 'right' : 'left') as any
+          });
+          if (l.content === 'productName' || l.content === 'price' || l.content === 'tagline') {
+            (obj as any).name = l.content;
+          }
+        } else if (l.type === 'rect') {
+          obj = new fabric.Rect({
+            ...commonProps,
+            width: resolve(l.width, canvasWidth, true),
+            height: resolve(l.height, canvasHeight, false),
+            rx: l.rx,
+            ry: l.ry
+          });
+        } else if (l.type === 'circle') {
+          obj = new fabric.Circle({
+            ...commonProps,
+            radius: l.radius
+          });
+        }
+
+        if (obj) {
+          if (l.id) (obj as any).id = l.id;
+          canvas.add(obj);
+        }
       });
-      canvas.add(nameText);
+      return; // If layers exist, we skip legacy UVTS rendering
     }
 
-    // 2. Render Price
-    const priceSpec = uvts.typography['#Price_Now'];
-    if (priceSpec) {
-      const symbol = priceSpec.symbol_logic?.content || '';
-      const fullPrice = `${symbol}${data.price}`;
-      const priceText = new fabric.IText(fullPrice, {
-        left: startX,
-        top: canvasHeight * 0.4,
-        fontSize: canvasWidth * 0.1 * priceSpec.size_em,
-        fontFamily: priceSpec.font,
-        fontWeight: priceSpec.weight as any,
-        fill: priceSpec.color || '#000000',
-        name: 'price'
-      });
-      canvas.add(priceText);
-    }
+    // 2. Legacy UVTS Rendering (V1)
+    if (uvts.structure?.info_layer) {
+      const infoWidth = (uvts.structure.info_layer.width_pct / 100) * canvasWidth;
+      const padding = (uvts.structure.info_layer.padding_pct / 100) * canvasWidth;
+      const align = uvts.structure.info_layer.align;
+      const startX = align === 'left' ? padding : canvasWidth - infoWidth + padding;
 
-    // 3. Render Tagline/Spec
-    const specSpec = uvts.typography['#Product_Spec'];
-    if (specSpec) {
-      const specText = new fabric.IText(data.tagline, {
-        left: startX,
-        top: canvasHeight * 0.35,
-        fontSize: canvasWidth * 0.04 * specSpec.size_em,
-        fontFamily: specSpec.font,
-        fontWeight: specSpec.weight as any,
-        fill: specSpec.color || '#333333',
-        name: 'tagline'
-      });
-      canvas.add(specText);
+      // 1. Render Product Name
+      const nameSpec = uvts.typography?.['#Product_Name'];
+      if (nameSpec) {
+        const nameText = new fabric.IText(data.productName, {
+          left: startX,
+          top: canvasHeight * 0.2,
+          fontSize: canvasWidth * 0.06 * nameSpec.size_em,
+          fontFamily: nameSpec.font,
+          fontWeight: nameSpec.weight as any,
+          fill: nameSpec.color || '#000000',
+          name: 'productName'
+        });
+        canvas.add(nameText);
+      }
+
+      // 2. Render Price
+      const priceSpec = uvts.typography?.['#Price_Now'];
+      if (priceSpec) {
+        const symbol = priceSpec.symbol_logic?.content || '';
+        const fullPrice = `${symbol}${data.price}`;
+        const priceText = new fabric.IText(fullPrice, {
+          left: startX,
+          top: canvasHeight * 0.4,
+          fontSize: canvasWidth * 0.1 * priceSpec.size_em,
+          fontFamily: priceSpec.font,
+          fontWeight: priceSpec.weight as any,
+          fill: priceSpec.color || '#000000',
+          name: 'price'
+        });
+        canvas.add(priceText);
+      }
+
+      // 3. Render Tagline/Spec
+      const specSpec = uvts.typography?.['#Product_Spec'];
+      if (specSpec) {
+        const specText = new fabric.IText(data.tagline, {
+          left: startX,
+          top: canvasHeight * 0.35,
+          fontSize: canvasWidth * 0.04 * specSpec.size_em,
+          fontFamily: specSpec.font,
+          fontWeight: specSpec.weight as any,
+          fill: specSpec.color || '#333333',
+          name: 'tagline'
+        });
+        canvas.add(specText);
+      }
     }
   };
 
@@ -530,7 +307,7 @@ export default function PhotoEditor() {
     if (!fabricCanvas) return;
     setIsExporting(true);
     const zip = new JSZip();
-    const template = TEMPLATES.find(t => t.id === activeTemplate);
+    const template = allTemplates.find(t => t.id === activeTemplate);
 
     try {
       for (let i = 0; i < batchItems.length; i++) {
@@ -539,7 +316,13 @@ export default function PhotoEditor() {
         fabricCanvas.backgroundColor = '#ffffff';
         if (bg) fabricCanvas.backgroundImage = bg;
         
-        if (template) template.apply(fabricCanvas, batchItems[i]);
+        if (template) {
+          if (template.isUVTS && template.uvtsData) {
+            applyUVTSTemplate(fabricCanvas, batchItems[i], template.uvtsData);
+          } else {
+            template.apply(fabricCanvas, batchItems[i]);
+          }
+        }
         fabricCanvas.renderAll();
 
         const dataUrl = fabricCanvas.toDataURL({ format, multiplier: 1, quality: 0.95 });
