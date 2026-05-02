@@ -20,6 +20,7 @@ import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
+import { useTasks } from './useTasks';
 import { IMAGE_COMPRESS, AI_CONFIG } from '../constants/config';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
@@ -103,6 +104,7 @@ export const useAdminPhotos = (
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
+  const { addTask, updateTask } = useTasks();
   
   const photosRef = useRef(photos);
   
@@ -183,57 +185,52 @@ export const useAdminPhotos = (
       return;
     }
     
-    if (!effectiveKey) {
-      showToast('請先在設定中設定 AI 金鑰', 'error');
-      return;
-    }
-
     setBatchProgress({ current: 0, total: unProcessed.length });
-    return runWithLoading('analyzing', async () => {
+    
+    // Create a background task
+    const taskId = addTask({
+      name: `批量 AI 識別 (${unProcessed.length} 張)`,
+      onCancel: () => abortAnalysis()
+    });
+
     const CONCURRENCY = AI_CONFIG.CONCURRENCY;
     let completedCount = 0;
+    const checkCancelled = () => {
+        return currentAnalysisController.current?.signal.aborted;
+    };
     
-    // duplicate logic and processPhoto definition
+    // Define processPhoto locally to access context
     const processPhoto = async (photo: Photo): Promise<void> => {
-        // --- Duplicate check logic ---
+        const controller = new AbortController();
+        currentAnalysisController.current = controller;
+        const signal = controller.signal;
+
+        // ... (existing logic for hash check and isAnalyzing: true)
         if (photo.uri && !photo.image_hash) {
             const hash = calculateMD5(photo.uri);
             photo.image_hash = hash;
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, image_hash: hash } : p));
         }
-
-        if (photo.image_hash) {
-            const dupInLocal = photosRef.current.find(p => p.id !== photo.id && p.image_hash === photo.image_hash);
-            if (dupInLocal) {
-                await deletePhoto(photo.id);
-                return;
-            }
-        }
         
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-            const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name);
+            const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
             
-            // Step 2: Separate Translation call
             if (result.description) {
               try {
-                const translations = await translateDescription(result.description, effectiveKey, customModel);
+                const translations = await translateDescription(result.description, effectiveKey, customModel, signal);
                 result.description_translations = {
                   zh: result.description,
                   en: translations.en,
                   ms: translations.ms
                 };
-              } catch (transErr) {
-                console.warn("Translation sub-step failed:", transErr);
-              }
+              } catch (e) {}
             }
 
             let finalCatId = result.categoryId || null;
-            
             const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
             const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
-
             const safeOldTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
             const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
 
@@ -251,7 +248,6 @@ export const useAdminPhotos = (
                 isAnalyzing: false 
             };
 
-            // Sync to cloud FIRST to get persistent ID
             if (user) {
                 const finalId = await savePhotoToCloud(user.id, updatedPhoto);
                 updatedPhoto.id = finalId;
@@ -265,13 +261,13 @@ export const useAdminPhotos = (
             });
         } catch (err: any) {
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
-            throw err; 
+            if (err.name !== 'AbortError') throw err;
         }
     };
 
     try {
         for (let i = 0; i < unProcessed.length; i += CONCURRENCY) {
-            if (isCancelled()) break;
+            if (checkCancelled()) break;
             
             const batch = unProcessed.slice(i, i + CONCURRENCY);
             const batchResults = await Promise.allSettled(batch.map(p => processPhoto(p)));
@@ -279,24 +275,39 @@ export const useAdminPhotos = (
             const fulfilledCount = batchResults.filter(r => r.status === 'fulfilled').length;
             completedCount += fulfilledCount;
             
-            setBatchProgress(prev => ({ ...prev, current: Math.min(i + CONCURRENCY, unProcessed.length) }));
+            const currentProgress = Math.min(i + CONCURRENCY, unProcessed.length);
+            const progressPercent = (currentProgress / unProcessed.length) * 100;
+            
+            setBatchProgress({ current: currentProgress, total: unProcessed.length });
+            updateTask(taskId, { 
+              progress: progressPercent,
+              message: `已處理 ${currentProgress}/${unProcessed.length} 張...`
+            });
         }
         
         const total = unProcessed.length;
         const failedCount = total - completedCount;
         
         if (completedCount > 0) {
-            showToast(`AI 識別完成！成功處理 ${completedCount} 張照片${failedCount > 0 ? `，${failedCount} 張失敗` : ''}。`, 'success');
+            updateTask(taskId, { 
+              status: 'completed', 
+              progress: 100, 
+              message: `完成！處理 ${completedCount} 張${failedCount > 0 ? `，${failedCount} 張失敗` : ''}`
+            });
+            showToast(`AI 識別任務已在後台完成！成功處理 ${completedCount} 張照片。`, 'success');
         } else if (total > 0) {
-            showToast(`AI 識別失敗：所有 ${total} 張照片均未成功識別，請檢查網路或金鑰。`, 'error');
+            updateTask(taskId, { status: 'error', message: '任務執行失敗，請檢查網路或金鑰。' });
+            showToast(`AI 識別失敗：所有 ${total} 張照片均未成功識別。`, 'error');
         }
+    } catch (err: any) {
+        updateTask(taskId, { status: 'error', message: `錯誤: ${err.message}` });
     } finally {
+        currentAnalysisController.current = null;
         setBatchProgress({ current: 0, total: 0 });
         setPhotos(prev => prev.map(p => 
             p.isAnalyzing ? { ...p, isAnalyzing: false } : p
         ));
     }
-    });
   };
 
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
@@ -431,6 +442,27 @@ export const useAdminPhotos = (
     let processed = 0;
     const allAddedPhotos: Photo[] = [];
     
+    let aiTaskId = '';
+    if (useAi && fileArray.length > 0) {
+      aiTaskId = addTask({
+        name: `導入照片 AI 識別 (${fileArray.length} 張)`,
+        onCancel: () => abortAnalysis()
+      });
+    }
+
+    let aiCompletedCount = 0;
+    const updateAiProgress = () => {
+      if (aiTaskId) {
+        aiCompletedCount++;
+        const progress = (aiCompletedCount / fileArray.length) * 100;
+        updateTask(aiTaskId, { 
+          progress,
+          message: `正在識別 ${aiCompletedCount}/${fileArray.length}...`,
+          status: aiCompletedCount === fileArray.length ? 'completed' : 'running'
+        });
+      }
+    };
+
     for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
       const chunk = fileArray.slice(i, i + CHUNK_SIZE);
       const newPhotosDraft: Photo[] = [];
@@ -449,10 +481,10 @@ export const useAdminPhotos = (
              }
           })();
 
-          // 2. Check local duplicates (session and existing)
           const duplicate = photosRef.current.find(p => p.image_hash === hash);
           if (duplicate || sessionHashes.has(hash)) {
             duplicateCount++;
+            if (useAi) updateAiProgress(); // Still counts as "processed" for AI task
             continue;
           }
 
@@ -460,6 +492,7 @@ export const useAdminPhotos = (
              const dupInCloud = await checkImageHashExists(hash);
              if (dupInCloud) {
                 duplicateCount++;
+                if (useAi) updateAiProgress();
                 continue;
              }
           }
@@ -474,11 +507,12 @@ export const useAdminPhotos = (
             reader.readAsDataURL(file);
           });
           
-          if (!rawUri) continue;
+          if (!rawUri) {
+            if (useAi) updateAiProgress();
+            continue;
+          }
           
           const compressedUri = await compressImage(rawUri, IMAGE_COMPRESS.MAX_WIDTH, IMAGE_COMPRESS.QUALITY);
-
-          // Use a temporary ID for local state, will be replaced by DB UUID after sync
           const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           
           const newPhoto: Photo = {
@@ -506,12 +540,12 @@ export const useAdminPhotos = (
           if (useAi) {
             (async (targetPhoto: Photo) => {
               try {
-                const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel);
+                const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
+                const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, apiKey, aiProvider, customModel);
                 
-                // Translation sub-step
-                if (result.description && geminiApiKey) {
+                if (result.description && apiKey) {
                   try {
-                    const translations = await translateDescription(result.description, geminiApiKey, customModel);
+                    const translations = await translateDescription(result.description, apiKey, customModel);
                     result.description_translations = {
                       zh: result.description,
                       en: translations.en,
@@ -521,7 +555,6 @@ export const useAdminPhotos = (
                 }
 
                 let finalCatId = result.categoryId || null;
-                
                 const allSuggestedTags = Array.from(new Set([
                   ...(result.tagIds || []),
                   ...(result.newTags || [])
@@ -550,6 +583,8 @@ export const useAdminPhotos = (
                 }));
               } catch (err: any) {
                 setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false } : p));
+              } finally {
+                updateAiProgress();
               }
             })(newPhoto);
           }

@@ -731,115 +731,96 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               </label>
             </div>
           </div>
+
+          {/* WhatsApp 联系人设定 (Original Location) */}
+          <div className={cardClass} id="section-whatsapp">
+              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+                <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
+                WhatsApp 联系人设定
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-2 pl-1 mb-2">
+                      <User size={12} className="text-slate-400" />
+                      <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">联系人 A</label>
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="姓名" className={inputClass} value={settings?.whatsapp_1_name || ''} onChange={(e) => setSettingField('whatsapp_1_name', e.target.value)} />
+                    <input type="text" placeholder="号码" className={`${inputClass} flex-[1.5]`} value={settings?.whatsapp_1 || ''} onChange={(e) => setSettingField('whatsapp_1', e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-2 pl-1 mb-2">
+                      <User size={12} className="text-slate-400" />
+                      <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">联系人 B</label>
+                  </div>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="姓名" className={inputClass} value={settings?.whatsapp_2_name || ''} onChange={(e) => setSettingField('whatsapp_2_name', e.target.value)} />
+                    <input type="text" placeholder="号码" className={`${inputClass} flex-[1.5]`} value={settings?.whatsapp_2 || ''} onChange={(e) => setSettingField('whatsapp_2', e.target.value)} />
+                  </div>
+                </div>
+              </div>
+          </div>
         </>
       ) : (
         <>
-            {/* Ad Maker Section */}
-            <div className={cardClass} id="section-ad-maker">
-                <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
-                    广告制作设定 / AD MAKER
-                  </span>
-                </h4>
-                <div className="space-y-4">
+          {/* Ad Maker System Config (Ad Design Tab) */}
+          <div className={cardClass} id="section-ad-maker">
+              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2 mb-6">
+                <span className="flex items-center gap-2">
+                  <div className="w-1.5 h-3.5 bg-blue-600 rounded-full"></div>
+                  广告海报系统设定 / AD ENGINE CONFIG
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-[9px] font-black uppercase">引擎就绪</span>
+                </div>
+              </h4>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left: Brand Identity */}
+                <div className="lg:col-span-1 space-y-6 pr-0 lg:pr-6 lg:border-r border-slate-100">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">品牌主色调 (默认显示颜色)</label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {['#1D3557', '#E63946', '#457B9D', '#2A9D8F', '#F4A261', '#E76F51', '#000000', '#FFD700'].map((c) => (
-                        <button
-                          key={c}
-                          onClick={() => setSettingField('ad_brand_color', c)}
-                          className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                            (settings?.ad_brand_color || '#1D3557') === c ? 'border-blue-600 ring-2 ring-blue-100' : 'border-white shadow-sm'
-                          }`}
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1">品牌视觉主色</label>
+                    <div className="flex flex-wrap gap-2 py-1">
+                      {['#1D3557', '#E63946', '#2A9D8F', '#F4A261', '#000000'].map((c) => (
+                        <button key={c} onClick={() => setSettingField('ad_brand_color', c)} 
+                          className={`w-7 h-7 rounded-lg border-2 transition-all ${(settings?.ad_brand_color || '#1D3557') === c ? 'border-blue-600 ring-4 ring-blue-50' : 'border-white shadow-sm'}`}
                           style={{ backgroundColor: c }}
                         />
                       ))}
-                      <input 
-                        type="color" 
-                        value={settings?.ad_brand_color || '#1D3557'}
-                        onChange={(e) => setSettingField('ad_brand_color', e.target.value)}
-                        className="w-8 h-8 rounded-full overflow-hidden border-none cursor-pointer appearance-none bg-transparent"
-                      />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">默认宣传标语 / TAGLINE</label>
-                    <input 
-                      type="text" 
-                      placeholder="例如: Step into the future..."
-                      className={inputClass}
-                      value={settings?.ad_default_tagline || ''}
-                      onChange={(e) => setSettingField('ad_default_tagline', e.target.value)}
-                    />
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1">全局 Slogan 预设</label>
+                    <input type="text" className={inputClass} value={settings?.ad_default_tagline || ''} onChange={(e) => setSettingField('ad_default_tagline', e.target.value)} placeholder="例如: 极致品质, 触手可及" />
                   </div>
                 </div>
-            </div>
 
-            {/* WhatsApp Section */}
-            <div className={cardClass} id="section-whatsapp">
-                <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
-                  WhatsApp 联系人
-                </h4>
-                <div className="space-y-6">
-                  {/* WhatsApp 1 */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 pl-1">
-                        <User size={12} className="text-[#1D3557]/30" />
-                        <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
-                            联系人 A <Heart size={10} className="inline-block text-red-400 animate-pulse" />
-                        </label>
-                    </div>
-                    <div className="flex gap-2 w-full">
-                      <input 
-                        type="text" 
-                        placeholder="姓名 (例如 John)"
-                        className={inputClass}
-                        value={settings?.whatsapp_1_name || ''}
-                        onChange={(e) => setSettingField('whatsapp_1_name', e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        placeholder="号码: 60123456789"
-                        className={`${inputClass} flex-[1.5]`}
-                        value={settings?.whatsapp_1 || ''}
-                        onChange={(e) => setSettingField('whatsapp_1', e.target.value)}
-                      />
+                {/* Right: Template & Figma Management */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1 mb-3">活跃模板管理</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3 bg-white border border-blue-100 rounded-2xl flex items-center gap-3">
+                        <Layout size={18} className="text-blue-600" />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[10px] font-black text-slate-700 uppercase truncate">内置营销模板 A</div>
+                          <div className="text-[9px] text-slate-400 font-medium">Standard Price Post</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* WhatsApp 2 */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 pl-1">
-                        <User size={12} className="text-slate-400" />
-                        <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
-                            联系人 B <Smile size={10} className="inline-block text-[#D4A853]" />
-                        </label>
-                    </div>
-                    <div className="flex gap-2 w-full">
-                      <input 
-                        type="text" 
-                        placeholder="姓名 (例如 Mary)"
-                        className={inputClass}
-                        value={settings?.whatsapp_2_name || ''}
-                        onChange={(e) => setSettingField('whatsapp_2_name', e.target.value)}
-                      />
-                      <input 
-                        type="text" 
-                        placeholder="号码: 60123456789"
-                        className={`${inputClass} flex-[1.5]`}
-                        value={settings?.whatsapp_2 || ''}
-                        onChange={(e) => setSettingField('whatsapp_2', e.target.value)}
-                      />
-                    </div>
+                  <div className="bg-slate-900 p-5 rounded-[2rem] border border-slate-800 relative overflow-hidden group">
+                    <h5 className="text-white text-xs font-black uppercase tracking-widest mb-1">FIGMA 格式支持</h5>
+                    <p className="text-slate-400 text-[10px] font-medium leading-relaxed">编辑器完全兼容 Figma。导入 SVG 文件即可直接生成具有识别框的海报模板。</p>
                   </div>
                 </div>
-            </div>
-          </>
-        )}
+              </div>
+          </div>
+        </>
+      )}
       </div>
     </div>
   );

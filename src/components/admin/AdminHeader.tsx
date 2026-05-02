@@ -255,26 +255,6 @@ export const AdminHeader: React.FC<Props> = ({
         </div>
       </header>
 
-      {/* Tab bar */}
-      {(user || sessionStorage.getItem('isStaffMode') === 'true') && (
-        <div className="bg-white border-b border-slate-100 px-4 sm:px-6 py-1 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1">
-             {[
-               { id: 'home', label: '照片管理', icon: <Plus size={12} /> },
-               { id: 'editor', label: '海报制作', icon: <LayoutTemplate size={12} /> },
-               { id: 'manage', label: '系统设置', icon: <Settings2 size={12} /> }
-             ].map((tab) => (
-               <button 
-                 key={tab.id}
-                 onClick={() => setActiveScreen?.(tab.id as any)}
-                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeScreen === tab.id ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
-               >
-                 {tab.icon} {tab.label}
-               </button>
-             ))}
-          </div>
-        </div>
-      )}
     </>
   );
 };
