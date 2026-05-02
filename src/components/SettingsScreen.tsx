@@ -186,6 +186,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
+  const [activeTab, setActiveTab] = useState<'photo' | 'ad'>('photo');
   const [hasChanges, setHasChanges] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -350,9 +351,29 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         <Settings2 size={20} className="text-[#1D3557]/20" />
       </div>
 
+      {/* Settings Tabs */}
+      <div className="px-6 mb-2">
+        <div className="flex p-1 bg-slate-100 rounded-2xl border border-slate-200">
+          <button 
+            onClick={() => setActiveTab('photo')}
+            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'photo' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+          >
+            照片与系统 / PHOTO
+          </button>
+          <button 
+            onClick={() => setActiveTab('ad')}
+            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ad' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+          >
+            广告与海报 / AD DESIGN
+          </button>
+        </div>
+      </div>
+
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 no-scrollbar pb-32">
         
-        {/* Logo Section */}
+        {activeTab === 'photo' ? (
+          <>
+            {/* Logo Section */}
         <div className={cardClass} id="section-logo">
             <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
               <span className="flex items-center gap-2">
@@ -461,111 +482,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Ad Maker Section */}
-        <div className={cardClass} id="section-ad-maker">
-            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
-                <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
-                广告制作设定 / AD MAKER
-              </span>
-            </h4>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">品牌主色调 (默认显示颜色)</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                   {['#1D3557', '#E63946', '#457B9D', '#2A9D8F', '#F4A261', '#E76F51', '#000000', '#FFD700'].map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setSettingField('ad_brand_color', c)}
-                      className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                        (settings?.ad_brand_color || '#1D3557') === c ? 'border-blue-600 ring-2 ring-blue-100' : 'border-white shadow-sm'
-                      }`}
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
-                  <input 
-                    type="color" 
-                    value={settings?.ad_brand_color || '#1D3557'}
-                    onChange={(e) => setSettingField('ad_brand_color', e.target.value)}
-                    className="w-8 h-8 rounded-full overflow-hidden border-none cursor-pointer appearance-none bg-transparent"
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">默认宣传标语 / TAGLINE</label>
-                <input 
-                  type="text" 
-                  placeholder="例如: Step into the future..."
-                  className={inputClass}
-                  value={settings?.ad_default_tagline || ''}
-                  onChange={(e) => setSettingField('ad_default_tagline', e.target.value)}
-                />
-              </div>
-            </div>
-        </div>
-
-        {/* WhatsApp Section */}
-        <div className={cardClass} id="section-whatsapp">
-            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
-              WhatsApp 联系人
-            </h4>
-            <div className="space-y-6">
-              {/* WhatsApp 1 */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 pl-1">
-                    <User size={12} className="text-[#1D3557]/30" />
-                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
-                        联系人 A <Heart size={10} className="inline-block text-red-400 animate-pulse" />
-                    </label>
-                </div>
-                <div className="flex gap-2 w-full">
-                  <input 
-                    type="text" 
-                    placeholder="姓名 (例如 John)"
-                    className={inputClass}
-                    value={settings?.whatsapp_1_name || ''}
-                    onChange={(e) => setSettingField('whatsapp_1_name', e.target.value)}
-                  />
-                  <input 
-                    type="text" 
-                    placeholder="号码: 60123456789"
-                    className={`${inputClass} flex-[1.5]`}
-                    value={settings?.whatsapp_1 || ''}
-                    onChange={(e) => setSettingField('whatsapp_1', e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* WhatsApp 2 */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 pl-1">
-                    <User size={12} className="text-slate-400" />
-                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
-                        联系人 B <Smile size={10} className="inline-block text-[#D4A853]" />
-                    </label>
-                </div>
-                <div className="flex gap-2 w-full">
-                  <input 
-                    type="text" 
-                    placeholder="姓名 (例如 Mary)"
-                    className={inputClass}
-                    value={settings?.whatsapp_2_name || ''}
-                    onChange={(e) => setSettingField('whatsapp_2_name', e.target.value)}
-                  />
-                  <input 
-                    type="text" 
-                    placeholder="号码: 60123456789"
-                    className={`${inputClass} flex-[1.5]`}
-                    value={settings?.whatsapp_2 || ''}
-                    onChange={(e) => setSettingField('whatsapp_2', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
         </div>
 
         {/* AI & Password Container */}
@@ -814,8 +730,116 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 导入 JSON
               </label>
             </div>
-        </div>
+          </div>
+        </>
+      ) : (
+        <>
+            {/* Ad Maker Section */}
+            <div className={cardClass} id="section-ad-maker">
+                <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-2">
+                    <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
+                    广告制作设定 / AD MAKER
+                  </span>
+                </h4>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">品牌主色调 (默认显示颜色)</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {['#1D3557', '#E63946', '#457B9D', '#2A9D8F', '#F4A261', '#E76F51', '#000000', '#FFD700'].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setSettingField('ad_brand_color', c)}
+                          className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                            (settings?.ad_brand_color || '#1D3557') === c ? 'border-blue-600 ring-2 ring-blue-100' : 'border-white shadow-sm'
+                          }`}
+                          style={{ backgroundColor: c }}
+                        />
+                      ))}
+                      <input 
+                        type="color" 
+                        value={settings?.ad_brand_color || '#1D3557'}
+                        onChange={(e) => setSettingField('ad_brand_color', e.target.value)}
+                        className="w-8 h-8 rounded-full overflow-hidden border-none cursor-pointer appearance-none bg-transparent"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest block px-1">默认宣传标语 / TAGLINE</label>
+                    <input 
+                      type="text" 
+                      placeholder="例如: Step into the future..."
+                      className={inputClass}
+                      value={settings?.ad_default_tagline || ''}
+                      onChange={(e) => setSettingField('ad_default_tagline', e.target.value)}
+                    />
+                  </div>
+                </div>
+            </div>
 
+            {/* WhatsApp Section */}
+            <div className={cardClass} id="section-whatsapp">
+                <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
+                  WhatsApp 联系人
+                </h4>
+                <div className="space-y-6">
+                  {/* WhatsApp 1 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 pl-1">
+                        <User size={12} className="text-[#1D3557]/30" />
+                        <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
+                            联系人 A <Heart size={10} className="inline-block text-red-400 animate-pulse" />
+                        </label>
+                    </div>
+                    <div className="flex gap-2 w-full">
+                      <input 
+                        type="text" 
+                        placeholder="姓名 (例如 John)"
+                        className={inputClass}
+                        value={settings?.whatsapp_1_name || ''}
+                        onChange={(e) => setSettingField('whatsapp_1_name', e.target.value)}
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="号码: 60123456789"
+                        className={`${inputClass} flex-[1.5]`}
+                        value={settings?.whatsapp_1 || ''}
+                        onChange={(e) => setSettingField('whatsapp_1', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* WhatsApp 2 */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 pl-1">
+                        <User size={12} className="text-slate-400" />
+                        <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">
+                            联系人 B <Smile size={10} className="inline-block text-[#D4A853]" />
+                        </label>
+                    </div>
+                    <div className="flex gap-2 w-full">
+                      <input 
+                        type="text" 
+                        placeholder="姓名 (例如 Mary)"
+                        className={inputClass}
+                        value={settings?.whatsapp_2_name || ''}
+                        onChange={(e) => setSettingField('whatsapp_2_name', e.target.value)}
+                      />
+                      <input 
+                        type="text" 
+                        placeholder="号码: 60123456789"
+                        className={`${inputClass} flex-[1.5]`}
+                        value={settings?.whatsapp_2 || ''}
+                        onChange={(e) => setSettingField('whatsapp_2', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
