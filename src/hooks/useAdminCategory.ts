@@ -82,7 +82,7 @@ export const useAdminCategory = (adminUI: any) => {
       const upName = newName.toUpperCase().trim();
       if (!upName) return;
       
-      const nextTags = tags.map(t => String(t.id) === String(tagId) ? { ...t, name: upName } : t);
+      const nextTags = tags.map(t => String(t.id) === String(tagId) ? { ...t, name: upName } : t).sort((a, b) => a.name.localeCompare(b.name));
       setTags(nextTags);
       await saveData('product_tags', nextTags);
       
@@ -329,8 +329,8 @@ export const useAdminCategory = (adminUI: any) => {
     try {
       const saved = await tagApi.create(name);
       if(saved) {
-        setTags(prev => [...prev, saved]);
-        await saveData('product_tags', [...tags, saved]);
+        setTags(prev => [...prev, saved].sort((a,b) => a.name.localeCompare(b.name)));
+        await saveData('product_tags', [...tags, saved].sort((a,b) => a.name.localeCompare(b.name)));
       }
       return saved;
     } catch(err: any) {
