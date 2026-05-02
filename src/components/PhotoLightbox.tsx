@@ -394,14 +394,14 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       )}
 
       {/* 底部悬浮页码/切换 - 仅移动端 */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-4 md:hidden z-20">
-         <button onClick={onPrev} className="w-12 h-12 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg border border-white/10">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 md:hidden z-20 whitespace-nowrap">
+         <button onClick={onPrev} className="w-11 h-11 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg border border-white/10 active:scale-90 transition-transform">
            <ChevronLeft size={24} />
          </button>
-         <div className="px-4 py-2 bg-black/60 backdrop-blur-md text-white text-xs font-black rounded-full shadow-lg border border-white/10 min-w-[60px] text-center">
+         <div className="px-4 py-2 bg-black/60 backdrop-blur-md text-white text-[11px] font-black rounded-full shadow-lg border border-white/10 min-w-[70px] text-center">
            {index + 1} / {displayPhotos.length}
          </div>
-         <button onClick={onNext} className="w-12 h-12 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg border border-white/10">
+         <button onClick={onNext} className="w-11 h-11 bg-black/60 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg border border-white/10 active:scale-90 transition-transform">
            <ChevronRight size={24} />
          </button>
       </div>

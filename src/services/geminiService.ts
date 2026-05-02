@@ -110,7 +110,8 @@ export const analyzeProductPhoto = async (
 - 仔細觀察照片中是否有任何標籤、吊牌、包裝盒、說明書上的文字
 - **【核心指令】識別照片中出現的任何編號、代碼、型號或代號（如 Model No, SKU, Code, No. 等），一律填入 "modelNumber"**
 - **【嚴格禁止】禁止識別或填寫 "manualCode" 欄位，該欄位必須保持為 null。AI 識別不准填寫此欄位，它僅供人工手寫填入。**
-- 識別尺寸信息（H/W/L），如有測量標註、吊牌上的尺寸請務必識別
+- 識別尺寸信息（H/W/L），如有測量標註、吊牌上的尺寸請務必識別。
+- **【嚴格限制】如果照片中完全沒有尺寸信息，請將 "dimensions" 設為空數組 []。禁止填寫 "Overall" 或任何猜測的數值。**
 
 【優先級 2：名稱規則 - 強制執行】
 - "name" 字段無論任何情況必須填寫，不能為空
@@ -317,7 +318,16 @@ export const analyzeProductPhoto = async (
     } else if (parsedData.dimensions && typeof parsedData.dimensions === 'object') {
       safeDims = [parsedData.dimensions];
     }
-    parsedData.dimensions = safeDims;
+    
+    // Filter out "Overall" or invalid dimensions
+    parsedData.dimensions = safeDims.filter(d => {
+      if (!d || typeof d !== 'object') return false;
+      const label = String(d.label || '').toLowerCase();
+      // If AI enters "Overall" but no real numbers, skip it.
+      if (label.includes('overall') && (!d.h && !d.w && !d.l)) return false;
+      if (label === 'overall') return false; // Strict "Overall" check
+      return true;
+    });
 
     // Normalize tagIds to always be an array of strings
     parsedData.tagIds = normalizeTagIds(parsedData.tagIds);
@@ -328,17 +338,17 @@ export const analyzeProductPhoto = async (
       newTagList = parsedData.newTags.map(s => String(s).trim()).filter(Boolean);
     }
 
-    // Total tags enforcement: Ensure we have exactly 2 tags (ID or New Name)
+    // Total tags enforcement: Ensure we have exactly 3 tags (ID or New Name)
     let currentTagIds = parsedData.tagIds;
     
-    // If we have more than 2 total, trim them down
-    if (currentTagIds.length + newTagList.length > 2) {
-      if (currentTagIds.length >= 2) {
-        currentTagIds = currentTagIds.slice(0, 2);
+    // If we have more than 3 total, trim them down
+    if (currentTagIds.length + newTagList.length > 3) {
+      if (currentTagIds.length >= 3) {
+        currentTagIds = currentTagIds.slice(0, 3);
         newTagList = [];
       } else {
-        // currentTagIds.length is 0 or 1
-        const needed = 2 - currentTagIds.length;
+        // currentTagIds.length is 0, 1 or 2
+        const needed = 3 - currentTagIds.length;
         newTagList = newTagList.slice(0, needed);
       }
     }

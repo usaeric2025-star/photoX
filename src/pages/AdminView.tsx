@@ -241,7 +241,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode,
-    visibleCount, setVisibleCount, tagIdToNameMap
+    visibleCount, setVisibleCount, tagIdToNameMap, clearSelection
   } = useGalleryContext();
   
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
@@ -386,9 +386,8 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
       message: '這將永久刪除選中的照片，此操作不可撤銷。',
       onConfirm: async () => {
         try {
-          for (const id of ids) {
-            await deletePhoto(id, true);
-          }
+          await deletePhoto(ids, true);
+          clearSelection();
           showToast('批量刪除成功', 'success');
           setEditPhotoId(null);
           setSelectedIds([]);
@@ -407,7 +406,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
       message: '這將永久刪除該產品信息及雲端資源。',
       onConfirm: async () => {
         try {
-          await deletePhoto(id);
+          await deletePhoto(id, true);
           setEditPhotoId(null);
           showToast('刪除成功', 'success');
         } catch (err: any) {
@@ -463,7 +462,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     manufacturers, setManufacturers, adTemplates: adTemplatesDB, setAdTemplates: setAdTemplatesDB,
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
     handleSingleAiAnalyzeCallback,
-    deletePhoto: handleDeletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    deletePhoto: deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, 
     updateCategory, deleteCategory, addCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,

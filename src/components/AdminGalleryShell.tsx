@@ -89,7 +89,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
       message: '刪除後無法恢復，雲端的文件也將被移除。',
       onConfirm: async () => {
         try {
-          await adminPhoto?.deletePhoto(selectedIds);
+          await adminPhoto?.deletePhoto(selectedIds, true);
           clearSelection();
           adminUI?.showToast(`已成功刪除 ${selectedIds.length} 張照片`, 'success');
         } catch (e: any) {
