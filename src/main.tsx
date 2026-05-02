@@ -1,4 +1,4 @@
-import {StrictMode} from 'react';
+import React, {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import AppRoutes from './AppRoutes';
 import { GalleryProvider } from './context/GalleryContext';

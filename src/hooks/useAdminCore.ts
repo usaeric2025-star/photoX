@@ -1,4 +1,3 @@
-import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
 import { groupApi } from '../api/groups';
 import { photoApi } from '../api/photos';
@@ -7,10 +6,8 @@ import {
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
   updatePhotosGroupInCloud,
-  clearGroupIdInCloud,
   supabase
 } from '../services/supabaseService';
-import { deleteGroupFromCloud } from '../services/groupService';
 import { saveData } from '../utils/indexedDB';
 
 import { useGalleryContext } from '../context/GalleryContext';
@@ -106,13 +103,8 @@ export const useAdminCore = (user: any) => {
   }, [user]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
-    const { success, error } = await deleteGroup(groupId);
-    if (success) {
-      showToast('群組已成功解散', 'success');
-    } else {
-      handleError(error, '解散群組失敗');
-    }
-  }, [deleteGroup, showToast, handleError]);
+    return await deleteGroup(groupId);
+  }, [deleteGroup]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return { success: false, error: 'Too few photos' };

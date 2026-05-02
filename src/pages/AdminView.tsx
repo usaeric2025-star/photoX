@@ -20,6 +20,7 @@ import { GroupDetailView } from '../components/GroupDetailView';
 import { useSyncEngine } from '../hooks/useSyncEngine';
 import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
+import { useAdminCore } from '../hooks/useAdminCore';
 import { useAdminDialogs } from '../hooks/useAdminDialogs';
 import { useLoading } from '../hooks/useLoading';
 import { usePhotoManagement } from '../hooks/usePhotoManagement';
@@ -192,9 +193,13 @@ export default function AdminView() {
   );
   
   const handleDeletePhoto = useCallback(async (id: string) => {
-    deletePhotos(id, user?.id);
-    setEditPhotoId(null);
-  }, [deletePhotos, user, setEditPhotoId]);
+    const { success, error } = await deletePhotos(id);
+    if (success) {
+      setEditPhotoId(null);
+    } else {
+      console.error(error);
+    }
+  }, [deletePhotos, setEditPhotoId]);
   
   const handleDeleteTag = useCallback((id: string) => {
     deleteTagHook(id);
