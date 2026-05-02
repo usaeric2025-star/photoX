@@ -4,7 +4,7 @@ import AppRoutes from './AppRoutes';
 import { GalleryProvider } from './context/GalleryContext';
 import { ErrorProvider } from './context/ErrorContext';
 import { TaskProvider } from './hooks/useTasks';
-import { AdminUIProvider } from './context/AdminContexts';
+import { AdminUIProvider, AdminSessionProvider } from './context/AdminContexts';
 import { useState } from 'react';
 import './index.css';
 
@@ -33,13 +33,40 @@ const RootAdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <AdminUIProvider value={value as any}>{children}</AdminUIProvider>;
 };
 
+const RootAdminSessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [settings, setSettings] = useState<any>({});
+  
+  const value = {
+    user: null, // Should be lifted from top-level auth, if applicable
+    isAdminMode: false,
+    settings,
+    setSettings,
+    geminiApiKey: '',
+    setGeminiApiKey: () => {},
+    internalPassword: '',
+    setInternalPassword: () => {},
+    customModel: '',
+    setCustomModel: () => {},
+    viewMode: 'public',
+    setViewMode: () => {},
+    syncPercent: 0,
+    setSyncPercent: () => {},
+    loginWithGoogle: async () => {},
+    logout: () => {},
+    appLang: 'zh'
+  };
+  return <AdminSessionProvider value={value as any}>{children}</AdminSessionProvider>;
+};
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorProvider>
       <GalleryProvider>
         <TaskProvider>
           <RootAdminUIProvider>
-            <AppRoutes />
+             <RootAdminSessionProvider>
+                <AppRoutes />
+             </RootAdminSessionProvider>
           </RootAdminUIProvider>
         </TaskProvider>
       </GalleryProvider>
