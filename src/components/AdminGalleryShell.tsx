@@ -6,6 +6,7 @@ import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
 import { translations } from '../lib/translations';
 import { updatePhoto } from '../services/photoService';
 import { usePhotoUpdate } from '../hooks/usePhotoUpdate';
+import { useTasks } from '../hooks/useTasks';
 
 import {
   AlertDialog,
@@ -41,6 +42,8 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   const t = translations[lang] || translations['en'];
 
   const { updatePhoto } = usePhotoUpdate();
+  const { tasks } = useTasks();
+  const hasActiveTasks = tasks.some(t => t.status === 'running');
 
   const handleTogglePinned = async (photo: any) => {
     const newStatus = !photo.isPinned;
@@ -177,7 +180,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
 
       {/* Admin Bulk Actions */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-3 bg-[#1D3557] px-5 py-3 rounded-2xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className={`fixed ${hasActiveTasks ? 'bottom-24' : 'bottom-6'} left-1/2 -translate-x-1/2 z-[500] flex items-center gap-3 bg-[#1D3557] px-5 py-3 rounded-2xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300 transition-all`}>
            <div className="bg-white/10 px-2 py-1 rounded-lg">
              <span className="text-xs font-black text-white">{selectedIds.length}</span>
            </div>
