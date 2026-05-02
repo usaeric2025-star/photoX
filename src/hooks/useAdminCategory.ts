@@ -1,4 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { useErrorHandler } from '../utils/errorHandler';
+import { useDelete } from './useDelete';
+import { categoryApi } from '../api/categories';
+import { tagApi } from '../api/tags';
+import { photoApi } from '../api/photos';
 import { Category, Tag, SubCategory, Photo } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
@@ -18,6 +23,8 @@ import {
 } from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: any) => {
+  const { handleError } = useErrorHandler();
+  const { deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook } = useDelete();
   const { setAlertDialog = () => {}, showToast = () => {} } = adminUI || {};
 
   const {
@@ -79,16 +86,12 @@ export const useAdminCategory = (adminUI: any) => {
       setTags(nextTags);
       await saveData('product_tags', nextTags);
       
-      const success = await updateTagInDB(tagId, upName);
-      if (!success) {
-        throw new Error("Cloud update failed");
-      }
+      await tagApi.update(tagId, upName);
     } catch (err: any) {
-      console.error("Cloud tag update failed:", err);
       // Revert local state if cloud failed
       const storedTags = await loadData('product_tags');
       if (storedTags) setTags(storedTags);
-      showToast(`更新失敗: 無法同步更新到雲端。`, 'error');
+      handleError(err, '更新標籤失敗');
     }
   };
 
@@ -181,15 +184,14 @@ export const useAdminCategory = (adminUI: any) => {
     try {
       const trimmed = name.trim();
       if (!trimmed) return;
-      const saved = await addCategoryToDB(trimmed);
+      const saved = await categoryApi.create(trimmed);
       if (saved) {
         const nextCategories = [...categories, saved];
         setCategories(nextCategories);
         await saveData('product_categories', nextCategories);
       }
     } catch (err: any) {
-      console.error("[useAdminCategory] Add category failed:", err);
-      showToast(`添加分类失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
+      handleError(err, '添加分類失敗');
     }
   };
 
@@ -198,33 +200,14 @@ export const useAdminCategory = (adminUI: any) => {
       const nextCategories = categories.map(c => String(c.id) === String(id) ? { ...c, ...updates } : c);
       setCategories(nextCategories);
       await saveData('product_categories', nextCategories);
-      await updateCategoryInDB(id, updates);
+      await categoryApi.update(id, updates);
     } catch (err) {
-      // Log suppressed
+      handleError(err, '更新分類失敗');
     }
   };
 
   const deleteCategory = async (id: string) => {
-    // UI should confirm before calling!
-    try {
-      const strId = String(id);
-      const { count } = await supabase
-        .from('furniture_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('category_id', strId);
-
-      if (count && count > 0) {
-        const { error } = await supabase
-          .from('furniture_items')
-          .update({ category_id: null })
-          .eq('category_id', strId);
-        if (error) throw error;
-      }
-      await performDeleteCategory(strId);
-      showToast('分类删除成功');
-    } catch (err: any) {
-      showToast(`删除失败: ${err.message}`, 'error');
-    }
+    deleteCategoryHook(id);
   };
 
   const performDeleteCategory = async (strId: string) => {
@@ -339,16 +322,14 @@ export const useAdminCategory = (adminUI: any) => {
 
   const addTag = async (name: string) => {
     try {
-      const saved = await addTagToDB(name);
+      const saved = await tagApi.create(name);
       if(saved) {
         setTags(prev => [...prev, saved]);
         await saveData('product_tags', [...tags, saved]);
       }
       return saved;
     } catch(err: any) {
-      console.error("[useAdminCategory] Add tag failed:", err);
-      // setAlertDialog is available via adminUI passed in constructor
-      showToast(`添加标签失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
+      handleError(err, '添加標籤失敗');
     }
   };
   

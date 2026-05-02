@@ -761,13 +761,21 @@ export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
   
   // 1. Delete DB records
   const ids = photos.map(p => p.id);
-  const { error } = await supabase
+  console.log(`[photoService] deletePhotosBatch: Attempting to delete ${ids.length} records. IDs:`, ids);
+  
+  const { data, error } = await supabase
     .from(TABLE_NAME)
     .delete()
     .in('id', ids)
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .select('id');
   
-  if (error) throw new Error(error.message || JSON.stringify(error));
+  if (error) {
+    console.error(`[photoService] deletePhotosBatch DB error:`, error);
+    throw new Error(error.message || JSON.stringify(error));
+  }
+  
+  console.log(`[photoService] deletePhotosBatch DB success. Rows affected: ${data?.length || 0}`);
   
   // 2. Delete files
   const filePaths = photos.flatMap(p => {

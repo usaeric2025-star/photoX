@@ -24,8 +24,14 @@ import { useAdminDialogs } from '../hooks/useAdminDialogs';
 import { useLoading } from '../hooks/useLoading';
 import { usePhotoManagement } from '../hooks/usePhotoManagement';
 import { useAuth } from '../hooks/useAuth';
-import { useGalleryContext } from '../context/GalleryContext';
-import { useAdminCore } from '../hooks/useAdminCore';
+import { useErrorHandler } from '../utils/errorHandler';
+import { usePermission } from '../hooks/usePermission';
+import { useDelete } from '../hooks/useDelete';
+import { formatDate } from '../utils/dateFormat';
+import { categoryApi } from '../api/categories';
+import { tagApi } from '../api/tags';
+import { groupApi } from '../api/groups';
+import { photoApi } from '../api/photos';
 import { translations, LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, AdminUIContextType } from '../context/AdminContexts';
@@ -247,10 +253,14 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
   const { activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, loadingState, setLoadingState, withLoading, cloudCount, setCloudCount } = uiProps;
 
+  const { handleError } = useErrorHandler();
+  const { canDelete, canEdit, isAdmin } = usePermission();
+  const { deletePhotos, deleteGroup, deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook } = useDelete();
+
   useEffect(() => {
     setUser(user);
-    setIsAdminMode(!!user || sessionStorage.getItem('isStaffMode') === 'true');
-  }, [user, setUser, setIsAdminMode]);
+    setIsAdminMode(isAdmin || sessionStorage.getItem('isStaffMode') === 'true');
+  }, [user, setUser, setIsAdminMode, isAdmin]);
   
   const cancelBatchAiRef = useRef(false);
   
@@ -380,54 +390,21 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
 
   const handleDeletePhotos = useCallback(async (ids: string[]) => {
     if (ids.length === 0) return;
-    
-    setAlertDialog({
-      title: `確定要批量刪除 ${ids.length} 張照片嗎？`,
-      message: '這將永久刪除選中的照片，此操作不可撤銷。',
-      onConfirm: async () => {
-        try {
-          await deletePhoto(ids, true);
-          clearSelection();
-          showToast('批量刪除成功', 'success');
-          setEditPhotoId(null);
-          setSelectedIds([]);
-          setIsMultiSelect(false);
-        } catch (err: any) {
-          console.error("[ERROR] Batch delete failed:", err);
-          showToast(`删除失败: ${err.message || String(err)}`, 'error');
-        }
-      }
-    });
-  }, [deletePhoto, setAlertDialog, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast]);
+    deletePhotos(ids, user?.id);
+    clearSelection();
+    setEditPhotoId(null);
+    setSelectedIds([]);
+    setIsMultiSelect(false);
+  }, [deletePhotos, user, clearSelection, setEditPhotoId, setSelectedIds, setIsMultiSelect]);
   
   const handleDeletePhoto = useCallback(async (id: string) => {
-    setAlertDialog({
-      title: '確定要刪除這張照片嗎？',
-      message: '這將永久刪除該產品信息及雲端資源。',
-      onConfirm: async () => {
-        try {
-          await deletePhoto(id, true);
-          setEditPhotoId(null);
-          showToast('刪除成功', 'success');
-        } catch (err: any) {
-          console.error("[ERROR] Delete failed:", err);
-          showToast(`删除失败: ${err.message || String(err)}`, 'error');
-        }
-      }
-    });
-  }, [deletePhoto, setAlertDialog, setEditPhotoId, showToast]);
+    deletePhotos(id, user?.id);
+    setEditPhotoId(null);
+  }, [deletePhotos, user, setEditPhotoId]);
   
   const handleDeleteTag = useCallback((id: string) => {
-    withLoading('syncing', async () => {
-      try {
-        await deleteTag(id);
-        showToast('标签已删除 / Tag deleted', 'success');
-      } catch (err: any) {
-        console.error('[handleDeleteTag] Error during deletion:', err);
-        showToast(`删除失败: ${err.message || String(err)}`, 'error');
-      }
-    });
-  }, [deleteTag, showToast, setAlertDialog, withLoading]);
+    deleteTagHook(id);
+  }, [deleteTagHook]);
 
   // Auto refresh - ONLY on initial mount of the content component
   useEffect(() => {
@@ -616,13 +593,12 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 }}
                 onToggleHidden={async (photo) => {
                   const newStatus = !photo.isHidden;
-                  import('../services/photoService').then(async (m) => {
-                    try {
-                      await m.updatePhoto(photo.id, { isHidden: newStatus }, setPhotos);
-                    } catch (e) {
-                      console.error("[ERROR] Failed to toggle hidden in AdminView:", e);
-                    }
-                  });
+                  try {
+                    await photoApi.update(photo.id, { is_hidden: newStatus, updated_at: new Date().toISOString() });
+                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
+                  } catch (e) {
+                    handleError(e, '切換隱藏狀態失敗');
+                  }
                 }}
               />
             )}

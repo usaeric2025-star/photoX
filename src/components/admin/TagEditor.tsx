@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAdminSession } from '../../context/AdminContexts';
+import { useErrorHandler } from '../../utils/errorHandler';
 import { saveSettings } from '../../services/supabaseService';
 
 interface TagEditorProps {
@@ -29,8 +29,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd, onRenameTagRequest,
   showHotEffects = false
 }) => {
+  const { handleError } = useErrorHandler();
   const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
-  const [confirmDeleteTag, setConfirmDeleteTag] = useState<any | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const hasLongPressed = useRef<boolean>(false);
 
@@ -87,14 +87,18 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   const { settings, setSettings } = useAdminSession();
 
   const togglePin = async (tagId: string) => {
-    const pinnedTags = settings?.pinnedTags || [];
-    const newPinned = pinnedTags.includes(tagId)
-      ? pinnedTags.filter((id: string) => id !== tagId)
-      : [...pinnedTags, tagId];
-    
-    const nextSettings = { ...settings, pinnedTags: newPinned };
-    setSettings(nextSettings);
-    await saveSettings(nextSettings);
+    try {
+      const pinnedTags = settings?.pinnedTags || [];
+      const newPinned = pinnedTags.includes(tagId)
+        ? pinnedTags.filter((id: string) => id !== tagId)
+        : [...pinnedTags, tagId];
+      
+      const nextSettings = { ...settings, pinnedTags: newPinned };
+      setSettings(nextSettings);
+      await saveSettings(nextSettings);
+    } catch (err) {
+      handleError(err, '切換置頂狀態失敗');
+    }
   };
 
   const hotTagsSet = useMemo(() => {
@@ -214,7 +218,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   type="button"
                   className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5" 
                   onClick={() => { 
-                    setConfirmDeleteTag(activeActionTag);
+                    onDeleteTag(activeActionTag.id);
                     setActiveActionTag(null); 
                   }}
                 >
@@ -232,32 +236,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
         </div>
       )}
 
-      <AlertDialog open={!!confirmDeleteTag} onOpenChange={(open) => !open && setConfirmDeleteTag(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认删除标签</AlertDialogTitle>
-            <AlertDialogDescription>
-              确定要删除标签 #{confirmDeleteTag?.name} 吗？此操作无法撤销。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>
-              取消 / CANCEL
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              variant="destructive"
-              onClick={() => {
-                if (confirmDeleteTag) {
-                  onDeleteTag(confirmDeleteTag.id);
-                  setConfirmDeleteTag(null);
-                }
-              }}
-            >
-              确认删除 / DELETE
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Redundant AlertDialog removed since onDeleteTag uses the unified useDelete hook which has its own dialog */}
     </div>
   );
 };

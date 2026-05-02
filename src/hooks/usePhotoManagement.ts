@@ -1,4 +1,8 @@
 import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
+import { useErrorHandler } from '../utils/errorHandler';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { formatDate } from '../utils/dateFormat';
+import { photoApi } from '../api/photos';
 import { Photo, Tag, ProductFormData } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
@@ -42,12 +46,8 @@ export const usePhotoManagement = (
   },
   adminSession?: any
 ) => {
-  const {
-    photos, setPhotos,
-    categories,
-    tags, setTags, tagNameToIdMap, tagIdToNameMap,
-    manufacturers
-  } = useGalleryContext();
+  const { handleError } = useErrorHandler();
+  const { validatePhotoForm } = useFormValidation();
 
   const { 
     setAlertDialog = () => {}, 
@@ -169,6 +169,11 @@ export const usePhotoManagement = (
     const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn:any) => fn();
     await run(async () => {
        try {
+           const errors = validatePhotoForm(formState);
+           if (Object.keys(errors).length > 0) {
+             throw new Error(Object.values(errors)[0]);
+           }
+
            // Resolve tag names to IDs
           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
 
@@ -197,7 +202,7 @@ export const usePhotoManagement = (
             isGroupCover: formState.isGroupCover || false,
             price: price,
             dimensions: finalDimensions,
-            updatedAt: new Date().toISOString()
+            updatedAt: formatDate(new Date())
           };
 
           const nextPhotos = photos.map(p => p.id === editPhotoId ? updatedPhoto : p);
@@ -234,7 +239,7 @@ export const usePhotoManagement = (
             isHidden: isHidden,
             price: price,
             dimensions: finalDimensions,
-            createdAt: new Date().toISOString(),
+            createdAt: formatDate(new Date()),
             groupId: null
           };
 
@@ -250,7 +255,7 @@ export const usePhotoManagement = (
        resetAddState();
        setActiveScreen('home');
        } catch (err: any) {
-          showToast(`儲存失敗: ${err.message}`, 'error');
+          handleError(err, '儲存產品時發生錯誤');
        }
     });
   };

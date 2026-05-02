@@ -1,4 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useErrorHandler } from '../utils/errorHandler';
+import { useDelete } from './useDelete';
+import { formatDate } from '../utils/dateFormat';
+import { photoApi } from '../api/photos';
 import { Photo, Category, Tag, SubCategory } from '../types';
 import { 
   savePhotoToCloud, 
@@ -73,7 +77,9 @@ export const useAdminPhotos = (
     manufacturers, setManufacturers
   } = useGalleryContext();
 
-  const { setIsSyncing = () => {} } = adminSession || {};
+  const { handleError } = useErrorHandler();
+  const { deletePhotos } = useDelete();
+  const {setIsSyncing = () => {}} = adminSession || {};
   const { 
     setAlertDialog = () => {}, 
     setActiveScreen = () => {}, 
@@ -271,7 +277,7 @@ export const useAdminPhotos = (
                 manual_code: photo.manual_code,
                 model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
                 dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : photo.dimensions,
-                updatedAt: new Date().toISOString(),
+                updatedAt: formatDate(new Date()),
                 isAnalyzing: false 
             };
 
@@ -417,7 +423,7 @@ export const useAdminPhotos = (
           dimensions: (result.dimensions && result.dimensions.length > 0)
             ? result.dimensions
             : photo.dimensions,
-          updatedAt: new Date().toISOString(),
+          updatedAt: formatDate(new Date()),
           isAnalyzing: false 
         };
         
@@ -556,7 +562,7 @@ export const useAdminPhotos = (
             categoryId: null,
             manufacturerId: null,
             tagIds: [],
-            createdAt: new Date().toISOString(),
+            createdAt: formatDate(new Date()),
             groupId: null,
             isAnalyzing: !!useAi
           };
@@ -676,59 +682,12 @@ export const useAdminPhotos = (
     }); // runWithLoading end
   };
   
-  const deletePhoto = async (idOrIds: string | string[], suppressAlert: boolean = false) => {
-    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-    const photosToDelete = photosRef.current.filter(p => ids.includes(p.id));
-    
-    try {
-      const previousPhotos = photosRef.current;
-      let nextPhotosList = photosRef.current.filter(p => !ids.includes(p.id));
-
-      // Optimistic Group Cover handling
-      const affectedGroups = new Set<string>();
-      photosToDelete.forEach(p => {
-        if (p.groupId && p.isGroupCover) {
-          affectedGroups.add(p.groupId);
-        }
-      });
-      
-      for (const groupId of affectedGroups) {
-        const remainingGroupPhotos = nextPhotosList.filter(p => p.groupId === groupId);
-        if (remainingGroupPhotos.length > 0 && !remainingGroupPhotos.some(p => p.isGroupCover)) {
-          const sorted = [...remainingGroupPhotos].sort((a, b) => 
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          );
-          const newCover = { ...sorted[0], isGroupCover: true };
-          nextPhotosList = nextPhotosList.map(p => p.id === newCover.id ? newCover : p);
-        }
-      }
-
-      // Apply optimistic UI
-      setPhotos(nextPhotosList);
-      setCloudCount(nextPhotosList.length);
-      await saveData('product_photos', nextPhotosList);
-
-      // Perform bulk cloud sync
-      if (user) {
-        await deletePhotosBatch(user.id, photosToDelete);
-        // Re-sync group covers if any
-        for (const groupId of affectedGroups) {
-           const photo = nextPhotosList.find(p => p.groupId === groupId && p.isGroupCover);
-           if (photo && user) savePhotoToCloud(user.id, photo).catch(console.error);
-        }
-      }
-
-      if (!suppressAlert) showToast('删除成功', 'success');
-    } catch (err: any) {
-      console.error("[ERROR] Delete photo failed:", err);
-      // Rollback
-      setPhotos(photosRef.current);
-      if (!suppressAlert) showToast('删除失败：' + err.message, 'error');
-    }
+  const deletePhoto = async (idOrIds: string | string[]) => {
+    deletePhotos(idOrIds, user?.id);
   };
 
   const updatePhoto = async (updatedPhoto: Photo) => {
-    const photoWithTime = { ...updatedPhoto, updatedAt: new Date().toISOString() };
+    const photoWithTime = { ...updatedPhoto, updatedAt: formatDate(new Date()) };
     // 1. Immediately update UI
     setPhotos(prev => prev.map(p => p.id === photoWithTime.id ? photoWithTime : p));
     saveData('product_photos', photosRef.current.filter(p => p.id !== photoWithTime.id).concat(photoWithTime));

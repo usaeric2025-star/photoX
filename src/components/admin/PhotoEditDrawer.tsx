@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { TagEditor } from './TagEditor';
+import { useFormValidation } from '../../hooks/useFormValidation';
+import { useErrorHandler } from '../../utils/errorHandler';
 import { Photo, ProductFormData } from '../../types';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight } from 'lucide-react';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
@@ -50,7 +51,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   } = useAdminPhoto();
   const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
-  const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  const isSyncing = sessionSyncing;
+  const { validatePhotoForm } = useFormValidation();
+  const { handleError } = useErrorHandler();
+  const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  
+  const isSyncing = sessionSyncing;
 
   const isPartOfGroup = useMemo(() => {
     if (!editPhotoId) return false;
@@ -156,6 +160,15 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             )}
             <button 
               onClick={async () => {
+                const errors = validatePhotoForm(formState);
+                if (Object.keys(errors).length > 0) {
+                  // The validation hook handles visual feedback if integrated with a form library,
+                  // but here we just block and show toast for simplicity since it's a raw object.
+                  const firstError = Object.values(errors)[0];
+                  handleError(new Error(firstError), '表單驗證失敗');
+                  return;
+                }
+
                 if (isPartOfGroup) {
                   const photo = photos.find(p => p.id === editPhotoId);
                   if (photo && photo.groupId) {

@@ -89,20 +89,52 @@ const uiValueForLogin = React.useMemo(() => ({
 
 ---
 
-## 七、代碼修改前的檢查清單（AI 必讀）
+## 七、删除操作规范
+
+所有删除操作（照片、群组、标签、分类、批量删除）必须使用 `src/hooks/useDelete.ts` 统一 Hook。
+
+禁止在组件中独立实现删除逻辑（如直接调用 `supabase.delete` 或 `updatePhotoInCloud`）。
+
+新增删除功能时，先确认是否可复用 Hook，不可复用再扩展 Hook。
+
+---
+
+## 八、错误处理规范
+
+所有异步操作必须用 `try...catch` 包裹，错误统一调用 `src/utils/errorHandler.ts` 的 `handleError` 函数。
+
+禁止直接 `console.error` 或 `alert` 报错。
+
+规则：
+- 需要用户确认的错误 → `setAlertDialog`
+- 普通错误提示 → `showToast`
+- 开发环境同时打印到控制台
+
+---
+
+## 九、权限判断统一
+
+禁止在组件中直接写 `if (user && isAdminMode)` 这种分散的权限判断，统一使用 `usePermission` Hook。
+
+---
+
+## 十、代码修改前的检查清单（AI 必读）
 
 在修改任何代码前，请确认：
 
 - 是否试图使用 `setConfirmDialog`？→ ❌ 禁止，改用 `<AlertDialog>`
 - 是否修改了 `uiValueForLogin`？→ ✅ 必须补全所有字段，缺失的设空函数
 - 是否使用了硬编码的 AI 模型名称或 API Key？→ ❌ 禁止，必须从 settings 获取
+- 是否使用了 `useDelete` 处理删除？→ ✅ 必须使用
+- 是否使用了 `handleError` 处理错误？→ ✅ 必须使用
+- 是否使用了 `usePermission` 检查权限？→ ✅ 必须使用
 - 是否移动了构建工具到 devDependencies？→ ❌ 禁止，必须留在 dependencies
 - 是否删除了 `dist/` 的 `.gitignore` 规则？→ ❌ 禁止
 - 是否添加了 `vercel.json`？→ ⚠️ 非必要不要加
 
 ---
 
-## 八、版本记录
+## 十一、版本记录
 
 | 日期 | 变更 | 原因 |
 |---|---|---|
@@ -110,3 +142,4 @@ const uiValueForLogin = React.useMemo(() => ({
 | 2026-05-01 | 补全 uiValueForLogin 结构 | 修复压缩后报错 |
 | 2026-05-01 | 构建工具移至 dependencies | 解决 Vercel 部署缺失依赖 |
 | 2026-05-01 | 禁止硬编码 AI 配置 | 确保用户在后台配置模型和 Key，提高安全性 |
+| 2026-05-02 | 统一化改造（删除、错误处理、权限、API） | 提高代码可维护性与鲁棒性 |

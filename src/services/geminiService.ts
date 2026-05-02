@@ -175,14 +175,9 @@ export const analyzeProductPhoto = async (
   "tagIds": ["abc-123...", "def-456..."],
   "newTags": ["MINIMALIST"],
   "dimensions": [
-    {
-      "label": "Overall",
-      "length": 210,
-      "width": 90,
-      "height": 85,
-      "unit": "cm",
-      "isAI": true
-    }
+    { "label": "120cm" },
+    { "label": "85cm" },
+    { "label": "110cm" }
   ]
 }
 
@@ -319,21 +314,8 @@ export const analyzeProductPhoto = async (
       safeDims = [parsedData.dimensions];
     }
     
-    // Filter out "Overall" or invalid dimensions
-    parsedData.dimensions = safeDims.filter(d => {
-      if (!d || typeof d !== 'object') return false;
-      const label = String(d.label || '').toLowerCase();
-      
-      // Strict removal of "overall" labels
-      if (label.includes('overall')) return false;
-      
-      // Also ensure there's at least one numeric value
-      const hasValue = (d.h && String(d.h).trim() !== '' && String(d.h) !== '-') || 
-                       (d.w && String(d.w).trim() !== '' && String(d.w) !== '-') || 
-                       (d.l && String(d.l).trim() !== '' && String(d.l) !== '-');
-      
-      return hasValue;
-    });
+    // Clean and normalize dimensions based on new rules
+    parsedData.dimensions = normalizeDimensions(safeDims);
 
     // Normalize tagIds to always be an array of strings
     parsedData.tagIds = normalizeTagIds(parsedData.tagIds);
@@ -401,6 +383,84 @@ export const analyzeProductPhoto = async (
 
     throw new Error(`AI_FAIL|${status}|${errorMsg}`);
   }
+};
+
+/**
+ * AI Recognition Dimensions Automatic Cleaning Function
+ */
+export const normalizeDimensions = (dims: any[]): any[] => {
+  if (!Array.isArray(dims) || dims.length === 0) return [];
+
+  // Filter out invalid items and handle pure strings
+  const labels = dims
+    .map(d => {
+      if (!d) return '';
+      if (typeof d === 'string') return d;
+      return String(d.label || '').trim();
+    })
+    .filter(l => l && !l.toLowerCase().includes('overall'));
+
+  if (labels.length === 0) return [];
+
+  const lwhParts: { type: 'L' | 'W' | 'H', val: string }[] = [];
+  const otherParts: string[] = [];
+
+  labels.forEach(label => {
+    // 1. Detect L/W/H patterns (e.g. L110, Length 110, H80)
+    const upper = label.toUpperCase();
+    const numMatch = label.match(/\d+(\.\d+)?/);
+    if (!numMatch) return;
+    const num = numMatch[0];
+
+    // Priority 1: Check for Directional labels
+    if (upper.includes('H') || upper.includes('HEIGHT') || upper.includes('DEPTH')) {
+       if (!lwhParts.some(p => p.type === 'H')) lwhParts.push({ type: 'H', val: num });
+    } else if (upper.includes('W') || upper.includes('WIDTH')) {
+       if (!lwhParts.some(p => p.type === 'W')) lwhParts.push({ type: 'W', val: num });
+    } else if (upper.includes('L') || upper.includes('LENGTH')) {
+       if (!lwhParts.some(p => p.type === 'L')) lwhParts.push({ type: 'L', val: num });
+    } else {
+      otherParts.push(num);
+    }
+  });
+
+  let resultLabel = '';
+
+  // Rule 1: Priority for L/W/H identification
+  if (lwhParts.length > 0) {
+    const sorted = [];
+    const l = lwhParts.find(p => p.type === 'L')?.val;
+    const w = lwhParts.find(p => p.type === 'W')?.val;
+    const h = lwhParts.find(p => p.type === 'H')?.val;
+    
+    if (l) sorted.push(`L${l}`);
+    if (w) sorted.push(`W${w}`);
+    if (h) sorted.push(`H${h}`);
+    
+    // If we only have some LWH but also some "other" parts, 
+    // it might be a split scenario. But priority is L x W x H.
+    if (sorted.length > 0) {
+      resultLabel = sorted.join(' × ');
+    }
+  } 
+  
+  // Rule 2: Pure numbers + cm merging
+  if (!resultLabel && otherParts.length > 0) {
+    // Merge all, remove duplicates, keep original relative order if possible
+    const unique = [];
+    const seen = new Set();
+    for (const n of otherParts) {
+      if (!seen.has(n)) {
+        unique.push(n);
+        seen.add(n);
+      }
+    }
+    resultLabel = unique.join(' / ');
+  }
+
+  if (!resultLabel) return [];
+
+  return [{ label: `${resultLabel} cm` }];
 };
 
 export const translateDescription = async (

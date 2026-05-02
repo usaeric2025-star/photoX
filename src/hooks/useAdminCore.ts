@@ -1,3 +1,7 @@
+import { useErrorHandler } from '../utils/errorHandler';
+import { useDelete } from './useDelete';
+import { groupApi } from '../api/groups';
+import { photoApi } from '../api/photos';
 import React, { useState, useCallback } from 'react';
 import { 
   saveSettings as saveSettingsCloud, 
@@ -20,10 +24,9 @@ export const useAdminCore = (
   adminUI?: any,
   adminSession?: any
 ) => {
-  const {
-    photos, setPhotos,
-    categories, tags, manufacturers
-  } = useGalleryContext();
+  const { handleError } = useErrorHandler();
+  const { deleteGroup } = useDelete();
+  const { photos, setPhotos, categories, tags, manufacturers } = useGalleryContext();
 
   const { settings, setSettings = () => {} } = adminSession || {};
   const { setAlertDialog = () => {}, setCloudCount = () => {}, showToast = () => {} } = adminUI || {};
@@ -40,16 +43,14 @@ export const useAdminCore = (
             categories: cats || categories,
             manufacturers: mfrs || manufacturers
           }).catch((err: any) => {
-            console.error(err);
-            showToast(`保存设置失败: ${err.message}`, 'error');
+            handleError(err, '保存設置失敗');
           });
         }, 0);
       }
     } catch (err: any) {
-      console.error(err);
-      showToast(`保存数据失败: ${err.message}`, 'error');
+      handleError(err, '保存本地設置失敗');
     }
-  }, [user, categories, tags, manufacturers, setSettings, setAlertDialog]);
+  }, [user, categories, tags, manufacturers, setSettings, handleError]);
 
   const handleSingleAiAnalyzeCallback = useCallback(async (
     data: string, 
@@ -112,10 +113,9 @@ export const useAdminCore = (
         showToast('未能从图片分析出有效数据。', 'error');
       }
     } catch (err: any) {
-      console.error(err);
-      showToast(`AI 识别失败: ${err.message || '请检查网络或 API 密钥'}`, 'error');
+      handleError(err, 'AI 識別失敗');
     }
-  }, [setAlertDialog, categories, tags]);
+  }, [setAlertDialog, categories, tags, handleError]);
 
   const performPushSync = useCallback(async () => {
     if (!user) return;
@@ -136,7 +136,7 @@ export const useAdminCore = (
         
         showToast(`${t.pushSuccess}: ${t.pushSuccessMsg(result.skipped)}`, 'success');
       } catch (err: any) {
-        showToast(`${t.pushFail}: ${err.message}`, 'error');
+        handleError(err, t.pushFail);
       }
     });
   }, [user, photos, settings, categories, tags, manufacturers, setAlertDialog, t, refreshCloudData, setCloudCount, lastSyncTime, adminUI]);
@@ -148,44 +148,14 @@ export const useAdminCore = (
         await refreshCloudData(user, true, setCloudCount);
         showToast(`${t.pullSuccess}: ${t.pullSuccessMsg}`, 'success');
       } catch (err: any) {
-        showToast(`${t.pullFail}: ${err.message}`, 'error');
+        handleError(err, t.pullFail);
       }
     });
   }, [user, setAlertDialog, t, refreshCloudData, setCloudCount, adminUI]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
-      console.log(`[Ungroup] Starting disband for group ${groupId}`);
-      try {
-        // 1. Clear group association in cloud (more robust as it catches all photos in group)
-        await clearGroupIdInCloud(groupId);
-
-        // 2. Clear locally
-        setPhotos(prev => {
-          const next = prev.map(p => p.groupId === groupId ? { 
-            ...p, 
-            groupId: null, 
-            isPinned: false,
-            isGroupCover: false,
-            groupOrder: 0
-          } : p);
-          
-          saveData('product_photos', next);
-          return next;
-        });
-
-        // 3. Delete group metadata permanently
-        console.log(`[Ungroup] Deleting metadata for ${groupId}`);
-        await deleteGroupFromCloud(groupId);
-
-        showToast('解除群組成功 / Group Disbanded', 'success');
-        console.log('[Ungroup] Success');
-        return true;
-      } catch (err: any) {
-        console.error('[Ungroup] Critical Fail:', err);
-        showToast(`解除群組失敗: ${err?.message || '未知錯誤'}`, 'error');
-        throw err; // Re-throw to prevent UI from closing/navigating
-      }
-  }, [setPhotos, showToast]);
+    deleteGroup(groupId);
+  }, [deleteGroup]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;

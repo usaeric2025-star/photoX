@@ -1,4 +1,5 @@
 import React from 'react';
+import { useErrorHandler } from '../../utils/errorHandler';
 import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -29,6 +30,7 @@ export const BatchEditScreen = ({
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
 }) => {
+  const { handleError } = useErrorHandler();
   const { 
     quickAddManufacturer: quickAddMfr, 
     quickAddTag: quickAddT,
@@ -147,11 +149,15 @@ export const BatchEditScreen = ({
             onToggleTag={(tag) => {
               const tagIdStr = String(tag.id);
               const exists = formState.tagIds.map(String).includes(tagIdStr);
-              updateForm({ 
-                tagIds: exists 
-                  ? formState.tagIds.filter((tid: string) => String(tid) !== tagIdStr) 
-                  : [...formState.tagIds, tagIdStr] 
-              });
+              if (exists) {
+                updateForm({ 
+                  tagIds: formState.tagIds.filter((tid: string) => String(tid) !== tagIdStr) 
+                });
+              } else if (formState.tagIds.length < 3) {
+                updateForm({ 
+                  tagIds: [...formState.tagIds, tagIdStr] 
+                });
+              }
             }}
             onUpdateTag={updateTag}
             onDeleteTag={deleteTag}
