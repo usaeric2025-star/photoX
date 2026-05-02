@@ -76,13 +76,19 @@ export const getGroupById = async (id: string): Promise<ProductGroup | null> => 
 };
 
 export const deleteGroupFromCloud = async (id: string) => {
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .delete()
-    .eq('id', id);
+  const { data: { session } } = await supabase.auth.getSession();
+  const userId = session?.user?.id;
+
+  const query = supabase.from(TABLE_NAME).delete().eq('id', id);
+  
+  if (userId) {
+    query.eq('user_id', userId);
+  }
+
+  const { error } = await query;
 
   if (error) {
-    console.error("Failed to delete group:", error);
-    throw new Error(error.message);
+    console.error(`[DB Error] Failed to delete group ${id}:`, error);
+    throw new Error(`刪除群組中繼資料失敗: ${error.message} (Code: ${error.code})`);
   }
 };

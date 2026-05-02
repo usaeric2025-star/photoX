@@ -109,6 +109,35 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
   }
 };
 
+export const clearGroupIdInCloud = async (groupId: string) => {
+  console.log(`[Cloud Action] Attempting to clear group_id for all photos in group: ${groupId}`);
+  
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .update({ 
+      group_id: null, 
+      is_pinned: false,
+      is_group_cover: false,
+      group_order: 0
+    })
+    .eq('group_id', groupId)
+    .select('id');
+    
+  if (error) {
+    console.error(`[DB Error] Failed to clear group_id for group ${groupId}:`, error);
+    throw new Error(`清除照片群組關聯失敗: ${error.message} (Code: ${error.code})`);
+  }
+  
+  const affectedCount = data?.length || 0;
+  console.log(`[DB Success] 更新照片 group_id 影响行数：${affectedCount}`);
+  
+  if (affectedCount === 0) {
+    const errorMsg = `解散失敗：在雲端找不到屬於此群組的照片。可能照片已同步成功或已被移除。 (No photos linked to group_id: ${groupId})`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+};
+
 export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {
   const { data, error } = await supabase
     .from(TABLE_NAME)

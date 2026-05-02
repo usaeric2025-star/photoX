@@ -3,6 +3,7 @@ import {
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
   updatePhotosGroupInCloud,
+  clearGroupIdInCloud,
   supabase
 } from '../services/supabaseService';
 import { deleteGroupFromCloud } from '../services/groupService';
@@ -155,59 +156,36 @@ export const useAdminCore = (
   const handleUngroup = useCallback(async (groupId: string) => {
       console.log(`[Ungroup] Starting disband for group ${groupId}`);
       try {
-        const photosToUngroup = photos.filter(p => p.groupId === groupId);
-        const photoIds = photosToUngroup.map(p => p.id);
-        
-        console.log(`[Ungroup] Updating ${photoIds.length} photos:`, photoIds);
+        // 1. Clear group association in cloud (more robust as it catches all photos in group)
+        await clearGroupIdInCloud(groupId);
 
-        // 1. Update photos to remove groupId and group-specific markers
-        if (photoIds.length > 0) {
-          // Alert if any are temp IDs
-          const temps = photoIds.filter(id => String(id).startsWith('temp-'));
-          if (temps.length > 0) {
-             console.warn('[Ungroup] Found temporary IDs during disband!', temps);
-             // If we have temp IDs, searching by image_hash as a backup might be needed in future, 
-             // but for now we expect IDs to be synced.
-          }
+        // 2. Clear locally
+        setPhotos(prev => {
+          const next = prev.map(p => p.groupId === groupId ? { 
+            ...p, 
+            groupId: null, 
+            isPinned: false,
+            isGroupCover: false,
+            groupOrder: 0
+          } : p);
+          
+          saveData('product_photos', next);
+          return next;
+        });
 
-          await updatePhotosGroupInCloud(photoIds, { 
-            group_id: null, 
-            is_pinned: false,
-            is_group_cover: false,
-            group_order: 0
-          });
-
-          setPhotos(prev => {
-            const next = prev.map(p => p.groupId === groupId ? { 
-              ...p, 
-              groupId: null, 
-              isPinned: false,
-              isGroupCover: false,
-              groupOrder: 0
-            } : p);
-            
-            // Persist immediately to prevent state revert after refresh
-            saveData('product_photos', next);
-            return next;
-          });
-        }
-
-        // 2. Delete group metadata permanently
-        try {
-          console.log(`[Ungroup] Deleting metadata for ${groupId}`);
-          await deleteGroupFromCloud(groupId);
-        } catch (e) {
-          console.warn("Failed to delete group metadata (might be already deleted or table missing):", e);
-        }
+        // 3. Delete group metadata permanently
+        console.log(`[Ungroup] Deleting metadata for ${groupId}`);
+        await deleteGroupFromCloud(groupId);
 
         showToast('解除群組成功 / Group Disbanded', 'success');
         console.log('[Ungroup] Success');
+        return true;
       } catch (err: any) {
         console.error('[Ungroup] Critical Fail:', err);
         showToast(`解除群組失敗: ${err?.message || '未知錯誤'}`, 'error');
         throw err; // Re-throw to prevent UI from closing/navigating
       }
-  }, [photos, setPhotos, showToast]);
+  }, [setPhotos, showToast]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
     if (ids.length < 2) return;
