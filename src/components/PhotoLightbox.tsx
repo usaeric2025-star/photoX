@@ -393,18 +393,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         </div>
       )}
 
-      {/* 顶部悬浮页码/切换 - 仅移动端 */}
-      <div className="fixed top-20 left-1/2 -translate-x-1/2 flex items-center gap-3 md:hidden z-[600] whitespace-nowrap">
-         <button onClick={onPrev} className="w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg border border-white/10 active:scale-90 transition-transform">
-           <ChevronLeft size={20} />
-         </button>
-         <div className="px-3 py-1.5 bg-black/40 backdrop-blur-md text-white text-[10px] font-black rounded-full shadow-lg border border-white/10 min-w-[60px] text-center">
-           {index + 1} / {displayPhotos.length}
-         </div>
-         <button onClick={onNext} className="w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg border border-white/10 active:scale-90 transition-transform">
-           <ChevronRight size={20} />
-         </button>
-      </div>
+      {/* 顶部悬浮页码/切换已移除 */}
     </motion.div>
   );
 };
