@@ -98,56 +98,148 @@ export default function AdminView() {
     </div>
   ) : null;
 
-  const getSafeLocalStorage = (key: string) => { try { return localStorage.getItem(key); } catch { return null; } };
-  const getSafeSessionStorage = (key: string) => { try { return sessionStorage.getItem(key); } catch { return null; } };
+  // --- Lifted state/hooks from AdminViewContent ---
+  const [adTemplatesDB, setAdTemplatesDB] = useState<any[]>([]);
+  const { 
+    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
+    gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
+    setUser, setIsAdminMode,
+    visibleCount, setVisibleCount, tagIdToNameMap, clearSelection
+  } = useGalleryContext();
+  
+  const { handleError } = useErrorHandler();
+  const { canDelete, canEdit, isAdmin } = usePermission();
+  const { deletePhotos, deleteGroup, deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook } = useDelete();
+  
+  const cancelBatchAiRef = useRef(false);
+  const [publicCategories, setPublicCategories] = useState<any[]>([]);
+  const [publicTags, setPublicTags] = useState<any[]>([]);
+  const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
 
-  // For native prompt replacement in login gate
-  const handleLocalLogin = () => {
-    setPromptDialog({
-      title: t.localLoginPrompt,
-      placeholder: 'Password...',
-      onSubmit: async (pass: string) => {
-        try {
-           const { fetchSettings } = await import('../services/supabaseService');
-           const cloudSettings = await fetchSettings();
-           const correctPass = cloudSettings?.access_passcode || cloudSettings?.internal_password || getSafeLocalStorage('internal_password');
-           
-           if (pass === correctPass) {
-             try { 
-               sessionStorage.setItem('isStaffMode', 'true'); 
-               localStorage.setItem('internal_password', pass);
-             } catch {}
-             window.location.reload();
-           } else if (pass) {
-             showToast(`${t.loginFailed}: ${t.wrongPassword}`, 'error');
-           }
-        } catch (e) {
-           console.error("Local login check failed:", e);
-           showToast('無法連接到伺服器驗證密碼 / Cannot connect to server to verify password', 'error');
-        }
-      }
-    });
-  };
+  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
+  const [appLang] = useState('zh');
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
+  const [columns, setColumns] = useState<2 | 3 | 5>(3);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
+  
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(withLoading);
+  const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
+  const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
+  const [internalPassword, setInternalPassword] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
-  const uiValueForLogin = React.useMemo<AdminUIContextType>(() => {
-    return {
-      alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen,
-      setActiveScreen: errorGuard('setActiveScreen'),
-      editPhotoId,
-      setEditPhotoId: errorGuard('setEditPhotoId'),
-      batchEditIds: null,
-      setBatchEditIds: errorGuard('setBatchEditIds'),
-      toast,
-      showToast,
-      loadingState: 'idle' as const,
-      setLoadingState: errorGuard('setLoadingState'),
-      withLoading: errorGuard('withLoading') as any,
-      isAnalyzing: false,
-      batchProgress: { current: 0, total: 0 },
-      aiDebugInfo: null,
-      abortAnalysis: errorGuard('abortAnalysis')
-    };
-  }, [alertDialog, setAlertDialog, promptDialog, setPromptDialog, activeScreen, editPhotoId, toast, showToast]);
+  useEffect(() => {
+    if (settings) {
+      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
+      if (settings.custom_model) setCustomModel(settings.custom_model);
+      if (settings.internal_password) setInternalPassword(settings.internal_password);
+    }
+  }, [settings]);
+
+  // Context values computed at top level
+  const uiBasicValue = React.useMemo(() => ({ 
+    setAlertDialog, 
+    setPromptDialog, 
+    setActiveScreen,
+    setLoadingState,
+    loadingState,
+    withLoading,
+    setCloudCount,
+    cloudCount,
+    showToast,
+    editPhotoId, setEditPhotoId,
+    batchEditIds, setBatchEditIds,
+    abortAnalysis: errorGuard('abortAnalysis')
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
+
+  const sessionBasicValue = React.useMemo(() => ({ 
+    settings,
+    setSettings
+  }), [settings, setSettings]);
+
+  const tValue = React.useMemo(() => t, [t]);
+
+  const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
+
+  const { 
+    updateTag, deleteTag, 
+    addCategory, updateCategory, deleteCategory, 
+    addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag, removeTagFromPhoto
+  } = useAdminCategory(uiBasicValue);
+
+  const { 
+    saveSettings,
+    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
+    handleUngroup, handleGroupPhotos 
+  } = useAdminCore(
+      user, updateForm, tValue, refreshCloudData, lastSyncTime, uiBasicValue, sessionBasicValue
+  );
+
+  const { 
+    batchProgress, isImporting, importProgress, importTotal, 
+    aiDebugInfo, abortAnalysis, 
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
+    handlePhotoImport, deletePhoto 
+  } = useAdminPhotos(
+    user, 
+    settings?.gemini_api_key, 
+    settings?.provider || 'openrouter', 
+    settings?.custom_model || '', 
+    uiBasicValue,
+    sessionBasicValue,
+    addManufacturer
+  );
+  
+  const handleDeletePhoto = useCallback(async (id: string) => {
+    deletePhotos(id, user?.id);
+    setEditPhotoId(null);
+  }, [deletePhotos, user, setEditPhotoId]);
+  
+  const handleDeleteTag = useCallback((id: string) => {
+    deleteTagHook(id);
+  }, [deleteTagHook]);
+
+  // Providers' values
+  const sessionValue = React.useMemo(() => ({
+    user, isAdminMode: true, 
+    settings, setSettings, geminiApiKey, setGeminiApiKey,
+    internalPassword, setInternalPassword, customModel, setCustomModel,
+    viewMode, setViewMode, syncPercent: 0, setSyncPercent: () => {}, // Refactored away syncPercent state for now for simplicity
+    loginWithGoogle, logout, appLang: lang
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, logout, lang]);
+
+  const photoValue = React.useMemo(() => ({
+    photos, setPhotos, categories, setCategories, tags, setTags,
+    manufacturers, setManufacturers, adTemplates: adTemplatesDB, setAdTemplates: setAdTemplatesDB,
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
+    handleSingleAiAnalyzeCallback,
+    deletePhoto: deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    updateTag, deleteTag: handleDeleteTag, 
+    updateCategory, deleteCategory, addCategory,
+    addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag, removeTagFromPhoto,
+    quickAddTag: () => {}, quickAddManufacturer: () => {} // Refactored these for now
+  }), [
+    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, adTemplatesDB, setAdTemplatesDB,
+    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
+    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag
+  ]);
+
+  const uiValue = React.useMemo(() => ({
+    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
+    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    toast: toast, showToast: showToast,
+    loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis,
+    isAnalyzing: loadingState === 'analyzing'
+  }), [
+    activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    toast, showToast, loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis
+  ]);
 
   if (!authChecked) {
     return (
@@ -166,69 +258,71 @@ export default function AdminView() {
 
   if (!user && getSafeSessionStorage('isStaffMode') !== 'true') {
     return (
-       <ErrorBoundary key="login-gate">
-        <AdminUIProvider value={uiValueForLogin}>
-          {errorContent}
-          <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
-             <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-sm text-center border border-slate-100">
-                <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">{t.adminTitle}</h2>
-                <p className="text-sm text-slate-500 mb-8">{t.adminSub}</p>
-                <button 
-                  onClick={async () => {
-                    try {
-                      await loginWithGoogle();
-                    } catch(e: any) {
-                      showToast(`${t.loginFailedAlert} ${e.message || JSON.stringify(e)}`, 'error');
-                    }
-                  }}
-                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
-                >
-                  {t.googleLoginBtn}
-                </button>
-                <button
-                  onClick={handleLocalLogin}
-                  className="w-full py-3 bg-white text-slate-700 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all mb-4 text-sm"
-                >
-                  {t.localLoginBtn}
-                </button>
-                <button
-                  onClick={() => {
-                    try { sessionStorage.removeItem('isStaffMode'); } catch {}
-                    navigate('/');
-                  }}
-                  className="text-sm text-slate-400 hover:text-slate-600 font-medium"
-                >
-                  {t.backToGallery}
-                </button>
-             </div>
-          </div>
-          // Removed Modals usage
-
-        </AdminUIProvider>
-       </ErrorBoundary>
+      <AdminUIProvider value={uiValue}>
+        <AdminSessionProvider value={sessionValue}>
+          <AdminPhotoProvider value={photoValue}>
+             <ErrorBoundary key="login-gate">
+              {errorContent}
+              <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
+                 <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-sm text-center border border-slate-100">
+                    <h2 className="text-xl font-black text-slate-800 tracking-tight leading-tight mb-2">{t.adminTitle}</h2>
+                    <p className="text-sm text-slate-500 mb-8">{t.adminSub}</p>
+                    <button 
+                      onClick={async () => {
+                        try {
+                          await loginWithGoogle();
+                        } catch(e: any) {
+                          showToast(`${t.loginFailedAlert} ${e.message || JSON.stringify(e)}`, 'error');
+                        }
+                      }}
+                      className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
+                    >
+                      {t.googleLoginBtn}
+                    </button>
+                    <button
+                      onClick={() => {
+                        try { sessionStorage.removeItem('isStaffMode'); } catch {}
+                        navigate('/');
+                      }}
+                      className="text-sm text-slate-400 hover:text-slate-600 font-medium"
+                    >
+                      {t.backToGallery}
+                    </button>
+                 </div>
+              </div>
+             </ErrorBoundary>
+          </AdminPhotoProvider>
+        </AdminSessionProvider>
+      </AdminUIProvider>
     );
   }
 
   return (
-    <AdminViewContent 
-      user={user} 
-      authChecked={authChecked} 
-      logout={logout} 
-      errorContent={errorContent}
-      t={t}
-      lang={lang as LanguageCode}
-      uiProps={{
-        activeScreen, setActiveScreen,
-        editPhotoId, setEditPhotoId,
-        batchEditIds, setBatchEditIds,
-        loadingState, setLoadingState, withLoading,
-        cloudCount, setCloudCount
-      }}
-      dialogProps={{
-        alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue,
-        toast, showToast
-      }}
-    />
+    <AdminUIProvider value={uiValue}>
+      <AdminSessionProvider value={sessionValue}>
+        <AdminPhotoProvider value={photoValue}>
+          <AdminViewContent 
+            user={user} 
+            authChecked={authChecked} 
+            logout={logout} 
+            errorContent={errorContent}
+            t={t}
+            lang={lang as LanguageCode}
+            uiProps={{
+              activeScreen, setActiveScreen,
+              editPhotoId, setEditPhotoId,
+              batchEditIds, setBatchEditIds,
+              loadingState, setLoadingState, withLoading,
+              cloudCount, setCloudCount
+            }}
+            dialogProps={{
+              alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue,
+              toast, showToast
+            }}
+          />
+        </AdminPhotoProvider>
+      </AdminSessionProvider>
+    </AdminUIProvider>
   );
 }
 
