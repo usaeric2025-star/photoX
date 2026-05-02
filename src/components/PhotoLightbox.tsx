@@ -35,6 +35,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+  const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
+
+  useEffect(() => {
+    setActiveLang(lang || 'zh');
+  }, [lang]);
 
   useEffect(() => {
     setIsImageLoading(true);
@@ -307,8 +312,29 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
              {/* 5. 描述内容 - 优先显示个人描述 */}
              {(photo.description || (groupData && (groupData.description || groupData.description_translations))) && (
                <div className="space-y-4">
+                  {/* Language Switcher for Description */}
+                  <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+                      {[
+                        { key: 'zh', label: '中文' },
+                        { key: 'en', label: 'EN' },
+                        { key: 'ms', label: 'BM' }
+                      ].map(l => (
+                        <button
+                          key={l.key}
+                          onClick={() => setActiveLang(l.key)}
+                          className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${
+                            activeLang === l.key 
+                              ? 'bg-white text-blue-600 shadow-sm' 
+                              : 'text-slate-400 hover:text-slate-600'
+                          }`}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                  </div>
+
                   {/* Photo Description if exists */}
-                  {photo.description && (
+                  {(photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && photo.description)) && (
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1.5">
                         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
@@ -316,16 +342,16 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                           <Sparkles size={8} /> AI
                         </div>
                       </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
+                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm min-h-[60px]">
                         <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
-                          {photo.description_translations?.[lang as 'zh'|'en'|'ms'] || photo.description}
+                          {photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? photo.description : '')}
                         </p>
                       </div>
                     </div>
                   )}
 
                   {/* Group Story (Series Story) if exists and photo is in group */}
-                  {groupData && (groupData.description || groupData.description_translations) && (
+                  {groupData && (groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && groupData.description)) && (
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <div className="w-1.5 h-3 bg-blue-600 rounded-full" />
@@ -333,7 +359,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                       </div>
                       <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md">
                         <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic opacity-80">
-                          {groupData.description_translations?.[lang as 'zh'|'en'|'ms'] || groupData.description}
+                          {groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? groupData.description : '')}
                         </p>
                       </div>
                     </div>

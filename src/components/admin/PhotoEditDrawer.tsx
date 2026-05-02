@@ -50,7 +50,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   } = useAdminPhoto();
   const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
-  const [activeDescLang, setActiveDescLang] = useState<'zh'|'en'|'ms'>('zh');
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  const isSyncing = sessionSyncing;
 
   const isPartOfGroup = useMemo(() => {
@@ -250,11 +249,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       if (!trimmed) return;
                       const saved = await addTag(trimmed);
                       if (saved) {
-                         const nextTagIds = [...new Set([...(formState.tagIds || []), String(saved.id)])];
-                         updateForm({ tagIds: nextTagIds });
-                         if (props.editPhotoId) {
-                           // If we are editing, we also want to persist this specifically to the photo
-                           // but Save button will handle it.
+                         const currentIds = formState.tagIds || [];
+                         if (currentIds.length < 3) {
+                           const nextTagIds = [...new Set([...currentIds, String(saved.id)])];
+                           updateForm({ tagIds: nextTagIds });
                          }
                       }
                     }
@@ -462,70 +460,52 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between px-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">多语言说明 / MULTI-LANG DESCRIPTIONS</span>
-                      <button 
-                        onClick={async () => {
-                          const zhText = formState.description_translations?.zh || formState.description;
-                          if (!zhText) return;
-                          try {
-                             const res = await handleTranslate(zhText);
-                             updateForm({
-                               description_translations: { 
-                                 ...formState.description_translations, 
-                                 zh: zhText,
-                                 en: res.en, 
-                                 ms: res.ms 
-                               }
-                             });
-                          } catch (e: any) {
-                             console.error('Translation failed:', e);
-                          }
-                        }}
-                        className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 flex items-center gap-1"
-                      >
-                        <Sparkles size={10} /> 自動翻譯 / AUTO TRANSLATE
-                      </button>
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-100 rounded-[28px] overflow-hidden">
-                      <div className="flex bg-slate-100/50 p-1">
-                        {[
-                          { key: 'zh', label: '中文' },
-                          { key: 'en', label: 'EN' },
-                          { key: 'ms', label: 'BM' }
-                        ].map((lang) => (
-                          <button
-                            key={lang.key}
-                            onClick={() => setActiveDescLang(lang.key as any)}
-                            className={`flex-1 py-2 text-[10px] font-black rounded-2xl transition-all ${
-                              activeDescLang === lang.key 
-                                ? 'bg-white text-blue-600 shadow-sm border border-slate-200/50' 
-                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-200/50'
-                            }`}
-                          >
-                            {lang.label}
-                          </button>
-                        ))}
-                      </div>
-                      
-                      <div className="p-3">
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <span className="text-[9px] font-black text-slate-400 uppercase px-1">中文说明</span>
                         <textarea 
-                          placeholder={
-                            activeDescLang === 'zh' ? "输入中文产品说明..." :
-                            activeDescLang === 'en' ? "Enter English description..." :
-                            "Masukkan penerangan Bahasa Melayu..."
-                          }
-                          value={formState.description_translations?.[activeDescLang] || (activeDescLang === 'zh' ? formState.description : '')} 
+                          placeholder="输入中文产品说明..." 
+                          value={formState.description_translations?.zh || formState.description || ''} 
                           onChange={e => {
                             const val = e.target.value;
-                            const newTranslations = { ...(formState.description_translations || {}), [activeDescLang]: val };
-                            
-                            const updates: any = { description_translations: newTranslations };
-                            if (activeDescLang === 'zh') {
-                              updates.description = val;
-                            }
-                            updateForm(updates);
+                            updateForm({ 
+                              description: val, 
+                              description_translations: { ...(formState.description_translations || {}), zh: val } 
+                            });
                           }} 
-                          className="w-full p-4 rounded-2xl border border-slate-200/50 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-inner" 
+                          className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-24 text-sm font-medium outline-none focus:border-blue-500" 
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <span className="text-[9px] font-black text-slate-400 uppercase px-1">English Description</span>
+                        <textarea 
+                          placeholder="Enter English description..." 
+                          value={formState.description_translations?.en || ''} 
+                          onChange={e => {
+                            const val = e.target.value;
+                            updateForm({ 
+                              description_translations: { ...(formState.description_translations || {}), en: val } 
+                            });
+                          }} 
+                          className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-24 text-sm font-medium outline-none focus:border-blue-500" 
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <span className="text-[9px] font-black text-slate-400 uppercase px-1">Bahasa Melayu</span>
+                        <textarea 
+                          placeholder="Masukkan penerangan Bahasa Melayu..." 
+                          value={formState.description_translations?.ms || ''} 
+                          onChange={e => {
+                            const val = e.target.value;
+                            updateForm({ 
+                              description_translations: { ...(formState.description_translations || {}), ms: val } 
+                            });
+                          }} 
+                          className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-24 text-sm font-medium outline-none focus:border-blue-500" 
                         />
                       </div>
                     </div>

@@ -258,7 +258,7 @@ export const useAdminPhotos = (
             const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
             const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
             const safeOldTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
-            const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds]));
+            const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds])).slice(0, 3);
 
             let updatedPhoto = { 
                 ...photo, 
@@ -402,7 +402,7 @@ export const useAdminPhotos = (
 
         let finalCatId = result.categoryId || photo.categoryId;
         const safeOldTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
-        const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi]));
+        const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIdsFromAi])).slice(0, 3);
 
         let updatedPhoto = { 
           ...photo, 
@@ -597,7 +597,7 @@ export const useAdminPhotos = (
                      isAnalyzing: false,
                      name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
                      categoryId: finalCatId,
-                     tagIds: finalTagIds,
+                     tagIds: finalTagIds.slice(0, 3),
                      description_translations: result.description_translations || p.description_translations,
                      model_number: p.model_number || result.modelNumber || '',
                      dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions
@@ -806,7 +806,7 @@ export const useAdminPhotos = (
             ...p,
             name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
             categoryId: result.categoryId && (p.categoryId === null || p.categoryId === 'uncategorized') ? result.categoryId : p.categoryId,
-            tagIds: finalTagIds,
+            tagIds: finalTagIds.slice(0, 3),
             description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
             description_translations: result.description_translations || p.description_translations,
             // manual_code is strictly manual, AI result is forced null in service
