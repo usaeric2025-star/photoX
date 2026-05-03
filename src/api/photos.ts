@@ -41,7 +41,7 @@ export const photoApi = {
       .range(from, to);
 
     if (error) throw error;
-    return (data || []).map(mapSupabasePhoto);
+    return (data as any[] || []).map(mapSupabasePhoto);
   },
 
   async getCount(params: {
@@ -67,7 +67,7 @@ export const photoApi = {
     return count || 0;
   },
 
-  async upsert(payload: any) {
+  async upsert(payload: Partial<Photo>) {
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .upsert(payload, { onConflict: 'id' })
@@ -90,7 +90,7 @@ export const photoApi = {
     return data;
   },
 
-  async update(id: string, updates: any) {
+  async update(id: string, updates: Partial<Photo>) {
     const { error } = await supabase
       .from(TABLE_NAME)
       .update(updates)
@@ -99,7 +99,7 @@ export const photoApi = {
     if (error) throw error;
   },
 
-  async batchUpdate(ids: string[], updates: any) {
+  async batchUpdate(ids: string[], updates: Partial<Photo>) {
     const { error } = await supabase
       .from(TABLE_NAME)
       .update(updates)

@@ -36,7 +36,7 @@ import { groupApi } from '../api/groups';
 import { photoApi } from '../api/photos';
 import { translations, LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
-import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, AdminUIContextType } from '../context/AdminContexts';
+import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, AdminUIContextType, AdminSessionContextType, AdminPhotoContextType } from '../context/AdminContexts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -124,7 +124,7 @@ export default function AdminView() {
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(withLoading);
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing } = useSyncEngine(withLoading);
   const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
   const [internalPassword, setInternalPassword] = useState('');
@@ -206,13 +206,18 @@ export default function AdminView() {
   }, [deleteTagHook]);
 
   // Providers' values
+  const onRefresh = useCallback(() => 
+    refreshCloudData(user, true, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers), 
+    [user, refreshCloudData]);
+
   const sessionValue = React.useMemo(() => ({
     user, isAdminMode: true, 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
-    viewMode, setViewMode, syncPercent: 0, setSyncPercent: () => {}, // Refactored away syncPercent state for now for simplicity
+    viewMode, setViewMode, syncPercent, setSyncPercent,
+    isSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, syncPercent, setSyncPercent, isSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
@@ -373,7 +378,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload } = useSyncEngine(withLoading);
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing } = useSyncEngine(withLoading);
   const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
   const [internalPassword, setInternalPassword] = useState('');
@@ -546,13 +551,18 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
 
   const [syncPercent, setSyncPercent] = useState(0);
 
+  const onRefresh = useCallback(() => 
+    refreshCloudData(user, true, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers), 
+    [user, refreshCloudData]);
+
   const sessionValue = React.useMemo(() => ({
     user, isAdminMode: true, 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
     viewMode, setViewMode, syncPercent, setSyncPercent,
+    isSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, syncPercent, setSyncPercent, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, syncPercent, setSyncPercent, isSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
@@ -714,7 +724,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 onToggleHidden={async (photo) => {
                   const newStatus = !photo.isHidden;
                   try {
-                    await photoApi.update(photo.id, { is_hidden: newStatus, updated_at: new Date().toISOString() });
+                    await photoApi.update(photo.id, { isHidden: newStatus, updated_at: new Date().toISOString() });
                     setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
                   } catch (e) {
                     handleError(e, '切換隱藏狀態失敗');

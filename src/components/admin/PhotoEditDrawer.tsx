@@ -52,7 +52,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag,
     removeTagFromPhoto
   } = useAdminPhoto();
-  const { isAnalyzing, aiDebugInfo, setPromptDialog } = useAdminUI();
+  const { isAnalyzing, aiDebugInfo, setPromptDialog, showToast } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { validatePhotoForm } = useFormValidation();
   const { handleError } = useErrorHandler();
@@ -257,11 +257,23 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 onDeleteTag={(tagId) => deleteTag(tagId)}
                 onQuickAdd={() => {
                   setPromptDialog({
-                    title: '新增标签',
-                    message: '输入标签名称',
+                    title: '新增标签 / Add Tag',
+                    message: '输入标签名称 / Enter Tag Name',
                     onSubmit: async (name) => {
                       const trimmed = name.trim();
                       if (!trimmed) return;
+                      
+                      const existing = tags.find(t => t.name.toUpperCase() === trimmed.toUpperCase());
+                      if (existing) {
+                        const currentIds = formState.tagIds || [];
+                        if (currentIds.length < 3) {
+                          const nextTagIds = [...new Set([...currentIds, String(existing.id)])];
+                          updateForm({ tagIds: nextTagIds });
+                        }
+                        showToast(`标签 "${trimmed}" 已存在 (自动选择)`, 'success');
+                        return;
+                      }
+
                       const saved = await addTag(trimmed);
                       if (saved) {
                          const currentIds = formState.tagIds || [];
@@ -269,6 +281,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                            const nextTagIds = [...new Set([...currentIds, String(saved.id)])];
                            updateForm({ tagIds: nextTagIds });
                          }
+                         showToast(`已新增标签 "${trimmed}"`, 'success');
                       }
                     }
                   });

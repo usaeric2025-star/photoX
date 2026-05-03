@@ -5,7 +5,7 @@ import { uploadImages } from './storageService';
 import { validateDimension } from '../utils/dimensionValidator';
 import { normalizeSearchQuery } from '../utils/stringHelper';
 
-export function mapSupabasePhoto(item: any): Photo {
+export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     if (!item) return {} as Photo;
     
     // Extract storageId from image_url if possible
@@ -22,7 +22,7 @@ export function mapSupabasePhoto(item: any): Photo {
       }
     }
 
-    const cat = item.category;
+    const cat = item.category as Record<string, unknown> | undefined;
 
     let tagIds: string[] = [];
     if (Array.isArray(item.photo_tags)) {
@@ -30,49 +30,50 @@ export function mapSupabasePhoto(item: any): Photo {
         .map((pt: any) => {
           if (pt == null) return null;
           if (typeof pt === 'object') {
-            if (pt.tag_id != null) return String(pt.tag_id);
-            if (pt.tags && pt.tags.id != null) return String(pt.tags.id);
-            if (pt.id != null) return String(pt.id);
+            const typedPt = pt as Record<string, any>;
+            if (typedPt.tag_id != null) return String(typedPt.tag_id);
+            if (typedPt.tags && (typedPt.tags as Record<string, any>).id != null) return String((typedPt.tags as Record<string, any>).id);
+            if (typedPt.id != null) return String(typedPt.id);
           }
           return String(pt);
         })
         .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
     } else if (Array.isArray(item.tags)) {
       // Fallback in case tags are returned directly
-      tagIds = item.tags
+      tagIds = (item.tags as any[])
         .map((t: any) => {
           if (t == null) return null;
-          if (typeof t === 'object' && t.id != null) return String(t.id);
+          if (typeof t === 'object' && (t as Record<string, any>).id != null) return String((t as Record<string, any>).id);
           return String(t);
         })
         .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
     }
 
     return {
-      id: item.id,
+      id: item.id as string,
       storageId: storageId,
-      item_code: item.item_code,
-      manual_code: item.manual_code,
-      model_number: item.model_number,
-      image_hash: item.image_hash,
-      name: item.name || 'Unnamed Product',
+      item_code: item.item_code as string | undefined,
+      manual_code: item.manual_code as string | undefined,
+      model_number: item.model_number as string | undefined,
+      image_hash: item.image_hash as string | undefined,
+      name: (item.name as string) || 'Unnamed Product',
       categoryId: item.category_id ? String(item.category_id) : null,
-      manufacturerId: item.manufacturer_id || null,
+      manufacturerId: (item.manufacturer_id as string) || null,
       tagIds,
-      description: item.description,
-      image_url: item.image_url,
-      thumb_url: item.thumb_url || item.image_url,
-      dimensions: Array.isArray(item.dimensions) ? item.dimensions : [],
-      exif_data: item.exif_data,
-      createdAt: item.created_at,
-      groupId: item.group_id,
-      isGroupCover: item.is_group_cover || false,
-      groupOrder: item.group_order || 0,
-      isHidden: item.is_hidden || false,
-      userId: item.user_id,
-      uri: item.image_url,
-      price: item.price || '',
-      description_translations: item.description_translations || null
+      description: item.description as string | undefined,
+      image_url: item.image_url as string | undefined,
+      thumb_url: (item.thumb_url as string) || (item.image_url as string),
+      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
+      exif_data: item.exif_data ?? null,
+      createdAt: item.created_at as string | undefined,
+      groupId: item.group_id as string | undefined,
+      isGroupCover: (item.is_group_cover as boolean) || false,
+      groupOrder: (item.group_order as number) || 0,
+      isHidden: (item.is_hidden as boolean) || false,
+      userId: item.user_id as string | undefined,
+      uri: item.image_url as string | undefined,
+      price: (item.price as string) || '',
+      description_translations: item.description_translations as Photo['description_translations'] || null
     };
 }
 

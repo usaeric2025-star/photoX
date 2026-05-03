@@ -1,3 +1,4 @@
+import { User } from '@supabase/supabase-js';
 import { supabase } from './client';
 
 export const loginWithGoogle = async () => {
@@ -21,14 +22,24 @@ export const loginWithGoogle = async () => {
 
 export const logout = () => supabase.auth.signOut();
 
-export const onAuthChange = (callback: (user: any) => void) => {
+export type AuthUser = User & {
+  displayName?: string;
+  avatarUrl?: string;
+};
+
+export const onAuthChange = (callback: (user: AuthUser | null) => void) => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
     const user = session?.user || null;
+    
+    let authUser: AuthUser | null = null;
     if (user) {
-      (user as any).displayName = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.displayName || user.email;
-      (user as any).avatarUrl = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+      authUser = {
+        ...user,
+        displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.displayName || user.email,
+        avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture
+      };
     }
-    callback(user);
+    callback(authUser);
   });
   return () => subscription.unsubscribe();
 };

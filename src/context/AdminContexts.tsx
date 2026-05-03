@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Photo, Category, Tag, ProductFormData } from '../types';
 
 // --- AdminSessionContext ---
-interface AdminSessionContextType {
+export interface AdminSessionContextType {
   user: any;
   isAdminMode: boolean;
   settings: any;
@@ -17,6 +17,8 @@ interface AdminSessionContextType {
   setViewMode: (v: 'public' | 'private') => void;
   syncPercent: number;
   setSyncPercent: (v: number) => void;
+  isSyncing: boolean;
+  onRefresh: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
   appLang: string;
@@ -37,7 +39,7 @@ export const useAdminSession = () => {
 export const useOptionalAdminSession = () => useContext(AdminSessionContext);
 
 // --- AdminPhotoContext ---
-interface AdminPhotoContextType {
+export interface AdminPhotoContextType {
   // Data lists
   photos: Photo[];
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
@@ -58,7 +60,7 @@ interface AdminPhotoContextType {
   handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;
   handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean, onComplete: (screen: string) => void) => Promise<void>;
   deletePhoto: (id: string) => Promise<void>;
-  handleGroupPhotos: (ids: string[], user: any, savePhotoToCloud: any) => Promise<void>;
+  handleGroupPhotos: (ids: string[]) => Promise<any>;
   handleUngroup: (groupId: string) => Promise<void>;
   saveNewPhoto: () => Promise<void>;
   saveBatchEdit: () => Promise<void>;
@@ -92,20 +94,20 @@ export const useOptionalAdminPhoto = () => useContext(AdminPhotoContext);
 
 // --- AdminUIContext ---
 export interface AdminUIContextType {
-  activeScreen: string;
-  setActiveScreen: (s: string) => void;
+  activeScreen: 'home' | 'manage' | 'editor' | 'login';
+  setActiveScreen: (s: 'home' | 'manage' | 'editor' | 'login') => void;
   editPhotoId: string | null;
   setEditPhotoId: (id: string | null) => void;
   batchEditIds: string[] | null;
   setBatchEditIds: (ids: string[] | null) => void;
   
-  alertDialog: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void } | null;
-  setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void } | null) => void;
+  alertDialog: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null;
+  setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
   promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
   setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
   
-  toast: { message: string, type: 'success' | 'error' } | null;
-  showToast: (msg: string, type: 'success' | 'error') => void;
+  toast: { message: string, type: 'success' | 'error' | 'loading' } | null;
+  showToast: (msg: string, type: 'success' | 'error' | 'loading') => void;
   
   loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
   withLoading: <T>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;

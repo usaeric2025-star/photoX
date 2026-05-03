@@ -11,7 +11,7 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-export class ErrorBoundary extends (React.Component as any) {
+export class ErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -31,7 +31,7 @@ export class ErrorBoundary extends (React.Component as any) {
   }
 
   public render() {
-    const { hasError, error, errorInfo } = (this as any).state;
+    const { hasError, error, errorInfo } = this.state;
     if (hasError) {
       return (
         <div className="fixed inset-0 z-[9999] bg-red-600 text-white p-6 overflow-auto">
@@ -51,6 +51,6 @@ export class ErrorBoundary extends (React.Component as any) {
       );
     }
 
-    return (this as any).props.children;
+    return this.props.children;
   }
 }
