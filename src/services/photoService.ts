@@ -69,7 +69,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       groupId: item.group_id as string | undefined,
       isGroupCover: (item.is_group_cover as boolean) || false,
       groupOrder: (item.group_order as number) || 0,
-      isHidden: (item.is_hidden as boolean) || false,
+      isHidden: (item.isHidden as boolean) || false,
       userId: item.user_id as string | undefined,
       uri: item.image_url as string | undefined,
       price: (item.price as string) || '',
@@ -181,7 +181,7 @@ export const updatePhoto = async (
   if ('groupOrder' in updates) dbUpdates.group_order = updates.groupOrder;
   if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
   if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
-  if ('isHidden' in updates) dbUpdates.is_hidden = updates.isHidden;
+  if ('isHidden' in updates) dbUpdates.isHidden = updates.isHidden;
   if ('description_translations' in updates) dbUpdates.description_translations = updates.description_translations;
   
   // Also copy all other standard string fields
@@ -240,7 +240,7 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
 
 export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
   return updatePhotoInCloud(photoId, { 
-    is_hidden: isHidden,
+    isHidden: isHidden,
     updated_at: new Date().toISOString()
   });
 };
@@ -287,6 +287,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     group_id: photo.groupId || null,
     is_group_cover: photo.isGroupCover || false,
     group_order: photo.groupOrder || 0,
+    isHidden: photo.isHidden || false,
     updated_at: photo.updatedAt || new Date().toISOString()
   };
 
@@ -413,6 +414,7 @@ export const savePhotosToCloudBatch = async (
       group_id: photo.groupId || null,
       is_group_cover: photo.isGroupCover || false,
       group_order: photo.groupOrder || 0,
+      isHidden: photo.isHidden || false,
       updated_at: photo.updatedAt || new Date().toISOString()
     };
     if (isUUID) {
