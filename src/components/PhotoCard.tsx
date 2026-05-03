@@ -124,12 +124,26 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         className={`w-full h-full object-cover ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''} ${photo.isHidden ? 'opacity-70' : ''}`}
       />
 
+      {/* Top Left Indicators (Group only) */}
+      <div className="absolute top-1 left-1 z-10 flex gap-0.5">
+        {photo.groupId && (
+          <div className="bg-black/50 backdrop-blur-sm px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
+            <Layers size={8} />
+            {photo.groupId.slice(-4)}
+          </div>
+        )}
+      </div>
+
+      {/* Hidden Status Indicator (Centered overlay) */}
       {photo.isHidden && (
-        <div className="absolute top-1 right-1 bg-yellow-400 text-black p-0.5 rounded-full shadow-lg z-10">
-          <EyeOff size={10} />
+        <div className="absolute inset-0 flex items-center justify-center z-20">
+          <div className="bg-yellow-400/90 text-black p-2 rounded-full shadow-lg">
+            <EyeOff size={16} />
+          </div>
         </div>
       )}
 
+      {/* Top Right Admin Actions */}
       {isAdminMode && isMultiSelect && isSelected && (
         <div className="absolute top-1 right-1 bg-blue-600 text-white p-0.5 rounded-full shadow-lg z-10">
           <X size={10} />
@@ -141,17 +155,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
              e.stopPropagation();
              onTogglePinned(photo);
            }}
-           className={`absolute top-1 ${isAdminMode && isMultiSelect && isSelected ? 'right-7' : 'right-1'} bg-black/50 backdrop-blur-sm p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''}`}
+           className={`absolute top-1 ${isAdminMode && isMultiSelect && isSelected ? 'right-7' : 'right-2'} bg-black/50 backdrop-blur-sm p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''} z-10`}
          >
            <Heart size={12} className={photo.isPinned ? 'fill-current' : ''} />
          </button>
       )}
-      {photo.groupId && (
-         <div className="absolute top-1 left-1 bg-black/50 backdrop-blur-sm px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
-           <Layers size={8} />
-           {photo.groupId.slice(-4)}
-         </div>
-       )}
       
       <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
          {!isUncategorized && displayCatName && (

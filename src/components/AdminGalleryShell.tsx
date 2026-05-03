@@ -89,8 +89,26 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
       message: '刪除後無法恢復，雲端的文件也將被移除。',
       onConfirm: async () => {
         try {
+          // Identify groups before deletion
+          const groupsToCheck = new Set(photos.filter(p => selectedIds.includes(p.id) && p.groupId).map(p => p.groupId));
+          
           await adminPhoto?.deletePhoto(selectedIds, true);
           clearSelection();
+          
+          // Check groups after deletion
+          for (const groupId of groupsToCheck) {
+              const remainingPhotos = photos.filter(p => p.groupId === groupId && !selectedIds.includes(p.id));
+              if (remainingPhotos.length <= 1) {
+                  // Dissolve group: clear group_id for remaining photo if any, and delete group metadata
+                  if (remainingPhotos.length === 1) {
+                      await updatePhoto(remainingPhotos[0].id, { groupId: null, isGroupCover: false, groupOrder: 0 });
+                  }
+                  // Delete group metadata
+                  await adminPhoto?.deleteGroup(groupId as string);
+                  adminUI?.showToast(`群组 ${groupId!.slice(-4)} 已自动解散`, 'info');
+              }
+          }
+
           adminUI?.showToast(`已成功刪除 ${selectedIds.length} 張照片`, 'success');
         } catch (e: any) {
           adminUI?.showToast(`刪除失敗: ${e.message}`, 'error');
