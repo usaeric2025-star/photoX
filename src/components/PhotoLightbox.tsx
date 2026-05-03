@@ -41,14 +41,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
-  const [showInfo, setShowInfo] = useState(() => {
-    const saved = localStorage.getItem('lightboxShowInfo');
-    return saved !== null ? JSON.parse(saved) : true;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('lightboxShowInfo', JSON.stringify(showInfo));
-  }, [showInfo]);
 
   const handleDownload = async () => {
     const url = photo?.image_url || photo?.uri;
@@ -243,21 +235,9 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       </div>
 
       {!isZoomed && (
-        <>
-          {/* Toggle Button - Visible always */}
-          <button
-            onClick={() => setShowInfo(!showInfo)}
-            className={`fixed z-[600] w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white transition-all 
-            ${showInfo ? 'top-4 left-4' : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'}
-            md:static md:z-10`}
-            title={showInfo ? '隐藏说明' : '显示说明'}
-          >
-            {showInfo ? <EyeOff size={20} /> : <Eye size={20} />}
-          </button>
-
-          {showInfo && (
-            <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative">
-              <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4">
+        <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative">
+          <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4">
+            {/* Info Card Content */}
                  {/* 1. 标题与动作条 */}
                  <div className="flex justify-between items-start gap-4">
                     <div className="flex-1">
@@ -456,8 +436,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                  </button>
               </div>
             </div>
-          )}
-        </>
       )}
 
       {/* 顶部悬浮页码/切换已移除 */}
