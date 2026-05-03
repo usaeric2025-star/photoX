@@ -1,6 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLongPress } from '../../hooks/useLongPress';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,62 +33,11 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 }) => {
   const { handleError } = useErrorHandler();
   const [searchTerm, setSearchTerm] = useState('');
-  
-  const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
-  const pressTimer = useRef<NodeJS.Timeout | null>(null);
-  const hasLongPressed = useRef<boolean>(false);
-
-  const activeTouchId = useRef<number | null>(null);
-  const touchStartPoint = useRef<{x: number, y: number} | null>(null);
-
-  const startPress = (tag: any, e?: React.TouchEvent | React.MouseEvent) => {
-    hasLongPressed.current = false;
-    
-    if (e && 'touches' in e) {
-      activeTouchId.current = e.touches[0].identifier;
-      touchStartPoint.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    } else {
-      activeTouchId.current = null;
-      touchStartPoint.current = null;
-    }
-
-    pressTimer.current = setTimeout(() => {
-      hasLongPressed.current = true;
-      setActiveActionTag(tag);
-    }, 400);
-  };
-
-  const clearTimer = () => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-      pressTimer.current = null;
-    }
-  };
-
-  const cancelPress = () => {
-    clearTimer();
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartPoint.current) return;
-    const touchList = Array.from(e.changedTouches) as React.Touch[];
-    const touch = touchList.find(t => t.identifier === activeTouchId.current);
-    if (!touch) return;
-    
-    const dx = touch.clientX - touchStartPoint.current.x;
-    const dy = touch.clientY - touchStartPoint.current.y;
-    if (Math.abs(dx) > 20 || Math.abs(dy) > 20) {
-      cancelPress();
-    }
-  };
-
-  const endPress = () => {
-    clearTimer();
-    activeTouchId.current = null;
-    touchStartPoint.current = null;
-  };
-
   const { settings, setSettings } = useAdminSession();
+  
+  const { startPress, endPress, cancelPress, handleTouchMove, hasLongPressed, activeItem: activeActionTag, setActiveItem: setActiveActionTag } = useLongPress(
+      (tag) => setActiveActionTag(tag)
+  );
 
   const togglePin = async (tagId: string) => {
     try {

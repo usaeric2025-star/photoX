@@ -260,7 +260,7 @@ export const useAdminCategory = (adminUI: any) => {
   const updateManufacturer = async (id: string | number, name: string) => {
     try {
       const strId = String(id);
-      const trimmed = name.trim();
+      const trimmed = name.trim().toUpperCase();
       await updateManufacturerInDB(strId, trimmed);
       const newMfrs = manufacturers.map(m => 
         String(m.id) === strId ? { ...m, name: trimmed } : m

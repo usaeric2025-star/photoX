@@ -46,6 +46,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     manufacturers, 
     addTag,
     addManufacturer,
+    updateManufacturer,
+    deleteManufacturer,
     updateTag,
     deleteTag,
     removeTagFromPhoto
@@ -303,6 +305,19 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             manufacturers={manufacturers}
             selectedId={formState.manufacturerId}
             onSelect={(id) => updateForm({ manufacturerId: id })}
+            onEdit={(mfr) => {
+                setPromptDialog({
+                  title: '编辑生产商 / Edit Manufacturer',
+                  placeholder: mfr.name,
+                  onSubmit: async (name) => {
+                    const trimmed = name.trim();
+                    if(trimmed) await updateManufacturer(mfr.id, trimmed);
+                  }
+                });
+            }}
+            onDelete={(mfr) => {
+                deleteManufacturer(mfr.id);
+            }}
           />
         </section>
 

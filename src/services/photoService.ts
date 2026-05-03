@@ -180,6 +180,7 @@ export const updatePhoto = async (
   if ('groupOrder' in updates) dbUpdates.group_order = updates.groupOrder;
   if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
   if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
+  if ('isHidden' in updates) dbUpdates.is_hidden = updates.isHidden;
   if ('description_translations' in updates) dbUpdates.description_translations = updates.description_translations;
   
   // Also copy all other standard string fields
