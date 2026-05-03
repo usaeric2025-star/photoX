@@ -173,7 +173,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     showToast('群組資料已更新 / Group info updated');
 
     try {
-      await saveGroupToCloud(nextGroupData);
+      // Create a copy without isHidden for the group update
+      const { isHidden: groupIsHidden, ...groupUpdateData } = nextGroupData;
+      await saveGroupToCloud(groupUpdateData);
       
       // If isHidden changed, update all photos in this group
       if (updates.hasOwnProperty('isHidden')) {

@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "Photo": {
+      "title": "Photo",
+      "description": "Photo entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
+        "isHidden": { "type": "boolean" }
+      }
+    },
+    "ProductGroup": {
+      "title": "ProductGroup",
+      "description": "ProductGroup entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "isHidden": { "type": "boolean" }
+      }
+    }
+  },
+  "firestore": {
+    "photos": { "schema": "Photo", "description": "Photos collection" },
+    "groups": { "schema": "ProductGroup", "description": "Groups collection" }
+  }
+}

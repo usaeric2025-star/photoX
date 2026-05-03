@@ -41,6 +41,14 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
+  const [showInfo, setShowInfo] = useState(() => {
+    const saved = localStorage.getItem('lightboxShowInfo');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lightboxShowInfo', JSON.stringify(showInfo));
+  }, [showInfo]);
 
   const handleDownload = async () => {
     const url = photo?.image_url || photo?.uri;
@@ -235,206 +243,221 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       </div>
 
       {!isZoomed && (
-        <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative">
-          <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4">
-             {/* 1. 标题与动作条 */}
-             <div className="flex justify-between items-start gap-4">
-                <div className="flex-1">
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
-                  <h2 className="text-lg font-black text-[#1D3557] leading-tight uppercase">
-                    {photo.name || t.unnamed}
-                  </h2>
-                </div>
-                {isAdminMode && (
-                  <div className="flex items-center gap-2">
-                    {onToggleHidden && (
-                      <button 
-                        onClick={() => onToggleHidden(photo)}
-                        className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
-                      >
-                        {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    )}
-                  </div>
-                )}
-             </div>
+        <>
+          {/* Toggle Button - Visible always */}
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            className={`fixed z-[600] w-10 h-10 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white transition-all 
+            ${showInfo ? 'top-4 left-4' : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'}
+            md:static md:z-10`}
+            title={showInfo ? '隐藏说明' : '显示说明'}
+          >
+            {showInfo ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
 
-             {/* 2. 价格与型号组合 */}
-             {(photo.price || photo.model_number) && (
-               <div className="flex flex-wrap items-stretch gap-3">
-                  {photo.price && (
-                    <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
-                      <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{t.price}</span>
-                      <p className="text-xl font-bold leading-none">{photo.price}</p>
+          {showInfo && (
+            <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative">
+              <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4">
+                 {/* 1. 标题与动作条 */}
+                 <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
+                      <h2 className="text-lg font-black text-[#1D3557] leading-tight uppercase">
+                        {photo.name || t.unnamed}
+                      </h2>
                     </div>
-                  )}
-                  {photo.model_number && (
-                    <div className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl flex-1 min-w-[120px] flex flex-col justify-center">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">{t.modelNumber}</span>
-                      <p className="font-mono font-bold text-slate-700">{photo.model_number}</p>
-                    </div>
-                  )}
-               </div>
-             )}
-
-             {/* 3. 厂商与标签 */}
-             {((mfrName && mfrName !== catName) || displayTags.length > 0) && (
-               <div className="flex flex-wrap items-center gap-2">
-                  {(mfrName && mfrName !== catName) && (
-                    <span className="bg-orange-50 text-orange-600 px-2.5 py-1 border border-orange-200 rounded-lg text-xs font-bold flex items-center">
-                      <Key size={10} className="mr-1.5" />
-                      {mfrName}
-                    </span>
-                  )}
-                  {displayTags.map((tagName: string, i: number) => (
-                    <span key={i} className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border border-slate-200">#{tagName}</span>
-                  ))}
-               </div>
-             )}
-
-             {/* Admin Group Controls */}
-             {isAdminMode && photo.groupId && (
-               <div className="grid grid-cols-2 gap-2 mt-2">
-                    <button 
-                      onClick={() => onUngroup?.(photo.id)}
-                      className="bg-red-50 text-red-600 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-red-100"
-                    >
-                      {t.ungroup || 'Ungroup'}
-                    </button>
-                    <button 
-                      onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
-                      className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
-                    >
-                      {t.setCover || 'Set Cover'}
-                    </button>
-               </div>
-             )}
-
-             {/* 4. 尺寸详情 */}
-             {Array.isArray(photo.dimensions) && photo.dimensions.length > 0 && (
-               <div className="space-y-2">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.dimensions || 'Dimensions'}</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {photo.dimensions.map((dim: any, i: number) => {
-                      const hasVolumeParams = dim.length || dim.width || dim.height;
-                      const isQuickLabel = dim.label && !hasVolumeParams && dim.unit;
-                      
-                      if (isQuickLabel) {
-                        return (
-                          <div key={i} className="bg-slate-50 p-2.5 border border-slate-100 rounded-xl flex items-center justify-between col-span-2">
-                            <p className="font-bold text-slate-700 text-sm">{dim.label}</p>
-                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">{dim.unit}</span>
-                          </div>
-                        )
-                      }
-                      
-                      return (
-                          <div key={i} className="bg-slate-50 p-3 rounded-xl space-y-2 border border-slate-100 col-span-2 sm:col-span-1">
-                            {dim.label && <p className="font-black text-slate-600 text-xs">{dim.label}</p>}
-                            <div className="grid grid-cols-3 gap-2">
-                              <div>
-                                 <span className="text-[9px] font-bold text-slate-400 uppercase block">L</span>
-                                 <p className="font-bold text-slate-700 text-sm">{dim.length || '-'}</p>
-                              </div>
-                              <div>
-                                 <span className="text-[9px] font-bold text-slate-400 uppercase block">W</span>
-                                 <p className="font-bold text-slate-700 text-sm">{dim.width || '-'}</p>
-                              </div>
-                              <div>
-                                 <span className="text-[9px] font-bold text-slate-400 uppercase block">H</span>
-                                 <p className="font-bold text-slate-700 text-sm">{dim.height || '-'}</p>
-                              </div>
-                            </div>
-                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block mt-1 uppercase">{dim.unit || 'cm'}</span>
-                          </div>
-                      )
-                    })}
-                  </div>
-               </div>
-             )}
-
-             {/* 5. 描述内容 - 优先显示个人描述 */}
-             {(photo.description || (groupData && (groupData.description || groupData.description_translations))) && (
-               <div className="space-y-4">
-                  {/* Language Switcher for Description */}
-                  <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
-                      {[
-                        { key: 'zh', label: '中文' },
-                        { key: 'en', label: 'EN' },
-                        { key: 'ms', label: 'BM' }
-                      ].map(l => (
-                        <button
-                          key={l.key}
-                          onClick={() => setActiveLang(l.key)}
-                          className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${
-                            activeLang === l.key 
-                              ? 'bg-white text-blue-600 shadow-sm' 
-                              : 'text-slate-400 hover:text-slate-600'
-                          }`}
-                        >
-                          {l.label}
-                        </button>
-                      ))}
-                  </div>
-
-                  {/* Photo Description if exists */}
-                  {(photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && photo.description)) && (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
-                        <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
-                          <Sparkles size={8} /> AI
-                        </div>
-                      </div>
-                      <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm min-h-[60px]">
-                        <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
-                          {photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? photo.description : '')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Group Story (Series Story) if exists and photo is in group */}
-                  {groupData && (groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && groupData.description)) && (
-                    <div className="space-y-1.5">
+                    {isAdminMode && (
                       <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-3 bg-blue-600 rounded-full" />
-                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.seriesStory || 'Series Context'}</h3>
+                        {onToggleHidden && (
+                          <button 
+                            onClick={() => onToggleHidden(photo)}
+                            className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+                          >
+                            {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
+                          </button>
+                        )}
                       </div>
-                      <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md">
-                        <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic opacity-80">
-                          {groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? groupData.description : '')}
-                        </p>
+                    )}
+                 </div>
+
+                 {/* 2. 价格与型号组合 */}
+                 {(photo.price || photo.model_number) && (
+                   <div className="flex flex-wrap items-stretch gap-3">
+                      {photo.price && (
+                        <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
+                          <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{t.price}</span>
+                          <p className="text-xl font-bold leading-none">{photo.price}</p>
+                        </div>
+                      )}
+                      {photo.model_number && (
+                        <div className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl flex-1 min-w-[120px] flex flex-col justify-center">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">{t.modelNumber}</span>
+                          <p className="font-mono font-bold text-slate-700">{photo.model_number}</p>
+                        </div>
+                      )}
+                   </div>
+                 )}
+
+                 {/* 3. 厂商与标签 */}
+                 {((mfrName && mfrName !== catName) || displayTags.length > 0) && (
+                   <div className="flex flex-wrap items-center gap-2">
+                      {(mfrName && mfrName !== catName) && (
+                        <span className="bg-orange-50 text-orange-600 px-2.5 py-1 border border-orange-200 rounded-lg text-xs font-bold flex items-center">
+                          <Key size={10} className="mr-1.5" />
+                          {mfrName}
+                        </span>
+                      )}
+                      {displayTags.map((tagName: string, i: number) => (
+                        <span key={i} className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border border-slate-200">#{tagName}</span>
+                      ))}
+                   </div>
+                 )}
+
+                 {/* Admin Group Controls */}
+                 {isAdminMode && photo.groupId && (
+                   <div className="grid grid-cols-2 gap-2 mt-2">
+                        <button 
+                          onClick={() => onUngroup?.(photo.id)}
+                          className="bg-red-50 text-red-600 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-red-100"
+                        >
+                          {t.ungroup || 'Ungroup'}
+                        </button>
+                        <button 
+                          onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
+                          className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+                        >
+                          {t.setCover || 'Set Cover'}
+                        </button>
+                   </div>
+                 )}
+
+                 {/* 4. 尺寸详情 */}
+                 {Array.isArray(photo.dimensions) && photo.dimensions.length > 0 && (
+                   <div className="space-y-2">
+                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.dimensions || 'Dimensions'}</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {photo.dimensions.map((dim: any, i: number) => {
+                          const hasVolumeParams = dim.length || dim.width || dim.height;
+                          const isQuickLabel = dim.label && !hasVolumeParams && dim.unit;
+                          
+                          if (isQuickLabel) {
+                            return (
+                              <div key={i} className="bg-slate-50 p-2.5 border border-slate-100 rounded-xl flex items-center justify-between col-span-2">
+                                <p className="font-bold text-slate-700 text-sm">{dim.label}</p>
+                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">{dim.unit}</span>
+                              </div>
+                            )
+                          }
+                          
+                          return (
+                              <div key={i} className="bg-slate-50 p-3 rounded-xl space-y-2 border border-slate-100 col-span-2 sm:col-span-1">
+                                {dim.label && <p className="font-black text-slate-600 text-xs">{dim.label}</p>}
+                                <div className="grid grid-cols-3 gap-2">
+                                  <div>
+                                     <span className="text-[9px] font-bold text-slate-400 uppercase block">L</span>
+                                     <p className="font-bold text-slate-700 text-sm">{dim.length || '-'}</p>
+                                  </div>
+                                  <div>
+                                     <span className="text-[9px] font-bold text-slate-400 uppercase block">W</span>
+                                     <p className="font-bold text-slate-700 text-sm">{dim.width || '-'}</p>
+                                  </div>
+                                  <div>
+                                     <span className="text-[9px] font-bold text-slate-400 uppercase block">H</span>
+                                     <p className="font-bold text-slate-700 text-sm">{dim.height || '-'}</p>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block mt-1 uppercase">{dim.unit || 'cm'}</span>
+                              </div>
+                          )
+                        })}
                       </div>
-                    </div>
-                  )}
-               </div>
-             )}
+                   </div>
+                 )}
 
-             {/* 内部私有信息 (Staff/Admin ONLY) */}
-             {(isAdminMode || isStaffMode) && photo.manual_code && (
-               <div className="bg-red-50 border border-red-100 p-3 rounded-xl mt-4">
-                 <h3 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Internal Reference</h3>
-                 <p className="font-mono font-black text-red-600 tracking-wider uppercase">{photo.manual_code}</p>
-               </div>
-             )}
-          </div>
+                 {/* 5. 描述内容 - 优先显示个人描述 */}
+                 {(photo.description || (groupData && (groupData.description || groupData.description_translations))) && (
+                   <div className="space-y-4">
+                      {/* Language Switcher for Description */}
+                      <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+                          {[
+                            { key: 'zh', label: '中文' },
+                            { key: 'en', label: 'EN' },
+                            { key: 'ms', label: 'BM' }
+                          ].map(l => (
+                            <button
+                              key={l.key}
+                              onClick={() => setActiveLang(l.key)}
+                              className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${
+                                activeLang === l.key 
+                                  ? 'bg-white text-blue-600 shadow-sm' 
+                                  : 'text-slate-400 hover:text-slate-600'
+                              }`}
+                            >
+                              {l.label}
+                            </button>
+                          ))}
+                      </div>
 
-          {/* 底部悬浮动作区域 */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 bg-gradient-to-t from-white via-white to-transparent pointer-events-none sticky bottom-0">
-             <button 
-               onClick={(e) => {
-                  e.stopPropagation();
-                  (window as any)._pendingPhoto = photo;
-                  contactWhatsApp(photo);
-                }}
-               className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
-             >
-               <MessageCircle size={20} fill="currentColor" />
-               {t.whatsAppInquiry}
-             </button>
-          </div>
-        </div>
+                      {/* Photo Description if exists */}
+                      {(photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && photo.description)) && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
+                            <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
+                              <Sparkles size={8} /> AI
+                            </div>
+                          </div>
+                          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm min-h-[60px]">
+                            <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
+                              {photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? photo.description : '')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Group Story (Series Story) if exists and photo is in group */}
+                      {groupData && (groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && groupData.description)) && (
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-3 bg-blue-600 rounded-full" />
+                            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.seriesStory || 'Series Context'}</h3>
+                          </div>
+                          <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md">
+                            <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic opacity-80">
+                              {groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? groupData.description : '')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                   </div>
+                 )}
+
+                 {/* 内部私有信息 (Staff/Admin ONLY) */}
+                 {(isAdminMode || isStaffMode) && photo.manual_code && (
+                   <div className="bg-red-50 border border-red-100 p-3 rounded-xl mt-4">
+                     <h3 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Internal Reference</h3>
+                     <p className="font-mono font-black text-red-600 tracking-wider uppercase">{photo.manual_code}</p>
+                   </div>
+                 )}
+              </div>
+
+              {/* 底部悬浮动作区域 */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 bg-gradient-to-t from-white via-white to-transparent pointer-events-none sticky bottom-0">
+                 <button 
+                   onClick={(e) => {
+                      e.stopPropagation();
+                      (window as any)._pendingPhoto = photo;
+                      contactWhatsApp(photo);
+                    }}
+                   className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
+                 >
+                   <MessageCircle size={20} fill="currentColor" />
+                   {t.whatsAppInquiry}
+                 </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* 顶部悬浮页码/切换已移除 */}
