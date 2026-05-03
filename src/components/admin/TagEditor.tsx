@@ -31,6 +31,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   showHotEffects = false
 }) => {
   const { handleError } = useErrorHandler();
+  const [searchTerm, setSearchTerm] = useState('');
+  
   const [activeActionTag, setActiveActionTag] = useState<any | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const hasLongPressed = useRef<boolean>(false);
@@ -119,14 +121,29 @@ export const TagEditor: React.FC<TagEditorProps> = ({
     return set;
   }, [settings?.hotTagsCount, settings?.pinnedTags, tags, showHotEffects]);
 
+  const filteredTags = useMemo(() => {
+    return (Array.from(new Map(tags.map(t => [t.id, t])).values()) as any[]).filter((tag: any) => 
+      tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [tags, searchTerm]);
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between px-1 mb-3">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">標籤 / TAGS</h3>
-        <button type="button" onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors">+ 新增</button>
+      <div className="space-y-2 mb-3">
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none px-1">標籤 / TAGS</h3>
+        <div className="flex items-center gap-2 px-1">
+          <input 
+            type="text"
+            placeholder="搜索标签..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] focus:outline-none focus:border-blue-500"
+          />
+          <button type="button" onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors">+ 新增</button>
+        </div>
       </div>
-      <div className="flex flex-wrap gap-2 pb-1 max-h-32 overflow-y-auto content-start">
-        {Array.from(new Map(tags.map(t => [t.id, t])).values()).map((tag: any) => {
+      <div className="flex flex-wrap gap-2 pb-1 max-h-48 overflow-y-auto content-start">
+        {filteredTags.map((tag: any) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = (settings?.pinnedTags || []).includes(String(tag.id));
@@ -157,28 +174,29 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   }
                 }}
                 className={cn(
-                  "px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border select-none flex items-center gap-1.5 w-auto",
+                  "px-3 py-2 rounded-lg text-[11px] font-bold transition-all border select-none flex items-center gap-1.5 w-auto shadow-sm",
                   isSelected 
-                    ? "bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20 z-10" 
-                    : "bg-white/60 text-slate-600 border-slate-200/50 hover:bg-white hover:border-slate-300 hover:text-slate-800 active:bg-slate-50",
-                  isHot && !isSelected && "border-amber-200/50 bg-amber-50/30 text-amber-700/80 hot-tag-breath",
-                  isHot && isSelected && "ring-2 ring-amber-400/30"
+                    ? "bg-blue-600 text-white border-blue-600 z-10" 
+                    : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 active:bg-slate-50",
+                  isHot && !isSelected && "border-amber-300 bg-amber-50 text-amber-800",
+                  isHot && isSelected && "ring-2 ring-amber-400"
                 )}
               >
                 <span className={cn(
-                  "w-1.5 h-1.5 rounded-full",
-                  isSelected ? (showHotEffects ? "bg-amber-400 animate-pulse" : "bg-slate-400") : (isHot ? "bg-amber-400/60" : "bg-slate-300")
+                  "w-2 h-2 rounded-full",
+                  isSelected ? "bg-white" : (isHot ? "bg-amber-400" : "bg-slate-300")
                 )} />
                 <span className="flex-1 text-left whitespace-nowrap overflow-hidden text-ellipsis max-w-[120px]">
                   #{tag.name}
                 </span>
-                {isPinned && !isSelected && <span className="text-[8px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter shadow-sm flex items-center pl-1 gap-0.5"><Heart size={8} className="fill-white"/> 置顶</span>}
-                {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-75 origin-left font-black tracking-tighter">HOT</span>}
+                {isPinned && !isSelected && <span className="text-[9px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full scale-90 origin-left font-black tracking-tighter shadow-sm"><Heart size={8} className="fill-white"/> 置顶</span>}
+                {isHot && !isPinned && !isSelected && <span className="text-[9px] bg-amber-400 text-white px-1.5 py-0.5 rounded-full scale-90 origin-left font-black tracking-tighter">HOT</span>}
               </button>
             </div>
           );
         })}
       </div>
+
 
       {activeActionTag && (
         <div 
