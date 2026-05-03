@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles, BookOpen } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles, BookOpen, Download } from 'lucide-react';
 import { Photo, Category, ProductGroup } from '../types';
 
 interface PhotoLightboxProps {
@@ -36,6 +36,26 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
+
+  const handleDownload = async () => {
+    const url = photo?.image_url || photo?.uri;
+    if (!url) return;
+    
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      const blob = await response.blob();
+      const objUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      a.download = photo?.name || 'image.jpg';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(objUrl);
+    } catch (err) {
+      console.error('Failed to download:', err);
+    }
+  };
 
   useEffect(() => {
     setActiveLang(lang || 'zh');
@@ -183,6 +203,15 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             <ChevronLeft size={24} />
           </div>
         </div>
+        
+        {isAdminMode && (
+          <div className="absolute bottom-4 right-16 z-20 flex items-center justify-end group cursor-pointer" onClick={handleDownload}>
+            <div className="w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-all">
+              <Download size={24} />
+            </div>
+          </div>
+        )}
+
         <div className="absolute bottom-4 right-4 z-20 flex items-center justify-end group cursor-pointer" onClick={onNext}>
           <div className="flex w-10 h-10 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full items-center justify-center text-white transition-all ml-auto">
             <ChevronRight size={24} />

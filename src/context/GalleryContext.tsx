@@ -140,9 +140,9 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const displayPhotos = useMemo(() => {
       let result = [...photosWithTime];
       
-      // Filter out hidden photos for public users
+      // Filter out hidden photos for public users, but keep group covers
       if (!isAdminMode) {
-        result = result.filter(p => !p.isHidden);
+        result = result.filter(p => !p.isHidden || p.isGroupCover);
       }
       
       if (debouncedSearchQuery) {
