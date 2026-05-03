@@ -6,6 +6,7 @@ import {
   User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
 import { SubCategory, Tag, Category } from '../types';
+import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   AlertDialog,
@@ -639,28 +640,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
             {(manufacturers || []).map(sub => (
-              <div key={sub.id} className="bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm animate-in fade-in zoom-in duration-300">
-                <span 
-                   className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight cursor-pointer"
-                   onClick={() => handleUpdateMfrName(sub)}
-                >
-                   {sub.name}
-                </span>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"><X size={14} /></button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>确定要删除生产商 #{sub.name} 吗？</AlertDialogTitle>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel variant="outline" size="default">关闭</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" size="default" onClick={() => deleteManufacturer(String(sub.id))}>删除</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+              <ManufacturerItem 
+                key={sub.id} 
+                manufacturer={sub} 
+                onUpdate={handleUpdateMfrName}
+                onDelete={(id) => deleteManufacturer(String(id))} 
+              />
             ))}
           </div>
         </section>
