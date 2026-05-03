@@ -143,7 +143,7 @@ export default function AdminView() {
   const uiBasicValue = React.useMemo(() => ({ 
     setAlertDialog, 
     setPromptDialog, 
-    setActiveScreen,
+    setActiveScreen: (s: string) => setActiveScreen(s as any),
     setLoadingState,
     loadingState,
     withLoading,
@@ -214,10 +214,10 @@ export default function AdminView() {
     user, isAdminMode: true, 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
-    viewMode, setViewMode, syncPercent, setSyncPercent,
+    viewMode, setViewMode,
     isSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, syncPercent, setSyncPercent, isSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, isSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
@@ -396,7 +396,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
   const uiBasicValue = React.useMemo(() => ({ 
     setAlertDialog, 
     setPromptDialog, 
-    setActiveScreen,
+    setActiveScreen: (s: string) => setActiveScreen(s as any),
     setLoadingState,
     loadingState,
     withLoading,
@@ -549,8 +549,6 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [syncPercent, setSyncPercent] = useState(0);
-
   const onRefresh = useCallback(() => 
     refreshCloudData(user, true, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers), 
     [user, refreshCloudData]);
@@ -559,10 +557,10 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     user, isAdminMode: true, 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
-    viewMode, setViewMode, syncPercent, setSyncPercent,
+    viewMode, setViewMode,
     isSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, syncPercent, setSyncPercent, isSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, isSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,

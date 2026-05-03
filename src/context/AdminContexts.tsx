@@ -15,8 +15,6 @@ export interface AdminSessionContextType {
   setCustomModel: (m: string) => void;
   viewMode: 'public' | 'private';
   setViewMode: (v: 'public' | 'private') => void;
-  syncPercent: number;
-  setSyncPercent: (v: number) => void;
   isSyncing: boolean;
   onRefresh: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
