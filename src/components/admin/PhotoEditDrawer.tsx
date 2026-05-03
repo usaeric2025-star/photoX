@@ -558,13 +558,26 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
            {props.editPhotoId && props.onDelete && (
             <div className="pt-2 pb-6">
-                <Button 
-                  variant="destructive" 
-                  className="w-full py-4 rounded-3xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  onClick={() => props.onDelete!(props.editPhotoId!)}
-                >
-                   删除此照片
-                </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full py-4 rounded-3xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                  >
+                     删除此照片
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>确定要删除此照片吗？</AlertDialogTitle>
+                    <AlertDialogDescription>此操作不可撤销，照片将从云端彻底移除。</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>关闭</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => props.onDelete!(props.editPhotoId!)}>删除</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
            )}
        </div>
