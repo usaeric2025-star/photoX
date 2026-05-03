@@ -52,7 +52,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
     pressTimer.current = setTimeout(() => {
       hasLongPressed.current = true;
       setActiveActionTag(tag);
-    }, 700);
+    }, 400);
   };
 
   const clearTimer = () => {
