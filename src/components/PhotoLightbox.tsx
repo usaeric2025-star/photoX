@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ChevronLeft, ChevronRight, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles, BookOpen, Download } from 'lucide-react';
+import { X, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles, Download } from 'lucide-react';
 import { Photo, Category, ProductGroup } from '../types';
+
+// ... (retain props and other logic)
 
 interface PhotoLightboxProps {
   photo: Photo | null;
@@ -188,12 +193,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           </div>
         )}
         <div className={`relative w-full h-full flex items-center justify-center overflow-hidden`}>
-          <motion.img 
-            key={photo.id}
-            src={photo.image_url || photo.uri || ''} 
-            alt={photo.name}
-            className={`w-full h-full object-contain transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
-            onLoad={() => setIsImageLoading(false)}
+          <Lightbox
+            open={true}
+            close={onClose}
+            slides={displayPhotos.map(p => ({ src: p.image_url || p.uri || '' }))}
+            index={index || 0}
+            plugins={[Zoom]}
+            controller={{ closeOnBackdropClick: true }}
           />
         </div>
 
