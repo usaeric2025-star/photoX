@@ -72,6 +72,7 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
             if (s && !settings) setSettings(s);
         };
         initSettings();
+    // Run this effect only once on mount to perform initial data loading.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

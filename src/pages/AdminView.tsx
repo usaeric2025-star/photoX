@@ -540,6 +540,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
       }
     };
     fetchTemplates();
+    // Execute data fetching side effects only on the first component mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

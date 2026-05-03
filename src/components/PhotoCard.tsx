@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Photo, Category } from '../types';
-import { X, Layers, Heart } from 'lucide-react';
+import { X, Layers, Heart, EyeOff } from 'lucide-react';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -115,14 +115,20 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           onLightboxOpen(index);
         }
       }}
-      className={`aspect-square bg-white rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.95] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-2 ring-blue-500 scale-[0.95]' : ''}`}
+      className={`aspect-square bg-white rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.95] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-2 ring-blue-500 scale-[0.95]' : ''} ${photo.isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
       <img 
         draggable={false}
         src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
         alt={photo.name}
-        className={`w-full h-full object-cover ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''}`}
+        className={`w-full h-full object-cover ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''} ${photo.isHidden ? 'opacity-70' : ''}`}
       />
+
+      {photo.isHidden && (
+        <div className="absolute top-1 right-1 bg-yellow-400 text-black p-0.5 rounded-full shadow-lg z-10">
+          <EyeOff size={10} />
+        </div>
+      )}
 
       {isAdminMode && isMultiSelect && isSelected && (
         <div className="absolute top-1 right-1 bg-blue-600 text-white p-0.5 rounded-full shadow-lg z-10">
