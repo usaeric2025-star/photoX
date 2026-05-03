@@ -175,7 +175,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setIsZoomed(!isZoomed);
+              setIsZoomed(true);
             }} 
             className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all"
             title="缩放"
@@ -193,14 +193,23 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           </div>
         )}
         <div className={`relative w-full h-full flex items-center justify-center overflow-hidden`}>
-          <Lightbox
-            open={true}
-            close={onClose}
-            slides={displayPhotos.map(p => ({ src: p.image_url || p.uri || '' }))}
-            index={index || 0}
-            plugins={[Zoom]}
-            controller={{ closeOnBackdropClick: true }}
-          />
+          {isZoomed ? (
+            <Lightbox
+              open={isZoomed}
+              close={() => setIsZoomed(false)}
+              slides={displayPhotos.map(p => ({ src: p.image_url || p.uri || '' }))}
+              index={index || 0}
+              plugins={[Zoom]}
+              controller={{ closeOnBackdropClick: true }}
+            />
+          ) : (
+            <img 
+              src={photo.image_url || photo.uri || ''} 
+              alt={photo.name || 'Photo'}
+              className="object-contain h-full w-full cursor-pointer" 
+              onClick={() => setIsZoomed(true)} 
+            />
+          )}
         </div>
 
         {/* 翻页按钮 - 底下 */}
