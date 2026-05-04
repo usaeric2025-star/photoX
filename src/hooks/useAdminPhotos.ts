@@ -186,7 +186,7 @@ export const useAdminPhotos = (
           setPhotos(localPhotos || []);
         }
       } catch (e) {
-        handleError(e, 'Init photos failed:');
+        console.error('Init photos failed:', e);
          // Fallback local if cloud fails
          const localPhotos = await loadData('product_photos');
          setPhotos(localPhotos || []);
@@ -443,7 +443,7 @@ export const useAdminPhotos = (
       result.tagIds = finalTagIdsFromAi;
       return result;
     } catch (err: any) {
-      handleError(err, "[ERROR] Single AI analysis failed:");
+      console.error("[ERROR] Single AI analysis failed:", err);
       setAiDebugInfo({ step: '错误', message: '识别失败', error: err.message });
       showToast(`AI 识别失败: ${err.message || '识别过程出现问题'}`, 'error');
       throw err;
@@ -610,7 +610,7 @@ export const useAdminPhotos = (
                    };
                    
                    if (user) {
-                     savePhotoToCloud(user.id, updatedPhoto).catch(e => handleError(e, "Process queue backup failed:"));
+                     savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Process queue backup failed:", e));
                    }
                    
                    return updatedPhoto;
@@ -623,7 +623,7 @@ export const useAdminPhotos = (
             })(newPhoto);
           }
         } catch (err: any) {
-          handleError(err, "Import processing error");
+          console.error("Import processing error", err);
           failCount++;
           failedFiles.push(file.name);
         }
@@ -665,7 +665,7 @@ export const useAdminPhotos = (
         
         setCloudCount(photosRef.current.length);
       } catch (e: any) {
-         handleError(e, 'Cloud upload block failed:');
+         console.error('Cloud upload block failed:', e);
          showToast('云端同步过程出现问题，但已保存在本地 / Cloud upload had some issues', 'error');
       }
     }
@@ -813,7 +813,7 @@ export const useAdminPhotos = (
         setAiDebugInfo(null);
         showToast(`群組識別完成: 已將識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。`, 'success');
       } catch (err: any) {
-        handleError(err, "[ERROR] Group AI analysis failed:");
+        console.error("[ERROR] Group AI analysis failed:", err);
         setPhotos(prev => prev.map(p => groupIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
         showToast(`識別失敗: ${err.message || '群組識別過程出現問題'}`, 'error');
         throw err;

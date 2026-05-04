@@ -5,10 +5,10 @@ import { useAdminSession } from '../context/AdminContexts';
  * Unified permission and role checking hook.
  */
 export function usePermission() {
-  const { user, isAdminMode } = useAdminSession();
+  const { user, isAdminMode, isStaffMode } = useAdminSession();
 
   const isAdmin = !!user && isAdminMode;
-  const isStaff = !!user && isAdminMode;
+  const isStaff = !!user && (isAdminMode || isStaffMode);
   
   // Basic policies
   const canEdit = isStaff;

@@ -2,5 +2,5 @@
   "name": "photoX",
   "description": "專為產品照片分類、標籤管理及快速搜尋設計的 AI 智能相冊 App。支援多重篩選、批量分享、以及自動 AI 辨識。",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["AI"]
 }

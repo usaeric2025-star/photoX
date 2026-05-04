@@ -1,4 +1,3 @@
-import { useErrorHandler } from '../utils/errorHandler';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
@@ -9,7 +8,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
 
 export default function PublicView() {
-  const { handleError } = useErrorHandler();
   const { user, authChecked } = useAuth();
   const { 
     photos, setPhotos, 
@@ -57,7 +55,7 @@ export default function PublicView() {
         setTotalCloudCount(total);
       }
     } catch (e) {
-      handleError(e, "Critical error in fetchFilteredPhotos:");
+      console.error("Critical error in fetchFilteredPhotos:", e);
     } finally {
       setIsRefreshing(false);
     }
@@ -132,7 +130,7 @@ export default function PublicView() {
         saveData('cachedSettings', cloudSettings);
       }
     } catch (e) {
-      handleError(e, "Critical error in syncWithCloud:");
+      console.error("Critical error in syncWithCloud:", e);
     } finally {
       setIsInitializing(false);
       setIsRefreshing(false);
@@ -156,7 +154,7 @@ export default function PublicView() {
         setHasMore(false);
       }
     } catch (e) {
-      handleError(e, "[ERROR] loadMore failed:");
+      console.error("[ERROR] loadMore failed:", e);
     } finally {
       setIsRefreshing(false);
     }
@@ -182,6 +180,9 @@ export default function PublicView() {
         </div>
       ) : (
         <PublicGallery 
+          photos={photos}
+          categories={categories}
+          tags={[]} // Tags from context will be used, but interface requires it
           onExit={() => navigate('/admin')}
           onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
           showExit={false}
@@ -217,7 +218,7 @@ export default function PublicView() {
                 )
               );
             } catch (e: any) {
-              handleError(e, "[ERROR] Failed to toggle pinned:");
+              console.error("[ERROR] Failed to toggle pinned:", e);
               // Revert changes
               setPhotos(prev => prev.map(p => 
                 affectedPhotos.some(ap => ap.id === p.id) 

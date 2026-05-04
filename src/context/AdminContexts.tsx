@@ -21,6 +21,7 @@ export interface AdminSessionContextType {
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
   appLang: string;
+  isStaffMode?: boolean;
 }
 
 const AdminSessionContext = createContext<AdminSessionContextType | undefined>(undefined);
@@ -43,30 +44,28 @@ export interface AdminPhotoContextType {
   photos: Photo[];
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
   categories: Category[];
-  setCategories: (c: Category[]) => void;
+  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   tags: Tag[];
-  setTags: (t: Tag[]) => void;
+  setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   manufacturers: any[];
-  setManufacturers: (m: any[]) => void;
-  adTemplates: any[];
-  setAdTemplates: (t: any[]) => void;
+  setManufacturers: React.Dispatch<React.SetStateAction<any[]>>;
   
   // Method references
-  handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
+  handleSingleAiAnalyze: (data: string, catId?: string) => Promise<any>;
   handleTranslate: (zhText: string) => Promise<{ en: string, ms: string }>;
-  handleSingleAiAnalyzeCallback?: (data: string, catId?: string, editPhotoId?: string, formState?: any, updateFormFn?: any, service?: any) => Promise<void>;
-  handleBatchAiIdentify: (photos: Photo[], existingTaskId?: string) => Promise<void>;
-  handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;
-  handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean, onComplete: (screen: string) => void) => Promise<void>;
+  handleSingleAiAnalyzeCallback?: (data: string, catId?: string, editPhotoId?: string, formState?: any, updateFormFn?: any, service?: any) => Promise<any>;
+  handleBatchAiIdentify: (photos: Photo[], existingTaskId?: string) => Promise<any>;
+  handleGroupAiIdentify: (photos: Photo[]) => Promise<any>;
+  handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean) => Promise<any>;
   deletePhoto: (ids: string[], isBatch: boolean) => Promise<void>;
-  deleteGroup: (groupId: string) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<any>;
   handleGroupPhotos: (ids: string[]) => Promise<any>;
-  handleUngroup: (groupId: string) => Promise<void>;
+  handleUngroup: (groupId: string) => Promise<any>;
   saveNewPhoto: () => Promise<void>;
   saveBatchEdit: () => Promise<void>;
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
-  addTag: (name: string) => Promise<void>;
+  addTag: (name: string) => Promise<any>;
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addCategory: (name: string) => Promise<void>;
@@ -94,8 +93,8 @@ export const useOptionalAdminPhoto = () => useContext(AdminPhotoContext);
 
 // --- AdminUIContext ---
 export interface AdminUIContextType {
-  activeScreen: 'home' | 'manage' | 'editor' | 'login';
-  setActiveScreen: (s: 'home' | 'manage' | 'editor' | 'login') => void;
+  activeScreen: 'home' | 'manage' | 'login';
+  setActiveScreen: (s: 'home' | 'manage' | 'login') => void;
   editPhotoId: string | null;
   setEditPhotoId: (id: string | null) => void;
   batchEditIds: string[] | null;

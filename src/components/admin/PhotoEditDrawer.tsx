@@ -559,7 +559,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
            {props.editPhotoId && props.onDelete && (
             <div className="pt-2 pb-6">
               <AlertDialog>
-                <AlertDialogTrigger asChild>
+                <AlertDialogTrigger>
                   <Button 
                     variant="destructive" 
                     className="w-full py-4 rounded-3xl text-xs font-bold transition-all flex items-center justify-center gap-2"

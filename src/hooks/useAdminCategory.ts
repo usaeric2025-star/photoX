@@ -252,7 +252,7 @@ export const useAdminCategory = (adminUI: any) => {
       await saveData('product_manufacturers', newMfrs);
       return saved;
     } catch (err: any) {
-      handleError(err, "[useAdminCategory] Add manufacturer failed:");
+      console.error("[useAdminCategory] Add manufacturer failed:", err);
       showToast(`添加厂商失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };
@@ -268,7 +268,7 @@ export const useAdminCategory = (adminUI: any) => {
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
     } catch (err: any) {
-      handleError(err, "[useAdminCategory] Update manufacturer failed:");
+      console.error("[useAdminCategory] Update manufacturer failed:", err);
       showToast(`更新厂商失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };

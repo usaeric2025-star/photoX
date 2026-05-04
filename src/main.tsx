@@ -1,6 +1,6 @@
 import React, {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
-import AppRoutes from './AppRoutes';
+import App from './App';
 import { GalleryProvider } from './context/GalleryContext';
 import { ErrorProvider } from './context/ErrorContext';
 import { TaskProvider } from './hooks/useTasks';
@@ -65,7 +65,7 @@ createRoot(document.getElementById('root')!).render(
         <TaskProvider>
           <RootAdminUIProvider>
              <RootAdminSessionProvider>
-                <AppRoutes />
+                <App />
              </RootAdminSessionProvider>
           </RootAdminUIProvider>
         </TaskProvider>

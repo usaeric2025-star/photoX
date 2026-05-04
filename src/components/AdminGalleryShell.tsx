@@ -1,4 +1,3 @@
-import { useErrorHandler } from '../utils/errorHandler';
 import React, { useEffect } from 'react';
 import { PublicGallery } from './PublicGallery';
 import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } from '../context/AdminContexts';
@@ -29,9 +28,10 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   const adminUI = useOptionalAdminUI();
   const adminSession = useOptionalAdminSession();
   
-  const { handleError } = useErrorHandler();
   const { 
     photos, 
+    categories,
+    tags,
     selectedIds, 
     clearSelection, 
     setIsMultiSelect,
@@ -65,7 +65,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         )
       );
     } catch (e: any) {
-      handleError(e, "[ERROR] Failed to toggle pinned:");
+      console.error("[ERROR] Failed to toggle pinned:", e);
       adminUI?.showToast(`置顶失败: 无法同步到服务器。`, 'error');
     }
   };
@@ -147,7 +147,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
-        handleError(e, "[ERROR] Batch share failed:");
+        console.error("[ERROR] Batch share failed:", e);
       }
     }
   };
@@ -155,6 +155,9 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   return (
     <div className="relative h-full w-full">
       <PublicGallery 
+        photos={photos}
+        categories={categories}
+        tags={tags}
         isAdminMode={true}
         onTogglePinned={handleTogglePinned}
         onExit={onExit}
@@ -168,7 +171,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
            input.type = 'file';
            input.accept = 'image/*';
            input.multiple = true;
-           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false, () => {});
+           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false);
            input.click();
         }}
         selectedIds={selectedIds}

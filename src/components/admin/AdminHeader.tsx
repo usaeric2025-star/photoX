@@ -214,7 +214,7 @@ export const AdminHeader: React.FC<Props> = ({
                 <div className="relative" ref={toolsRef}>
                   <button 
                     onClick={() => setShowToolsMenu(!showToolsMenu)}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${(activeScreen === 'manage' || activeScreen === 'editor') ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeScreen === 'manage' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
                   >
                     <Menu size={18} />
                   </button>
@@ -226,12 +226,6 @@ export const AdminHeader: React.FC<Props> = ({
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-[120]"
                       >
-                        <button 
-                          onClick={() => { setActiveScreen?.('editor'); setShowToolsMenu(false); }}
-                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
-                        >
-                          <LayoutTemplate size={16} /> <span className="text-xs font-bold uppercase">广告海报制作</span>
-                        </button>
                         <button 
                           onClick={() => { setActiveScreen?.('manage'); setShowToolsMenu(false); }}
                           className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"

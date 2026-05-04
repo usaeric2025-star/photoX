@@ -14,9 +14,9 @@ export default defineConfig(({mode}) => {
       react(), 
       tailwindcss(),
     ],
-    base: './',
+    base: '/',
     build: {
-      outDir: path.resolve(__dirname, 'dist'),
+      outDir: 'dist',
       assetsDir: 'assets',
       minify: 'esbuild',
       sourcemap: false,

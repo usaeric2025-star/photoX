@@ -1,4 +1,3 @@
-import { useErrorHandler } from '../utils/errorHandler';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoService';
@@ -18,9 +17,9 @@ import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 
 interface PublicGalleryProps {
-  photos?: Photo[];
-  categories?: Category[];
-  tags?: Tag[];
+  photos: Photo[];
+  categories: Category[];
+  tags: Tag[];
   manufacturers?: any[];
   onExit?: () => void;
   showExit?: boolean;
@@ -139,7 +138,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const internalPassword = settings?.access_passcode;
 
   const context = useGalleryContext();
-  const { handleError } = useErrorHandler();
   const {
     photos,
     categories,
@@ -333,7 +331,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
-        handleError(e, "Share failed:");
+        console.error("Share failed:", e);
       }
     }
   }, [t.shareTitle, t.shareNotSupported]);
@@ -350,7 +348,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
-        handleError(e, "Group share failed:");
+        console.error("Group share failed:", e);
       }
     }
   }, [t]);
@@ -493,11 +491,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         setLightboxIndex={setLightboxIndex}
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
-        onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
-        onLongPressStart={isAdminMode ? startLongPress : undefined}
+        onEditPhoto={onEditPhoto ? (photo: Photo) => onEditPhoto(photo.id) : undefined}
+        onLongPressStart={isAdminMode ? (p: Photo) => startLongPress(p.id) : undefined}
         onLongPressEnd={isAdminMode ? endLongPress : undefined}
         onBatchEdit={onBatchEdit}
-        onUngroup={onGroupPhotos} 
+        onUngroup={onGroupPhotos && activeGroupId ? () => onGroupPhotos([activeGroupId]) : undefined} 
         onAddPhotoToGroup={onAddPhoto}
         onAiAnalyze={onAiAnalyze}
         onCancelAnalyze={onCancelAnalyze}
@@ -520,7 +518,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
               } catch (e) {
-                handleError(e, "[ERROR] Failed to toggle hidden:");
+                console.error("[ERROR] Failed to toggle hidden:", e);
               }
            });
         }}
@@ -590,7 +588,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                setAlertDialog?.({ title: '設置封面失敗', message: err.message });
              }
           }).catch(err => {
-             handleError(err, "[ERROR] Failed to update group cover:");
+             console.error("[ERROR] Failed to update group cover:", err);
           });
         }}
         onEditPhoto={(photo) => {
@@ -603,7 +601,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
               } catch (e) {
-                handleError(e, "[ERROR] Failed to toggle hidden:");
+                console.error("[ERROR] Failed to toggle hidden:", e);
               }
            });
         }}

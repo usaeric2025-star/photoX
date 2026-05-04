@@ -32,19 +32,19 @@ interface GalleryContextType {
   setCategories: React.Dispatch<React.SetStateAction<any[]>>;
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   setManufacturers: React.Dispatch<React.SetStateAction<any[]>>;
-  setSearchQuery: (query: string) => void;
-  setFilterCatId: (id: string | null) => void;
-  setFilterSubId: (id: string | null) => void;
-  setFilterTagIds: (ids: string[]) => void;
-  setSortOrder: (order: 'asc' | 'desc') => void;
-  setIsMultiSelect: (is: boolean) => void;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  setFilterCatId: React.Dispatch<React.SetStateAction<string | null>>;
+  setFilterSubId: React.Dispatch<React.SetStateAction<string | null>>;
+  setFilterTagIds: React.Dispatch<React.SetStateAction<string[]>>;
+  setSortOrder: React.Dispatch<React.SetStateAction<'asc' | 'desc'>>;
+  setIsMultiSelect: React.Dispatch<React.SetStateAction<boolean>>;
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
-  setShowGroupsCollapsed: (show: boolean) => void;
-  setIsInfiniteMode: (is: boolean) => void;
-  setUser: (user: any) => void;
-  setIsAdminMode: (is: boolean) => void;
+  setShowGroupsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsInfiniteMode: React.Dispatch<React.SetStateAction<boolean>>;
+  setUser: React.Dispatch<React.SetStateAction<any>>;
+  setIsAdminMode: React.Dispatch<React.SetStateAction<boolean>>;
   setPage: React.Dispatch<React.SetStateAction<number>>;
-  setHasMore: (has: boolean) => void;
+  setHasMore: React.Dispatch<React.SetStateAction<boolean>>;
   setTotalCloudCount: React.Dispatch<React.SetStateAction<number>>;
   
   // Actions
