@@ -215,7 +215,7 @@ export default function AdminView() {
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     internalPassword, setInternalPassword, customModel, setCustomModel,
     viewMode, setViewMode,
-    isSyncing, onRefresh,
+    isSyncing, setIsSyncing: (v) => {}, syncPercent: 0, isStaffMode: false, onRefresh,
     loginWithGoogle, logout, appLang: lang
   }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, isSyncing, onRefresh, logout, lang]);
 
@@ -224,12 +224,13 @@ export default function AdminView() {
     manufacturers, setManufacturers, adTemplates: adTemplatesDB, setAdTemplates: setAdTemplatesDB,
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
     handleSingleAiAnalyzeCallback,
-    deletePhoto: deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    deletePhoto: deletePhoto, deleteGroup: deleteGroup, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag: handleDeleteTag, 
     updateCategory, deleteCategory, addCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,
     addTag, removeTagFromPhoto,
-    quickAddTag: () => {}, quickAddManufacturer: () => {} // Refactored these for now
+    quickAddTag,
+    quickAddManufacturer
   }), [
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, adTemplatesDB, setAdTemplatesDB,
     handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
@@ -440,21 +441,16 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
         if (!normalized) return;
         const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
-          updateForm((prev: any) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
           showToast(`標籤 "${normalized}" 已存在`);
           return;
         }
         const saved = await addTag(normalized);
         if (saved) {
-           updateForm((prev: any) => ({ 
-             ...prev, 
-             tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
-           }));
            showToast(`已新增標籤 "${normalized}"`);
         }
       }
     });
-  }, [setPromptDialog, tags, addTag, updateForm, showToast]);
+  }, [setPromptDialog, tags, addTag, showToast]);
 
   const quickAddManufacturer = useCallback(() => {
     console.log('[AdminView] quickAddManufacturer triggered');
@@ -466,12 +462,35 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
         if (!trimmed) return;
         const saved = await addManufacturer(trimmed);
         if (saved) {
-           updateForm((prev: any) => ({ ...prev, manufacturerId: saved.id }));
            showToast(`已新增廠商 "${trimmed}"`);
         }
       }
     });
-  }, [setPromptDialog, addManufacturer, updateForm, showToast]);
+  }, [setPromptDialog, addManufacturer, showToast]);
+
+  const handleDeletePhotos = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+    const { success, error } = await deletePhotos(ids);
+    if (success) {
+        showToast(`已成功刪除 ${ids.length} 張照片`, 'success');
+        clearSelection();
+        setEditPhotoId(null);
+        setSelectedIds([]);
+        setIsMultiSelect(false);
+    } else {
+        handleError(error, '刪除照片失敗');
+    }
+  }, [deletePhotos, clearSelection, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast, handleError]);
+
+  const handleDeletePhoto = useCallback(async (id: string) => {
+     const { success, error } = await deletePhotos([id]);
+     if (success) {
+         showToast('照片已成功刪除', 'success');
+         setEditPhotoId(null);
+     } else {
+         handleError(error, '刪除照片失敗');
+     }
+  }, [deletePhotos, setEditPhotoId, showToast, handleError]);
 
 
   const { 
@@ -489,29 +508,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
     addManufacturer
   );
 
-  const handleDeletePhotos = useCallback(async (ids: string[]) => {
-    if (ids.length === 0) return;
-    const { success, error } = await deletePhotos(ids);
-    if (success) {
-        showToast(`已成功刪除 ${ids.length} 張照片`, 'success');
-        clearSelection();
-        setEditPhotoId(null);
-        setSelectedIds([]);
-        setIsMultiSelect(false);
-    } else {
-        handleError(error, '刪除照片失敗');
-    }
-  }, [deletePhotos, user, clearSelection, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast, handleError]);
-  
-  const handleDeletePhoto = useCallback(async (id: string) => {
-     const { success, error } = await deletePhotos(id);
-     if (success) {
-         showToast('照片已成功刪除', 'success');
-         setEditPhotoId(null);
-     } else {
-         handleError(error, '刪除照片失敗');
-     }
-  }, [deletePhotos, setEditPhotoId, showToast, handleError]);
+
   const handleDeleteTag = useCallback(async (id: string) => {
     const { success, error } = await deleteTagHook(id);
     if (success) {
@@ -722,7 +719,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 onToggleHidden={async (photo) => {
                   const newStatus = !photo.isHidden;
                   try {
-                    await photoApi.update(photo.id, { isHidden: newStatus, updated_at: new Date().toISOString() });
+                    await photoApi.update(photo.id, { isHidden: newStatus, updatedAt: new Date().toISOString() });
                     setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
                   } catch (e) {
                     handleError(e, '切換隱藏狀態失敗');

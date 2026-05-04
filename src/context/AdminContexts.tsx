@@ -16,6 +16,9 @@ export interface AdminSessionContextType {
   viewMode: 'public' | 'private';
   setViewMode: (v: 'public' | 'private') => void;
   isSyncing: boolean;
+  setIsSyncing: (v: boolean) => void;
+  syncPercent: number;
+  isStaffMode: boolean;
   onRefresh: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
@@ -105,8 +108,8 @@ export interface AdminUIContextType {
   promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
   setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
   
-  toast: { message: string, type: 'success' | 'error' | 'loading' } | null;
-  showToast: (msg: string, type: 'success' | 'error' | 'loading') => void;
+  toast: { message: string, type: 'success' | 'error' | 'loading' | 'info' } | null;
+  showToast: (msg: string, type: 'success' | 'error' | 'loading' | 'info') => void;
   
   loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
   withLoading: <T>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;

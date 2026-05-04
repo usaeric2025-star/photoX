@@ -45,6 +45,7 @@ interface GalleryContextType {
   setIsAdminMode: (is: boolean) => void;
   setPage: React.Dispatch<React.SetStateAction<number>>;
   setHasMore: (has: boolean) => void;
+  setTotalCloudCount: React.Dispatch<React.SetStateAction<number>>;
   
   // Actions
   togglePhotoSelection: (id: string) => void;
