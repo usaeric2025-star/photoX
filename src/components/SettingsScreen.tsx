@@ -55,6 +55,7 @@ interface SettingsScreenProps {
   setInternalPassword: (p: string) => void;
   photos: any[];
   setPhotos: (p: any[]) => void;
+  quickAddTag: () => void;
 }
 
 const obfuscateKey = (key: string) => {
@@ -181,11 +182,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     internalPassword, setInternalPassword,
     setSettings
   } = useAdminSession();
+  const adminPhoto = useAdminPhoto();
   const { 
     manufacturers, tags, photos, categories, adTemplates,
     setTags, setCategories, setManufacturers, setPhotos, setAdTemplates,
-    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag
-  } = useAdminPhoto();
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer
+  } = adminPhoto;
+  const quickAddTag = adminPhoto.quickAddTag || (() => console.warn('[SettingsScreen] quickAddTag context missing'));
+
   const { loadingState, setAlertDialog, setPromptDialog, showToast, withLoading } = useAdminUI();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;

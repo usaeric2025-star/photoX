@@ -17,6 +17,7 @@ import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
 import { SettingsScreen } from '../components/SettingsScreen';
 import { GroupDetailView } from '../components/GroupDetailView';
+import { AdManagement } from '../components/ad/AdManagement';
 import { useSyncEngine } from '../hooks/useSyncEngine';
 import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
@@ -347,6 +348,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
 }) {
   const [adTemplatesDB, setAdTemplatesDB] = useState<any[]>([]);
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'photos' | 'ads'>('photos');
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
@@ -666,6 +668,23 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
               )}
             </AnimatePresence>
       
+            {activeScreen === 'home' && (
+              <div className="fixed top-16 left-0 right-0 z-50 bg-white border-b flex p-2 gap-2">
+                <button onClick={() => setActiveTab('photos')} className={`px-4 py-2 rounded ${activeTab === 'photos' ? 'bg-blue-100 font-bold' : ''}`}>照片管理</button>
+                <button onClick={() => setActiveTab('ads')} className={`px-4 py-2 rounded ${activeTab === 'ads' ? 'bg-blue-100 font-bold' : ''}`}>廣告管理</button>
+              </div>
+            )}
+
+            {activeScreen === 'home' && activeTab === 'ads' && (
+              <div className="mt-16 p-4">
+                 <AdManagement />
+              </div>
+            )}
+            
+            {activeTab === 'photos' && (
+              <>
+            
+            {/* The existing code below */}
             {batchEditIds && (
               <BatchEditScreen 
                 resetAddState={() => { resetAddState(); }}
@@ -673,12 +692,14 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                 batchEditIds={batchEditIds}
                 formState={formState}
                 updateForm={updateForm}
-                batchIsHiddenApplied={false}
-                setBatchIsHiddenApplied={() => {}}
+                batchIsHiddenApplied={batchIsHiddenApplied}
+                setBatchIsHiddenApplied={setBatchIsHiddenApplied}
                 showOtherFields={showOtherFields}
                 setShowOtherFields={setShowOtherFields}
               />
             )}
+            
+
             
             {activeGroupId && (
               <GroupDetailView
@@ -737,6 +758,7 @@ function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, ui
                  performPullSync={performPullSync}
                  cloudCount={cloudCount}
                  lastSyncTime={lastSyncTime}
+                 quickAddTag={quickAddTag}
                />
             )}
 
