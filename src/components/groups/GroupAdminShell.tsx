@@ -1,3 +1,4 @@
+import { useErrorHandler } from '../../utils/errorHandler';
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -68,6 +69,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   setAlertDialog
 }) => {
   const { setCover } = useGroupSync(activeGroupId);
+  const { handleError } = useErrorHandler();
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
@@ -677,7 +679,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                                    }
                                    setAlertDialog?.(null);
                                  } catch (e) {
-                                   console.error('Failed to ungroup:', e);
+                                   handleError(e, 'Failed to ungroup:');
                                    setAlertDialog?.(null);
                                    // do NOT jump back if it failed
                                  }

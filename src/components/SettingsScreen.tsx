@@ -97,7 +97,7 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
         {tag.name}
       </span>
       <AlertDialog>
-        <AlertDialogTrigger asChild>
+        <AlertDialogTrigger>
           <button className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full">
             <X size={14} />
           </button>
@@ -176,7 +176,7 @@ import { SYSTEM_TEMPLATES } from '../constants/systemTemplates';
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
-    settings, user, loginWithGoogle, logout, syncPercent, 
+    settings, user, loginWithGoogle, logout, 
     geminiApiKey, setGeminiApiKey, customModel, setCustomModel, 
     internalPassword, setInternalPassword,
     setSettings
@@ -188,7 +188,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   } = useAdminPhoto();
   const { loadingState, setAlertDialog, setPromptDialog, showToast, withLoading } = useAdminUI();
 
-  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
+  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing, syncPercent } = props;
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [activeTab, setActiveTab] = useState<'photo' | 'ad'>('photo');
   const [hasChanges, setHasChanges] = useState(false);
@@ -388,23 +388,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       <div className="px-6 mb-2">
         <div className="flex p-1 bg-slate-100 rounded-2xl border border-slate-200">
           <button 
-            onClick={() => setActiveTab('photo')}
-            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'photo' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all bg-white text-slate-900 shadow-sm`}
           >
             照片与系统 / PHOTO
           </button>
           <button 
-            onClick={() => setActiveTab('ad')}
-            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ad' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}`}
+            onClick={() => window.location.hash = '#/admin/ads'}
+            className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all text-slate-400`}
           >
-            广告与海报 / AD DESIGN
+            广告管理 / AD DESIGN
           </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
         <AnimatePresence mode="wait">
-          {activeTab === 'photo' ? (
             <motion.div 
               key="photo-tab"
               initial={{ opacity: 0, x: -10 }}
@@ -785,229 +783,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               </div>
           </div>
             </motion.div>
-          ) : (
-            <motion.div 
-              key="ad-tab"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="space-y-6"
-            >
-          {/* Ad Maker System Config (Ad Design Tab) */}
-          <div className={cardClass} id="section-ad-maker">
-              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2 mb-6">
-                <span className="flex items-center gap-2">
-                  <div className="w-1.5 h-3.5 bg-blue-600 rounded-full"></div>
-                  广告海报系统设定 / AD ENGINE CONFIG
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-[9px] font-black uppercase">引擎就绪</span>
-                </div>
-              </h4>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: Brand Identity */}
-                <div className="lg:col-span-1 space-y-6 pr-0 lg:pr-6 lg:border-r border-slate-100">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1">品牌视觉主色</label>
-                    <div className="flex flex-wrap gap-2 py-1">
-                      {['#1D3557', '#E63946', '#2A9D8F', '#F4A261', '#000000'].map((c) => (
-                        <button key={c} onClick={() => setSettingField('ad_brand_color', c)} 
-                          className={`w-7 h-7 rounded-lg border-2 transition-all ${(settings?.ad_brand_color || '#1D3557') === c ? 'border-blue-600 ring-4 ring-blue-50' : 'border-white shadow-sm'}`}
-                          style={{ backgroundColor: c }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1">全局 Slogan 预设</label>
-                    <input type="text" className={inputClass} value={settings?.ad_default_tagline || ''} onChange={(e) => setSettingField('ad_default_tagline', e.target.value)} placeholder="例如: 极致品质, 触手可及" />
-                  </div>
-                </div>
-
-                {/* Right: Template & Figma Management */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1 mb-3 flex items-center justify-between">
-                      海报模板仓库 / TEMPLATE LIBRARY
-                      <span className="text-blue-600 font-bold">后台同步已激活</span>
-                    </label>
-                    
-                    <div className="space-y-4">
-                      {/* Control Panel */}
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => setActiveTab('ad')} 
-                          className="flex-1 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-2"
-                        >
-                          <Plus size={14} /> 新置模板
-                        </button>
-                        <button 
-                          onClick={seedTemplates}
-                          disabled={loadingState.saving}
-                          className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-                        >
-                          <Sparkles size={14} className="text-blue-600" /> 初始化预设
-                        </button>
-                        <button className="px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center">
-                          <RefreshCcw size={14} />
-                        </button>
-                      </div>
-
-                      {/* Template List */}
-                      <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                        {adTemplates.length === 0 ? (
-                          <div className="p-10 text-center bg-slate-50 border border-dashed border-slate-200 rounded-[32px] space-y-3">
-                             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
-                               <Layout size={24} />
-                             </div>
-                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">目前暂无自定义模板</p>
-                          </div>
-                        ) : (
-                          adTemplates.map((t) => (
-                            <div key={t.id} className="group bg-white border border-slate-100 p-4 rounded-3xl shadow-sm hover:shadow-md transition-all border-l-4 border-l-blue-600 relative overflow-hidden">
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h5 className="text-xs font-black text-slate-900 uppercase truncate">{t.name}</h5>
-                                    <span className="text-[7px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-black">UVTS-1.1</span>
-                                  </div>
-                                  <p className="text-[9px] text-slate-400 font-medium line-clamp-1 mb-2 italic">
-                                    {t.description || '无具体描述'}
-                                  </p>
-                                  <div className="flex items-center gap-3">
-                                     <div className="flex items-center gap-1">
-                                        <div className="w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
-                                        <span className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">
-                                          {new Date(t.created_at).toLocaleDateString()}
-                                        </span>
-                                     </div>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                  <button 
-                                    onClick={() => {
-                                      setUvtsInput(JSON.stringify(t.uvts_json, null, 2));
-                                      showToast('内容已加载至编辑器', 'success');
-                                    }}
-                                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                                  >
-                                    <Pencil size={14} />
-                                  </button>
-                                  <button 
-                                    onClick={async () => {
-                                      if (confirm(`确定要永久删除模板 [${t.name}] 吗？`)) {
-                                        await withLoading('deleting', async () => {
-                                          await templateService.deleteTemplate(t.id);
-                                          setAdTemplates(prev => prev.filter(item => item.id !== t.id));
-                                          showToast('模板已从后台移除');
-                                        });
-                                      }
-                                    }}
-                                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 pt-4 border-t border-slate-100">
-                    <div className="flex items-center justify-between px-1">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <Sparkles size={14} className="text-blue-600" />
-                        新建模板 / IMPORT NEW
-                      </label>
-                      <button 
-                         onClick={() => {
-                            const sample = {
-                               version: "UVTS-1.1",
-                               style_name: "NEW_TEMPLATE",
-                               canvas: { ratio: "1:1", background: "#FFFFFF" },
-                               structure: { info_layer: { width_pct: 40, align: "left", padding_pct: 10 }, image_layer: { width_pct: 60, position: "right", fit: "cover" } },
-                               typography: { "#Product_Name": { font: "Inter", size_em: 1, weight: "bold", color: "#000000" } },
-                               rules: { auto_shrink_text: true, currency_symbol_spacing: "4px" }
-                            };
-                            setUvtsInput(JSON.stringify(sample, null, 2));
-                         }}
-                         className="text-[9px] text-blue-600 font-bold uppercase tracking-widest hover:underline"
-                      >
-                         加载示例
-                      </button>
-                    </div>
-                    
-                    <div className="relative">
-                      <textarea 
-                        value={uvtsInput}
-                        onChange={(e) => setUvtsInput(e.target.value)}
-                        className="w-full h-48 p-4 bg-slate-50 border border-slate-100 rounded-[2rem] outline-none focus:ring-2 focus:ring-blue-100 font-mono text-[10px] transition-all resize-none shadow-inner"
-                        placeholder='粘贴来自 Figma 或 AI 的 UVTS 模板 JSON...'
-                      />
-                      <div className="absolute right-4 bottom-4 flex gap-2">
-                         {uvtsInput && (
-                           <button onClick={() => setUvtsInput('')} className="p-2 bg-white border border-slate-200 text-slate-300 hover:text-slate-500 rounded-full shadow-sm">
-                             <X size={14} />
-                           </button>
-                         )}
-                      </div>
-                    </div>
-
-                    <button 
-                      onClick={async () => {
-                        if (!uvtsInput.trim()) return;
-                        try {
-                          const uvts = JSON.parse(uvtsInput) as UVTSTemplate;
-                          if (!uvts.style_name) throw new Error('缺少 style_name');
-                          
-                          await withLoading('saving', async () => {
-                            const newT = await templateService.saveTemplate(
-                              uvts.style_name, 
-                              `UVTS-${uvts.version} Format`, 
-                              uvts
-                            );
-                            setAdTemplates(prev => [newT, ...prev]);
-                            setUvtsInput('');
-                            showToast('模板导入并成功保存至后台！', 'success');
-                          });
-                        } catch (err: any) {
-                          showToast(`解析失败: ${err.message}`, 'error');
-                        }
-                      }}
-                      className="w-full py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2"
-                    >
-                      <Save size={16} /> 保存至海报库 / SAVE TO LIBRARY
-                    </button>
-                    
-                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="p-1 bg-blue-600 text-white rounded">
-                           <Layout size={10} />
-                        </div>
-                        <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest">Figma 联动指南</span>
-                      </div>
-                      <p className="text-[9px] text-blue-600/70 font-medium leading-relaxed">
-                        1. 在 Figma 设计稿中选中图层。 <br/>
-                        2. 运行海报转换工具，获取标准 UVTS-1.1 JSON。<br/>
-                        3. 粘贴至上方并保存，即刻应用于海报编辑器。
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-slate-900 p-5 rounded-[2rem] border border-slate-800 relative overflow-hidden group">
-                    <h5 className="text-white text-xs font-black uppercase tracking-widest mb-1">FIGMA 格式支持</h5>
-                    <p className="text-slate-400 text-[10px] font-medium leading-relaxed">编辑器完全兼容 Figma。导入 SVG 文件即可直接生成具有识别框的海报模板。</p>
-                  </div>
-                </div>
-              </div>
-          </div>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
     </div>

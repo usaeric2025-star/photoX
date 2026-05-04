@@ -1,3 +1,4 @@
+import { useErrorHandler } from '../utils/errorHandler';
 import React, { useState, useEffect } from 'react';
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
@@ -37,6 +38,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto, onToggleHidden,
   onAiAnalyze, onCancelAnalyze, isAnalyzing
 }) => {
+  const { handleError } = useErrorHandler();
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
@@ -58,7 +60,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       a.remove();
       window.URL.revokeObjectURL(objUrl);
     } catch (err) {
-      console.error('Failed to download:', err);
+      handleError(err, 'Failed to download:');
     }
   };
 
@@ -84,6 +86,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+  const { handleError } = useErrorHandler();
       if (e.key === 'ArrowLeft') onPrev();
       else if (e.key === 'ArrowRight') onNext();
       else if (e.key === 'Escape') onClose();

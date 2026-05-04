@@ -1,3 +1,4 @@
+import { useErrorHandler } from '../utils/errorHandler';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as fabric from 'fabric';
 import { Upload, Download, Layout, Type, Palette, Image as ImageIcon, Sparkles, Move, X, Layers, Save, Info, Plus, ChevronDown, CheckCircle2, FileText, Package, Trash2, Zap } from 'lucide-react';
@@ -37,6 +38,7 @@ const TEMPLATES: AdTemplate[] = SYSTEM_TEMPLATES.map(t => ({
 export default function PhotoEditor() {
   const { settings } = useAdminSession();
   const { adTemplates } = useAdminPhoto();
+  const { handleError } = useErrorHandler();
   const { showToast } = useAdminUI();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
@@ -50,7 +52,7 @@ export default function PhotoEditor() {
       try {
         parsedUVTS = JSON.parse(parsedUVTS);
       } catch (e) {
-        console.error('Failed to parse UVTS JSON', e);
+        handleError(e, 'Failed to parse UVTS JSON');
       }
     }
     return {
@@ -120,6 +122,7 @@ export default function PhotoEditor() {
   }, [fabricCanvas, activeTemplate, currentItem, allTemplates]);
 
   const applyUVTSTemplate = (canvas: fabric.Canvas, data: AdData, uvts: UVTSTemplate) => {
+  const { handleError } = useErrorHandler();
     if (!uvts || !uvts.canvas) {
       console.warn('Invalid UVTS template structure:', uvts);
       canvas.backgroundColor = '#ffffff';
@@ -336,7 +339,7 @@ export default function PhotoEditor() {
       link.href = URL.createObjectURL(content);
       link.click();
     } catch (err) {
-      console.error('Export failed:', err);
+      handleError(err, 'Export failed:');
     } finally {
       refreshCanvas();
       setIsExporting(false);

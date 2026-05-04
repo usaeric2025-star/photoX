@@ -331,7 +331,7 @@ export const usePhotoManagement = (
                 }
               }
            } catch (err: any) {
-              console.error("Batch save error:", err);
+              handleError(err, "Batch save error:");
               throw err;
            }
         }

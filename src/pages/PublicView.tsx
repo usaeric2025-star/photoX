@@ -1,3 +1,4 @@
+import { useErrorHandler } from '../utils/errorHandler';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
@@ -8,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
 
 export default function PublicView() {
+  const { handleError } = useErrorHandler();
   const { user, authChecked } = useAuth();
   const { 
     photos, setPhotos, 
@@ -55,7 +57,7 @@ export default function PublicView() {
         setTotalCloudCount(total);
       }
     } catch (e) {
-      console.error("Critical error in fetchFilteredPhotos:", e);
+      handleError(e, "Critical error in fetchFilteredPhotos:");
     } finally {
       setIsRefreshing(false);
     }
@@ -130,7 +132,7 @@ export default function PublicView() {
         saveData('cachedSettings', cloudSettings);
       }
     } catch (e) {
-      console.error("Critical error in syncWithCloud:", e);
+      handleError(e, "Critical error in syncWithCloud:");
     } finally {
       setIsInitializing(false);
       setIsRefreshing(false);
@@ -154,7 +156,7 @@ export default function PublicView() {
         setHasMore(false);
       }
     } catch (e) {
-      console.error("[ERROR] loadMore failed:", e);
+      handleError(e, "[ERROR] loadMore failed:");
     } finally {
       setIsRefreshing(false);
     }
@@ -215,7 +217,7 @@ export default function PublicView() {
                 )
               );
             } catch (e: any) {
-              console.error("[ERROR] Failed to toggle pinned:", e);
+              handleError(e, "[ERROR] Failed to toggle pinned:");
               // Revert changes
               setPhotos(prev => prev.map(p => 
                 affectedPhotos.some(ap => ap.id === p.id) 

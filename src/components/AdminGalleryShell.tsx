@@ -1,3 +1,4 @@
+import { useErrorHandler } from '../utils/errorHandler';
 import React, { useEffect } from 'react';
 import { PublicGallery } from './PublicGallery';
 import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } from '../context/AdminContexts';
@@ -28,6 +29,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   const adminUI = useOptionalAdminUI();
   const adminSession = useOptionalAdminSession();
   
+  const { handleError } = useErrorHandler();
   const { 
     photos, 
     selectedIds, 
@@ -63,7 +65,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         )
       );
     } catch (e: any) {
-      console.error("[ERROR] Failed to toggle pinned:", e);
+      handleError(e, "[ERROR] Failed to toggle pinned:");
       adminUI?.showToast(`置顶失败: 无法同步到服务器。`, 'error');
     }
   };
@@ -145,7 +147,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
-        console.error("[ERROR] Batch share failed:", e);
+        handleError(e, "[ERROR] Batch share failed:");
       }
     }
   };
@@ -166,14 +168,14 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
            input.type = 'file';
            input.accept = 'image/*';
            input.multiple = true;
-           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false);
+           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false, () => {});
            input.click();
         }}
         selectedIds={selectedIds}
         isMultiSelect={isMultiSelect}
         onToggleSelection={togglePhotoSelection}
         onClearSelection={clearSelection}
-        onToggleMultiSelect={setIsMultiSelect}
+        onToggleMultiSelect={() => setIsMultiSelect(!isMultiSelect)}
         onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
         onBatchAiAnalyze={(photos) => adminPhoto?.handleGroupAiIdentify(photos)}
         onCancelAnalyze={() => adminUI?.abortAnalysis()}

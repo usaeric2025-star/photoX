@@ -1,3 +1,4 @@
+import { useErrorHandler } from '../utils/errorHandler';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoService';
@@ -17,9 +18,9 @@ import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 
 interface PublicGalleryProps {
-  photos: Photo[];
-  categories: Category[];
-  tags: Tag[];
+  photos?: Photo[];
+  categories?: Category[];
+  tags?: Tag[];
   manufacturers?: any[];
   onExit?: () => void;
   showExit?: boolean;
@@ -138,6 +139,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const internalPassword = settings?.access_passcode;
 
   const context = useGalleryContext();
+  const { handleError } = useErrorHandler();
   const {
     photos,
     categories,
@@ -231,6 +233,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const virtuosoRef = useRef<any>(null);
 
   const scrollToTop = () => {
+  const { handleError } = useErrorHandler();
     virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   };
 
@@ -331,7 +334,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
-        console.error("Share failed:", e);
+        handleError(e, "Share failed:");
       }
     }
   }, [t.shareTitle, t.shareNotSupported]);
@@ -348,7 +351,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
-        console.error("Group share failed:", e);
+        handleError(e, "Group share failed:");
       }
     }
   }, [t]);
@@ -518,7 +521,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
               } catch (e) {
-                console.error("[ERROR] Failed to toggle hidden:", e);
+                handleError(e, "[ERROR] Failed to toggle hidden:");
               }
            });
         }}
@@ -588,7 +591,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                setAlertDialog?.({ title: '設置封面失敗', message: err.message });
              }
           }).catch(err => {
-             console.error("[ERROR] Failed to update group cover:", err);
+             handleError(err, "[ERROR] Failed to update group cover:");
           });
         }}
         onEditPhoto={(photo) => {
@@ -601,7 +604,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
               } catch (e) {
-                console.error("[ERROR] Failed to toggle hidden:", e);
+                handleError(e, "[ERROR] Failed to toggle hidden:");
               }
            });
         }}
