@@ -57,7 +57,8 @@ export interface AdminPhotoContextType {
   handleBatchAiIdentify: (photos: Photo[], existingTaskId?: string) => Promise<void>;
   handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;
   handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean, onComplete: (screen: string) => void) => Promise<void>;
-  deletePhoto: (id: string) => Promise<void>;
+  deletePhoto: (ids: string[], isBatch: boolean) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
   handleGroupPhotos: (ids: string[]) => Promise<any>;
   handleUngroup: (groupId: string) => Promise<void>;
   saveNewPhoto: () => Promise<void>;

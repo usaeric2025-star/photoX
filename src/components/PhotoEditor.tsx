@@ -55,8 +55,8 @@ export default function PhotoEditor() {
     }
     return {
       id: t.id,
-      name: t.name,
-      description: t.description,
+      name: t.name || 'Unnamed Template',
+      description: t.description || '',
       isUVTS: true,
       uvtsData: parsedUVTS,
       apply: () => {}

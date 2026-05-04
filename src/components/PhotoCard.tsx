@@ -64,7 +64,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     // 1. If it's a real category ID (including 7 for Other), use the category name
     if (catId && catName) {
       // Even if it's "others" string, if the ID is 7, it's a valid category
-      if (isOther || !uncatValues.includes(catName.toLowerCase())) {
+      if (isOther || !uncatValues.includes((catName || '').toLowerCase())) {
         return catName;
       }
     }
