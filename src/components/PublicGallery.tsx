@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updatePhotoHidden, updatePhotoInCloud, updatePhoto } from '../services/photoService';
+import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoService';
 import { Photo, Category, Tag } from '../types';
 import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -17,9 +17,9 @@ import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 
 interface PublicGalleryProps {
-  photos?: Photo[];
-  categories?: Category[];
-  tags?: Tag[];
+  photos: Photo[];
+  categories: Category[];
+  tags: Tag[];
   manufacturers?: any[];
   onExit?: () => void;
   showExit?: boolean;
@@ -415,7 +415,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         selectedSubId={selectedSubId}
         setSelectedSubId={setSelectedSubId}
         selectedTagIds={selectedTagIds}
-        setSelectedTagIds={(fn: any) => setSelectedTagIds(typeof fn === 'function' ? fn(selectedTagIds) : fn)}
+        setSelectedTagIds={setSelectedTagIds}
         sortedTags={sortedTags}
         lang={lang}
         t={t}
@@ -492,12 +492,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
         onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
-        onLongPressStart={isAdminMode ? (startLongPress as any) : undefined}
-        onLongPressEnd={isAdminMode ? (endLongPress as any) : undefined}
+        onLongPressStart={isAdminMode ? startLongPress : undefined}
+        onLongPressEnd={isAdminMode ? endLongPress : undefined}
         onBatchEdit={onBatchEdit}
-        onUngroup={onGroupPhotos as any} 
+        onUngroup={onGroupPhotos} 
         onAddPhotoToGroup={onAddPhoto}
-        onAiAnalyze={onAiAnalyze as any}
+        onAiAnalyze={onAiAnalyze}
         onCancelAnalyze={onCancelAnalyze}
         isAnalyzing={isAnalyzing}
         onBatchAiAnalyze={onBatchAiAnalyze}
@@ -514,11 +514,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         onToggleHidden={async (photo) => {
            const newStatus = !photo.isHidden;
-           try {
-             await updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
-           } catch (e) {
-             console.error("[ERROR] Failed to toggle hidden:", e);
-           }
+           import('../services/photoService').then(async (m) => {
+              try {
+                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+              } catch (e) {
+                console.error("[ERROR] Failed to toggle hidden:", e);
+              }
+           });
         }}
       />
 
@@ -577,13 +579,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onSetGroupCover={async (id, groupId) => {
           const groupPhotos = photos.filter(p => p.groupId === groupId);
-          try {
-            await Promise.all(
-              groupPhotos.map(p => updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
-            );
-          } catch (err: any) {
-            setAlertDialog?.({ title: '設置封面失敗', message: err.message });
-          }
+          import('../services/photoService').then(async (m) => {
+             try {
+               await Promise.all(
+                  groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
+               );
+             } catch (err: any) {
+               setAlertDialog?.({ title: '設置封面失敗', message: err.message });
+             }
+          }).catch(err => {
+             console.error("[ERROR] Failed to update group cover:", err);
+          });
         }}
         onEditPhoto={(photo) => {
            setLightboxIndex(null);
@@ -591,11 +597,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onToggleHidden={async (photo) => {
            const newStatus = !photo.isHidden;
-           try {
-             await updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
-           } catch (e) {
-             console.error("[ERROR] Failed to toggle hidden:", e);
-           }
+           import('../services/photoService').then(async (m) => {
+              try {
+                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+              } catch (e) {
+                console.error("[ERROR] Failed to toggle hidden:", e);
+              }
+           });
         }}
       />
 

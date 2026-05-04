@@ -118,16 +118,7 @@ const uiValueForLogin = React.useMemo(() => ({
 
 ---
 
-## 十、骨架屏规范
-
-- 统一使用 Tailwind CSS 的 `animate-pulse` 类
-- 不引入第三方骨架屏库
-- 不重复封装骨架屏组件
-- 颜色统一使用 `bg-gray-200`，圆角根据场景使用 `rounded` / `rounded-lg` / `rounded-xl`
-
----
-
-## 十一、代码修改前的检查清单（AI 必读）
+## 十、代码修改前的检查清单（AI 必读）
 
 在修改任何代码前，请确认：
 

@@ -166,14 +166,14 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
            input.type = 'file';
            input.accept = 'image/*';
            input.multiple = true;
-           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false, () => {});
+           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false);
            input.click();
         }}
         selectedIds={selectedIds}
         isMultiSelect={isMultiSelect}
         onToggleSelection={togglePhotoSelection}
         onClearSelection={clearSelection}
-        onToggleMultiSelect={() => setIsMultiSelect(!isMultiSelect)}
+        onToggleMultiSelect={setIsMultiSelect}
         onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
         onBatchAiAnalyze={(photos) => adminPhoto?.handleGroupAiIdentify(photos)}
         onCancelAnalyze={() => adminUI?.abortAnalysis()}

@@ -5,14 +5,16 @@ export const loginWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: window.location.origin + '/#/admin'
+      redirectTo: window.location.origin + '/#/admin',
+      skipBrowserRedirect: true
     }
   });
 
   if (error) throw error;
   
   if (data?.url) {
-    window.location.href = data.url;
+    // Open in new tab/window to avoid iframe X-Frame-Options: SAMEORIGIN issues
+    window.open(data.url, '_blank');
   }
   
   return null;

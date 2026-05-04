@@ -180,9 +180,6 @@ export default function PublicView() {
         </div>
       ) : (
         <PublicGallery 
-          photos={photos}
-          categories={categories}
-          tags={[]}
           onExit={() => navigate('/admin')}
           onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
           showExit={false}

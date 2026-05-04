@@ -559,8 +559,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
            {props.editPhotoId && props.onDelete && (
             <div className="pt-2 pb-6">
               <AlertDialog>
-                <AlertDialogTrigger className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-3xl text-xs font-bold transition-all flex items-center justify-center gap-2">
-                   删除此照片
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full py-4 rounded-3xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                  >
+                     删除此照片
+                  </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>

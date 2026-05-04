@@ -17,8 +17,6 @@ export interface AdminSessionContextType {
   setViewMode: (v: 'public' | 'private') => void;
   isSyncing: boolean;
   setIsSyncing: (v: boolean) => void;
-  syncPercent: number;
-  isStaffMode: boolean;
   onRefresh: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => void;
@@ -45,13 +43,13 @@ export interface AdminPhotoContextType {
   photos: Photo[];
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
   categories: Category[];
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+  setCategories: (c: Category[]) => void;
   tags: Tag[];
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
+  setTags: (t: Tag[]) => void;
   manufacturers: any[];
-  setManufacturers: React.Dispatch<React.SetStateAction<any[]>>;
+  setManufacturers: (m: any[]) => void;
   adTemplates: any[];
-  setAdTemplates: React.Dispatch<React.SetStateAction<any[]>>;
+  setAdTemplates: (t: any[]) => void;
   
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
@@ -68,7 +66,7 @@ export interface AdminPhotoContextType {
   saveBatchEdit: () => Promise<void>;
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
-  addTag: (name: string) => Promise<any>;
+  addTag: (name: string) => Promise<void>;
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addCategory: (name: string) => Promise<void>;

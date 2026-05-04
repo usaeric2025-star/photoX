@@ -5,7 +5,6 @@ import { GalleryProvider } from './context/GalleryContext';
 import { ErrorProvider } from './context/ErrorContext';
 import { TaskProvider } from './hooks/useTasks';
 import { AdminUIProvider, AdminSessionProvider } from './context/AdminContexts';
-import { ErrorBoundary } from './components/ErrorBoundary';
 import { useState } from 'react';
 import './index.css';
 
@@ -61,14 +60,16 @@ const RootAdminSessionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
-      <ErrorProvider>
-        <GalleryProvider>
-          <TaskProvider>
-            <AppRoutes />
-          </TaskProvider>
-        </GalleryProvider>
-      </ErrorProvider>
-    </ErrorBoundary>
+    <ErrorProvider>
+      <GalleryProvider>
+        <TaskProvider>
+          <RootAdminUIProvider>
+             <RootAdminSessionProvider>
+                <AppRoutes />
+             </RootAdminSessionProvider>
+          </RootAdminUIProvider>
+        </TaskProvider>
+      </GalleryProvider>
+    </ErrorProvider>
   </StrictMode>,
 );

@@ -73,8 +73,10 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
               <Pencil size={12} /> 编辑
             </button>
             <AlertDialog>
-              <AlertDialogTrigger className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2">
-                <Trash2 size={12} /> 删除
+              <AlertDialogTrigger asChild>
+                <button className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2">
+                  <Trash2 size={12} /> 删除
+                </button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
