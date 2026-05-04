@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoService';
+import { updatePhotoHidden, updatePhotoInCloud, updatePhoto } from '../services/photoService';
 import { Photo, Category, Tag } from '../types';
 import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -514,13 +514,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         onToggleHidden={async (photo) => {
            const newStatus = !photo.isHidden;
-           import('../services/photoService').then(async (m) => {
-              try {
-                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
-              } catch (e) {
-                console.error("[ERROR] Failed to toggle hidden:", e);
-              }
-           });
+           try {
+             await updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+           } catch (e) {
+             console.error("[ERROR] Failed to toggle hidden:", e);
+           }
         }}
       />
 
@@ -579,17 +577,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onSetGroupCover={async (id, groupId) => {
           const groupPhotos = photos.filter(p => p.groupId === groupId);
-          import('../services/photoService').then(async (m) => {
-             try {
-               await Promise.all(
-                  groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
-               );
-             } catch (err: any) {
-               setAlertDialog?.({ title: '設置封面失敗', message: err.message });
-             }
-          }).catch(err => {
-             console.error("[ERROR] Failed to update group cover:", err);
-          });
+          try {
+            await Promise.all(
+              groupPhotos.map(p => updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
+            );
+          } catch (err: any) {
+            setAlertDialog?.({ title: '設置封面失敗', message: err.message });
+          }
         }}
         onEditPhoto={(photo) => {
            setLightboxIndex(null);
@@ -597,13 +591,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onToggleHidden={async (photo) => {
            const newStatus = !photo.isHidden;
-           import('../services/photoService').then(async (m) => {
-              try {
-                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
-              } catch (e) {
-                console.error("[ERROR] Failed to toggle hidden:", e);
-              }
-           });
+           try {
+             await updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+           } catch (e) {
+             console.error("[ERROR] Failed to toggle hidden:", e);
+           }
         }}
       />
 
