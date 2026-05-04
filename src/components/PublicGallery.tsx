@@ -233,7 +233,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const virtuosoRef = useRef<any>(null);
 
   const scrollToTop = () => {
-  const { handleError } = useErrorHandler();
     virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
   };
 
