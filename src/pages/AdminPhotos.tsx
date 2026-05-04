@@ -16,8 +16,11 @@ export const AdminPhotos: React.FC = () => {
     }, [setIsAdminMode]);
 
     return (
-        <div className="flex flex-col h-full bg-[#FDFAF6] rounded-xl overflow-hidden shadow-sm border border-slate-200">
+        <div className="flex flex-col flex-1 h-full bg-[#FDFAF6] rounded-xl overflow-hidden shadow-sm border border-slate-200">
             <PublicGallery 
+                photos={photos}
+                categories={[]}
+                tags={[]}
                 onExit={() => {}}
                 onBatchEdit={() => {}}
                 showExit={false}

@@ -52,7 +52,7 @@ export const AdminLayout: React.FC = () => {
                         <NavLink to="/admin/settings" className="p-2 rounded hover:bg-slate-200">設置</NavLink>
                     </div>
                 </nav>
-                <main className="flex-1 p-8">
+                <main className="flex-1 p-8 flex flex-col min-h-0 overflow-hidden relative">
                     <Outlet />
                 </main>
             </div>

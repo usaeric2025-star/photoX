@@ -17,9 +17,9 @@ import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 
 interface PublicGalleryProps {
-  photos: Photo[];
-  categories: Category[];
-  tags: Tag[];
+  photos?: Photo[];
+  categories?: Category[];
+  tags?: Tag[];
   manufacturers?: any[];
   onExit?: () => void;
   showExit?: boolean;

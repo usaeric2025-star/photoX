@@ -11,10 +11,18 @@ import { useAuth } from './hooks/useAuth';
 export default function AppRoutes() {
   const { user, authChecked } = useAuth();
   
-  if (!authChecked) return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  if (!authChecked) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-red-100 z-[99999]">
+        <div className="text-4xl text-red-600 font-bold mb-4">Initializing App...</div>
+        <div className="text-xl text-slate-800">Please wait. If this stays forever, there's a routing or auth crash.</div>
+      </div>
+    );
+  }
 
   return (
-    <HashRouter>
+    <div className="relative min-h-screen w-full border-4 border-blue-500">
+      <HashRouter>
       <Routes>
         <Route path="/" element={user ? <Navigate to="/admin/photos" replace /> : <PublicView />} />
         <Route path="/admin" element={<AdminLayout />}>
@@ -28,5 +36,6 @@ export default function AppRoutes() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </HashRouter>
+    </div>
   );
 }
