@@ -98,10 +98,8 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
         {tag.name}
       </span>
       <AlertDialog>
-        <AlertDialogTrigger asChild>
-          <button className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full">
-            <X size={14} />
-          </button>
+        <AlertDialogTrigger className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full cursor-pointer">
+          <X size={14} />
         </AlertDialogTrigger>
         <AlertDialogContent>
            <AlertDialogHeader>
@@ -442,7 +440,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                     </span>
                     <input 
                       type="file" 
-                      onChange={(e) => handleLogoUpload(e, categories, tags, manufacturers, showToast)} 
+                      onChange={handleLogoUpload} 
                       className="absolute inset-0 opacity-0 cursor-pointer" 
                       accept="image/*" 
                     />
@@ -849,7 +847,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                         </button>
                         <button 
                           onClick={seedTemplates}
-                          disabled={loadingState.saving}
+                          disabled={loadingState === 'saving'}
                           className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                         >
                           <Sparkles size={14} className="text-blue-600" /> 初始化预设
@@ -905,7 +903,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                                         await withLoading('deleting', async () => {
                                           await templateService.deleteTemplate(t.id);
                                           setAdTemplates(prev => prev.filter(item => item.id !== t.id));
-                                          showToast('模板已从后台移除');
+                                          showToast('模板已从后台移除', 'success');
                                         });
                                       }
                                     }}

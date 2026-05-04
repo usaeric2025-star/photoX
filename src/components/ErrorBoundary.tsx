@@ -1,56 +1,33 @@
-import React, { ErrorInfo, ReactNode } from 'react';
+import React from 'react';
 
-interface Props {
-  children: ReactNode;
-  key?: string | number;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-}
-
-export class ErrorBoundary extends React.Component<Props, State> {
-  constructor(props: Props) {
+export class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error: Error | null; errorInfo: React.ErrorInfo | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null
-    };
+    this.state = { hasError: false, error: null, errorInfo: null };
   }
 
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: null };
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({ error, errorInfo });
-    console.error("Uncaught error:", error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    this.setState({ errorInfo });
   }
 
-  public render() {
-    const { hasError, error, errorInfo } = this.state;
-    if (hasError) {
+  render() {
+    if (this.state.hasError) {
       return (
-        <div className="fixed inset-0 z-[9999] bg-red-600 text-white p-6 overflow-auto">
-          <h1 className="text-2xl font-bold mb-4 whitespace-normal">Something went wrong.</h1>
-          <div className="text-sm border p-4 bg-red-700 font-mono break-all whitespace-pre-wrap">
-            {error?.toString()}
-            <br />
-            {errorInfo?.componentStack}
-          </div>
-          <button 
-            className="mt-4 px-6 py-3 bg-white text-red-600 font-bold rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer"
-            onClick={() => window.location.reload()}
-          >
-            Reload Page
-          </button>
+        <div style={{ padding: 20, background: 'red', color: 'white', zIndex: 9999 }}>
+          <h1>Something went wrong.</h1>
+          <pre>{this.state.error && this.state.error.toString()}</pre>
+          <pre>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
         </div>
       );
     }
-
     return this.props.children;
   }
 }

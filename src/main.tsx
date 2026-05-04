@@ -65,11 +65,7 @@ createRoot(document.getElementById('root')!).render(
       <ErrorProvider>
         <GalleryProvider>
           <TaskProvider>
-            <RootAdminUIProvider>
-               <RootAdminSessionProvider>
-                  <AppRoutes />
-               </RootAdminSessionProvider>
-            </RootAdminUIProvider>
+            <AppRoutes />
           </TaskProvider>
         </GalleryProvider>
       </ErrorProvider>

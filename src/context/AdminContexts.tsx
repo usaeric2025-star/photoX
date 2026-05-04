@@ -45,13 +45,13 @@ export interface AdminPhotoContextType {
   photos: Photo[];
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
   categories: Category[];
-  setCategories: (c: Category[]) => void;
+  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   tags: Tag[];
-  setTags: (t: Tag[]) => void;
+  setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   manufacturers: any[];
-  setManufacturers: (m: any[]) => void;
+  setManufacturers: React.Dispatch<React.SetStateAction<any[]>>;
   adTemplates: any[];
-  setAdTemplates: (t: any[]) => void;
+  setAdTemplates: React.Dispatch<React.SetStateAction<any[]>>;
   
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<void>;
@@ -68,7 +68,7 @@ export interface AdminPhotoContextType {
   saveBatchEdit: () => Promise<void>;
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
-  addTag: (name: string) => Promise<void>;
+  addTag: (name: string) => Promise<any>;
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addCategory: (name: string) => Promise<void>;

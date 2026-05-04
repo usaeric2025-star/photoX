@@ -72,7 +72,7 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: pink; /* TEST BACKGROUND */
+  background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
 }

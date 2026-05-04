@@ -415,7 +415,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         selectedSubId={selectedSubId}
         setSelectedSubId={setSelectedSubId}
         selectedTagIds={selectedTagIds}
-        setSelectedTagIds={setSelectedTagIds}
+        setSelectedTagIds={(fn: any) => setSelectedTagIds(typeof fn === 'function' ? fn(selectedTagIds) : fn)}
         sortedTags={sortedTags}
         lang={lang}
         t={t}
@@ -492,12 +492,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
         onEditPhoto={onEditPhoto ? (p) => onEditPhoto(p.id) : undefined}
-        onLongPressStart={isAdminMode ? startLongPress : undefined}
-        onLongPressEnd={isAdminMode ? endLongPress : undefined}
+        onLongPressStart={isAdminMode ? (startLongPress as any) : undefined}
+        onLongPressEnd={isAdminMode ? (endLongPress as any) : undefined}
         onBatchEdit={onBatchEdit}
-        onUngroup={onGroupPhotos} 
+        onUngroup={onGroupPhotos as any} 
         onAddPhotoToGroup={onAddPhoto}
-        onAiAnalyze={onAiAnalyze}
+        onAiAnalyze={onAiAnalyze as any}
         onCancelAnalyze={onCancelAnalyze}
         isAnalyzing={isAnalyzing}
         onBatchAiAnalyze={onBatchAiAnalyze}

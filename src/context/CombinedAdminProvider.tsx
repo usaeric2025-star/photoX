@@ -42,10 +42,29 @@ export const CombinedAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   // ... this is a lot of state, maybe just pass what's needed for the new pages ...
   // The user just wants it to display.
 
+  const valueSession: any = {
+    user: null, isAdminMode: true, settings: {}, setSettings: () => {},
+    geminiApiKey: '', setGeminiApiKey: () => {}, internalPassword: '', setInternalPassword: () => {},
+    customModel: '', setCustomModel: () => {}, viewMode: 'public', setViewMode: () => {},
+    syncPercent: 0, setSyncPercent: () => {}, loginWithGoogle: async () => {}, logout: () => {}, appLang: 'zh'
+  };
+
+  const valuePhoto: any = {
+    photos: photos || [], setPhotos, categories: categories || [], setCategories,
+    tags: tags || [], setTags, manufacturers: [], setManufacturers: () => {}, adTemplates: [], setAdTemplates: () => {},
+    handleSingleAiAnalyze: async () => {}, handleTranslate: async () => ({ en: '', ms: '' }),
+    handleBatchAiIdentify: async () => {}, handleGroupAiIdentify: async () => {}, handlePhotoImport: async () => {},
+    deletePhoto: async () => {}, deleteGroup: async () => {}, handleGroupPhotos: async () => {}, handleUngroup: async () => {},
+    saveNewPhoto: async () => {}, saveBatchEdit: async () => {}, updateTag: async () => {}, deleteTag: async () => {},
+    addTag: async () => {}, updateCategory: async () => {}, deleteCategory: async () => {}, addCategory: async () => {},
+    addManufacturer: async () => {}, updateManufacturer: async () => {}, deleteManufacturer: async () => {},
+    removeTagFromPhoto: async () => {}, quickAddTag: () => {}, quickAddManufacturer: () => {}
+  };
+
   return (
         <AdminUIProvider value={uiBasicValue as any}>
-          <AdminSessionProvider value={{} as any}>
-            <AdminPhotoProvider value={{} as any}>
+          <AdminSessionProvider value={valueSession}>
+            <AdminPhotoProvider value={valuePhoto}>
                 {children}
             </AdminPhotoProvider>
           </AdminSessionProvider>
