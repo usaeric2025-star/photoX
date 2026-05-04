@@ -73,7 +73,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
   const filteredTags = useMemo(() => {
     return (Array.from(new Map(tags.map(t => [t.id, t])).values()) as any[]).filter((tag: any) => 
-      tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+      (tag.name || '').toLowerCase().includes((searchTerm || '').toLowerCase())
     );
   }, [tags, searchTerm]);
 

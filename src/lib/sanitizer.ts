@@ -13,7 +13,7 @@ export const sanitizePhotoTags = (photo: Photo, tags: Tag[]): Photo => {
     if (tags.some(t => String(t.id) === strVal)) {
       validTagIds.push(strVal);
     } else {
-      const matchedByName = tags.find(t => t.name.toLowerCase() === strVal.toLowerCase());
+      const matchedByName = tags.find(t => (t.name || '').toLowerCase() === strVal.toLowerCase());
       if (matchedByName) {
         validTagIds.push(String(matchedByName.id));
       } else {

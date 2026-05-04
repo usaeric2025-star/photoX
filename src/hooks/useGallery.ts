@@ -90,7 +90,7 @@ export const useGallery = ({
           
           const tObj = tags.find(t => String(t.id) === strTid);
           if (tObj) {
-            return rawTagIds.some((rt: string) => rt.trim().toLowerCase() === tObj.name.trim().toLowerCase());
+            return rawTagIds.some((rt: string) => rt.trim().toLowerCase() === (tObj.name || '').trim().toLowerCase());
           }
           return false;
         });
@@ -99,7 +99,7 @@ export const useGallery = ({
 
     const normSearchQuery = normalizeSearchQuery(searchQuery);
     if (normSearchQuery) {
-      const q = normSearchQuery.toLowerCase();
+      const q = (normSearchQuery || '').toLowerCase();
       filtered = filtered.filter(p => {
         const rawTagIds = (Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : [])).map(String);
         const mappedTagNames = rawTagIds.map(tid => tags.find(t => String(t.id) === tid)?.name).filter(Boolean);

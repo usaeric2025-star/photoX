@@ -201,6 +201,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
               index={index || 0}
               plugins={[Zoom]}
               controller={{ closeOnBackdropClick: true }}
+              on={{
+                view: ({ index: newIndex }) => {
+                  if (newIndex > (index || 0)) onNext();
+                  else if (newIndex < (index || 0)) onPrev();
+                }
+              }}
             />
           ) : (
             <img 
