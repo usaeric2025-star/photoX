@@ -218,21 +218,21 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   placeholder="輸入名稱..." 
                   defaultValue={formState.name} 
                   onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
-                  className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+                  className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
                 />
              </div>
              <div className="flex w-full gap-2 pt-1">
                  <div className="flex-1 space-y-1.5">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">編號 / CODE</h3>
-                  <input type="text" placeholder="編號..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-[11px] font-bold outline-none focus:border-blue-500" />
+                  <input type="text" placeholder="編號..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" />
                 </div>
                 <div className="flex-1 space-y-1.5">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">型號 / MODEL</h3>
-                  <input type="text" placeholder="型號..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-[11px] font-bold outline-none focus:border-blue-500" />
+                  <input type="text" placeholder="型號..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" />
                 </div>
                 <div className="flex-1 space-y-1.5">
                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">價格 / PRICE</h3>
-                  <input type="text" placeholder="價格..." value={formState.price||''} onChange={e => updateForm({ price: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-[11px] font-bold text-blue-600 outline-none focus:border-blue-500" />
+                  <input type="text" placeholder="價格..." value={formState.price||''} onChange={e => updateForm({ price: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold text-blue-600 outline-none focus:border-blue-500" />
                 </div>
              </div>
           </div>

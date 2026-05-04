@@ -6,9 +6,11 @@ import { PublicGallery } from '../components/PublicGallery';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
+import { PAGINATION } from '../constants/config';
+import { AppSettings } from '../types';
 
 export default function PublicView() {
-  const { user, authChecked } = useAuth();
+  const { user } = useAuth();
   const { 
     photos, setPhotos, 
     categories, setCategories, 
@@ -27,35 +29,37 @@ export default function PublicView() {
     setSelectedIds
   } = useGalleryContext();
 
+  const handleError = (error: any, context?: string) => {
+    console.error(`[PublicView] ${context}:`, error);
+  };
+
   useEffect(() => {
     setIsAdminMode(false);
     setIsMultiSelect(false);
     setSelectedIds([]);
   }, [setIsAdminMode, setIsMultiSelect, setSelectedIds]);
   
-  const [settings, setSettings] = useState<any>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
 
   const fetchFilteredPhotos = async () => {
     setIsRefreshing(true);
-    console.log("[DEBUG] Fetching filtered photos for PublicView...", { filterCatId, filterTagIds, debouncedSearchQuery });
     try {
       const [cloudPhotos, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
         getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery)
       ]);
-      console.log("[DEBUG] Results:", { count: cloudPhotos?.length, total });
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
         setPage(0);
-        setHasMore(cloudPhotos.length === 100);
-        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + 20));
+        setHasMore(cloudPhotos.length === PAGINATION.ADMIN_BATCH_SIZE);
+        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
       }
     } catch (e) {
-      console.error("Critical error in fetchFilteredPhotos:", e);
+      handleError(e, "fetchFilteredPhotos");
     } finally {
       setIsRefreshing(false);
     }
@@ -77,7 +81,7 @@ export default function PublicView() {
     if (cachedTags) setTags(cachedTags);
     if (cachedManufacturers) setManufacturers(cachedManufacturers);
     if (cachedSettings) {
-      setSettings(cachedSettings);
+      setSettings(cachedSettings as AppSettings);
     }
 
     if (!isBackground && !cachedPhotos) setIsInitializing(true);
@@ -85,7 +89,7 @@ export default function PublicView() {
 
     try {
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
         loadCategoriesFromCloud().catch(() => []),
         loadTagsFromCloud().catch(() => []),
         loadManufacturersFromCloud().catch(() => []),
@@ -96,8 +100,8 @@ export default function PublicView() {
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
         setPage(0);
-        setHasMore(cloudPhotos.length === 100);
-        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + 20));
+        setHasMore(cloudPhotos.length === PAGINATION.ADMIN_BATCH_SIZE);
+        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
         if (!filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
           saveData('cachedPhotos', cloudPhotos);
@@ -126,11 +130,11 @@ export default function PublicView() {
       }
 
       if (cloudSettings) {
-        setSettings(cloudSettings);
+        setSettings(cloudSettings as AppSettings);
         saveData('cachedSettings', cloudSettings);
       }
     } catch (e) {
-      console.error("Critical error in syncWithCloud:", e);
+      handleError(e, "syncWithCloud");
     } finally {
       setIsInitializing(false);
       setIsRefreshing(false);
@@ -144,17 +148,17 @@ export default function PublicView() {
     const nextPage = page + 1;
     
     try {
-      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, 100, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
+      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
       if (morePhotos && morePhotos.length > 0) {
         setPhotos(prev => [...prev, ...morePhotos]);
         setPage(nextPage);
-        setHasMore(morePhotos.length === 100);
+        setHasMore(morePhotos.length === PAGINATION.ADMIN_BATCH_SIZE);
         setVisibleCount(prev => prev + morePhotos.length);
       } else {
         setHasMore(false);
       }
     } catch (e) {
-      console.error("[ERROR] loadMore failed:", e);
+      handleError(e, "loadMore");
     } finally {
       setIsRefreshing(false);
     }
@@ -218,7 +222,7 @@ export default function PublicView() {
                 )
               );
             } catch (e: any) {
-              console.error("[ERROR] Failed to toggle pinned:", e);
+              handleError(e, "togglePinned");
               // Revert changes
               setPhotos(prev => prev.map(p => 
                 affectedPhotos.some(ap => ap.id === p.id) 

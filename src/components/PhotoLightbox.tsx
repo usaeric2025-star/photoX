@@ -3,7 +3,7 @@ import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MessageCircle, Key, Layers, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Photo, Category, ProductGroup } from '../types';
 
 // ... (retain props and other logic)
@@ -72,7 +72,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   useEffect(() => {
     setIsImageLoading(true);
-    setIsZoomed(false);
+    // REMOVED: setIsZoomed(false); // Do not reset zoom when navigating via arrows
     
     // Fetch group context if part of a group
     if (photo?.groupId) {

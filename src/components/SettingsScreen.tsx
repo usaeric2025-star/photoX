@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { 
-  ChevronLeft, X, Cloud, LogOut, RefreshCcw, 
-  Trash2, Download, Upload, MessageCircle, 
+  ChevronLeft, X, Cloud, LogOut,
+  Trash2, Upload,
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
-  User, Heart, Smile, Layout, ChevronRight, CheckCircle2, AlertCircle, Save, Pencil
+  User, Heart, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
-import { SubCategory, Tag, Category } from '../types';
+import { Tag, Category } from '../types';
 import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -150,7 +150,11 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
   );
 };
 
-import { SYSTEM_TEMPLATES } from '../constants/systemTemplates';
+const BUTTON_STYLES = {
+  primary: "px-5 py-2.5 bg-[#1D3557] hover:bg-[#1D3557]/90 text-[#FDFAF6] rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  secondary: "px-5 py-2.5 bg-[#FDFAF6] border border-[#1D3557]/20 hover:bg-[#1D3557]/5 text-[#1D3557] rounded-2xl text-xs font-medium tracking-wide shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  accent: "px-5 py-2.5 bg-[#D4A853] hover:bg-[#D4A853]/90 text-white rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+};
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
@@ -295,11 +299,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setHasChanges(true);
   };
 
-  // Consistent Button Classes
-  const primaryBtnClass = "px-5 py-2.5 bg-[#1D3557] hover:bg-[#1D3557]/90 text-[#FDFAF6] rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
-  const secondaryBtnClass = "px-5 py-2.5 bg-[#FDFAF6] border border-[#1D3557]/20 hover:bg-[#1D3557]/5 text-[#1D3557] rounded-2xl text-xs font-medium tracking-wide shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
-  const accentBtnClass = "px-5 py-2.5 bg-[#D4A853] hover:bg-[#D4A853]/90 text-white rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50";
-  
   const inputClass = "flex-1 min-w-0 bg-[#1D3557]/5 border border-[#1D3557]/10 p-3 rounded-2xl text-sm outline-none focus:border-[#D4A853] focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-[#1D3557]/30 text-[#1D3557]";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-[#1D3557]/10 space-y-4";
 
@@ -355,7 +354,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 </div>
                 <div className="flex flex-col gap-2 flex-1">
                   <label className="relative overflow-hidden block">
-                    <span className={secondaryBtnClass}>
+                    <span className={BUTTON_STYLES.secondary}>
                       <Upload size={14} /> 上传 Logo
                     </span>
                     <input 
@@ -556,7 +555,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(manufacturers || []).length} 个项目</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleAddManufacturer} className={accentBtnClass}>
+            <button onClick={handleAddManufacturer} className={BUTTON_STYLES.accent}>
               <Plus size={16} /> 新增生产商
             </button>
           </div>
@@ -582,7 +581,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(tags || []).length} 个项目</span>
           </div>
           <div className="flex gap-2 items-center">
-            <button onClick={handleAddTag} className={accentBtnClass}>
+            <button onClick={handleAddTag} className={BUTTON_STYLES.accent}>
               <Plus size={16} /> 新增标签
             </button>
             <div className="flex items-center gap-2 bg-[#1D3557]/5 px-3 py-1.5 rounded-full border border-[#1D3557]/10 ml-auto h-full">
@@ -645,11 +644,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                   a.download = `furniture_backup_${new Date().toISOString().split('T')[0]}.json`;
                   a.click();
                 }}
-                className={primaryBtnClass}
+                className={BUTTON_STYLES.primary}
               >
                 导出 JSON
               </button>
-              <label className={secondaryBtnClass + " cursor-pointer"}>
+              <label className={BUTTON_STYLES.secondary + " cursor-pointer"}>
                 <input 
                   type="file" 
                   className="hidden" 

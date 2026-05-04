@@ -46,7 +46,7 @@ export const SearchAndFilter: React.FC<Props> = ({
           <input 
             type="text" 
             placeholder="搜索产品..."
-            className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-2.5 pl-10 pr-4 text-xs focus:bg-white transition-all outline-none text-[#1D3557] placeholder-[#1D3557]/30 shadow-inner"
+            className="w-full bg-white/60 border border-[#1D3557]/10 rounded-2xl py-2.5 pl-10 pr-4 text-base md:text-xs focus:bg-white transition-colors outline-none text-[#1D3557] placeholder-[#1D3557]/30 shadow-inner"
             value={localSearch}
             onChange={(e) => handleSearchChange(e.target.value)}
           />

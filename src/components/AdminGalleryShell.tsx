@@ -8,16 +8,7 @@ import { updatePhoto } from '../services/photoService';
 import { usePhotoUpdate } from '../hooks/usePhotoUpdate';
 import { useTasks } from '../hooks/useTasks';
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 
 interface AdminGalleryShellProps {
   onExit: () => void;

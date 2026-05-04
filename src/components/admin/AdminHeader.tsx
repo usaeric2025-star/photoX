@@ -232,13 +232,6 @@ export const AdminHeader: React.FC<Props> = ({
                         >
                           <Settings2 size={16} /> <span className="text-xs font-bold uppercase">系统设置</span>
                         </button>
-                        <div className="h-px bg-slate-100" />
-                        <button 
-                          onClick={() => { setActiveScreen?.('home'); setShowToolsMenu(false); }}
-                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
-                        >
-                          <Plus size={16} /> <span className="text-xs font-bold uppercase">返回照片管理</span>
-                        </button>
                       </motion.div>
                     )}
                   </AnimatePresence>

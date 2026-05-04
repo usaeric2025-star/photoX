@@ -69,7 +69,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/40 border border-[#1D3557]/5 rounded-xl py-2 pl-10 pr-4 text-xs text-[#1D3557] placeholder-[#1D3557]/30 focus:outline-none focus:bg-white transition-all shadow-sm"
+              className="w-full bg-white/40 border border-[#1D3557]/5 rounded-xl py-2 pl-10 pr-4 text-base md:text-xs text-[#1D3557] placeholder-[#1D3557]/30 focus:outline-none focus:bg-white transition-colors shadow-sm"
             />
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#1D3557]/30" />
           </div>

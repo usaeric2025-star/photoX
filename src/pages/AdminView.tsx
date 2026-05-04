@@ -1,51 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { CheckSquare, X, Sparkles } from 'lucide-react';
-import { loginWithGoogle, saveSettings } from '../services/supabaseService';
-// Removed Tag import
+import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-// Removed Modals import
 
-import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
-import { PromptDialog } from '../components/admin/PromptDialog';
-import { AdminHeader } from '../components/admin/AdminHeader';
-import { FloatingActionButton } from '../components/admin/FloatingActionButton';
-import { BatchEditScreen } from '../components/admin/BatchEditScreen';
-import { AdminGalleryShell } from '../components/AdminGalleryShell';
-import { PublicGallery } from '../components/PublicGallery';
-import { SettingsScreen } from '../components/SettingsScreen';
-import { GroupDetailView } from '../components/GroupDetailView';
 import { useSyncEngine } from '../hooks/useSyncEngine';
-import { useAdminPhotos } from '../hooks/useAdminPhotos';
-import { useAdminCategory } from '../hooks/useAdminCategory';
-import { useAdminCore } from '../hooks/useAdminCore';
 import { useAdminDialogs } from '../hooks/useAdminDialogs';
 import { useLoading } from '../hooks/useLoading';
-import { usePhotoManagement } from '../hooks/usePhotoManagement';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
-import { useErrorHandler } from '../utils/errorHandler';
-import { usePermission } from '../hooks/usePermission';
-import { useDelete } from '../hooks/useDelete';
-import { formatDate } from '../utils/dateFormat';
-import { categoryApi } from '../api/categories';
-import { tagApi } from '../api/tags';
-import { groupApi } from '../api/groups';
-import { photoApi } from '../api/photos';
 import { translations, LanguageCode } from '../lib/translations';
-import { PAGINATION } from '../constants/config';
-import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, AdminUIContextType, AdminSessionContextType, AdminPhotoContextType } from '../context/AdminContexts';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../components/ui/alert-dialog";
+import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
+import { AdminViewContent } from './AdminViewContent';
 
 const errorGuard = (name: string) => () => {
   console.error(`Blocked call to ${name}`);
@@ -60,11 +25,10 @@ export default function AdminView() {
 
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
 
-  // Lift UI states to the top level AdminView to avoid ReferenceErrors in login gate
   const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
-  const { loadingState, setLoadingState, startLoading, stopLoading, withLoading } = useLoading();
+  const { loadingState, setLoadingState, withLoading } = useLoading();
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
 
@@ -73,10 +37,14 @@ export default function AdminView() {
     if (!persistent) {
       setTimeout(() => setToast(null), 3000);
     }
-    return () => setToast(null); // Return close function
+    return () => setToast(null);
   }, []);
 
   const [pageError, setPageError] = useState<string | null>(null);
+
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [internalPassword, setInternalPassword] = useState('');
+  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
   useEffect(() => {
     const handleError = (e: ErrorEvent) => setPageError(e.message);
@@ -98,46 +66,12 @@ export default function AdminView() {
     </div>
   ) : null;
 
-  // --- Lifted state/hooks from AdminViewContent ---
   const { 
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-    gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
-    setUser, setIsAdminMode,
-    visibleCount, setVisibleCount, tagIdToNameMap, clearSelection
+    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers
   } = useGalleryContext();
   
-  const { handleError } = useErrorHandler();
-  const { canDelete, canEdit, isAdmin } = usePermission();
-  const { deletePhotos, deleteGroup, deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook } = useDelete();
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
   
-  const cancelBatchAiRef = useRef(false);
-  const [publicCategories, setPublicCategories] = useState<any[]>([]);
-  const [publicTags, setPublicTags] = useState<any[]>([]);
-  const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
-
-  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
-  const [appLang] = useState('zh');
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
-  const [columns, setColumns] = useState<2 | 3 | 5>(3);
-  const [previewUri, setPreviewUri] = useState<string | null>(null);
-  
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
-  const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
-  const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
-  const [internalPassword, setInternalPassword] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
-
-  useEffect(() => {
-    if (settings) {
-      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
-      if (settings.custom_model) setCustomModel(settings.custom_model);
-      if (settings.internal_password) setInternalPassword(settings.internal_password);
-    }
-  }, [settings]);
-
-  // Context values computed at top level
   const uiBasicValue = React.useMemo(() => ({ 
     setAlertDialog, 
     setPromptDialog, 
@@ -159,95 +93,60 @@ export default function AdminView() {
     setIsSyncing
   }), [settings, setSettings, setIsSyncing]);
 
-  const tValue = React.useMemo(() => t, [t]);
-
-  const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
-
-  const { 
-    updateTag, deleteTag, 
-    addCategory, updateCategory, deleteCategory, 
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto
-  } = useAdminCategory(uiBasicValue);
-
-  const { 
-    saveSettings,
-    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-    handleUngroup, handleGroupPhotos 
-  } = useAdminCore(user);
-
-  const { 
-    batchProgress, isImporting, importProgress, importTotal, 
-    aiDebugInfo, abortAnalysis, 
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto 
-  } = useAdminPhotos(
-    user, 
-    settings?.gemini_api_key, 
-    settings?.provider || 'openrouter', 
-    settings?.custom_model || '', 
-    uiBasicValue,
-    sessionBasicValue,
-    addManufacturer
-  );
-  
-  const handleDeletePhoto = useCallback(async (id: string) => {
-    const { success, error } = await deletePhotos(id);
-    if (success) {
-      setEditPhotoId(null);
-    } else {
-      console.error(error);
-    }
-  }, [deletePhotos, setEditPhotoId]);
-  
-  const handleDeleteTag = useCallback(async (id: string) => {
-    await deleteTagHook(id);
-  }, [deleteTagHook]);
-
-  // Providers' values
   const onRefresh = useCallback(() => 
-    refreshCloudData(user, true, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers), 
+    refreshCloudData(user, true, setCloudCount), 
     [user, refreshCloudData]);
 
   const sessionValue = React.useMemo(() => ({
     user, isAdminMode: true, 
-    settings, setSettings, geminiApiKey, setGeminiApiKey,
-    internalPassword, setInternalPassword, customModel, setCustomModel,
+    settings, setSettings,
+    geminiApiKey, setGeminiApiKey,
+    internalPassword, setInternalPassword,
+    customModel, setCustomModel,
     viewMode, setViewMode,
     isSyncing, setIsSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, internalPassword, customModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
     manufacturers, setManufacturers,
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
-    handleSingleAiAnalyzeCallback,
-    deletePhoto: deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, deleteTag: handleDeleteTag, 
-    updateCategory, deleteCategory, addCategory,
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto,
-    quickAddTag: () => {}, quickAddManufacturer: () => {},
-    deleteGroup: async () => ({ success: true })
-  }), [
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers,
-    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
-    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto
-  ]);
+    handleSingleAiAnalyze: async () => ({}),
+    handleTranslate: async () => ({ en: '', ms: '' }),
+    handleBatchAiIdentify: async () => {},
+    handleGroupAiIdentify: async () => {},
+    handlePhotoImport: async () => {},
+    handleSingleAiAnalyzeCallback: async () => {},
+    handleGroupPhotos: async () => {},
+    handleUngroup: async () => {},
+    saveNewPhoto: async () => {},
+    saveBatchEdit: async () => {},
+    deletePhoto: async () => {},
+    deleteGroup: async () => ({ success: true }),
+    updateTag: async () => {},
+    deleteTag: async () => {},
+    addTag: async () => ({}),
+    updateCategory: async () => {},
+    deleteCategory: async () => {},
+    addCategory: async () => {},
+    addManufacturer: async () => ({}),
+    updateManufacturer: async () => {},
+    deleteManufacturer: async () => {},
+    removeTagFromPhoto: async () => {},
+    quickAddTag: () => {},
+    quickAddManufacturer: () => {}
+  }), [photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers]);
 
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast: toast, showToast: showToast,
-    loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis,
-    isAnalyzing: loadingState === 'analyzing'
-  }), [
-    activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast, loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis
-  ]);
+    toast, showToast,
+    loadingState, setLoadingState, withLoading, 
+    batchProgress: { current: 0, total: 0 },
+    isAnalyzing: loadingState === 'analyzing',
+    aiDebugInfo: null,
+    abortAnalysis: () => {}
+  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, toast, showToast, loadingState, setLoadingState, withLoading]);
 
   if (!authChecked) {
     return (
@@ -331,578 +230,5 @@ export default function AdminView() {
         </AdminPhotoProvider>
       </AdminSessionProvider>
     </AdminUIProvider>
-  );
-}
-
-function AdminViewContent({ user, authChecked, logout, errorContent, t, lang, uiProps, dialogProps }: { 
-  user: any, 
-  authChecked: boolean, 
-  logout: () => void, 
-  errorContent: React.ReactNode,
-  t: any,
-  lang: LanguageCode,
-  uiProps: any,
-  dialogProps: any
-}) {
-  const navigate = useNavigate();
-  const { 
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
-    gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
-    setUser, setIsAdminMode,
-    visibleCount, setVisibleCount, tagIdToNameMap, clearSelection
-  } = useGalleryContext();
-  
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue, toast, showToast } = dialogProps;
-  const { activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, loadingState, setLoadingState, withLoading, cloudCount, setCloudCount } = uiProps;
-
-  const { handleError } = useErrorHandler();
-  const { canDelete, canEdit, isAdmin } = usePermission();
-  const { deletePhotos, deleteGroup, deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook } = useDelete();
-
-  useEffect(() => {
-    setUser(user);
-    setIsAdminMode(isAdmin || sessionStorage.getItem('isStaffMode') === 'true');
-  }, [user, setUser, setIsAdminMode, isAdmin]);
-  
-  const cancelBatchAiRef = useRef(false);
-  
-  const [publicCategories, setPublicCategories] = useState<any[]>([]);
-  const [publicTags, setPublicTags] = useState<any[]>([]);
-  const [publicManufacturers, setPublicManufacturers] = useState<any[]>([]);
-
-  const [displayMode, setDisplayMode] = useState<'grid' | 'list'>('grid');
-  const [appLang] = useState('zh');
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
-  const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
-  const [columns, setColumns] = useState<2 | 3 | 5>(3);
-  const [previewUri, setPreviewUri] = useState<string | null>(null);
-  
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
-  const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
-  const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
-  const [internalPassword, setInternalPassword] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
-
-  useEffect(() => {
-    if (settings) {
-      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
-      if (settings.custom_model) setCustomModel(settings.custom_model);
-      if (settings.internal_password) setInternalPassword(settings.internal_password);
-    }
-  }, [settings]);
-  
-  const uiBasicValue = React.useMemo(() => ({ 
-    setAlertDialog, 
-    setPromptDialog, 
-    setActiveScreen: (s: string) => setActiveScreen(s as any),
-    setLoadingState,
-    loadingState,
-    withLoading,
-    setCloudCount,
-    cloudCount,
-    showToast,
-    editPhotoId, setEditPhotoId,
-    batchEditIds, setBatchEditIds,
-    abortAnalysis: errorGuard('abortAnalysis')
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
-
-  const sessionBasicValue = React.useMemo(() => ({ 
-    settings,
-    setSettings,
-    setIsSyncing
-  }), [settings, setSettings, setIsSyncing]);
-
-  const tValue = React.useMemo(() => t, [t]);
-
-  const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
-
-  const { 
-    updateTag, deleteTag, 
-    addCategory, updateCategory, deleteCategory, 
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto
-  } = useAdminCategory(uiBasicValue);
-
-  const { 
-    saveSettings,
-    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-    handleUngroup, handleGroupPhotos 
-  } = useAdminCore(user);
-
-  const quickAddTag = useCallback(() => {
-    console.log('[AdminView] quickAddTag triggered');
-    setPromptDialog({
-      title: '自定義標籤 / Custom Tag',
-      placeholder: '輸入新標籤名稱 (例如: 清貨)',
-      onSubmit: async (val: string) => {
-        const normalized = val.trim();
-        if (!normalized) return;
-        const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
-        if (existing) {
-          updateForm((prev: any) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
-          showToast(`標籤 "${normalized}" 已存在`);
-          return;
-        }
-        const saved = await addTag(normalized);
-        if (saved) {
-           updateForm((prev: any) => ({ 
-             ...prev, 
-             tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
-           }));
-           showToast(`已新增標籤 "${normalized}"`);
-        }
-      }
-    });
-  }, [setPromptDialog, tags, addTag, updateForm, showToast]);
-
-  const quickAddManufacturer = useCallback(() => {
-    console.log('[AdminView] quickAddManufacturer triggered');
-    setPromptDialog({
-      title: '新增廠商 / New Manufacturer',
-      placeholder: '輸入新廠商名稱',
-      onSubmit: async (val: string) => {
-        const trimmed = val.trim();
-        if (!trimmed) return;
-        const saved = await addManufacturer(trimmed);
-        if (saved) {
-           updateForm((prev: any) => ({ ...prev, manufacturerId: saved.id }));
-           showToast(`已新增廠商 "${trimmed}"`);
-        }
-      }
-    });
-  }, [setPromptDialog, addManufacturer, updateForm, showToast]);
-
-
-  const { 
-    batchProgress, isImporting, importProgress, importTotal, 
-    aiDebugInfo, abortAnalysis, 
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto 
-  } = useAdminPhotos(
-    user, 
-    settings?.gemini_api_key, 
-    settings?.provider || 'openrouter', 
-    settings?.custom_model || '', 
-    uiBasicValue,
-    sessionBasicValue,
-    addManufacturer
-  );
-
-  const handleDeletePhotos = useCallback(async (ids: string[]) => {
-    if (ids.length === 0) return;
-    const { success, error } = await deletePhotos(ids);
-    if (success) {
-        showToast(`已成功刪除 ${ids.length} 張照片`, 'success');
-        clearSelection();
-        setEditPhotoId(null);
-        setSelectedIds([]);
-        setIsMultiSelect(false);
-    } else {
-        handleError(error, '刪除照片失敗');
-    }
-  }, [deletePhotos, user, clearSelection, setEditPhotoId, setSelectedIds, setIsMultiSelect, showToast, handleError]);
-  
-  const handleDeletePhoto = useCallback(async (id: string) => {
-     const { success, error } = await deletePhotos(id);
-     if (success) {
-         showToast('照片已成功刪除', 'success');
-         setEditPhotoId(null);
-     } else {
-         handleError(error, '刪除照片失敗');
-     }
-  }, [deletePhotos, setEditPhotoId, showToast, handleError]);
-  const handleDeleteTag = useCallback(async (id: string) => {
-    const { success, error } = await deleteTagHook(id);
-    if (success) {
-        showToast('標籤已成功刪除', 'success');
-    } else {
-        handleError(error, '刪除標籤失敗');
-    }
-  }, [deleteTagHook, showToast, handleError]);
-  
-  const handleDeleteCategory = useCallback(async (id: string) => {
-    const { success, error } = await deleteCategoryHook(id);
-    if (success) {
-        showToast('分類已成功刪除', 'success');
-    } else {
-        handleError(error, '刪除分類失敗');
-    }
-  }, [deleteCategoryHook, showToast, handleError]);
-
-  // Auto refresh - ONLY on initial mount of the content component
-  useEffect(() => {
-    refreshCloudData(user, false, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers);
-    // Execute data fetching side effects only on the first component mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onRefresh = useCallback(() => 
-    refreshCloudData(user, true, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers), 
-    [user, refreshCloudData]);
-
-  const sessionValue = React.useMemo(() => ({
-    user, isAdminMode: true, 
-    settings, setSettings, geminiApiKey, setGeminiApiKey,
-    internalPassword, setInternalPassword, customModel, setCustomModel,
-    viewMode, setViewMode,
-    isSyncing, setIsSyncing, onRefresh,
-    loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
-
-  const photoValue = React.useMemo(() => ({
-    photos, setPhotos, categories, setCategories, tags, setTags,
-    manufacturers, setManufacturers,
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
-    handleSingleAiAnalyzeCallback,
-    deletePhoto: deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, deleteTag: handleDeleteTag, 
-    updateCategory, deleteCategory, addCategory,
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto,
-    quickAddTag,
-    quickAddManufacturer,
-    deleteGroup
-  }), [
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers,
-    handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
-    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, quickAddTag, quickAddManufacturer, deleteGroup
-  ]);
-
-  const uiValue = React.useMemo(() => ({
-    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
-    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast: toast, showToast: showToast,
-    loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis,
-    isAnalyzing: loadingState === 'analyzing'
-  }), [
-    activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast, loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis
-  ]);
-
-  const handleBatchAiIdentifyTrigger = () => {
-    if (loadingState === 'analyzing') {
-      abortAnalysis();
-    } else {
-      handleBatchAiIdentify(displayPhotos);
-    }
-  };
-  
-  return (
-    <ErrorBoundary key="admin-main">
-      <AdminSessionProvider value={sessionValue}>
-        <AdminPhotoProvider value={photoValue}>
-          <AdminUIProvider value={uiValue}>
-            {/* 全局动态 AlertDialog 渲染器 */}
-            <AlertDialog 
-              open={!!alertDialog} 
-              onOpenChange={(open) => {
-                if (!open) {
-                  if (alertDialog?.onCancel) alertDialog.onCancel();
-                  setAlertDialog(null);
-                }
-              }}
-            >
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {alertDialog?.message}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  {alertDialog?.onConfirm ? (
-                    <>
-                      <AlertDialogCancel onClick={() => {
-                        if (alertDialog.onCancel) alertDialog.onCancel();
-                      }}>
-                        取消 / CANCEL
-                      </AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={async () => {
-                          if (alertDialog.onConfirm) {
-                            await alertDialog.onConfirm();
-                          }
-                          setAlertDialog(null);
-                        }}
-                      >
-                        確定 / OK
-                      </AlertDialogAction>
-                    </>
-                  ) : (
-                    <AlertDialogAction onClick={() => setAlertDialog(null)}>
-                      確定 / OK
-                    </AlertDialogAction>
-                  )}
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-
-            {errorContent}
-            
-            <AnimatePresence>
-              {toast && (
-                <motion.div
-                  initial={{ opacity: 0, y: -50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -50 }}
-                  className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
-                >
-                  {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : 
-                   toast.type === 'loading' ? <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> : 
-                   <X size={18} className="text-red-400" />}
-                  {toast.message}
-                </motion.div>
-              )}
-            </AnimatePresence>
-      
-            {batchEditIds && (
-              <BatchEditScreen 
-                resetAddState={() => { resetAddState(); }}
-                saveBatchEdit={saveBatchEdit}
-                batchEditIds={batchEditIds}
-                formState={formState}
-                updateForm={updateForm}
-                batchIsHiddenApplied={false}
-                setBatchIsHiddenApplied={() => {}}
-                showOtherFields={showOtherFields}
-                setShowOtherFields={setShowOtherFields}
-              />
-            )}
-            
-            {activeGroupId && (
-              <GroupDetailView
-                activeGroupId={activeGroupId}
-                setActiveGroupId={setActiveGroupId}
-                setAlertDialog={setAlertDialog}
-                photos={photos}
-                displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
-                setLightboxIndex={() => {}}
-                isAdminMode={true}
-                isStaffMode={true}
-                onEditPhoto={(p) => { setEditPhotoId(p.id); }}
-                onLongPressStart={() => {}}
-                onLongPressEnd={() => {}}
-                onBatchEdit={(ids) => { setBatchEditIds(ids); }}
-                onUngroup={async (groupId) => { 
-                  await handleUngroup(groupId); 
-                }}
-                onAddPhotoToGroup={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.multiple = true;
-                  input.onchange = (e) => handlePhotoImport(e as any, false);
-                  input.click();
-                }}
-                setPhotos={setPhotos}
-                lang={lang}
-                t={t}
-                categories={categories}
-                manufacturers={manufacturers}
-                allTags={tags}
-                tagMap={tagIdToNameMap as any}
-                onBatchAiAnalyze={handleGroupAiIdentify}
-                onAiAnalyze={(p) => {
-                  handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id);
-                }}
-                onToggleHidden={async (photo) => {
-                  const newStatus = !photo.isHidden;
-                  try {
-                    await photoApi.update(photo.id, { isHidden: newStatus, updatedAt: new Date().toISOString() });
-                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
-                  } catch (e) {
-                    handleError(e, '切換隱藏狀態失敗');
-                  }
-                }}
-              />
-            )}
-      
-            {activeScreen === 'manage' && (
-               <SettingsScreen 
-                 setActiveScreen={setActiveScreen}
-                 saveSettings={saveSettings}
-                 handleLogoUpload={handleLogoUpload}
-                 performPushSync={() => performPushSync(settings, refreshCloudData, lastSyncTime)}
-                 performPullSync={() => performPullSync(refreshCloudData)}
-                 cloudCount={cloudCount}
-                 lastSyncTime={lastSyncTime}
-                 isSyncing={isSyncing}
-               />
-            )}
-      
-            {(editPhotoId || newPhotoData) && (
-                <PhotoEditDrawer 
-                    editPhotoId={editPhotoId} 
-                    resetAddState={resetAddState} 
-                    saveNewPhoto={saveNewPhoto} 
-                    formState={formState}
-                    updateForm={updateForm}
-                    showOtherFields={showOtherFields} 
-                    setShowOtherFields={setShowOtherFields}
-                    newPhotoData={newPhotoData} 
-                    onDelete={handleDeletePhoto}
-                    editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
-                    abortAnalysis={abortAnalysis}
-                />
-            )}
-            
-            {activeScreen === 'home' && viewMode === 'private' && (
-              <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
-                      <AdminHeader 
-                          isMultiSelect={isMultiSelect}
-                          selectedIds={selectedIds}
-                          filteredPhotos={gridPhotos}
-                          setSelectedIds={setSelectedIds}
-                          setIsMultiSelect={setIsMultiSelect}
-                          handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
-                          handleManageClick={() => setActiveScreen(prev => prev === 'manage' ? 'home' : 'manage')}
-                          loginWithGoogle={loginWithGoogle}
-                          onRefresh={() => performPullSync(refreshCloudData)}
-                          photosCount={photos.length}
-                          totalPhotosCount={photos.length}
-                          cloudCount={cloudCount}
-                          appLang={appLang}
-                       />
-                       <div className="flex-1 min-h-0 relative">
-                          <AdminGalleryShell 
-                             onExit={() => setViewMode('public')}
-                          />
-                          <FloatingActionButton 
-                            onClick={() => {
-                              const input = document.createElement('input');
-                              input.type = 'file';
-                              input.accept = 'image/*';
-                              input.multiple = true;
-                              input.onchange = (e) => handlePhotoImport(e as any, false);
-                              input.click();
-                            }}
-                            title={t.addPhoto}
-                          />
-                       </div>
-                    </div>
-            )}
-
-            {activeScreen === 'home' && viewMode === 'public' && (
-              <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
-                 <div className="flex-1 min-h-0 relative bg-bg">
-                      <PublicGallery 
-                         photos={photos}
-                         categories={categories}
-                         tags={tags}
-                         isAdminMode={false}
-                         onTogglePinned={async (photo) => {
-                           const newStatus = !photo.isPinned;
-                           const affectedPhotos = photo.groupId 
-                             ? photos.filter(p => p.groupId === photo.groupId)
-                             : [photo];
-                           import('../services/photoService').then(async (m) => {
-                             try {
-                               await Promise.all(
-                                 affectedPhotos.map(p => 
-                                   m.updatePhoto(p.id, { isPinned: newStatus }, setPhotos)
-                                 )
-                               );
-                             } catch (e: any) {
-                               console.error("[ERROR] Failed to toggle pinned:", e);
-                               showToast('Failed to toggle pin status', 'error');
-                             }
-                           });
-                         }}
-                         settings={settings}
-                         isRefreshing={loadingState === 'syncing'}
-                         onExit={() => setViewMode('private')}
-                         showExit={true}
-                         onRefresh={() => performPullSync(refreshCloudData)}
-                         hideHeader={false}
-                         columns={columns}
-                         setColumns={setColumns}
-                         cloudCount={cloudCount}
-                         user={user}
-                         loginWithGoogle={loginWithGoogle}
-                         onLoadMore={() => {
-                           if (visibleCount < gridPhotos.length) {
-                             setVisibleCount(prev => prev + PAGINATION.PUBLIC_PAGE_SIZE);
-                           } else if (photos.length < (cloudCount || 0)) {
-                              // If we have less locally than on cloud, pull more? 
-                              // Actually performPullSync already pulls (using force=true which I just fixed to ignore timestamps)
-                              performPullSync(refreshCloudData);
-                           }
-                         }}
-                         hasMore={visibleCount < gridPhotos.length || (cloudCount !== null && photos.length < cloudCount)}
-                      />
-                 </div>
-              </div>
-            )}
-      
-            <AnimatePresence>
-              {loadingState !== 'idle' && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[2000] bg-white/70 backdrop-blur-xl flex flex-col items-center justify-center p-8"
-                >
-                  <div className="w-16 h-16 relative mb-8">
-                     <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
-                     <div className="absolute inset-0 border-t-4 border-blue-600 rounded-full animate-spin shadow-lg shadow-blue-200"></div>
-                  </div>
-                  
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-black text-slate-800 tracking-tight mb-2">
-                       {loadingState === 'analyzing' ? 'AI 智能辨識中... / AI Analyzing...' :
-                        loadingState === 'importing' ? '正在匯入照片... / Importing...' :
-                        loadingState === 'compressing' ? '影像壓縮中... / Compressing...' :
-                        loadingState === 'uploading' ? '正在上傳雲端... / Uploading...' :
-                        '正在同步數據... / Synching...'}
-                    </h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t.doNotClose}</p>
-                  </div>
-
-                  {(batchProgress.total > 0 || (loadingState === 'importing' && importTotal > 0)) && (
-                    <div className="w-full max-w-xs">
-                      <div className="flex justify-between text-xs font-black text-slate-500 mb-2 uppercase tracking-tight">
-                         <span>
-                           {loadingState === 'importing' ? '匯入進度 / Import Progress' : '處理進度 / Progress'}
-                         </span>
-                         <span>
-                           {loadingState === 'importing' ? `${importProgress} / ${importTotal}` : `${batchProgress.current} / ${batchProgress.total}`}
-                         </span>
-                      </div>
-                      <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner border border-slate-200">
-                        <motion.div 
-                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-600" 
-                          initial={{ width: 0 }}
-                          animate={{ 
-                            width: `${Math.round(((loadingState === 'importing' ? importProgress : batchProgress.current) / (loadingState === 'importing' ? importTotal : batchProgress.total)) * 100)}%` 
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {loadingState === 'analyzing' && (
-                    <button 
-                      onClick={() => {
-                        abortAnalysis?.();
-                        cancelBatchAiRef.current = true;
-                      }}
-                      className="mt-12 px-8 py-3 bg-red-50 text-red-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-100 transition-all border border-red-100"
-                    >
-                      取消辨識 / Cancel
-                    </button>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-      
-
-            <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
-          </AdminUIProvider>
-        </AdminPhotoProvider>
-      </AdminSessionProvider>
-    </ErrorBoundary>
   );
 }

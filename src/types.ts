@@ -124,6 +124,20 @@ export interface ProductFormData {
   dimH?: string;
 }
 
+export interface AppSettings {
+  logo_url?: string;
+  pinnedTags?: string[];
+  hotTagsCount?: number;
+  gemini_api_key?: string;
+  internal_password?: string;
+  custom_model?: string;
+  provider?: string;
+  whatsapp_1_name?: string;
+  whatsapp_1?: string;
+  whatsapp_2_name?: string;
+  whatsapp_2?: string;
+}
+
 export interface AppState {
   photos: Photo[];
   categories: Category[];
