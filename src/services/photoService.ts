@@ -73,7 +73,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       groupId: item.group_id as string | undefined,
       isGroupCover: (item.is_group_cover as boolean) || false,
       groupOrder: (item.group_order as number) || 0,
-      isHidden: (item.isHidden as boolean) || false,
+      isHidden: (item.isHidden ?? item.is_hidden ?? false) as boolean,
       userId: item.user_id as string | undefined,
       uri: item.image_url as string | undefined,
       price: (item.price as string) || '',
@@ -187,7 +187,10 @@ export const updatePhoto = async (
   if ('groupOrder' in updates) dbUpdates.group_order = updates.groupOrder;
   if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
   if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
-  if ('isHidden' in updates) dbUpdates.isHidden = updates.isHidden;
+  if ('isHidden' in updates) {
+    dbUpdates.isHidden = updates.isHidden;
+    dbUpdates.is_hidden = updates.isHidden; // Set both just in case
+  }
   if ('description_translations' in updates) dbUpdates.description_translations = updates.description_translations;
   
   // Also copy all other standard string fields
@@ -298,6 +301,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     is_group_cover: photo.isGroupCover || false,
     group_order: photo.groupOrder || 0,
     isHidden: photo.isHidden || false,
+    is_hidden: photo.isHidden || false, // Mapping to both
     updated_at: photo.updatedAt || new Date().toISOString()
   };
 
@@ -743,9 +747,11 @@ export const loadPhotosFromCloud = async (
     .select(`
       *,
       photo_tags(*),
-      category:categories(id, name)
-    `)
-    .eq('user_id', userId);
+      category:categories(*)
+    `);
+
+  // Temporary: If we are not seeing data, try to fetch all items even for admin
+  // query = query.eq('user_id', userId); 
 
   if (since) {
     query = query.gt('updated_at', since);

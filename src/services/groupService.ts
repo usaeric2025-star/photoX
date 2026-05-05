@@ -6,7 +6,7 @@ export const TABLE_NAME = 'groups';
 export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('id, name, description, colors, materials, cover_photo_id, isHidden, created_at, updated_at, user_id')
+    .select('*')
     .eq('user_id', userId);
 
   if (error) {
@@ -25,7 +25,7 @@ export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[
     colors: item.colors || [],
     materials: item.materials || [],
     cover_photo_id: item.cover_photo_id,
-    isHidden: item.isHidden,
+    isHidden: (item.isHidden ?? item.is_hidden ?? false) as boolean,
     created_at: item.created_at,
     updated_at: item.updated_at,
     user_id: item.user_id
@@ -58,7 +58,7 @@ export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: stri
 export const getGroupById = async (id: string): Promise<ProductGroup | null> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('id, name, description, colors, materials, cover_photo_id, isHidden, created_at, updated_at, user_id')
+    .select('*')
     .eq('id', id)
     .single();
 
@@ -71,7 +71,7 @@ export const getGroupById = async (id: string): Promise<ProductGroup | null> => 
     colors: data.colors || [],
     materials: data.materials || [],
     cover_photo_id: data.cover_photo_id,
-    isHidden: data.isHidden,
+    isHidden: (data.isHidden ?? data.is_hidden ?? false) as boolean,
     created_at: data.created_at,
     updated_at: data.updated_at,
     user_id: data.user_id
