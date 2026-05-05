@@ -6,8 +6,8 @@ export const TABLE_NAME = 'groups';
 export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*')
-    .eq('user_id', userId);
+    .select('*');
+    // .eq('user_id', userId);
 
   if (error) {
     if (error.message.includes('relation "groups" does not exist')) {

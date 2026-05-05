@@ -750,8 +750,8 @@ export const loadPhotosFromCloud = async (
       category:categories(*)
     `);
 
-  // Temporary: If we are not seeing data, try to fetch all items even for admin
-  // query = query.eq('user_id', userId); 
+  // Temporarily disabled userId filter to debug visibility
+  // query = query.filter('user_id', 'eq', userId);
 
   if (since) {
     query = query.gt('updated_at', since);
