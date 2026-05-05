@@ -1,4 +1,4 @@
-import { Category, Tag } from './types';
+import { Category, Tag } from '../types';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'c1', name: '家具', aliases: ['家具', '家具', 'furniture'], subcategories: [

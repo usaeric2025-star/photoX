@@ -245,7 +245,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       </div>
 
       {!isZoomed && (
-        <div className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative">
+        <motion.div 
+          initial={{ x: 300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative"
+        >
           <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4">
             {/* Info Card Content */}
                  {/* 1. 标题与动作条 */}
@@ -445,7 +450,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                    {t.whatsAppInquiry}
                  </button>
               </div>
-            </div>
+        </motion.div>
       )}
 
       {/* 顶部悬浮页码/切换已移除 */}
