@@ -8,17 +8,6 @@ import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
 import { useAdminUI } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 
 export const BatchEditScreen = ({
   resetAddState,
@@ -53,12 +42,19 @@ export const BatchEditScreen = ({
     updateTag,
     deleteTag
   } = useAdminPhoto();
-  const { setPromptDialog } = useAdminUI();
+  const { setPromptDialog, setAlertDialog } = useAdminUI();
   const { isSyncing, appLang } = useAdminSession();
 
   const handleDelete = () => {
     if (!batchEditIds || !onDelete) return;
-    onDelete(batchEditIds);
+    setAlertDialog({
+      title: `确定要删除选中的 ${batchEditIds.length} 张照片吗？`,
+      message: '此操作不可撤销，所有选中照片将从云端彻底移除。',
+      onConfirm: async () => {
+        await onDelete(batchEditIds);
+        setAlertDialog(null);
+      }
+    });
   };
 
   return (
@@ -72,30 +68,15 @@ export const BatchEditScreen = ({
         
         <div className="flex items-center gap-2">
           {onDelete && (
-             <AlertDialog>
-                <AlertDialogTrigger 
-                  render={
-                    <button 
-                      className="w-10 h-10 bg-red-50 text-red-500 
-                      rounded-xl flex items-center justify-center 
-                      active:bg-red-100 transition-colors"
-                      title="批量删除"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  }
-                />
-                <AlertDialogContent>
-                   <AlertDialogHeader>
-                      <AlertDialogTitle>确定要删除选中的 {batchEditIds?.length} 张照片吗？</AlertDialogTitle>
-                      <AlertDialogDescription>此操作不可撤销，所有选中照片将从云端彻底移除。</AlertDialogDescription>
-                   </AlertDialogHeader>
-                   <AlertDialogFooter>
-                      <AlertDialogCancel>关闭</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">删除</AlertDialogAction>
-                   </AlertDialogFooter>
-                </AlertDialogContent>
-             </AlertDialog>
+            <button 
+              onClick={handleDelete}
+              className="w-10 h-10 bg-red-50 text-red-500 
+              rounded-xl flex items-center justify-center 
+              active:bg-red-100 transition-colors"
+              title="批量删除"
+            >
+              <Trash2 size={18} />
+            </button>
           )}
 
           <button onClick={() => saveBatchEdit(batchIsHiddenApplied)}

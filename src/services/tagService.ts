@@ -1,7 +1,13 @@
 import { supabase } from '../lib/supabase';
 import { Tag } from '../types';
+import { createCache } from './cacheUtils';
+
+const tagCache = createCache<Tag[]>();
 
 export const loadTagsFromCloud = async (): Promise<Tag[]> => {
+    const cached = tagCache.get();
+    if (cached) return cached;
+
     const { data, error } = await supabase
         .from('tags')
         .select('*')
@@ -12,11 +18,14 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
     }
     
     // Ensure name is uppercase and id is string
-    return (data || []).map((t: Tag) => ({
+    const result = (data || []).map((t: Tag) => ({
       ...t,
       name: (t.name || '').toUpperCase(),
       id: String(t.id)
     }));
+
+    tagCache.set(result);
+    return result;
 };
 
 export const addTagToDB = async (name: string): Promise<Tag> => {
@@ -45,6 +54,7 @@ export const addTagToDB = async (name: string): Promise<Tag> => {
         
         throw new Error(errorMessage);
     }
+    tagCache.clear();
     return { ...data, id: String(data.id) };
 };
 
@@ -74,6 +84,7 @@ export const batchCreateTags = async (names: string[]): Promise<Map<string, stri
         throw new Error(errorMessage);
     }
     
+    tagCache.clear();
     const map = new Map<string, string>();
     (data || []).forEach(t => map.set(t.name, String(t.id)));
     return map;
@@ -90,6 +101,7 @@ export const updateTagInDB = async (tagId: string, name: string): Promise<boolea
         console.error("Failed to update tag:", error);
         return false;
     }
+    tagCache.clear();
     return true;
 };
 
@@ -104,6 +116,7 @@ export const deleteTagFromDB = async (tagId: string | number): Promise<boolean> 
         return false;
     }
 
+    tagCache.clear();
     // 只有实际删除了记录，才返回 true
     return count !== null && count > 0;
 };

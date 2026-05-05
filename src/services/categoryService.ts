@@ -1,7 +1,13 @@
 import { supabase } from '../lib/supabase';
 import { Category } from '../types';
+import { createCache } from './cacheUtils';
+
+const categoryCache = createCache<Category[]>();
 
 export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
+  const cached = categoryCache.get();
+  if (cached) return cached;
+
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -11,7 +17,10 @@ export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
     console.error("Failed to load categories:", error);
     return [];
   }
-  return data || [];
+  
+  const result = data || [];
+  categoryCache.set(result);
+  return result;
 };
 
 export const updateCategoryInDB = async (categoryId: string, updates: Partial<Category>): Promise<boolean> => {
@@ -24,6 +33,7 @@ export const updateCategoryInDB = async (categoryId: string, updates: Partial<Ca
     console.error("Failed to update category:", error);
     return false;
   }
+  categoryCache.clear();
   return true;
 };
 
@@ -37,6 +47,7 @@ export const deleteCategoryFromDB = async (categoryId: string): Promise<boolean>
     console.error("Failed to delete category:", error);
     return false;
   }
+  categoryCache.clear();
   return true;
 };
 
@@ -51,5 +62,6 @@ export const addCategoryToDB = async (name: string): Promise<Category | null> =>
     console.error("Failed to add category:", error);
     return null;
   }
+  categoryCache.clear();
   return data;
 };

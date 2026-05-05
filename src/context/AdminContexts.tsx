@@ -100,8 +100,34 @@ export interface AdminUIContextType {
   batchEditIds: string[] | null;
   setBatchEditIds: (ids: string[] | null) => void;
   
-  alertDialog: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null;
-  setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
+  alertDialog: { 
+    title: string, 
+    message: string | React.ReactNode, 
+    onConfirm?: () => void | Promise<void>, 
+    onCancel?: () => void, 
+    confirmLabel?: string, 
+    cancelLabel?: string,
+    type?: 'danger' | 'info',
+    secondaryAction?: { 
+      label: string, 
+      onClick: () => void | Promise<void>, 
+      type?: 'danger' | 'default' 
+    }
+  } | null;
+  setAlertDialog: (d: { 
+    title: string, 
+    message: string | React.ReactNode, 
+    onConfirm?: () => void | Promise<void>, 
+    onCancel?: () => void, 
+    confirmLabel?: string, 
+    cancelLabel?: string,
+    type?: 'danger' | 'info',
+    secondaryAction?: { 
+      label: string, 
+      onClick: () => void | Promise<void>, 
+      type?: 'danger' | 'default' 
+    }
+  } | null) => void;
   promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
   setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
   

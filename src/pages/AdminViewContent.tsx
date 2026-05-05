@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { CheckSquare, X } from 'lucide-react';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
-import { PromptDialog } from '../components/admin/PromptDialog';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { FloatingActionButton } from '../components/admin/FloatingActionButton';
 import { BatchEditScreen } from '../components/admin/BatchEditScreen';
@@ -24,20 +21,12 @@ import { useErrorHandler } from '../utils/errorHandler';
 import { usePermission } from '../hooks/usePermission';
 import { useDelete } from '../hooks/useDelete';
 import { photoApi } from '../api/photos';
-import { Photo, Category, Tag, Manufacturer, User, AppSettings, ProductFormData } from '../types';
+import { Photo, Category, Tag, Manufacturer, User, ProductFormData } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../components/ui/alert-dialog";
+
+import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
 
 const errorGuard = (name: string) => () => {
   console.error(`Blocked call to ${name}`);
@@ -96,10 +85,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   
   const cancelBatchAiRef = useRef(false);
   
-  const [, setPublicCategories] = useState<Category[]>([]);
-  const [, setPublicTags] = useState<Tag[]>([]);
-  const [, setPublicManufacturers] = useState<Manufacturer[]>([]);
-
   const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
@@ -235,12 +220,12 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   
   // Auto refresh
   useEffect(() => {
-    refreshCloudData(user, false, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers);
+    refreshCloudData(user, false, setCloudCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onRefresh = useCallback(() => 
-    refreshCloudData(user, true, setCloudCount, setPublicCategories, setPublicTags, setPublicManufacturers), 
+    refreshCloudData(user, true, setCloudCount), 
     [user, refreshCloudData, setCloudCount]);
 
   const sessionValue = React.useMemo(() => ({
@@ -297,67 +282,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
       <AdminSessionProvider value={sessionValue}>
         <AdminPhotoProvider value={photoValue}>
           <AdminUIProvider value={uiValue}>
-            <AlertDialog 
-              open={!!alertDialog} 
-              onOpenChange={(open) => {
-                if (!open) {
-                  if (alertDialog?.onCancel) alertDialog.onCancel();
-                  setAlertDialog(null);
-                }
-              }}
-            >
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {alertDialog?.message}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  {alertDialog?.onConfirm ? (
-                    <>
-                      <AlertDialogCancel onClick={() => {
-                        if (alertDialog.onCancel) alertDialog.onCancel();
-                      }}>
-                        取消 / CANCEL
-                      </AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={async () => {
-                          if (alertDialog.onConfirm) {
-                            await alertDialog.onConfirm();
-                          }
-                          setAlertDialog(null);
-                        }}
-                      >
-                        確定 / OK
-                      </AlertDialogAction>
-                    </>
-                  ) : (
-                    <AlertDialogAction onClick={() => setAlertDialog(null)}>
-                      確定 / OK
-                    </AlertDialogAction>
-                  )}
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <AdminGlobalModals />
 
             {errorContent}
-            
-            <AnimatePresence>
-              {toast && (
-                <motion.div
-                  initial={{ opacity: 0, y: -50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -50 }}
-                  className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
-                >
-                  {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : 
-                   toast.type === 'loading' ? <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> : 
-                   <X size={18} className="text-red-400" />}
-                  {toast.message}
-                </motion.div>
-              )}
-            </AnimatePresence>
       
             {batchEditIds && (
               <BatchEditScreen 
@@ -554,8 +481,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 cancelBatchAiRef.current = true;
               }}
             />
-      
-            <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
           </AdminUIProvider>
         </AdminPhotoProvider>
       </AdminSessionProvider>

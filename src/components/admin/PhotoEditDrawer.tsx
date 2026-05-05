@@ -7,17 +7,6 @@ import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight, 
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { TagEditor } from './TagEditor';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 
 interface Props {
@@ -163,28 +152,21 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             )}
             
             {props.editPhotoId && props.onDelete && (
-              <AlertDialog>
-                <AlertDialogTrigger 
-                  render={
-                    <button 
-                      className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold"
-                      title="删除"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  }
-                />
-                <AlertDialogContent>
-                   <AlertDialogHeader>
-                      <AlertDialogTitle>确定要删除此照片吗？</AlertDialogTitle>
-                      <AlertDialogDescription>此操作不可撤销，照片将从云端彻底移除。</AlertDialogDescription>
-                   </AlertDialogHeader>
-                   <AlertDialogFooter>
-                      <AlertDialogCancel>关闭</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => props.onDelete!(props.editPhotoId!)} className="bg-red-600 hover:bg-red-700">删除</AlertDialogAction>
-                   </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <button 
+                onClick={() => {
+                  setAlertDialog({
+                    title: '确定要删除此照片吗？',
+                    message: '此操作不可撤销，照片将从云端彻底移除。',
+                    onConfirm: () => props.onDelete!(props.editPhotoId!),
+                    confirmLabel: '删除',
+                    type: 'danger'
+                  });
+                }}
+                className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold"
+                title="删除"
+              >
+                <Trash2 size={18} />
+              </button>
             )}
 
             <button 

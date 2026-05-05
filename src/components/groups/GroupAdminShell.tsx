@@ -10,16 +10,6 @@ import { updatePhotosGroupInCloud, updatePhoto, savePhotoToCloud } from '../../s
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupGridView } from './GroupGridView';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../ui/alert-dialog";
 
 export interface GroupAdminShellProps {
   activeGroupId: string | null;
@@ -65,14 +55,15 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   onToggleHidden = () => {},
   lang = 'zh',
   t, categories, tagMap, allTags = [],
-  setAlertDialog
+  setAlertDialog: propsSetAlertDialog
 }) => {
+  const { setAlertDialog: contextSetAlertDialog, setPromptDialog, showToast } = useAdminUI();
+  const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
   const { setCover } = useGroupSync(activeGroupId);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
   const [showGroupSettings, setShowGroupSettings] = useState(false);
@@ -130,15 +121,25 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     }
   }, [selectedPhotoIds.length, isMultiSelectMode]);
 
-  const [confirmDelete, setConfirmDelete] = useState<{ ids: string[] } | null>(null);
-
   const confirmBulkRemove = (ids: string[]) => {
-    setConfirmDelete({ ids });
-  };
-
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 2000);
+    setAlertDialog({
+      title: '确认批量移出',
+      message: `確定要將選中的 ${ids.length} 張照片移出群組嗎？`,
+      onConfirm: async () => {
+        try {
+          await updatePhotosGroupInCloud(ids, { group_id: null });
+          setPhotos?.(prev => prev.map(p => 
+            ids.includes(p.id) ? { ...p, groupId: null } : p
+          ));
+          setIsMultiSelectMode(false);
+          setSelectedPhotoIds([]);
+          showToast('已移出 / Removed', 'success');
+        } catch (err) {
+          showToast(`操作失败: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
+        }
+        setAlertDialog(null);
+      }
+    });
   };
 
   const persistPhotoChange = async (photoId: string, updates: Partial<Photo>) => {
@@ -158,9 +159,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       } else {
         await updatePhoto(photoId, updates);
       }
-      showToast('已保存 / Saved');
+      showToast('已保存 / Saved', 'success');
     } catch (err) {
-      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`);
+      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
     }
   };
 
@@ -170,7 +171,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     const nextGroupData = { ...groupData, ...updates };
     setGroupData(nextGroupData);
     
-    showToast('群組資料已更新 / Group info updated');
+    showToast('群組資料已更新 / Group info updated', 'success');
 
     try {
       await saveGroupToCloud(nextGroupData);
@@ -184,11 +185,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
              groupPhotos.map(p => updatePhoto(p.id, { isHidden }))
            );
            setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isHidden: isHidden! } : p));
-           showToast(`群組內照片已${isHidden ? '屏蔽' : '顯示'}`);
+           showToast(`群組內照片已${isHidden ? '屏蔽' : '顯示'}`, 'success');
         }
       }
     } catch (err) {
-      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`);
+      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
     }
   };
 
@@ -231,13 +232,13 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     }));
     
     try {
-      showToast('排序中...');
+      showToast('排序中...', 'loading');
       await Promise.all(
         updatedWithOrder.map(p => updatePhoto(p.id, { groupOrder: p.groupOrder }))
       );
-      showToast('排序已保存');
+      showToast('排序已保存', 'success');
     } catch (err) {
-      showToast(`排序同步失敗: ${err instanceof Error ? err.message : '未知錯誤'}`);
+      showToast(`排序同步失敗: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
     }
   };
 
@@ -260,42 +261,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
 
   return (
     <>
-      <AlertDialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>确认批量移出</AlertDialogTitle>
-            <AlertDialogDescription>
-              確定要將選中的 {confirmDelete?.ids.length} 張照片移出群組嗎？
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmDelete(null)}>
-              取消 / CANCEL
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={async () => {
-                if (confirmDelete) {
-                    try {
-                      await updatePhotosGroupInCloud(confirmDelete.ids, { group_id: null });
-                      setPhotos?.(prev => prev.map(p => 
-                        confirmDelete.ids.includes(p.id) ? { ...p, groupId: null } : p
-                      ));
-                      setIsMultiSelectMode(false);
-                      setSelectedPhotoIds([]);
-                      showToast('已移出 / Removed');
-                    } catch (err) {
-                      showToast(`操作失败: ${err instanceof Error ? err.message : '未知錯誤'}`);
-                    }
-                    setConfirmDelete(null);
-                }
-              }}
-            >
-              確定移出 / CONFIRM
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <AnimatePresence mode="wait">
         {activeGroupId !== null && (
           <motion.div 
@@ -654,8 +619,14 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                               ))}
                               <button 
                                 onClick={() => {
-                                  const c = prompt('Color Code:');
-                                  if (c) handleUpdateGroupData({ colors: [...(groupData?.colors || []), c] });
+                                  setPromptDialog({
+                                    title: '新增系列配色 / Add Color',
+                                    message: '輸入顏色十六進制碼 (例如: #FF0000) / Enter Color Hex Code:',
+                                    placeholder: '#',
+                                    onSubmit: (c) => {
+                                      if (c && c.trim()) handleUpdateGroupData({ colors: [...(groupData?.colors || []), c.trim()] });
+                                    }
+                                  });
                                 }}
                                 className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:text-indigo-400"
                               >
@@ -736,20 +707,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                     />
                  );
              })()}
-           </AnimatePresence>
-           {/* Toast Notification */}
-           <AnimatePresence>
-             {toastMessage && (
-               <motion.div 
-                 initial={{ opacity: 0, y: 50, x: '-50%' }}
-                 animate={{ opacity: 1, y: 0, x: '-50%' }}
-                 exit={{ opacity: 0, y: 50, x: '-50%' }}
-                 className="fixed bottom-24 left-1/2 z-[1000] bg-slate-900 text-white px-6 py-3 rounded-full font-bold text-sm shadow-2xl flex items-center gap-2"
-               >
-                 <Check size={16} className="text-green-400" />
-                 {toastMessage}
-               </motion.div>
-             )}
            </AnimatePresence>
         </motion.div>
       )}

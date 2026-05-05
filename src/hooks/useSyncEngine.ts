@@ -79,15 +79,24 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
     const refreshCloudData = async (
         user: any,
         force = false,
-        setCloudCount?: (c: number | null) => void,
-        setPublicCategories?: (c: any) => void,
-        setPublicTags?: (t: any) => void,
-        setPublicManufacturers?: (m: any) => void
+        setCloudCount?: (c: number | null) => void
     ) => {
         return runWithSyncing(async () => {
         console.log("SyncEngine: Refreshing data (Force:", force, ")...");
         try {
-            const cloudSettings = await fetchSettings();
+            // Parallelize initial metadata and photos fetch
+            const lastSyncTime = force ? null : localStorage.getItem('lastSyncTime');
+            
+            const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, cloudPhotos] = await Promise.all([
+                fetchSettings().catch(err => { console.error("fetchSettings failed:", err); return null; }),
+                loadManufacturersFromCloud().catch(err => { console.error("loadManufacturersFromCloud failed:", err); return null; }),
+                loadTagsFromCloud().catch(err => { console.error("loadTagsFromCloud failed:", err); return null; }),
+                loadCategoriesFromCloud().catch(err => { console.error("loadCategoriesFromCloud failed:", err); return []; }),
+                user 
+                  ? loadPhotosFromCloud(user.id, lastSyncTime || undefined).catch(err => { console.error("loadPhotosFromCloud failed:", err); return []; })
+                  : loadAllPhotosFromCloud(lastSyncTime || undefined).catch(err => { console.error("loadAllPhotosFromCloud failed:", err); return []; })
+            ]);
+
             if (cloudSettings) {
                 setSettings(cloudSettings);
                 await saveData('product_settings', cloudSettings);
@@ -98,25 +107,17 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
             }
 
-            // --- Load Manufacturers Relational ---
-            const cloudManufacturers = await loadManufacturersFromCloud();
             if (cloudManufacturers) {
                 setManufacturers(cloudManufacturers);
-                setPublicManufacturers?.(cloudManufacturers);
                 await saveData('product_manufacturers', cloudManufacturers);
             }
 
-            // --- Load Tags Relational ---
-            const cloudTags = await loadTagsFromCloud();
             if (cloudTags) {
               setTags?.(cloudTags);
-              setPublicTags?.(cloudTags);
               await saveData('product_tags', cloudTags);
             }
 
-            const cloudCategories = await loadCategoriesFromCloud();
             if (cloudCategories && cloudCategories.length > 0) {
-                // Categories from cloud already follow the Category interface
                 const normalized = cloudCategories.map(c => ({
                   ...c,
                   id: String(c.id),
@@ -125,18 +126,11 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 }));
                 
                 setCategories(normalized);
-                setPublicCategories?.(normalized);
                 await saveData('product_categories', normalized);
             } else {
                 setCategories([]);
-                setPublicCategories?.([]);
                 await saveData('product_categories', []);
             }
-
-            const lastSyncTime = force ? null : localStorage.getItem('lastSyncTime');
-            const cloudPhotos = user 
-                ? await loadPhotosFromCloud(user.id, lastSyncTime || undefined) 
-                : await loadAllPhotosFromCloud(lastSyncTime || undefined);
             
             // Get current local state to merge properly and get total count
             const localPhotos = await loadData('product_photos') || [];

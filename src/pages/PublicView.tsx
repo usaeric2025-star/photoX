@@ -47,9 +47,10 @@ export default function PublicView() {
   const fetchFilteredPhotos = async () => {
     setIsRefreshing(true);
     try {
+      const tagId = filterTagIds.length > 0 ? filterTagIds[0] : null;
       const [cloudPhotos, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
-        getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery)
+        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, tagId, debouncedSearchQuery),
+        getPhotoCount(filterCatId, tagId, debouncedSearchQuery)
       ]);
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
@@ -88,13 +89,15 @@ export default function PublicView() {
     else setIsRefreshing(true);
 
     try {
+      const tagId = filterTagIds.length > 0 ? filterTagIds[0] : null;
+      
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, tagId, debouncedSearchQuery),
         loadCategoriesFromCloud().catch(() => []),
         loadTagsFromCloud().catch(() => []),
         loadManufacturersFromCloud().catch(() => []),
         fetchSettings().catch(() => ({})),
-        getPhotoCount(filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery).catch(() => 0)
+        getPhotoCount(filterCatId, tagId, debouncedSearchQuery).catch(() => 0)
       ]);
 
       if (cloudPhotos) {

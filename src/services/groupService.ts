@@ -6,7 +6,7 @@ export const TABLE_NAME = 'groups';
 export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*')
+    .select('id, name, description, colors, materials, cover_photo_id, isHidden, created_at, updated_at, user_id')
     .eq('user_id', userId);
 
   if (error) {
@@ -58,7 +58,7 @@ export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: stri
 export const getGroupById = async (id: string): Promise<ProductGroup | null> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*')
+    .select('id, name, description, colors, materials, cover_photo_id, isHidden, created_at, updated_at, user_id')
     .eq('id', id)
     .single();
 

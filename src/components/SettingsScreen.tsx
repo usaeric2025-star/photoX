@@ -8,17 +8,6 @@ import {
 import { Tag, Category, Photo, Manufacturer, AppSettings, User, ApiResponse } from '../types';
 import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
 import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
@@ -51,6 +40,7 @@ interface TagItemProps {
 }
 
 const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin }: TagItemProps) => {
+  const { setAlertDialog } = useAdminUI();
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -84,23 +74,21 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
         {isPinned && <Heart size={10} className="text-[#D4A853] fill-[#D4A853] shrink-0" />}
         {tag.name}
       </span>
-      <AlertDialog>
-        <AlertDialogTrigger>
-          <button className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full">
-            <X size={14} />
-          </button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-           <AlertDialogHeader>
-             <AlertDialogTitle>确定要删除标签 #{tag.name} 吗？</AlertDialogTitle>
-             <AlertDialogDescription>无法撤销且会从所有照片中移除。</AlertDialogDescription>
-           </AlertDialogHeader>
-           <AlertDialogFooter>
-              <AlertDialogCancel variant="outline" size="default">关闭</AlertDialogCancel>
-              <AlertDialogAction variant="destructive" size="default" onClick={() => deleteTag(tag.id)}>删除</AlertDialogAction>
-           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      
+      <button 
+        onClick={() => {
+          setAlertDialog({
+            title: `确定要删除标签 #${tag.name} 吗？`,
+            message: '无法撤销且会从所有照片中移除。',
+            onConfirm: () => deleteTag(tag.id),
+            confirmLabel: '删除',
+            type: 'danger'
+          });
+        }}
+        className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"
+      >
+        <X size={14} />
+      </button>
 
       <AnimatePresence>
         {activeTagMenuId === tag.id && (

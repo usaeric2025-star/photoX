@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
 import { Category, Manufacturer } from '../../types';
 import { useLongPress } from '../../hooks/useLongPress';
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Pencil, Trash2 } from 'lucide-react';
+import { useAdminUI } from '../../context/AdminContexts';
 
 interface SectionHeaderProps {
   title: string;
@@ -74,52 +65,46 @@ interface ManufacturerSelectorProps {
 }
 
 export const ManufacturerList: React.FC<ManufacturerSelectorProps> = ({ manufacturers, selectedId, onSelect, onEdit, onDelete }) => {
-    const { startPress, endPress, cancelPress, handleTouchMove, activeItem: activeActionMfr, setActiveItem: setActiveActionMfr } = useLongPress<Manufacturer>(
-        (mfr) => { if (onEdit || onDelete) setActiveActionMfr(mfr); }
+    const { setAlertDialog } = useAdminUI();
+    const { startPress, endPress, cancelPress, handleTouchMove } = useLongPress<Manufacturer>(
+        (mfr) => { 
+            if (onEdit || onDelete) {
+                setAlertDialog({
+                    title: `管理厂商: ${mfr.name}`,
+                    message: '请选择操作',
+                    secondaryAction: {
+                        label: '编辑',
+                        onClick: () => onEdit?.(mfr)
+                    },
+                    onConfirm: () => onDelete?.(mfr),
+                    confirmLabel: '删除',
+                    type: 'danger'
+                });
+            }
+        }
     );
 
     return (
-        <>
-            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto content-start px-0.5 no-scrollbar">
-                {(manufacturers || []).map((mfr) => {
-                const isSelected = String(selectedId || '') === String(mfr.id || '');
-                return (
-                    <button 
-                    key={mfr.id}
-                    onMouseDown={(e) => startPress(mfr, e)}
-                    onMouseUp={endPress}
-                    onMouseLeave={cancelPress}
-                    onTouchStart={(e) => startPress(mfr, e)}
-                    onTouchEnd={endPress}
-                    onTouchMove={handleTouchMove}
-                    onTouchCancel={cancelPress}
-                    onClick={() => onSelect(isSelected ? null : String(mfr.id))}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? 'bg-slate-800 text-white border-slate-800 shadow-lg' : 'bg-white border-slate-200 text-slate-600 active:bg-slate-50'}`}
-                    >
-                    {mfr.name}
-                    </button>
-                );
-                })}
-            </div>
-            {activeActionMfr && (
-                <AlertDialog open={!!activeActionMfr} onOpenChange={() => setActiveActionMfr(null)}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>管理厂商: {activeActionMfr.name}</AlertDialogTitle>
-                            <AlertDialogDescription>请选择操作</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogAction onClick={() => { onEdit?.(activeActionMfr); setActiveActionMfr(null); }}>
-                                <Pencil size={16} className="mr-2" /> 编辑
-                            </AlertDialogAction>
-                            <AlertDialogAction className="bg-red-600" onClick={() => { onDelete?.(activeActionMfr); setActiveActionMfr(null); }}>
-                                <Trash2 size={16} className="mr-2" /> 删除
-                            </AlertDialogAction>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            )}
-        </>
+        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto content-start px-0.5 no-scrollbar">
+            {(manufacturers || []).map((mfr) => {
+            const isSelected = String(selectedId || '') === String(mfr.id || '');
+            return (
+                <button 
+                key={mfr.id}
+                onMouseDown={(e) => startPress(mfr, e)}
+                onMouseUp={endPress}
+                onMouseLeave={cancelPress}
+                onTouchStart={(e) => startPress(mfr, e)}
+                onTouchEnd={endPress}
+                onTouchMove={handleTouchMove}
+                onTouchCancel={cancelPress}
+                onClick={() => onSelect(isSelected ? null : String(mfr.id))}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? 'bg-slate-800 text-white border-slate-800 shadow-lg' : 'bg-white border-slate-200 text-slate-600 active:bg-slate-50'}`}
+                >
+                {mfr.name}
+                </button>
+            );
+            })}
+        </div>
     );
 };

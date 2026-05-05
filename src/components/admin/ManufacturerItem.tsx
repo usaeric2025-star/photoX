@@ -1,17 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Trash2, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { useAdminUI } from '../../context/AdminContexts';
 
 import { Manufacturer } from '../../types';
 
@@ -22,6 +12,7 @@ interface ManufacturerProps {
 }
 
 export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: ManufacturerProps) => {
+  const { setAlertDialog } = useAdminUI();
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -74,23 +65,22 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
             >
               <Pencil size={12} /> 编辑
             </button>
-            <AlertDialog>
-              <AlertDialogTrigger>
-                <button className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2">
-                  <Trash2 size={12} /> 删除
-                </button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>确定要删除生产商 #{manufacturer.name} 吗？</AlertDialogTitle>
-                  <AlertDialogDescription>此操作不可撤销。</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>关闭</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(manufacturer.id)}>删除</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setAlertDialog({
+                  title: `确定要删除生产商 #${manufacturer.name} 吗？`,
+                  message: '此操作不可撤销。',
+                  onConfirm: () => onDelete(manufacturer.id),
+                  confirmLabel: '删除',
+                  type: 'danger'
+                });
+                setActiveMenuId(null);
+              }}
+              className="px-3 py-2 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+            >
+              <Trash2 size={12} /> 删除
+            </button>
             <div 
               className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1D3557] rotate-45 -mt-1"
             />

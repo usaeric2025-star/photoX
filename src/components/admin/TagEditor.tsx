@@ -2,19 +2,9 @@ import React, { useState, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '../../hooks/useLongPress';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useErrorHandler } from '../../utils/errorHandler';
 import { saveSettings } from '../../services/supabaseService';
-import { useAdminSession } from '../../context/AdminContexts';
+import { useAdminSession, useAdminUI } from '../../context/AdminContexts';
 import { Tag } from '../../types';
 
 interface TagEditorProps {
@@ -33,6 +23,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   showHotEffects = false
 }) => {
   const { handleError } = useErrorHandler();
+  const { setAlertDialog } = useAdminUI();
   const [searchTerm, setSearchTerm] = useState('');
   const { settings, setSettings } = useAdminSession();
   
@@ -202,7 +193,13 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   type="button"
                   className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5" 
                   onClick={() => { 
-                    onDeleteTag(activeActionTag.id);
+                    setAlertDialog({
+                      title: `彻底删除标籤 / Permanent Delete: #${activeActionTag.name}`,
+                      message: '無法撤銷且會從所有照片中移除 / This will be permanently removed from all photos.',
+                      onConfirm: () => onDeleteTag(activeActionTag.id),
+                      confirmLabel: '删除',
+                      type: 'danger'
+                    });
                     setActiveActionTag(null); 
                   }}
                 >

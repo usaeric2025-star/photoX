@@ -114,20 +114,24 @@ export const useAdminPhotos = (
   
   const photosRef = useRef(photos);
   
-  const [isInitializing, setIsInitializing] = useState(true);
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const currentAnalysisController = useRef<AbortController | null>(null);
 
   // Auto-resume logic: If there's a running batch task on mount, restart it
   useEffect(() => {
-    if (!isInitializing && photos.length > 0) {
+    if (photos.length > 0) {
       const runningBatchTask = tasks.find(t => t.status === 'running' && t.name.includes('批量 AI 識別'));
       if (runningBatchTask && !currentAnalysisController.current) {
         console.log('Resuming background task:', runningBatchTask.id);
         handleBatchAiIdentify(photos, runningBatchTask.id);
       }
     }
-  }, [isInitializing, photos.length]);
+  }, [photos.length]);
+
+  useEffect(() => {
+    photosRef.current = photos;
+    saveData('product_photos', photos);
+  }, [photos]);
 
   const abortAnalysis = (taskId?: string) => {
     if (currentAnalysisController.current) {
@@ -150,52 +154,6 @@ export const useAdminPhotos = (
       setTimeout(() => setAiDebugInfo(null), 3000);
     }
   };
-
-  useEffect(() => {
-    photosRef.current = photos;
-    if (!isInitializing) {
-      saveData('product_photos', photos);
-    }
-  }, [photos, isInitializing]);
-  
-  useEffect(() => {
-    const initPhotos = async () => {
-      setIsInitializing(true);
-      try {
-        if (user) {
-          // ALWAYS fetch from cloud on init, as per requirement
-          const cloudPhotos = await loadPhotosFromCloud(user.id);
-          if (cloudPhotos) {
-            // Reset isAnalyzing flag in case it was saved to cloud or stale locally
-            const cleanPhotos = cloudPhotos.map(p => ({ ...p, isAnalyzing: false }));
-            setPhotos(cleanPhotos);
-            setCloudCount(cleanPhotos.length);
-            // Overwrite local indexedDB
-            await saveData('product_photos', cleanPhotos);
-          } else {
-             // Fallback/sync from local if cloud failed or empty?
-             // User requested overwriting by cloud, if cloud is empty, local becomes empty.
-             // This might be harsh if cloud is empty due to temporary issue, 
-             // but it follows "Synchronize from cloud", "OverwriteIndexedDB".
-             setPhotos([]);
-             await saveData('product_photos', []);
-          }
-        } else {
-          // Fallback local if user is not logged in
-          const localPhotos = await loadData('product_photos');
-          setPhotos(localPhotos || []);
-        }
-      } catch (e) {
-        console.error('Init photos failed:', e);
-         // Fallback local if cloud fails
-         const localPhotos = await loadData('product_photos');
-         setPhotos(localPhotos || []);
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-    initPhotos();
-  }, [user]);
 
   const handleBatchAiIdentify = async (
       photosToProcess: Photo[], 

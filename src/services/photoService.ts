@@ -5,6 +5,9 @@ import { Photo } from '../types';
 import { uploadImages } from './storageService';
 import { validateDimension } from '../utils/dimensionValidator';
 import { normalizeSearchQuery } from '../utils/stringHelper';
+import { createKeyedCache } from './cacheUtils';
+
+const photoCache = createKeyedCache<Photo[]>();
 
 export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     if (!item) return {} as Photo;
@@ -130,6 +133,7 @@ export const clearGroupIdInCloud = async (groupId: string) => {
     throw new Error(`清除照片群組關聯失敗: ${error.message} (Code: ${error.code})`);
   }
   
+  photoCache.clear();
   const affectedCount = data?.length || 0;
   console.log(`[DB Success] 更新照片 group_id 影响行数：${affectedCount}`);
   
@@ -156,6 +160,7 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
     throw new Error(error.message || JSON.stringify(error));
   }
   
+  photoCache.clear();
   if (!data || data.length === 0) {
     const errorMsg = "解散失敗：在雲端找不到對應的照片 ID。請嘗試重新同步或刷新頁面。 (Database match failed)";
     console.error(errorMsg, photoIds);
@@ -232,11 +237,15 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
        
        if (modified) {
          const { error: retryError } = await supabase.from(DB_CONFIG.TABLE_NAME).update(safeUpdates).eq('id', photoId);
-         if (!retryError) return;
+         if (!retryError) {
+           photoCache.clear();
+           return;
+         }
        }
     }
     throw new Error(error.message || JSON.stringify(error));
   }
+  photoCache.clear();
 };
 
 export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
@@ -333,6 +342,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     throw new Error(`數據同步失敗: ${dbError.message}`);
   }
 
+  photoCache.clear();
   const finalPhotoId = savedPhoto?.id || photo.id;
 
   // Update the photo object in-place so callers get the persistent ID
@@ -454,6 +464,7 @@ export const savePhotosToCloudBatch = async (
       throw new Error(`批量同步失敗: ${dbError.message}`);
     }
     
+    photoCache.clear();
     // Update IDs in results array - more robust matching using usedIndexes to handle same-hash duplicates
     if (savedRows) {
       const usedIndexes = new Set<number>();
@@ -625,21 +636,26 @@ export const loadAllPhotosFromCloud = async (
   tagId?: string | null,
   searchQuery?: string | null
 ): Promise<Photo[]> => {
+  const cacheKey = JSON.stringify({ since, page, limit, categoryId, tagId, searchQuery });
+  const cached = photoCache.get(cacheKey);
+  if (cached) return cached;
+
   const selectQuery = tagId 
     ? `
       *,
-      photo_tags!inner(*),
-      category:categories(*)
+      photo_tags!inner(*)
     `
     : `
       *,
-      photo_tags(*),
-      category:categories(*)
+      photo_tags(*)
     `;
 
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select(selectQuery);
+
+  // Filter removed temporarily to debug visibility
+  // query = query.neq('isHidden', true);
   
   if (since) {
     query = query.gt('updated_at', since);
@@ -672,7 +688,9 @@ export const loadAllPhotosFromCloud = async (
     return [];
   }
 
-  return (data || []).map(item => mapSupabasePhoto(item));
+  const result = (data || []).map(item => mapSupabasePhoto(item));
+  photoCache.set(cacheKey, result);
+  return result;
 };
 
 export const getPhotoCount = async (
@@ -682,14 +700,19 @@ export const getPhotoCount = async (
 ): Promise<number> => {
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .select('*', { count: 'exact', head: true });
+    .select('id', { count: 'exact', head: true });
+  
+  // Filter removed temporarily to debug visibility
+  // query = query.neq('isHidden', true);
   
   if (categoryId) {
     query = query.eq('category_id', categoryId);
   }
 
   if (tagId) {
-    query = query.eq('photo_tags.tag_id', tagId);
+    // When filtering by tags, we need to join with photo_tags
+    // In PostgREST, we can filter by the referenced table's column
+    query = query.filter('photo_tags.tag_id', 'eq', tagId);
   }
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');
@@ -719,11 +742,8 @@ export const loadPhotosFromCloud = async (
     .from(DB_CONFIG.TABLE_NAME)
     .select(`
       *,
-      photo_tags(
-        tag_id,
-        tags!photo_tags_tag_id_fkey(id, name)
-      ),
-      category:categories(*)
+      photo_tags(*),
+      category:categories(id, name)
     `)
     .eq('user_id', userId);
 
@@ -759,6 +779,7 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
   if (error) {
     throw new Error(error.message || JSON.stringify(error));
   }
+  photoCache.clear();
 };
 
 export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
@@ -780,6 +801,7 @@ export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
     throw new Error(error.message || JSON.stringify(error));
   }
   
+  photoCache.clear();
   console.log(`[photoService] deletePhotosBatch DB success. Rows affected: ${data?.length || 0}`);
   
   // 2. Delete files
