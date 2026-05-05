@@ -4,7 +4,7 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Photo, Category, ProductGroup } from '../types';
+import { Photo, Category, ProductGroup, Manufacturer } from '../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../lib/ui-helpers';
 
 // ... (retain props and other logic)
@@ -16,10 +16,10 @@ interface PhotoLightboxProps {
   onClose: () => void;
   onPrev: (e?: React.MouseEvent) => void;
   onNext: (e?: React.MouseEvent) => void;
-  t: any;
+  t: Record<string, any>;
   lang: string;
   categories: Category[];
-  manufacturers: any[];
+  manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
   isAdminMode: boolean;
   isStaffMode: boolean;

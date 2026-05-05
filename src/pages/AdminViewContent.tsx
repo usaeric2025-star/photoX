@@ -24,6 +24,7 @@ import { useErrorHandler } from '../utils/errorHandler';
 import { usePermission } from '../hooks/usePermission';
 import { useDelete } from '../hooks/useDelete';
 import { photoApi } from '../api/photos';
+import { Photo, Category, Tag, Manufacturer, User, AppSettings, ProductFormData } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
@@ -44,14 +45,35 @@ const errorGuard = (name: string) => () => {
 };
 
 export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps, dialogProps }: { 
-  user: any, 
+  user: User | null, 
   authChecked: boolean, 
   logout: () => void, 
   errorContent: React.ReactNode,
   t: any,
   lang: LanguageCode,
-  uiProps: any,
-  dialogProps: any
+  uiProps: {
+    activeScreen: 'home' | 'manage' | 'login';
+    setActiveScreen: (s: 'home' | 'manage' | 'login') => void;
+    editPhotoId: string | null;
+    setEditPhotoId: (id: string | null) => void;
+    batchEditIds: string[] | null;
+    setBatchEditIds: (ids: string[] | null) => void;
+    loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
+    setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting') => void;
+    withLoading: <T>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;
+    cloudCount: number | null;
+    setCloudCount: (c: number | null) => void;
+  },
+  dialogProps: {
+    alertDialog: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null;
+    setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
+    promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
+    setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
+    promptValue: string;
+    setPromptValue: (v: string) => void;
+    toast: { message: string, type: 'success' | 'error' | 'loading' } | null;
+    showToast: (msg: string, type?: 'success' | 'error' | 'loading') => void;
+  }
 }) {
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
@@ -74,9 +96,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   
   const cancelBatchAiRef = useRef(false);
   
-  const [, setPublicCategories] = useState<any[]>([]);
-  const [, setPublicTags] = useState<any[]>([]);
-  const [, setPublicManufacturers] = useState<any[]>([]);
+  const [, setPublicCategories] = useState<Category[]>([]);
+  const [, setPublicTags] = useState<Tag[]>([]);
+  const [, setPublicManufacturers] = useState<Manufacturer[]>([]);
 
   const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -100,7 +122,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   const uiBasicValue = React.useMemo(() => ({ 
     setAlertDialog, 
     setPromptDialog, 
-    setActiveScreen: (s: string) => setActiveScreen(s as any),
+    setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
     setLoadingState,
     loadingState,
     withLoading,
@@ -142,13 +164,13 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
         if (!normalized) return;
         const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
-          updateForm((prev: any) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
+          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
           showToast(`標籤 "${normalized}" 已存在`);
           return;
         }
         const saved = await addTag(normalized);
         if (saved) {
-           updateForm((prev: any) => ({ 
+           updateForm((prev: ProductFormData) => ({ 
              ...prev, 
              tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
            }));
@@ -167,7 +189,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
         if (!trimmed) return;
         const saved = await addManufacturer(trimmed);
         if (saved) {
-           updateForm((prev: any) => ({ ...prev, manufacturerId: saved.id }));
+           updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
            showToast(`已新增廠商 "${trimmed}"`);
         }
       }
@@ -382,7 +404,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                   input.type = 'file';
                   input.accept = 'image/*';
                   input.multiple = true;
-                  input.onchange = (e) => handlePhotoImport(e as any, false);
+                  input.onchange = (e) => handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
                   input.click();
                 }}
                 setPhotos={setPhotos}
@@ -391,7 +413,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 categories={categories}
                 manufacturers={manufacturers}
                 allTags={tags}
-                tagMap={tagIdToNameMap as any}
+                tagMap={Object.fromEntries(tagIdToNameMap)}
                 onBatchAiAnalyze={handleGroupAiIdentify}
                 onAiAnalyze={(p) => {
                   handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id);
@@ -446,7 +468,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                           setSelectedIds={setSelectedIds}
                           setIsMultiSelect={setIsMultiSelect}
                           handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
-                          handleManageClick={() => setActiveScreen(prev => prev === 'manage' ? 'home' : 'manage')}
+                          handleManageClick={() => setActiveScreen('manage')}
                           loginWithGoogle={loginWithGoogle}
                           onRefresh={() => performPullSync(refreshCloudData)}
                           photosCount={photos.length}
@@ -464,7 +486,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                               input.type = 'file';
                               input.accept = 'image/*';
                               input.multiple = true;
-                              input.onchange = (e) => handlePhotoImport(e as any, false);
+                              input.onchange = (e) => handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
                               input.click();
                             }}
                             title={t.addPhoto}

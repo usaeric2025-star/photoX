@@ -30,8 +30,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => 
         onClick={async () => {
           try {
             await loginWithGoogle();
-          } catch(e: any) {
-            adminUI?.showToast(`登入失敗: ${e.message || JSON.stringify(e)}`, 'error');
+          } catch(e) {
+            adminUI?.showToast(`登入失敗: ${e instanceof Error ? e.message : '未知錯誤'}`, 'error');
           }
         }}
         className="w-full bg-slate-900 text-white py-5 rounded-[24px] text-sm font-bold flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] active:bg-black"

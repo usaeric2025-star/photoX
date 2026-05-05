@@ -3,9 +3,9 @@ import {
   ChevronLeft, X, Cloud, LogOut,
   Trash2, Upload,
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
-  User, Heart, CheckCircle2, AlertCircle, Save, Pencil
+  User as UserIcon, Heart, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
-import { Tag, Category } from '../types';
+import { Tag, Category, Photo, Manufacturer, AppSettings, User, ApiResponse } from '../types';
 import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -25,11 +25,11 @@ import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelp
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 
 interface SettingsScreenProps {
-  setActiveScreen: (screen: any) => void;
-  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: any[], tags: any[], manufacturers: any[], showToast: any) => Promise<void>;
-  performPushSync: () => Promise<any>;
-  performPullSync: () => Promise<any>;
-  saveSettings: (s: any) => Promise<any>;
+  setActiveScreen: (screen: 'home' | 'manage' | 'login') => void;
+  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: Category[], tags: Tag[], manufacturers: Manufacturer[], showToast: (msg: string, type?: any) => void) => Promise<void>;
+  performPushSync: () => Promise<ApiResponse>;
+  performPullSync: () => Promise<ApiResponse>;
+  saveSettings: (s: AppSettings) => Promise<ApiResponse>;
   cloudCount: number | null;
   lastSyncTime: number | null;
   isSyncing: boolean;
@@ -40,7 +40,17 @@ const obfuscateKey = (key: string) => {
   return btoa(key).split('').reverse().join('');
 };
 
-const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin }: any) => {
+interface TagItemProps {
+  tag: Tag;
+  activeTagMenuId: string | null;
+  setActiveTagMenuId: (id: string | null) => void;
+  handleUpdateTagName: (tag: Tag) => void;
+  deleteTag: (id: string) => void;
+  isPinned: boolean;
+  togglePin: (id: string) => void;
+}
+
+const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin }: TagItemProps) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -177,7 +187,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   // Debounced save for settings
   const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout | null>(null);
-  const debouncedSave = (newSettings: any) => {
+  const debouncedSave = (newSettings: AppSettings) => {
     if (saveTimer) clearTimeout(saveTimer);
     const timer = setTimeout(() => {
       saveSettings(newSettings);
@@ -264,7 +274,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setActiveTagMenuId(tag.id);
   };
 
-  const handleUpdateMfrName = async (mfr: any) => {
+  const handleUpdateMfrName = async (mfr: Manufacturer) => {
     setPromptDialog({
       title: '编辑生产商 / Edit Manufacturer',
       message: '输入新名称 / Enter new name:',
@@ -293,7 +303,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     });
   };
 
-  const setSettingField = (field: string, value: any) => {
+  const setSettingField = (field: keyof AppSettings, value: any) => {
     const newSettings = { ...settings, [field]: value };
     setSettings(newSettings);
     setHasChanges(true);
@@ -606,12 +616,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             </div>
           </div>
           <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
-            {(Array.from(tags || []) as any[]).sort((a: any, b: any) => {
+            {(Array.from(tags || []) as Tag[]).sort((a, b) => {
                const ap = (settings?.pinnedTags || []).includes(a.id) ? 1 : 0;
                const bp = (settings?.pinnedTags || []).includes(b.id) ? 1 : 0;
                if (ap !== bp) return bp - ap;
                return String(a.name).localeCompare(String(b.name));
-            }).map((tag: any) => (
+            }).map((tag) => (
               <TagItem 
                 key={tag.id}
                 tag={tag}
@@ -685,7 +695,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-2 pl-1 mb-2">
-                      <User size={12} className="text-slate-400" />
+                      <UserIcon size={12} className="text-slate-400" />
                       <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">联系人 A</label>
                   </div>
                   <div className="flex gap-2">
@@ -695,7 +705,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 </div>
                 <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-2 pl-1 mb-2">
-                      <User size={12} className="text-slate-400" />
+                      <UserIcon size={12} className="text-slate-400" />
                       <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">联系人 B</label>
                   </div>
                   <div className="flex gap-2">

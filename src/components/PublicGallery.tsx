@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoService';
-import { Photo, Category, Tag } from '../types';
-import { X, Image as ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
+import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types';
+import { X, ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { useGalleryContext } from '../context/GalleryContext';
@@ -21,16 +21,16 @@ interface PublicGalleryProps {
   photos: Photo[];
   categories: Category[];
   tags: Tag[];
-  manufacturers?: any[];
+  manufacturers?: Manufacturer[];
   onExit?: () => void;
   showExit?: boolean;
   onLogin?: () => void;
   loginWithGoogle?: () => Promise<void>;
   internalPassword?: string;
-  settings?: any;
+  settings?: AppSettings;
   isRefreshing?: boolean;
   onRefresh?: () => void;
-  user?: any;
+  user?: User | null;
   isAdminMode?: boolean;
   onEditPhoto?: (id: string) => void;
   onDeletePhotos?: (ids: string[]) => void;
@@ -55,14 +55,42 @@ interface PublicGalleryProps {
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
   onSetGroupCover?: (id: string, groupId: string) => Promise<void>;
-  setAlertDialog?: (d: any) => void;
+  setAlertDialog?: (d: { title: string, message: string }) => void;
   totalCount?: number;
   onTogglePinned?: (photo: Photo) => void;
 }
 
-const MemoizedPhotoCard = React.memo(({ index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, gridPhotos, onTogglePinned }: any) => {
+const MemoizedPhotoCard = React.memo(({ 
+  index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, 
+  lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
+  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, 
+  gridPhotos, onTogglePinned 
+}: {
+  index: number;
+  photo: Photo;
+  isAdminMode: boolean;
+  isMultiSelect: boolean;
+  isStaffMode: boolean;
+  isSelected: boolean;
+  showGroupsCollapsed: boolean;
+  lang: string;
+  t: any;
+  categories: Category[];
+  manufacturers: Manufacturer[];
+  tagMap: Record<string, string>;
+  onToggleSelection?: (id: string) => void;
+  onEditPhoto?: (id: string) => void;
+  onGroupClick?: (groupId: string) => void;
+  onLightboxOpen: (index: number) => void;
+  onLongPressStart: (id: string) => void;
+  onLongPressEnd: () => void;
+  shareSinglePhoto: (photo: Photo) => void;
+  displayPhotos: Photo[];
+  gridPhotos: Photo[];
+  onTogglePinned?: (photo: Photo) => void;
+}) => {
   const handleOpenLightbox = useCallback(() => {
-    const realIndex = displayPhotos.findIndex((p: any) => p.id === gridPhotos[index].id);
+    const realIndex = displayPhotos.findIndex((p: Photo) => p.id === gridPhotos[index].id);
     if (realIndex !== -1) onLightboxOpen(realIndex);
   }, [index, displayPhotos, gridPhotos, onLightboxOpen]);
 
@@ -165,7 +193,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const activeClearSelection = onClearSelection || context.clearSelection;
   const activeSetIsMultiSelect = onToggleMultiSelect || context.setIsMultiSelect;
 
-  const setAlertDialog = propsSetAlertDialog || ((d: any) => alert(d.message || d.title));
+  const setAlertDialog = propsSetAlertDialog || ((d: { title: string, message: string }) => alert(d.message || d.title));
 
   // Handle infinite mode
   useEffect(() => {

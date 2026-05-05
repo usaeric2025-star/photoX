@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Category, Tag } from '../types';
+import { Category, Tag, AppSettings } from '../types';
 import { cn } from '../lib/utils';
 
 interface PublicGalleryFiltersProps {
@@ -10,10 +10,10 @@ interface PublicGalleryFiltersProps {
   sortOrder: 'asc' | 'desc';
   toggleSortOrder: () => void;
   columns: number;
-  setColumns: (val: any) => void;
+  setColumns: (val: 2 | 3 | 5) => void;
   showGroupsCollapsed: boolean;
   setShowGroupsCollapsed: (val: boolean) => void;
-  categories: any[];
+  categories: Category[];
   selectedCatCode: string | null;
   setSelectedCatCode: (id: string | null) => void;
   selectedSubId: string | null;
@@ -22,10 +22,10 @@ interface PublicGalleryFiltersProps {
   setSelectedTagIds: (fn: (prev: string[]) => string[]) => void;
   sortedTags: Tag[];
   lang: string;
-  t: any;
+  t: Record<string, any>;
   onScrollToTop: () => void;
   showHotEffects?: boolean;
-  settings?: any;
+  settings?: AppSettings;
 }
 
 export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({

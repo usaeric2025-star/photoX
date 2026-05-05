@@ -9,7 +9,7 @@ interface GroupGridViewProps {
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
   isMultiSelectMode?: boolean;
   selectedPhotoIds?: string[];
-  getPhotoProps?: (photo: Photo) => any; // Returns props to spread on the photo card wrapper (like drag events)
+  getPhotoProps?: (photo: Photo) => Record<string, any>; // Returns props to spread on the photo card wrapper (like drag events)
 }
 
 export const GroupGridView: React.FC<GroupGridViewProps> = ({
@@ -95,7 +95,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
                 className="aspect-square rounded-xl overflow-hidden relative"
                 onTouchStart={() => {
                    longPressTimers.current[photo.id] = setTimeout(() => {
-                        onPhotoContextMenu?.({ preventDefault: () => {} } as any, photo);
+                        onPhotoContextMenu?.({ preventDefault: () => {} } as React.MouseEvent, photo);
                    }, 350);
                 }}
                 onTouchMove={() => {

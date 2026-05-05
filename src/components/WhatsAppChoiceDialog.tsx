@@ -2,12 +2,14 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { X, MessageCircle } from 'lucide-react';
 
+import { AppSettings } from '../types';
+
 interface WhatsAppChoiceDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  settings: any;
+  settings: AppSettings | null;
   onSelect: (num: string) => void;
-  t: any;
+  t: Record<string, any>;
 }
 
 export const WhatsAppChoiceDialog: React.FC<WhatsAppChoiceDialogProps> = ({

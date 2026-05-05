@@ -12,7 +12,7 @@ interface StaffUnlockDialogProps {
   onSubmit: (e: React.FormEvent) => void;
   onLogin?: () => void;
   loginWithGoogle?: () => Promise<void>;
-  t: any;
+  t: Record<string, any>;
 }
 
 export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({

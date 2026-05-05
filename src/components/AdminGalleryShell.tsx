@@ -3,10 +3,11 @@ import { PublicGallery } from './PublicGallery';
 import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } from '../context/AdminContexts';
 import { useGalleryContext } from '../context/GalleryContext';
 import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
-import { translations } from '../lib/translations';
+import { translations, LanguageCode } from '../lib/translations';
 import { updatePhoto } from '../services/photoService';
 import { usePhotoUpdate } from '../hooks/usePhotoUpdate';
 import { useTasks } from '../hooks/useTasks';
+import { Photo } from '../types';
 
 
 
@@ -31,7 +32,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     setPhotos
   } = useGalleryContext();
 
-  const lang = (localStorage.getItem('appLang') as any) || 'en';
+  const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] || translations['en'];
 
   const { updatePhoto } = usePhotoUpdate();
@@ -41,7 +42,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     setAvoidingSelection(selectedIds.length > 0);
   }, [selectedIds.length, setAvoidingSelection]);
 
-  const handleTogglePinned = async (photo: any) => {
+  const handleTogglePinned = async (photo: Photo) => {
     const newStatus = !photo.isPinned;
     
     // Identify affected photos (the photo itself + any other photos in the same group)
@@ -55,7 +56,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           updatePhoto(p.id, { isPinned: newStatus })
         )
       );
-    } catch (e: any) {
+    } catch (e) {
       console.error("[ERROR] Failed to toggle pinned:", e);
       adminUI?.showToast(`置顶失败: 无法同步到服务器。`, 'error');
     }
@@ -103,8 +104,9 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           }
 
           adminUI?.showToast(`已成功刪除 ${selectedIds.length} 張照片`, 'success');
-        } catch (e: any) {
-          adminUI?.showToast(`刪除失敗: ${e.message}`, 'error');
+        } catch (e) {
+          const error = e instanceof Error ? e : new Error(String(e));
+          adminUI?.showToast(`刪除失敗: ${error.message}`, 'error');
         }
       }
     });
@@ -118,7 +120,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     try {
       await Promise.all(selectedIds.map(id => updatePhoto(id, { isHidden: hidden })));
       adminUI?.showToast(`已${hidden ? '隱藏' : '顯示'} ${count} 張照片`, 'success');
-    } catch (e: any) {
+    } catch (e) {
       adminUI?.showToast(`操作失敗: 部分照片更新失敗。`, 'error');
     }
   };
@@ -136,8 +138,8 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
       } else {
         adminUI?.showToast(`${t.shareTitle}: ${t.shareNotSupported}`, 'error');
       }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') {
+    } catch (e) {
+      if (e instanceof Error && e.name !== 'AbortError') {
         console.error("[ERROR] Batch share failed:", e);
       }
     }
@@ -162,7 +164,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
            input.type = 'file';
            input.accept = 'image/*';
            input.multiple = true;
-           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as any, false);
+           input.onchange = (e) => adminPhoto?.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
            input.click();
         }}
         selectedIds={selectedIds}
@@ -185,8 +187,9 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
              await Promise.all(
                 groupPhotos.map(p => updatePhoto(p.id, { isGroupCover: p.id === id }))
              );
-          } catch (err: any) {
-             adminUI?.showToast(`設置封面失敗: ${err.message}`, 'error');
+          } catch (err) {
+             const error = err instanceof Error ? err : new Error(String(err));
+             adminUI?.showToast(`設置封面失敗: ${error.message}`, 'error');
           }
         }}
         user={adminSession?.user}

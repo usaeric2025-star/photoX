@@ -5,10 +5,12 @@ import { useAdminSession, useAdminUI } from '../../context/AdminContexts';
 import { useGalleryContext } from '../../context/GalleryContext';
 import { motion, AnimatePresence } from 'motion/react';
 
+import { Photo } from '../../types';
+
 interface Props {
   isMultiSelect: boolean;
   selectedIds: string[];
-  filteredPhotos: any[];
+  filteredPhotos: Photo[];
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   setIsMultiSelect: React.Dispatch<React.SetStateAction<boolean>>;
   handleBatchAiIdentifyTrigger: () => void;
@@ -95,13 +97,14 @@ export const AdminHeader: React.FC<Props> = ({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
+              {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
             <button 
               onClick={async () => {
                 try {
                   await loginWithGoogle();
-                } catch(e: any) {
-                  showToast?.(`Log in failed: ${e.message || JSON.stringify(e)}`, 'error');
+                } catch(e) {
+                  const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
+                  showToast?.(`Log in failed: ${errMsg}`, 'error');
                 }
               }}
               className="px-4 py-2 rounded-2xl text-xs font-medium uppercase tracking-wide bg-[#1D3557] text-[#FDFAF6] shadow-sm active:scale-95 transition-all flex items-center gap-2"

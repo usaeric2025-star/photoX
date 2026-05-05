@@ -5,7 +5,7 @@ import {
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon, Eye, EyeOff
 } from 'lucide-react';
-import { Photo, Tag, Category, ProductGroup } from '../../types';
+import { Photo, Tag, Category, ProductGroup, Manufacturer } from '../../types';
 import { updatePhotosGroupInCloud, updatePhoto, savePhotoToCloud } from '../../services/photoService';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { PhotoLightbox } from '../PhotoLightbox';
@@ -36,17 +36,17 @@ export interface GroupAdminShellProps {
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
   onBatchAiAnalyze?: (photos: Photo[]) => void;
-  manufacturers?: any[];
+  manufacturers?: Manufacturer[];
   isStaffMode?: boolean;
   contactWhatsApp?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
   lang?: string;
-  t?: any;
-  categories?: any[];
+  t?: Record<string, any>;
+  categories?: Category[];
   tagMap?: Record<string, string>;
   allTags?: Tag[];
   isMultiSelect?: boolean;
-  setAlertDialog?: (d: any) => void;
+  setAlertDialog?: (d: { title: string; message: string; onConfirm: () => void } | null) => void;
 }
 
 import { useGroupSync } from '../../hooks/useGroupSync';
@@ -154,13 +154,13 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     try {
       if (updates.tagIds) {
         // use local instance if available or 'default'
-        await savePhotoToCloud((photo as any).userId || 'default', updatedPhoto);
+        await savePhotoToCloud(photo.userId || 'default', updatedPhoto);
       } else {
         await updatePhoto(photoId, updates);
       }
       showToast('已保存 / Saved');
-    } catch (err: any) {
-      showToast(`保存失敗: ${err.message}`);
+    } catch (err) {
+      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`);
     }
   };
 
@@ -187,8 +187,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
            showToast(`群組內照片已${isHidden ? '屏蔽' : '顯示'}`);
         }
       }
-    } catch (err: any) {
-      showToast(`保存失敗: ${err.message}`);
+    } catch (err) {
+      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`);
     }
   };
 
@@ -236,8 +236,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
         updatedWithOrder.map(p => updatePhoto(p.id, { groupOrder: p.groupOrder }))
       );
       showToast('排序已保存');
-    } catch (err: any) {
-      showToast(`排序同步失敗: ${err.message}`);
+    } catch (err) {
+      showToast(`排序同步失敗: ${err instanceof Error ? err.message : '未知錯誤'}`);
     }
   };
 
@@ -283,8 +283,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                       setIsMultiSelectMode(false);
                       setSelectedPhotoIds([]);
                       showToast('已移出 / Removed');
-                    } catch (err: any) {
-                      showToast(`操作失败: ${err.message}`);
+                    } catch (err) {
+                      showToast(`操作失败: ${err instanceof Error ? err.message : '未知錯誤'}`);
                     }
                     setConfirmDelete(null);
                 }
@@ -426,8 +426,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
              getPhotoProps={(photo) => ({
                draggable: isAdminMode && !isMultiSelectMode,
                onDragStart: () => setDraggedPhotoId(photo.id),
-               onDragOver: (e: any) => e.preventDefault(),
-               onDrop: (e: any) => {
+               onDragOver: (e: React.DragEvent) => e.preventDefault(),
+               onDrop: (e: React.DragEvent) => {
                  if (e && typeof e.preventDefault === 'function') e.preventDefault();
                  if (draggedPhotoId) {
                    handleReorder(draggedPhotoId, photo.id);
@@ -515,7 +515,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                                onConfirm: async () => {
                                  try {
                                    if (onUngroup && activeGroupId) {
-                                     await (onUngroup(activeGroupId) as any);
+                                     onUngroup(activeGroupId);
                                      setActiveGroupId(null);
                                      setShowGroupSettings(false);
                                    }

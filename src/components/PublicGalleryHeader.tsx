@@ -1,23 +1,24 @@
 import React from 'react';
 import { RefreshCcw, Grid3X3, Plus, Globe, Settings2, Sparkles } from 'lucide-react';
-import { Photo } from '../types';
+import { Photo, AppSettings } from '../types';
 import { useNavigate } from 'react-router-dom';
+import { LanguageCode } from '../lib/translations';
 
 interface PublicGalleryHeaderProps {
-  settings: any;
+  settings: AppSettings;
   photos: Photo[];
   isAdminMode: boolean;
   isRefreshing: boolean;
   isMultiSelect: boolean;
   lang: string;
-  t: any;
+  t: Record<string, any>;
   onHeaderClick: () => void;
   onRefresh: () => void;
   onToggleMultiSelect: () => void;
   clearSelection: () => void;
   setIsMultiSelect: (val: boolean) => void;
   onAddPhoto: () => void;
-  onSetLang: (lang: any) => void;
+  onSetLang: (lang: LanguageCode) => void;
   onExit?: () => void;
   onLogin?: () => void;
   onOpenSettings?: () => void;
@@ -80,7 +81,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
               { code: 'en', label: 'EN' },
               { code: 'ms', label: 'BM' }
             ].map(l => (
-              <button key={l.code} onClick={() => onSetLang(l.code as any)} className={`${lang === l.code ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-2 h-9 flex items-center justify-center rounded-xl transition-all shadow-sm active:scale-95`}>
+              <button key={l.code} onClick={() => onSetLang(l.code as LanguageCode)} className={`${lang === l.code ? 'bg-[#1D3557] text-[#FDFAF6]' : 'bg-[#1D3557]/5 text-[#1D3557]/40'} px-2 h-9 flex items-center justify-center rounded-xl transition-all shadow-sm active:scale-95`}>
                 {l.label}
               </button>
             ))}

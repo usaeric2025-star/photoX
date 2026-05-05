@@ -3,7 +3,7 @@ import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
 import { formatDate } from '../utils/dateFormat';
 import { photoApi } from '../api/photos';
-import { Photo, Category, Tag, SubCategory } from '../types';
+import { Photo, Category, Tag, SubCategory, User, Manufacturer } from '../types';
 import { 
   savePhotoToCloud, 
   deletePhotoFromCloud, 
@@ -51,7 +51,7 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
 };
 
 export const useAdminPhotos = (
-  user: {id: string} | null, 
+  user: User | null, 
   geminiApiKey: string | undefined, 
   aiProvider: string, 
   customModel: string,
@@ -59,16 +59,16 @@ export const useAdminPhotos = (
     cloudCount: number | null;
     setCloudCount: (c: number | null) => void;
     loadingState?: string;
-    setAlertDialog: (d: any) => void;
-    showToast: (msg: string, type?: 'success' | 'error') => void;
-    setActiveScreen: (s: string) => void;
+    setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
+    showToast: (msg: string, type?: 'success' | 'error' | 'loading' | 'info') => void;
+    setActiveScreen: (s: 'home' | 'manage' | 'login') => void;
     abortAnalysis: () => void;
-    withLoading?: <T>(state: any, fn: () => Promise<T>) => Promise<T>;
+    withLoading?: <T>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;
   },
   adminSession?: {
     setIsSyncing: (v: boolean) => void;
   },
-  addManufacturer?: (name: string) => Promise<any>
+  addManufacturer?: (name: string) => Promise<Manufacturer>
 ) => {
   const {
     photos, setPhotos,
@@ -95,11 +95,11 @@ export const useAdminPhotos = (
   // Use provided loadingState if available, otherwise use internal
   const currentLoadingState = adminUI?.loadingState !== undefined ? adminUI.loadingState : internalLoadingState;
 
-  const runWithLoading = async <T,>(state: string, fn: () => Promise<T>): Promise<T> => {
+  const runWithLoading = async <T,>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>): Promise<T> => {
       if (adminUI?.withLoading) {
-          return adminUI.withLoading(state as any, fn);
+          return adminUI.withLoading(state, fn);
       }
-      setInternalLoadingState(state as any);
+      setInternalLoadingState(state as any); // fallback internal only supports limited subset
       try {
           return await fn();
       } finally {
@@ -292,9 +292,10 @@ export const useAdminPhotos = (
                 saveData('product_photos', next);
                 return next;
             });
-        } catch (err: any) {
+    } catch (err) {
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
-            if (err.name !== 'AbortError') throw err;
+            if (err instanceof Error && err.name !== 'AbortError') throw err;
+            if (!(err instanceof Error)) throw err;
         }
     };
 
@@ -332,8 +333,9 @@ export const useAdminPhotos = (
             updateTask(taskId, { status: 'error', message: '任務執行失敗，請檢查網路或金鑰。' });
             showToast(`AI 識別失敗：所有 ${total} 張照片均未成功識別。`, 'error');
         }
-    } catch (err: any) {
-        updateTask(taskId, { status: 'error', message: `錯誤: ${err.message}` });
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        updateTask(taskId, { status: 'error', message: `錯誤: ${message}` });
     } finally {
         currentAnalysisController.current = null;
         setBatchProgress({ current: 0, total: 0 });
@@ -442,11 +444,12 @@ export const useAdminPhotos = (
       // Populate form state properties to return them
       result.tagIds = finalTagIdsFromAi;
       return result;
-    } catch (err: any) {
-      console.error("[ERROR] Single AI analysis failed:", err);
-      setAiDebugInfo({ step: '错误', message: '识别失败', error: err.message });
-      showToast(`AI 识别失败: ${err.message || '识别过程出现问题'}`, 'error');
-      throw err;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error("[ERROR] Single AI analysis failed:", error);
+      setAiDebugInfo({ step: '错误', message: '识别失败', error: error.message });
+      showToast(`AI 识别失败: ${error.message || '识别过程出现问题'}`, 'error');
+      throw error;
     }
     });
   };
@@ -615,14 +618,14 @@ export const useAdminPhotos = (
                    
                    return updatedPhoto;
                 }));
-              } catch (err: any) {
+              } catch (err) {
                 setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false } : p));
               } finally {
                 updateAiProgress();
               }
             })(newPhoto);
           }
-        } catch (err: any) {
+        } catch (err) {
           console.error("Import processing error", err);
           failCount++;
           failedFiles.push(file.name);
@@ -664,8 +667,9 @@ export const useAdminPhotos = (
         });
         
         setCloudCount(photosRef.current.length);
-      } catch (e: any) {
-         console.error('Cloud upload block failed:', e);
+      } catch (e) {
+         const error = e instanceof Error ? e : new Error(String(e));
+         console.error('Cloud upload block failed:', error);
          showToast('云端同步过程出现问题，但已保存在本地 / Cloud upload had some issues', 'error');
       }
     }
@@ -812,11 +816,12 @@ export const useAdminPhotos = (
 
         setAiDebugInfo(null);
         showToast(`群組識別完成: 已將識別結果套用到群組內的所有 ${groupPhotos.length} 張照片。`, 'success');
-      } catch (err: any) {
-        console.error("[ERROR] Group AI analysis failed:", err);
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        console.error("[ERROR] Group AI analysis failed:", error);
         setPhotos(prev => prev.map(p => groupIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
-        showToast(`識別失敗: ${err.message || '群組識別過程出現問題'}`, 'error');
-        throw err;
+        showToast(`識別失敗: ${error.message || '群組識別過程出現問題'}`, 'error');
+        throw error;
       }
       });
     },

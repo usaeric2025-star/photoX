@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 interface LoadingOverlayProps {
   loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
   batchProgress: { current: number, total: number };
-  t: any;
+  t: Record<string, any>;
   abortAnalysis?: () => void;
 }
 

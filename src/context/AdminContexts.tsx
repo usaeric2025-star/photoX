@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Photo, Category, Tag, ProductFormData } from '../types';
+import { Photo, Category, Tag, ProductFormData, User, AppSettings, Manufacturer, ApiResponse } from '../types';
 
 // --- AdminSessionContext ---
 export interface AdminSessionContextType {
-  user: any;
+  user: User | null;
   isAdminMode: boolean;
-  settings: any;
-  setSettings: (s: any) => void;
+  settings: AppSettings;
+  setSettings: (s: AppSettings) => void;
   geminiApiKey: string;
   setGeminiApiKey: (k: string) => void;
   internalPassword: string;
@@ -47,29 +47,29 @@ export interface AdminPhotoContextType {
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   tags: Tag[];
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
-  manufacturers: any[];
-  setManufacturers: React.Dispatch<React.SetStateAction<any[]>>;
+  manufacturers: Manufacturer[];
+  setManufacturers: React.Dispatch<React.SetStateAction<Manufacturer[]>>;
   
   // Method references
   handleSingleAiAnalyze: (data: string, catId?: string) => Promise<any>;
   handleTranslate: (zhText: string) => Promise<{ en: string, ms: string }>;
-  handleSingleAiAnalyzeCallback?: (data: string, catId?: string, editPhotoId?: string, formState?: any, updateFormFn?: any, service?: any) => Promise<any>;
-  handleBatchAiIdentify: (photos: Photo[], existingTaskId?: string) => Promise<any>;
-  handleGroupAiIdentify: (photos: Photo[]) => Promise<any>;
-  handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean) => Promise<any>;
+  handleSingleAiAnalyzeCallback?: (data: string, catId?: string, editPhotoId?: string, formState?: ProductFormData, updateFormFn?: (updates: Partial<ProductFormData>) => void, service?: any) => Promise<ApiResponse>;
+  handleBatchAiIdentify: (photos: Photo[], existingTaskId?: string) => Promise<void>;
+  handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;
+  handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean) => Promise<void>;
   deletePhoto: (ids: string[], isBatch: boolean) => Promise<void>;
-  deleteGroup: (groupId: string) => Promise<any>;
-  handleGroupPhotos: (ids: string[]) => Promise<any>;
-  handleUngroup: (groupId: string) => Promise<any>;
+  deleteGroup: (groupId: string) => Promise<ApiResponse>;
+  handleGroupPhotos: (ids: string[]) => Promise<ApiResponse>;
+  handleUngroup: (groupId: string) => Promise<ApiResponse>;
   saveNewPhoto: () => Promise<void>;
   saveBatchEdit: () => Promise<void>;
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
-  addTag: (name: string) => Promise<any>;
+  addTag: (name: string) => Promise<Tag>;
   updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addCategory: (name: string) => Promise<void>;
-  addManufacturer: (name: string) => Promise<any>;
+  addManufacturer: (name: string) => Promise<Manufacturer>;
   updateManufacturer: (id: string, name: string) => Promise<void>;
   deleteManufacturer: (id: string) => Promise<void>;
   removeTagFromPhoto: (photoId: string, tagId: string) => Promise<void>;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, X, LayoutGrid, Grid3X3, Layers, ArrowDown, ArrowUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Category, SubCategory, Tag } from '../../types';
 import { useGalleryContext } from '../../context/GalleryContext';
 
 interface Props {
@@ -91,12 +92,12 @@ export const SearchAndFilter: React.FC<Props> = ({
           全部产品
         </button>
         {categories
-          .filter((cat: any) => {
+          .filter((cat: Category) => {
             const n = (cat.name || '').toLowerCase();
             const z = (cat.zh || '').toLowerCase();
             return !['all', '全部', '全部产品', '全部產品'].includes(n) && !['全部', '全部产品', '全部產品'].includes(z);
           })
-          .map((cat: any) => {
+          .map((cat: Category) => {
             const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
             return (
               <button 
@@ -133,11 +134,11 @@ export const SearchAndFilter: React.FC<Props> = ({
                 {(() => {
                   const activeCat = categories.find(c => c.id === filterCatId);
                   return (activeCat?.subcategories || [])
-                    .filter((s: any) => {
+                    .filter((s: SubCategory) => {
                       const n = (s.name || '').toLowerCase();
                       return !['all', '全部', '全部产品'].includes(n);
                     })
-                    .map((sub: any) => (
+                    .map((sub: SubCategory) => (
                     <button 
                       key={sub.id}
                       onClick={() => setFilterSubId(filterSubId === sub.id ? null : sub.id)}
@@ -151,7 +152,7 @@ export const SearchAndFilter: React.FC<Props> = ({
             )}
             
             <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth px-1">
-              {tags.map((tag: any) => {
+              {tags.map((tag: Tag) => {
                 const strTagId = String(tag.id);
                 return (
                 <button 

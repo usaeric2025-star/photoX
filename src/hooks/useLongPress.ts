@@ -1,13 +1,13 @@
 import React, { useRef, useState } from 'react';
 
-export const useLongPress = (onLongPress: (item: any) => void) => {
+export const useLongPress = <T = any>(onLongPress: (item: T) => void) => {
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const activeTouchId = useRef<number | null>(null);
   const touchStartPoint = useRef<{x: number, y: number} | null>(null);
   const hasLongPressed = useRef<boolean>(false);
-  const [activeItem, setActiveItem] = useState<any | null>(null);
+  const [activeItem, setActiveItem] = useState<T | null>(null);
 
-  const startPress = (item: any, e?: React.TouchEvent | React.MouseEvent) => {
+  const startPress = (item: T, e?: React.TouchEvent | React.MouseEvent) => {
     hasLongPressed.current = false;
     
     if (e && 'touches' in e) {

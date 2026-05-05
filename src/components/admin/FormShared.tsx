@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Category } from '../../types';
+import { Category, Manufacturer } from '../../types';
 import { useLongPress } from '../../hooks/useLongPress';
 import { 
   AlertDialog,
@@ -47,7 +47,7 @@ interface CategorySelectorProps {
 
 export const CategoryGrid: React.FC<CategorySelectorProps> = ({ categories, selectedId, onSelect, appLang }) => (
   <div className="grid grid-cols-4 gap-1.5 px-0.5">
-    {categories.filter(cat => cat && cat.id).map((cat: any) => {
+    {categories.filter(cat => cat && cat.id).map((cat) => {
       const isSelected = String(selectedId || '') === String(cat.id || '');
       const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
       return (
@@ -66,22 +66,22 @@ export const CategoryGrid: React.FC<CategorySelectorProps> = ({ categories, sele
 );
 
 interface ManufacturerSelectorProps {
-  manufacturers: any[];
+  manufacturers: Manufacturer[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
-  onEdit?: (mfr: any) => void;
-  onDelete?: (mfr: any) => void;
+  onEdit?: (mfr: Manufacturer) => void;
+  onDelete?: (mfr: Manufacturer) => void;
 }
 
 export const ManufacturerList: React.FC<ManufacturerSelectorProps> = ({ manufacturers, selectedId, onSelect, onEdit, onDelete }) => {
-    const { startPress, endPress, cancelPress, handleTouchMove, activeItem: activeActionMfr, setActiveItem: setActiveActionMfr } = useLongPress(
+    const { startPress, endPress, cancelPress, handleTouchMove, activeItem: activeActionMfr, setActiveItem: setActiveActionMfr } = useLongPress<Manufacturer>(
         (mfr) => { if (onEdit || onDelete) setActiveActionMfr(mfr); }
     );
 
     return (
         <>
             <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto content-start px-0.5 no-scrollbar">
-                {(manufacturers || []).map((mfr: any) => {
+                {(manufacturers || []).map((mfr) => {
                 const isSelected = String(selectedId || '') === String(mfr.id || '');
                 return (
                     <button 

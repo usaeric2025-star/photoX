@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Photo, Category } from '../types';
+import { Photo, Category, Manufacturer } from '../types';
 import { X, Layers, Heart, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName } from '../lib/ui-helpers';
 
@@ -12,9 +12,9 @@ interface PhotoCardProps {
   isSelected: boolean;
   showGroupsCollapsed: boolean;
   lang: string;
-  t: any;
+  t: Record<string, any>;
   categories: Category[];
-  manufacturers: any[];
+  manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
   onToggleSelection?: (id: string) => void;
   onEditPhoto?: (id: string) => void;
@@ -32,17 +32,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned
 }) => {
   const mfrName = useMemo(() => {
-    return getManufacturerName(photo.manufacturerId || (photo as any).sub_category, manufacturers);
-  }, [photo.manufacturerId, (photo as any).sub_category, manufacturers]);
+    return getManufacturerName(photo.manufacturerId || photo.sub_category, manufacturers);
+  }, [photo.manufacturerId, photo.sub_category, manufacturers]);
 
   const displayCatName = useMemo(() => {
-    return getTranslatedCategoryName(photo.categoryId || (photo as any).category_id, categories, lang, t);
-  }, [photo.categoryId, (photo as any).category_id, categories, lang, t]);
+    return getTranslatedCategoryName(photo.categoryId || photo.category_id, categories, lang, t);
+  }, [photo.categoryId, photo.category_id, categories, lang, t]);
 
   const isUncategorized = useMemo(() => {
-    const catId = photo.categoryId || (photo as any).category_id;
+    const catId = photo.categoryId || photo.category_id;
     return isUncategorizedName(displayCatName, t, catId);
-  }, [displayCatName, t, photo.categoryId, (photo as any).category_id]);
+  }, [displayCatName, t, photo.categoryId, photo.category_id]);
   
   const toTitleCase = (str: string) => {
     if (!str) return '';

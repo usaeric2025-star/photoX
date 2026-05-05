@@ -22,7 +22,10 @@ import {
   supabase
 } from '../services/supabaseService';
 
-export const useAdminCategory = (adminUI: any) => {
+export const useAdminCategory = (adminUI: {
+  setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
+  showToast: (msg: string, type?: 'success' | 'error' | 'loading' | 'info') => void;
+}) => {
   const { handleError } = useErrorHandler();
   const { deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook } = useDelete();
   const { setAlertDialog = () => {}, showToast = () => {} } = adminUI || {};
@@ -87,11 +90,12 @@ export const useAdminCategory = (adminUI: any) => {
       await saveData('product_tags', nextTags);
       
       await tagApi.update(tagId, upName);
-    } catch (err: any) {
+    } catch (err) {
       // Revert local state if cloud failed
+      const error = err instanceof Error ? err : new Error(String(err));
       const storedTags = await loadData('product_tags');
       if (storedTags) setTags(storedTags);
-      handleError(err, '更新標籤失敗');
+      handleError(error, '更新標籤失敗');
     }
   };
 
@@ -109,9 +113,10 @@ export const useAdminCategory = (adminUI: any) => {
 
       setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
       await saveData('product_photos', photos.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
-    } catch (err: any) {
-      showToast(`移除标签失败: ${err.message}`, 'error');
-      throw err;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      showToast(`移除标签失败: ${error.message}`, 'error');
+      throw error;
     }
   };
 
@@ -125,9 +130,10 @@ export const useAdminCategory = (adminUI: any) => {
 
       setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, categoryId: null } : p));
       await saveData('product_photos', photos.map(p => p.id === photoId ? { ...p, categoryId: null } : p));
-    } catch (err: any) {
-      showToast(`移除分类失败: ${err.message}`, 'error');
-      throw err;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      showToast(`移除分类失败: ${error.message}`, 'error');
+      throw error;
     }
   };
 
@@ -169,9 +175,10 @@ export const useAdminCategory = (adminUI: any) => {
           await saveData('product_tags', newTags);
           
           showToast('标签删除成功');
-        } catch (err: any) {
-          showToast(`标签删除失败: ${err.message}`, 'error');
-          throw err;
+        } catch (err) {
+          const error = err instanceof Error ? err : new Error(String(err));
+          showToast(`标签删除失败: ${error.message}`, 'error');
+          throw error;
         }
   };
 
@@ -190,8 +197,9 @@ export const useAdminCategory = (adminUI: any) => {
         setCategories(nextCategories);
         await saveData('product_categories', nextCategories);
       }
-    } catch (err: any) {
-      handleError(err, '添加分類失敗');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      handleError(error, '添加分類失敗');
     }
   };
 
@@ -237,8 +245,9 @@ export const useAdminCategory = (adminUI: any) => {
             const { data: { user: userObj } } = await supabase.auth.getUser();
             if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
         }
-      } catch (err: any) {
-        if (isMounted.current) showToast(`分类删除失败: ${err.message}`, 'error');
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        if (isMounted.current) showToast(`分类删除失败: ${error.message}`, 'error');
       }
   };
 
@@ -251,9 +260,10 @@ export const useAdminCategory = (adminUI: any) => {
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
       return saved;
-    } catch (err: any) {
-      console.error("[useAdminCategory] Add manufacturer failed:", err);
-      showToast(`添加厂商失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error("[useAdminCategory] Add manufacturer failed:", error);
+      showToast(`添加厂商失败: ${error.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };
 
@@ -267,9 +277,10 @@ export const useAdminCategory = (adminUI: any) => {
       );
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
-    } catch (err: any) {
-      console.error("[useAdminCategory] Update manufacturer failed:", err);
-      showToast(`更新厂商失败: ${err.message || '网络连接或数据库权限问题'}`, 'error');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      console.error("[useAdminCategory] Update manufacturer failed:", error);
+      showToast(`更新厂商失败: ${error.message || '网络连接或数据库权限问题'}`, 'error');
     }
   };
 
@@ -291,8 +302,9 @@ export const useAdminCategory = (adminUI: any) => {
       }
       await performDeleteManufacturer(strId, id);
       showToast('厂商删除成功');
-    } catch (err: any) {
-      showToast(`删除失败: ${err.message}`, 'error');
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      showToast(`删除失败: ${error.message}`, 'error');
     }
   };
 
@@ -319,8 +331,9 @@ export const useAdminCategory = (adminUI: any) => {
           const { data: { user: userObj } } = await supabase.auth.getUser();
           if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
         }
-      } catch (err: any) {
-         if (isMounted.current) showToast(`删除厂商失败: ${err.message}`, 'error');
+      } catch (err) {
+         const error = err instanceof Error ? err : new Error(String(err));
+         if (isMounted.current) showToast(`删除厂商失败: ${error.message}`, 'error');
       }
   };
 
@@ -333,8 +346,9 @@ export const useAdminCategory = (adminUI: any) => {
         await saveData('product_tags', [...tags, saved].sort((a,b) => a.name.localeCompare(b.name)));
       }
       return saved;
-    } catch(err: any) {
-      handleError(err, '添加標籤失敗');
+    } catch(err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      handleError(error, '添加標籤失敗');
     }
   };
   

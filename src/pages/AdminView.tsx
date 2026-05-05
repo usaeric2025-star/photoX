@@ -11,6 +11,7 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { translations, LanguageCode } from '../lib/translations';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 import { AdminViewContent } from './AdminViewContent';
+import { Photo, Category, Tag, Manufacturer } from '../types';
 
 const errorGuard = (name: string) => () => {
   console.error(`Blocked call to ${name}`);
@@ -75,7 +76,7 @@ export default function AdminView() {
   const uiBasicValue = React.useMemo(() => ({ 
     setAlertDialog, 
     setPromptDialog, 
-    setActiveScreen: (s: string) => setActiveScreen(s as any),
+    setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
     setLoadingState,
     loadingState,
     withLoading,
@@ -116,20 +117,20 @@ export default function AdminView() {
     handleBatchAiIdentify: async () => {},
     handleGroupAiIdentify: async () => {},
     handlePhotoImport: async () => {},
-    handleSingleAiAnalyzeCallback: async () => {},
-    handleGroupPhotos: async () => {},
-    handleUngroup: async () => {},
+    handleSingleAiAnalyzeCallback: async () => ({ success: true }),
+    handleGroupPhotos: async () => ({ success: true }),
+    handleUngroup: async () => ({ success: true }),
     saveNewPhoto: async () => {},
     saveBatchEdit: async () => {},
     deletePhoto: async () => {},
     deleteGroup: async () => ({ success: true }),
     updateTag: async () => {},
     deleteTag: async () => {},
-    addTag: async () => ({}),
+    addTag: async () => ({} as Tag),
     updateCategory: async () => {},
     deleteCategory: async () => {},
     addCategory: async () => {},
-    addManufacturer: async () => ({}),
+    addManufacturer: async () => ({} as Manufacturer),
     updateManufacturer: async () => {},
     deleteManufacturer: async () => {},
     removeTagFromPhoto: async () => {},
@@ -178,8 +179,9 @@ export default function AdminView() {
                       onClick={async () => {
                         try {
                           await loginWithGoogle();
-                        } catch(e: any) {
-                          showToast(`${t.loginFailedAlert} ${e.message || JSON.stringify(e)}`, 'error');
+                        } catch(e) {
+                          const error = e instanceof Error ? e : new Error(String(e));
+                          showToast(`${t.loginFailedAlert} ${error.message || JSON.stringify(e)}`, 'error');
                         }
                       }}
                       className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"

@@ -2,6 +2,7 @@ import { useDelete } from './useDelete';
 import { groupApi } from '../api/groups';
 import { photoApi } from '../api/photos';
 import React, { useState, useCallback } from 'react';
+import { Photo, User, AppSettings, ProductFormData } from '../types';
 import { 
   saveSettings as saveSettingsCloud, 
   syncPhotosToCloud as syncPhotosToCloudService,
@@ -12,15 +13,15 @@ import { saveData } from '../utils/indexedDB';
 
 import { useGalleryContext } from '../context/GalleryContext';
 
-export const useAdminCore = (user: any) => {
+export const useAdminCore = (user: User | null) => {
   const { deleteGroup } = useDelete();
   const { photos, setPhotos, categories, manufacturers } = useGalleryContext();
 
-  const saveSettings = useCallback(async (s: any) => {
+  const saveSettings = useCallback(async (s: AppSettings) => {
     try {
       await saveData('product_settings', s);
       if (user) {
-        const { categories: cats, manufacturers: mfrs } = s;
+        const { categories: cats, manufacturers: mfrs } = s as any; // categories and manufacturers might be in s depending on usage
         await saveSettingsCloud({
           ...s,
           categories: cats || categories,
@@ -28,7 +29,7 @@ export const useAdminCore = (user: any) => {
         });
       }
       return { success: true };
-    } catch (err: any) {
+    } catch (err) {
       return { success: false, error: err };
     }
   }, [user, categories, manufacturers]);
@@ -37,15 +38,15 @@ export const useAdminCore = (user: any) => {
     data: string, 
     catId?: string, 
     editPhotoId?: string, 
-    formState?: any, 
-    updateFormFn?: any,
-    handleSingleAiAnalyzeService?: any
+    formState?: ProductFormData, 
+    updateFormFn?: (updates: Partial<ProductFormData>) => void,
+    handleSingleAiAnalyzeService?: (data: string, catId?: string, editPhotoId?: string | null) => Promise<any>
   ) => {
-    if(!handleSingleAiAnalyzeService) return { success: false, error: 'No service' };
+    if(!handleSingleAiAnalyzeService || !updateFormFn || !formState) return { success: false, error: 'No service' };
     try {
-      const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId);
+      const result = await handleSingleAiAnalyzeService(data, catId, editPhotoId || null);
       if (result) {
-        const updates: Partial<any> = {};
+        const updates: Partial<ProductFormData> = {};
         if (result.name) updates.name = result.name;
         
         if (result.categoryId && !catId && !formState.categoryId) {
@@ -71,33 +72,33 @@ export const useAdminCore = (user: any) => {
         return { success: true, data: result };
       }
       return { success: false, error: '未能分析' };
-    } catch (err: any) {
+    } catch (err) {
       return { success: false, error: err };
     }
   };
 
 
-  const performPushSync = useCallback(async (settings: any, refreshCloudData: Function, lastSyncTime?: number | null) => {
+  const performPushSync = useCallback(async (settings: AppSettings, refreshCloudData: (user: User | null, force?: boolean) => Promise<void>, lastSyncTime?: number | null) => {
     if (!user) return { success: false, error: 'No user' };
     try {
       await saveSettingsCloud({...settings, categories, manufacturers});
       const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
-      const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
+      const result = await syncPhotosToCloudService(user.uid, photos, lastSyncISO);
       const now = new Date().toISOString();
       localStorage.setItem('lastSyncTime', now);
       await saveData('last_sync_time', Date.now());
       await refreshCloudData(user, false);
       return { success: true, data: result };
-    } catch (err: any) {
+    } catch (err) {
       return { success: false, error: err };
     }
   }, [user, photos, categories, manufacturers]);
 
-  const performPullSync = useCallback(async (refreshCloudData: Function) => {
+  const performPullSync = useCallback(async (refreshCloudData: (user: User | null, force?: boolean) => Promise<void>) => {
     try {
       await refreshCloudData(user, true);
       return { success: true };
-    } catch (err: any) {
+    } catch (err) {
       return { success: false, error: err };
     }
   }, [user]);
@@ -120,7 +121,7 @@ export const useAdminCore = (user: any) => {
     try {
       await updatePhotosGroupInCloud(photoIdsToUpdate, { group_id: groupIdToUse });
       return { success: true };
-    } catch (err: any) {
+    } catch (err) {
       return { success: false, error: err };
     }
   }, [photos, setPhotos]);

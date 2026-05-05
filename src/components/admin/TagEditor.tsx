@@ -15,15 +15,16 @@ import {
 import { useErrorHandler } from '../../utils/errorHandler';
 import { saveSettings } from '../../services/supabaseService';
 import { useAdminSession } from '../../context/AdminContexts';
+import { Tag } from '../../types';
 
 interface TagEditorProps {
-  tags: any[];
+  tags: Tag[];
   selectedTagIds: string[];
-  onToggleTag: (tag: any) => void;
+  onToggleTag: (tag: Tag) => void;
   onUpdateTag: (id: string, name: string) => void;
   onDeleteTag: (id: string) => void;
   onQuickAdd: () => void;
-  onRenameTagRequest?: (tag: any) => void;
+  onRenameTagRequest?: (tag: Tag) => void;
   showHotEffects?: boolean;
 }
 
@@ -72,7 +73,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   }, [settings?.hotTagsCount, settings?.pinnedTags, tags, showHotEffects]);
 
   const filteredTags = useMemo(() => {
-    const list = (Array.from(new Map(tags.map(t => [t.id, t])).values()) as any[]).filter((tag: any) => 
+    const list = (Array.from(new Map(tags.map(t => [t.id, t])).values()) as Tag[]).filter((tag: Tag) => 
       (tag.name || '').toLowerCase().includes((searchTerm || '').toLowerCase())
     );
 
@@ -107,7 +108,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
         </div>
       </div>
       <div className="flex flex-wrap gap-2 pb-1 max-h-48 overflow-y-auto content-start">
-        {filteredTags.map((tag: any) => {
+        {filteredTags.map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = (settings?.pinnedTags || []).includes(String(tag.id));

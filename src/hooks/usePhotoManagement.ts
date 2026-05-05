@@ -3,7 +3,7 @@ import { useErrorHandler } from '../utils/errorHandler';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { formatDate } from '../utils/dateFormat';
 import { photoApi } from '../api/photos';
-import { Photo, Tag, ProductFormData } from '../types';
+import { Photo, Tag, ProductFormData, User } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, generateItemCode, checkImageHashExists, uploadImages } from '../services/supabaseService';
@@ -31,7 +31,7 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 export const usePhotoManagement = (
-  user: {id: string} | null,
+  user: User | null,
   adminUI?: {
     setAlertDialog: (d: any) => void;
     showToast?: (msg: string, type: 'success'|'error') => void;

@@ -18,6 +18,7 @@ export interface Category {
   aliases: string[];
   subcategories: SubCategory[];
   userId?: string;
+  code?: string;
 }
 
 export interface Tag {
@@ -52,7 +53,7 @@ export interface Photo {
     label?: string;
     isAI?: boolean;
   }[] | null;
-  exif_data?: any | null;
+  exif_data?: Record<string, unknown> | null;
   createdAt: string;
   updatedAt?: string;
   description_translations?: {
@@ -74,6 +75,18 @@ export interface Photo {
   tagIds: string[]; // For local filter
   price?: string;
   note?: string;
+  category_id?: string | null;
+  sub_category?: string | null;
+}
+
+export interface User {
+  uid: string;
+  id?: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  avatarUrl?: string | null;
+  emailVerified: boolean;
 }
 
 export interface ProductGroup {
@@ -136,6 +149,13 @@ export interface AppSettings {
   whatsapp_1?: string;
   whatsapp_2_name?: string;
   whatsapp_2?: string;
+  access_passcode?: string;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: unknown;
 }
 
 export interface AppState {

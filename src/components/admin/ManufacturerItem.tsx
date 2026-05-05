@@ -13,9 +13,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+import { Manufacturer } from '../../types';
+
 interface ManufacturerProps {
-  manufacturer: { id: string | number, name: string };
-  onUpdate: (mfr: any) => void;
+  manufacturer: Manufacturer;
+  onUpdate: (mfr: Manufacturer) => void;
   onDelete: (id: string | number) => void;
 }
 

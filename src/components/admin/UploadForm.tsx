@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
-import { Category, Tag, ProductFormData } from '../../types';
+import { Category, Tag, ProductFormData, Manufacturer } from '../../types';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
 import {
@@ -33,7 +33,7 @@ interface UploadFormProps {
   quickAddSubCategory: () => void;
   quickAddTag: () => void;
   quickAddManufacturer: () => void;
-  manufacturers: any[];
+  manufacturers: Manufacturer[];
   aiDebugInfo: { step: string; message: string; error?: string } | null;
   abortAnalysis?: () => void;
 }
@@ -165,7 +165,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
           <div className="grid grid-cols-3 gap-2">
-            {categories.filter(c => c.name && c.name.trim()).map((cat: any) => {
+            {categories.filter(c => c.name && c.name.trim()).map((cat: Category) => {
               const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
               return (
               <button 
@@ -185,7 +185,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 / Manufacturer</h3>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
-            {(manufacturers || []).map((mfr: any) => (
+            {(manufacturers || []).map((mfr: Manufacturer) => (
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ manufacturerId: String(mfr.id) })}
