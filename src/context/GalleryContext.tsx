@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { Photo, Category, Tag } from '../types';
+import { filterPhotos, groupPhotos } from '../lib/filters';
 
 interface GalleryContextType {
   // State
@@ -139,92 +140,19 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, [photos]);
 
     const displayPhotos = useMemo(() => {
-      let result = [...photosWithTime];
-      
-      // Filter out hidden photos for public users, but keep group covers
-      if (!isAdminMode) {
-        result = result.filter(p => !p.isHidden || p.isGroupCover);
-      }
-      
-      if (debouncedSearchQuery) {
-        const q = debouncedSearchQuery.toLowerCase();
-        result = result.filter(p => 
-          (p.name || '').toLowerCase().includes(q) || 
-          (p.manual_code || '').toLowerCase().includes(q) ||
-          (p.model_number || '').toLowerCase().includes(q)
-        );
-      }
-      
-      if (filterCatId) {
-        result = result.filter(p => String(p.categoryId) === String(filterCatId));
-      }
-      
-      if (filterSubId) {
-        result = result.filter(p => p.manufacturerId === filterSubId);
-      }
-      
-      if (filterTagIds.length > 0) {
-        const tagFallbackMap = new Map<string, string>();
-        filterTagIds.forEach(tid => {
-          const tagObj = tags.find(t => String(t.id) === String(tid));
-          if (tagObj) tagFallbackMap.set(tid, tagObj.name.toLowerCase());
-        });
-        
-        result = result.filter(p => {
-          const pTagIds = Array.isArray(p.tagIds) ? p.tagIds.map(String) : (typeof p.tagIds === 'string' ? [String(p.tagIds)] : []);
-          
-          return filterTagIds.every(tid => {
-            const strTid = String(tid);
-            if (pTagIds.includes(strTid)) return true;
-            
-            const fallbackName = tagFallbackMap.get(tid);
-            if (fallbackName) {
-              return pTagIds.some(pt => String(pt).toLowerCase() === fallbackName);
-            }
-            return false;
-          });
-        });
-      }
-  
-      result.sort((a, b) => {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        
-        return sortOrder === 'desc' ? b._time - a._time : a._time - b._time;
-      });
-  
-      return result;
-    }, [photosWithTime, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, tags]);
+      return filterPhotos(photos, {
+        searchQuery: debouncedSearchQuery,
+        filterCatId,
+        filterSubId,
+        filterTagIds,
+        sortOrder,
+        isAdminMode
+      }, tags);
+    }, [photos, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, isAdminMode, tags]);
 
   // final grid: with grouping
   const gridPhotosFull = useMemo(() => {
-    let result = [...displayPhotos];
-    
-    if (showGroupsCollapsed) {
-      const groupCovers = new Map<string, any>();
-      result.forEach(p => {
-         if (p.groupId) {
-             const existing = groupCovers.get(p.groupId);
-             if (!existing || (p.isGroupCover && !existing.isGroupCover)) {
-                 groupCovers.set(p.groupId, p);
-             }
-         }
-      });
-      
-      const groupsSeen = new Set<string>();
-      result = result.filter(p => {
-        if (!p.groupId) return true;
-        if (groupsSeen.has(p.groupId)) return false;
-        groupsSeen.add(p.groupId);
-        return true;
-      }).map(p => {
-        if (p.groupId && groupCovers.has(p.groupId)) {
-           return groupCovers.get(p.groupId)!;
-        }
-        return p;
-      });
-    }
-    return result;
+    return groupPhotos(displayPhotos, showGroupsCollapsed);
   }, [displayPhotos, showGroupsCollapsed]);
 
   const gridPhotos = useMemo(() => {

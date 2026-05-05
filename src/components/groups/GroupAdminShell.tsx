@@ -505,9 +505,47 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                       <Settings2 size={20} />
                       <h3 className="font-black text-lg tracking-tight">群組資料庫 / DB</h3>
                     </div>
-                    <button onClick={() => setShowGroupSettings(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors">
-                      <X size={18} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                       <button 
+                         onClick={() => {
+                           if (onUngroup && activeGroupId) {
+                             setAlertDialog?.({
+                               title: '確定要解散整個群組？',
+                               message: '解散後，群組關係、排序信息及DNA數據將被移除，照片將變回單張展示。',
+                               onConfirm: async () => {
+                                 try {
+                                   if (onUngroup && activeGroupId) {
+                                     await (onUngroup(activeGroupId) as any);
+                                     setActiveGroupId(null);
+                                     setShowGroupSettings(false);
+                                   }
+                                   setAlertDialog?.(null);
+                                 } catch (e) {
+                                   console.error('Failed to ungroup:', e);
+                                   setAlertDialog?.(null);
+                                 }
+                               }
+                             });
+                           }
+                         }}
+                         className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all"
+                         title="解散群組"
+                       >
+                         <Trash2 size={18} />
+                       </button>
+
+                       <button 
+                         onClick={() => setShowGroupSettings(false)}
+                         className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white text-indigo-600 hover:bg-white shadow-xl transition-all font-black"
+                         title="保存并关闭"
+                       >
+                         <Save size={18} />
+                       </button>
+
+                       <button onClick={() => setShowGroupSettings(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors ml-1">
+                         <X size={18} />
+                       </button>
+                    </div>
                   </div>
 
                   <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
@@ -650,46 +688,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                       </div>
                     </section>
 
-                    {/* Disband Actions */}
-                    <section className="pt-6 border-t border-slate-100 space-y-4">
-                       <button 
-                         onClick={() => {
-                           setShowGroupSettings(false);
-                         }}
-                         className="w-full py-4 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 font-black text-xs uppercase"
-                       >
-                         <Save size={20} />
-                       </button>
-
-                       <button 
-                         onClick={() => {
-                           if (onUngroup && activeGroupId) {
-                             setAlertDialog?.({
-                               title: '確定要解散整個群組？',
-                               message: '解散後，群組關係、排序信息及DNA數據將被移除，照片將變回單張展示。',
-                               onConfirm: async () => {
-                                 try {
-                                   if (onUngroup && activeGroupId) {
-                                     await (onUngroup(activeGroupId) as any);
-                                     // Only return home if successful
-                                     setActiveGroupId(null);
-                                     setShowGroupSettings(false);
-                                   }
-                                   setAlertDialog?.(null);
-                                 } catch (e) {
-                                   console.error('Failed to ungroup:', e);
-                                   setAlertDialog?.(null);
-                                   // do NOT jump back if it failed
-                                 }
-                               }
-                             });
-                           }
-                         }}
-                         className="w-full py-4 rounded-2xl border-2 border-red-50 border-dashed text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center gap-2 font-black text-xs uppercase"
-                       >
-                         <Trash2 size={16} /> 解散群組 / Disband Group
-                       </button>
-                    </section>
+                    <div className="h-12"></div>
                   </div>
                 </motion.div>
               )}

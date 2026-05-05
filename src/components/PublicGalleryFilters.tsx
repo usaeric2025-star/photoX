@@ -182,7 +182,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   if (aHot && !bHot) return -1;
                   if (!aHot && bHot) return 1;
                   
-                  return 0;
+                  return a.name.localeCompare(b.name, undefined, { numeric: true });
                 });
               }, [sortedTags, settings?.pinnedTags, hotTagsSet]).map(tag => {
                 const strTagId = String(tag.id);

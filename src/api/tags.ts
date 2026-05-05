@@ -1,5 +1,6 @@
 
-import { supabase } from '../services/client';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 import { Tag } from '../types';
 
 export const tagApi = {

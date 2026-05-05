@@ -1,4 +1,5 @@
-import { supabase, BUCKET_NAME } from './client';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -70,7 +71,7 @@ export const uploadImages = async (
       const blob = await res.blob();
       
       const { error: storageError } = await supabase.storage
-        .from(BUCKET_NAME)
+        .from(DB_CONFIG.BUCKET_NAME)
         .upload(fileName, blob, {
           contentType: 'image/jpeg',
           upsert: true
@@ -79,7 +80,7 @@ export const uploadImages = async (
       if (storageError) throw storageError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from(BUCKET_NAME)
+        .from(DB_CONFIG.BUCKET_NAME)
         .getPublicUrl(fileName);
       
       return publicUrl;

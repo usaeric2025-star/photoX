@@ -1,4 +1,5 @@
-import { supabase, BUCKET_NAME } from './client';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 
 export const fetchSettings = async () => {
     const { data, error } = await supabase
@@ -88,7 +89,7 @@ export const saveSettings = async (settings: any) => {
 
 export const uploadLogo = async (file: File) => {
     // Using the same bucket as photos for better reliability
-    const bucketName = BUCKET_NAME; 
+    const bucketName = DB_CONFIG.BUCKET_NAME; 
     const fileName = `app/logo-${Date.now()}.webp`;
     
     try {

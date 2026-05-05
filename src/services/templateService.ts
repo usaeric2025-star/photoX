@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from '../lib/supabase';
 import { UVTSTemplate } from '../types/uvts';
 
 export interface AdTemplateRecord {

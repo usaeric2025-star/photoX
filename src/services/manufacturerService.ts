@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from '../lib/supabase';
 import { SubCategory as Manufacturer } from '../types';
 
 // 加载所有厂商

@@ -1,5 +1,5 @@
 import SparkMD5 from 'spark-md5';
-import { supabase } from './client';
+import { supabase } from '../lib/supabase';
 
 export const calculateMD5 = (base64Data: string): string => {
   try {

@@ -5,6 +5,7 @@ import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Photo, Category, ProductGroup } from '../types';
+import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../lib/ui-helpers';
 
 // ... (retain props and other logic)
 
@@ -128,22 +129,10 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   if (index === null || !photo) return null;
 
-  // Header/Meta info calculation
-  const catId = photo.categoryId;
-  
-  const activeCat = categories.find(c => String(c.id) === String(catId));
-  let catName = '';
-  if (activeCat) {
-     if (lang === 'zh') catName = activeCat.zh || activeCat.name;
-     else if (lang === 'en') catName = activeCat.en || activeCat.name || activeCat.zh;
-     else if (lang === 'ms') catName = activeCat.ms || activeCat.name || activeCat.en || activeCat.zh;
-     else catName = activeCat.name;
-  }
-
-  // Manufacturer lookup
-  const subId = photo.manufacturerId;
-  const mfr = manufacturers && subId ? manufacturers.find(m => m.id === subId) : null;
-  const mfrName = mfr ? mfr.name : null;
+  // Header/Meta info calculation using shared helpers
+  const catName = getTranslatedCategoryName(photo.categoryId, categories, lang, t);
+  const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
+  const photoDisplayName = getPhotoDisplayName(photo, categories, lang, t);
 
   return (
     <motion.div 
@@ -258,7 +247,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                     <div className="flex-1">
                       <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
                       <h2 className="text-lg font-black text-[#1D3557] leading-tight uppercase">
-                        {photo.name || t.unnamed}
+                        {photoDisplayName}
                       </h2>
                     </div>
                     {isAdminMode && (

@@ -5,7 +5,8 @@ import { groupApi } from '../api/groups';
 import { tagApi } from '../api/tags';
 import { categoryApi } from '../api/categories';
 import { saveData } from '../utils/indexedDB';
-import { supabase } from '../services/client';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 
 export function useDelete() {
   const { 
@@ -73,7 +74,7 @@ export function useDelete() {
       // Keep this direct Supabase here for now as it crosses table boundaries, 
       // but acknowledge boundary crossing.
       const { data: affected } = await supabase
-        .from('furniture_items')
+        .from(DB_CONFIG.TABLE_NAME)
         .update({ category_id: null })
         .eq('category_id', categoryId)
         .select('id');
@@ -99,7 +100,7 @@ export function useDelete() {
     try {
       // 1. Update photos in cloud (this side-effect should ideally be in manufacturerService or orchestrator, but keeping consistent with existing structure)
       const { data: affected } = await supabase
-        .from('furniture_items')
+        .from(DB_CONFIG.TABLE_NAME)
         .update({ manufacturer_id: null })
         .eq('manufacturer_id', mfrId)
         .select('id');

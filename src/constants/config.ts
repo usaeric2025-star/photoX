@@ -7,6 +7,11 @@ export const PAGINATION = {
   PUBLIC_LOAD_MORE_OFFSET: 20,
 };
 
+export const DB_CONFIG = {
+  TABLE_NAME: 'furniture_items',
+  BUCKET_NAME: 'furniture_images',
+};
+
 export const IMAGE_COMPRESS = {
   MAX_WIDTH: 1200,
   QUALITY: 0.7,

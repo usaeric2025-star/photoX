@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from '../lib/supabase';
 import { ProductGroup } from '../types';
 
 export const TABLE_NAME = 'groups';

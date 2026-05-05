@@ -7,4 +7,4 @@ export * from './settingService';
 export * from './storageService';
 export * from './templateService';
 export * from './utils';
-export { supabase } from './client';
+export { supabase } from '../lib/supabase';

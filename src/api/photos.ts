@@ -1,5 +1,6 @@
 
-import { supabase, TABLE_NAME, BUCKET_NAME } from '../services/client';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 import { Photo } from '../types';
 import { mapSupabasePhoto } from '../services/photoService';
 
@@ -16,7 +17,7 @@ export const photoApi = {
     const { userId, since, page = 0, limit = 1000, categoryId, tagId, searchQuery } = params;
     
     let query = supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .select(`
         *,
         photo_tags(${tagId ? '!inner' : ''}*),
@@ -52,7 +53,7 @@ export const photoApi = {
     const { categoryId, tagId, searchQuery } = params;
     
     let query = supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .select('*', { count: 'exact', head: true });
     
     if (categoryId) query = query.eq('category_id', categoryId);
@@ -69,7 +70,7 @@ export const photoApi = {
 
   async upsert(payload: Partial<Photo>) {
     const { data, error } = await supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .upsert(payload, { onConflict: 'id' })
       .select('id')
       .maybeSingle();
@@ -80,7 +81,7 @@ export const photoApi = {
 
   async deleteSlice(ids: string[], userId: string) {
     const { data, error } = await supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .delete()
       .in('id', ids)
       .eq('user_id', userId)
@@ -92,7 +93,7 @@ export const photoApi = {
 
   async update(id: string, updates: Partial<Photo>) {
     const { error } = await supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .update(updates)
       .eq('id', id);
     
@@ -101,7 +102,7 @@ export const photoApi = {
 
   async batchUpdate(ids: string[], updates: Partial<Photo>) {
     const { error } = await supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .update(updates)
       .in('id', ids);
     

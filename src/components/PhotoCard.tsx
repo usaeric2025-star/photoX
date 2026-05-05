@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Photo, Category } from '../types';
 import { X, Layers, Heart, EyeOff } from 'lucide-react';
+import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName } from '../lib/ui-helpers';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -31,49 +32,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned
 }) => {
   const mfrName = useMemo(() => {
-    const mfrId = photo.manufacturerId || (photo as any).sub_category;
-    if (mfrId) {
-      const activeMfr = manufacturers.find((m: any) => String(m.id) === String(mfrId));
-      if (activeMfr) return activeMfr.name;
-    }
-    return '';
+    return getManufacturerName(photo.manufacturerId || (photo as any).sub_category, manufacturers);
   }, [photo.manufacturerId, (photo as any).sub_category, manufacturers]);
 
-  const catName = useMemo(() => {
-    const catId = photo.categoryId || (photo as any).category_id;
-    
-    if (catId) {
-      const catIdStr = String(catId);
-      const activeCat = categories ? categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr) : null;
-      if (activeCat) {
-        if (lang === 'zh') return activeCat.zh || activeCat.name;
-        if (lang === 'en') return activeCat.en || activeCat.name;
-        if (lang === 'ms') return activeCat.ms || activeCat.name || activeCat.en;
-        return activeCat.name;
-      }
-    }
-
-    return '';
-  }, [photo.categoryId, (photo as any).category_id, categories, lang]);
-  
   const displayCatName = useMemo(() => {
-    const catId = photo.categoryId || (photo as any).category_id;
-    const isOther = String(catId) === '7';
-    const uncatValues = ['未分类', '未分類', 'uncategorized', 'others', 'tiada kategori'];
-    
-    // 1. If it's a real category ID (including 7 for Other), use the category name
-    if (catId && catName) {
-      // Even if it's "others" string, if the ID is 7, it's a valid category
-      if (isOther || !uncatValues.includes((catName || '').toLowerCase())) {
-        return catName;
-      }
-    }
-    
-    // 2. If truly uncategorized (no catId), use the default
-    return catName || t.uncategorized;
-  }, [catName, t.uncategorized, photo.categoryId, (photo as any).category_id]);
+    return getTranslatedCategoryName(photo.categoryId || (photo as any).category_id, categories, lang, t);
+  }, [photo.categoryId, (photo as any).category_id, categories, lang, t]);
 
-  const isUncategorized = displayCatName === t.uncategorized;
+  const isUncategorized = useMemo(() => isUncategorizedName(displayCatName, t), [displayCatName, t]);
   
   const toTitleCase = (str: string) => {
     if (!str) return '';
@@ -119,9 +85,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     >
       <img 
         draggable={false}
+        loading="lazy"
         src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
         alt={photo.name}
-        className={`w-full h-full object-cover ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : ''} ${photo.isHidden ? 'opacity-70' : ''}`}
+        className={`w-full h-full object-cover transition-opacity duration-500 ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : 'opacity-100'} ${photo.isHidden ? 'opacity-70' : ''}`}
+        onLoad={(e) => {
+          (e.currentTarget as HTMLImageElement).style.opacity = '1';
+        }}
+        style={{ opacity: 0 }}
       />
 
       {/* Top Left Indicators (Group only) */}

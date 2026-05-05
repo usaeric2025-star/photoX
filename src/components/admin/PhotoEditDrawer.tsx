@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { useErrorHandler } from '../../utils/errorHandler';
 import { Photo, ProductFormData } from '../../types';
-import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight } from 'lucide-react';
+import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight, Trash2 } from 'lucide-react';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { TagEditor } from './TagEditor';
@@ -66,7 +66,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   }, [editPhotoId, photos]);
 
   const sortedTags = useMemo(() => {
-    return tags;
+    return [...tags].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
   }, [tags]);
   
   const handleToggleTag = (tag: any) => {
@@ -161,6 +161,32 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 <div className="text-[10px] font-bold">封面</div>
               </button>
             )}
+            
+            {props.editPhotoId && props.onDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger 
+                  render={
+                    <button 
+                      className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold"
+                      title="删除"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  }
+                />
+                <AlertDialogContent>
+                   <AlertDialogHeader>
+                      <AlertDialogTitle>确定要删除此照片吗？</AlertDialogTitle>
+                      <AlertDialogDescription>此操作不可撤销，照片将从云端彻底移除。</AlertDialogDescription>
+                   </AlertDialogHeader>
+                   <AlertDialogFooter>
+                      <AlertDialogCancel>关闭</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => props.onDelete!(props.editPhotoId!)} className="bg-red-600 hover:bg-red-700">删除</AlertDialogAction>
+                   </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+
             <button 
               onClick={async () => {
                 const { valid, errors } = validatePhotoForm(formState);
@@ -556,30 +582,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
              )}
           </section>
 
-           {props.editPhotoId && props.onDelete && (
-            <div className="pt-2 pb-6">
-              <AlertDialog>
-                <AlertDialogTrigger>
-                  <Button 
-                    variant="destructive" 
-                    className="w-full py-4 rounded-3xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                     删除此照片
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>确定要删除此照片吗？</AlertDialogTitle>
-                    <AlertDialogDescription>此操作不可撤销，照片将从云端彻底移除。</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>关闭</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => props.onDelete!(props.editPhotoId!)}>删除</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-           )}
+           {/* Bottom space */}
+           <div className="h-8"></div>
        </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from '../lib/supabase';
 import { Tag } from '../types';
 
 export const loadTagsFromCloud = async (): Promise<Tag[]> => {

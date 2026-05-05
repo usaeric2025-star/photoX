@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from '../lib/supabase';
 import { Category } from '../types';
 
 export const loadCategoriesFromCloud = async (): Promise<Category[]> => {

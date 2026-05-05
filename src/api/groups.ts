@@ -1,5 +1,6 @@
 
-import { supabase } from '../services/client';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 import { ProductGroup } from '../types';
 
 const TABLE_NAME = 'groups';

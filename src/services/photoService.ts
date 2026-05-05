@@ -1,5 +1,6 @@
 import React from 'react';
-import { supabase, BUCKET_NAME, TABLE_NAME } from './client';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 import { Photo } from '../types';
 import { uploadImages } from './storageService';
 import { validateDimension } from '../utils/dimensionValidator';
@@ -95,7 +96,7 @@ function normalizeDimensionsBeforeSave(dimensions: any[] | null | undefined) {
 export const checkImageHashExists = async (hash: string): Promise<{image_url: string, manual_code: string} | null> => {
   try {
     const { data, error } = await supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .select('image_url, manual_code')
       .eq('image_hash', hash)
       .not('image_url', 'is', null)
@@ -114,7 +115,7 @@ export const clearGroupIdInCloud = async (groupId: string) => {
   console.log(`[Cloud Action] Attempting to clear group_id for all photos in group: ${groupId}`);
   
   const { data, error } = await supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .update({ 
       group_id: null, 
       is_pinned: false,
@@ -141,7 +142,7 @@ export const clearGroupIdInCloud = async (groupId: string) => {
 
 export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {
   const { data, error } = await supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .update(updates)
     .in('id', photoIds)
     .select('id');
@@ -203,9 +204,9 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   if (updates.dimensions !== undefined) {
     normalizeDimensionsBeforeSave(updates.dimensions);
   }
-
+  
   const { error } = await supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .update(updates)
     .eq('id', photoId);
     
@@ -230,7 +231,7 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
        });
        
        if (modified) {
-         const { error: retryError } = await supabase.from(TABLE_NAME).update(safeUpdates).eq('id', photoId);
+         const { error: retryError } = await supabase.from(DB_CONFIG.TABLE_NAME).update(safeUpdates).eq('id', photoId);
          if (!retryError) return;
        }
     }
@@ -297,7 +298,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
 
   // Upsert on photo as before
   let { data: savedPhoto, error: dbError } = await supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .upsert(payload, { 
       onConflict: 'id',
       ignoreDuplicates: false 
@@ -317,7 +318,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
       delete safePayload.is_group_cover;
       
       const retry = await supabase
-        .from(TABLE_NAME)
+        .from(DB_CONFIG.TABLE_NAME)
         .upsert(safePayload, { onConflict: 'id', ignoreDuplicates: false })
         .select('id')
         .maybeSingle();
@@ -428,7 +429,7 @@ export const savePhotosToCloudBatch = async (
   for (let i = 0; i < payloads.length; i += chunkSize) {
     const chunk = payloads.slice(i, i + chunkSize);
     let { data: savedRows, error: dbError } = await supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .upsert(chunk, { onConflict: 'id', ignoreDuplicates: false })
       .select('id, image_hash');
 
@@ -443,7 +444,7 @@ export const savePhotosToCloudBatch = async (
          delete cp.group_metadata;
          return cp;
        });
-       const retry = await supabase.from(TABLE_NAME).upsert(safeChunk, { onConflict: 'id' }).select('id, image_hash');
+       const retry = await supabase.from(DB_CONFIG.TABLE_NAME).upsert(safeChunk, { onConflict: 'id' }).select('id, image_hash');
        savedRows = retry.data;
        dbError = retry.error;
     }
@@ -511,7 +512,7 @@ export const syncPhotosToCloud = async (
   
   // 1. Get current cloud state
   let query = supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .select('id, storageId, image_hash, image_url, thumb_url, updated_at')
     .eq('user_id', userId);
     
@@ -560,9 +561,9 @@ export const syncPhotosToCloud = async (
     if (itemsToDelete.length > 0) {
       for (const item of itemsToDelete) {
         try {
-          await supabase.from(TABLE_NAME).delete().match({ id: item.id, user_id: userId });
+          await supabase.from(DB_CONFIG.TABLE_NAME).delete().match({ id: item.id, user_id: userId });
           const filename = item.storageId || item.id;
-          await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`, `public/thumb_${filename}.webp`]);
+          await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove([`public/${filename}.webp`, `public/thumb_${filename}.webp`]);
         } catch (e) {
           // Ignored
         }
@@ -637,7 +638,7 @@ export const loadAllPhotosFromCloud = async (
     `;
 
   let query = supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .select(selectQuery);
   
   if (since) {
@@ -680,7 +681,7 @@ export const getPhotoCount = async (
   searchQuery?: string | null
 ): Promise<number> => {
   let query = supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .select('*', { count: 'exact', head: true });
   
   if (categoryId) {
@@ -715,7 +716,7 @@ export const loadPhotosFromCloud = async (
   categoryId?: string | null
 ): Promise<Photo[]> => {
   let query = supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .select(`
       *,
       photo_tags(
@@ -751,7 +752,7 @@ export const loadPhotosFromCloud = async (
 
 export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
   const { error } = await supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .delete()
     .match({ id: photo.id, user_id: userId });
 
@@ -768,7 +769,7 @@ export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
   console.log(`[photoService] deletePhotosBatch: Attempting to delete ${ids.length} records. IDs:`, ids);
   
   const { data, error } = await supabase
-    .from(TABLE_NAME)
+    .from(DB_CONFIG.TABLE_NAME)
     .delete()
     .in('id', ids)
     .eq('user_id', userId)
@@ -787,14 +788,14 @@ export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
     return [`public/${filename}.webp`, `public/thumb_${filename}.webp`];
   });
   
-  await supabase.storage.from(BUCKET_NAME).remove(filePaths);
+  await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove(filePaths);
 };
 
 export const deduplicatePhotos = async (userId?: string): Promise<{removed: number}> => {
   try {
     // 1. Get all photos and group them by user and hash
     let query = supabase
-      .from(TABLE_NAME)
+      .from(DB_CONFIG.TABLE_NAME)
       .select('id, image_hash, created_at, storageId, image_url, user_id')
       .order('created_at', { ascending: true });
 
@@ -827,20 +828,20 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
 
         for (const duplicate of duplicates) {
           try {
-            await supabase.from(TABLE_NAME).delete().eq('id', duplicate.id);
+            await supabase.from(DB_CONFIG.TABLE_NAME).delete().eq('id', duplicate.id);
             
             // Only remove from storage if it's NOT the same physical file as the original
             // AND no other record (from any user) is using this file
             if (duplicate.image_url && duplicate.image_url !== original.image_url) {
                 // Check if any other record still uses this URL
                 const { count } = await supabase
-                    .from(TABLE_NAME)
+                    .from(DB_CONFIG.TABLE_NAME)
                     .select('*', { count: 'exact', head: true })
                     .eq('image_url', duplicate.image_url);
                 
                 if (count === 0) {
                     const filename = duplicate.storageId || duplicate.id;
-                    await supabase.storage.from(BUCKET_NAME).remove([`public/${filename}.webp`]);
+                    await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove([`public/${filename}.webp`]);
                 }
             }
             removedCount++;

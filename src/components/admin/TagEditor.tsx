@@ -72,10 +72,24 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   }, [settings?.hotTagsCount, settings?.pinnedTags, tags, showHotEffects]);
 
   const filteredTags = useMemo(() => {
-    return (Array.from(new Map(tags.map(t => [t.id, t])).values()) as any[]).filter((tag: any) => 
+    const list = (Array.from(new Map(tags.map(t => [t.id, t])).values()) as any[]).filter((tag: any) => 
       (tag.name || '').toLowerCase().includes((searchTerm || '').toLowerCase())
     );
-  }, [tags, searchTerm]);
+
+    return list.sort((a, b) => {
+      const aPinned = (settings?.pinnedTags || []).includes(String(a.id));
+      const bPinned = (settings?.pinnedTags || []).includes(String(b.id));
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+
+      const aHot = hotTagsSet.has(String(a.id));
+      const bHot = hotTagsSet.has(String(b.id));
+      if (aHot && !bHot) return -1;
+      if (!aHot && bHot) return 1;
+
+      return a.name.localeCompare(b.name, undefined, { numeric: true });
+    });
+  }, [tags, searchTerm, settings?.pinnedTags, hotTagsSet]);
 
   return (
     <div className="space-y-2">

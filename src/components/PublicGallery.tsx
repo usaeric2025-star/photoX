@@ -15,6 +15,7 @@ import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
 import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
+import { getTranslatedCategoryName, getPhotoDisplayName } from '../lib/ui-helpers';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -250,26 +251,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);
 
-  const getPhotoDisplayName = (p: Photo) => {
-    const isPlaceholder = !p.name || p.name === t.furnitureRecord || p.name === 'Furniture Record' || p.name === '未命名产品' || p.name === translations['zh'].furnitureRecord || p.name === translations['en'].furnitureRecord;
-    if (!isPlaceholder) return p.name;
-    
-    const catId = (p.categoryId || '').trim();
-    
-    // Try new system
-    const activeCat = categories.find(c => String(c.id) === String(catId));
-    if (activeCat) {
-      if (lang === 'zh') return activeCat.zh || activeCat.name;
-      if (lang === 'ms') return activeCat.ms || activeCat.name || activeCat.en || activeCat.zh;
-      return activeCat.en || activeCat.name || activeCat.zh;
-    }
-
-    if (lang === 'ms') return translations['ms'].furniture;
-    return lang === 'en' ? translations['en'].furniture : translations['zh'].furniture;
+  const getPhotoDisplayNameLocal = (p: Photo) => {
+    return getPhotoDisplayName(p, categories, lang, t);
   };
 
   const getShareMessage = (p: Photo) => {
-    const displayName = getPhotoDisplayName(p);
+    const displayName = getPhotoDisplayNameLocal(p);
     const modelStr = p.model_number ? ` (${p.model_number})` : '';
     const manualCodeStr = p.manual_code ? ` [${p.manual_code}]` : '';
     const suffix = isStaffMode ? manualCodeStr : modelStr;

@@ -134,7 +134,17 @@ const uiValueForLogin = React.useMemo(() => ({
 
 ---
 
-## 十一、版本记录
+## 十一、性能优化现状（已实现）
+- ✅ 虚拟列表（react-virtuoso）
+- ✅ 分批加载（初始 20 张，滚动增加）
+- ✅ 缩略图加载（列表用 thumb_url）
+- ✅ 原生 loading="lazy"
+- ✅ 渐现动画
+- ✅ 共用逻辑已抽取到 src/lib/ui-helpers.ts
+
+---
+
+## 十二、版本记录
 
 | 日期 | 变更 | 原因 |
 |---|---|---|

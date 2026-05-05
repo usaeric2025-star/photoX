@@ -1,6 +1,6 @@
 import React from 'react';
 import { useErrorHandler } from '../../utils/errorHandler';
-import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save } from 'lucide-react';
+import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { ProductFormData } from '../../types';
@@ -8,6 +8,17 @@ import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
 import { useAdminUI } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export const BatchEditScreen = ({
   resetAddState,
@@ -19,6 +30,7 @@ export const BatchEditScreen = ({
   setBatchIsHiddenApplied,
   showOtherFields,
   setShowOtherFields,
+  onDelete,
 }: {
   resetAddState: () => void;
   saveBatchEdit: (batchIsHiddenApplied: boolean) => Promise<void>;
@@ -29,6 +41,7 @@ export const BatchEditScreen = ({
   setBatchIsHiddenApplied: (a: boolean) => void;
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
+  onDelete?: (ids: string[]) => void;
 }) => {
   const { handleError } = useErrorHandler();
   const { 
@@ -42,16 +55,49 @@ export const BatchEditScreen = ({
   } = useAdminPhoto();
   const { setPromptDialog } = useAdminUI();
   const { isSyncing, appLang } = useAdminSession();
+
+  const handleDelete = () => {
+    if (!batchEditIds || !onDelete) return;
+    onDelete(batchEditIds);
+  };
+
   return (
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe">
       <div className="px-4 py-3 border-b border-slate-200 
-        bg-white flex items-center justify-between gap-3">
+        bg-white flex items-center justify-between gap-3 shadow-sm">
         
         <h2 className="font-black text-base text-slate-800">
-          批量修改
+          批量修改 ({batchEditIds?.length || 0})
         </h2>
         
         <div className="flex items-center gap-2">
+          {onDelete && (
+             <AlertDialog>
+                <AlertDialogTrigger 
+                  render={
+                    <button 
+                      className="w-10 h-10 bg-red-50 text-red-500 
+                      rounded-xl flex items-center justify-center 
+                      active:bg-red-100 transition-colors"
+                      title="批量删除"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  }
+                />
+                <AlertDialogContent>
+                   <AlertDialogHeader>
+                      <AlertDialogTitle>确定要删除选中的 {batchEditIds?.length} 张照片吗？</AlertDialogTitle>
+                      <AlertDialogDescription>此操作不可撤销，所有选中照片将从云端彻底移除。</AlertDialogDescription>
+                   </AlertDialogHeader>
+                   <AlertDialogFooter>
+                      <AlertDialogCancel>关闭</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">删除</AlertDialogAction>
+                   </AlertDialogFooter>
+                </AlertDialogContent>
+             </AlertDialog>
+          )}
+
           <button onClick={() => saveBatchEdit(batchIsHiddenApplied)}
             className={`w-10 h-10 bg-blue-600 text-white 
             rounded-xl flex items-center justify-center 
