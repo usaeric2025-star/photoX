@@ -167,6 +167,16 @@ body {
   }
   html {
     @apply font-sans;
-    scrollbar-gutter: stable;
+    scrollbar-gutter: stable !important;
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch;
   }
+}
+
+/* Custom Reset to prevent layout shifts */
+body {
+  width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }

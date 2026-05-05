@@ -702,8 +702,12 @@ export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => 
   
   const cacheKey = `group_photos_${groupId}`;
   const cached = photoCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    console.log(`[Cache Hit] Group ${groupId}: ${cached.length} photos`);
+    return cached;
+  }
 
+  console.log(`[DB Fetch] Loading group photos for: ${groupId}`);
   const { data, error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('*, photo_tags(*)')
@@ -715,7 +719,14 @@ export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => 
     return [];
   }
 
+  console.log(`[DB Success] Group ${groupId}: Received ${data?.length || 0} raw rows`);
   const result = (data || []).map(item => mapSupabasePhoto(item));
+  
+  // Log details about each photo to see if any fields are suspicious
+  if (result.length > 0) {
+    console.log(`[Group Analysis] ${groupId}:`, result.map(p => ({ id: p.id, code: p.item_code, hidden: p.isHidden })));
+  }
+
   photoCache.set(cacheKey, result);
   return result;
 };

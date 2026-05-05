@@ -166,7 +166,7 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 setCloudCount(finalPhotos.length);
             }
             
-            if (!lastSyncTime) {
+            if (!effectiveSyncTime) {
               console.log("SyncEngine: Full sync complete, setting visibleCount to cover all photos.");
               setVisibleCount?.(Math.max(100, finalPhotos.length + 50));
             }

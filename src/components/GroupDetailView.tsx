@@ -20,11 +20,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { activeGroupId, setActiveGroupId, photos, setPhotos, isAdminMode, shareGroup } = props;
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
-
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+  const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (activeGroupId) {
+      setIsLoading(true);
       // 1. Fetch group metadata
       import('../services/groupService').then(m => {
         m.getGroupById(activeGroupId).then(data => {
@@ -32,20 +34,30 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         });
       });
 
-      // 2. Fetch all group photos to ensure they are all present
+      // 2. Fetch all group photos explicitly for this view
       loadPhotosByGroupId(activeGroupId).then(groupPhotos => {
-        if (groupPhotos && groupPhotos.length > 0 && setPhotos) {
-          setPhotos(prev => {
-            const existingIds = new Set(prev.map(p => p.id));
-            const newPhotos = groupPhotos.filter(p => !existingIds.has(p.id));
-            if (newPhotos.length > 0) {
-              console.log(`[GroupDetailView] Loaded ${newPhotos.length} missing photos for group ${activeGroupId}`);
-              return [...prev, ...newPhotos];
-            }
-            return prev;
-          });
+        if (groupPhotos && groupPhotos.length > 0) {
+          console.log(`[GroupDetailView] Fetched ${groupPhotos.length} photos for group ${activeGroupId}`);
+          setLocalGroupPhotos(groupPhotos);
+          
+          // Also sync back to global state if missing
+          if (setPhotos) {
+            setPhotos(prev => {
+              const existingIds = new Set(prev.map(p => p.id));
+              const newPhotos = groupPhotos.filter(p => !existingIds.has(p.id));
+              if (newPhotos.length > 0) {
+                return [...prev, ...newPhotos];
+              }
+              return prev;
+            });
+          }
         }
+      }).finally(() => {
+        setIsLoading(false);
       });
+    } else {
+      setLocalGroupPhotos([]);
+      setGroupData(null);
     }
   }, [activeGroupId, setPhotos]);
 
@@ -53,11 +65,22 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     if (!activeGroupId) return [];
     
     const gid = String(activeGroupId);
-    const filtered = photos
-      .filter(p => {
-        const photoGroupId = p.groupId || (p as any).group_id || (p as any).groupId;
-        return String(photoGroupId) === gid && (isAdminMode || !p.isHidden);
-      })
+    
+    // Combine props.photos and localGroupPhotos for the best source
+    const photoPool = [...localGroupPhotos];
+    const poolIds = new Set(photoPool.map(p => p.id));
+    
+    // Add any missing from props
+    photos.forEach(p => {
+      const pGid = p.groupId || (p as any).group_id;
+      if (String(pGid) === gid && !poolIds.has(p.id)) {
+        photoPool.push(p);
+        poolIds.add(p.id);
+      }
+    });
+
+    return photoPool
+      .filter(p => isAdminMode || !p.isHidden)
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
@@ -66,10 +89,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         }
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
-
-    console.log(`[GroupDetailView] Group ${gid}: Found ${filtered.length} photos (Total in state: ${photos.length}, Mode: ${isAdminMode ? 'Admin' : 'Public'})`);
-    return filtered;
-  }, [activeGroupId, photos, isAdminMode]);
+  }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);
 
   if (!activeGroupId) return null;
 

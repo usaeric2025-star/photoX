@@ -3,22 +3,30 @@ import { supabase } from '../lib/supabase';
 
 export const loginWithGoogle = async () => {
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      console.log("Already logged in as:", session.user.email);
+      return { user: session.user };
+    }
+
+    const redirectUrl = window.location.origin;
+    console.log("Initiating Google login with redirect to:", redirectUrl);
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: redirectUrl,
+        queryParams: {
+          prompt: 'select_account',
+        }
       }
     });
 
-    if (error) {
-      console.error("Login Error:", error);
-      throw error;
-    }
-    
+    if (error) throw error;
     return data;
-  } catch (err) {
-    console.error("Login exception:", err);
-    return null;
+  } catch (err: any) {
+    console.error("Login Exception:", err);
+    throw err;
   }
 };
 
