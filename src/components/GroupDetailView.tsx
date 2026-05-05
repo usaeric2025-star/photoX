@@ -35,7 +35,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
     return photos
-      .filter(p => p.groupId === activeGroupId)
+      .filter(p => p.groupId === activeGroupId && (isAdminMode || !p.isHidden))
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;

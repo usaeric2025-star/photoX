@@ -517,7 +517,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                                performPullSync(refreshCloudData);
                            }
                          }}
-                         hasMore={visibleCount < gridPhotos.length || (cloudCount !== null && photos.length < cloudCount)}
+                         hasMore={visibleCount < totalGridCount || (cloudCount !== null && photos.length < cloudCount)}
                       />
                  </div>
               </div>

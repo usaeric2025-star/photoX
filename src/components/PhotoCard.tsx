@@ -39,7 +39,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     return getTranslatedCategoryName(photo.categoryId || (photo as any).category_id, categories, lang, t);
   }, [photo.categoryId, (photo as any).category_id, categories, lang, t]);
 
-  const isUncategorized = useMemo(() => isUncategorizedName(displayCatName, t), [displayCatName, t]);
+  const isUncategorized = useMemo(() => {
+    const catId = photo.categoryId || (photo as any).category_id;
+    return isUncategorizedName(displayCatName, t, catId);
+  }, [displayCatName, t, photo.categoryId, (photo as any).category_id]);
   
   const toTitleCase = (str: string) => {
     if (!str) return '';
