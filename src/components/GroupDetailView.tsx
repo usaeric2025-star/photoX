@@ -5,6 +5,7 @@ import { Photo, Tag, Category, ProductGroup } from '../types';
 import { PhotoLightbox } from './PhotoLightbox';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
+import { loadPhotosByGroupId } from '../services/photoService';
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
 export interface GroupDetailViewProps extends GroupAdminShellProps {
@@ -16,7 +17,7 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
-  const { activeGroupId, setActiveGroupId, photos, isAdminMode, shareGroup } = props;
+  const { activeGroupId, setActiveGroupId, photos, setPhotos, isAdminMode, shareGroup } = props;
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
@@ -24,18 +25,39 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
 
   useEffect(() => {
     if (activeGroupId) {
+      // 1. Fetch group metadata
       import('../services/groupService').then(m => {
         m.getGroupById(activeGroupId).then(data => {
           if (data) setGroupData(data);
         });
       });
+
+      // 2. Fetch all group photos to ensure they are all present
+      loadPhotosByGroupId(activeGroupId).then(groupPhotos => {
+        if (groupPhotos && groupPhotos.length > 0 && setPhotos) {
+          setPhotos(prev => {
+            const existingIds = new Set(prev.map(p => p.id));
+            const newPhotos = groupPhotos.filter(p => !existingIds.has(p.id));
+            if (newPhotos.length > 0) {
+              console.log(`[GroupDetailView] Loaded ${newPhotos.length} missing photos for group ${activeGroupId}`);
+              return [...prev, ...newPhotos];
+            }
+            return prev;
+          });
+        }
+      });
     }
-  }, [activeGroupId]);
+  }, [activeGroupId, setPhotos]);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    return photos
-      .filter(p => p.groupId === activeGroupId && (isAdminMode || !p.isHidden))
+    
+    const gid = String(activeGroupId);
+    const filtered = photos
+      .filter(p => {
+        const photoGroupId = p.groupId || (p as any).group_id || (p as any).groupId;
+        return String(photoGroupId) === gid && (isAdminMode || !p.isHidden);
+      })
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
@@ -44,7 +66,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         }
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
-  }, [activeGroupId, photos]);
+
+    console.log(`[GroupDetailView] Group ${gid}: Found ${filtered.length} photos (Total in state: ${photos.length}, Mode: ${isAdminMode ? 'Admin' : 'Public'})`);
+    return filtered;
+  }, [activeGroupId, photos, isAdminMode]);
 
   if (!activeGroupId) return null;
 

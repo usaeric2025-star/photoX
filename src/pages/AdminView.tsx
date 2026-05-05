@@ -21,6 +21,12 @@ const errorGuard = (name: string) => () => {
 export default function AdminView() {
   const { user, authChecked, logout } = useAuth();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (authChecked) {
+      console.log("[AdminView] Auth Check Complete. User:", user?.email || 'Guest');
+    }
+  }, [authChecked, user]);
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] ?? translations.en;
 

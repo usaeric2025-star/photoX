@@ -62,7 +62,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       image_hash: item.image_hash as string | undefined,
       name: (item.name as string) || 'Unnamed Product',
       categoryId: item.category_id ? String(item.category_id) : null,
-      manufacturerId: (item.manufacturer_id as string) || null,
+      manufacturerId: item.manufacturer_id ? String(item.manufacturer_id) : null,
       tagIds,
       description: item.description as string | undefined,
       image_url: item.image_url as string | undefined,
@@ -70,13 +70,13 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
       exif_data: (item.exif_data as Record<string, unknown>) ?? null,
       createdAt: item.created_at as string | undefined,
-      groupId: item.group_id as string | undefined,
+      groupId: item.group_id ? String(item.group_id) : undefined,
       isGroupCover: (item.is_group_cover as boolean) || false,
-      groupOrder: (item.group_order as number) || 0,
-      isHidden: (item.isHidden ?? item.is_hidden ?? false) as boolean,
-      userId: item.user_id as string | undefined,
+      groupOrder: Number(item.group_order) || 0,
+      isHidden: (item.is_hidden === true || item.isHidden === true),
+      userId: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
-      price: (item.price as string) || '',
+      price: item.price ? String(item.price) : '',
       description_translations: item.description_translations as Photo['description_translations'] || null
     };
 }
@@ -689,6 +689,29 @@ export const loadAllPhotosFromCloud = async (
   
   if (error) {
     console.error("[ERROR] Supabase Fetch Error (loadAllPhotosFromCloud):", error);
+    return [];
+  }
+
+  const result = (data || []).map(item => mapSupabasePhoto(item));
+  photoCache.set(cacheKey, result);
+  return result;
+};
+
+export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => {
+  if (!groupId) return [];
+  
+  const cacheKey = `group_photos_${groupId}`;
+  const cached = photoCache.get(cacheKey);
+  if (cached) return cached;
+
+  const { data, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('*, photo_tags(*)')
+    .eq('group_id', groupId)
+    .order('group_order', { ascending: true });
+
+  if (error) {
+    console.error("[ERROR] loadPhotosByGroupId:", error);
     return [];
   }
 

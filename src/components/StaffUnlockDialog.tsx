@@ -74,9 +74,9 @@ export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
                 <button
                   type="button"
                   onClick={async () => {
-                    onClose();
                     try {
-                      await loginWithGoogle();
+                      // Don't close modal immediately to show intent
+                      await loginWithGoogle?.();
                     } catch (e: any) { 
                       adminUI?.showToast(`${t.loginFailed}: ${e.message || String(e)}`, 'error');
                     }

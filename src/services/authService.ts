@@ -2,12 +2,24 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 export const loginWithGoogle = async () => {
-  const { data, error } = await supabase.auth.signInWithPopup({
-    provider: 'google'
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      }
+    });
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      console.error("Login Error:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (err) {
+    console.error("Login exception:", err);
+    return null;
+  }
 };
 
 export const logout = () => supabase.auth.signOut();

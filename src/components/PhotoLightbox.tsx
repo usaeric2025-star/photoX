@@ -202,14 +202,23 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
               }}
             />
           ) : (
-            <img 
-              key={photo.id}
-              src={photo.image_url || photo.uri || ''} 
-              alt={photo.name || 'Photo'}
-              className={`object-contain h-full w-full cursor-pointer transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`} 
-              onLoad={() => setIsImageLoading(false)}
-              onClick={() => setIsZoomed(true)} 
-            />
+            <>
+              {/* Placeholder for loading state */}
+              <div 
+                className={`absolute inset-0 bg-slate-950 transition-opacity duration-300 ${isImageLoading ? 'opacity-100' : 'opacity-0'}`}
+              />
+              <img 
+                key={photo.id}
+                src={photo.image_url || photo.uri || ''} 
+                alt={photo.name || 'Photo'}
+                className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-300 ${isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} 
+                onLoad={() => {
+                  console.log("Lightbox photo loaded:", photo.id);
+                  setIsImageLoading(false);
+                }}
+                onClick={() => setIsZoomed(true)} 
+              />
+            </>
           )}
         </div>
 
