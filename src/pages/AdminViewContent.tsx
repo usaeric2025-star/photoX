@@ -57,7 +57,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode,
-    visibleCount, setVisibleCount, tagIdToNameMap, clearSelection
+    visibleCount, setVisibleCount, tagIdToNameMap, clearSelection, totalGridCount
   } = useGalleryContext();
   
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, toast, showToast } = dialogProps;
@@ -511,7 +511,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                          user={user}
                          loginWithGoogle={loginWithGoogle}
                          onLoadMore={() => {
-                           if (visibleCount < gridPhotos.length) {
+                           if (visibleCount < totalGridCount) {
                              setVisibleCount(prev => prev + PAGINATION.PUBLIC_PAGE_SIZE);
                            } else if (photos.length < (cloudCount || 0)) {
                                performPullSync(refreshCloudData);

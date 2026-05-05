@@ -156,9 +156,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [displayPhotos, showGroupsCollapsed]);
 
   const gridPhotos = useMemo(() => {
-    if (isAdminMode) return gridPhotosFull;
     return gridPhotosFull.slice(0, visibleCount);
-  }, [gridPhotosFull, visibleCount, isAdminMode]);
+  }, [gridPhotosFull, visibleCount]);
 
   const stableTagCounts = useMemo(() => {
     const counts: Record<string, number> = {};
