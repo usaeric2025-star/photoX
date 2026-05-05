@@ -84,17 +84,18 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
         return runWithSyncing(async () => {
         console.log("SyncEngine: Refreshing data (Force:", force, ")...");
         try {
-            // Parallelize initial metadata and photos fetch
-            const lastSyncTime = force ? null : localStorage.getItem('lastSyncTime');
+            // Get current local state to merge properly
+            const localPhotos = await loadData('product_photos') || [];
+            
+            // If local data is empty, force a full sync regardless of 'force' param
+            const effectiveSyncTime = (force || localPhotos.length === 0) ? null : localStorage.getItem('lastSyncTime');
             
             const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, cloudPhotos] = await Promise.all([
                 fetchSettings().catch(err => { console.error("fetchSettings failed:", err); return null; }),
                 loadManufacturersFromCloud().catch(err => { console.error("loadManufacturersFromCloud failed:", err); return null; }),
                 loadTagsFromCloud().catch(err => { console.error("loadTagsFromCloud failed:", err); return null; }),
                 loadCategoriesFromCloud().catch(err => { console.error("loadCategoriesFromCloud failed:", err); return []; }),
-                user 
-                  ? loadPhotosFromCloud(user.id, lastSyncTime || undefined).catch(err => { console.error("loadPhotosFromCloud failed:", err); return []; })
-                  : loadAllPhotosFromCloud(lastSyncTime || undefined).catch(err => { console.error("loadAllPhotosFromCloud failed:", err); return []; })
+                loadAllPhotosFromCloud(effectiveSyncTime || undefined).catch(err => { console.error("loadAllPhotosFromCloud failed:", err); return []; })
             ]);
 
             if (cloudSettings) {
@@ -133,7 +134,6 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
             }
             
             // Get current local state to merge properly and get total count
-            const localPhotos = await loadData('product_photos') || [];
             const localMap = new Map((localPhotos as any[]).filter(p => p && p.id).map(p => [p.id, p]));
 
             if (cloudPhotos && cloudPhotos.length > 0) {

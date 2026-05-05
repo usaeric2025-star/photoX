@@ -2,22 +2,12 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 export const loginWithGoogle = async () => {
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin + '/#/admin',
-      skipBrowserRedirect: true
-    }
+  const { data, error } = await supabase.auth.signInWithPopup({
+    provider: 'google'
   });
 
   if (error) throw error;
-  
-  if (data?.url) {
-    // Open in new tab/window to avoid iframe X-Frame-Options: SAMEORIGIN issues
-    window.open(data.url, '_blank');
-  }
-  
-  return null;
+  return data;
 };
 
 export const logout = () => supabase.auth.signOut();

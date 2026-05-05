@@ -203,9 +203,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             />
           ) : (
             <img 
+              key={photo.id}
               src={photo.image_url || photo.uri || ''} 
               alt={photo.name || 'Photo'}
-              className="object-contain h-full w-full cursor-pointer" 
+              className={`object-contain h-full w-full cursor-pointer transition-opacity duration-300 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`} 
+              onLoad={() => setIsImageLoading(false)}
               onClick={() => setIsZoomed(true)} 
             />
           )}
@@ -240,7 +242,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative"
         >
-          <div className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4">
+          <motion.div 
+            key={photo.id}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4"
+          >
             {/* Info Card Content */}
                  {/* 1. 标题与动作条 */}
                  <div className="flex justify-between items-start gap-4">
@@ -423,22 +431,22 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                      <p className="font-mono font-black text-red-600 tracking-wider uppercase">{photo.manual_code}</p>
                    </div>
                  )}
-              </div>
+          </motion.div>
 
-              {/* 底部悬浮动作区域 */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 bg-gradient-to-t from-white via-white to-transparent pointer-events-none sticky bottom-0">
-                 <button 
-                   onClick={(e) => {
-                      e.stopPropagation();
-                      (window as any)._pendingPhoto = photo;
-                      contactWhatsApp(photo);
-                    }}
-                   className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
-                 >
-                   <MessageCircle size={20} fill="currentColor" />
-                   {t.whatsAppInquiry}
-                 </button>
-              </div>
+          {/* 底部悬浮动作区域 */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 bg-gradient-to-t from-white via-white to-transparent pointer-events-none sticky bottom-0">
+             <button 
+               onClick={(e) => {
+                  e.stopPropagation();
+                  (window as any)._pendingPhoto = photo;
+                  contactWhatsApp(photo);
+                }}
+               className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
+             >
+               <MessageCircle size={20} fill="currentColor" />
+               {t.whatsAppInquiry}
+             </button>
+          </div>
         </motion.div>
       )}
 

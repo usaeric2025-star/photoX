@@ -68,11 +68,11 @@ export default function PublicView() {
 
   const syncWithCloud = async (isBackground = false) => {
     // 1. 先读本地缓存
-    const cachedPhotos = await loadData('cachedPhotos');
-    const cachedCats = await loadData('cachedCategories');
-    const cachedTags = await loadData('cachedTags');
-    const cachedManufacturers = await loadData('cachedManufacturers');
-    const cachedSettings = await loadData('cachedSettings');
+    const cachedPhotos = await loadData('product_photos');
+    const cachedCats = await loadData('product_categories');
+    const cachedTags = await loadData('product_tags');
+    const cachedManufacturers = await loadData('product_manufacturers');
+    const cachedSettings = await loadData('product_settings');
 
     if (cachedPhotos && !filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
       setPhotos(cachedPhotos);
@@ -107,7 +107,7 @@ export default function PublicView() {
         setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
         if (!filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
-          saveData('cachedPhotos', cloudPhotos);
+          saveData('product_photos', cloudPhotos);
         }
       }
       
@@ -119,22 +119,22 @@ export default function PublicView() {
           subcategories: c.subcategories || [] 
         }));
         setCategories(normalized);
-        saveData('cachedCategories', normalized);
+        saveData('product_categories', normalized);
       }
 
       if (cloudTags) {
         setTags(cloudTags);
-        saveData('cachedTags', cloudTags);
+        saveData('product_tags', cloudTags);
       }
 
       if (cloudManufacturers) {
         setManufacturers(cloudManufacturers);
-        saveData('cachedManufacturers', cloudManufacturers);
+        saveData('product_manufacturers', cloudManufacturers);
       }
 
       if (cloudSettings) {
         setSettings(cloudSettings as AppSettings);
-        saveData('cachedSettings', cloudSettings);
+        saveData('product_settings', cloudSettings);
       }
     } catch (e) {
       handleError(e, "syncWithCloud");
