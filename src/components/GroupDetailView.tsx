@@ -44,9 +44,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           .eq('group_id', activeGroupId)
           .order('group_order', { ascending: true })
           .then(({ data, error }) => {
+            console.log('[GroupDetailView] Query result:', { data, error, activeGroupId });
             if (error) {
-              console.error(`[GroupDetailView] Error fetching photos for group ${activeGroupId}:`, error);
+              console.error(`[GroupDetailView] Error:`, error);
             } else if (data) {
+              console.log(`[GroupDetailView] Got ${data.length} photos`);
               const mapped = data.map(item => mapSupabasePhoto(item));
               setLocalGroupPhotos(mapped);
             }
