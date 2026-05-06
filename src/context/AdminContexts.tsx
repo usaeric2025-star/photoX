@@ -18,7 +18,7 @@ export interface AdminSessionContextType {
   isSyncing: boolean;
   setIsSyncing: (v: boolean) => void;
   onRefresh: () => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: () => Promise<any>;
   logout: () => void;
   appLang: string;
   isStaffMode?: boolean;

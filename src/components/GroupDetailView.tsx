@@ -5,7 +5,9 @@ import { Photo, Tag, Category, ProductGroup } from '../types';
 import { PhotoLightbox } from './PhotoLightbox';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
-import { loadPhotosByGroupId } from '../services/photoService';
+import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService';
+import { supabase } from '../lib/supabase';
+import { DB_CONFIG } from '../constants/config';
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
 export interface GroupDetailViewProps extends GroupAdminShellProps {
@@ -35,26 +37,62 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
       });
 
       // 2. Fetch all group photos explicitly for this view
-      loadPhotosByGroupId(activeGroupId).then(groupPhotos => {
-        if (groupPhotos && groupPhotos.length > 0) {
-          console.log(`[GroupDetailView] Fetched ${groupPhotos.length} photos for group ${activeGroupId}`);
-          setLocalGroupPhotos(groupPhotos);
-          
-          // Also sync back to global state if missing
-          if (setPhotos) {
-            setPhotos(prev => {
-              const existingIds = new Set(prev.map(p => p.id));
-              const newPhotos = groupPhotos.filter(p => !existingIds.has(p.id));
-              if (newPhotos.length > 0) {
-                return [...prev, ...newPhotos];
-              }
-              return prev;
-            });
+      const fetchPhotos = async () => {
+        const { data: rawPhotos, error } = await supabase
+          .from(DB_CONFIG.TABLE_NAME)
+          .select('*, photo_tags(*)')
+          .eq('group_id', activeGroupId)
+          .order('group_order', { ascending: true });
+
+        if (error) {
+          if (error.message.includes('column')) {
+            console.warn("[GroupDetailView] Column missing, retrying without 'is_hidden'...");
+            const { data: retryPhotos, error: retryError } = await supabase
+              .from(DB_CONFIG.TABLE_NAME)
+              .select('id, name, item_code, group_id, group_order, is_group_cover, image_url, image_hash, photo_tags(*)')
+              .eq('group_id', activeGroupId)
+              .order('group_order', { ascending: true });
+            
+            if (retryError) {
+              console.error(`[GroupDetailView] Retry fetch failed:`, retryError);
+              setIsLoading(false);
+              return;
+            }
+            processPhotos(retryPhotos);
+          } else {
+            console.error(`[GroupDetailView] Error fetching photos for group ${activeGroupId}:`, error);
+            setIsLoading(false);
+            return;
           }
+        } else {
+          processPhotos(rawPhotos);
         }
-      }).finally(() => {
-        setIsLoading(false);
-      });
+      };
+
+      const processPhotos = (rawPhotos: any[] | null) => {
+          console.log(`[GroupDetailView DEBUG] ActiveGroup ${activeGroupId} returned ${rawPhotos?.length} raw rows.`);
+          const groupPhotos = (rawPhotos || []).map(item => mapSupabasePhoto(item));
+
+          if (groupPhotos && groupPhotos.length > 0) {
+            console.log(`[GroupDetailView] Fetched ${groupPhotos.length} photos for group ${activeGroupId}`);
+            setLocalGroupPhotos(groupPhotos);
+            
+            // Also sync back to global state if missing
+            if (setPhotos) {
+              setPhotos(prev => {
+                const existingIds = new Set(prev.map(p => p.id));
+                const newPhotos = groupPhotos.filter(p => !existingIds.has(p.id));
+                if (newPhotos.length > 0) {
+                  return [...prev, ...newPhotos];
+                }
+                return prev;
+              });
+            }
+          }
+          setIsLoading(false);
+      };
+
+      fetchPhotos();
     } else {
       setLocalGroupPhotos([]);
       setGroupData(null);

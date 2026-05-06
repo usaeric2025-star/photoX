@@ -11,7 +11,7 @@ interface StaffUnlockDialogProps {
   passError: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onLogin?: () => void;
-  loginWithGoogle?: () => Promise<void>;
+  loginWithGoogle?: () => Promise<any>;
   t: Record<string, any>;
 }
 

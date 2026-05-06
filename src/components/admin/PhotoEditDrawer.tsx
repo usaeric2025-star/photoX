@@ -41,7 +41,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag,
     removeTagFromPhoto
   } = useAdminPhoto();
-  const { isAnalyzing, aiDebugInfo, setPromptDialog, showToast } = useAdminUI();
+  const { isAnalyzing, aiDebugInfo, setPromptDialog, showToast, setAlertDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { validatePhotoForm } = useFormValidation();
   const { handleError } = useErrorHandler();

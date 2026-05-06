@@ -73,7 +73,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       groupId: item.group_id ? String(item.group_id) : undefined,
       isGroupCover: (item.is_group_cover as boolean) || false,
       groupOrder: Number(item.group_order) || 0,
-      isHidden: (item.is_hidden === true || item.isHidden === true),
+      isHidden: (item.isHidden === true),
       userId: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
@@ -189,7 +189,6 @@ export const updatePhoto = async (
   if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
   if ('isHidden' in updates) {
     dbUpdates.isHidden = updates.isHidden;
-    dbUpdates.is_hidden = updates.isHidden; // Set both just in case
   }
   if ('description_translations' in updates) dbUpdates.description_translations = updates.description_translations;
   
@@ -223,14 +222,14 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
        // Try again without group fields if they were the cause
        const safeUpdates = { ...updates };
        let modified = false;
-       ['group_id', 'group_order', 'is_group_cover', 'is_hidden', 'updated_at'].forEach(key => {
+       ['group_id', 'group_order', 'is_group_cover', 'updated_at'].forEach(key => {
          if (key in safeUpdates) {
            // Mapping internal keys to DB keys if needed or just skipping if error
          }
        });
        
        // Just basic cleanup if error
-       const groupKeys = ['group_id', 'group_order', 'is_group_cover', 'group_metadata'];
+       const groupKeys = ['group_id', 'group_order', 'is_group_cover', 'group_metadata', 'is_hidden'];
        groupKeys.forEach(key => {
          if (key in safeUpdates) {
            delete (safeUpdates as any)[key];
@@ -301,7 +300,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     is_group_cover: photo.isGroupCover || false,
     group_order: photo.groupOrder || 0,
     isHidden: photo.isHidden || false,
-    is_hidden: photo.isHidden || false, // Mapping to both
     updated_at: photo.updatedAt || new Date().toISOString()
   };
 
@@ -318,28 +316,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     })
     .select('id')
     .maybeSingle();
-
-  // FALLBACK: If group columns are missing in the DB schema, retry without them
-  if (dbError && dbError.message.includes('column')) {
-    const isGroupError = ['group_id', 'group_order', 'is_group_cover'].some(col => dbError?.message.includes(col));
-    
-    if (isGroupError) {
-      console.warn("DB Schema mismatch detected for group columns, retrying without them...");
-      const safePayload = { ...payload };
-      delete safePayload.group_id;
-      delete safePayload.group_order;
-      delete safePayload.is_group_cover;
-      
-      const retry = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .upsert(safePayload, { onConflict: 'id', ignoreDuplicates: false })
-        .select('id')
-        .maybeSingle();
-      
-      savedPhoto = retry.data;
-      dbError = retry.error;
-    }
-  }
 
   if (dbError) {
     console.error("Supabase Database Upsert Error:", dbError);

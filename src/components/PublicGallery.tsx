@@ -25,7 +25,7 @@ interface PublicGalleryProps {
   onExit?: () => void;
   showExit?: boolean;
   onLogin?: () => void;
-  loginWithGoogle?: () => Promise<void>;
+  loginWithGoogle?: () => Promise<any>;
   internalPassword?: string;
   settings?: AppSettings;
   isRefreshing?: boolean;
