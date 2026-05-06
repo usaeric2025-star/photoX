@@ -27,7 +27,7 @@ export function useDelete() {
       await saveData('product_photos', nextPhotos);
 
       if (userId) {
-          const { deletePhotosBatch } = await import('../services/photoService');
+          const { deletePhotosBatch } = await import('../services/photoMutationService');
           await deletePhotosBatch(userId, photosToDelete);
       }
       return { success: true };
@@ -44,7 +44,7 @@ export function useDelete() {
     if (!userId) return { success: false, error: 'User ID not found' };
 
     try {
-      const { clearGroupIdInCloud } = await import('../services/photoService');
+      const { clearGroupIdInCloud } = await import('../services/photoSyncService');
       await clearGroupIdInCloud(groupId);
       
       const { deleteGroupFromCloud } = await import('../services/groupService');

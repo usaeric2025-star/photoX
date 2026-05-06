@@ -3,6 +3,7 @@ import { Photo, Category, Tag } from '../types';
 import { sanitizePhotoTags } from '../lib/sanitizer';
 import { normalizeSearchQuery } from '../utils/stringHelper';
 import { PAGINATION } from '../constants/config';
+import { groupPhotos } from '../lib/filters';
 
 interface UseGalleryProps {
   photos: Photo[];
@@ -10,6 +11,7 @@ interface UseGalleryProps {
   tags: Tag[];
   columns: 2 | 3 | 5;
   isAdminMode?: boolean;
+  isStaffMode?: boolean;
   externalSortOrder?: 'asc' | 'desc';
   externalSearchQuery?: string;
   externalSelectedCatCode?: string | null;
@@ -18,7 +20,7 @@ interface UseGalleryProps {
 }
 
 export const useGallery = ({ 
-  photos, categories, tags, columns, isAdminMode = false, 
+  photos, categories, tags, columns, isAdminMode = false, isStaffMode = false,
   externalSortOrder, externalSearchQuery, 
   externalSelectedCatCode, externalSelectedSubId, externalSelectedTagIds 
 }: UseGalleryProps) => {
@@ -35,7 +37,7 @@ export const useGallery = ({
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
   const selectedCatCode = externalSelectedCatCode !== undefined ? externalSelectedCatCode : internalSelectedCatCode;
   const selectedSubId = externalSelectedSubId !== undefined ? externalSelectedSubId : internalSelectedSubId;
-  const selectedTagIds = externalSelectedTagIds !== undefined ? externalSelectedTagIds : internalSelectedTagIds;
+  const selectedTagIds = externalSelectedTagIds !== undefined ? externalSelectedTagIds : externalSelectedTagIds;
 
   const toggleSortOrder = () => {
     setInternalSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
@@ -70,7 +72,7 @@ export const useGallery = ({
     // Sanitization: remove missing tags
     const sanitized = photos.map(p => sanitizePhotoTags(p, tags));
     
-    let filtered = isAdminMode ? sanitized : sanitized.filter(p => !p.isHidden);
+    let filtered = (isAdminMode || isStaffMode) ? sanitized : sanitized.filter(p => !p.isHidden);
     
     if (selectedCatCode) {
       filtered = filtered.filter(p => p.categoryId === selectedCatCode);
@@ -122,22 +124,12 @@ export const useGallery = ({
     });
 
     return filtered;
-  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, categories, tags, sortOrder, isAdminMode]);
+  }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, categories, tags, sortOrder, isAdminMode, isStaffMode]);
 
   const totalPhotoCount = displayPhotos.length;
 
   const aggregatedPhotos = useMemo(() => {
-    let sorted = [...displayPhotos];
-    if (showGroupsCollapsed) {
-      const groupsSeen = new Set<string>();
-      sorted = sorted.filter(p => {
-        if (!p.groupId) return true;
-        if (groupsSeen.has(p.groupId)) return false;
-        groupsSeen.add(p.groupId);
-        return true;
-      });
-    }
-    return sorted;
+    return groupPhotos(displayPhotos, showGroupsCollapsed);
   }, [displayPhotos, showGroupsCollapsed]);
 
   const visiblePhotos = useMemo(() => {

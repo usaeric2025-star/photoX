@@ -6,7 +6,8 @@ import {
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon, Eye, EyeOff
 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup, Manufacturer } from '../../types';
-import { updatePhotosGroupInCloud, updatePhoto, savePhotoToCloud } from '../../services/photoService';
+import { updatePhotosGroupInCloud } from '../../services/photoSyncService';
+import { updatePhoto, savePhotoToCloud } from '../../services/photoMutationService';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupGridView } from './GroupGridView';

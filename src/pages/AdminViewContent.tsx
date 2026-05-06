@@ -430,12 +430,13 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                          categories={categories}
                          tags={tags}
                          isAdminMode={false}
+                         isStaffMode={true}
                          onTogglePinned={async (photo) => {
                            const newStatus = !photo.isPinned;
                            const affectedPhotos = photo.groupId 
                              ? photos.filter(p => p.groupId === photo.groupId)
                              : [photo];
-                           import('../services/photoService').then(async (m) => {
+                           import('../services/photoMutationService').then(async (m) => {
                              try {
                                await Promise.all(
                                  affectedPhotos.map(p => 

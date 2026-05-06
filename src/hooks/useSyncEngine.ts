@@ -2,17 +2,18 @@ import React, { useState } from 'react';
 import { Photo } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
 import { 
-    fetchSettings, 
-    saveSettings, 
-    loadCategoriesFromCloud, 
     loadAllPhotosFromCloud, 
     loadPhotosFromCloud,
+} from '../services/photoService';
+import {
     savePhotoToCloud,
     deletePhotoFromCloud,
-    uploadLogo,
-    loadTagsFromCloud,
-    loadManufacturersFromCloud
-} from '../services/supabaseService';
+} from '../services/photoMutationService';
+import { fetchSettings, saveSettings } from '../services/settingService';
+import { loadCategoriesFromCloud } from '../services/categoryService';
+import { loadTagsFromCloud } from '../services/tagService';
+import { loadManufacturersFromCloud } from '../services/manufacturerService';
+import { uploadLogo } from '../services/settingService';
 
 import { useGalleryContext } from '../context/GalleryContext';
 

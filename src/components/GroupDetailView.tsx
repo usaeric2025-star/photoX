@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup } from '../types';
 import { PhotoLightbox } from './PhotoLightbox';
+import { getGroupById } from '../services/groupService';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
 import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService';
@@ -29,10 +30,8 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   useEffect(() => {
     if (activeGroupId) {
       // 1. Fetch group metadata
-      import('../services/groupService').then(m => {
-        m.getGroupById(activeGroupId).then(data => {
-          if (data) setGroupData(data);
-        });
+      getGroupById(activeGroupId).then(data => {
+        if (data) setGroupData(data);
       });
 
       // 2. In public mode, fetch all group photos directly to bypass pagination
@@ -42,13 +41,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           .from(DB_CONFIG.TABLE_NAME)
           .select('*, photo_tags(*)')
           .eq('group_id', activeGroupId)
-          .order('group_order', { ascending: true })
           .then(({ data, error }) => {
-            console.log('[GroupDetailView] Query result:', { data, error, activeGroupId });
             if (error) {
               console.error(`[GroupDetailView] Error:`, error);
             } else if (data) {
-              console.log(`[GroupDetailView] Got ${data.length} photos`);
               const mapped = data.map(item => mapSupabasePhoto(item));
               setLocalGroupPhotos(mapped);
             }
@@ -110,7 +106,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                      <h2 className="text-lg font-bold text-slate-800 tracking-tight">
-                       {activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                       {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
                      </h2>
                   </div>
                   <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>

@@ -7,19 +7,18 @@ import { Photo, Category, Tag, SubCategory, User, Manufacturer } from '../types'
 import { 
   savePhotoToCloud, 
   deletePhotoFromCloud, 
-  compressImage,
-  calculateMD5,
-  calculateMD5FromFile,
-  calculateMD5FromArrayBuffer,
-  generateItemCode,
-  checkImageHashExists,
-  loadAllPhotosFromCloud,
-  loadPhotosFromCloud,
-  batchCreateTags,
-  syncPhotosToCloud,
+  checkImageHashExists, 
   deletePhotosBatch,
   savePhotosToCloudBatch
-} from '../services/supabaseService';
+} from '../services/photoMutationService';
+import { 
+  loadAllPhotosFromCloud,
+  loadPhotosFromCloud
+} from '../services/photoService';
+import { syncPhotosToCloud } from '../services/photoSyncService';
+import { compressImage } from '../services/storageService';
+import { calculateMD5, calculateMD5FromFile, calculateMD5FromArrayBuffer, generateItemCode } from '../services/utils';
+import { batchCreateTags } from '../services/tagService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
@@ -602,7 +601,6 @@ export const useAdminPhotos = (
     
     if (user && successCount > 0 && allAddedPhotos.length > 0) {
       try {
-        const { savePhotosToCloudBatch } = await import('../services/photoService');
         const syncedPhotos = await savePhotosToCloudBatch(user.id, allAddedPhotos);
         
         // Update state with confirmed IDs from cloud

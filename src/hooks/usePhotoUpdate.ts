@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAdminPhoto } from '../context/AdminContexts';
-import { updatePhoto } from '../services/photoService';
+import { updatePhoto } from '../services/photoMutationService';
 import { Photo } from '../types';
 
 export function usePhotoUpdate() {

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAdminPhoto, useAdminUI } from '../context/AdminContexts';
-import { updatePhotosGroupInCloud } from '../services/photoService';
+import { updatePhotosGroupInCloud } from '../services/photoSyncService';
 
 export function useGroupSync(activeGroupId: string | null) {
   const { photos, setPhotos } = useAdminPhoto();

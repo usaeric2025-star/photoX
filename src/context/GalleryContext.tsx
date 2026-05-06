@@ -23,6 +23,7 @@ interface GalleryContextType {
   visibleCount: number;
   setVisibleCount: React.Dispatch<React.SetStateAction<number>>;
   isInfiniteMode: boolean;
+  isStaffMode: boolean; // Add this
   user: any;
   isAdminMode: boolean;
   page: number;
@@ -42,6 +43,7 @@ interface GalleryContextType {
   setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
   setShowGroupsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
   setIsInfiniteMode: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsStaffMode: React.Dispatch<React.SetStateAction<boolean>>; // Add this
   setUser: React.Dispatch<React.SetStateAction<any>>;
   setIsAdminMode: React.Dispatch<React.SetStateAction<boolean>>;
   setPage: React.Dispatch<React.SetStateAction<number>>;
@@ -87,6 +89,14 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [showGroupsCollapsed, setShowGroupsCollapsed] = useState(true);
   const [visibleCount, setVisibleCount] = useState(20);
   const [isInfiniteMode, setIsInfiniteMode] = useState(false);
+  const [isStaffMode, setIsStaffMode] = useState(() => {
+    return sessionStorage.getItem('isStaffMode') === 'true';
+  });
+  
+  useEffect(() => {
+    sessionStorage.setItem('isStaffMode', String(isStaffMode));
+  }, [isStaffMode]);
+
   const [user, setUser] = useState<any>(null);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [page, setPage] = useState(0);
@@ -132,13 +142,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [tags]);
 
     // Use pre-computed time to avoid repeated Date parsing during sort
-    const photosWithTime = useMemo(() => {
-      return photos.map(p => ({
-        ...p,
-        _time: new Date(p.createdAt || (p as any).created_at || 0).getTime()
-      }));
-    }, [photos]);
-
     const displayPhotos = useMemo(() => {
       return filterPhotos(photos, {
         searchQuery: debouncedSearchQuery,
@@ -146,9 +149,10 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         filterSubId,
         filterTagIds,
         sortOrder,
-        isAdminMode
+        isAdminMode,
+        isStaffMode
       }, tags);
-    }, [photos, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, isAdminMode, tags]);
+    }, [photos, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, isAdminMode, isStaffMode, tags]);
 
   // final grid: with grouping
   const gridPhotosFull = useMemo(() => {
@@ -200,6 +204,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       visibleCount,
       setVisibleCount,
       isInfiniteMode,
+      isStaffMode,
       user,
       isAdminMode,
       page,
@@ -217,6 +222,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setSelectedIds,
       setShowGroupsCollapsed,
       setIsInfiniteMode,
+      setIsStaffMode,
       setUser,
       setIsAdminMode,
       setPage,
@@ -232,7 +238,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
-    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, isInfiniteMode, user, isAdminMode, page, hasMore,
+    sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, isInfiniteMode, isStaffMode, user, isAdminMode, page, hasMore,
     tagNameToIdMap, tagIdToNameMap, sortedTags,
     togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, gridPhotosFull.length, totalCloudCount
   ]);

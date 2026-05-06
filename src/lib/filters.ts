@@ -7,6 +7,7 @@ export interface FilterOptions {
   filterTagIds?: string[];
   sortOrder?: 'asc' | 'desc';
   isAdminMode?: boolean;
+  isStaffMode?: boolean;
 }
 
 export function filterPhotos(
@@ -21,6 +22,7 @@ export function filterPhotos(
     filterTagIds = [],
     sortOrder = 'desc',
     isAdminMode = false,
+    isStaffMode = false,
   } = options;
 
   let result = photos.map(p => ({
@@ -29,7 +31,7 @@ export function filterPhotos(
   }));
 
   // 1. Basic Visibility Filter
-  if (!isAdminMode) {
+  if (!isAdminMode && !isStaffMode) {
     result = result.filter(p => !p.isHidden || p.isGroupCover);
   }
 

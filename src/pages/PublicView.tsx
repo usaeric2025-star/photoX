@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
-import { updatePhoto } from '../services/photoService';
+import { updatePhoto } from '../services/photoMutationService';
 import { PublicGallery } from '../components/PublicGallery';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
@@ -49,13 +49,13 @@ export default function PublicView() {
     try {
       const tagId = filterTagIds.length > 0 ? filterTagIds[0] : null;
       const [cloudPhotos, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, tagId, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, 1000, filterCatId, tagId, debouncedSearchQuery),
         getPhotoCount(filterCatId, tagId, debouncedSearchQuery)
       ]);
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
         setPage(0);
-        setHasMore(cloudPhotos.length === PAGINATION.ADMIN_BATCH_SIZE);
+        setHasMore(cloudPhotos.length === 1000);
         setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
       }

@@ -311,7 +311,7 @@ export const usePhotoManagement = (
         
         if (user) {
            try {
-              const m = await import('../services/photoService');
+              const m = await import('../services/photoMutationService');
               if (m.savePhotosToCloudBatch) {
                  await m.savePhotosToCloudBatch(user.id, updatedPhotosList, (count) => {
                     if (adminUI?.setBatchProgress) {

@@ -1,5 +1,7 @@
 export * from './authService';
 export * from './photoService';
+export * from './photoMutationService';
+export * from './photoSyncService';
 export * from './tagService';
 export * from './categoryService';
 export * from './manufacturerService';

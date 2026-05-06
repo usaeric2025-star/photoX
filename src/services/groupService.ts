@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { supabasePublic } from '../lib/supabase-public';
 import { ProductGroup } from '../types';
 
 export const TABLE_NAME = 'groups';
@@ -56,7 +57,7 @@ export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: stri
 };
 
 export const getGroupById = async (id: string): Promise<ProductGroup | null> => {
-  const { data, error } = await supabase
+  const { data, error } = await supabasePublic
     .from(TABLE_NAME)
     .select('*')
     .eq('id', id)

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoService';
+import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoMutationService';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types';
 import { X, ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
@@ -180,7 +180,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
-    isInfiniteMode,
+    isInfiniteMode, isStaffMode, setIsStaffMode,
     displayPhotos, gridPhotos,
     totalGridCount,
     page
@@ -197,13 +197,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   // Handle infinite mode
   useEffect(() => {
-    if (isAdminMode && isInfiniteMode) {
+    if ((isAdminMode || isStaffMode) && isInfiniteMode) {
       setVisibleCount(PAGINATION.INFINITE_MODE_COUNT);
-    } else if (isAdminMode) {
-      // In admin mode but not infinite, ensure we have a reasonable starting point
+    } else if (isAdminMode || isStaffMode) {
+      // In admin/staff mode but not infinite, ensure we have a reasonable starting point
       setVisibleCount(prev => prev < PAGINATION.LAZY_LOAD_COUNT ? PAGINATION.LAZY_LOAD_COUNT : prev);
     }
-  }, [isAdminMode, isInfiniteMode, setVisibleCount]);
+  }, [isAdminMode, isStaffMode, isInfiniteMode, setVisibleCount]);
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
@@ -230,13 +230,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [lang]);
   const navigate = useNavigate();
 
-  const [isStaffMode, setIsStaffMode] = useState(() => {
-    return sessionStorage.getItem('isStaffMode') === 'true';
-  });
-  
-  useEffect(() => {
-    sessionStorage.setItem('isStaffMode', String(isStaffMode));
-  }, [isStaffMode]);
   const [showPassPrompt, setShowPassPrompt] = useState(false);
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
@@ -529,7 +522,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
         onToggleHidden={async (photo) => {
            const newStatus = !photo.isHidden;
-           import('../services/photoService').then(async (m) => {
+           import('../services/photoMutationService').then(async (m) => {
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
               } catch (e) {
@@ -594,7 +587,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onSetGroupCover={async (id, groupId) => {
           const groupPhotos = photos.filter(p => p.groupId === groupId);
-          import('../services/photoService').then(async (m) => {
+          import('../services/photoMutationService').then(async (m) => {
              try {
                await Promise.all(
                   groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
@@ -612,7 +605,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         }}
         onToggleHidden={async (photo) => {
            const newStatus = !photo.isHidden;
-           import('../services/photoService').then(async (m) => {
+           import('../services/photoMutationService').then(async (m) => {
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
               } catch (e) {
