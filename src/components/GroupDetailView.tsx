@@ -23,23 +23,49 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+  const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (activeGroupId) {
+      // 1. Fetch group metadata
       import('../services/groupService').then(m => {
         m.getGroupById(activeGroupId).then(data => {
           if (data) setGroupData(data);
         });
       });
+
+      // 2. In public mode, fetch all group photos directly to bypass pagination
+      if (!isAdminMode) {
+        setIsLoading(true);
+        supabase
+          .from(DB_CONFIG.TABLE_NAME)
+          .select('*, photo_tags(*)')
+          .eq('group_id', activeGroupId)
+          .order('group_order', { ascending: true })
+          .then(({ data, error }) => {
+            if (error) {
+              console.error(`[GroupDetailView] Error fetching photos for group ${activeGroupId}:`, error);
+            } else if (data) {
+              const mapped = data.map(item => mapSupabasePhoto(item));
+              setLocalGroupPhotos(mapped);
+            }
+            setIsLoading(false);
+          });
+      }
     } else {
       setGroupData(null);
+      setLocalGroupPhotos([]);
     }
-  }, [activeGroupId]);
+  }, [activeGroupId, isAdminMode]);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
 
-    return photos
+    // Use localGroupPhotos in public mode (to bypass pagination), props.photos in admin mode
+    const sourcePhotos = isAdminMode ? photos : localGroupPhotos;
+
+    return sourcePhotos
       .filter(p => {
         const pGid = p.groupId || (p as any).group_id;
         return String(pGid) === String(activeGroupId);
@@ -53,7 +79,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         }
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
-  }, [activeGroupId, photos, isAdminMode]);
+  }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);
 
   if (!activeGroupId) return null;
 
@@ -119,10 +145,16 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
               </div>
             )}
 
-           <GroupGridView 
-             photos={activeGroupPhotos} 
-             onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
-           />
+           {isLoading ? (
+             <div className="flex-1 flex items-center justify-center p-12">
+               <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
+             </div>
+           ) : (
+             <GroupGridView 
+               photos={activeGroupPhotos} 
+               onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
+             />
+           )}
 
            {/* Unified Photo Lightbox */}
            <AnimatePresence>
