@@ -45,25 +45,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           .order('group_order', { ascending: true });
 
         if (error) {
-          if (error.message.includes('column')) {
-            console.warn("[GroupDetailView] Column missing, retrying without 'is_hidden'...");
-            const { data: retryPhotos, error: retryError } = await supabase
-              .from(DB_CONFIG.TABLE_NAME)
-              .select('id, name, item_code, group_id, group_order, is_group_cover, image_url, image_hash, photo_tags(*)')
-              .eq('group_id', activeGroupId)
-              .order('group_order', { ascending: true });
-            
-            if (retryError) {
-              console.error(`[GroupDetailView] Retry fetch failed:`, retryError);
-              setIsLoading(false);
-              return;
-            }
-            processPhotos(retryPhotos);
-          } else {
-            console.error(`[GroupDetailView] Error fetching photos for group ${activeGroupId}:`, error);
-            setIsLoading(false);
-            return;
-          }
+          console.error(`[GroupDetailView] Error fetching photos for group ${activeGroupId}:`, error);
+          setIsLoading(false);
+          return;
         } else {
           processPhotos(rawPhotos);
         }
