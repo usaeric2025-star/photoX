@@ -89,6 +89,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       <img 
         draggable={false}
         loading="lazy"
+        referrerPolicy="no-referrer"
         src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
         alt={photo.name}
         className={`w-full h-full object-cover transition-opacity duration-500 ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : 'opacity-100'} ${photo.isHidden ? 'opacity-70' : ''}`}

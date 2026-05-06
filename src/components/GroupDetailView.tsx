@@ -23,50 +23,27 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (activeGroupId) {
-      setIsLoading(true);
-      // 1. Fetch group metadata
       import('../services/groupService').then(m => {
         m.getGroupById(activeGroupId).then(data => {
           if (data) setGroupData(data);
         });
       });
-
-      // 2. Fetch all group photos explicitly for this view
-      const fetchPhotos = async () => {
-        const { data: rawPhotos, error } = await supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .select('*, photo_tags(*)')
-          .eq('group_id', activeGroupId)
-          .order('group_order', { ascending: true });
-
-        if (error) {
-          console.error(`[GroupDetailView] Error fetching photos for group ${activeGroupId}:`, error);
-          setIsLoading(false);
-          return;
-        }
-
-        const groupPhotos = (rawPhotos || []).map(item => mapSupabasePhoto(item));
-        console.log(`[GroupDetailView] Fetched ${groupPhotos.length} photos for group ${activeGroupId}`);
-        setLocalGroupPhotos(groupPhotos);
-        setIsLoading(false);
-      };
-
-      fetchPhotos();
     } else {
-      setLocalGroupPhotos([]);
       setGroupData(null);
     }
-  }, [activeGroupId, setPhotos]);
+  }, [activeGroupId]);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
 
-    return localGroupPhotos
+    return photos
+      .filter(p => {
+        const pGid = p.groupId || (p as any).group_id;
+        return String(pGid) === String(activeGroupId);
+      })
       .filter(p => isAdminMode || !p.isHidden)
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
@@ -76,7 +53,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         }
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
-  }, [activeGroupId, localGroupPhotos, isAdminMode]);
+  }, [activeGroupId, photos, isAdminMode]);
 
   if (!activeGroupId) return null;
 
