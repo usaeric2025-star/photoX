@@ -6,7 +6,7 @@ import { PhotoLightbox } from './PhotoLightbox';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
 import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService';
-import { supabase } from '../lib/supabase';
+import { supabasePublic as supabase } from '../lib/supabase-public';
 import { DB_CONFIG } from '../constants/config';
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
