@@ -48,32 +48,12 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           console.error(`[GroupDetailView] Error fetching photos for group ${activeGroupId}:`, error);
           setIsLoading(false);
           return;
-        } else {
-          processPhotos(rawPhotos);
         }
-      };
 
-      const processPhotos = (rawPhotos: any[] | null) => {
-          console.log(`[GroupDetailView DEBUG] ActiveGroup ${activeGroupId} returned ${rawPhotos?.length} raw rows.`);
-          const groupPhotos = (rawPhotos || []).map(item => mapSupabasePhoto(item));
-
-          if (groupPhotos && groupPhotos.length > 0) {
-            console.log(`[GroupDetailView] Fetched ${groupPhotos.length} photos for group ${activeGroupId}`);
-            setLocalGroupPhotos(groupPhotos);
-            
-            // Also sync back to global state if missing
-            if (setPhotos) {
-              setPhotos(prev => {
-                const existingIds = new Set(prev.map(p => p.id));
-                const newPhotos = groupPhotos.filter(p => !existingIds.has(p.id));
-                if (newPhotos.length > 0) {
-                  return [...prev, ...newPhotos];
-                }
-                return prev;
-              });
-            }
-          }
-          setIsLoading(false);
+        const groupPhotos = (rawPhotos || []).map(item => mapSupabasePhoto(item));
+        console.log(`[GroupDetailView] Fetched ${groupPhotos.length} photos for group ${activeGroupId}`);
+        setLocalGroupPhotos(groupPhotos);
+        setIsLoading(false);
       };
 
       fetchPhotos();
@@ -85,23 +65,8 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    
-    const gid = String(activeGroupId);
-    
-    // Combine props.photos and localGroupPhotos for the best source
-    const photoPool = [...localGroupPhotos];
-    const poolIds = new Set(photoPool.map(p => p.id));
-    
-    // Add any missing from props
-    photos.forEach(p => {
-      const pGid = p.groupId || (p as any).group_id;
-      if (String(pGid) === gid && !poolIds.has(p.id)) {
-        photoPool.push(p);
-        poolIds.add(p.id);
-      }
-    });
 
-    return photoPool
+    return localGroupPhotos
       .filter(p => isAdminMode || !p.isHidden)
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
@@ -111,7 +76,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         }
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
-  }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);
+  }, [activeGroupId, localGroupPhotos, isAdminMode]);
 
   if (!activeGroupId) return null;
 
