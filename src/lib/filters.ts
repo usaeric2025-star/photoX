@@ -93,8 +93,15 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Phot
   if (!showGroupsCollapsed) return photos;
 
   const groupCovers = new Map<string, Photo>();
+  const groupMaxTime = new Map<string, number>();
+
   photos.forEach(p => {
     if (p.groupId) {
+      const time = new Date(p.createdAt || (p as any).created_at || 0).getTime();
+      
+      const maxT = groupMaxTime.get(p.groupId) || 0;
+      groupMaxTime.set(p.groupId, Math.max(maxT, time));
+      
       const existing = groupCovers.get(p.groupId);
       if (!existing || (p.isGroupCover && !existing.isGroupCover)) {
         groupCovers.set(p.groupId, p);
@@ -102,16 +109,21 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Phot
     }
   });
 
+  const representatives: Photo[] = [];
   const groupsSeen = new Set<string>();
-  return photos.filter(p => {
-    if (!p.groupId) return true;
-    if (groupsSeen.has(p.groupId)) return false;
-    groupsSeen.add(p.groupId);
-    return true;
-  }).map(p => {
-    if (p.groupId && groupCovers.has(p.groupId)) {
-      return groupCovers.get(p.groupId)!;
+
+  photos.forEach(p => {
+    if (!p.groupId) {
+      representatives.push(p);
+    } else if (!groupsSeen.has(p.groupId)) {
+      groupsSeen.add(p.groupId);
+      const cover = { ...groupCovers.get(p.groupId)! };
+      cover._time = groupMaxTime.get(p.groupId)!;
+      representatives.push(cover);
     }
-    return p;
   });
+  
+  representatives.sort((a, b) => b._time - a._time);
+
+  return representatives;
 }
