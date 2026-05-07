@@ -46,7 +46,6 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     created_at: photo.createdAt,
     group_id: photo.groupId || null,
     is_group_cover: photo.isGroupCover || false,
-    group_order: photo.groupOrder || Number(photo.createdAt) || 0,
     isHidden: photo.isHidden || false,
     updated_at: photo.updatedAt || new Date().toISOString()
   };
@@ -176,7 +175,6 @@ export const savePhotosToCloudBatch = async (
        const safeChunk = chunk.map(p => {
          const cp = { ...p };
          delete cp.group_id;
-         delete cp.group_order;
          delete cp.is_group_cover;
          delete cp.group_metadata;
          return cp;
@@ -301,14 +299,14 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
        // Try again without group fields if they were the cause
        const safeUpdates = { ...updates };
        let modified = false;
-       ['group_id', 'group_order', 'is_group_cover', 'updated_at'].forEach(key => {
+       ['group_id', 'is_group_cover', 'updated_at'].forEach(key => {
          if (key in safeUpdates) {
            // Mapping internal keys to DB keys if needed or just skipping if error
          }
        });
        
        // Just basic cleanup if error
-       const groupKeys = ['group_id', 'group_order', 'is_group_cover', 'group_metadata', 'is_hidden'];
+       const groupKeys = ['group_id', 'is_group_cover', 'group_metadata', 'is_hidden'];
        groupKeys.forEach(key => {
          if (key in safeUpdates) {
            delete (safeUpdates as any)[key];

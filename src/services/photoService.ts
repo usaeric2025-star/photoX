@@ -68,7 +68,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       createdAt: item.created_at as string | undefined,
       groupId: item.group_id ? String(item.group_id) : undefined,
       isGroupCover: !!item.is_group_cover,
-      groupOrder: Number(item.group_order) || Number(item.created_at) || 0,
+      groupOrder: Number(item.created_at) || 0,
       isHidden: !!item.isHidden,
       userId: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
