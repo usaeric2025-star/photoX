@@ -19,7 +19,6 @@ export const fetchSettings = async () => {
     if (data) {
         if (data.api_key) data.gemini_api_key = data.api_key;
         if (data.model_name) data.custom_model = data.model_name;
-        if (data.access_passcode) data.internal_password = data.access_passcode;
         
         if (data.tags_json) {
             try {
@@ -44,9 +43,6 @@ export const saveSettings = async (settings: any) => {
         if (payload.custom_model) {
             payload.model_name = payload.custom_model;
         }
-        if (payload.internal_password) {
-            payload.access_passcode = payload.internal_password;
-        }
 
         // Handle hot tags
         if (payload.pinnedTags || payload.hotTagsCount !== undefined) {
@@ -59,7 +55,6 @@ export const saveSettings = async (settings: any) => {
         // REMOVE all redundant fields that are now in separate tables
         delete payload.gemini_api_key;
         delete payload.custom_model;
-        delete payload.internal_password;
         delete payload.categories;
         delete payload.tags; // Keep tags_json!
         delete payload.manufacturers;

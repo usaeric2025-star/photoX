@@ -101,7 +101,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
   const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
-  const [internalPassword, setInternalPassword] = useState('');
+  const [accessPasscode, setAccessPasscode] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState('');
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
@@ -109,7 +109,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     if (settings) {
       if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
       if (settings.custom_model) setCustomModel(settings.custom_model);
-      if (settings.internal_password) setInternalPassword(settings.internal_password);
+      if (settings.access_passcode) setAccessPasscode(settings.access_passcode);
     }
   }, [settings]);
   
@@ -244,11 +244,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   const sessionValue = React.useMemo(() => ({
     user, isAdminMode: true, 
     settings, setSettings, geminiApiKey, setGeminiApiKey,
-    internalPassword, setInternalPassword, customModel, setCustomModel,
+    accessPasscode, setAccessPasscode, customModel, setCustomModel,
     viewMode, setViewMode,
     isSyncing, setIsSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, internalPassword, setInternalPassword, customModel, setCustomModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,

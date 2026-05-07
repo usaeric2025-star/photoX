@@ -138,7 +138,6 @@ export interface AppSettings {
   pinnedTags?: string[];
   hotTagsCount?: number;
   gemini_api_key?: string;
-  internal_password?: string;
   custom_model?: string;
   provider?: string;
   whatsapp_1_name?: string;

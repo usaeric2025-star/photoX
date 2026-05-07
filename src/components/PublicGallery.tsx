@@ -167,7 +167,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const loginWithGoogle = propsLoginWithGoogle;
   const isSyncing = propsIsRefreshing;
   
-  const internalPassword = settings?.access_passcode;
+  const accessPasscode = settings?.access_passcode;
 
   const context = useGalleryContext();
   const {
@@ -547,8 +547,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             loginWithGoogle={loginWithGoogle}
             onSubmit={(e) => {
               e.preventDefault();
-              console.log('DEBUG [PublicGallery]: passInput', passInput, 'internalPassword', internalPassword);
-              if (passInput === internalPassword) {
+              console.log('DEBUG [PublicGallery]: passInput', passInput, 'accessPasscode', accessPasscode);
+              if (passInput === accessPasscode) {
                 setIsStaffMode(true);
                 setShowPassPrompt(false);
                 setPassInput('');

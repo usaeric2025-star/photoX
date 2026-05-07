@@ -60,7 +60,7 @@ export default function AdminView() {
   const [pageError, setPageError] = useState<string | null>(null);
 
   const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [internalPassword, setInternalPassword] = useState('');
+  const [accessPasscode, setAccessPasscode] = useState('');
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
   useEffect(() => {
@@ -125,12 +125,12 @@ export default function AdminView() {
     user, isAdminMode: true, 
     settings, setSettings,
     geminiApiKey, setGeminiApiKey,
-    internalPassword, setInternalPassword,
+    accessPasscode, setAccessPasscode,
     customModel, setCustomModel,
     viewMode, setViewMode,
     isSyncing, setIsSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, internalPassword, customModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, accessPasscode, customModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,

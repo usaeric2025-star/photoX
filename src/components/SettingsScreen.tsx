@@ -159,7 +159,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
     settings, user, loginWithGoogle, logout, 
     geminiApiKey, setGeminiApiKey, customModel, setCustomModel, 
-    internalPassword, setInternalPassword,
+    accessPasscode, setAccessPasscode,
     setSettings
   } = useAdminSession();
   const { 
@@ -511,13 +511,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 type="password" 
                 placeholder="设置密钥..."
                 className={`${inputClass} font-mono tracking-widest`}
-                value={internalPassword}
+                value={accessPasscode}
                 onChange={(e) => {
-                  setInternalPassword(e.target.value);
-                  localStorage.setItem('internal_password', e.target.value);
+                  setAccessPasscode(e.target.value);
+                  localStorage.setItem('access_passcode', e.target.value);
                 }}
                 onBlur={(e) => {
-                  setSettingField('internal_password', e.target.value);
+                  setSettingField('access_passcode', e.target.value);
                 }}
               />
           </div>

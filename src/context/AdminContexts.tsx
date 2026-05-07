@@ -9,8 +9,8 @@ export interface AdminSessionContextType {
   setSettings: (s: AppSettings) => void;
   geminiApiKey: string;
   setGeminiApiKey: (k: string) => void;
-  internalPassword: string;
-  setInternalPassword: (p: string) => void;
+  accessPasscode: string;
+  setAccessPasscode: (p: string) => void;
   customModel: string;
   setCustomModel: (m: string) => void;
   viewMode: 'public' | 'private';
