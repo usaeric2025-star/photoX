@@ -455,108 +455,91 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="space-y-3">
-                    {safeArray<any>(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim: any, idx) => (
-                      <div key={`dim-${idx}`} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
-                        { (formState.dimensions && formState.dimensions.length > 1) && (
-                          <button 
-                            onClick={() => {
-                              updateForm({ dimensions: formState.dimensions.filter((_, i) => i !== idx) });
-                            }}
-                            className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
-                          >
-                            <CloseIcon size={14} />
-                          </button>
-                        )}
-                        <div className="grid grid-cols-2 gap-2">
-                           <div className="space-y-1">
-                              <div className="flex items-center justify-between pl-1">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">规格名称 / Label</span>
-                                {dim.isAI && <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">AI</span>}
-                              </div>
-                              <input 
-                                type="text" 
-                                placeholder="如: 3-Seater" 
-                                value={dim.label || ''} 
-                                onChange={e => {
-                                  const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
-                                  newDims[idx].label = e.target.value;
-                                  updateForm({ dimensions: newDims });
-                                }}
-                                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold" 
-                              />
-                           </div>
-                           <div className="space-y-1">
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
-                              <div className="flex gap-1">
-                                {['cm', 'mm', 'inch'].map(u => (
-                                  <button 
-                                    key={u}
-                                    onClick={() => {
-                                      const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
-                                      newDims[idx].unit = u;
-                                      newDims[idx].isAI = false;
-                                      updateForm({ dimensions: newDims });
-                                    }}
-                                    className={`flex-1 p-2 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}
-                                  >
-                                    {u}
-                                  </button>
-                                ))}
-                              </div>
-                           </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="space-y-1">
-                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">长 / L</span>
-                             <input 
-                               type="number" 
-                               value={dim.length || (dim.label.match(/(\d+(\.\d+)?)/g)?.[0] || '')} 
-                               onChange={e => {
-                                 const curDims = formState.dimensions;
-                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
-                                 newDims[idx].length = parseFloat(e.target.value) || 0;
-                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
-                                 if (idx === 0) updates.dimL = e.target.value;
-                                 updateForm(updates);
-                               }}
-                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
-                             />
+                    {safeArray<any>(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim: any, idx) => {
+                      const label = dim.label || '';
+                      const prefixMatch = label.match(/^([A-Z]+):\s*(.*)/);
+                      const prefix = prefixMatch ? prefixMatch[1] : '';
+                      const dimensionsPart = prefixMatch ? prefixMatch[2] : label;
+                      
+                      const handleUpdateLabel = (newPrefix: string, newDimPart: string) => {
+                        const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
+                        const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
+                        newDims[idx].label = finalLabel;
+                        
+                        // Try to re-parse H/W/D if possible to keep numeric fields somewhat relevant,
+                        // though they are no longer exposed in the UI.
+                        const hMatch = newDimPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+                        const wMatch = newDimPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+                        const lMatch = newDimPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+                        const dMatch = newDimPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+                        
+                        if (hMatch) newDims[idx].height = parseFloat(hMatch[1]);
+                        if (wMatch) newDims[idx].width = parseFloat(wMatch[1]);
+                        if (lMatch) newDims[idx].length = parseFloat(lMatch[1]);
+                        else if (dMatch) newDims[idx].length = parseFloat(dMatch[1]);
+
+                        updateForm({ dimensions: newDims });
+                      };
+
+                      return (
+                        <div key={`dim-${idx}`} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
+                          { (formState.dimensions && formState.dimensions.length > 1) && (
+                            <button 
+                              onClick={() => {
+                                updateForm({ dimensions: formState.dimensions.filter((_, i) => i !== idx) });
+                              }}
+                              className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
+                            >
+                              <CloseIcon size={14} />
+                            </button>
+                          )}
+                          <div className="grid grid-cols-2 gap-2">
+                             <div className="space-y-1">
+                                <div className="flex items-center justify-between pl-1">
+                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">规格名称 / PART</span>
+                                  {dim.isAI && <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">AI</span>}
+                                </div>
+                                <input 
+                                  type="text" 
+                                  placeholder="如: WD" 
+                                  value={prefix} 
+                                  onChange={e => handleUpdateLabel(e.target.value.toUpperCase().trim(), dimensionsPart)}
+                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold" 
+                                />
+                             </div>
+                             <div className="space-y-1">
+                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
+                                <div className="flex gap-1">
+                                  {['cm', 'mm', 'inch'].map(u => (
+                                    <button 
+                                      key={u}
+                                      onClick={() => {
+                                        const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
+                                        newDims[idx].unit = u as any;
+                                        newDims[idx].isAI = false;
+                                        updateForm({ dimensions: newDims });
+                                      }}
+                                      className={`flex-1 p-2 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}
+                                    >
+                                      {u}
+                                    </button>
+                                  ))}
+                                </div>
+                             </div>
                           </div>
                           <div className="space-y-1">
-                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">宽 / W</span>
+                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">尺寸内容 / DIMENSIONS</span>
                              <input 
-                               type="number" 
-                               value={dim.width || (dim.label.match(/(\d+(\.\d+)?)/g)?.[1] || '')} 
-                               onChange={e => {
-                                 const curDims = formState.dimensions;
-                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
-                                 newDims[idx].width = parseFloat(e.target.value) || 0;
-                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
-                                 if (idx === 0) updates.dimW = e.target.value;
-                                 updateForm(updates);
-                               }}
-                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
-                             />
-                          </div>
-                          <div className="space-y-1">
-                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">高 / H</span>
-                             <input 
-                               type="number" 
-                               value={dim.height || (dim.label.match(/(\d+(\.\d+)?)/g)?.[2] || '')} 
-                               onChange={e => {
-                                 const curDims = formState.dimensions;
-                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
-                                 newDims[idx].height = parseFloat(e.target.value) || 0;
-                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
-                                 if (idx === 0) updates.dimH = e.target.value;
-                                 updateForm(updates);
-                               }}
-                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-center font-bold text-sm" 
+                               type="text" 
+                               placeholder="H94 x W96 x D23" 
+                               value={dimensionsPart} 
+                               onChange={e => handleUpdateLabel(prefix, e.target.value)}
+                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold" 
                              />
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <div className="space-y-3">

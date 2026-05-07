@@ -123,8 +123,8 @@ export const analyzeProductPhoto = async (
 
 【DIMENSIONS RULES】
 - Each dimension object MUST include label, length, width, height, unit.
-- If label shows H/W/D/L: height = H, width = W, length = L, depth = D. Assign strictly by labels, ignore item name or number order.
-- If label format is "PART: Dimensions" (e.g., "WD: H94 x W96 x D23"): maintain the "PART:" prefix but parse only the dimensions.
+- If label shows H/W/D/L: height = H, width OR length = W/L, depth = D. Assign strictly by labels, ignore item name or number order.
+- If label format is "PART: Dimensions" (e.g., "WD: H94 x W96 x D23"): maintain the "PART:" prefix but parse only the dimensions for numeric values.
 - If NO H/W/D/L labels: use order height → length → width.
 - Default unit = "cm" if missing.
 
@@ -386,8 +386,7 @@ export const normalizeDimensions = (dims: any[]): any[] => {
       if (hasH || hasW || hasD || hasL) {
         // 1️⃣ Strict identification by labels (H/W/D/L)
         // H → height
-        // W → width
-        // L → length
+        // W 或 L → width / length
         // D → depth (mapping to length if length is 0, else width)
         const hMatch = parsingPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
         const wMatch = parsingPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
@@ -395,8 +394,18 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         const dMatch = parsingPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
 
         if (hMatch) height = parseFloat(hMatch[1]);
-        if (wMatch) width = parseFloat(wMatch[1]);
-        if (lMatch) length = parseFloat(lMatch[1]);
+        
+        // Handle W and L competing for width/length slots
+        if (wMatch && lMatch) {
+          width = parseFloat(wMatch[1]);
+          length = parseFloat(lMatch[1]);
+        } else if (wMatch) {
+          width = parseFloat(wMatch[1]);
+        } else if (lMatch) {
+          length = parseFloat(lMatch[1]);
+        }
+
+        // Handle D (Depth) mapping to length if not used, else width
         if (dMatch) {
           const depthVal = parseFloat(dMatch[1]);
           if (length === 0) length = depthVal;

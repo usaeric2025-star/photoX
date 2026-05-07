@@ -36,7 +36,7 @@ export interface Manufacturer {
 
 export interface Dimension {
   label: string;
-  unit: 'cm' | 'inch';
+  unit: 'cm' | 'inch' | 'mm';
   length: number;
   width: number;
   height: number;
