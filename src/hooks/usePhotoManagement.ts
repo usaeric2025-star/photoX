@@ -216,6 +216,7 @@ export const usePhotoManagement = (
           if (newPhotoData) {
             updatedPhoto.uri = newPhotoData;
             updatedPhoto.image_url = ''; // Clear URL to force savePhotoToCloud to re-upload
+            updatedPhoto.thumb_url = ''; 
             updatedPhoto.image_hash = calculateMD5(newPhotoData);
           }
 
