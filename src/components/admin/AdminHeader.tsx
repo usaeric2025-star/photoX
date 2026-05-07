@@ -235,6 +235,17 @@ export const AdminHeader: React.FC<Props> = ({
                         >
                           <Settings2 size={16} /> <span className="text-xs font-bold uppercase">系统设置</span>
                         </button>
+                        {sessionStorage.getItem('isStaffMode') === 'true' && (
+                          <button 
+                            onClick={() => {
+                              sessionStorage.removeItem('isStaffMode');
+                              window.location.reload();
+                            }}
+                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-left text-red-600"
+                          >
+                            <LogIn size={16} /> <span className="text-xs font-bold uppercase">退出员工模式</span>
+                          </button>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
