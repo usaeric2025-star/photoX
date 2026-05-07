@@ -26,7 +26,7 @@ const FIELD_MAP: Record<string, string> = {
 const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'categoryId',
   'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId',
-  'image_url', 'thumb_url', 'price', 'updated_at', 'created_at'
+  'image_url', 'thumb_url', 'price', 'updated_at', 'created_at', 'userId'
 ];
 
 const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
