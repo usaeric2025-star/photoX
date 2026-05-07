@@ -391,76 +391,26 @@ export const analyzeProductPhoto = async (
 export const normalizeDimensions = (dims: any[]): any[] => {
   if (!Array.isArray(dims) || dims.length === 0) return [];
 
-  // Filter out invalid items and handle pure strings
-  const labels = dims
+  // Instead of collapsing all to one label, we clean each item individually.
+  return dims
     .map(d => {
-      if (!d) return '';
-      if (typeof d === 'string') return d;
-      return String(d.label || '').trim();
+      if (!d) return null;
+      const label = typeof d === 'string' ? d : String(d.label || '');
+      if (!label || label.toLowerCase().includes('overall')) return null;
+
+      // Extract numbers to ensure clean format, add cm if missing
+      const match = label.match(/\d+(\.\d+)?/);
+      if (!match) return null;
+      
+      const num = match[0];
+      const hasUnit = /[a-zA-Z]+/.test(label.replace(num, '').trim());
+      
+      return { 
+        ...d,
+        label: hasUnit ? label : `${label} cm` 
+      };
     })
-    .filter(l => l && !l.toLowerCase().includes('overall'));
-
-  if (labels.length === 0) return [];
-
-  const lwhParts: { type: 'L' | 'W' | 'H', val: string }[] = [];
-  const otherParts: string[] = [];
-
-  labels.forEach(label => {
-    // 1. Detect L/W/H patterns (e.g. L110, Length 110, H80)
-    const upper = label.toUpperCase();
-    const numMatch = label.match(/\d+(\.\d+)?/);
-    if (!numMatch) return;
-    const num = numMatch[0];
-
-    // Priority 1: Check for Directional labels
-    if (upper.includes('H') || upper.includes('HEIGHT') || upper.includes('DEPTH')) {
-       if (!lwhParts.some(p => p.type === 'H')) lwhParts.push({ type: 'H', val: num });
-    } else if (upper.includes('W') || upper.includes('WIDTH')) {
-       if (!lwhParts.some(p => p.type === 'W')) lwhParts.push({ type: 'W', val: num });
-    } else if (upper.includes('L') || upper.includes('LENGTH')) {
-       if (!lwhParts.some(p => p.type === 'L')) lwhParts.push({ type: 'L', val: num });
-    } else {
-      otherParts.push(num);
-    }
-  });
-
-  let resultLabel = '';
-
-  // Rule 1: Priority for L/W/H identification
-  if (lwhParts.length > 0) {
-    const sorted = [];
-    const l = lwhParts.find(p => p.type === 'L')?.val;
-    const w = lwhParts.find(p => p.type === 'W')?.val;
-    const h = lwhParts.find(p => p.type === 'H')?.val;
-    
-    if (l) sorted.push(`L${l}`);
-    if (w) sorted.push(`W${w}`);
-    if (h) sorted.push(`H${h}`);
-    
-    // If we only have some LWH but also some "other" parts, 
-    // it might be a split scenario. But priority is L x W x H.
-    if (sorted.length > 0) {
-      resultLabel = sorted.join(' × ');
-    }
-  } 
-  
-  // Rule 2: Pure numbers + cm merging
-  if (!resultLabel && otherParts.length > 0) {
-    // Merge all, remove duplicates, keep original relative order if possible
-    const unique = [];
-    const seen = new Set();
-    for (const n of otherParts) {
-      if (!seen.has(n)) {
-        unique.push(n);
-        seen.add(n);
-      }
-    }
-    resultLabel = unique.join(' / ');
-  }
-
-  if (!resultLabel) return [];
-
-  return [{ label: `${resultLabel} cm` }];
+    .filter(Boolean);
 };
 
 export const translateDescription = async (
