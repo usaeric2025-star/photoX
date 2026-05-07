@@ -5,6 +5,7 @@ import {
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
   User as UserIcon, Heart, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
+import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { Tag, Category, Photo, Manufacturer, AppSettings, User, ApiResponse } from '../types';
 import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
@@ -703,6 +704,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 </div>
               </div>
           </div>
+          <ErrorLogViewer />
         </div>
       </div>
     </div>
