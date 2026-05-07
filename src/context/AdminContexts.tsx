@@ -139,6 +139,7 @@ export interface AdminUIContextType {
   isAnalyzing: boolean;
   batchProgress: { current: number, total: number };
   aiDebugInfo: { step: string; message: string; error?: string } | null;
+  setAiDebugInfo: (d: { step: string; message: string; error?: string } | null) => void;
   abortAnalysis: () => void;
 }
 

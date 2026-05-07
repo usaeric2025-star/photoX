@@ -207,7 +207,7 @@ export default function PublicView() {
             onLogin={() => navigate('/admin')}
             loginWithGoogle={loginWithGoogle}
             user={user}
-            internalPassword=""
+            internalPassword={settings?.access_passcode || ""}
             settings={settings}
             isRefreshing={isRefreshing}
             onRefresh={() => syncWithCloud(true)}

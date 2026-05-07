@@ -48,6 +48,7 @@ export default function AdminView() {
   const { loadingState, setLoadingState, withLoading } = useLoading();
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
+  const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'loading' = 'success', persistent = false) => {
     setToast({ message, type });
@@ -168,9 +169,10 @@ export default function AdminView() {
     loadingState, setLoadingState, withLoading, 
     batchProgress: { current: 0, total: 0 },
     isAnalyzing: loadingState === 'analyzing',
-    aiDebugInfo: null,
+    aiDebugInfo,
+    setAiDebugInfo,
     abortAnalysis: () => {}
-  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, toast, showToast, loadingState, setLoadingState, withLoading]);
+  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, toast, showToast, loadingState, setLoadingState, withLoading, aiDebugInfo, setAiDebugInfo]);
 
   if (!authChecked) {
     return (

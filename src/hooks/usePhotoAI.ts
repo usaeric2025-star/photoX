@@ -176,6 +176,7 @@ export const usePhotoAI = (
                 return next;
             });
         } catch (err: any) {
+            setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: err.message });
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
             if (err.message && (err.message.includes('401') || err.message.includes('403'))) {
                 throw new Error(`FATAL_AI_ERROR: ${err.message}`);
