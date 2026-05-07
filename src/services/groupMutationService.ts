@@ -4,8 +4,9 @@ import { ProductGroup } from '../types';
 const TABLE_NAME = 'groups';
 
 const ALLOWED_FIELDS = [
-    'id', 'name', 'description', 'colors', 'materials',
-    'coverPhotoId', 'userId', 'isHidden', 'createdAt', 'updatedAt'
+    'id', 'name', 'description', 'description_translations', 'colors', 'materials',
+    'coverPhotoId', 'userId', 'isHidden', 'createdAt', 'updatedAt',
+    'cover_photo_id', 'user_id', 'is_hidden', 'created_at', 'updated_at'
 ];
 
 const FIELD_MAP: Record<string, string> = {
@@ -33,8 +34,8 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, isCreate 
         dbUpdates.created_at = new Date().toISOString();
     }
     
-    // Explicitly set user_id if provided
-    if (userId) {
+    // Explicitly set user_id if provided and not already set
+    if (userId && !dbUpdates.user_id) {
         dbUpdates.user_id = userId;
     }
 
