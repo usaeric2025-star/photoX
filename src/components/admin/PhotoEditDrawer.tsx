@@ -62,7 +62,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     if (formState.tagIds.includes(tag.id)) {
         updateForm({ tagIds: formState.tagIds.filter(id => id !== tag.id) });
     } else if (formState.tagIds.length < 3) {
-        updateForm({ tagIds: [...formState.tagIds, tag.id] });
+        updateForm({ tagIds: [...(formState.tagIds || []), tag.id] });
     }
   };
 

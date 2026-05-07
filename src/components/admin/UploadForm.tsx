@@ -210,7 +210,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               if (isSelected) {
                 updateForm({ tagIds: formState.tagIds.filter(tid => tid !== tag.id) });
               } else if (formState.tagIds.length < 3) {
-                updateForm({ tagIds: [...formState.tagIds, tag.id] });
+                updateForm({ tagIds: [...(formState.tagIds || []), tag.id] });
               }
             }}
             onUpdateTag={updateTag}

@@ -182,7 +182,7 @@ export const BatchEditScreen = ({
                 });
               } else if (formState.tagIds.length < 3) {
                 updateForm({ 
-                  tagIds: [...formState.tagIds, tagIdStr] 
+                  tagIds: [...(formState.tagIds || []), tagIdStr] 
                 });
               }
             }}

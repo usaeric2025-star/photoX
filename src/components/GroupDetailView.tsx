@@ -24,14 +24,17 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
   const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (activeGroupId) {
       // 1. Fetch group metadata
+      setIsGroupDataLoading(true);
       getGroupById(activeGroupId).then(data => {
         if (data) setGroupData(data);
+        setIsGroupDataLoading(false);
       });
 
       // 2. In public mode, fetch all group photos directly to bypass pagination
@@ -68,7 +71,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         const pGid = p.groupId || (p as any).group_id;
         return String(pGid) === String(activeGroupId);
       })
-      .filter(p => isAdminMode || !p.isHidden)
+      .filter(p => isAdminMode || !p.isHidden || p.isGroupCover)
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
@@ -106,7 +109,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                      <h2 className="text-lg font-bold text-slate-800 tracking-tight">
-                       {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                       {isGroupDataLoading ? '...' : (groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`)}
                      </h2>
                   </div>
                   <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>
