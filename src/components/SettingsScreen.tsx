@@ -658,7 +658,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                     reader.onload = (event) => {
                       try {
                         const json = JSON.parse(event.target?.result as string);
-                        if (json.photos) setPhotos(json.photos);
+                        if (Array.isArray(json.photos)) setPhotos(json.photos);
                         if (json.tags) setTags(json.tags);
                         if (json.manufacturers) setManufacturers(json.manufacturers);
                         showToast('数据导入成功！', 'success');

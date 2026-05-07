@@ -73,6 +73,10 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const setPhotos = useCallback((update: any) => {
     setPhotosState(prev => {
         const next = typeof update === 'function' ? update(prev) : update;
+        if (!Array.isArray(next)) {
+            console.error("setPhotos called with non-array value", next);
+            return prev;
+        }
         return next;
     });
   }, []);
