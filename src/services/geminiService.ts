@@ -108,17 +108,15 @@ export const analyzeProductPhoto = async (
 
 【優先級 1：圖片文字識別】
 - 仔細觀察照片中是否有任何標籤、吊牌、包裝盒、說明書上的文字
-- **【核心指令】識別照片中出現的任何編號、代碼、型號或代號（如 Model No, SKU, Code, No. 等），一律填入 "modelNumber"**
+- **【核心指令 - 型號識別】識別並提取型號代碼（如 Model No, SKU, Code 等），一律單獨填入 "modelNumber" 欄位。禁止將型號混入名稱中。**
 - **【嚴格禁止】禁止識別或填寫 "manualCode" 欄位，該欄位必須保持為 null。AI 識別不准填寫此欄位，它僅供人工手寫填入。**
-- 識別尺寸信息（H/W/L），如有測量標註、吊牌上的尺寸請務必識別。
-- **【嚴格限制】如果照片中完全沒有尺寸信息，請將 "dimensions" 設為空數組 []。禁止填寫 "Overall" 或任何猜測的數值。**
+- **【核心指令 - 尺寸識別】識別照片中出現的尺寸標註。**
+- **【嚴格限制】如果照片中完全沒有尺寸信息，"dimensions" 一律設為空數組 []。禁止將任何標籤符號識別為尺寸。**
 
 【優先級 2：名稱規則 - 強制執行】
-- "name" 字段無論任何情況必須填寫，不能為空
-- 如果照片上有文字名稱：優先使用，中文一律翻譯成英文
-- 如果照片上沒有文字名稱：根據家具外觀給出專業英文名稱
-- 如果原本名稱是純數字或編號：直接替換為專業英文名稱
-- 名稱格式：英文，首字母大寫，簡潔專業
+- "name" 字段無論任何情況必須填寫，不能為空，不能包含型號編號。
+- 如果原本名稱是純數字、編號或帶有型號信息：直接替換為專業英文名稱（例如：不准包含 "SK-2024"）。
+- 名稱格式：英文，首字母大寫，簡潔專業 (例如: "Modern Leather Sofa")。
 
 【優先級 3：外觀特徵分析】
 - 生成一份詳細且專業的【繁體中文 (Traditional Chinese)】產品說明，說明家具的外觀、材質、風格或用途。
@@ -389,11 +387,13 @@ export const analyzeProductPhoto = async (
  */
 export const normalizeDimensions = (dims: any[]): any[] => {
   if (!Array.isArray(dims) || dims.length === 0) return [];
+  console.log("Normalizing dimensions:", dims); // Debug
 
   // Instead of collapsing all to one label, we clean each item individually.
   return dims
     .map(d => {
       if (!d) return null;
+      // Handle the case where the AI returns an object like { label: "..." }
       const label = typeof d === 'string' ? d : String(d.label || '');
       if (!label || label.toLowerCase().includes('overall')) return null;
 
