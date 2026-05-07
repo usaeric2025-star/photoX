@@ -79,7 +79,8 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
             console.error("setPhotos called with non-array value", next);
             return prev;
         }
-        return next.map(p => ({
+        const safePhotos = cleanPhotos(next);
+        return safePhotos.map(p => ({
             ...p,
             tagIds: Array.isArray(p.tagIds) ? p.tagIds : [],
             dimensions: Array.isArray(p.dimensions) ? p.dimensions : [],
