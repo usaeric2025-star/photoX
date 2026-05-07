@@ -17,6 +17,10 @@ export function useErrorHandler() {
 
     const message = error?.message || String(error) || '發生未知錯誤';
 
+    if (message.includes('row-level security policy')) {
+      showToast('登录状态已过期，请重新登录', 'error');
+    }
+
     // Heuristics for critical vs non-critical errors
     const isCritical = 
       message.includes('permission denied') || 

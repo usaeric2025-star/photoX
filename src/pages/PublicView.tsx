@@ -10,6 +10,8 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { PAGINATION } from '../constants/config';
 import { AppSettings } from '../types';
 
+const PUBLIC_PAGE_SIZE = 50;
+
 export default function PublicView() {
   const { user } = useAuth();
   const { 
@@ -93,7 +95,7 @@ export default function PublicView() {
       const tagId = filterTagIds.length > 0 ? filterTagIds[0] : null;
       
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, tagId, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, PUBLIC_PAGE_SIZE, filterCatId, tagId, debouncedSearchQuery),
         loadCategoriesFromCloud().catch(() => []),
         loadTagsFromCloud().catch(() => []),
         loadManufacturersFromCloud().catch(() => []),
@@ -104,7 +106,7 @@ export default function PublicView() {
       if (cloudPhotos) {
         setPhotos(cloudPhotos);
         setPage(0);
-        setHasMore(cloudPhotos.length === PAGINATION.ADMIN_BATCH_SIZE);
+        setHasMore(cloudPhotos.length === PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
         if (!filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
@@ -152,11 +154,11 @@ export default function PublicView() {
     const nextPage = page + 1;
     
     try {
-      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PAGINATION.ADMIN_BATCH_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
+      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PUBLIC_PAGE_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
       if (morePhotos && morePhotos.length > 0) {
         setPhotos(prev => [...prev, ...morePhotos]);
         setPage(nextPage);
-        setHasMore(morePhotos.length === PAGINATION.ADMIN_BATCH_SIZE);
+        setHasMore(morePhotos.length === PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => prev + morePhotos.length);
       } else {
         setHasMore(false);

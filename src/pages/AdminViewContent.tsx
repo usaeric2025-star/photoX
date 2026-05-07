@@ -83,6 +83,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     setUser(user);
     setIsAdminMode(isAdmin || sessionStorage.getItem('isStaffMode') === 'true');
   }, [user, setUser, setIsAdminMode, isAdmin]);
+
+  useEffect(() => {
+    // @ts-ignore
+    window.__debug_photos = photos;
+  }, [photos]);
   
   const cancelBatchAiRef = useRef(false);
   

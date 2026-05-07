@@ -20,10 +20,14 @@ export const initDB = (): Promise<IDBDatabase> => {
 
 export const saveData = async (key: string, data: any) => {
   const db = await initDB();
+  const wrapper = {
+    _data: data,
+    savedAt: Date.now()
+  };
   return new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, 'readwrite');
     const store = transaction.objectStore(STORE_NAME);
-    store.put(data, key);
+    store.put(wrapper, key);
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
@@ -35,7 +39,42 @@ export const loadData = async (key: string) => {
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
     const request = store.get(key);
-    request.onsuccess = () => resolve(request.result);
+    request.onsuccess = () => {
+      const res = request.result;
+      if (res && typeof res === 'object' && 'savedAt' in res && '_data' in res) {
+        resolve(res._data);
+      } else {
+        resolve(res);
+      }
+    };
+    request.onerror = () => reject(request.error);
+  });
+};
+
+export const clearExpiredCaches = async (expireDays = 7) => {
+  const db = await initDB();
+  const expireMs = expireDays * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  
+  return new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.openCursor();
+    
+    request.onsuccess = (event: any) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        const key = cursor.key as string;
+        const data = cursor.value;
+        if (key.startsWith('product_') && data && data.savedAt && (now - data.savedAt > expireMs)) {
+          console.log(`[IndexedDB] Clearing expired cache: ${key}`);
+          store.delete(key);
+        }
+        cursor.continue();
+      } else {
+        resolve();
+      }
+    };
     request.onerror = () => reject(request.error);
   });
 };

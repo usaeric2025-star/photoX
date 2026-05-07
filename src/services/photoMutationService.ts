@@ -294,6 +294,9 @@ export const updatePhoto = async (
   updates: Partial<Photo>,
   setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>
 ): Promise<void> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('NO_ACTIVE_SESSION');
+
   const dbUpdates = mapToDb(updates);
   
   if (setPhotos) setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));

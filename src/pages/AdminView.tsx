@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
@@ -21,6 +22,14 @@ const errorGuard = (name: string) => () => {
 export default function AdminView() {
   const { user, authChecked, logout } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session && user) {
+        console.warn('⚠️ 用户已登录但 session 丢失，请刷新页面或重新登录');
+      }
+    });
+  }, [user]);
   
   useEffect(() => {
     if (authChecked) {

@@ -20,7 +20,7 @@ import { compressImage } from '../services/storageService';
 import { calculateMD5, calculateMD5FromFile, calculateMD5FromArrayBuffer, generateItemCode, cleanObject } from '../services/utils';
 import { batchCreateTags } from '../services/tagService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
-import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
+import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../services/geminiService';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
 import { useTasks } from './useTasks';
@@ -220,8 +220,26 @@ export const useAdminPhotos = (
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-            const resultRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
-            const result = cleanObject(resultRaw);
+            const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
+            const result = cleanObject(resRaw);
+            
+            // AI Result Normalization
+            if (result.name) {
+              // 1. 如果 name 包含数字、单位或尺寸符号，清空 name
+              if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) {
+                result.name = '';
+              }
+              // 2. 如果 modelNumber 还是空的，尝试从 name 里提取纯数字/字母组合
+              if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
+                result.modelNumber = result.name;
+                result.name = '';
+              }
+            }
+            // 3. 强制 dimensions 里的每个对象带 length/width/height
+            if (result.dimensions) {
+               result.dimensions = normalizeDimensions(result.dimensions);
+            }
+
             const aiName = cleanAiName(result.name);
             
             if (result.description) {
@@ -350,6 +368,24 @@ export const useAdminPhotos = (
       
       const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
       const result = cleanObject(resRaw);
+      
+      // AI Result Normalization
+      if (result.name) {
+        // 1. 如果 name 包含数字、单位或尺寸符号，清空 name
+        if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) {
+          result.name = '';
+        }
+        // 2. 如果 modelNumber 还是空的，尝试从 name 里提取纯数字/字母组合
+        if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
+          result.modelNumber = result.name;
+          result.name = '';
+        }
+      }
+      // 3. 强制 dimensions 里的每个对象带 length/width/height
+      if (result.dimensions) {
+        result.dimensions = normalizeDimensions(result.dimensions);
+      }
+
       const aiName = cleanAiName(result.name);
       
       if (signal.aborted) throw new Error('Aborted');
@@ -735,6 +771,24 @@ export const useAdminPhotos = (
           effectiveKey, aiProvider, customModel, 
           firstPhoto.categoryId
         );
+
+        // AI Result Normalization
+        if (result.name) {
+          // 1. 如果 name 包含数字、单位或尺寸符号，清空 name
+          if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) {
+            result.name = '';
+          }
+          // 2. 如果 modelNumber 还是空的，尝试从 name 里提取纯数字/字母组合
+          if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
+            result.modelNumber = result.name;
+            result.name = '';
+          }
+        }
+        // 3. 强制 dimensions 里的每个对象带 length/width/height
+        if (result.dimensions) {
+          result.dimensions = normalizeDimensions(result.dimensions);
+        }
+
         const aiName = cleanAiName(result.name);
 
         // 3. Translation sub-step

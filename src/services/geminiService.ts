@@ -100,91 +100,56 @@ export const analyzeProductPhoto = async (
   const manufacturersJson = (manufacturers || []).map(m => ({ id: m.id, name: m.name }));
   const tagsJson = (tags || []).map(t => ({ id: t.id, name: t.name }));
   const categoryContext = targetCategoryId
-    ? `【強制要求】系統已預設分類為: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.zh || (categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})。請確認照片分類是否符合此設定。`
-    : `【強制要求】請從現有分類中選擇最合適的一個。`;
+    ? `【強制要求】系統已預設分類為: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.zh || (categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})`
+    : "請從清單選擇最合適的分類";
 
-  const promptText = `
-你是一位家具專業分析師。請分析照片中的家具，並嚴格按照以下規則提取資訊：
+  const promptText = `You are a furniture product analyzer. Extract data STRICTLY as follows:
 
-【優先級 1：圖片文字識別】
-- 仔細觀察照片中是否有任何標籤、吊牌、包裝盒、說明書上的文字
-- **【核心指令 - 型號識別】識別並提取型號代碼（如 Model No, SKU, Code 等），一律單獨填入 "modelNumber" 欄位。禁止將型號混入名稱中。**
-- **【核心指令 - 價格識別】識別照片中的價格信息（如 "RM 1200" 或單純的金額）。如果識別到，請僅填入金額數字部分（如 "1200"）到 "price" 欄位。**
-- **【嚴格禁止】禁止識別或填寫 "manualCode" 欄位，該欄位必須保持為 null。AI 識別不准填寫此欄位，它僅供人工手寫填入。**
-- **【核心指令 - 尺寸識別】識別照片中出現的尺寸標註。務必將高度(Height/H)、寬度(Width/W)、深度或長度(Depth/D/L)分別識別。**
-- **【嚴格限制】如果照片中完全沒有尺寸信息，"dimensions" 一律設為空數組 []。禁止將任何標籤符號識別為尺寸。**
+【CRITICAL - FIELD SEPARATION】
+- "name": ONLY product model or brand name (e.g., "IMCOCO").
+- "modelNumber": ONLY SKU/Model code (e.g., "B728").
+- "price": ONLY numeric part (e.g., "1200").
+- "dimensions": Array of objects with length/width/height (numbers).
+- FORBID putting dimensions, model numbers, or price into "name".
 
-【優先級 2：名稱規則 - 強制執行】
-- "name" 字段無論任何情況必須填寫，不能為空。
-- **【嚴格限制】禁止在名稱中包含任何型號、尺寸（如 Dimension, Size, Measurement, HxWxL, 100cm 等）、測量值、編號信息。**
-- **【絕對禁令】禁止在 "name" 欄位出現尺寸字母(H/W/D/L/T)、數字+單位(如 53cm, 24")，這些信息必須填入尺寸欄位。**
-- 如果原本名稱是純數字、編號或帶有型號/尺寸信息：直接替換為專業英文名稱（例如：不准包含 "SK-2024" 或尺寸描述）。
-- 名稱格式：英文，首字母大寫，簡潔專業 (例如: "Modern Leather Sofa")。
+【NAME RULES】
+- name MUST NOT contain H/W/D, numbers+units (like 53cm), or "x"/×.
+- If detected, move those contents to dimensions.
+- name should be professional and concise.
 
-【優先級 3：外觀特徵分析】
-- 生成一份詳細且專業的【繁體中文 (Traditional Chinese)】產品說明，說明家具的外觀、材質、風格或用途。
-- 【絕對限制】：務必僅使用【繁體中文】生成初步描述，禁止使用英文，填入 "description" 字段。
+【LANGUAGE & DESCRIPTION】
+- "description": Generate a professional description in 【繁體中文 (Traditional Chinese)】.
+- MUST NOT be empty.
 
-【核心規則 - 必須遵守】
+【DIMENSIONS RULES】
+- Each dimension object MUST include label, length, width, height, unit.
+- If label shows H/W/D: length = H, width = W, height = D.
+- If label only has numbers without H/W/D: use order length → width → height.
+- Default unit = "cm" if missing.
 
-1. 語言規範：
-    - "description": 必須填寫專業【繁體中文】描述。不得包含任何英文句子，除非是不可翻譯的品牌名或專有名詞。
-    - 【重要】：如果 AI 模型默認生成英文，請務必將其翻譯為【繁體中文】後再填入 "description"。
-    - 【強制要求】：中文描述必須完整提供，不得為空，不得填入產品名稱，必須是描述性語句。
+【CATEGORY & TAGS】
+- "categoryId": ${categoryContext} Available Categories (id/name): ${JSON.stringify(categoriesJson)}
+- "tagIds": Select 2-3 most relevant existing tags (return their IDs): ${JSON.stringify(tagsJson)}
+- "newTags": If no existing tag fits, create NEW ones. Rules: UPPERCASE, single English word.
 
-2. 標籤（Tags）：
-   - 強制選取或新增 2-3 個標籤以描述產品。
-   - 【極其重要】語義去重：請仔細對比現有標籤清單 ${JSON.stringify(tagsJson)}。
-   - 如果你想新增的標籤與現有標籤意思接近（例如：Marble 與 Marblelook、Sofa 與 Couches、Leather 與 Faux-leather）、或是包含關係，必須優先選擇現有標籤清單中的詞，嚴禁新增語義重複的標籤。
-   - 現有標籤請直接填入該標籤的 id 到 "tagIds" 數組中。
-   - 標籤側重：家具用途/性質、風格、材質、顏色等。
-   - 若現有標籤完全無關聯，才可以填入 "newTags"。
-   - 強制規範：新標籤每個必須是單一英文單詞，不得包含空格、符號或數字，且必須全部大写 (UPPERCASE)。
-   - 新增標籤填入 "newTags" 字段，格式為數組（如 ["RATTAN"]），若不新增則返回 []。
+【STRICT PROHIBITIONS】
+- DO NOT fill "manualCode". Leave it as null.
+- DO NOT invent dimensions. If not visible in photo, return empty array [].
+- DO NOT output markdown or extra text. Return ONLY valid JSON.
 
-2. 尺寸（Dimensions）：
-
-【尺寸提取規則 - 強制執行】
-- 每個尺寸對象必須包含：label（原始文本）、length、width、height（數字）、unit（cm/inch）。
-- 如果圖片中有 H / W / D 標識，嚴格對應 length = H, width = W, height = D。
-- 如果圖片沒有明確方向標識（如只有 "94x96x23"），按 "長（L） → 寬（W） → 高（H）" 順序賦值。
-- 如果沒有單位，默認 unit = "cm"。
-- 多個部件（如 WD、DT、BED）分別輸出獨立對象。
-
-示例：
+OUTPUT JSON example:
 {
   "name": "IMCOCO",
+  "modelNumber": "B728",
+  "price": "1200",
   "dimensions": [
     { "label": "H94\" x W96\" x D23\"", "length": 94, "width": 96, "height": 23, "unit": "inch" }
-  ]
+  ],
+  "description": "這是一款現代風格的梳化床...",
+  "categoryId": "UUID-FROM-LIST or null",
+  "tagIds": ["UUID1", "UUID2"],
+  "newTags": []
 }
-
-3. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
-
-4. 輸出規範：
-   - 僅回傳一個合法且壓縮的 JSON 物件。
-   - 禁止 Markdown 標記（如 \` \` \`json）。
-   - 所有字串欄位嚴禁包含換行符或未轉義的雙引號。
-   - 數字欄位必須為純數字（不含單位）。
-
-【JSON 輸出格式範例】
-{
-  "manualCode": null,
-  "modelNumber": "SK-2024 (或其他識別到的編號/型號)",
-  "name": "Modern Leather Sofa",
-  "description": "這是一款採用義大利進口大理石打造的餐桌，設計優雅且耐用。",
-  "price": "1200",
-  "categoryId": "123e4567-e89b-12d3... (存在清單中的 UUID)",
-  "tagIds": ["abc-123...", "def-456..."],
-  "newTags": ["MINIMALIST"],
-  "dimensions": [
-    { "label": "120cm" },
-    { "label": "85cm" },
-    { "label": "110cm" }
-  ]
-}
-
-請確保輸出為嚴格有效的 JSON。只返回 JSON，不要任何其他文字。
 `;
 
   try {
