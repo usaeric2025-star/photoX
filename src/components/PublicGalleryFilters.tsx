@@ -3,6 +3,7 @@ import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart } from 'lucide-re
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Tag, AppSettings } from '../types';
 import { cn } from '../lib/utils';
+import { toTitleCase } from '../lib/ui-helpers';
 
 interface PublicGalleryFiltersProps {
   searchQuery: string;
@@ -190,10 +191,6 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 const isHot = hotTagsSet.has(strTagId);
                 const isPinned = (settings?.pinnedTags || []).includes(strTagId);
                 
-                const toTitleCase = (str: string) => {
-                  if (!str) return '';
-                  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-                };
                 return (
                   <button 
                     key={strTagId}

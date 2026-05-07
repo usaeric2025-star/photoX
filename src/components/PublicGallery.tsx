@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { updatePhotoHidden, updatePhotoInCloud } from '../services/photoMutationService';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types';
-import { X, ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, Trash2, Pencil } from 'lucide-react';
+import { X, ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { useGalleryContext } from '../context/GalleryContext';
@@ -184,8 +183,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     visibleCount, setVisibleCount,
     isInfiniteMode, isStaffMode, setIsStaffMode,
     displayPhotos, gridPhotos,
-    totalGridCount,
-    page
+    totalGridCount
   } = context;
   
   // Use passed in selection state if provided (for AdminGalleryShell), otherwise use context
@@ -274,12 +272,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);
 
-  const getPhotoDisplayNameLocal = (p: Photo) => {
-    return getPhotoDisplayName(p, categories, lang, t);
-  };
-
   const getShareMessage = (p: Photo) => {
-    const displayName = getPhotoDisplayNameLocal(p);
+    const displayName = getPhotoDisplayName(p, categories, lang, t);
     const modelStr = p.model_number ? ` (${p.model_number})` : '';
     const manualCodeStr = p.manual_code ? ` [${p.manual_code}]` : '';
     const suffix = isStaffMode ? manualCodeStr : modelStr;

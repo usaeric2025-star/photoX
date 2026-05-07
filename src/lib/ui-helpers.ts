@@ -72,3 +72,11 @@ export const getManufacturerName = (
   const activeMfr = manufacturers.find(m => String(m.id) === String(mfrId));
   return activeMfr ? activeMfr.name : '';
 };
+
+/**
+ * Converts a string to Title Case.
+ */
+export function toTitleCase(str: string): string {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}

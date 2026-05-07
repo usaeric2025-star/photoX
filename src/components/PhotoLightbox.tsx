@@ -4,7 +4,7 @@ import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Photo, Category, ProductGroup, Manufacturer } from '../types';
+import { Photo, Category, ProductGroup, Manufacturer, Dimension } from '../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../lib/ui-helpers';
 
 // ... (retain props and other logic)
@@ -214,7 +214,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                 alt={photo.name || 'Photo'}
                 className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-300 ${isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} 
                 onLoad={() => {
-                  console.log("Lightbox photo loaded:", photo.id);
                   setIsImageLoading(false);
                 }}
                 onClick={() => setIsZoomed(true)} 
@@ -344,7 +343,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                    <div className="space-y-2">
                       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.dimensions || 'Dimensions'}</h3>
                       <div className="grid grid-cols-2 gap-2">
-                        {photo.dimensions.map((dim: any, i: number) => {
+                        {photo.dimensions.map((dim: Dimension, i: number) => {
                           const hasVolumeParams = dim.length || dim.width || dim.height;
                           const isQuickLabel = dim.label && !hasVolumeParams && dim.unit;
                           
