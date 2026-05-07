@@ -84,7 +84,9 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   }
 
   // Upload image if it doesn't have an image_url yet but has a uri
+  console.log('DEBUG [savePhotoToCloud]: photo.image_url', !!photo.image_url, 'photo.uri', !!photo.uri);
   if (!photo.image_url && photo.uri) {
+    console.log('DEBUG [savePhotoToCloud]: Proceeding to upload image');
     try {
       const filename = photo.storageId || photo.id;
       const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri, onStatus);

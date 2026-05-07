@@ -81,40 +81,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   // 2. 自动触发 AI 识别逻辑
   const hasAutoTriggered = React.useRef<string | null>(null);
 
-  React.useEffect(() => {
-    const photoData = newPhotoData || editPhotoPreview;
-    
-    // 只有在 editPhotoId 变化时才考虑自动触发
-    if (editPhotoId && hasAutoTriggered.current === editPhotoId) return;
-    hasAutoTriggered.current = editPhotoId || null;
+  // Disabled auto-trigger
+  /* React.useEffect(() => {
+    ...
+  }, [editPhotoId, !!newPhotoData, !!editPhotoPreview]); */
 
-    const sDims = safeArray(formState.dimensions);
-    const hasNoDims = sDims.length === 0 || 
-                     (sDims.length === 1 && !sDims[0].label && !sDims[0].length);
-
-    if (photoData && hasNoDims && !isAnalyzing) {
-      console.log('Auto-triggering AI Dimension Analysis...');
-      const trigger = async () => {
-        if (handleSingleAiAnalyzeCallback) {
-          await handleSingleAiAnalyzeCallback(
-            photoData,
-            formState.categoryId || undefined,
-            editPhotoId || undefined,
-            formState,
-            (updates) => {
-              // 拦截尺寸更新并执行合并
-              if (updates.dimensions) {
-                updates.dimensions = mergeDimensionsIfNeeded(updates.dimensions);
-              }
-              updateForm(updates);
-            },
-            handleSingleAiAnalyze!
-          );
-        }
-      };
-      trigger();
-    }
-  }, [editPhotoId, !!newPhotoData, !!editPhotoPreview]);
 
   const isPartOfGroup = useMemo(() => {
     if (!editPhotoId) return false;
@@ -169,7 +140,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     }
   };
 
-  const rotatePhoto = () => transformImage();
+  const rotatePhoto = async () => {
+    console.log('DEBUG [PhotoEditDrawer]: Rotate clicked');
+    await transformImage();
+  };
 
   return (
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
