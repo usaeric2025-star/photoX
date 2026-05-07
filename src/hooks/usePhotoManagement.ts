@@ -3,7 +3,7 @@ import { useErrorHandler } from '../utils/errorHandler';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { formatDate } from '../utils/dateFormat';
 import { photoApi } from '../api/photos';
-import { Photo, Tag, ProductFormData, User } from '../types';
+import { Photo, Tag, ProductFormData, User, Dimension } from '../types';
 import { saveData, loadData } from '../utils/indexedDB';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, generateItemCode, checkImageHashExists, uploadImages } from '../services/supabaseService';
@@ -187,7 +187,8 @@ export const usePhotoManagement = (
           const original = photos.find(p => p.id === editPhotoId);
           if (!original) throw new Error('Photo not found');
 
-          const finalDimensions = dimensions.length > 0 ? dimensions : [{
+          const finalDimensions: Dimension[] = dimensions.length > 0 ? dimensions : [{
+            label: '',
             length: parseFloat(dimL || '0') || 0,
             width: parseFloat(dimW || '0') || 0,
             height: parseFloat(dimH || '0') || 0,
@@ -227,7 +228,8 @@ export const usePhotoManagement = (
           }
        } else if (newPhotoData) {
           const finalId = crypto.randomUUID();
-          const finalDimensions = dimensions.length > 0 ? dimensions : [{
+          const finalDimensions: Dimension[] = dimensions.length > 0 ? dimensions : [{
+            label: '',
             length: parseFloat(dimL || '0') || 0,
             width: parseFloat(dimW || '0') || 0,
             height: parseFloat(dimH || '0') || 0,

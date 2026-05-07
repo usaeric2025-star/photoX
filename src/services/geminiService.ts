@@ -144,19 +144,20 @@ export const analyzeProductPhoto = async (
 
 2. 尺寸（Dimensions）：
 
-【尺寸識別規則】
+【尺寸提取規則 - 強制執行】
+- 每個尺寸對象必須包含：label（原始文本）、length、width、height（數字）、unit（cm/inch）。
+- 如果圖片中有 H / W / D 標識，嚴格對應 length = H, width = W, height = D。
+- 如果圖片沒有明確方向標識（如只有 "94x96x23"），按 "長（L） → 寬（W） → 高（H）" 順序賦值。
+- 如果沒有單位，默認 unit = "cm"。
+- 多個部件（如 WD、DT、BED）分別輸出獨立對象。
 
-1. 仔細掃描圖片上的所有尺寸文字標註。
-2. 只要圖片中顯示的尺寸，都要列出。
-3. **【合併指令】禁止回傳碎裂的尺寸！例如：禁止將長寬高拆成 "{label: '53'}"、"{label: '63'}"，必須合併為 "{label: 'H49\" × W62.5\" × D86\"'}"。**
-4. 如果有多個尺寸標註（部件或總長寬高等），不論是否完整，請儘量分別返回多個完整的尺寸對象。
-5. 如果圖片上完全沒有尺寸標註 → **留空，不返回尺寸對象**。
-6. 如果无法确定部件名称 → **part 字段留空，不要写 “overall” 或提示词**。
-7. 每个尺寸对象包含：
-   - label（必填）：完整尺寸字符串，如 "120cm" 或 "120x60x75" 或 "H120 × W60 × D75"
-   - unit（必填）：cm / mm / inch
-   - part（可选）：只有极其确定时才填写
-   - isAIEstimated（可选）：AI 估算时设为 true
+示例：
+{
+  "name": "IMCOCO",
+  "dimensions": [
+    { "label": "H94\" x W96\" x D23\"", "length": 94, "width": 96, "height": 23, "unit": "inch" }
+  ]
+}
 
 3. 分類（categoryId）：${categoryContext} 現有分類清單（請填入對應的 id）：${JSON.stringify(categoriesJson)}
 
@@ -388,71 +389,58 @@ export const analyzeProductPhoto = async (
 };
 
 /**
- * AI Recognition Dimensions Automatic Cleaning and Merging Function
+ * AI Recognition Dimensions Automatic Cleaning Function
+ * Ensures length/width/height fields are preserved and data is clean.
  */
 export const normalizeDimensions = (dims: any[]): any[] => {
   if (!Array.isArray(dims) || dims.length === 0) return [];
 
-  // Group together consecutive "fragments" (pure numbers or numbers with simple units)
-  const result: any[] = [];
-  let pendingGroup: any[] = [];
-
-  const isFragment = (label: string) => {
-    // Check if it's a "fragment" - mostly numeric, lacking separators or H/W/D markers
-    const clean = label.replace(/\s/g, '');
-    const hasSpecialMarkers = /[xwdtlh"“”×]/i.test(clean);
-    const hasOnlyNumbersAndUnit = /^\d+(\.\d+)?(cm|mm|inch|in)?$/i.test(clean);
-    return !hasSpecialMarkers && hasOnlyNumbersAndUnit;
-  };
-
-  const processPending = () => {
-    if (pendingGroup.length === 0) return;
-    if (pendingGroup.length === 1) {
-      result.push(pendingGroup[0]);
-    } else {
-      // Merge items
-      const mergedLabel = pendingGroup.map(item => item.label).join(' × ');
-      const firstUnit = pendingGroup[0].unit || 'cm';
-      result.push({
-        ...pendingGroup[0],
-        label: mergedLabel,
-        unit: firstUnit
-      });
-    }
-    pendingGroup = [];
-  };
-
-  for (const d of dims) {
-    if (!d) continue;
-    let label = typeof d === 'string' ? d : String(d.label || '');
-    if (!label) continue;
-
-    // Use original d structure
-    const item = { ...d, label: label.trim() };
-
-    if (isFragment(item.label)) {
-      pendingGroup.push(item);
-    } else {
-      processPending();
-      result.push(item);
-    }
-  }
-  processPending();
-
-  // Final filtering: remove entries that are obviously not dimensions (no numbers at all)
-  return result
+  return dims
     .map(d => {
-      const label = d.label;
-      const hasNumber = /\d/.test(label);
-      if (!hasNumber) return null;
+      if (!d) return null;
+      let label = typeof d === 'string' ? d : String(d.label || '');
+      if (!label) return null;
 
       // Clean typical junk labels if they are NOT clearly part of the dimension
       let cleanedLabel = label.replace(/(overall|size|dimension|measurement|approx)/gi, '').trim();
       
-      // If cleaned label becomes empty or just symbols, discard
-      if (!cleanedLabel || !/\d/.test(cleanedLabel)) return null;
+      // Basic number check
+      const hasNumber = /\d/.test(cleanedLabel);
+      if (!hasNumber) return null;
 
-      return { ...d, label: cleanedLabel };
+      let length = Number(d.length) || 0;
+      let width = Number(d.width) || 0;
+      let height = Number(d.height) || 0;
+
+      // Fallback: If L/W/H are missing but label has numbers, try to extract them
+      if (length === 0 && width === 0 && height === 0) {
+        const hMatch = cleanedLabel.match(/H\s*(\d+(\.\d+)?)/i);
+        const wMatch = cleanedLabel.match(/W\s*(\d+(\.\d+)?)/i);
+        const dMatch = cleanedLabel.match(/[DL]\s*(\d+(\.\d+)?)/i);
+        
+        if (hMatch) height = parseFloat(hMatch[1]);
+        if (wMatch) width = parseFloat(wMatch[1]);
+        if (dMatch) length = parseFloat(dMatch[1]);
+
+        // If still all 0, try sequential extraction (L -> W -> H)
+        if (length === 0 && width === 0 && height === 0) {
+          const nums = cleanedLabel.match(/(\d+(\.\d+)?)/g);
+          if (nums) {
+            if (nums.length >= 1) length = parseFloat(nums[0]);
+            if (nums.length >= 2) width = parseFloat(nums[1]);
+            if (nums.length >= 3) height = parseFloat(nums[2]);
+          }
+        }
+      }
+
+      return { 
+        ...d, 
+        label: cleanedLabel,
+        unit: d.unit === 'inch' ? 'inch' : 'cm',
+        length,
+        width,
+        height
+      };
     })
     .filter(Boolean);
 };

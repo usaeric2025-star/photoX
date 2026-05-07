@@ -202,7 +202,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
 
   const handleSetDim = (photo: Photo, label: string) => {
     persistPhotoChange(photo.id, { 
-      dimensions: [{ label, unit: 'cm', isAI: false }] 
+      dimensions: [{ label, unit: 'cm', length: 0, width: 0, height: 0, isAI: false }] 
     });
   };
 

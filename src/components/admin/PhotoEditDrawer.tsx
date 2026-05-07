@@ -523,7 +523,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">长 / L</span>
                              <input 
                                type="number" 
-                               value={dim.length || ''} 
+                               value={dim.length || (dim.label.match(/(\d+(\.\d+)?)/g)?.[0] || '')} 
                                onChange={e => {
                                  const curDims = formState.dimensions;
                                  const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
@@ -539,7 +539,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">宽 / W</span>
                              <input 
                                type="number" 
-                               value={dim.width || ''} 
+                               value={dim.width || (dim.label.match(/(\d+(\.\d+)?)/g)?.[1] || '')} 
                                onChange={e => {
                                  const curDims = formState.dimensions;
                                  const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
@@ -555,7 +555,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">高 / H</span>
                              <input 
                                type="number" 
-                               value={dim.height || ''} 
+                               value={dim.height || (dim.label.match(/(\d+(\.\d+)?)/g)?.[2] || '')} 
                                onChange={e => {
                                  const curDims = formState.dimensions;
                                  const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];

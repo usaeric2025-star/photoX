@@ -34,6 +34,17 @@ export interface Manufacturer {
   aliases: string[];
 }
 
+export interface Dimension {
+  label: string;
+  unit: 'cm' | 'inch';
+  length: number;
+  width: number;
+  height: number;
+  part?: string;
+  isAI?: boolean;
+  isAIEstimated?: boolean;
+}
+
 export interface Photo {
   id: string; // Database UUID
   storageId?: string; // Filename for Supabase Storage
@@ -45,14 +56,7 @@ export interface Photo {
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
   thumb_url?: string; // Thumbnail URL in Storage
-  dimensions?: {
-    length?: number;
-    width?: number;
-    height?: number;
-    unit?: string;
-    label?: string;
-    isAI?: boolean;
-  }[] | null;
+  dimensions?: Dimension[] | null;
   exif_data?: Record<string, unknown> | null;
   createdAt: string;
   updatedAt?: string;
@@ -120,14 +124,7 @@ export interface ProductFormData {
   };
   manual_code: string;
   model_number: string;
-  dimensions: {
-    label?: string;
-    length?: number;
-    width?: number;
-    height?: number;
-    unit?: string;
-    isAI?: boolean;
-  }[];
+  dimensions: Dimension[];
   isHidden: boolean;
   price: string;
   isGroupCover: boolean;
