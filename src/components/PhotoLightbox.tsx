@@ -304,10 +304,16 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                  {((mfrName && mfrName !== catName) || displayTags.length > 0) && (
                    <div className="flex flex-wrap items-center gap-2">
                       {(mfrName && mfrName !== catName) && (
-                        <span className="bg-orange-50 text-orange-600 px-2.5 py-1 border border-orange-200 rounded-lg text-xs font-bold flex items-center">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log("Filtering by:", mfrName);
+                          }}
+                          className="bg-orange-50 text-orange-600 px-2.5 py-1 border border-orange-200 rounded-lg text-xs font-bold flex items-center hover:bg-orange-100 transition-colors"
+                        >
                           <Key size={10} className="mr-1.5" />
                           {mfrName}
-                        </span>
+                        </button>
                       )}
                       {displayTags.map((tagName: string, i: number) => (
                         <span key={i} className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border border-slate-200">#{tagName}</span>

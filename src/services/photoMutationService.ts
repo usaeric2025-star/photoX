@@ -24,16 +24,27 @@ const FIELD_MAP: Record<string, string> = {
   descriptionTranslations: 'description_translations',
 };
 
+const ALLOWED_FIELDS = [
+  'id', 'name', 'description', 'description_translations', 'categoryId',
+  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId',
+  'isHidden', 'image_url', 'thumb_url', 'price', 'updated_at', 'created_at'
+];
+
 const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
     const dbUpdates: any = {};
     
-    // Ensure exif_data is removed
-    if ('exif_data' in updates) delete updates.exif_data;
+    // Filter updates based on whitelist
+    const filteredUpdates: Record<string, any> = {};
+    for (const key of ALLOWED_FIELDS) {
+        if (key in updates) {
+            filteredUpdates[key] = updates[key];
+        }
+    }
     
     // Map fields
-    for (const [key, value] of Object.entries(updates)) {
+    for (const [key, value] of Object.entries(filteredUpdates)) {
         // Exclude relational/array fields that are handled separately
-        if (['tagIds', 'dimensions', 'exif_data'].includes(key)) continue;
+        if (['tagIds', 'dimensions'].includes(key)) continue;
         
         if (FIELD_MAP[key]) {
             dbUpdates[FIELD_MAP[key]] = value;
