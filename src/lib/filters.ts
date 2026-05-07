@@ -15,6 +15,8 @@ export function filterPhotos(
   options: FilterOptions,
   tags: Tag[]
 ): Photo[] {
+  if (!Array.isArray(photos)) return [];
+  
   const {
     searchQuery,
     filterCatId,
@@ -90,6 +92,7 @@ export function filterPhotos(
 }
 
 export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Photo[] {
+  if (!Array.isArray(photos)) return [];
   if (!showGroupsCollapsed) return photos;
 
   const groupCovers = new Map<string, Photo>();

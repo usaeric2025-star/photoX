@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
 import { updatePhoto } from '../services/photoMutationService';
 import { PublicGallery } from '../components/PublicGallery';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
@@ -186,55 +187,57 @@ export default function PublicView() {
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading Gallery...</p>
         </div>
       ) : (
-        <PublicGallery 
-          photos={photos}
-          categories={categories}
-          tags={[]} // Tags from context will be used, but interface requires it
-          onExit={() => navigate('/admin')}
-          onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
-          showExit={false}
-          onLogin={() => navigate('/admin')}
-          loginWithGoogle={loginWithGoogle}
-          user={user}
-          internalPassword=""
-          settings={settings}
-          isRefreshing={isRefreshing}
-          onRefresh={() => syncWithCloud(true)}
-          onLoadMore={loadMore}
-          hasMore={hasMore}
-          totalCount={totalCloudCount}
-          onTogglePinned={async (photo) => {
-            const newStatus = !photo.isPinned;
-            
-            // Identify affected photos (the photo itself + any other photos in the same group)
-            const affectedPhotos = photo.groupId 
-              ? photos.filter(p => p.groupId === photo.groupId)
-              : [photo];
+        <ErrorBoundary key="publicGallery">
+          <PublicGallery 
+            photos={photos}
+            categories={categories}
+            tags={[]} // Tags from context will be used, but interface requires it
+            onExit={() => navigate('/admin')}
+            onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
+            showExit={false}
+            onLogin={() => navigate('/admin')}
+            loginWithGoogle={loginWithGoogle}
+            user={user}
+            internalPassword=""
+            settings={settings}
+            isRefreshing={isRefreshing}
+            onRefresh={() => syncWithCloud(true)}
+            onLoadMore={loadMore}
+            hasMore={hasMore}
+            totalCount={totalCloudCount}
+            onTogglePinned={async (photo) => {
+              const newStatus = !photo.isPinned;
               
-            // Optimistic update for all affected photos
-            setPhotos(prev => prev.map(p => 
-              affectedPhotos.some(ap => ap.id === p.id) 
-                ? { ...p, isPinned: newStatus } 
-                : p
-            ));
-            
-            try {
-              await Promise.all(
-                affectedPhotos.map(p => 
-                  updatePhoto(p.id, { isPinned: newStatus })
-                )
-              );
-            } catch (e: any) {
-              handleError(e, "togglePinned");
-              // Revert changes
+              // Identify affected photos (the photo itself + any other photos in the same group)
+              const affectedPhotos = photo.groupId 
+                ? photos.filter(p => p.groupId === photo.groupId)
+                : [photo];
+                
+              // Optimistic update for all affected photos
               setPhotos(prev => prev.map(p => 
                 affectedPhotos.some(ap => ap.id === p.id) 
-                  ? { ...p, isPinned: !newStatus } 
+                  ? { ...p, isPinned: newStatus } 
                   : p
               ));
-            }
-          }}
-        />
+              
+              try {
+                await Promise.all(
+                  affectedPhotos.map(p => 
+                    updatePhoto(p.id, { isPinned: newStatus })
+                  )
+                );
+              } catch (e: any) {
+                handleError(e, "togglePinned");
+                // Revert changes
+                setPhotos(prev => prev.map(p => 
+                  affectedPhotos.some(ap => ap.id === p.id) 
+                    ? { ...p, isPinned: !newStatus } 
+                    : p
+                ));
+              }
+            }}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );
