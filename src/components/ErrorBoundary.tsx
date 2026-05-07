@@ -1,4 +1,5 @@
 import React, { ErrorInfo, ReactNode } from 'react';
+import { logErrorToSupabase } from '../services/logService';
 
 interface Props {
   children: ReactNode;
@@ -28,6 +29,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ error, errorInfo });
     console.error("Uncaught error:", error, errorInfo);
+    logErrorToSupabase(error, errorInfo);
   }
 
   public render() {

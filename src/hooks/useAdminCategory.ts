@@ -145,15 +145,15 @@ export const useAdminCategory = (adminUI: {
           // 1. Remove from all photos
           const { data: photosWithTag } = await supabase
               .from('furniture_items')
-              .select('id, tagIds')
-              .contains('tagIds', [strId]);
+              .select('id, tag_ids')
+              .contains('tag_ids', [strId]);
   
           if (photosWithTag && photosWithTag.length > 0) {
               for (const photo of photosWithTag) {
-                  const newTagIds = (photo.tagIds || []).filter(tid => String(tid) !== strId);
+                  const newTagIds = (photo.tag_ids || []).filter(tid => String(tid) !== strId);
                   const { error } = await supabase
                       .from('furniture_items')
-                      .update({ tagIds: newTagIds })
+                      .update({ tag_ids: newTagIds })
                       .eq('id', photo.id);
                   if (error) throw error;
               }
