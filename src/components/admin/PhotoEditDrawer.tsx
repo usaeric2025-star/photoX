@@ -79,8 +79,15 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   };
 
   // 2. 自动触发 AI 识别逻辑
+  const hasAutoTriggered = useRef<string | null>(null);
+
   React.useEffect(() => {
     const photoData = newPhotoData || editPhotoPreview;
+    
+    // 只有在 editPhotoId 变化时才考虑自动触发
+    if (editPhotoId && hasAutoTriggered.current === editPhotoId) return;
+    hasAutoTriggered.current = editPhotoId || null;
+
     const sDims = safeArray(formState.dimensions);
     const hasNoDims = sDims.length === 0 || 
                      (sDims.length === 1 && !sDims[0].label && !sDims[0].length);

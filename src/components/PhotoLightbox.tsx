@@ -216,7 +216,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
               <img 
                 key={photo.id}
                 referrerPolicy="no-referrer"
-                src={photo.image_url || photo.uri || ''} 
+                src={(photo.image_url || photo.uri || '') + (photo.image_url ? `?t=${new Date(photo.updatedAt || '0').getTime()}` : '')}
                 alt={photo.name || 'Photo'}
                 className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-300 ${isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} 
                 onLoad={() => {
