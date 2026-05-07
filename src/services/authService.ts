@@ -1,5 +1,6 @@
-import { User } from '@supabase/supabase-js';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { User } from '../types';
 
 export const loginWithGoogle = async () => {
   try {
@@ -32,21 +33,19 @@ export const loginWithGoogle = async () => {
 
 export const logout = () => supabase.auth.signOut();
 
-export type AuthUser = User & {
-  displayName?: string;
-  avatarUrl?: string;
-};
-
-export const onAuthChange = (callback: (user: AuthUser | null) => void) => {
+export const onAuthChange = (callback: (user: User | null) => void) => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
     const user = session?.user || null;
     
-    let authUser: AuthUser | null = null;
+    let authUser: User | null = null;
     if (user) {
       authUser = {
-        ...user,
-        displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.displayName || user.email,
-        avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture
+        id: user.id,
+        email: user.email || null,
+        displayName: user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.displayName || user.email || null,
+        photoURL: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        emailVerified: !!user.email_confirmed_at
       };
     }
     callback(authUser);

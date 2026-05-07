@@ -84,8 +84,7 @@ export interface Photo {
 }
 
 export interface User {
-  uid: string;
-  id?: string;
+  id: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;

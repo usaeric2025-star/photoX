@@ -83,7 +83,7 @@ export const useAdminCore = (user: User | null) => {
     try {
       await saveSettingsCloud({...settings, categories, manufacturers});
       const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
-      const result = await syncPhotosToCloudService(user.uid, photos, lastSyncISO);
+      const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
       const now = new Date().toISOString();
       localStorage.setItem('lastSyncTime', now);
       await saveData('last_sync_time', Date.now());
