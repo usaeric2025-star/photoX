@@ -37,7 +37,7 @@ export const deleteCategoryFromDB = async (categoryId: string): Promise<boolean>
 };
 
 export const addCategoryToDB = async (name: string): Promise<Category | null> => {
-  const data = await createCategory({ name, sortOrder: 0 } as Category);
+  const data = await createCategory({ name, sortOrder: 0, aliases: [], subcategories: [] } as unknown as Omit<Category, 'id'>);
   categoryCache.clear();
   return data;
 };

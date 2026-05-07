@@ -72,8 +72,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       price: item.price ? String(item.price) : '',
       description_translations: item.description_translations as Photo['description_translations'] || null,
       tagIds: Array.isArray(tagIds) ? tagIds : [],
-      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
-      photo_tags: Array.isArray(item.photo_tags) ? (item.photo_tags as any[]) : []
+      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : []
     };
 }
 
