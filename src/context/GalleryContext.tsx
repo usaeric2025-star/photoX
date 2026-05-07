@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useMemo, useCallback, useEf
 import { Photo, Category, Tag } from '../types';
 import { filterPhotos, groupPhotos } from '../lib/filters';
 import { safeArray } from '../utils/safeAccess';
+import { injectBadData } from '../utils/debugInjector';
 
 interface GalleryContextType {
   // State
@@ -87,6 +88,16 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const photos = photosState;
+
+  // Debug tool: Inject bad data to test UI resilience
+  useEffect(() => {
+    (window as any).__debugInject = () => injectBadData(setPhotos);
+    console.log('🛠️ [DEBUG] window.__debugInject() is ready. Call it in console to test crashes.');
+    return () => {
+      delete (window as any).__debugInject;
+    };
+  }, [setPhotos]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [filterCatId, setFilterCatId] = useState<string | null>(null);

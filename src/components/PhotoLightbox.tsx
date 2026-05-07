@@ -44,7 +44,9 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
 
   const slides = React.useMemo(() => {
-    return displayPhotos.map(p => ({ src: p.image_url || p.uri || '' }));
+    return (displayPhotos || [])
+      .filter(p => !!p)
+      .map(p => ({ src: p.image_url || p.uri || '' }));
   }, [displayPhotos]);
 
   const handleDownload = async () => {
@@ -104,9 +106,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   // Tags lookup
   const displayTags = React.useMemo(() => {
-    if (!photo || !photo.tagIds || photo.tagIds.length === 0) return [];
-    // Only show tags present in the tagMap
-    return photo.tagIds
+    if (!photo) return [];
+    
+    // Ensure tagIds is safely handled even if it's not an array
+    const rawIds = Array.isArray(photo.tagIds) ? photo.tagIds : [];
+    if (rawIds.length === 0) return [];
+
+    return rawIds
       .map(tid => tagMap[String(tid)])
       .filter((tagName): tagName is string => !!tagName && tagName.trim() !== '');
   }, [photo?.id, photo?.tagIds, tagMap]);

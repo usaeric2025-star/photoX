@@ -73,6 +73,8 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-6">
         {photos.map((photo) => {
+          if (!photo) return null; // Defensive check for null entries
+          
           const isSelected = selectedPhotoIds.includes(photo.id);
           const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
           

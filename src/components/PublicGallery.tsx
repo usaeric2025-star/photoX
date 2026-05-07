@@ -91,7 +91,9 @@ const MemoizedPhotoCard = React.memo(({
   onTogglePinned?: (photo: Photo) => void;
 }) => {
   const handleOpenLightbox = useCallback(() => {
-    const realIndex = displayPhotos.findIndex((p: Photo) => p.id === gridPhotos[index].id);
+    const target = gridPhotos[index];
+    if (!target) return;
+    const realIndex = displayPhotos.findIndex((p: Photo) => p?.id === target.id);
     if (realIndex !== -1) onLightboxOpen(realIndex);
   }, [index, displayPhotos, gridPhotos, onLightboxOpen]);
 
@@ -342,7 +344,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [t.shareTitle, t.shareNotSupported]);
 
   const shareGroup = useCallback(async (photos: Photo[]) => {
-    const safePhotos = safeArray(photos);
+    const safePhotos = safeArray(photos).filter(p => !!p);
     const msg = safePhotos.map(p => p.name || 'Furniture').join(', ');
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView more: ${window.location.origin}`;
     
