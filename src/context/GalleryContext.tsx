@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { Photo, Category, Tag } from '../types';
 import { filterPhotos, groupPhotos } from '../lib/filters';
+import { safeArray } from '../utils/safeAccess';
 
 interface GalleryContextType {
   // State
@@ -80,7 +81,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return next.map(p => ({
             ...p,
             tagIds: Array.isArray(p.tagIds) ? p.tagIds : [],
-            dimensions: Array.isArray(p.dimensions) ? p.dimensions : []
+            dimensions: Array.isArray(p.dimensions) ? p.dimensions : [],
         }));
     });
   }, []);
@@ -174,7 +175,7 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const stableTagCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     photosState.forEach(p => {
-      const ids = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+      const ids = safeArray<string | number>(p.tagIds);
       ids.forEach(id => {
         counts[String(id)] = (counts[String(id)] || 0) + 1;
       });

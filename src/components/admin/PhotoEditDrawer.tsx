@@ -8,6 +8,7 @@ import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminC
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { TagEditor } from './TagEditor';
 import { Button } from "@/components/ui/button"
+import { safeArray } from '../../utils/safeAccess';
 
 interface Props {
   editPhotoId: string | null;
@@ -60,10 +61,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   }, [tags]);
   
   const handleToggleTag = (tag: any) => {
-    if (formState.tagIds.includes(tag.id)) {
-        updateForm({ tagIds: formState.tagIds.filter(id => id !== tag.id) });
-    } else if (formState.tagIds.length < 3) {
-        updateForm({ tagIds: [...(formState.tagIds || []), tag.id] });
+    const currentTagIds = safeArray<string>(formState.tagIds);
+    if (currentTagIds.includes(tag.id)) {
+        updateForm({ tagIds: currentTagIds.filter(id => id !== tag.id) });
+    } else if (currentTagIds.length < 3) {
+        updateForm({ tagIds: [...currentTagIds, tag.id] });
     }
   };
 
@@ -468,7 +470,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="space-y-3">
-                    {(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim, idx) => (
+                    {safeArray<any>(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim: any, idx) => (
                       <div key={`dim-${idx}`} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
                         { (formState.dimensions && formState.dimensions.length > 1) && (
                           <button 

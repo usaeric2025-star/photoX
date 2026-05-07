@@ -4,13 +4,21 @@ import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
 import { clearExpiredCaches } from './utils/indexedDB';
+import { supabase } from './lib/supabase';
 
 export default function AppRoutes() {
   const { user, authChecked } = useAuth();
   
   useEffect(() => {
-    // Background cache cleanup
+    // 1. Background cache cleanup
     clearExpiredCaches(7).catch(err => console.error('[IndexedDB] Cleanup failed:', err));
+    
+    // 2. Supabase Session Health Check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session && user) {
+        console.warn('⚠️ Session 丢失，建议重新登录');
+      }
+    });
   }, []);
   
   if (!authChecked) return null;

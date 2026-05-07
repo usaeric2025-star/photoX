@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Photo, Category, Manufacturer } from '../types';
 import { X, Layers, Heart, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName } from '../lib/ui-helpers';
+import { safeArray } from '../utils/safeAccess';
 
 interface PhotoCardProps {
   photo: Photo;
@@ -50,9 +51,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   };
 
   const photoTags = useMemo(() => {
-    if (!photo.tagIds || photo.tagIds.length === 0) return [];
+    const rawTagIds = safeArray<string | number>(photo.tagIds);
+    if (!rawTagIds || rawTagIds.length === 0) return [];
     // Only show tags present in the tagMap
-    return photo.tagIds
+    return rawTagIds
       .map(tid => tagMap[String(tid)])
       .filter(Boolean)
       .map(toTitleCase);

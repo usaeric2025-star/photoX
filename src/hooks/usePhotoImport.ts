@@ -81,6 +81,12 @@ export const usePhotoImport = (
     
     const fileArray = Array.from(files) as File[];
     
+    // HEIC Detection Alert
+    const hasHeic = fileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
+    if (hasHeic) {
+      showToast('檢測到 HEIC 格式照片，部分手機瀏覽器可能無法直接顯示，建議轉換為 JPG 後上傳', 'info');
+    }
+    
     return runWithLoading('importing', async () => {
       setIsSyncing(true);
       setImportTotal(fileArray.length);

@@ -16,6 +16,7 @@ import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 import { getTranslatedCategoryName, getPhotoDisplayName } from '../lib/ui-helpers';
+import { safeArray } from '../utils/safeAccess';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -208,8 +209,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
-    photos.forEach(p => {
-       (Array.isArray(p.tagIds) ? p.tagIds : []).forEach(id => ids.add(id));
+    safeArray<Photo>(photos).forEach(p => {
+       safeArray<string>(p.tagIds).forEach(id => ids.add(id));
     });
     return ids;
   }, [photos]);
