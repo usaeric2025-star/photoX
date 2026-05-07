@@ -106,7 +106,7 @@ export const analyzeProductPhoto = async (
   const promptText = `You are a furniture product analyzer. Extract data STRICTLY as follows:
 
 【CRITICAL - FIELD SEPARATION】
-- "name": ONLY product model or brand name (e.g., "IMCOCO").
+- "name": ONLY product model or brand name (e.g., "IMCOCO"). MUST be in English.
 - "modelNumber": ONLY SKU/Model code (e.g., "B728").
 - "price": ONLY numeric part (e.g., "1200").
 - "dimensions": Array of objects with length/width/height (numbers).

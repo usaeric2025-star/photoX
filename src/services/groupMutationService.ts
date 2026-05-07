@@ -16,7 +16,7 @@ const FIELD_MAP: Record<string, string> = {
     updatedAt: 'updated_at',
 };
 
-const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, isCreate = false): Record<string, any> => {
+const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, isCreate = false, userId?: string): Record<string, any> => {
     const dbUpdates: any = {};
 
     // Filter
@@ -32,12 +32,23 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, isCreate 
     if (isCreate && !dbUpdates.created_at) {
         dbUpdates.created_at = new Date().toISOString();
     }
+    
+    // Explicitly set user_id if provided
+    if (userId) {
+        dbUpdates.user_id = userId;
+    }
 
     return dbUpdates;
 };
 
+const getCurrentUserId = async (): Promise<string | undefined> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return user?.id;
+};
+
 export const updateGroup = async (groupId: string, updates: Partial<ProductGroup>) => {
-    const dbUpdates = mapToDb(updates);
+    const userId = await getCurrentUserId();
+    const dbUpdates = mapToDb(updates, false, userId);
     const { error } = await supabase
         .from(TABLE_NAME)
         .update(dbUpdates)
@@ -50,7 +61,8 @@ export const updateGroup = async (groupId: string, updates: Partial<ProductGroup
 };
 
 export const upsertGroup = async (group: Partial<ProductGroup> & { id: string }) => {
-    const dbUpdates = mapToDb(group);
+    const userId = await getCurrentUserId();
+    const dbUpdates = mapToDb(group, false, userId);
     const { error } = await supabase
         .from(TABLE_NAME)
         .upsert(dbUpdates, { onConflict: 'id' });
@@ -62,7 +74,8 @@ export const upsertGroup = async (group: Partial<ProductGroup> & { id: string })
 };
 
 export const createGroup = async (groupData: ProductGroup) => {
-    const dbUpdates = mapToDb(groupData, true);
+    const userId = await getCurrentUserId();
+    const dbUpdates = mapToDb(groupData, true, userId);
     const { error, data } = await supabase
         .from(TABLE_NAME)
         .insert(dbUpdates)
