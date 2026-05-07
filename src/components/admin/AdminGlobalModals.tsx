@@ -67,13 +67,13 @@ export const AdminGlobalModals: React.FC = () => {
                       setAlertDialog(null);
                     }}
                   >
-                    {alertDialog.confirmLabel || '確定 / OK'}
+                    {alertDialog.confirmLabel || '确定 / OK'}
                   </AlertDialogAction>
                 )}
               </>
             ) : (
               <AlertDialogAction onClick={() => setAlertDialog(null)}>
-                確定 / OK
+                确定 / OK
               </AlertDialogAction>
             )}
           </AlertDialogFooter>

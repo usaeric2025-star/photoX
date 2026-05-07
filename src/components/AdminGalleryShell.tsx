@@ -79,8 +79,8 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     if (selectedIds.length === 0) return;
     
     adminUI?.setAlertDialog({
-      title: `確定要刪除這 ${selectedIds.length} 張照片嗎？`,
-      message: '刪除後無法恢復，雲端的文件也將被移除。',
+      title: `确定要删除这 ${selectedIds.length} 张照片吗？`,
+      message: '删除后无法恢复，云端的文件也将被移除。',
       onConfirm: async () => {
         try {
           // Identify groups before deletion
@@ -103,10 +103,10 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
               }
           }
 
-          adminUI?.showToast(`已成功刪除 ${selectedIds.length} 張照片`, 'success');
+          adminUI?.showToast(`已成功删除 ${selectedIds.length} 张照片`, 'success');
         } catch (e) {
           const error = e instanceof Error ? e : new Error(String(e));
-          adminUI?.showToast(`刪除失敗: ${error.message}`, 'error');
+          adminUI?.showToast(`删除失败: ${error.message}`, 'error');
         }
       }
     });
@@ -119,9 +119,9 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     
     try {
       await Promise.all(selectedIds.map(id => updatePhoto(id, { isHidden: hidden })));
-      adminUI?.showToast(`已${hidden ? '隱藏' : '顯示'} ${count} 張照片`, 'success');
+      adminUI?.showToast(`已${hidden ? '隐藏' : '显示'} ${count} 张照片`, 'success');
     } catch (e) {
-      adminUI?.showToast(`操作失敗: 部分照片更新失敗。`, 'error');
+      adminUI?.showToast(`操作失败: 部分照片更新失败。`, 'error');
     }
   };
 
@@ -189,7 +189,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
              );
           } catch (err) {
              const error = err instanceof Error ? err : new Error(String(err));
-             adminUI?.showToast(`設置封面失敗: ${error.message}`, 'error');
+             adminUI?.showToast(`设置封面失败: ${error.message}`, 'error');
           }
         }}
         user={adminSession?.user}

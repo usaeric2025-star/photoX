@@ -36,7 +36,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
                <div>
                   <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${groupData.isHidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列故事 / Series Story</h3>
                   <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl">
-                    {groupData.description || '暫無系列說明 / No description yet.'}
+                    {groupData.description || '暂无系列说明 / No description yet.'}
                   </p>
                </div>
                
@@ -145,7 +145,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
                   </h4>
                   {photo.isHidden && (
                     <span className="shrink-0 bg-orange-100 text-orange-600 px-1 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">
-                      已隱藏
+                      已隐藏
                     </span>
                   )}
                 </div>

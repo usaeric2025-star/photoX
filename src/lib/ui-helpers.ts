@@ -55,7 +55,7 @@ export const getPhotoDisplayName = (
  */
 export const isUncategorizedName = (name: string, t: any, catId?: string | number): boolean => {
   if (catId && (String(catId) === '7' || String(catId) === 'Others' || String(catId) === 'other')) return false;
-  const uncatValues = ['未分类', '未分類', 'uncategorized', 'tiada kategori'];
+  const uncatValues = ['未分类', 'uncategorized', 'tiada kategori'];
   const nameLower = (name || '').toLowerCase().trim();
   if (nameLower === 'other' || nameLower === 'others' || nameLower === '其他') return false;
   return !name || name === t.uncategorized || uncatValues.includes(nameLower);

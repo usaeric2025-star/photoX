@@ -122,7 +122,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   const confirmBulkRemove = (ids: string[]) => {
     setAlertDialog({
       title: '确认批量移出',
-      message: `確定要將選中的 ${ids.length} 張照片移出群組嗎？`,
+      message: `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
       onConfirm: async () => {
         try {
           await updatePhotosGroupInCloud(ids, { group_id: null });
@@ -159,7 +159,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       }
       showToast('已保存 / Saved', 'success');
     } catch (err) {
-      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
+      showToast(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
     }
   };
 
@@ -169,7 +169,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     const nextGroupData = { ...groupData, ...updates };
     setGroupData(nextGroupData);
     
-    showToast('群組資料已更新 / Group info updated', 'success');
+    showToast('群组资料已更新 / Group info updated', 'success');
 
     try {
       await saveGroupToCloud(nextGroupData);
@@ -183,11 +183,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
              groupPhotos.map(p => updatePhoto(p.id, { isHidden }))
            );
            setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isHidden: isHidden! } : p));
-           showToast(`群組內照片已${isHidden ? '屏蔽' : '顯示'}`, 'success');
+           showToast(`群组内照片已${isHidden ? '屏蔽' : '显示'}`, 'success');
         }
       }
     } catch (err) {
-      showToast(`保存失敗: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
+      showToast(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
     }
   };
 
@@ -235,7 +235,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       );
       showToast('排序已保存', 'success');
     } catch (err) {
-      showToast(`排序同步失敗: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
+      showToast(`排序同步失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
     }
   };
 
@@ -292,7 +292,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                     {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
                   </div>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    {groupData?.name ? `封面產品: ${activeGroupPhotos[0]?.name || ''}` : `${activeGroupPhotos.length} 張照片 / Photos`}
+                    {groupData?.name ? `封面产品: ${activeGroupPhotos[0]?.name || ''}` : `${activeGroupPhotos.length} 张照片 / Photos`}
                   </p>
                 </div>
               </div>
@@ -313,7 +313,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         <span className="text-xs">AI</span>
                       </button>
 
-                        <button onClick={() => setShowGroupSettings(true)} className="w-10 h-10 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all" title="群組資料庫">
+                        <button onClick={() => setShowGroupSettings(true)} className="w-10 h-10 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all" title="群组数据库">
                           <Settings2 size={18} />
                         </button>
                       <div className="relative">
@@ -331,7 +331,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                              }}
                              className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                            >
-                             <Pencil size={16} /> 批量編輯 / Batch Edit
+                             <Pencil size={16} /> 批量编辑 / Batch Edit
                            </button>
                            <button 
                              onClick={() => {
@@ -424,7 +424,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         <div className="w-10 h-10 rounded-xl bg-white/10 text-white flex items-center justify-center border border-white/10 active:scale-95 transition-all">
                            <Pencil size={18} />
                         </div>
-                        <span className="text-[10px] font-bold text-white/60">批量編輯</span>
+                        <span className="text-[10px] font-bold text-white/60">批量编辑</span>
                      </button>
 
                      <button onClick={() => handleBulkAction('remove')} className="flex flex-col items-center gap-1 shrink-0">
@@ -465,15 +465,15 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                   <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-indigo-600 text-white">
                     <div className="flex items-center gap-3">
                       <Settings2 size={20} />
-                      <h3 className="font-black text-lg tracking-tight">群組資料庫 / DB</h3>
+                      <h3 className="font-black text-lg tracking-tight">群组数据库 / DB</h3>
                     </div>
                     <div className="flex items-center gap-2">
                        <button 
                          onClick={() => {
                            if (onUngroup && activeGroupId) {
                              setAlertDialog?.({
-                               title: '確定要解散整個群組？',
-                               message: '解散後，群組關係、排序信息及DNA數據將被移除，照片將變回單張展示。',
+                               title: '确定要解散整个群组？',
+                               message: '解散后，群组关系、排序信息及DNA数据将被移除，照片将变回单张展示。',
                                onConfirm: async () => {
                                  try {
                                    if (onUngroup && activeGroupId) {
@@ -491,7 +491,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                            }
                          }}
                          className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all"
-                         title="解散群組"
+                         title="解散群组"
                        >
                          <Trash2 size={18} />
                        </button>
@@ -530,12 +530,12 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         
                         <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列正式名稱 (Group Display Name)</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列正式名称 (Group Display Name)</label>
                           <input 
                             value={groupData?.name || ''}
                             onChange={(e) => handleUpdateGroupData({ name: e.target.value })}
                             className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
-                            placeholder="例如: 意式極簡沙發系列..."
+                            placeholder="例如: 意式极简沙发系列..."
                           />
                         </div>
 
@@ -635,7 +635,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-3">系列材質庫 (Materials)</label>
                            <div className="flex flex-wrap gap-1.5">
-                             {['實木', '真皮', '金屬', '布藝', '岩板', '鋼化玻璃'].map(mat => {
+                             {['实木', '真皮', '金属', '布艺', '岩板', '钢化玻璃'].map(mat => {
                                const isSelected = (groupData?.materials || []).includes(mat);
                                return (
                                  <button 

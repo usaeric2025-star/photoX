@@ -67,7 +67,7 @@ export const analyzeProductPhoto = async (
 ) => {
   const apiKey = customApiKey || process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('請先在管理設定中設定 AI 金鑰');
+    throw new Error('请先在管理设置中设定 AI 密钥');
   }
 
   // Use OpenRouter endpoint
@@ -76,7 +76,7 @@ export const analyzeProductPhoto = async (
   let modelName = customModel;
   
   if (!modelName) {
-    throw new Error('請在設置中配置 AI 模型 (Model Name)');
+    throw new Error('请在设置中配置 AI 模型 (Model Name)');
   }
   
   // Ensure the model name includes the provider prefix if needed
@@ -100,8 +100,8 @@ export const analyzeProductPhoto = async (
   const manufacturersJson = (manufacturers || []).map(m => ({ id: m.id, name: m.name }));
   const tagsJson = (tags || []).map(t => ({ id: t.id, name: t.name }));
   const categoryContext = targetCategoryId
-    ? `【強制要求】系統已預設分類為: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.zh || (categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})`
-    : "請從清單選擇最合適的分類";
+    ? `【强制要求】系统已预设分类为: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.zh || (categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})`
+    : "请从清单选择最合适的分类";
 
   const promptText = `You are a furniture product analyzer. Extract data STRICTLY as follows:
 
@@ -118,7 +118,7 @@ export const analyzeProductPhoto = async (
 - name should be professional and concise.
 
 【LANGUAGE & DESCRIPTION】
-- "description": Generate a professional description in 【繁體中文 (Traditional Chinese)】.
+- "description": Generate a professional description in 【简体中文 (Simplified Chinese)】.
 - MUST NOT be empty.
 
 【DIMENSIONS RULES】
@@ -146,7 +146,7 @@ OUTPUT JSON example:
   "dimensions": [
     { "label": "H94\" x W96\" x D23\"", "length": 23, "width": 96, "height": 94, "unit": "inch" }
   ],
-  "description": "這是一款現代風格的梳化床...",
+  "description": "这是一款现代风格的沙发床...",
   "categoryId": "UUID-FROM-LIST or null",
   "tagIds": ["UUID1", "UUID2"],
   "newTags": []
@@ -211,7 +211,7 @@ OUTPUT JSON example:
     const textOutput = data.choices[0]?.message?.content;
     
     if (!textOutput) {
-      throw new Error(`AI 未回傳分析結果`);
+      throw new Error(`AI 未回传分析结果`);
     }
 
     // Safely extract JSON in case the model wraps it in markdown blocks or has leading/trailing fluff
@@ -224,7 +224,7 @@ OUTPUT JSON example:
     const startIndex = cleanText.indexOf('{');
     const endIndex = cleanText.lastIndexOf('}');
     if (startIndex === -1 || endIndex === -1) {
-      throw new Error('回傳格式錯誤，找不到 JSON 對象');
+      throw new Error('回传格式错误，找不到 JSON 对象');
     }
     
     const jsonStr = cleanText.substring(startIndex, endIndex + 1);
@@ -258,7 +258,7 @@ OUTPUT JSON example:
            });
            parsedData = JSON.parse(heuristicFixed);
          } catch (finalErr) {
-           throw new Error(`JSON 解析失敗: ${parseErr instanceof Error ? parseErr.message : '解析格式錯誤'}`);
+           throw new Error(`JSON 解析失败: ${parseErr instanceof Error ? parseErr.message : '解析格式错误'}`);
          }
       }
     }
@@ -330,7 +330,7 @@ OUTPUT JSON example:
     }
 
     // Safely extract the most descriptive error message possible
-    let errorMsg = error.message || `API 請求發送失敗 (status: ${status}, url: ${url})。詳細錯誤: ${errorDetail}`;
+    let errorMsg = error.message || `API 请求发送失败 (status: ${status}, url: ${url})。详细错误: ${errorDetail}`;
     
     if (error.response?.data?.error?.message) {
         errorMsg = error.response.data.error.message;
@@ -340,11 +340,11 @@ OUTPUT JSON example:
     
     // Check if body is plain text or json
     if (error.response?.data && typeof error.response.data === 'string' && error.response.data.includes('does not have permission')) {
-        errorMsg = "API Key 沒有權限、遭停權，或是此地區被封鎖: " + error.response.data;
+        errorMsg = "API Key 没有权限、遭停权，或是此地区被封锁: " + error.response.data;
     }
 
     // Direct debug alerting as requested by user
-    console.error('AI API 錯誤詳情:\n' + JSON.stringify({ 
+    console.error('AI API 错误详情:\n' + JSON.stringify({ 
         status: status, 
         message: errorMsg,
         errorRaw: error 
@@ -440,19 +440,19 @@ export const translateDescription = async (
   signal?: AbortSignal
 ): Promise<{ en: string; ms: string }> => {
   const modelName = customModel;
-  if (!modelName) throw new Error('請在設置中配置 AI 模型 (Model Name)');
+  if (!modelName) throw new Error('请在设置中配置 AI 模型 (Model Name)');
 
   const prompt = `
-你是一個專業的家具貿易翻譯官。
-請將以下中文產品描述翻譯成【英文】和【馬來文】。
+你是一个专业的家具贸易翻译官。
+请将以下中文产品描述翻译成【英文】和【马来文】。
 
-【待翻譯中文】：
+【待翻译中文】：
 ${zhText}
 
 【要求】：
-1. 翻譯風格：專業、商務、吸引人。英譯應符合歐美電商水平。馬來文應符合馬來西亞在地口語與專業術語。
-2. 保持專業術語的一致性（例如：Marble -> Guli/Marmar, Extendable -> Boleh dipanjangkan）。
-3. 僅返回 JSON 格式。
+1. 翻译风格：专业、商务、吸引人。英译应符合欧美电商水平。马来文应符合马来西亚在地口语与专业术语。
+2. 保持专业术语的一致性（例如：Marble -> Guli/Marmar, Extendable -> Boleh dipanjangkan）。
+3. 仅返回 JSON 格式。
 
 【返回格式】：
 {
@@ -479,7 +479,7 @@ ${zhText}
       signal
     });
 
-    if (!response.ok) throw new Error(`翻譯失敗: ${response.statusText}`);
+    if (!response.ok) throw new Error(`翻译失败: ${response.statusText}`);
     
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content;

@@ -11,8 +11,8 @@ export function useGroupSync(activeGroupId: string | null) {
     const groupPhotos = photos.filter(p => p.groupId === activeGroupId);
     
     setAlertDialog({
-      title: '設為封面',
-      message: '確定要將這張照片設為群組封面嗎？',
+      title: '设为封面',
+      message: '确定要将这张照片设为群组封面吗？',
       onConfirm: async () => {
         setAlertDialog(null);
         await withLoading('saving', async () => {
@@ -24,9 +24,9 @@ export function useGroupSync(activeGroupId: string | null) {
             await updatePhotosGroupInCloud([photoId], { is_group_cover: true });
             
             setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isGroupCover: p.id === photoId } : p));
-            showToast('已設為封面', 'success');
+            showToast('已设为封面', 'success');
           } catch (err: any) {
-            showToast(`設為封面失敗: ${err.message}`, 'error');
+            showToast(`设为封面失败: ${err.message}`, 'error');
           }
         });
       }

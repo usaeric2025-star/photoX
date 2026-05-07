@@ -8,11 +8,11 @@ export function useFormValidation() {
 
     if (!isBatch) {
       if (!form.name || !form.name.trim()) {
-        errors.push('產品名稱不能為空');
+        errors.push('产品名称不能为空');
       }
 
       if (!form.categoryId || form.categoryId === 'uncategorized') {
-        errors.push('請選擇一個分類');
+        errors.push('请选择一个分类');
       }
     }
 

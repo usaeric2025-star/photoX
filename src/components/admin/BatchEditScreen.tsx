@@ -103,7 +103,7 @@ export const BatchEditScreen = ({
         </div>
 
         <section className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">產品名稱 / PRODUCT NAME</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 / PRODUCT NAME</h3>
             <input 
               type="text" 
               placeholder="输入统一产品名称..."
@@ -114,7 +114,7 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">產品編號 / ITEM CODE</h3>
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品编号 / ITEM CODE</h3>
             <input 
               type="text" 
               placeholder="输入统一编号 (如: SK-2024)..."
@@ -147,7 +147,7 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
-          <FormSectionHeader title="產品目錄" subtitle="CATEGORY *" />
+          <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
           <CategoryGrid 
             categories={categories}
             selectedId={formState.categoryId}
@@ -158,7 +158,7 @@ export const BatchEditScreen = ({
 
         <section className="space-y-4">
           <FormSectionHeader 
-            title="廠商名稱" 
+            title="厂商名称" 
             subtitle="MANUFACTURER" 
             onAction={quickAddMfr} 
           />

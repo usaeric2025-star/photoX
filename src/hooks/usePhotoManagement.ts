@@ -168,7 +168,7 @@ export const usePhotoManagement = (
     } = formState;
 
     if (!categoryId && !name && !editPhotoId && !newPhotoData) {
-       showToast('請填寫基本資訊或選擇分類', 'error');
+       showToast('请填写基本信息或选择分类', 'error');
        return;
     }
 
@@ -275,7 +275,7 @@ export const usePhotoManagement = (
        resetAddState();
        setActiveScreen('home');
        } catch (err: any) {
-          handleError(err, '儲存產品時發生錯誤');
+          handleError(err, '储存产品时发生错误');
        }
     });
   };
@@ -353,7 +353,7 @@ export const usePhotoManagement = (
            resetAddState();
            setActiveScreen('home');
         } catch (err: any) {
-           showToast(`批量儲存失敗: ${err.message}`, 'error');
+           showToast(`批量储存失败: ${err.message}`, 'error');
         } finally {
            if (adminUI?.setBatchProgress) {
              adminUI.setBatchProgress({ current: 0, total: 0 });

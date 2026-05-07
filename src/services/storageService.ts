@@ -92,6 +92,6 @@ export const uploadImages = async (
     return { imageUrl, thumbUrl };
   } catch (err: any) {
     console.error("Image processing or upload failed:", err);
-    throw new Error(`圖片處理異常: ${err.message || '請檢查網絡'}`);
+    throw new Error(`图片处理异常: ${err.message || '请检查网络'}`);
   }
 };

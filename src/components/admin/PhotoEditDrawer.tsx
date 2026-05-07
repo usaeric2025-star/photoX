@@ -185,7 +185,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         {/* Center: Title */}
         <div className="flex-1 flex flex-col items-center justify-center min-w-0 px-2">
           <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-center">
-            {props.editPhotoId ? '編輯產品信息' : '分析新產品'}
+            {props.editPhotoId ? '编辑产品信息' : '分析新产品'}
           </h2>
           <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">Product Details</p>
         </div>
@@ -329,7 +329,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           )}
           <div className="flex-1 space-y-3">
              <div className="space-y-1.5">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">產品名稱 / PRODUCT NAME</h3>
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 / PRODUCT NAME</h3>
                 <input 
                   key={editPhotoId || 'new'}
                   type="text" 
@@ -357,7 +357,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
 
         <section className="space-y-4">
-            <FormSectionHeader title="產品目錄" subtitle="CATEGORY *" />
+            <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
             <CategoryGrid 
               categories={categories}
               selectedId={formState.categoryId}
@@ -422,12 +422,12 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
         <section className="space-y-4">
           <FormSectionHeader 
-            title="廠商名稱" 
+            title="厂商名称" 
             subtitle="MANUFACTURER" 
             onAction={() => {
               setPromptDialog({
-                title: '新增廠商 / New Manufacturer',
-                placeholder: '輸入廠商名稱',
+                title: '新增厂商 / New Manufacturer',
+                placeholder: '输入厂商名称',
                 onSubmit: (name) => addManufacturer(name)
               })
             }} 
@@ -461,7 +461,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                  <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${props.showOtherFields ? 'rotate-90' : ''}`}>
                     <ChevronRight size={16} />
                  </div>
-                 <span>其他詳細資訊 (編號、尺寸、備註)</span>
+                 <span>其他详细信息 (编号、尺寸、备注)</span>
                </div>
                <div className="w-2 h-2 rounded-full bg-slate-200"></div>
              </button>

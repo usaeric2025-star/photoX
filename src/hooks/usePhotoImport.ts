@@ -84,7 +84,7 @@ export const usePhotoImport = (
     // HEIC Detection Alert
     const hasHeic = fileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
     if (hasHeic) {
-      showToast('檢測到 HEIC 格式照片，部分手機瀏覽器可能無法直接顯示，建議轉換為 JPG 後上傳', 'info');
+      showToast('检测到 HEIC 格式照片，部分手机浏览器可能无法直接显示，建议转换为 JPG 后上传', 'info');
     }
     
     return runWithLoading('importing', async () => {
@@ -106,7 +106,7 @@ export const usePhotoImport = (
       let aiTaskId = '';
       if (useAi && fileArray.length > 0) {
         aiTaskId = addTask({
-          name: `導入照片 AI 識別 (${fileArray.length} 張)`,
+          name: `导入照片 AI 识别 (${fileArray.length} 张)`,
           onCancel: () => abortAnalysis()
         });
       }
@@ -118,7 +118,7 @@ export const usePhotoImport = (
           const progress = (aiCompletedCount / fileArray.length) * 100;
           updateTask(aiTaskId, { 
             progress,
-            message: `正在識別 ${aiCompletedCount}/${fileArray.length}...`,
+            message: `正在识别 ${aiCompletedCount}/${fileArray.length}...`,
             status: aiCompletedCount === fileArray.length ? 'completed' : 'running'
           });
         }
@@ -296,9 +296,9 @@ export const usePhotoImport = (
       setIsSyncing(false);
       
       if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
-         let msg = `成功處理并压缩了 ${successCount} 張照片。`;
-         if (duplicateCount > 0) msg += ` 跳過了 ${duplicateCount} 張重複。`;
-         if (failCount > 0) msg += ` 有 ${failCount} 張失敗: ${failedFiles.join(', ')}`;
+         let msg = `成功处理并压缩了 ${successCount} 张照片。`;
+         if (duplicateCount > 0) msg += ` 跳过了 ${duplicateCount} 张重复。`;
+         if (failCount > 0) msg += ` 有 ${failCount} 张失败: ${failedFiles.join(', ')}`;
          
          showToast(msg, successCount > 0 ? 'success' : 'error');
       }

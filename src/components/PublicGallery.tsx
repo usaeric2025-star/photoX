@@ -590,7 +590,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
                );
              } catch (err: any) {
-               setAlertDialog?.({ title: '設置封面失敗', message: err.message });
+               setAlertDialog?.({ title: '设置封面失败', message: err.message });
              }
           }).catch(err => {
              console.error("[ERROR] Failed to update group cover:", err);

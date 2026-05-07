@@ -73,7 +73,7 @@ export const useAdminPhotos = (
   // Handle AI Resume
   useEffect(() => {
     if (photos.length > 0) {
-      const runningBatchTask = tasks.find(t => t.status === 'running' && t.name.includes('批量 AI 識別'));
+      const runningBatchTask = tasks.find(t => t.status === 'running' && t.name.includes('批量 AI 识别'));
       if (runningBatchTask && !aiHook.aiDebugInfo) {
         aiHook.handleBatchAiIdentify(photos, runningBatchTask.id);
       }
@@ -123,7 +123,7 @@ export const useAdminPhotos = (
     abortAnalysis: aiHook.abortAnalysis,
     handleTranslate: async (zhText: string) => {
       const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
-      if (!apiKey) throw new Error('請先在設定中設定 AI 金鑰');
+      if (!apiKey) throw new Error('请先在设置中设定 AI 密钥');
       return await translateDescription(zhText, apiKey, customModel);
     },
 

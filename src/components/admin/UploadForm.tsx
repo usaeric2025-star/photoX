@@ -46,7 +46,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <div className="flex-1"></div>
 
         <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
-            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight pointer-events-auto">{editPhotoId ? '編輯產品' : '產品入庫'}</h2>
+            <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight pointer-events-auto">{editPhotoId ? '编辑产品' : '产品入库'}</h2>
             <div 
               onClick={() => updateForm({ isHidden: !formState.isHidden })}
               className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border cursor-pointer mt-1 pointer-events-auto ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
@@ -97,7 +97,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                 });
               }}
               className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-100 transition-all active:bg-red-200"
-              title="刪除照片"
+              title="删除照片"
             >
               <Trash2 size={20} />
             </button>

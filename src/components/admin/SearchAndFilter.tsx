@@ -95,7 +95,7 @@ export const SearchAndFilter: React.FC<Props> = ({
           .filter((cat: Category) => {
             const n = (cat.name || '').toLowerCase();
             const z = (cat.zh || '').toLowerCase();
-            return !['all', '全部', '全部产品', '全部產品'].includes(n) && !['全部', '全部产品', '全部產品'].includes(z);
+            return !['all', '全部', '全部产品'].includes(n) && !['all', '全部', '全部产品'].includes(z);
           })
           .map((cat: Category) => {
             const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);

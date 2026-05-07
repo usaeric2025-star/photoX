@@ -135,7 +135,7 @@ export const clearGroupIdInCloud = async (groupId: string) => {
     
   if (error) {
     console.error(`[DB Error] Failed to clear group_id for group ${groupId}:`, error);
-    throw new Error(`清除照片群組關聯失敗: ${error.message} (Code: ${error.code})`);
+    throw new Error(`清除照片群组关联失败: ${error.message} (Code: ${error.code})`);
   }
   
   photoCache.clear();
@@ -143,7 +143,7 @@ export const clearGroupIdInCloud = async (groupId: string) => {
   console.log(`[DB Success] 更新照片 group_id 影响行数：${affectedCount}`);
   
   if (affectedCount === 0) {
-    const errorMsg = `解散失敗：在雲端找不到屬於此群組的照片。可能照片已同步成功或已被移除。 (No photos linked to group_id: ${groupId})`;
+    const errorMsg = `解散失败：在云端找不到属于此群组的照片。可能照片已同步成功或已被移除。 (No photos linked to group_id: ${groupId})`;
     console.error(errorMsg);
     throw new Error(errorMsg);
   }
@@ -167,7 +167,7 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
   
   photoCache.clear();
   if (!data || data.length === 0) {
-    const errorMsg = "解散失敗：在雲端找不到對應的照片 ID。請嘗試重新同步或刷新頁面。 (Database match failed)";
+    const errorMsg = "解散失败：在云端找不到对应的照片 ID。请尝试重新同步或刷新页面。 (Database match failed)";
     console.error(errorMsg, photoIds);
     throw new Error(errorMsg);
   } else {

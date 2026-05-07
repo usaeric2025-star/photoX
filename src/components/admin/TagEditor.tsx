@@ -42,7 +42,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       setSettings(nextSettings);
       await saveSettings(nextSettings);
     } catch (err) {
-      handleError(err, '切換置頂狀態失敗');
+      handleError(err, '切换置顶状态失败');
     }
   };
 
@@ -86,7 +86,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   return (
     <div className="space-y-2">
       <div className="space-y-2 mb-3">
-        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none px-1">標籤 / TAGS</h3>
+        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none px-1">标签 / TAGS</h3>
         <div className="flex items-center gap-2 px-1">
           <input 
             type="text"
@@ -194,8 +194,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   className="w-full flex items-center justify-center gap-3 text-red-600 bg-red-50/50 backdrop-blur-sm border border-red-100/50 font-bold py-4 rounded-2xl hover:bg-red-100 transition-all cursor-pointer shadow-sm shadow-red-500/5" 
                   onClick={() => { 
                     setAlertDialog({
-                      title: `彻底删除标籤 / Permanent Delete: #${activeActionTag.name}`,
-                      message: '無法撤銷且會從所有照片中移除 / This will be permanently removed from all photos.',
+                      title: `彻底删除标签 / Permanent Delete: #${activeActionTag.name}`,
+                      message: '无法撤销且会从所有照片中移除 / This will be permanently removed from all photos.',
                       onConfirm: () => onDeleteTag(activeActionTag.id),
                       confirmLabel: '删除',
                       type: 'danger'

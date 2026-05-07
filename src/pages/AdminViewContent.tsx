@@ -148,15 +148,15 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
 
   const quickAddTag = useCallback(() => {
     setPromptDialog({
-      title: '自定義標籤 / Custom Tag',
-      placeholder: '輸入新標籤名稱 (例如: 清貨)',
+      title: '自定义标签 / Custom Tag',
+      placeholder: '输入新标签名称 (例如: 清货)',
       onSubmit: async (val: string) => {
         const normalized = val.trim();
         if (!normalized) return;
         const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
           updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
-          showToast(`標籤 "${normalized}" 已存在`);
+          showToast(`标签 "${normalized}" 已存在`);
           return;
         }
         const saved = await addTag(normalized);
@@ -165,7 +165,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
              ...prev, 
              tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
            }));
-           showToast(`已新增標籤 "${normalized}"`);
+           showToast(`已新增标签 "${normalized}"`);
         }
       }
     });
@@ -173,15 +173,15 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
 
   const quickAddManufacturer = useCallback(() => {
     setPromptDialog({
-      title: '新增廠商 / New Manufacturer',
-      placeholder: '輸入新廠商名稱',
+      title: '新增厂商 / New Manufacturer',
+      placeholder: '输入新厂商名称',
       onSubmit: async (val: string) => {
         const trimmed = val.trim();
         if (!trimmed) return;
         const saved = await addManufacturer(trimmed);
         if (saved) {
            updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
-           showToast(`已新增廠商 "${trimmed}"`);
+           showToast(`已新增厂商 "${trimmed}"`);
         }
       }
     });
@@ -208,19 +208,19 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   const handleDeletePhoto = useCallback(async (id: string) => {
      const { success, error } = await deletePhotos(id);
      if (success) {
-         showToast('照片已成功刪除', 'success');
+         showToast('照片已成功删除', 'success');
          setEditPhotoId(null);
      } else {
-         handleError(error, '刪除照片失敗');
+         handleError(error, '删除照片失败');
      }
   }, [deletePhotos, setEditPhotoId, showToast, handleError]);
 
   const handleDeleteTag = useCallback(async (id: string) => {
     const { success, error } = await deleteTagHook(id);
     if (success) {
-        showToast('標籤已成功刪除', 'success');
+        showToast('标签已成功删除', 'success');
     } else {
-        handleError(error, '刪除標籤失敗');
+        handleError(error, '删除标签失败');
     }
   }, [deleteTagHook, showToast, handleError]);
   
@@ -360,7 +360,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                     await photoApi.update(photo.id, { isHidden: newStatus, updatedAt: new Date().toISOString() });
                     setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
                   } catch (e) {
-                    handleError(e, '切換隱藏狀態失敗');
+                    handleError(e, '切换隐藏状态失败');
                   }
                 }}
               />

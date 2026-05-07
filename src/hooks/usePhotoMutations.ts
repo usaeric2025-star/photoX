@@ -15,9 +15,9 @@ export const usePhotoMutations = (
   const deletePhoto = async (idOrIds: string | string[]) => {
     const { success, error } = await deletePhotos(idOrIds);
     if (!success) {
-      handleError(error, '刪除照片失敗');
+      handleError(error, '删除照片失败');
     } else {
-      showToast('照片已成功刪除', 'success');
+      showToast('照片已成功删除', 'success');
     }
   };
 

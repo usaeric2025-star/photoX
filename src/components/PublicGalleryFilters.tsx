@@ -117,7 +117,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
               .filter(c => {
                 const n = (c.name || '').toLowerCase();
                 const z = (c.zh || '').toLowerCase();
-                return !['all', '全部', '全部产品', '全部產品'].includes(n) && !['全部', '全部产品', '全部產品'].includes(z);
+                return !['all', '全部', '全部产品'].includes(n) && !['all', '全部', '全部产品'].includes(z);
               })
               .map(cat => {
                 const displayName = lang === 'zh' ? (cat.zh || cat.name) : lang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
@@ -153,7 +153,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   return Array.from(new Map(subList.map((s: any) => [s.id, s])).values())
                     .filter((s: any) => {
                       const n = (s.name || '').toLowerCase();
-                      return !['all', '全部', '全部產品', '全部产品'].includes(n);
+                      return !['all', '全部', '全部产品'].includes(n);
                     })
                     .map((sub: any) => (
                     <button 

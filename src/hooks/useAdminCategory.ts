@@ -95,7 +95,7 @@ export const useAdminCategory = (adminUI: {
       const error = err instanceof Error ? err : new Error(String(err));
       const storedTags = await loadData('product_tags');
       if (storedTags) setTags(storedTags);
-      handleError(error, '更新標籤失敗');
+      handleError(error, '更新标签失败');
     }
   };
 
@@ -193,7 +193,7 @@ export const useAdminCategory = (adminUI: {
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      handleError(error, '添加分類失敗');
+      handleError(error, '添加分类失败');
     }
   };
 
@@ -204,16 +204,16 @@ export const useAdminCategory = (adminUI: {
       await saveData('product_categories', nextCategories);
       await categoryApi.update(id, updates);
     } catch (err) {
-      handleError(err, '更新分類失敗');
+      handleError(err, '更新分类失败');
     }
   };
 
   const deleteCategory = async (id: string) => {
     const { success, error } = await deleteCategoryHook(id);
     if (!success) {
-      handleError(error, '刪除分類失敗');
+      handleError(error, '删除分类失败');
     } else {
-      showToast('分類已成功刪除', 'success');
+      showToast('分类已成功删除', 'success');
     }
   };
 
@@ -305,7 +305,7 @@ export const useAdminCategory = (adminUI: {
   const performDeleteManufacturer = async (strId: string, id: string | number) => {
     try {
         const success = await deleteManufacturerFromDB(strId);
-        if (!success) throw new Error("無法刪除廠商");
+        if (!success) throw new Error("无法删除厂商");
 
         const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
         setManufacturers(newMfrs);
@@ -342,7 +342,7 @@ export const useAdminCategory = (adminUI: {
       return saved;
     } catch(err) {
       const error = err instanceof Error ? err : new Error(String(err));
-      handleError(error, '添加標籤失敗');
+      handleError(error, '添加标签失败');
     }
   };
   

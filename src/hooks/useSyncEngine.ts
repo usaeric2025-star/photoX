@@ -192,10 +192,10 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 tags,
                 manufacturers
                 });
-                showToast('上傳成功: 品牌 Logo 已更新', 'success');
+                showToast('上传成功: 品牌 Logo 已更新', 'success');
             } catch (err: any) {
                 console.error("Logo upload failed:", err);
-                showToast(`上傳失敗: ${err.message || '請檢查網路連線或儲存空間權限'}`, 'error');
+                showToast(`上传失败: ${err.message || '请检查网络连线或储存空间权限'}`, 'error');
             }
         }
     };

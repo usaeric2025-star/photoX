@@ -57,9 +57,9 @@ export const usePhotoAI = (
     if (currentAnalysisController.current) {
       currentAnalysisController.current.abort();
       currentAnalysisController.current = null;
-      setAiDebugInfo({ step: '已取消', message: '用戶中斷了 AI 識別任务' });
+      setAiDebugInfo({ step: '已取消', message: '用户中断了 AI 识别任务' });
       if (taskId) {
-        updateTask(taskId, { status: 'cancelled', message: '用戶已取消任務' });
+        updateTask(taskId, { status: 'cancelled', message: '用户已取消任务' });
       }
       setTimeout(() => setAiDebugInfo(null), 3000);
     }
@@ -75,16 +75,16 @@ export const usePhotoAI = (
     
     if (unProcessed.length === 0) {
       if (existingTaskId) {
-        updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已識別完成' });
+        updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
-        showToast('選中的照片已經包含完整的類別、標籤和翻譯，無需重新識別。', 'success');
+        showToast('选中的照片已经包含完整的类别、标签和翻译，无需重新识别。', 'success');
       }
       return;
     }
     
     setBatchProgress({ current: 0, total: unProcessed.length });
     const taskId = existingTaskId || addTask({
-      name: `批量 AI 識別 (${unProcessed.length} 張)`,
+      name: `批量 AI 识别 (${unProcessed.length} 张)`,
       onCancel: () => abortAnalysis()
     });
 
@@ -180,14 +180,14 @@ export const usePhotoAI = (
             const currentProgress = Math.min(i + CONCURRENCY, unProcessed.length);
             const progressPercent = (currentProgress / unProcessed.length) * 100;
             setBatchProgress({ current: currentProgress, total: unProcessed.length });
-            updateTask(taskId, { progress: progressPercent, message: `已處理 ${currentProgress}/${unProcessed.length} 張...` });
+            updateTask(taskId, { progress: progressPercent, message: `已处理 ${currentProgress}/${unProcessed.length} 张...` });
         }
         if (completedCount > 0) {
-            updateTask(taskId, { status: 'completed', progress: 100, message: `完成！處理 ${completedCount} 張` });
-            showToast(`AI 識別成功處理 ${completedCount} 張。`, 'success');
+            updateTask(taskId, { status: 'completed', progress: 100, message: `完成！处理 ${completedCount} 张` });
+            showToast(`AI 识别成功处理 ${completedCount} 张。`, 'success');
         } else {
-            updateTask(taskId, { status: 'error', message: '任務執行失敗。' });
-            showToast('AI 識別失敗。', 'error');
+            updateTask(taskId, { status: 'error', message: '任务执行失败。' });
+            showToast('AI 识别失败。', 'error');
         }
     } catch (err) {
         updateTask(taskId, { status: 'error', message: `錯誤: ${err instanceof Error ? err.message : String(err)}` });
@@ -267,7 +267,7 @@ export const usePhotoAI = (
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     if (!effectiveKey) return;
     return runWithLoading('analyzing', async () => {
-      setAiDebugInfo({ step: '群組識別', message: '正在分析第一張照片...' });
+      setAiDebugInfo({ step: '群组识别', message: '正在分析第一张照片...' });
       const firstPhoto = groupPhotos.find(p => p.isGroupCover) || groupPhotos[0];
       const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.categoryId);
       const result = cleanObject(resRaw);
