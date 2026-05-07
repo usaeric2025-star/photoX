@@ -8,6 +8,7 @@ import { Category, Tag, SubCategory, Photo } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
+import { safeArray } from '../lib/utils';
 import { 
   updateTagInDB, 
   deleteTagFromDB, 
@@ -55,11 +56,11 @@ export const useAdminCategory = (adminUI: {
     const loadInit = async () => {
       const storedCats = await loadData('product_categories');
       if (Array.isArray(storedCats)) setCategories(storedCats);
-      else if (categories.length === 0) setCategories(DEFAULT_CATEGORIES);
+      else if (safeArray(categories).length === 0) setCategories(DEFAULT_CATEGORIES);
 
       const storedTags = await loadData('product_tags');
       if (Array.isArray(storedTags)) setTags(storedTags);
-      else if (tags.length === 0) setTags(DEFAULT_TAGS);
+      else if (safeArray(tags).length === 0) setTags(DEFAULT_TAGS);
 
       const storedMfrs = await loadData('product_manufacturers');
       if (storedMfrs) setManufacturers(storedMfrs);
@@ -85,7 +86,7 @@ export const useAdminCategory = (adminUI: {
       const upName = newName.toUpperCase().trim();
       if (!upName) return;
       
-      const nextTags = tags.map(t => String(t.id) === String(tagId) ? { ...t, name: upName } : t).sort((a, b) => a.name.localeCompare(b.name));
+      const nextTags = safeArray(tags).map(t => String(t.id) === String(tagId) ? { ...t, name: upName } : t).sort((a, b) => a.name.localeCompare(b.name));
       setTags(nextTags);
       await saveData('product_tags', nextTags);
       
@@ -102,9 +103,9 @@ export const useAdminCategory = (adminUI: {
   // 从单张照片移除标签（编辑灯箱用）
   const removeTagFromPhoto = async (photoId: string, tagId: string) => {
     try {
-      const photo = photos.find(p => p.id === photoId);
+      const photo = safeArray(photos).find(p => p.id === photoId);
       if (!photo) return;
-      const newTagIds = (photo.tagIds || []).filter(tid => String(tid) !== String(tagId));
+      const newTagIds = safeArray(photo.tagIds).filter(tid => String(tid) !== String(tagId));
       
       // FIX: Operate on 'photo_tags' relational table, not 'furniture_items'
       const { error } = await supabase
@@ -114,8 +115,8 @@ export const useAdminCategory = (adminUI: {
           .eq('tag_id', tagId);
       if (error) throw error;
 
-      setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
-      await saveData('product_photos', photos.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
+      setPhotos(prev => safeArray(prev).map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
+      await saveData('product_photos', safeArray(photos).map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       showToast(`移除标签失败: ${error.message}`, 'error');
@@ -131,8 +132,8 @@ export const useAdminCategory = (adminUI: {
           .update({ category_id: null })
           .eq('id', photoId);
 
-      setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, categoryId: null } : p));
-      await saveData('product_photos', photos.map(p => p.id === photoId ? { ...p, categoryId: null } : p));
+      setPhotos(prev => safeArray(prev).map(p => p.id === photoId ? { ...p, categoryId: null } : p));
+      await saveData('product_photos', safeArray(photos).map(p => p.id === photoId ? { ...p, categoryId: null } : p));
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err));
       showToast(`移除分类失败: ${error.message}`, 'error');
@@ -153,9 +154,9 @@ export const useAdminCategory = (adminUI: {
           if (deleteError) throw deleteError;
           
           // Update local state
-          const refreshedPhotos = photos.map(p => ({
+          const refreshedPhotos = safeArray(photos).map(p => ({
               ...p,
-              tagIds: (p.tagIds || []).filter(tid => String(tid) !== strId)
+              tagIds: safeArray(p.tagIds).filter(tid => String(tid) !== strId)
           }));
           setPhotos(refreshedPhotos);
           await saveData('product_photos', refreshedPhotos);
@@ -164,7 +165,7 @@ export const useAdminCategory = (adminUI: {
           const success = await deleteTagFromDB(tagId);
           if (!success) throw new Error("无法在云端删除标签。");
   
-          const newTags = tags.filter(t => String(t.id) !== strId);
+          const newTags = safeArray(tags).filter(t => String(t.id) !== strId);
           setTags(newTags);
           await saveData('product_tags', newTags);
           
@@ -199,7 +200,7 @@ export const useAdminCategory = (adminUI: {
 
   const updateCategory = async (id: string, updates: Partial<Category>) => {
     try {
-      const nextCategories = categories.map(c => String(c.id) === String(id) ? { ...c, ...updates } : c);
+      const nextCategories = safeArray(categories).map(c => String(c.id) === String(id) ? { ...c, ...updates } : c);
       setCategories(nextCategories);
       await saveData('product_categories', nextCategories);
       await categoryApi.update(id, updates);
@@ -222,22 +223,25 @@ export const useAdminCategory = (adminUI: {
         const success = await deleteCategoryFromDB(strId);
         if (!success) throw new Error("无法在云端删除分类。");
 
-        const nextCategories = categories.filter(c => String(c.id) !== strId);
+        const nextCategories = safeArray(categories).filter(c => String(c.id) !== strId);
         if (isMounted.current) {
             setCategories(nextCategories);
             await saveData('product_categories', nextCategories);
         }
         
-        const nextPhotos = photos.map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
+        const nextPhotos = safeArray(photos).map(p => String(p.categoryId) === strId ? { ...p, categoryId: null } : p);
         if (isMounted.current) {
             setPhotos(nextPhotos);
             await saveData('product_photos', nextPhotos);
         }
 
-        const affectedPhotos = nextPhotos.filter((p, i) => String(photos[i].categoryId) === strId);
-        if (affectedPhotos.length > 0) {
+        const sPhotos = safeArray(photos);
+        const sNextPhotos = safeArray(nextPhotos);
+        const affectedPhotos = sNextPhotos.filter((p, i) => String(sPhotos[i]?.categoryId) === strId);
+        const sAffected = safeArray(affectedPhotos);
+        if (sAffected.length > 0) {
             const { data: { user: userObj } } = await supabase.auth.getUser();
-            if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
+            if (userObj) await Promise.allSettled(sAffected.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err));
@@ -266,7 +270,7 @@ export const useAdminCategory = (adminUI: {
       const strId = String(id);
       const trimmed = name.trim().toUpperCase();
       await updateManufacturerInDB(strId, trimmed);
-      const newMfrs = manufacturers.map(m => 
+      const newMfrs = safeArray(manufacturers).map(m => 
         String(m.id) === strId ? { ...m, name: trimmed } : m
       );
       setManufacturers(newMfrs);
@@ -307,11 +311,11 @@ export const useAdminCategory = (adminUI: {
         const success = await deleteManufacturerFromDB(strId);
         if (!success) throw new Error("无法删除厂商");
 
-        const newMfrs = manufacturers.filter(m => String(m.id) !== strId);
+        const newMfrs = safeArray(manufacturers).filter(m => String(m.id) !== strId);
         setManufacturers(newMfrs);
         await saveData('product_manufacturers', newMfrs);
         
-        const nextPhotos = photos.map(p => 
+        const nextPhotos = safeArray(photos).map(p => 
           String(p.manufacturerId) === strId ? { ...p, manufacturerId: null } : p
         );
         
@@ -320,10 +324,13 @@ export const useAdminCategory = (adminUI: {
           await saveData('product_photos', nextPhotos);
         }
 
-        const affectedPhotos = nextPhotos.filter((p, i) => String(photos[i].manufacturerId) === strId);
-        if (affectedPhotos.length > 0) {
+        const sPhotos = safeArray(photos);
+        const sNextPhotos = safeArray(nextPhotos);
+        const affectedPhotos = sNextPhotos.filter((p, i) => String(sPhotos[i]?.manufacturerId) === strId);
+        const sAffected = safeArray(affectedPhotos);
+        if (sAffected.length > 0) {
           const { data: { user: userObj } } = await supabase.auth.getUser();
-          if (userObj) await Promise.allSettled(affectedPhotos.map(p => savePhotoToCloud(userObj.id, p)));
+          if (userObj) await Promise.allSettled(sAffected.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err) {
          const error = err instanceof Error ? err : new Error(String(err));
@@ -336,8 +343,8 @@ export const useAdminCategory = (adminUI: {
     try {
       const saved = await tagApi.create(name);
       if(saved) {
-        setTags(prev => [...prev, saved].sort((a,b) => a.name.localeCompare(b.name)));
-        await saveData('product_tags', [...tags, saved].sort((a,b) => a.name.localeCompare(b.name)));
+        setTags(prev => safeArray(prev).concat(saved).sort((a,b) => a.name.localeCompare(b.name)));
+        await saveData('product_tags', safeArray(tags).concat(saved).sort((a,b) => a.name.localeCompare(b.name)));
       }
       return saved;
     } catch(err) {

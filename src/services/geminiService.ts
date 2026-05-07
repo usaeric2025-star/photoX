@@ -186,7 +186,12 @@ OUTPUT JSON example:
     const timeoutId = setTimeout(() => timeoutAbort.abort(), 45000);
     
     // Combine signals if necessary
-    const combinedSignal = signal ? signal : timeoutAbort.signal;
+    let combinedSignal;
+    if (typeof (AbortSignal as any).any === 'function') {
+      combinedSignal = (AbortSignal as any).any([signal, timeoutAbort.signal].filter(Boolean));
+    } else {
+      combinedSignal = signal || timeoutAbort.signal;
+    }
 
     const fetchResponse = await fetch(fetchUrl, {
       method: 'POST',
@@ -317,6 +322,7 @@ OUTPUT JSON example:
     parsedData._aiModelUsed = modelName;
     return parsedData;
   } catch (error: any) {
+    if (error.name === 'AbortError') throw error;
     console.error("GeminiService API Error:", error);
     const status = error.status || error.response?.status || 500;
     const url = error.url || 'unknown';
@@ -490,6 +496,7 @@ ${zhText}
       ms: parsed.ms || ''
     };
   } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err;
     console.error("Translation error:", err);
     return { en: '', ms: '' };
   }

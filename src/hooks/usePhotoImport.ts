@@ -12,6 +12,7 @@ import { saveData } from '../utils/indexedDB';
 import { IMAGE_COMPRESS } from '../constants/config';
 import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
+import { safeArray } from '../lib/utils';
 
 // Helper functions moved from useAdminPhotos
 const shouldUpdateName = (name: string | null | undefined): boolean => {
@@ -80,16 +81,17 @@ export const usePhotoImport = (
     if (!files || files.length === 0) return;
     
     const fileArray = Array.from(files) as File[];
+    const sFileArray = safeArray(fileArray);
     
     // HEIC Detection Alert
-    const hasHeic = fileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
+    const hasHeic = sFileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
     if (hasHeic) {
       showToast('检测到 HEIC 格式照片，部分手机浏览器可能无法直接显示，建议转换为 JPG 后上传', 'info');
     }
     
     return runWithLoading('importing', async () => {
       setIsSyncing(true);
-      setImportTotal(fileArray.length);
+      setImportTotal(sFileArray.length);
       setImportProgress(0);
       setActiveScreen('home');
 
@@ -104,9 +106,9 @@ export const usePhotoImport = (
       const allAddedPhotos: Photo[] = [];
       
       let aiTaskId = '';
-      if (useAi && fileArray.length > 0) {
+      if (useAi && sFileArray.length > 0) {
         aiTaskId = addTask({
-          name: `导入照片 AI 识别 (${fileArray.length} 张)`,
+          name: `导入照片 AI 识别 (${sFileArray.length} 张)`,
           onCancel: () => abortAnalysis()
         });
       }
@@ -115,20 +117,21 @@ export const usePhotoImport = (
       const updateAiProgress = () => {
         if (aiTaskId) {
           aiCompletedCount++;
-          const progress = (aiCompletedCount / fileArray.length) * 100;
+          const progress = (aiCompletedCount / sFileArray.length) * 100;
           updateTask(aiTaskId, { 
             progress,
-            message: `正在识别 ${aiCompletedCount}/${fileArray.length}...`,
-            status: aiCompletedCount === fileArray.length ? 'completed' : 'running'
+            message: `正在识别 ${aiCompletedCount}/${sFileArray.length}...`,
+            status: aiCompletedCount === sFileArray.length ? 'completed' : 'running'
           });
         }
       };
 
-      for (let i = 0; i < fileArray.length; i += CHUNK_SIZE) {
-        const chunk = fileArray.slice(i, i + CHUNK_SIZE);
+      for (let i = 0; i < sFileArray.length; i += CHUNK_SIZE) {
+        const chunk = sFileArray.slice(i, i + CHUNK_SIZE);
         const newPhotosDraft: Photo[] = [];
         
-        for (const file of chunk) {
+        const sChunk = safeArray(chunk);
+        for (const file of sChunk) {
           processed++;
           setImportProgress(processed);
           try {
@@ -217,8 +220,8 @@ export const usePhotoImport = (
 
                   let finalCatId = result.categoryId || null;
                   const allSuggestedTags = Array.from(new Set([
-                    ...(result.tagIds || []),
-                    ...(result.newTags || [])
+                    ...safeArray<string>(result.tagIds),
+                    ...safeArray<string>(result.newTags)
                   ]));
                   
                   const finalTagIds = await resolveTagIdsBatch(allSuggestedTags, tags, tagNameToIdMap, setTags);
@@ -233,7 +236,7 @@ export const usePhotoImport = (
                        tagIds: finalTagIds.slice(0, 3),
                        description_translations: result.description_translations || p.description_translations,
                        model_number: p.model_number || result.modelNumber || '',
-                       dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions
+                       dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : p.dimensions
                      };
                      
                      if (user) {
@@ -266,7 +269,7 @@ export const usePhotoImport = (
         }
       }
       
-      if (user && successCount > 0 && allAddedPhotos.length > 0) {
+      if (user && successCount > 0 && safeArray(allAddedPhotos).length > 0) {
         try {
           const syncedPhotos = await savePhotosToCloudBatch(user.id, allAddedPhotos);
           

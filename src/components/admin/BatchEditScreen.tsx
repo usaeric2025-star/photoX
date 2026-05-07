@@ -9,6 +9,8 @@ import { TagEditor } from './TagEditor';
 import { useAdminUI } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 
+import { safeArray } from '../../lib/utils';
+
 export const BatchEditScreen = ({
   resetAddState,
   saveBatchEdit,
@@ -48,7 +50,7 @@ export const BatchEditScreen = ({
   const handleDelete = () => {
     if (!batchEditIds || !onDelete) return;
     setAlertDialog({
-      title: `确定要删除选中的 ${batchEditIds.length} 张照片吗？`,
+      title: `确定要删除选中的 ${safeArray(batchEditIds).length} 张照片吗？`,
       message: '此操作不可撤销，所有选中照片将从云端彻底移除。',
       onConfirm: async () => {
         await onDelete(batchEditIds);
@@ -63,7 +65,7 @@ export const BatchEditScreen = ({
         bg-white flex items-center justify-between gap-3 shadow-sm">
         
         <h2 className="font-black text-base text-slate-800">
-          批量修改 ({batchEditIds?.length || 0})
+          批量修改 ({safeArray(batchEditIds).length})
         </h2>
         
         <div className="flex items-center gap-2">
@@ -175,14 +177,15 @@ export const BatchEditScreen = ({
             selectedTagIds={formState.tagIds}
             onToggleTag={(tag) => {
               const tagIdStr = String(tag.id);
-              const exists = formState.tagIds.map(String).includes(tagIdStr);
+              const sTagIds = safeArray<string>(formState.tagIds);
+              const exists = sTagIds.map(String).includes(tagIdStr);
               if (exists) {
                 updateForm({ 
-                  tagIds: formState.tagIds.filter((tid: string) => String(tid) !== tagIdStr) 
+                  tagIds: sTagIds.filter((tid: string) => String(tid) !== tagIdStr) 
                 });
-              } else if (formState.tagIds.length < 3) {
+              } else if (sTagIds.length < 3) {
                 updateForm({ 
-                  tagIds: [...(formState.tagIds || []), tagIdStr] 
+                  tagIds: [...sTagIds, tagIdStr] 
                 });
               }
             }}

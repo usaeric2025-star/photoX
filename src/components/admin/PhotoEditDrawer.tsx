@@ -8,7 +8,7 @@ import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminC
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { TagEditor } from './TagEditor';
 import { Button } from "@/components/ui/button"
-import { safeArray } from '../../utils/safeAccess';
+import { cn, safeArray } from '../../lib/utils';
 
 interface Props {
   editPhotoId: string | null;
@@ -52,23 +52,24 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
   // 1. 合并逻辑工具函数
   const mergeDimensionsIfNeeded = (dims: any[]) => {
-    if (!dims || dims.length === 0) return dims;
+    const sDims = safeArray(dims);
+    if (sDims.length === 0) return dims;
     
     // 检查是否已经是完整描述的正则 (包含 H/W/D 或 数字+单位)
     const isComplete = (s: string) => {
-      const lower = s.toLowerCase();
+      const lower = (s || '').toLowerCase();
       const hasLabels = lower.includes('h') || lower.includes('w') || lower.includes('d') || lower.includes('l');
       const hasUnit = lower.match(/\d+(\.\d+)?\s*(cm|mm|inch|in|")/i);
       return hasLabels || hasUnit;
     };
 
     // 如果长度 <= 3 且都不是完整描述，则合并
-    if (dims.length > 1 && dims.length <= 3) {
-      const allIncomplete = dims.every(d => !isComplete(d.label || ''));
+    if (sDims.length > 1 && sDims.length <= 3) {
+      const allIncomplete = sDims.every(d => !isComplete(d.label || ''));
       if (allIncomplete) {
-        const combinedLabel = dims.map(d => d.label).join(' ').trim();
+        const combinedLabel = sDims.map(d => d.label).join(' ').trim();
         return [{
-          ...dims[0],
+          ...sDims[0],
           label: combinedLabel,
           isAI: true
         }];
@@ -80,8 +81,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   // 2. 自动触发 AI 识别逻辑
   React.useEffect(() => {
     const photoData = newPhotoData || editPhotoPreview;
-    const hasNoDims = !formState.dimensions || formState.dimensions.length === 0 || 
-                     (formState.dimensions.length === 1 && !formState.dimensions[0].label && !formState.dimensions[0].length);
+    const sDims = safeArray(formState.dimensions);
+    const hasNoDims = sDims.length === 0 || 
+                     (sDims.length === 1 && !sDims[0].label && !sDims[0].length);
 
     if (photoData && hasNoDims && !isAnalyzing) {
       console.log('Auto-triggering AI Dimension Analysis...');
@@ -276,9 +278,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 }
 
                 if (isPartOfGroup) {
-                  const photo = photos.find(p => p.id === editPhotoId);
+                  const photo = safeArray<Photo>(photos).find(p => p.id === editPhotoId);
                   if (photo && photo.groupId) {
-                     setPhotos(prevPhotos => prevPhotos.map(p => {
+                     setPhotos(prevPhotos => safeArray<Photo>(prevPhotos).map(p => {
                          if (p.groupId === photo.groupId) {
                              return { ...p, tagIds: formState.tagIds, categoryId: formState.categoryId };
                          }
@@ -500,7 +502,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       )}
                       <button 
                         onClick={() => {
-                          const newDims = [...(formState.dimensions || [])];
+                          const newDims = [...safeArray(formState.dimensions)];
                           newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
                           updateForm({ dimensions: newDims });
                         }}
@@ -512,7 +514,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="space-y-3">
-                    {safeArray<any>(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' }]).map((dim: any, idx) => {
+                    {safeArray<any>(safeArray(formState.dimensions).length > 0 ? formState.dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' }]).map((dim: any, idx) => {
                       const label = dim.label || '';
                       // 增强正则，支持中文冒号
                       const prefixMatch = label.match(/^([A-Z0-9\u4e00-\u9fa5]+)\s*[:：]\s*(.*)$/i);
@@ -521,7 +523,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       
                       const handleUpdateLabel = (newPrefix: string, newDimPart: string) => {
                         const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
-                        const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
+                        const currDims = safeArray(formState.dimensions);
+                        const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
                         newDims[idx].label = finalLabel;
                         newDims[idx].isAI = false; // 用户修改后移除 AI 标记
                         
@@ -541,10 +544,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
                       return (
                         <div key={`dim-${idx}`} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
-                          { (formState.dimensions && formState.dimensions.length > 1) && (
+                          { (safeArray(formState.dimensions).length > 1) && (
                             <button 
                               onClick={() => {
-                                updateForm({ dimensions: formState.dimensions.filter((_, i) => i !== idx) });
+                                updateForm({ dimensions: safeArray(formState.dimensions).filter((_, i) => i !== idx) });
                               }}
                               className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
                             >
@@ -577,7 +580,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                                     <button 
                                       key={u}
                                       onClick={() => {
-                                        const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
+                                        const currDims = safeArray(formState.dimensions);
+                                        const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
                                         newDims[idx].unit = u as any;
                                         newDims[idx].isAI = false;
                                         updateForm({ dimensions: newDims });

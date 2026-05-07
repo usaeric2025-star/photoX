@@ -1,3 +1,17 @@
+window.onerror = function(msg, src, line, col, error) {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:red;color:white;font-size:11px;padding:8px;z-index:99999;word-break:break-all;white-space:pre-wrap';
+  div.innerText = `ERR: ${msg}\nLine: ${line}\n${error?.stack?.slice(0, 400) || ''}`;
+  document.body.appendChild(div);
+};
+
+window.onunhandledrejection = function(e) {
+  const div = document.createElement('div');
+  div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:orange;color:white;font-size:11px;padding:8px;z-index:99999;word-break:break-all;white-space:pre-wrap';
+  div.innerText = `PROMISE ERR: ${String(e.reason?.stack || e.reason).slice(0, 400)}`;
+  document.body.appendChild(div);
+};
+
 import React, {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App';

@@ -7,6 +7,7 @@ import { categoryApi } from '../api/categories';
 import { saveData } from '../utils/indexedDB';
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
+import { safeArray } from '../lib/utils';
 
 export function useDelete() {
   const { 
@@ -15,12 +16,13 @@ export function useDelete() {
   } = useGalleryContext();
 
   const deletePhotos = async (idOrIds: string | string[]): Promise<{ success: boolean, error?: any }> => {
-    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
-    const photosToDelete = photos.filter(p => ids.includes(p.id));
+    const ids = safeArray(Array.isArray(idOrIds) ? idOrIds : [idOrIds]);
+    const sPhotos = safeArray(photos);
+    const photosToDelete = sPhotos.filter(p => ids.includes(p.id));
     const userId = user?.id;
 
     try {
-      const nextPhotos = photos.filter(p => !ids.includes(p.id));
+      const nextPhotos = sPhotos.filter(p => !ids.includes(p.id));
       
       // Optimistic UI
       setPhotos(nextPhotos);
@@ -84,10 +86,11 @@ export function useDelete() {
       await deleteCategoryFromDB(categoryId);
 
       // 3. Update local state
-      setCategories(prev => prev.filter(c => String(c.id) !== String(categoryId)));
-      if (affected && affected.length > 0) {
-        const affectedIds = affected.map(a => a.id);
-        setPhotos(prev => prev.map(p => affectedIds.includes(p.id) ? { ...p, categoryId: null } : p));
+      setCategories(prev => safeArray(prev).filter(c => String(c.id) !== String(categoryId)));
+      const sAffected = safeArray(affected);
+      if (sAffected.length > 0) {
+        const affectedIds = sAffected.map(a => a.id);
+        setPhotos(prev => safeArray(prev).map(p => affectedIds.includes(p.id) ? { ...p, categoryId: null } : p));
       }
 
       return { success: true };
@@ -110,10 +113,11 @@ export function useDelete() {
       await deleteManufacturerFromDB(mfrId);
 
       // 3. Update local state
-      setManufacturers(prev => prev.filter(m => String(m.id) !== String(mfrId)));
-      if (affected && affected.length > 0) {
-        const affectedIds = affected.map(a => a.id);
-        setPhotos(prev => prev.map(p => affectedIds.includes(p.id) ? { ...p, manufacturerId: null } : p));
+      setManufacturers(prev => safeArray(prev).filter(m => String(m.id) !== String(mfrId)));
+      const sAffected = safeArray(affected);
+      if (sAffected.length > 0) {
+        const affectedIds = sAffected.map(a => a.id);
+        setPhotos(prev => safeArray(prev).map(p => affectedIds.includes(p.id) ? { ...p, manufacturerId: null } : p));
       }
 
       return { success: true };

@@ -11,6 +11,7 @@ import { useTasks } from './useTasks';
 import { usePhotoImport } from './usePhotoImport';
 import { usePhotoAI } from './usePhotoAI';
 import { usePhotoMutations } from './usePhotoMutations';
+import { safeArray } from '../lib/utils';
 
 export const useAdminPhotos = (
   user: User | null, 
@@ -72,13 +73,14 @@ export const useAdminPhotos = (
 
   // Handle AI Resume
   useEffect(() => {
-    if (photos.length > 0) {
+    const sPhotos = safeArray(photos);
+    if (sPhotos.length > 0) {
       const runningBatchTask = tasks.find(t => t.status === 'running' && t.name.includes('批量 AI 识别'));
       if (runningBatchTask && !aiHook.aiDebugInfo) {
-        aiHook.handleBatchAiIdentify(photos, runningBatchTask.id);
+        aiHook.handleBatchAiIdentify(sPhotos, runningBatchTask.id);
       }
     }
-  }, [photos.length]);
+  }, [safeArray(photos).length]);
 
   // 1. Initialize Photo AI Hook
   const aiHook = usePhotoAI(

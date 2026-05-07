@@ -4,6 +4,7 @@ import { Photo } from '../types';
 import { uploadImages } from './storageService';
 import { validateDimension } from '../utils/dimensionValidator';
 import { mapSupabasePhoto, photoCache } from './photoService';
+import { safeArray } from '../lib/utils';
 
 const FIELD_MAP: Record<string, string> = {
   groupId: 'group_id',
@@ -130,14 +131,14 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     photo.id = finalPhotoId;
   }
 
-  // --- Relational Tags Sync ---
-  if (Array.isArray(photo.tagIds) && photo.tagIds.length >= 0) {
+  const sTagIds = safeArray(photo.tagIds);
+  if (sTagIds.length >= 0) {
     // 1. Delete existing associations
     await supabase.from('photo_tags').delete().eq('photo_id', finalPhotoId);
     
     // 2. Insert new associations
-    if (photo.tagIds.length > 0) {
-      const tagAssociations = photo.tagIds
+    if (sTagIds.length > 0) {
+      const tagAssociations = sTagIds
         .filter(tid => !!tid)
         .map(tagId => ({
           photo_id: finalPhotoId,
@@ -160,7 +161,8 @@ export const savePhotosToCloudBatch = async (
   photos: Photo[],
   onProgress?: (count: number) => void
 ): Promise<Photo[]> => {
-  if (photos.length === 0) return [];
+  const sPhotos = safeArray(photos);
+  if (sPhotos.length === 0) return [];
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) {
@@ -181,8 +183,8 @@ export const savePhotosToCloudBatch = async (
     }
   }
 
-  const results: Photo[] = [...photos.map(p => ({ ...p }))];
-  const payloads = photos.map(photo => {
+  const results: Photo[] = [...sPhotos.map(p => ({ ...p }))];
+  const payloads = sPhotos.map(photo => {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
     
     normalizeDimensionsBeforeSave(photo.dimensions);
@@ -262,7 +264,7 @@ export const savePhotosToCloudBatch = async (
   }
 
   // 2. Bulk Sync Tags
-  const photoIdsToUpdate = results.map(p => p.id);
+  const photoIdsToUpdate = safeArray(results).map(p => p.id);
   
   // Wipe existing tags for these photos
   for (let i = 0; i < photoIdsToUpdate.length; i += 100) {
@@ -272,9 +274,10 @@ export const savePhotosToCloudBatch = async (
 
   // Insert new tags
   const newTagAssociations: any[] = [];
-  results.forEach(p => {
-    if (Array.isArray(p.tagIds) && p.tagIds.length > 0) {
-      p.tagIds.forEach(tid => {
+  safeArray(results).forEach(p => {
+    const pTagIds = safeArray(p.tagIds);
+    if (pTagIds.length > 0) {
+      pTagIds.forEach(tid => {
         if (tid) newTagAssociations.push({ photo_id: p.id, tag_id: tid });
       });
     }
@@ -306,8 +309,9 @@ export const updatePhoto = async (
   // Sync tags if needed
   if ('tagIds' in updates) {
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-      if (Array.isArray(updates.tagIds) && updates.tagIds.length > 0) {
-          const tagAssociations = updates.tagIds.map(tagId => ({
+      const uTagIds = safeArray(updates.tagIds);
+      if (uTagIds.length > 0) {
+          const tagAssociations = uTagIds.map(tagId => ({
               photo_id: photoId,
               tag_id: tagId
           }));
@@ -369,10 +373,11 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
 };
 
 export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
-  if (photos.length === 0) return;
+  const sPhotos = safeArray(photos);
+  if (sPhotos.length === 0) return;
   
   // 1. Delete DB records
-  const ids = photos.map(p => p.id);
+  const ids = sPhotos.map(p => p.id);
   console.log(`[photoService] deletePhotosBatch: Attempting to delete ${ids.length} records. IDs:`, ids);
   
   const { data, error } = await supabase
@@ -418,9 +423,9 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
 };
 
 function normalizeDimensionsBeforeSave(dimensions: any[] | null | undefined) {
-  if (Array.isArray(dimensions)) {
-    dimensions.forEach((dim) => {
-      if (dim && typeof dim === 'object') {
+  const sDims = safeArray(dimensions);
+  sDims.forEach((dim) => {
+    if (dim && typeof dim === 'object') {
         const maxVal = Math.max(Number(dim.length) || 0, Number(dim.width) || 0, Number(dim.height) || 0);
         // Create a temporary object matching Dimension structure for validation if value is missing
         const validated = validateDimension({ ...dim, value: maxVal });
@@ -428,6 +433,5 @@ function normalizeDimensionsBeforeSave(dimensions: any[] | null | undefined) {
           dim.unit = validated.unit;
         }
       }
-    });
-  }
+  });
 }

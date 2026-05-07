@@ -25,6 +25,7 @@ import { Photo, Category, Tag, Manufacturer, User, ProductFormData } from '../ty
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
+import { safeArray } from '../lib/utils';
 
 import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
@@ -153,9 +154,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
       onSubmit: async (val: string) => {
         const normalized = val.trim();
         if (!normalized) return;
-        const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
+        const existing = safeArray(tags).find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
-          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
+          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...safeArray(prev.tagIds), String(existing.id)])] }));
           showToast(`标签 "${normalized}" 已存在`);
           return;
         }
@@ -163,7 +164,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
         if (saved) {
            updateForm((prev: ProductFormData) => ({ 
              ...prev, 
-             tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
+             tagIds: [...new Set([...safeArray(prev.tagIds), String(saved.id)])] 
            }));
            showToast(`已新增标签 "${normalized}"`);
         }
@@ -307,9 +308,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 showOtherFields={showOtherFields}
                 setShowOtherFields={setShowOtherFields}
                 onDelete={async (ids) => {
-                  const { success, error } = await deletePhotos(ids);
+                  const sIds = safeArray(ids);
+                  const { success, error } = await deletePhotos(sIds);
                   if (success) {
-                    showToast(`已成功删除 ${ids.length} 张照片`, 'success');
+                    showToast(`已成功删除 ${sIds.length} 张照片`, 'success');
                     resetAddState();
                   } else {
                     handleError(error, '批量删除失败');
@@ -324,7 +326,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 setActiveGroupId={setActiveGroupId}
                 setAlertDialog={setAlertDialog}
                 photos={photos}
-                displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
+                displayPhotos={safeArray(photos).filter(p => p.groupId === activeGroupId)}
                 setLightboxIndex={() => {}}
                 isAdminMode={true}
                 isStaffMode={true}
@@ -391,7 +393,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                     newPhotoData={newPhotoData} 
                     setNewPhotoData={setNewPhotoData}
                     onDelete={handleDeletePhoto}
-                    editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
+                    editPhotoPreview={editPhotoId ? safeArray(photos).find(p => p.id === editPhotoId)?.image_url || safeArray(photos).find(p => p.id === editPhotoId)?.uri : null}
                     abortAnalysis={abortAnalysis}
                 />
             )}
@@ -408,8 +410,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                           handleManageClick={() => setActiveScreen('manage')}
                           loginWithGoogle={loginWithGoogle}
                           onRefresh={() => performPullSync(refreshCloudData)}
-                          photosCount={photos.length}
-                          totalPhotosCount={photos.length}
+                          photosCount={safeArray(photos).length}
+                          totalPhotosCount={safeArray(photos).length}
                           cloudCount={cloudCount}
                           appLang={appLang}
                        />
@@ -443,13 +445,15 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                          isStaffMode={true}
                          onTogglePinned={async (photo) => {
                            const newStatus = !photo.isPinned;
+                           const sPhotos = safeArray(photos);
                            const affectedPhotos = photo.groupId 
-                             ? photos.filter(p => p.groupId === photo.groupId)
+                             ? sPhotos.filter(p => p.groupId === photo.groupId)
                              : [photo];
                            import('../services/photoMutationService').then(async (m) => {
                              try {
+                               const sAffected = safeArray(affectedPhotos);
                                await Promise.all(
-                                 affectedPhotos.map(p => 
+                                 sAffected.map(p => 
                                    m.updatePhoto(p.id, { isPinned: newStatus }, setPhotos)
                                  )
                                );
@@ -471,13 +475,14 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                          user={user}
                          loginWithGoogle={loginWithGoogle}
                          onLoadMore={() => {
+                           const sPhotos = safeArray(photos);
                            if (visibleCount < totalGridCount) {
                              setVisibleCount(prev => prev + PAGINATION.PUBLIC_PAGE_SIZE);
-                           } else if (photos.length < (cloudCount || 0)) {
+                           } else if (sPhotos.length < (cloudCount || 0)) {
                                performPullSync(refreshCloudData);
                            }
                          }}
-                         hasMore={visibleCount < totalGridCount || (cloudCount !== null && photos.length < cloudCount)}
+                         hasMore={visibleCount < totalGridCount || (cloudCount !== null && safeArray(photos).length < cloudCount)}
                       />
                  </div>
               </div>

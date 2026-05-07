@@ -4,6 +4,7 @@ import { Photo } from '../types';
 import { uploadImages } from './storageService';
 import { photoCache } from './photoService';
 import { savePhotoToCloud } from './photoMutationService';
+import { safeArray } from '../lib/utils';
 
 export const syncPhotosToCloud = async (
   userId: string, 
@@ -36,7 +37,7 @@ export const syncPhotosToCloud = async (
   
   // Populate cache from existing cloud items
   if (cloudItems) {
-    cloudItems.forEach(item => {
+    safeArray(cloudItems).forEach(item => {
       if (item.image_hash && item.image_url) {
         hashUrlMap.set(item.image_hash, {
           imageUrl: item.image_url,
@@ -47,7 +48,8 @@ export const syncPhotosToCloud = async (
   }
 
   // Populate cache from local photos that already have an image_url
-  photos.forEach(p => {
+  const sPhotos = safeArray(photos);
+  sPhotos.forEach(p => {
     if (p.image_hash && p.image_url) {
       hashUrlMap.set(p.image_hash, {
         imageUrl: p.image_url,
@@ -58,11 +60,12 @@ export const syncPhotosToCloud = async (
 
   // 2. Identify cloud items that are NOT in the local list (Cleanup)
   if (!fetchError && !lastSyncTime) {
-    const localIds = new Set(photos.map(p => p.id));
-    const itemsToDelete = (cloudItems || []).filter(item => !localIds.has(item.id));
+    const localIds = new Set(sPhotos.map(p => p.id));
+    const itemsToDelete = safeArray(cloudItems).filter(item => !localIds.has(item.id));
     
-    if (itemsToDelete.length > 0) {
-      for (const item of itemsToDelete) {
+    const sItemsToDelete = safeArray(itemsToDelete);
+    if (sItemsToDelete.length > 0) {
+      for (const item of sItemsToDelete) {
         try {
           await supabase.from(DB_CONFIG.TABLE_NAME).delete().match({ id: item.id, user_id: userId });
           const filename = item.storageId || item.id;
@@ -110,7 +113,7 @@ export const syncPhotosToCloud = async (
         skippedCount++;
       }
       
-      if (onProgress) onProgress(((successCount + skippedCount) / photos.length) * 100);
+      if (onProgress) onProgress(((successCount + skippedCount) / sPhotos.length) * 100);
     } catch (err: any) {
       console.error(`Sync failed for photo ${photo.id}:`, err);
       throw err;
@@ -139,7 +142,8 @@ export const clearGroupIdInCloud = async (groupId: string) => {
   }
   
   photoCache.clear();
-  const affectedCount = data?.length || 0;
+  const sData = safeArray(data);
+  const affectedCount = sData.length;
   console.log(`[DB Success] 更新照片 group_id 影响行数：${affectedCount}`);
   
   if (affectedCount === 0) {
@@ -166,12 +170,13 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
   }
   
   photoCache.clear();
-  if (!data || data.length === 0) {
+  const sData = safeArray(data);
+  if (sData.length === 0) {
     const errorMsg = "解散失败：在云端找不到对应的照片 ID。请尝试重新同步或刷新页面。 (Database match failed)";
     console.error(errorMsg, photoIds);
     throw new Error(errorMsg);
   } else {
-    console.log(`Successfully updated ${data.length} photos in cloud.`);
+    console.log(`Successfully updated ${sData.length} photos in cloud.`);
   }
 };
 
@@ -194,7 +199,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
 
     // Group by userId + hash
     const groups: Record<string, typeof data> = {};
-    data.forEach(item => {
+    safeArray(data).forEach(item => {
       if (!item.image_hash) return;
       const key = `${item.user_id}_${item.image_hash}`;
       if (!groups[key]) groups[key] = [];
@@ -203,7 +208,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
 
     let removedCount = 0;
     for (const key in groups) {
-      const group = groups[key];
+      const group = safeArray(groups[key]);
       if (group.length > 1) {
         // Keep the first (oldest) one, delete the rest
         const [original, ...duplicates] = group;

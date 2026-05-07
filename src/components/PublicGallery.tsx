@@ -15,7 +15,7 @@ import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 import { getTranslatedCategoryName, getPhotoDisplayName } from '../lib/ui-helpers';
-import { safeArray } from '../utils/safeAccess';
+import { safeArray } from '../lib/utils';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -207,7 +207,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
-    safeArray<Photo>(photos).forEach(p => {
+    const safePhotos = safeArray<Photo>(photos);
+    safePhotos.forEach(p => {
        safeArray<string>(p.tagIds).forEach(id => ids.add(id));
     });
     return ids;
@@ -215,7 +216,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const tags = useMemo(() => {
     const tMap = new Map<string, Tag>();
-    contextTags.forEach(t => tMap.set(t.id, t));
+    safeArray(contextTags).forEach(t => tMap.set(t.id, t));
     
     return Array.from(tMap.values());
   }, [contextTags, allTagIds]);
@@ -242,7 +243,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};
-    tags.forEach(t => { map[String(t.id)] = t.name; });
+    safeArray(tags).forEach(t => { map[String(t.id)] = t.name; });
     return map;
   }, [tags]);
 
@@ -341,7 +342,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [t.shareTitle, t.shareNotSupported]);
 
   const shareGroup = useCallback(async (photos: Photo[]) => {
-    const safePhotos = Array.isArray(photos) ? photos : [];
+    const safePhotos = safeArray(photos);
     const msg = safePhotos.map(p => p.name || 'Furniture').join(', ');
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView more: ${window.location.origin}`;
     
@@ -373,9 +374,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, [gridPhotos, isSyncing]);
 
-  const photosToShow = isSyncing && gridPhotos.length === 0
+  const photosToShow = isSyncing && safeArray(gridPhotos).length === 0
     ? prevPhotosRef.current
     : gridPhotos;
+
+  const safePhotosToShow = safeArray(photosToShow);
 
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
@@ -433,7 +436,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         {isSyncing && (
           <div className="absolute top-3 right-3 z-10 w-6 h-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
         )}
-        {photosToShow.length === 0 ? (
+        {safePhotosToShow.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
                 <ImageIcon size={32} className="opacity-20" />
@@ -444,7 +447,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           <VirtuosoGrid
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
-            totalCount={photosToShow.length}
+            totalCount={safePhotosToShow.length}
             endReached={handleLoadMore}
             overscan={200}
             listClassName={`grid gap-3 p-2 pb-40 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
@@ -452,11 +455,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               <MemoizedPhotoCard
                 key={index}
                 index={index}
-                photo={photosToShow[index]}
+                photo={safePhotosToShow[index]}
                 isAdminMode={!!isAdminMode}
                 isMultiSelect={activeIsMultiSelect}
                 isStaffMode={isStaffMode}
-                isSelected={!!activeSelectedIds.includes(photosToShow[index].id)}
+                isSelected={!!activeSelectedIds.includes(safePhotosToShow[index].id)}
                 showGroupsCollapsed={showGroupsCollapsed}
                 lang={lang}
                 t={t}
@@ -472,7 +475,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 shareSinglePhoto={shareSinglePhoto}
                 onTogglePinned={onTogglePinned}
                 displayPhotos={displayPhotos}
-                gridPhotos={photosToShow}
+                gridPhotos={safePhotosToShow}
               />
             )}
           />
@@ -583,7 +586,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           setLightboxIndex(null);
         }}
         onSetGroupCover={async (id, groupId) => {
-          const groupPhotos = photos.filter(p => p.groupId === groupId);
+          const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
           import('../services/photoMutationService').then(async (m) => {
              try {
                await Promise.all(

@@ -4,6 +4,7 @@ import { useFormValidation } from '../hooks/useFormValidation';
 import { formatDate } from '../utils/dateFormat';
 import { photoApi } from '../api/photos';
 import { Photo, Tag, ProductFormData, User, Dimension } from '../types';
+import { safeArray } from '../lib/utils';
 import { saveData, loadData } from '../utils/indexedDB';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, generateItemCode, checkImageHashExists, uploadImages } from '../services/supabaseService';
@@ -91,10 +92,10 @@ export const usePhotoManagement = (
     if (editPhotoId) {
       if (editPhotoId === lastInitializedId.current) return; // Already initialized this photo
 
-      const photo = photos.find(p => p.id === editPhotoId);
+      const photo = safeArray(photos).find(p => p.id === editPhotoId);
       if (photo) {
-        const rawTagIds = (Array.isArray(photo.tagIds) ? photo.tagIds : []).map(String);
-        const dims = Array.isArray(photo.dimensions) ? photo.dimensions : [];
+        const rawTagIds = safeArray(photo.tagIds).map(String);
+        const dims = safeArray(photo.dimensions);
 
         setFormState({
           name: photo.name || '',
@@ -123,19 +124,21 @@ export const usePhotoManagement = (
   const lastInitializedBatchIds = useRef<string | null>(null);
 
   useEffect(() => {
-    if (batchEditIds && batchEditIds.length > 0) {
-      const batchKey = batchEditIds.sort().join(',');
+    const sBatchEditIds = safeArray(batchEditIds);
+    if (sBatchEditIds.length > 0) {
+      const batchKey = sBatchEditIds.slice().sort().join(',');
       if (batchKey === lastInitializedBatchIds.current) return;
 
-      const photosInBatch = photos.filter(p => batchEditIds.includes(p.id));
-      if (photosInBatch.length > 0) {
-        const firstPhoto = photosInBatch[0];
+      const photosInBatch = safeArray(photos).filter(p => sBatchEditIds.includes(p.id));
+      const sPhotosInBatch = safeArray(photosInBatch);
+      if (sPhotosInBatch.length > 0) {
+        const firstPhoto = sPhotosInBatch[0];
         
         // Calculate intersection of tags present in all photos
-        const intersectionTagIds = photosInBatch.reduce((acc, photo) => {
-            const photoTagIds = (photo.tagIds || []).map(String);
-            return acc.filter(tagId => photoTagIds.includes(String(tagId)));
-        }, (firstPhoto.tagIds || []).map(String));
+        const intersectionTagIds = sPhotosInBatch.reduce((acc, photo) => {
+            const photoTagIds = safeArray(photo.tagIds).map(String);
+            return safeArray(acc).filter(tagId => photoTagIds.includes(String(tagId)));
+        }, safeArray(firstPhoto.tagIds).map(String));
 
         setFormState({
           ...INITIAL_FORM_STATE,
@@ -177,103 +180,105 @@ export const usePhotoManagement = (
        try {
            const { valid, errors } = validatePhotoForm(formState);
            if (!valid) {
-             throw new Error(errors[0]);
+             throw new Error(errors[0] || 'Verification failed');
+           }
+           
+           // Resolve tag names to IDs
+           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+
+        if (editPhotoId) {
+           const original = safeArray(photos).find(p => p.id === editPhotoId);
+           if (!original) throw new Error('Photo not found');
+
+           const sDimensions = safeArray(dimensions);
+           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [{
+             label: '',
+             length: parseFloat(dimL || '0') || 0,
+             width: parseFloat(dimW || '0') || 0,
+             height: parseFloat(dimH || '0') || 0,
+             unit: 'cm'
+           }];
+
+           const updatedPhoto: Photo = {
+             ...original,
+             name: name || original.name,
+             categoryId: categoryId,
+             manufacturerId: manufacturerId,
+             tagIds: finalTagIds,
+             description: description || '',
+             description_translations: description_translations || { zh: '', en: '', ms: '' },
+             manual_code: manual_code,
+             model_number: model_number,
+             isHidden: isHidden,
+             isGroupCover: formState.isGroupCover || false,
+             price: price,
+             dimensions: finalDimensions,
+             updatedAt: formatDate(new Date())
+           };
+
+           // If we have explicit new image data (e.g. from rotation), trigger re-upload
+           if (newPhotoData) {
+             updatedPhoto.uri = newPhotoData;
+             updatedPhoto.image_url = ''; // Clear URL to force savePhotoToCloud to re-upload
+             updatedPhoto.thumb_url = ''; 
+             updatedPhoto.image_hash = calculateMD5(newPhotoData);
            }
 
-           // Resolve tag names to IDs
-          const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+           const nextPhotos = safeArray(photos).map(p => p.id === editPhotoId ? updatedPhoto : p);
+           setPhotos(nextPhotos);
+           await saveData('product_photos', nextPhotos);
+           
+           if (user) {
+              await savePhotoToCloud(user.id, updatedPhoto);
+              // Final sync after cloud upload finishes (to get the real URLs)
+              setPhotos(prev => safeArray(prev).map(p => p.id === editPhotoId ? { ...p, image_url: updatedPhoto.image_url, thumb_url: updatedPhoto.thumb_url, uri: undefined } : p));
+           }
+        } else if (newPhotoData) {
+           const finalId = crypto.randomUUID();
+           const sDimensions = safeArray(dimensions);
+           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [{
+             label: '',
+             length: parseFloat(dimL || '0') || 0,
+             width: parseFloat(dimW || '0') || 0,
+             height: parseFloat(dimH || '0') || 0,
+             unit: 'cm'
+           }];
 
-       if (editPhotoId) {
-          const original = photos.find(p => p.id === editPhotoId);
-          if (!original) throw new Error('Photo not found');
+           const newPhoto: Photo = {
+             id: finalId,
+             storageId: finalId,
+             item_code: generateItemCode(),
+             manual_code: manual_code,
+             model_number: model_number,
+             image_hash: calculateMD5(newPhotoData),
+             name: name || '未命名产品',
+             description: description || '',
+             description_translations: description_translations || { zh: '', en: '', ms: '' },
+             image_url: '',
+             uri: newPhotoData,
+             categoryId: categoryId,
+             manufacturerId: manufacturerId,
+             tagIds: finalTagIds,
+             isHidden: isHidden,
+             price: price,
+             dimensions: finalDimensions,
+             createdAt: formatDate(new Date()),
+             groupId: null
+           };
 
-          const finalDimensions: Dimension[] = dimensions.length > 0 ? dimensions : [{
-            label: '',
-            length: parseFloat(dimL || '0') || 0,
-            width: parseFloat(dimW || '0') || 0,
-            height: parseFloat(dimH || '0') || 0,
-            unit: 'cm'
-          }];
-
-          const updatedPhoto: Photo = {
-            ...original,
-            name: name || original.name,
-            categoryId: categoryId,
-            manufacturerId: manufacturerId,
-            tagIds: finalTagIds,
-            description: description || '',
-            description_translations: description_translations || { zh: '', en: '', ms: '' },
-            manual_code: manual_code,
-            model_number: model_number,
-            isHidden: isHidden,
-            isGroupCover: formState.isGroupCover || false,
-            price: price,
-            dimensions: finalDimensions,
-            updatedAt: formatDate(new Date())
-          };
-
-          // If we have explicit new image data (e.g. from rotation), trigger re-upload
-          if (newPhotoData) {
-            updatedPhoto.uri = newPhotoData;
-            updatedPhoto.image_url = ''; // Clear URL to force savePhotoToCloud to re-upload
-            updatedPhoto.thumb_url = ''; 
-            updatedPhoto.image_hash = calculateMD5(newPhotoData);
-          }
-
-          const nextPhotos = photos.map(p => p.id === editPhotoId ? updatedPhoto : p);
-          setPhotos(nextPhotos);
-          await saveData('product_photos', nextPhotos);
-          
-          if (user) {
-             await savePhotoToCloud(user.id, updatedPhoto);
-             // Final sync after cloud upload finishes (to get the real URLs)
-             setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, image_url: updatedPhoto.image_url, thumb_url: updatedPhoto.thumb_url, uri: undefined } : p));
-          }
-       } else if (newPhotoData) {
-          const finalId = crypto.randomUUID();
-          const finalDimensions: Dimension[] = dimensions.length > 0 ? dimensions : [{
-            label: '',
-            length: parseFloat(dimL || '0') || 0,
-            width: parseFloat(dimW || '0') || 0,
-            height: parseFloat(dimH || '0') || 0,
-            unit: 'cm'
-          }];
-
-          const newPhoto: Photo = {
-            id: finalId,
-            storageId: finalId,
-            item_code: generateItemCode(),
-            manual_code: manual_code,
-            model_number: model_number,
-            image_hash: calculateMD5(newPhotoData),
-            name: name || '未命名产品',
-            description: description || '',
-            description_translations: description_translations || { zh: '', en: '', ms: '' },
-            image_url: '',
-            uri: newPhotoData,
-            categoryId: categoryId,
-            manufacturerId: manufacturerId,
-            tagIds: finalTagIds,
-            isHidden: isHidden,
-            price: price,
-            dimensions: finalDimensions,
-            createdAt: formatDate(new Date()),
-            groupId: null
-          };
-
-          const nextPhotos = [newPhoto, ...photos];
-          setPhotos(nextPhotos);
-          await saveData('product_photos', nextPhotos);
-          
-          if (user) {
-            await savePhotoToCloud(user.id, newPhoto);
-            // Final sync to get real URLs
-            setPhotos(prev => prev.map(p => p.id === finalId ? { ...p, image_url: newPhoto.image_url, thumb_url: newPhoto.thumb_url, uri: undefined } : p));
-          }
-       }
-       
-       resetAddState();
-       setActiveScreen('home');
+           const nextPhotos = [newPhoto, ...photos];
+           setPhotos(nextPhotos);
+           await saveData('product_photos', nextPhotos);
+           
+           if (user) {
+             await savePhotoToCloud(user.id, newPhoto);
+             // Final sync to get real URLs
+             setPhotos(prev => prev.map(p => p.id === finalId ? { ...p, image_url: newPhoto.image_url, thumb_url: newPhoto.thumb_url, uri: undefined } : p));
+           }
+        }
+        
+        resetAddState();
+        setActiveScreen('home');
        } catch (err: any) {
           handleError(err, '储存产品时发生错误');
        }

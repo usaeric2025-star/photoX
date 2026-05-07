@@ -11,9 +11,10 @@ export function useFormValidation() {
         errors.push('产品名称不能为空');
       }
 
-      if (!form.categoryId || form.categoryId === 'uncategorized') {
-        errors.push('请选择一个分类');
-      }
+      // Category is now optional to reduce friction
+      // if (!form.categoryId || form.categoryId === 'uncategorized') {
+      //   errors.push('请选择一个分类');
+      // }
     }
 
     // Optional: Model number validation could go here

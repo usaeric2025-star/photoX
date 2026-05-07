@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
 import { PAGINATION } from '../constants/config';
 import { AppSettings } from '../types';
+import { safeArray } from '../lib/utils';
 
 const PUBLIC_PAGE_SIZE = 50;
 
@@ -50,16 +51,18 @@ export default function PublicView() {
   const fetchFilteredPhotos = async () => {
     setIsRefreshing(true);
     try {
-      const tagId = filterTagIds.length > 0 ? filterTagIds[0] : null;
+      const sFilterTagIds = safeArray(filterTagIds);
+      const tagId = sFilterTagIds.length > 0 ? sFilterTagIds[0] : null;
       const [cloudPhotos, total] = await Promise.all([
         loadAllPhotosFromCloud(undefined, 0, 1000, filterCatId, tagId, debouncedSearchQuery),
         getPhotoCount(filterCatId, tagId, debouncedSearchQuery)
       ]);
+      const sCloudPhotos = safeArray(cloudPhotos);
       if (cloudPhotos) {
-        setPhotos(cloudPhotos);
+        setPhotos(sCloudPhotos);
         setPage(0);
-        setHasMore(cloudPhotos.length === 1000);
-        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
+        setHasMore(sCloudPhotos.length === 1000);
+        setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
       }
     } catch (e) {
@@ -77,7 +80,7 @@ export default function PublicView() {
     const cachedManufacturers = await loadData('product_manufacturers');
     const cachedSettings = await loadData('product_settings');
 
-    if (cachedPhotos && !filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
+    if (cachedPhotos && !filterCatId && safeArray(filterTagIds).length === 0 && !debouncedSearchQuery) {
       setPhotos(cachedPhotos);
       if (!isBackground) setIsInitializing(false);
     }
@@ -92,7 +95,8 @@ export default function PublicView() {
     else setIsRefreshing(true);
 
     try {
-      const tagId = filterTagIds.length > 0 ? filterTagIds[0] : null;
+      const sFilterTagIds = safeArray(filterTagIds);
+      const tagId = sFilterTagIds.length > 0 ? sFilterTagIds[0] : null;
       
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
         loadAllPhotosFromCloud(undefined, 0, PUBLIC_PAGE_SIZE, filterCatId, tagId, debouncedSearchQuery),
@@ -103,23 +107,24 @@ export default function PublicView() {
         getPhotoCount(filterCatId, tagId, debouncedSearchQuery).catch(() => 0)
       ]);
 
+      const sCloudPhotos = safeArray(cloudPhotos);
       if (cloudPhotos) {
-        setPhotos(cloudPhotos);
+        setPhotos(sCloudPhotos);
         setPage(0);
-        setHasMore(cloudPhotos.length === PUBLIC_PAGE_SIZE);
-        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
+        setHasMore(sCloudPhotos.length === PUBLIC_PAGE_SIZE);
+        setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
-        if (!filterCatId && filterTagIds.length === 0 && !debouncedSearchQuery) {
-          saveData('product_photos', cloudPhotos);
+        if (!filterCatId && sFilterTagIds.length === 0 && !debouncedSearchQuery) {
+          saveData('product_photos', sCloudPhotos);
         }
       }
       
       if (cloudCats) {
-        const normalized = cloudCats.map((c: any) => ({
+        const normalized = safeArray(cloudCats).map((c: any) => ({
           ...c,
           id: String(c.id),
           name: c.name || c.zh || 'Uncategorized',
-          subcategories: c.subcategories || [] 
+          subcategories: safeArray(c.subcategories)
         }));
         setCategories(normalized);
         saveData('product_categories', normalized);
@@ -154,12 +159,14 @@ export default function PublicView() {
     const nextPage = page + 1;
     
     try {
-      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PUBLIC_PAGE_SIZE, filterCatId, filterTagIds.length > 0 ? filterTagIds[0] : null, debouncedSearchQuery);
-      if (morePhotos && morePhotos.length > 0) {
-        setPhotos(prev => [...prev, ...morePhotos]);
+      const sFilterTagIds = safeArray(filterTagIds);
+      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PUBLIC_PAGE_SIZE, filterCatId, sFilterTagIds.length > 0 ? sFilterTagIds[0] : null, debouncedSearchQuery);
+      const sMorePhotos = safeArray(morePhotos);
+      if (morePhotos && sMorePhotos.length > 0) {
+        setPhotos(prev => [...prev, ...sMorePhotos]);
         setPage(nextPage);
-        setHasMore(morePhotos.length === PUBLIC_PAGE_SIZE);
-        setVisibleCount(prev => prev + morePhotos.length);
+        setHasMore(sMorePhotos.length === PUBLIC_PAGE_SIZE);
+        setVisibleCount(prev => prev + sMorePhotos.length);
       } else {
         setHasMore(false);
       }
@@ -183,7 +190,7 @@ export default function PublicView() {
 
   return (
     <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
-      {isInitializing && photos.length === 0 ? (
+      {isInitializing && safeArray(photos).length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center space-y-4">
           <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading Gallery...</p>
@@ -211,20 +218,22 @@ export default function PublicView() {
               const newStatus = !photo.isPinned;
               
               // Identify affected photos (the photo itself + any other photos in the same group)
+              const sPhotos = safeArray(photos);
               const affectedPhotos = photo.groupId 
-                ? photos.filter(p => p.groupId === photo.groupId)
+                ? sPhotos.filter(p => p.groupId === photo.groupId)
                 : [photo];
                 
+              const sAffected = safeArray(affectedPhotos);
               // Optimistic update for all affected photos
               setPhotos(prev => prev.map(p => 
-                affectedPhotos.some(ap => ap.id === p.id) 
+                sAffected.some(ap => ap.id === p.id) 
                   ? { ...p, isPinned: newStatus } 
                   : p
               ));
               
               try {
                 await Promise.all(
-                  affectedPhotos.map(p => 
+                  sAffected.map(p => 
                     updatePhoto(p.id, { isPinned: newStatus })
                   )
                 );
@@ -232,7 +241,7 @@ export default function PublicView() {
                 handleError(e, "togglePinned");
                 // Revert changes
                 setPhotos(prev => prev.map(p => 
-                  affectedPhotos.some(ap => ap.id === p.id) 
+                  sAffected.some(ap => ap.id === p.id) 
                     ? { ...p, isPinned: !newStatus } 
                     : p
                 ));

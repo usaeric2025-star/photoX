@@ -5,6 +5,8 @@ import { Category, Tag, ProductFormData, Manufacturer } from '../../types';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../../context/AdminContexts';
 import { TagEditor } from './TagEditor';
 
+import { safeArray } from '../../lib/utils';
+
 interface UploadFormProps {
   onClose: () => void;
   editPhotoId: string | null;
@@ -166,7 +168,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">目录 / Category *</h3>
           <div className="grid grid-cols-3 gap-2">
-            {categories.filter(c => c.name && c.name.trim()).map((cat: Category) => {
+            {safeArray(categories).filter(c => c.name && c.name.trim()).map((cat: Category) => {
               const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
               return (
               <button 
@@ -186,7 +188,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">厂商 / Manufacturer</h3>
           </div>
           <div className="flex flex-wrap gap-2 p-1">
-            {(manufacturers || []).map((mfr: Manufacturer) => (
+            {safeArray(manufacturers).map((mfr: Manufacturer) => (
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ manufacturerId: String(mfr.id) })}
@@ -206,11 +208,12 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             tags={tags}
             selectedTagIds={formState.tagIds}
             onToggleTag={(tag) => {
-              const isSelected = formState.tagIds.includes(tag.id);
+              const sTagIds = safeArray<string>(formState.tagIds);
+              const isSelected = sTagIds.includes(tag.id);
               if (isSelected) {
-                updateForm({ tagIds: formState.tagIds.filter(tid => tid !== tag.id) });
-              } else if (formState.tagIds.length < 3) {
-                updateForm({ tagIds: [...(formState.tagIds || []), tag.id] });
+                updateForm({ tagIds: sTagIds.filter(tid => tid !== tag.id) });
+              } else if (sTagIds.length < 3) {
+                updateForm({ tagIds: [...sTagIds, tag.id] });
               }
             }}
             onUpdateTag={updateTag}
@@ -259,7 +262,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">产品尺寸 / DIMENSIONS</label>
                     <button 
                       onClick={() => {
-                        const newDims = [...(formState.dimensions || [])];
+                        const newDims = [...safeArray(formState.dimensions)];
                         newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
                         updateForm({ dimensions: newDims });
                       }}
@@ -270,12 +273,14 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   </div>
                   
                   <div className="space-y-3">
-                    {(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim, idx) => (
+                    {(safeArray(formState.dimensions).length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim, idx) => {
+                      const sDims = safeArray(formState.dimensions);
+                      return (
                       <div key={idx} className="bg-slate-100/30 p-4 rounded-3xl border border-slate-100 space-y-3 relative">
-                        { (formState.dimensions && formState.dimensions.length > 1) && (
+                        { (sDims.length > 1) && (
                           <button 
                             onClick={() => {
-                              updateForm({ dimensions: formState.dimensions.filter((_, i) => i !== idx) });
+                              updateForm({ dimensions: sDims.filter((_, i) => i !== idx) });
                             }}
                             className="absolute top-3 right-3 p-1 text-slate-300 hover:text-red-500 transition-colors"
                           >
@@ -293,7 +298,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                 placeholder="如: 3-Seater" 
                                 value={dim.label || ''} 
                                 onChange={e => {
-                                  const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
+                                  const currDims = safeArray(formState.dimensions);
+                                  const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
                                   newDims[idx].label = e.target.value;
                                   updateForm({ dimensions: newDims });
                                 }}
@@ -307,7 +313,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                   <button 
                                     key={u}
                                     onClick={() => {
-                                      const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
+                                      const currDims = safeArray(formState.dimensions);
+                                      const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
                                       newDims[idx].unit = u;
                                       updateForm({ dimensions: newDims });
                                     }}
@@ -326,8 +333,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                type="number" 
                                value={dim.length || ''} 
                                onChange={e => {
-                                 const curDims = formState.dimensions;
-                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
+                                 const curDims = safeArray(formState.dimensions);
+                                 const newDims = [...(curDims.length > 0 ? curDims : [{...dim}])];
                                  newDims[idx].length = parseFloat(e.target.value) || 0;
                                  const updates: Partial<ProductFormData> = { dimensions: newDims };
                                  if (idx === 0) updates.dimL = e.target.value;
@@ -342,8 +349,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                type="number" 
                                value={dim.width || ''} 
                                onChange={e => {
-                                 const curDims = formState.dimensions;
-                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
+                                 const curDims = safeArray(formState.dimensions);
+                                 const newDims = [...(curDims.length > 0 ? curDims : [{...dim}])];
                                  newDims[idx].width = parseFloat(e.target.value) || 0;
                                  const updates: Partial<ProductFormData> = { dimensions: newDims };
                                  if (idx === 0) updates.dimW = e.target.value;
@@ -358,8 +365,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                                type="number" 
                                value={dim.height || ''} 
                                onChange={e => {
-                                 const curDims = formState.dimensions;
-                                 const newDims = [...((curDims && curDims.length > 0) ? curDims : [{...dim}])];
+                                 const curDims = safeArray(formState.dimensions);
+                                 const newDims = [...(curDims.length > 0 ? curDims : [{...dim}])];
                                  newDims[idx].height = parseFloat(e.target.value) || 0;
                                  const updates: Partial<ProductFormData> = { dimensions: newDims };
                                  if (idx === 0) updates.dimH = e.target.value;
@@ -370,7 +377,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
 

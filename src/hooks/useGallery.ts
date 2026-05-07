@@ -4,6 +4,7 @@ import { sanitizePhotoTags } from '../lib/sanitizer';
 import { normalizeSearchQuery } from '../utils/stringHelper';
 import { PAGINATION } from '../constants/config';
 import { groupPhotos } from '../lib/filters';
+import { safeArray } from '../lib/utils';
 
 interface UseGalleryProps {
   photos: Photo[];
@@ -70,7 +71,7 @@ export const useGallery = ({
 
   const displayPhotos = useMemo(() => {
     // Sanitization: remove missing tags
-    const sanitized = photos.map(p => sanitizePhotoTags(p, tags));
+    const sanitized = safeArray(photos).map(p => sanitizePhotoTags(p, tags));
     
     let filtered = (isAdminMode || isStaffMode) ? sanitized : sanitized.filter(p => !p.isHidden);
     
@@ -82,15 +83,16 @@ export const useGallery = ({
       filtered = filtered.filter(p => p.manufacturerId === selectedSubId);
     }
 
-    if (selectedTagIds.length > 0) {
+    const sSelectedTagIds = safeArray(selectedTagIds);
+    if (sSelectedTagIds.length > 0) {
       filtered = filtered.filter(p => {
-        const rawTagIds = (Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : [])).map(String);
+        const rawTagIds = safeArray(p.tagIds).map(String);
         
-        return selectedTagIds.every(tid => {
+        return sSelectedTagIds.every(tid => {
           const strTid = String(tid);
           if (rawTagIds.includes(strTid)) return true;
           
-          const tObj = tags.find(t => String(t.id) === strTid);
+          const tObj = safeArray(tags).find(t => String(t.id) === strTid);
           if (tObj) {
             return rawTagIds.some((rt: string) => rt.trim().toLowerCase() === (tObj.name || '').trim().toLowerCase());
           }
@@ -103,8 +105,8 @@ export const useGallery = ({
     if (normSearchQuery) {
       const q = (normSearchQuery || '').toLowerCase();
       filtered = filtered.filter(p => {
-        const rawTagIds = (Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : [])).map(String);
-        const mappedTagNames = rawTagIds.map(tid => tags.find(t => String(t.id) === tid)?.name).filter(Boolean);
+        const rawTagIds = safeArray(p.tagIds).map(String);
+        const mappedTagNames = rawTagIds.map(tid => safeArray(tags).find(t => String(t.id) === tid)?.name).filter(Boolean);
         
         const searchableText = [
           p.name,
@@ -126,27 +128,30 @@ export const useGallery = ({
     return filtered;
   }, [photos, selectedCatCode, selectedSubId, selectedTagIds, searchQuery, categories, tags, sortOrder, isAdminMode, isStaffMode]);
 
-  const totalPhotoCount = displayPhotos.length;
+  const totalPhotoCount = safeArray(displayPhotos).length;
 
   const aggregatedPhotos = useMemo(() => {
     return groupPhotos(displayPhotos, showGroupsCollapsed);
   }, [displayPhotos, showGroupsCollapsed]);
 
   const visiblePhotos = useMemo(() => {
-    if (aggregatedPhotos.length === 0) return [];
+    const sAggregated = safeArray(aggregatedPhotos);
+    if (sAggregated.length === 0) return [];
     
     // Cap visible count to avoid excessive memory usage if it keeps increasing
-    const count = Math.min(visibleCount, aggregatedPhotos.length);
-    return aggregatedPhotos.slice(0, count);
+    const count = Math.min(visibleCount, sAggregated.length);
+    return sAggregated.slice(0, count);
   }, [aggregatedPhotos, visibleCount]);
 
   const gridPhotos = useMemo(() => {
-    if (visiblePhotos.length === 0 || aggregatedPhotos.length === 0) return visiblePhotos;
-    const remainder = visiblePhotos.length % columns;
-    if (remainder === 0) return visiblePhotos;
+    const sVisible = safeArray(visiblePhotos);
+    const sAggregated = safeArray(aggregatedPhotos);
+    if (sVisible.length === 0 || sAggregated.length === 0) return sVisible;
+    const remainder = sVisible.length % columns;
+    if (remainder === 0) return sVisible;
     
     // In normal gallery we don't necessarily need fillers, but let's keep it clean
-    return visiblePhotos;
+    return sVisible;
   }, [visiblePhotos, columns, aggregatedPhotos]);
 
   const getRealId = (loopId: string) => loopId.split('-loop-')[0].split('-filler-')[0];
@@ -155,7 +160,8 @@ export const useGallery = ({
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && visibleCount < aggregatedPhotos.length) {
+        const sAggregated = safeArray(aggregatedPhotos);
+        if (entries[0].isIntersecting && visibleCount < sAggregated.length) {
           setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
         }
       },
@@ -178,7 +184,7 @@ export const useGallery = ({
     visibleCount, setVisibleCount,
     lightboxIndex, setLightboxIndex,
     displayPhotos: aggregatedPhotos, // For lightbox indexed access
-    totalPhotoCount: aggregatedPhotos.length,
+    totalPhotoCount: safeArray(aggregatedPhotos).length,
     visiblePhotos, gridPhotos,
     getRealId, observerTarget,
     sortOrder, toggleSortOrder

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Photo, Category, Tag, Manufacturer, User } from '../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
+import { safeArray } from '../lib/utils';
 import { cleanObject } from '../services/utils';
 import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
@@ -55,25 +56,36 @@ export const usePhotoAI = (
 
   const abortAnalysis = (taskId?: string) => {
     if (currentAnalysisController.current) {
-      currentAnalysisController.current.abort();
-      currentAnalysisController.current = null;
-      setAiDebugInfo({ step: '已取消', message: '用户中断了 AI 识别任务' });
-      if (taskId) {
-        updateTask(taskId, { status: 'cancelled', message: '用户已取消任务' });
-      }
-      setTimeout(() => setAiDebugInfo(null), 3000);
+        currentAnalysisController.current.abort();
+        currentAnalysisController.current = null;
     }
+    setBatchProgress({ current: 0, total: 0 });
+    setLoadingState('idle'); // Safety: reset global state
+    
+    // Safety: ensure any stuck isAnalyzing flags are cleared
+    setPhotos(prev => prev.map(p => p.isAnalyzing ? { ...p, isAnalyzing: false } : p));
+    photosRef.current = photosRef.current.map(p => p.isAnalyzing ? { ...p, isAnalyzing: false } : p);
+    
+    if (taskId) {
+        updateTask(taskId, { status: 'cancelled', message: '用户已取消任务' });
+    }
+    setAiDebugInfo({ step: '已取消', message: '用户中断了 AI 识别任务' });
+    setTimeout(() => setAiDebugInfo(null), 3000);
+    
+    showToast('AI 识别已取消 / AI Analysis Cancelled', 'info');
   };
 
   const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
-    const unProcessed = photosToProcess.filter(p => {
-       const rawTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+    const sPhotosToProcess = safeArray(photosToProcess);
+    const unProcessed = sPhotosToProcess.filter(p => {
+       const rawTagIds = safeArray(p.tagIds);
        const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
        return (!p.categoryId || rawTagIds.length < 2 || !p.name || !hasAllTranslations) && !p.isAnalyzing;
     });
     
-    if (unProcessed.length === 0) {
+    const sUnProcessed = safeArray(unProcessed);
+    if (sUnProcessed.length === 0) {
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
@@ -82,24 +94,25 @@ export const usePhotoAI = (
       return;
     }
     
-    setBatchProgress({ current: 0, total: unProcessed.length });
-    const taskId = existingTaskId || addTask({
-      name: `批量 AI 识别 (${unProcessed.length} 张)`,
-      onCancel: () => abortAnalysis()
-    });
+    return runWithLoading('analyzing', async () => {
+        setBatchProgress({ current: 0, total: sUnProcessed.length });
+        const taskId = existingTaskId || addTask({
+          name: `批量 AI 识别 (${sUnProcessed.length} 张)`,
+          onCancel: () => abortAnalysis()
+        });
 
-    const CONCURRENCY = AI_CONFIG.CONCURRENCY;
-    let completedCount = 0;
-    
-    const processPhoto = async (photo: Photo): Promise<void> => {
-        const controller = new AbortController();
-        currentAnalysisController.current = controller;
-        const signal = controller.signal;
+        const CONCURRENCY = AI_CONFIG.CONCURRENCY;
+        let completedCount = 0;
         
-        setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
-        
-        try {
-            const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
+        const processPhoto = async (photo: Photo): Promise<void> => {
+            const controller = new AbortController();
+            currentAnalysisController.current = controller;
+            const signal = controller.signal;
+            
+            setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
+            
+            try {
+                const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
             const result = cleanObject(resRaw);
             
             if (result.name) {
@@ -129,9 +142,9 @@ export const usePhotoAI = (
             }
 
             let finalCatId = result.categoryId || null;
-            const allTagNamesOrIds = [...(result.tagIds || []), ...(result.newTags || [])];
+            const allTagNamesOrIds = [...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)];
             const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
-            const safeOldTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : (typeof photo.tagIds === 'string' ? [photo.tagIds] : []);
+            const safeOldTagIds = safeArray(photo.tagIds);
             const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds])).slice(0, 3);
 
             let updatedPhoto = { 
@@ -143,9 +156,9 @@ export const usePhotoAI = (
                 description_translations: result.description_translations || photo.description_translations,
                 manual_code: photo.manual_code,
                 model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
-                dimensions: (result.dimensions && Array.isArray(result.dimensions) && result.dimensions.length > 0) 
+                dimensions: (safeArray(result.dimensions).length > 0) 
                     ? result.dimensions 
-                    : (Array.isArray(photo.dimensions) ? photo.dimensions : []),
+                    : safeArray(photo.dimensions),
                 updatedAt: formatDate(new Date()),
                 isAnalyzing: false 
             };
@@ -171,16 +184,16 @@ export const usePhotoAI = (
     };
 
     try {
-        for (let i = 0; i < unProcessed.length; i += CONCURRENCY) {
+        for (let i = 0; i < sUnProcessed.length; i += CONCURRENCY) {
             if (currentAnalysisController.current?.signal.aborted) break;
-            const batch = unProcessed.slice(i, i + CONCURRENCY);
-            const batchResults = await Promise.allSettled(batch.map(p => processPhoto(p)));
-            const fulfilledCount = batchResults.filter(r => r.status === 'fulfilled').length;
+            const batch = sUnProcessed.slice(i, i + CONCURRENCY);
+            const batchResults = await Promise.allSettled(safeArray(batch).map(p => processPhoto(p)));
+            const fulfilledCount = safeArray(batchResults).filter(r => r.status === 'fulfilled').length;
             completedCount += fulfilledCount;
-            const currentProgress = Math.min(i + CONCURRENCY, unProcessed.length);
-            const progressPercent = (currentProgress / unProcessed.length) * 100;
-            setBatchProgress({ current: currentProgress, total: unProcessed.length });
-            updateTask(taskId, { progress: progressPercent, message: `已处理 ${currentProgress}/${unProcessed.length} 张...` });
+            const currentProgress = Math.min(i + CONCURRENCY, sUnProcessed.length);
+            const progressPercent = (currentProgress / sUnProcessed.length) * 100;
+            setBatchProgress({ current: currentProgress, total: sUnProcessed.length });
+            updateTask(taskId, { progress: progressPercent, message: `已处理 ${currentProgress}/${sUnProcessed.length} 张...` });
         }
         if (completedCount > 0) {
             updateTask(taskId, { status: 'completed', progress: 100, message: `完成！处理 ${completedCount} 张` });
@@ -195,11 +208,17 @@ export const usePhotoAI = (
         currentAnalysisController.current = null;
         setBatchProgress({ current: 0, total: 0 });
     }
+    });
   };
 
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
     if (!imageData) return;
     return runWithLoading('analyzing', async () => {
+      if (editPhotoId) {
+        setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p));
+        // Also update local ref
+        photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
+      }
       setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
       const controller = new AbortController();
       currentAnalysisController.current = controller;
@@ -232,15 +251,16 @@ export const usePhotoAI = (
         if (editPhotoId) {
           const photo = photosRef.current.find(p => p.id === editPhotoId);
           if (photo) {
+            const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
             let updatedPhoto = { 
               ...photo, 
               categoryId: result.categoryId || photo.categoryId,
-              tagIds: Array.from(new Set([...(Array.isArray(photo.tagIds) ? photo.tagIds : []), ...(await resolveTagIdsBatch([...(result.tagIds || []), ...(result.newTags || [])], tags, tagNameToIdMap, setTags))])).slice(0, 3),
+              tagIds: Array.from(new Set([...safeArray(photo.tagIds), ...resolvedTags])).slice(0, 3),
               name: shouldUpdateName(photo.name) ? (aiName || photo.name) : photo.name,
               description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
               description_translations: result.description_translations || photo.description_translations,
               model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
-              dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : photo.dimensions,
+              dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : photo.dimensions,
               updatedAt: formatDate(new Date()),
               isAnalyzing: false 
             };
@@ -255,54 +275,73 @@ export const usePhotoAI = (
           }
         }
         return result;
-      } catch (err) {
-        setAiDebugInfo({ step: '错误', message: '识别失败' });
+      } catch (err: any) {
+        if (err.name === 'AbortError') {
+          setAiDebugInfo({ step: '已取消', message: '识别任务已由用户中断' });
+        } else {
+          setAiDebugInfo({ step: '错误', message: '识别失败' });
+        }
+        if (editPhotoId) {
+          setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
+          photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p);
+        }
         throw err;
       }
     });
   };
 
   const handleGroupAiIdentify = async (groupPhotos: Photo[]) => {
-    if (groupPhotos.length === 0) return;
+    const sGroupPhotos = safeArray(groupPhotos);
+    if (sGroupPhotos.length === 0) return;
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     if (!effectiveKey) return;
     return runWithLoading('analyzing', async () => {
+      const photoIds = sGroupPhotos.map(p => p.id);
+      setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p));
+      photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p);
+
       setAiDebugInfo({ step: '群组识别', message: '正在分析第一张照片...' });
-      const firstPhoto = groupPhotos.find(p => p.isGroupCover) || groupPhotos[0];
-      const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.categoryId);
-      const result = cleanObject(resRaw);
-      if (result.name) {
-        if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) result.name = '';
-        if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
-          result.modelNumber = result.name;
-          result.name = '';
+      try {
+        const firstPhoto = sGroupPhotos.find(p => p.isGroupCover) || sGroupPhotos[0];
+        const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.categoryId);
+        const result = cleanObject(resRaw);
+        if (result.name) {
+          if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) result.name = '';
+          if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
+            result.modelNumber = result.name;
+            result.name = '';
+          }
         }
+        if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
+        const aiName = cleanAiName(result.name);
+        if (result.description) {
+          const translations = await translateDescription(result.description, effectiveKey, customModel);
+          result.description_translations = { zh: result.description, en: translations.en, ms: translations.ms };
+        }
+        const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
+        const groupIds = sGroupPhotos.map(p => p.id);
+        setPhotos(prev => {
+          const next = prev.map(p => groupIds.includes(p.id) ? {
+            ...p,
+            categoryId: result.categoryId || p.categoryId,
+            tagIds: finalTagIds.slice(0, 3),
+            name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
+            description: result.description,
+            description_translations: result.description_translations,
+            model_number: result.modelNumber || p.model_number,
+            dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : p.dimensions,
+            updatedAt: formatDate(new Date()),
+            isAnalyzing: false
+          } : p);
+          photosRef.current = next;
+          return next;
+        });
+        return result;
+      } catch (err) {
+        setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
+        photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
+        throw err;
       }
-      if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
-      const aiName = cleanAiName(result.name);
-      if (result.description) {
-        const translations = await translateDescription(result.description, effectiveKey, customModel);
-        result.description_translations = { zh: result.description, en: translations.en, ms: translations.ms };
-      }
-      const finalTagIds = await resolveTagIdsBatch([...(result.tagIds || []), ...(result.newTags || [])], tags, tagNameToIdMap, setTags);
-      const groupIds = groupPhotos.map(p => p.id);
-      setPhotos(prev => {
-        const next = prev.map(p => groupIds.includes(p.id) ? {
-          ...p,
-          categoryId: result.categoryId || p.categoryId,
-          tagIds: finalTagIds.slice(0, 3),
-          name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
-          description: result.description,
-          description_translations: result.description_translations,
-          model_number: result.modelNumber || p.model_number,
-          dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
-          updatedAt: formatDate(new Date()),
-          isAnalyzing: false
-        } : p);
-        photosRef.current = next;
-        return next;
-      });
-      return result;
     });
   };
 
