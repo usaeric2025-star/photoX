@@ -347,5 +347,5 @@ export const usePhotoAI = (
     });
   };
 
-  return { handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, aiDebugInfo, batchProgress, abortAnalysis };
+  return { handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, aiDebugInfo, setAiDebugInfo, batchProgress, abortAnalysis };
 };

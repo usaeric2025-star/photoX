@@ -124,6 +124,7 @@ export const useAdminPhotos = (
     handleBatchAiIdentify: aiHook.handleBatchAiIdentify,
     handleGroupAiIdentify: aiHook.handleGroupAiIdentify,
     aiDebugInfo: aiHook.aiDebugInfo,
+    setAiDebugInfo: aiHook.setAiDebugInfo,
     batchProgress: aiHook.batchProgress,
     abortAnalysis: aiHook.abortAnalysis,
     handleTranslate: async (zhText: string) => {

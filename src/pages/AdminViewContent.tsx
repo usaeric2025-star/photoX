@@ -193,7 +193,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
 
   const { 
     batchProgress, 
-    aiDebugInfo, abortAnalysis, 
+    aiDebugInfo, setAiDebugInfo, abortAnalysis, 
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
     handlePhotoImport, deletePhoto 
   } = useAdminPhotos(
@@ -275,11 +275,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     toast, showToast,
-    loadingState: actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis,
+    loadingState: actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
     isAnalyzing: actualLoadingState === 'analyzing'
   }), [
     activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast, actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, abortAnalysis
+    toast, showToast, actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis
   ]);
 
   const handleBatchAiIdentifyTrigger = () => {
