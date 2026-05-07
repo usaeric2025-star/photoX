@@ -84,7 +84,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
 
   useEffect(() => {
     setUser(user);
-    setIsAdminMode(isAdmin || sessionStorage.getItem('isStaffMode') === 'true');
+    setIsAdminMode(isAdmin);
   }, [user, setUser, setIsAdminMode, isAdmin]);
 
   useEffect(() => {

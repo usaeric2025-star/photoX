@@ -214,10 +214,6 @@ export default function PublicView() {
             onLoadMore={loadMore}
             hasMore={hasMore}
             totalCount={totalCloudCount}
-            onSecretTrigger={() => {
-              sessionStorage.setItem('isStaffMode', 'true');
-              navigate('/admin');
-            }}
             onTogglePinned={async (photo) => {
               const newStatus = !photo.isPinned;
               

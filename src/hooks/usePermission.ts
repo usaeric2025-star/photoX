@@ -11,7 +11,7 @@ export function usePermission() {
   const isStaff = !!user && (isAdminMode || isStaffMode);
   
   // Basic policies
-  const canEdit = isStaff;
+  const canEdit = isAdmin;
   const canDelete = isAdmin;
   const canBatchEdit = isAdmin;
   const canManageSystem = isAdmin;

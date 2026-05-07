@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { LanguageCode } from '../lib/translations';
 
 interface PublicGalleryHeaderProps {
-  onSecretTrigger?: () => void;
   settings: AppSettings;
   photos: Photo[];
   isAdminMode: boolean;
@@ -30,27 +29,9 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
   settings, photos, isAdminMode, isRefreshing, isMultiSelect, lang, t,
   onHeaderClick, onRefresh, onToggleMultiSelect, clearSelection, setIsMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings, totalCount
 }) => {
-  const navigate = useNavigate();
-  const [clickCount, setClickCount] = React.useState(0);
-  const clickTimer = React.useRef<NodeJS.Timeout | null>(null);
-
-  const handleLogoClick = () => {
-    if (clickTimer.current) clearTimeout(clickTimer.current);
-    
-    const newCount = clickCount + 1;
-    setClickCount(newCount);
-    
-    if (newCount >= 5) {
-      setClickCount(0);
-      if (onSecretTrigger) onSecretTrigger();
-    } else {
-      clickTimer.current = setTimeout(() => setClickCount(0), 1000);
-    }
-  };
-
   return (
     <header className="shrink-0 z-50 bg-[#FDFAF6] px-3 sm:px-4 py-1 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0" onClick={handleLogoClick}>
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0" onClick={onHeaderClick}>
         {settings?.logo_url ? (
           <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-12 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-[#1D3557]/10 p-1 bg-white shadow-sm" />
         ) : (
