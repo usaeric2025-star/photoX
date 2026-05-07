@@ -67,41 +67,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   };
 
   const [isFlipped, setIsFlipped] = useState(false);
+  const [rotation, setRotation] = useState(0);
 
-  const flipPhoto = async () => {
-    // 1. Flip UI
-    setIsFlipped(!isFlipped);
-    
-    // 2. Perform actual image flip. Need canvas.
-    const imgSrc = props.newPhotoData || props.editPhotoPreview;
-    if (!imgSrc) return;
-    
-    const img = new Image();
-    img.crossOrigin = "Anonymous";
-    img.src = imgSrc;
-    await img.decode();
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Flip
-    ctx.scale(-1, 1);
-    ctx.drawImage(img, -img.width, 0);
-    
-    const flippedData = canvas.toDataURL('image/jpeg');
-    
-    // Update form with flipped data
-    if (props.newPhotoData) {
-        // Need to update newPhotoData - assuming it's managed externally,
-        // this might need prop change. Updating formState for now if possible
-        // Actually this component shouldn't modify the source directly via props.
-        // Let's assume newPhotoData is passed up from parent.
-        // For now, let's just trigger an update if possible or handle it via callback
-    }
-  };
+  const flipPhoto = () => setIsFlipped(!isFlipped);
+  const rotatePhoto = () => setRotation((r) => (r + 90) % 360);
 
   return (
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
@@ -250,14 +219,22 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           {(props.newPhotoData || props.editPhotoPreview) && (
             <div className="w-1/3 shrink-0 space-y-2">
                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
-                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className={`w-full h-full object-contain transition-transform duration-300 ${isFlipped ? 'scale-x-[-1]' : ''}`} alt="Preview" />
+                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="w-full h-full object-contain transition-transform duration-300" style={{ transform: `rotate(${rotation}deg) scaleX(${isFlipped ? -1 : 1})` }} alt="Preview" />
                </div>
-               <button 
-                 onClick={flipPhoto}
-                 className="w-full text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200"
-               >
-                 {isFlipped ? 'Undo Flip' : 'Flip'}
-               </button>
+               <div className="flex gap-2">
+                 <button 
+                   onClick={flipPhoto}
+                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200"
+                 >
+                   {isFlipped ? 'Undo Flip' : 'Flip'}
+                 </button>
+                 <button 
+                   onClick={rotatePhoto}
+                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200"
+                 >
+                   Rotate 90°
+                 </button>
+               </div>
             </div>
           )}
           <div className="flex-1 space-y-3">
