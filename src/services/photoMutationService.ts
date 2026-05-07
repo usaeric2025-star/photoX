@@ -27,10 +27,13 @@ const FIELD_MAP: Record<string, string> = {
 const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
     const dbUpdates: any = {};
     
+    // Ensure exif_data is removed
+    if ('exif_data' in updates) delete updates.exif_data;
+    
     // Map fields
     for (const [key, value] of Object.entries(updates)) {
         // Exclude relational/array fields that are handled separately
-        if (['tagIds', 'dimensions'].includes(key)) continue;
+        if (['tagIds', 'dimensions', 'exif_data'].includes(key)) continue;
         
         if (FIELD_MAP[key]) {
             dbUpdates[FIELD_MAP[key]] = value;
@@ -49,6 +52,11 @@ const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false
     if ('dimensions' in updates) {
         dbUpdates.dimensions = Array.isArray(updates.dimensions) ? updates.dimensions : [];
         normalizeDimensionsBeforeSave(dbUpdates.dimensions);
+    }
+    
+    // Ensure Price unit
+    if (dbUpdates.price && typeof dbUpdates.price === 'string' && !dbUpdates.price.includes('RM')) {
+        dbUpdates.price = `RM ${dbUpdates.price.replace(/RM/gi, '').trim()}`;
     }
     
     return dbUpdates;
