@@ -79,6 +79,16 @@ const RootAdminSessionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   return <AdminSessionProvider value={value as any}>{children}</AdminSessionProvider>;
 };
 
+import { injectBadData } from './utils/debugInjector';
+
+declare global {
+  interface Window {
+    __debugInject: any;
+  }
+}
+
+window.__debugInject = injectBadData;
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorProvider>

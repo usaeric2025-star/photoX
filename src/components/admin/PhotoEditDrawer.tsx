@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { useErrorHandler } from '../../utils/errorHandler';
@@ -79,7 +79,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   };
 
   // 2. 自动触发 AI 识别逻辑
-  const hasAutoTriggered = useRef<string | null>(null);
+  const hasAutoTriggered = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     const photoData = newPhotoData || editPhotoPreview;

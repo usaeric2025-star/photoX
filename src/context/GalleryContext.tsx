@@ -91,12 +91,11 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Debug tool: Inject bad data to test UI resilience
   useEffect(() => {
-    (window as any).__debugInject = () => injectBadData(setPhotos);
-    console.log('🛠️ [DEBUG] window.__debugInject() is ready. Call it in console to test crashes.');
+    console.log('🛠️ [DEBUG] window.__debugInject() is ready.');
     return () => {
       delete (window as any).__debugInject;
     };
-  }, [setPhotos]);
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');

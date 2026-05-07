@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
@@ -26,10 +26,12 @@ import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 import { safeArray } from '../lib/utils';
+import { setDebugSetPhotosCallback } from '../utils/debugInjector';
 
 import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
 
+// ... (in AdminViewContent component)
 const errorGuard = (name: string) => () => {
   console.error(`Blocked call to ${name}`);
   throw new Error(`[Architecture Error] Illegal call to "${name}".`);
@@ -90,7 +92,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     window.__debug_photos = photos;
   }, [photos]);
   
-  const cancelBatchAiRef = useRef(false);
+  const cancelBatchAiRef = React.useRef(false);
   
   const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -230,6 +232,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     refreshCloudData(user, false, setCloudCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    setDebugSetPhotosCallback(setPhotos);
+  }, [setPhotos]);
 
   const onRefresh = useCallback(() => 
     refreshCloudData(user, true, setCloudCount), 
