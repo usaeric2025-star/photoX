@@ -211,6 +211,13 @@ export const usePhotoManagement = (
             updatedAt: formatDate(new Date())
           };
 
+          // If we have explicit new image data (e.g. from rotation), trigger re-upload
+          if (newPhotoData) {
+            updatedPhoto.uri = newPhotoData;
+            updatedPhoto.image_url = ''; // Clear URL to force savePhotoToCloud to re-upload
+            updatedPhoto.image_hash = calculateMD5(newPhotoData);
+          }
+
           const nextPhotos = photos.map(p => p.id === editPhotoId ? updatedPhoto : p);
           setPhotos(nextPhotos);
           await saveData('product_photos', nextPhotos);

@@ -126,7 +126,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     setIsSyncing
   }), [settings, setSettings, setIsSyncing]);
 
-  const { newPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
+  const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 
   const { 
     updateTag, 
@@ -384,6 +384,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                     showOtherFields={showOtherFields} 
                     setShowOtherFields={setShowOtherFields}
                     newPhotoData={newPhotoData} 
+                    setNewPhotoData={setNewPhotoData}
                     onDelete={handleDeletePhoto}
                     editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
                     abortAnalysis={abortAnalysis}

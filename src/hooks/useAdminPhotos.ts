@@ -49,6 +49,22 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
   return false; // Otherwise, preserve the existing name
 };
 
+const cleanAiName = (name: string | null | undefined): string | null => {
+  if (!name) return null;
+  const trimmed = name.trim();
+  const lower = trimmed.toLowerCase();
+
+  // Pattern detection for measurements: H, W, D, L, T, x, ", cm, inch, numbers + units
+  const measurementPattern = /([hwdlt]\d+)|(\d+["”']|cm|inch|mm)|(\d+\s*x\s*\d+)/i;
+  
+  if (measurementPattern.test(trimmed)) {
+    console.warn('[AI] Rejecting name due to measurement detected:', trimmed);
+    return null;
+  }
+  
+  return trimmed;
+};
+
 export const useAdminPhotos = (
   user: User | null, 
   geminiApiKey: string | undefined, 
@@ -206,6 +222,7 @@ export const useAdminPhotos = (
         try {
             const resultRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
             const result = cleanObject(resultRaw);
+            const aiName = cleanAiName(result.name);
             
             if (result.description) {
               try {
@@ -228,7 +245,7 @@ export const useAdminPhotos = (
                 ...photo, 
                 categoryId: photo.categoryId && photo.categoryId !== 'uncategorized' ? photo.categoryId : finalCatId, 
                 tagIds: mergedTagIds,
-                name: shouldUpdateName(photo.name) ? (result.name || photo.name) : photo.name,
+                name: shouldUpdateName(photo.name) ? (aiName || photo.name) : photo.name,
                 description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
                 description_translations: result.description_translations || photo.description_translations,
                 // manual_code is strictly manual, AI result is forced null in service
@@ -333,6 +350,7 @@ export const useAdminPhotos = (
       
       const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
       const result = cleanObject(resRaw);
+      const aiName = cleanAiName(result.name);
       
       if (signal.aborted) throw new Error('Aborted');
 
@@ -381,7 +399,7 @@ export const useAdminPhotos = (
           ...photo, 
           categoryId: finalCatId,
           tagIds: mergedTagIds,
-          name: shouldUpdateName(photo.name) ? (result.name || photo.name) : photo.name,
+          name: shouldUpdateName(photo.name) ? (aiName || photo.name) : photo.name,
           description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
           description_translations: result.description_translations || photo.description_translations,
           // manual_code is strictly manual, AI result is forced null in service
@@ -545,6 +563,7 @@ export const useAdminPhotos = (
                 const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
                 const resRaw = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, apiKey, aiProvider, customModel);
                 const result = cleanObject(resRaw);
+                const aiName = cleanAiName(result.name);
                 
                 if (result.description && apiKey) {
                   try {
@@ -570,7 +589,7 @@ export const useAdminPhotos = (
                    const updatedPhoto = {
                      ...p,
                      isAnalyzing: false,
-                     name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
+                     name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
                      categoryId: finalCatId,
                      tagIds: finalTagIds.slice(0, 3),
                      description_translations: result.description_translations || p.description_translations,
@@ -716,6 +735,7 @@ export const useAdminPhotos = (
           effectiveKey, aiProvider, customModel, 
           firstPhoto.categoryId
         );
+        const aiName = cleanAiName(result.name);
 
         // 3. Translation sub-step
         if (result.description) {
@@ -737,7 +757,7 @@ export const useAdminPhotos = (
         const updatedGroupPhotos: Photo[] = groupPhotos.map(p => {
           return {
             ...p,
-            name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
+            name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
             categoryId: result.categoryId && (p.categoryId === null || p.categoryId === 'uncategorized') ? result.categoryId : p.categoryId,
             tagIds: Array.isArray(finalTagIds) ? finalTagIds.slice(0, 3) : [],
             description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,

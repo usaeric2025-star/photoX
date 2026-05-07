@@ -117,6 +117,7 @@ export const analyzeProductPhoto = async (
 【優先級 2：名稱規則 - 強制執行】
 - "name" 字段無論任何情況必須填寫，不能為空。
 - **【嚴格限制】禁止在名稱中包含任何型號、尺寸（如 Dimension, Size, Measurement, HxWxL, 100cm 等）、測量值、編號信息。**
+- **【絕對禁令】禁止在 "name" 欄位出現尺寸字母(H/W/D/L/T)、數字+單位(如 53cm, 24")，這些信息必須填入尺寸欄位。**
 - 如果原本名稱是純數字、編號或帶有型號/尺寸信息：直接替換為專業英文名稱（例如：不准包含 "SK-2024" 或尺寸描述）。
 - 名稱格式：英文，首字母大寫，簡潔專業 (例如: "Modern Leather Sofa")。
 
@@ -147,11 +148,12 @@ export const analyzeProductPhoto = async (
 
 1. 仔細掃描圖片上的所有尺寸文字標註。
 2. 只要圖片中顯示的尺寸，都要列出。
-3. 如果有多個尺寸標註（部件或總長寬高等），不論是否完整，請儘量分別返回多個尺寸對象，嚴禁隨意合併！
-4. 如果圖片上完全沒有尺寸標註 → **留空，不返回尺寸對象**。
+3. **【合併指令】禁止回傳碎裂的尺寸！例如：禁止將長寬高拆成 "{label: '53'}"、"{label: '63'}"，必須合併為 "{label: 'H49\" × W62.5\" × D86\"'}"。**
+4. 如果有多個尺寸標註（部件或總長寬高等），不論是否完整，請儘量分別返回多個完整的尺寸對象。
+5. 如果圖片上完全沒有尺寸標註 → **留空，不返回尺寸對象**。
 6. 如果无法确定部件名称 → **part 字段留空，不要写 “overall” 或提示词**。
 7. 每个尺寸对象包含：
-   - label（必填）：尺寸字符串，如 "120cm" 或 "120x60x75"
+   - label（必填）：完整尺寸字符串，如 "120cm" 或 "120x60x75" 或 "H120 × W60 × D75"
    - unit（必填）：cm / mm / inch
    - part（可选）：只有极其确定时才填写
    - isAIEstimated（可选）：AI 估算时设为 true
@@ -170,6 +172,7 @@ export const analyzeProductPhoto = async (
   "modelNumber": "SK-2024 (或其他識別到的編號/型號)",
   "name": "Modern Leather Sofa",
   "description": "這是一款採用義大利進口大理石打造的餐桌，設計優雅且耐用。",
+  "price": "1200",
   "categoryId": "123e4567-e89b-12d3... (存在清單中的 UUID)",
   "tagIds": ["abc-123...", "def-456..."],
   "newTags": ["MINIMALIST"],
@@ -385,47 +388,71 @@ export const analyzeProductPhoto = async (
 };
 
 /**
- * AI Recognition Dimensions Automatic Cleaning Function
+ * AI Recognition Dimensions Automatic Cleaning and Merging Function
  */
 export const normalizeDimensions = (dims: any[]): any[] => {
   if (!Array.isArray(dims) || dims.length === 0) return [];
 
-  // Define regex to match only valid dimension-like strings
-  // e.g., "120", "120 cm", "120x60x75"
-  const dimensionRegex = /^\d+(\.\d+)?\s*(cm|mm|inch|in)?(\s*x\s*\d+(\.\d+)?\s*(cm|mm|inch|in)?)*$/i;
+  // Group together consecutive "fragments" (pure numbers or numbers with simple units)
+  const result: any[] = [];
+  let pendingGroup: any[] = [];
 
-  return dims
+  const isFragment = (label: string) => {
+    // Check if it's a "fragment" - mostly numeric, lacking separators or H/W/D markers
+    const clean = label.replace(/\s/g, '');
+    const hasSpecialMarkers = /[xwdtlh"“”×]/i.test(clean);
+    const hasOnlyNumbersAndUnit = /^\d+(\.\d+)?(cm|mm|inch|in)?$/i.test(clean);
+    return !hasSpecialMarkers && hasOnlyNumbersAndUnit;
+  };
+
+  const processPending = () => {
+    if (pendingGroup.length === 0) return;
+    if (pendingGroup.length === 1) {
+      result.push(pendingGroup[0]);
+    } else {
+      // Merge items
+      const mergedLabel = pendingGroup.map(item => item.label).join(' × ');
+      const firstUnit = pendingGroup[0].unit || 'cm';
+      result.push({
+        ...pendingGroup[0],
+        label: mergedLabel,
+        unit: firstUnit
+      });
+    }
+    pendingGroup = [];
+  };
+
+  for (const d of dims) {
+    if (!d) continue;
+    let label = typeof d === 'string' ? d : String(d.label || '');
+    if (!label) continue;
+
+    // Use original d structure
+    const item = { ...d, label: label.trim() };
+
+    if (isFragment(item.label)) {
+      pendingGroup.push(item);
+    } else {
+      processPending();
+      result.push(item);
+    }
+  }
+  processPending();
+
+  // Final filtering: remove entries that are obviously not dimensions (no numbers at all)
+  return result
     .map(d => {
-      if (!d) return null;
-      let label = typeof d === 'string' ? d : String(d.label || '');
-      if (!label) return null;
+      const label = d.label;
+      const hasNumber = /\d/.test(label);
+      if (!hasNumber) return null;
 
-      // 1. Clean common descriptive language that gets caught in AI label extraction
-      // Remove "H", "W", "D", "L", "Overall", "approx", "size" if they are clearly descriptive markers
-      // but keep them if they might be part of the actual data, this is tricky.
-      // Let's strip typical junk:
-      label = label.replace(/(overall|size|dimension|measurement|approx)/gi, '').trim();
-
-      // 2. If it still looks like "H49", try to strip the letter prefix if it's just a label marker
-      // This is high risk, let's just attempt to extract the first number found if the rule fits
-      const match = label.match(/(\d+(\.\d+)?)/);
-      if (!match) return null;
+      // Clean typical junk labels if they are NOT clearly part of the dimension
+      let cleanedLabel = label.replace(/(overall|size|dimension|measurement|approx)/gi, '').trim();
       
-      // If the label is just a messy descriptive string like "H49\"/9\"", 
-      // extract the core numeric part.
-      const cleanLabel = label.replace(/[^\d\.\sx\s]/gi, '').trim();
-      
-      // Re-validate against our strict regex
-      if (!dimensionRegex.test(cleanLabel)) {
-          // If it fails, only keep the numeric part if it seems plausible
-          // For now, return null to be safe rather than poisoning data
-          return null;
-      }
+      // If cleaned label becomes empty or just symbols, discard
+      if (!cleanedLabel || !/\d/.test(cleanedLabel)) return null;
 
-      return { 
-        ...d,
-        label: cleanLabel
-      };
+      return { ...d, label: cleanedLabel };
     })
     .filter(Boolean);
 };

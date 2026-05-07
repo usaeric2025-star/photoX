@@ -20,6 +20,7 @@ interface Props {
   editPhotoPreview?: string | null;
   onDelete?: (id: string) => void;
   newPhotoData?: string | null;
+  setNewPhotoData?: (data: string | null) => void;
   abortAnalysis?: () => void;
 }
 
@@ -66,11 +67,49 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     }
   };
 
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [rotation, setRotation] = useState(0);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
 
-  const flipPhoto = () => setIsFlipped(!isFlipped);
-  const rotatePhoto = () => setRotation((r) => (r + 90) % 360);
+  const transformImage = async (type: 'rotate' | 'flip') => {
+    const src = props.newPhotoData || props.editPhotoPreview;
+    if (!src) return;
+
+    setIsProcessingImage(true);
+    try {
+      const img = new Image();
+      if (src.startsWith('http')) img.crossOrigin = 'Anonymous';
+      img.src = src;
+      await img.decode();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      if (type === 'rotate') {
+        canvas.width = img.height;
+        canvas.height = img.width;
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((90 * Math.PI) / 180);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      } else {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, -img.width, 0);
+      }
+
+      const newData = canvas.toDataURL('image/jpeg', 0.95);
+      if (props.setNewPhotoData) {
+        props.setNewPhotoData(newData);
+      }
+    } catch (err) {
+      console.error('Image transform failed:', err);
+    } finally {
+      setIsProcessingImage(false);
+    }
+  };
+
+  const flipPhoto = () => transformImage('flip');
+  const rotatePhoto = () => transformImage('rotate');
 
   return (
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
@@ -219,18 +258,25 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
           {(props.newPhotoData || props.editPhotoPreview) && (
             <div className="w-1/3 shrink-0 space-y-2">
                <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
-                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="w-full h-full object-contain transition-transform duration-300" style={{ transform: `rotate(${rotation}deg) scaleX(${isFlipped ? -1 : 1})` }} alt="Preview" />
+                  {isProcessingImage && (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
+                      <RefreshCcw className="text-white animate-spin" size={24} />
+                    </div>
+                  )}
+                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="w-full h-full object-contain" alt="Preview" />
                </div>
                <div className="flex gap-2">
                  <button 
                    onClick={flipPhoto}
-                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200"
+                   disabled={isProcessingImage}
+                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200 active:bg-slate-50 disabled:opacity-50"
                  >
-                   {isFlipped ? 'Undo Flip' : 'Flip'}
+                   Flip
                  </button>
                  <button 
                    onClick={rotatePhoto}
-                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200"
+                   disabled={isProcessingImage}
+                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200 active:bg-slate-50 disabled:opacity-50"
                  >
                    Rotate 90°
                  </button>
