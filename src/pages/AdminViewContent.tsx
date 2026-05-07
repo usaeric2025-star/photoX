@@ -26,7 +26,6 @@ import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 import { safeArray } from '../lib/utils';
-import { setDebugSetPhotosCallback } from '../utils/debugInjector';
 
 import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
@@ -232,10 +231,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     refreshCloudData(user, false, setCloudCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    setDebugSetPhotosCallback(setPhotos);
-  }, [setPhotos]);
 
   const onRefresh = useCallback(() => 
     refreshCloudData(user, true, setCloudCount), 

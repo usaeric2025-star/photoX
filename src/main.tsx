@@ -9,25 +9,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { useState } from 'react';
 import './index.css';
 
-window.onerror = function(msg, src, line, col, error) {
-  // Append to local error log so it shows up in ErrorLogViewer
-  showSystemError(`[Global] ${msg} (at ${line}:${col})`);
-  
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:red;color:white;font-size:11px;padding:8px;z-index:99999;word-break:break-all;white-space:pre-wrap';
-  div.innerText = `ERR: ${msg}\nLine: ${line}\n${error?.stack?.slice(0, 400) || ''}`;
-  document.body.appendChild(div);
-};
-
-window.onunhandledrejection = function(e) {
-  const reason = String(e.reason?.message || e.reason);
-  showSystemError(`[Promise] ${reason}`);
-
-  const div = document.createElement('div');
-  div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:orange;color:white;font-size:11px;padding:8px;z-index:99999;word-break:break-all;white-space:pre-wrap';
-  div.innerText = `PROMISE ERR: ${String(e.reason?.stack || e.reason).slice(0, 400)}`;
-  document.body.appendChild(div);
-};
 
 const RootAdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [alertDialog, setAlertDialog] = useState<any>(null);
@@ -79,7 +60,6 @@ const RootAdminSessionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   return <AdminSessionProvider value={value as any}>{children}</AdminSessionProvider>;
 };
 
-import { injectBadData } from './utils/debugInjector';
 
 declare global {
   interface Window {
@@ -87,7 +67,6 @@ declare global {
   }
 }
 
-window.__debugInject = injectBadData;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useMemo, useCallback, useEf
 import { Photo, Category, Tag } from '../types';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { safeArray } from '../utils/safeAccess';
-import { injectBadData } from '../utils/debugInjector';
 
 interface GalleryContextType {
   // State
@@ -90,13 +89,6 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const photos = photosState;
 
-  // Debug tool: Inject bad data to test UI resilience
-  useEffect(() => {
-    console.log('🛠️ [DEBUG] window.__debugInject() is ready.');
-    return () => {
-      delete (window as any).__debugInject;
-    };
-  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
