@@ -45,6 +45,9 @@ const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false
     for (const [key, value] of Object.entries(filteredUpdates)) {
         // Exclude relational/array fields that are handled separately
         if (['tagIds', 'dimensions'].includes(key)) continue;
+
+        // Ensure we explicitly ignore UI-only fields if they somehow slip through
+        if (key === 'isAnalyzing') continue;
         
         if (FIELD_MAP[key]) {
             dbUpdates[FIELD_MAP[key]] = value;
