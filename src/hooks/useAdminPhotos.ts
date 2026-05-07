@@ -249,8 +249,12 @@ export const useAdminPhotos = (
                 saveData('product_photos', next);
                 return next;
             });
-    } catch (err) {
+        } catch (err: any) {
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
+            // Specifically propagate fatal errors to stop the entire batch
+            if (err.message && (err.message.includes('401') || err.message.includes('403'))) {
+                throw new Error(`FATAL_AI_ERROR: ${err.message}`);
+            }
             if (err instanceof Error && err.name !== 'AbortError') throw err;
             if (!(err instanceof Error)) throw err;
         }
