@@ -59,6 +59,7 @@ interface PublicGalleryProps {
   setAlertDialog?: (d: { title: string, message: string }) => void;
   totalCount?: number;
   onTogglePinned?: (photo: Photo) => void;
+  onSecretTrigger?: () => void;
 }
 
 const MemoizedPhotoCard = React.memo(({ 
@@ -160,7 +161,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   onSetGroupCover,
   setAlertDialog: propsSetAlertDialog,
   totalCount,
-  onTogglePinned
+  onTogglePinned,
+  onSecretTrigger
 }) => {
   const user = propsUser;
   const settings = propsSettings;
@@ -405,6 +407,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           onExit={handleLoginClick}
           onLogin={onLogin}
           onOpenSettings={onOpenSettings}
+          onSecretTrigger={onSecretTrigger}
         />
       )}
 
