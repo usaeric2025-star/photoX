@@ -233,7 +233,9 @@ export const useAdminPhotos = (
                 // manual_code is strictly manual, AI result is forced null in service
                 manual_code: photo.manual_code,
                 model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
-                dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : photo.dimensions,
+                dimensions: (result.dimensions && Array.isArray(result.dimensions) && result.dimensions.length > 0) 
+                    ? result.dimensions 
+                    : (Array.isArray(photo.dimensions) ? photo.dimensions : []),
                 updatedAt: formatDate(new Date()),
                 isAnalyzing: false 
             };
@@ -734,13 +736,15 @@ export const useAdminPhotos = (
             ...p,
             name: shouldUpdateName(p.name) ? (result.name || p.name) : p.name,
             categoryId: result.categoryId && (p.categoryId === null || p.categoryId === 'uncategorized') ? result.categoryId : p.categoryId,
-            tagIds: finalTagIds.slice(0, 3),
+            tagIds: Array.isArray(finalTagIds) ? finalTagIds.slice(0, 3) : [],
             description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
             description_translations: result.description_translations || p.description_translations,
             // manual_code is strictly manual, AI result is forced null in service
             manual_code: p.manual_code,
             model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
-            dimensions: (result.dimensions && result.dimensions.length > 0) ? result.dimensions : p.dimensions,
+            dimensions: (result.dimensions && Array.isArray(result.dimensions) && result.dimensions.length > 0) 
+                ? result.dimensions 
+                : (Array.isArray(p.dimensions) ? p.dimensions : []),
             updatedAt: new Date().toISOString(),
             isAnalyzing: false
           };

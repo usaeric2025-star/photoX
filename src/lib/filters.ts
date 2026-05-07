@@ -120,7 +120,8 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Phot
       representatives.push(p);
     } else if (!groupsSeen.has(p.groupId)) {
       groupsSeen.add(p.groupId);
-      const cover = { ...groupCovers.get(p.groupId)! };
+      const coverData = groupCovers.get(p.groupId);
+      const cover = coverData ? { ...coverData } : { ...p, groupId: p.groupId };
       cover._time = groupMaxTime.get(p.groupId)!;
       representatives.push(cover);
     }

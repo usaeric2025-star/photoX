@@ -346,7 +346,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [t.shareTitle, t.shareNotSupported]);
 
   const shareGroup = useCallback(async (photos: Photo[]) => {
-    const msg = photos.map(p => p.name || 'Furniture').join(', ');
+    const safePhotos = Array.isArray(photos) ? photos : [];
+    const msg = safePhotos.map(p => p.name || 'Furniture').join(', ');
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView more: ${window.location.origin}`;
     
     try {
@@ -450,7 +451,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             style={{ height: '100%', width: '100%' }}
             totalCount={photosToShow.length}
             endReached={handleLoadMore}
-            overscan={600}
+            overscan={200}
             listClassName={`grid gap-3 p-2 pb-40 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (
               <MemoizedPhotoCard

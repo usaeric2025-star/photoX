@@ -100,9 +100,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       />
 
       {/* Top Left Indicators (Group only) */}
-      <div className="absolute top-1 left-1 z-10 flex gap-0.5">
+        <div className="absolute top-1 left-1 z-10 flex gap-0.5">
         {photo.groupId && (
-          <div className="bg-black/50 backdrop-blur-sm px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
+          <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
             <Layers size={8} />
             {photo.groupId.slice(-4)}
           </div>
@@ -130,7 +130,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
              e.stopPropagation();
              onTogglePinned(photo);
            }}
-           className={`absolute top-1 ${isAdminMode && isMultiSelect && isSelected ? 'right-7' : 'right-2'} bg-black/50 backdrop-blur-sm p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''} z-10`}
+           className={`absolute top-1 ${isAdminMode && isMultiSelect && isSelected ? 'right-7' : 'right-2'} bg-black/50 p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''} z-10`}
          >
            <Heart size={12} className={photo.isPinned ? 'fill-current' : ''} />
          </button>
@@ -146,7 +146,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         {photoTags.length > 0 && (
           <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {photoTags.slice(0, 3).map((tagName, idx) => (
-              <span key={idx} className="bg-black/30 backdrop-blur-sm text-white text-[9px] px-1.5 rounded font-medium whitespace-nowrap">
+              <span key={idx} className="bg-black/30 text-white text-[9px] px-1.5 rounded font-medium whitespace-nowrap">
                 {tagName}
               </span>
             ))}

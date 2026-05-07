@@ -59,11 +59,9 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       name: (item.name as string) || 'Unnamed Product',
       categoryId: item.category_id ? String(item.category_id) : null,
       manufacturerId: item.manufacturer_id ? String(item.manufacturer_id) : null,
-      tagIds,
       description: item.description as string | undefined,
       image_url: item.image_url as string | undefined,
       thumb_url: (item.thumb_url as string) || (item.image_url as string),
-      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
       exif_data: (item.exif_data as Record<string, unknown>) ?? null,
       createdAt: item.created_at as string | undefined,
       groupId: item.group_id ? String(item.group_id) : undefined,
@@ -72,7 +70,10 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       userId: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
-      description_translations: item.description_translations as Photo['description_translations'] || null
+      description_translations: item.description_translations as Photo['description_translations'] || null,
+      tagIds: Array.isArray(tagIds) ? tagIds : [],
+      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
+      photo_tags: Array.isArray(item.photo_tags) ? (item.photo_tags as any[]) : []
     };
 }
 

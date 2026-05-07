@@ -27,6 +27,7 @@ import { PAGINATION } from '../constants/config';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 
 import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
+import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
 
 const errorGuard = (name: string) => () => {
   console.error(`Blocked call to ${name}`);
@@ -285,6 +286,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
             <AdminGlobalModals />
 
             {errorContent}
+            <div className="px-6 pb-6">
+               <ErrorLogViewer />
+            </div>
       
             {batchEditIds && (
               <BatchEditScreen 
