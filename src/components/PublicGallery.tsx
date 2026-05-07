@@ -550,6 +550,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             loginWithGoogle={loginWithGoogle}
             onSubmit={(e) => {
               e.preventDefault();
+              console.log('DEBUG [PublicGallery]: passInput', passInput, 'internalPassword', internalPassword);
               if (passInput === internalPassword) {
                 setIsStaffMode(true);
                 setShowPassPrompt(false);
