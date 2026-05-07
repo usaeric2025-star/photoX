@@ -10,6 +10,7 @@ import { useLoading } from '../hooks/useLoading';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryContext } from '../context/GalleryContext';
 import { translations, LanguageCode } from '../lib/translations';
+import { showSystemError } from '../context/ErrorContext';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 import { AdminViewContent } from './AdminViewContent';
 import { Photo, Category, Tag, Manufacturer } from '../types';
@@ -63,8 +64,15 @@ export default function AdminView() {
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
   useEffect(() => {
-    const handleError = (e: ErrorEvent) => setPageError(e.message);
-    const handleRejection = (e: PromiseRejectionEvent) => setPageError(String(e.reason));
+    const handleError = (e: ErrorEvent) => {
+      setPageError(e.message);
+      showSystemError(`[Runtime] ${e.message}`);
+    };
+    const handleRejection = (e: PromiseRejectionEvent) => {
+      const msg = String(e.reason?.message || e.reason);
+      setPageError(msg);
+      showSystemError(`[UncaughtRejection] ${msg}`);
+    };
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleRejection);
     return () => {

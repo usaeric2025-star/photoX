@@ -48,6 +48,7 @@ export const usePhotoAI = (
   addTask: (task: any) => string,
   updateTask: (id: string, updates: any) => void,
   runWithLoading: <T>(state: any, fn: () => Promise<T>) => Promise<T>,
+  setLoadingState: (s: any) => void,
   photosRef: React.MutableRefObject<Photo[]>
 ) => {
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);

@@ -1,9 +1,10 @@
 import React, { ErrorInfo, ReactNode } from 'react';
 import { logErrorToSupabase } from '../services/logService';
+import { showSystemError } from '../context/ErrorContext';
+import { AlertCircle, RefreshCcw } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
-  key?: string | number;
 }
 
 interface State {
@@ -29,6 +30,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ error, errorInfo });
     console.error("Uncaught error:", error, errorInfo);
+    
+    // Log to local context for the ErrorLogViewer to see
+    showSystemError(`[ErrorBoundary] ${error.message || 'Unknown error'}`);
+    
+    // Fallback to supabase log if it exists
     logErrorToSupabase(error, errorInfo);
   }
 
@@ -36,19 +42,30 @@ export class ErrorBoundary extends React.Component<Props, State> {
     const { hasError, error, errorInfo } = this.state;
     if (hasError) {
       return (
-        <div className="fixed inset-0 z-[9999] bg-red-600 text-white p-6 overflow-auto">
-          <h1 className="text-2xl font-bold mb-4 whitespace-normal">Something went wrong.</h1>
-          <div className="text-sm border p-4 bg-red-700 font-mono break-all whitespace-pre-wrap">
-            {error?.toString()}
-            <br />
-            {errorInfo?.componentStack}
+        <div className="fixed inset-0 z-[9999] bg-white flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-red-50 border border-red-100 rounded-3xl p-8 text-center shadow-2xl">
+            <div className="w-16 h-16 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <AlertCircle size={32} />
+            </div>
+            
+            <h1 className="text-xl font-bold text-slate-900 mb-2">系统遇到一个意外错误</h1>
+            <p className="text-sm text-slate-500 mb-6">程序运行出错了，给您带来不便我们深表歉意。</p>
+            
+            <div className="text-[10px] text-left bg-slate-900 text-slate-300 p-4 rounded-xl font-mono overflow-auto max-h-48 mb-8 break-all">
+              <div className="text-red-400 font-bold mb-1">Error: {error?.toString()}</div>
+              {errorInfo?.componentStack}
+            </div>
+
+            <button 
+              className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-slate-800 active:scale-95 transition-all shadow-lg"
+              onClick={() => window.location.reload()}
+            >
+              <RefreshCcw size={18} />
+              重新呼叫系统
+            </button>
+            
+            <p className="mt-6 text-[10px] text-slate-400">错误已自动记录，我们的工程师会尽快处理</p>
           </div>
-          <button 
-            className="mt-4 px-6 py-3 bg-white text-red-600 font-bold rounded-xl shadow-lg active:scale-95 transition-all cursor-pointer"
-            onClick={() => window.location.reload()}
-          >
-            Reload Page
-          </button>
         </div>
       );
     }

@@ -21,7 +21,8 @@ export const useAdminPhotos = (
   adminUI?: {
     cloudCount: number | null;
     setCloudCount: (c: number | null) => void;
-    loadingState?: string;
+    loadingState?: any;
+    setLoadingState?: (s: any) => void;
     setAlertDialog: (d: any | null) => void;
     showToast: (msg: string, type?: 'success' | 'error' | 'loading' | 'info') => void;
     setActiveScreen: (s: 'home' | 'manage' | 'login') => void;
@@ -43,7 +44,7 @@ export const useAdminPhotos = (
   const { handleError } = useErrorHandler();
   const { deletePhotos } = useDelete();
   const { tasks, addTask, updateTask } = useTasks();
-  const { showToast = () => {} } = adminUI || {};
+  const { showToast = () => {}, setLoadingState: uiSetLoadingState } = adminUI || {};
   
   const [internalCloudCount, setInternalCloudCount] = useState<number | null>(null);
   const cloudCount = adminUI?.cloudCount ?? internalCloudCount;
@@ -51,16 +52,17 @@ export const useAdminPhotos = (
 
   const [internalLoadingState, setInternalLoadingState] = useState<string>('idle');
   const currentLoadingState = adminUI?.loadingState !== undefined ? adminUI.loadingState : internalLoadingState;
+  const setLoadingState = uiSetLoadingState || setInternalLoadingState;
 
   const runWithLoading = async <T,>(state: any, fn: () => Promise<T>): Promise<T> => {
       if (adminUI?.withLoading) {
           return adminUI.withLoading(state, fn);
       }
-      setInternalLoadingState(state);
+      setLoadingState(state);
       try {
           return await fn();
       } finally {
-          setInternalLoadingState('idle');
+          setLoadingState('idle');
       }
   };
 
@@ -88,6 +90,7 @@ export const useAdminPhotos = (
     categories, tags, manufacturers, 
     setPhotos, setTags, tagNameToIdMap, 
     showToast, addTask, updateTask, runWithLoading, 
+    setLoadingState,
     photosRef
   );
 
