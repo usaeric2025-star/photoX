@@ -60,6 +60,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       .map(toTitleCase);
   }, [photo.tagIds, tagMap]);
 
+  const thumbSrc = useMemo(() => {
+    const url = photo.thumb_url || photo.image_url || photo.uri;
+    if (!url) return undefined;
+    
+    // Add cache busting based on updatedAt
+    const timestamp = photo.updatedAt ? new Date(photo.updatedAt).getTime() : 
+                      (photo.createdAt ? new Date(photo.createdAt).getTime() : Date.now());
+                      
+    return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+  }, [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]);
+
   return (
     <div 
       onContextMenu={(e) => {
@@ -92,7 +103,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         draggable={false}
         loading="lazy"
         referrerPolicy="no-referrer"
-        src={photo.thumb_url || photo.image_url || photo.uri || undefined} 
+        src={thumbSrc} 
         alt={photo.name}
         className={`w-full h-full object-cover transition-opacity duration-500 ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : 'opacity-100'} ${photo.isHidden ? 'opacity-70' : ''}`}
         onLoad={(e) => {

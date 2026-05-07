@@ -197,6 +197,15 @@ export default function PublicView() {
         </div>
       ) : (
         <ErrorBoundary key="publicGallery">
+          <button
+            className="fixed bottom-4 left-4 z-[9999] opacity-10 hover:opacity-100 text-xs bg-slate-800 text-white px-2 py-1 rounded"
+            onClick={() => {
+              sessionStorage.setItem('isStaffMode', 'true');
+              navigate('/admin');
+            }}
+          >
+            Staff Admin
+          </button>
           <PublicGallery 
             photos={photos}
             categories={categories}
