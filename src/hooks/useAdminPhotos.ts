@@ -17,7 +17,7 @@ import {
 } from '../services/photoService';
 import { syncPhotosToCloud } from '../services/photoSyncService';
 import { compressImage } from '../services/storageService';
-import { calculateMD5, calculateMD5FromFile, calculateMD5FromArrayBuffer, generateItemCode } from '../services/utils';
+import { calculateMD5, calculateMD5FromFile, calculateMD5FromArrayBuffer, generateItemCode, cleanObject } from '../services/utils';
 import { batchCreateTags } from '../services/tagService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
@@ -204,7 +204,8 @@ export const useAdminPhotos = (
         setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
         
         try {
-            const result = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
+            const resultRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
+            const result = cleanObject(resultRaw);
             
             if (result.description) {
               try {
@@ -330,7 +331,8 @@ export const useAdminPhotos = (
 
       setAiDebugInfo({ step: '內容分析', message: `圖片大小: ${imageData.length} bytes, Provider: ${aiProvider}` });
       
-      const result = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
+      const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
+      const result = cleanObject(resRaw);
       
       if (signal.aborted) throw new Error('Aborted');
 
@@ -541,7 +543,8 @@ export const useAdminPhotos = (
             (async (targetPhoto: Photo) => {
               try {
                 const apiKey = geminiApiKey || process.env.GEMINI_API_KEY;
-                const result = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, apiKey, aiProvider, customModel);
+                const resRaw = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, apiKey, aiProvider, customModel);
+                const result = cleanObject(resRaw);
                 
                 if (result.description && apiKey) {
                   try {

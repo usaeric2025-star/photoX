@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { SubCategory as Manufacturer } from '../types';
 import { createCache } from './cacheUtils';
+import { updateManufacturer, createManufacturer, deleteManufacturer } from './manufacturersMutationService';
 
 const manufacturerCache = createCache<Manufacturer[]>();
 
@@ -26,38 +27,21 @@ export const loadManufacturersFromCloud = async (): Promise<Manufacturer[]> => {
 
 // 新增厂商
 export const addManufacturerToDB = async (name: string): Promise<Manufacturer> => {
-  const { data, error } = await supabase
-    .from('manufacturers')
-    .insert({ name, aliases: [] })
-    .select()
-    .single();
-  if (error) throw error;
+  const data = await createManufacturer({ name, aliases: [] } as Manufacturer);
   manufacturerCache.clear();
-  return { ...data, id: String(data.id) };
+  return { ...data, id: String(data.id) } as Manufacturer;
 };
 
 // 更新厂商
 export const updateManufacturerInDB = async (id: string, name: string) => {
-  const { error } = await supabase
-    .from('manufacturers')
-    .update({ name })
-    .eq('id', id);
-  if (error) throw error;
+  await updateManufacturer(id, { name });
   manufacturerCache.clear();
   return true;
 };
 
 // 删除厂商
 export const deleteManufacturerFromDB = async (id: string) => {
-  const { error } = await supabase
-    .from('manufacturers')
-    .delete()
-    .eq('id', id);
-  
-  if (error) {
-    console.error(`[manufacturerService] Error deleting manufacturer: ${id}`, error);
-    throw error;
-  }
+  await deleteManufacturer(id);
   manufacturerCache.clear();
   return true;
 };

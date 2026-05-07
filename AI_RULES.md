@@ -164,3 +164,14 @@ const uiValueForLogin = React.useMemo(() => ({
 5.  任何组件、Hook、页面不得直接调用 `supabase.from('groups').update` 或 `insert`。
 6.  所有对 `groups` 表的写操作必须通过 `src/services/groupMutationService.ts` 中的统一函数进行。
 
+## XV. 数据写入总规则（不可违反）
+
+本项目所有对数据库的写入操作（INSERT、UPDATE、DELETE、UPSERT），必须通过对应的 `MutationService` 进行。
+
+禁止在组件、Hook、Utils 或其他任何非 Service 文件中直接调用 `supabase.from(...).update/insert/delete`。
+
+所有数据库字段映射（驼峰 ↔ 蛇形）和白名单过滤，必须在 `MutationService` 中完成。
+
+违反此规则的代码将被拒绝合并。
+
+

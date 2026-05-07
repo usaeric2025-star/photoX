@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { Category } from '../types';
 import { createCache } from './cacheUtils';
+import { updateCategory, createCategory, deleteCategory } from './categoriesMutationService';
 
 const categoryCache = createCache<Category[]>();
 
@@ -24,44 +25,19 @@ export const loadCategoriesFromCloud = async (): Promise<Category[]> => {
 };
 
 export const updateCategoryInDB = async (categoryId: string, updates: Partial<Category>): Promise<boolean> => {
-  const { error } = await supabase
-    .from('categories')
-    .update(updates)
-    .eq('id', categoryId);
-  
-  if (error) {
-    console.error("Failed to update category:", error);
-    return false;
-  }
+  await updateCategory(categoryId, updates);
   categoryCache.clear();
   return true;
 };
 
 export const deleteCategoryFromDB = async (categoryId: string): Promise<boolean> => {
-  const { error } = await supabase
-    .from('categories')
-    .delete()
-    .eq('id', categoryId);
-  
-  if (error) {
-    console.error("Failed to delete category:", error);
-    return false;
-  }
+  await deleteCategory(categoryId);
   categoryCache.clear();
   return true;
 };
 
 export const addCategoryToDB = async (name: string): Promise<Category | null> => {
-  const { data, error } = await supabase
-    .from('categories')
-    .insert([{ name, sort_order: 0 }])
-    .select()
-    .single();
-  
-  if (error) {
-    console.error("Failed to add category:", error);
-    return null;
-  }
+  const data = await createCategory({ name, sortOrder: 0 } as Category);
   categoryCache.clear();
   return data;
 };

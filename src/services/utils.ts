@@ -1,6 +1,16 @@
 import SparkMD5 from 'spark-md5';
 import { supabase } from '../lib/supabase';
 
+const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
+
+export const cleanObject = <T extends Record<string, any>>(obj: T): T => {
+    const cleaned = { ...obj };
+    for (const key of NEVER_ALLOWED) {
+        delete cleaned[key];
+    }
+    return cleaned;
+};
+
 export const calculateMD5 = (base64Data: string): string => {
   try {
     const base64Content = base64Data.split(',')[1];
