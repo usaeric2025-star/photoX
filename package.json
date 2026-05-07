@@ -8,7 +8,8 @@
     "build": "NODE_ENV=production vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "check-tags": "grep -rI 'from(DB_CONFIG.TABLE_NAME)' src | grep -E 'tag_ids|tagIds' && echo 'Schema Conflict Found' || echo 'No Schema Conflict Found'"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

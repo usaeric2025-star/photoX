@@ -251,7 +251,7 @@ export const updatePhoto = async (
   const dbUpdates: any = {};
   if ('categoryId' in updates) dbUpdates.category_id = updates.categoryId;
   if ('manufacturerId' in updates) dbUpdates.manufacturer_id = updates.manufacturerId;
-  if ('tagIds' in updates) dbUpdates.tags = updates.tagIds;
+  // REMOVED: if ('tagIds' in updates) dbUpdates.tags = updates.tagIds;
   if ('isGroupCover' in updates) dbUpdates.is_group_cover = updates.isGroupCover;
   if ('groupOrder' in updates) dbUpdates.group_order = updates.groupOrder;
   if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
@@ -271,6 +271,18 @@ export const updatePhoto = async (
 
   try {
     await updatePhotoInCloud(photoId, dbUpdates);
+    
+    // FIX: Perform relational tag sync if tagIds changed
+    if ('tagIds' in updates) {
+        await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+        if (Array.isArray(updates.tagIds) && updates.tagIds.length > 0) {
+            const tagAssociations = updates.tagIds.map(tagId => ({
+                photo_id: photoId,
+                tag_id: tagId
+            }));
+            await supabase.from('photo_tags').insert(tagAssociations);
+        }
+    }
   } catch (err) {
     throw err;
   }

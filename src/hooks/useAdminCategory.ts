@@ -106,10 +106,13 @@ export const useAdminCategory = (adminUI: {
       if (!photo) return;
       const newTagIds = (photo.tagIds || []).filter(tid => String(tid) !== String(tagId));
       
-      await supabase
-          .from('furniture_items')
-          .update({ tagIds: newTagIds })
-          .eq('id', photoId);
+      // FIX: Operate on 'photo_tags' relational table, not 'furniture_items'
+      const { error } = await supabase
+          .from('photo_tags')
+          .delete()
+          .eq('photo_id', photoId)
+          .eq('tag_id', tagId);
+      if (error) throw error;
 
       setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
       await saveData('product_photos', photos.map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
@@ -142,29 +145,20 @@ export const useAdminCategory = (adminUI: {
         try {
           const strId = String(tagId);
           
-          // 1. Remove from all photos
-          const { data: photosWithTag } = await supabase
-              .from('furniture_items')
-              .select('id, tag_ids')
-              .contains('tag_ids', [strId]);
-  
-          if (photosWithTag && photosWithTag.length > 0) {
-              for (const photo of photosWithTag) {
-                  const newTagIds = (photo.tag_ids || []).filter(tid => String(tid) !== strId);
-                  const { error } = await supabase
-                      .from('furniture_items')
-                      .update({ tag_ids: newTagIds })
-                      .eq('id', photo.id);
-                  if (error) throw error;
-              }
-              
-              const refreshedPhotos = photos.map(p => ({
-                  ...p,
-                  tagIds: (p.tagIds || []).filter(tid => String(tid) !== strId)
-              }));
-              setPhotos(refreshedPhotos);
-              await saveData('product_photos', refreshedPhotos);
-          }
+          // 1. Remove all associations from 'photo_tags'
+          const { error: deleteError } = await supabase
+              .from('photo_tags')
+              .delete()
+              .eq('tag_id', strId);
+          if (deleteError) throw deleteError;
+          
+          // Update local state
+          const refreshedPhotos = photos.map(p => ({
+              ...p,
+              tagIds: (p.tagIds || []).filter(tid => String(tid) !== strId)
+          }));
+          setPhotos(refreshedPhotos);
+          await saveData('product_photos', refreshedPhotos);
   
           // 2. Delete tag
           const success = await deleteTagFromDB(tagId);

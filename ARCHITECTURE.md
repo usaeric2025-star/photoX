@@ -4,6 +4,10 @@
 
 ## 第一部分：資料庫結構
 
+*   **重要事实 (READ BEFORE MODIFYING)**:
+    *   `furniture_items` 資料表完全不存在 `tagIds` 或 `tag_ids` 欄位。
+    *   任何標籤關係查詢、更新、新增、刪除操作，**嚴禁**對 `furniture_items` 表進行標籤相關欄位操作。
+    *   所有標籤邏輯必須透過 `photo_tags` 關聯表維護。
 *   **主要資料表**：`furniture_items` (參見 `constants/config.ts`)
 *   **關鍵欄位**：
     *   `id` (uuid)
