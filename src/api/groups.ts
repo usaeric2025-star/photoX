@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
 import { ProductGroup } from '../types';
+import { upsertGroup, deleteGroup } from '../services/groupMutationService';
 
 const TABLE_NAME = 'groups';
 
@@ -39,20 +40,10 @@ export const groupApi = {
   },
 
   async upsert(group: any) {
-    const { error } = await supabase
-      .from(TABLE_NAME)
-      .upsert(group, { onConflict: 'id' });
-
-    if (error) throw error;
+    await upsertGroup(group);
   },
 
   async deleteOne(id: string, userId: string) {
-    const { error } = await supabase
-      .from(TABLE_NAME)
-      .delete()
-      .eq('id', id)
-      .eq('user_id', userId);
-
-    if (error) throw error;
+    await deleteGroup(id, userId);
   }
 };

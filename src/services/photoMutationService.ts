@@ -7,7 +7,6 @@ import { mapSupabasePhoto, photoCache } from './photoService';
 
 const FIELD_MAP: Record<string, string> = {
   groupId: 'group_id',
-  isHidden: 'is_hidden',
   isGroupCover: 'is_group_cover',
   categoryId: 'category_id',
   manufacturerId: 'manufacturer_id',
@@ -27,7 +26,7 @@ const FIELD_MAP: Record<string, string> = {
 const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'categoryId',
   'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId',
-  'isHidden', 'image_url', 'thumb_url', 'price', 'updated_at', 'created_at'
+  'image_url', 'thumb_url', 'price', 'updated_at', 'created_at'
 ];
 
 const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
@@ -47,7 +46,7 @@ const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false
         if (['tagIds', 'dimensions'].includes(key)) continue;
 
         // Ensure we explicitly ignore UI-only fields if they somehow slip through
-        if (key === 'isAnalyzing') continue;
+        if (['isAnalyzing', 'isHidden'].includes(key)) continue;
         
         if (FIELD_MAP[key]) {
             dbUpdates[FIELD_MAP[key]] = value;

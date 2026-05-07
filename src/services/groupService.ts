@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { supabasePublic } from '../lib/supabase-public';
 import { ProductGroup } from '../types';
+import { upsertGroup, deleteGroup } from './groupMutationService';
 
 export const TABLE_NAME = 'groups';
 
@@ -34,26 +35,7 @@ export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[
 };
 
 export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: string, user_id: string }) => {
-  const payload: any = {
-    id: group.id,
-    name: group.name,
-    description: group.description,
-    colors: group.colors,
-    materials: group.materials,
-    cover_photo_id: group.cover_photo_id,
-    isHidden: group.isHidden,
-    user_id: group.user_id,
-    updated_at: new Date().toISOString()
-  };
-
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .upsert(payload, { onConflict: 'id' });
-
-  if (error) {
-    console.error("Failed to save group:", error);
-    throw new Error(error.message);
-  }
+  await upsertGroup(group);
 };
 
 export const getGroupById = async (id: string): Promise<ProductGroup | null> => {
@@ -82,17 +64,5 @@ export const getGroupById = async (id: string): Promise<ProductGroup | null> => 
 export const deleteGroupFromCloud = async (id: string) => {
   const { data: { session } } = await supabase.auth.getSession();
   const userId = session?.user?.id;
-
-  const query = supabase.from(TABLE_NAME).delete().eq('id', id);
-  
-  if (userId) {
-    query.eq('user_id', userId);
-  }
-
-  const { error } = await query;
-
-  if (error) {
-    console.error(`[DB Error] Failed to delete group ${id}:`, error);
-    throw new Error(`刪除群組中繼資料失敗: ${error.message} (Code: ${error.code})`);
-  }
+  await deleteGroup(id, userId);
 };
