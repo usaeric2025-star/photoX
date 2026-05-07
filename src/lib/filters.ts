@@ -1,5 +1,16 @@
 import { Photo, Category, Tag } from '../types';
 
+const cleanPhotos = (photos: any[]): Photo[] => {
+  if (!Array.isArray(photos)) return [];
+  return photos
+    .filter(p => p != null && typeof p === 'object')
+    .map(p => ({
+      ...p,
+      tagIds: Array.isArray(p.tagIds) ? p.tagIds : [],
+      dimensions: Array.isArray(p.dimensions) ? p.dimensions : [],
+    }));
+};
+
 export interface FilterOptions {
   searchQuery?: string;
   filterCatId?: string | null;
@@ -92,13 +103,14 @@ export function filterPhotos(
 }
 
 export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Photo[] {
-  if (!Array.isArray(photos)) return [];
-  if (!showGroupsCollapsed) return photos;
+  const cleanedPhotos = cleanPhotos(photos);
+  if (cleanedPhotos.length === 0 && Array.isArray(photos) && photos.length > 0) return [];
+  if (!showGroupsCollapsed) return cleanedPhotos;
 
   const groupCovers = new Map<string, Photo>();
   const groupMaxTime = new Map<string, number>();
 
-  photos.forEach(p => {
+  cleanedPhotos.forEach(p => {
     if (p.groupId) {
       const time = new Date(p.createdAt || (p as any).created_at || 0).getTime();
       
@@ -115,7 +127,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Phot
   const representatives: Photo[] = [];
   const groupsSeen = new Set<string>();
 
-  photos.forEach(p => {
+  cleanedPhotos.forEach(p => {
     if (!p.groupId) {
       representatives.push(p);
     } else if (!groupsSeen.has(p.groupId)) {

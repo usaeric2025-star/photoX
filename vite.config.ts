@@ -13,6 +13,7 @@ export default defineConfig(({mode}) => {
       tailwindcss(),
     ],
     build: {
+      outDir: 'dist',
       emptyOutDir: true,
     },
     define: {
