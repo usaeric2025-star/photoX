@@ -123,8 +123,9 @@ export const analyzeProductPhoto = async (
 
 【DIMENSIONS RULES】
 - Each dimension object MUST include label, length, width, height, unit.
-- If label shows H/W/D: length = H, width = W, height = D.
-- If label only has numbers without H/W/D: use order length → width → height.
+- If label shows H/W/D/L: height = H, width = W, length = L, depth = D. Assign strictly by labels, ignore item name or number order.
+- If label format is "PART: Dimensions" (e.g., "WD: H94 x W96 x D23"): maintain the "PART:" prefix but parse only the dimensions.
+- If NO H/W/D/L labels: use order height → length → width.
 - Default unit = "cm" if missing.
 
 【CATEGORY & TAGS】
@@ -143,7 +144,7 @@ OUTPUT JSON example:
   "modelNumber": "B728",
   "price": "1200",
   "dimensions": [
-    { "label": "H94\" x W96\" x D23\"", "length": 94, "width": 96, "height": 23, "unit": "inch" }
+    { "label": "H94\" x W96\" x D23\"", "length": 23, "width": 96, "height": 94, "unit": "inch" }
   ],
   "description": "這是一款現代風格的梳化床...",
   "categoryId": "UUID-FROM-LIST or null",
@@ -363,44 +364,56 @@ export const normalizeDimensions = (dims: any[]): any[] => {
   return dims
     .map(d => {
       if (!d) return null;
-      let label = typeof d === 'string' ? d : String(d.label || '');
-      if (!label) return null;
-
-      // Clean typical junk labels if they are NOT clearly part of the dimension
-      let cleanedLabel = label.replace(/(overall|size|dimension|measurement|approx)/gi, '').trim();
+      const originalLabel = typeof d === 'string' ? d : String(d.label || '');
       
-      // Basic number check
-      const hasNumber = /\d/.test(cleanedLabel);
-      if (!hasNumber) return null;
+      let length = 0;
+      let width = 0;
+      let height = 0;
 
-      let length = Number(d.length) || 0;
-      let width = Number(d.width) || 0;
-      let height = Number(d.height) || 0;
+      // Handle part name separation (e.g. "WD: H..." -> parse dimensions from "H...")
+      let parsingPart = originalLabel;
+      const partPrefixMatch = originalLabel.match(/^([A-Z]+):\s*(.*)/);
+      if (partPrefixMatch) {
+        parsingPart = partPrefixMatch[2];
+      }
 
-      // Fallback: If L/W/H are missing but label has numbers, try to extract them
-      if (length === 0 && width === 0 && height === 0) {
-        const hMatch = cleanedLabel.match(/H\s*(\d+(\.\d+)?)/i);
-        const wMatch = cleanedLabel.match(/W\s*(\d+(\.\d+)?)/i);
-        const dMatch = cleanedLabel.match(/[DL]\s*(\d+(\.\d+)?)/i);
-        
+      const nums = parsingPart.match(/(\d+(\.\d+)?)/g) || [];
+      const hasH = /H/i.test(parsingPart);
+      const hasW = /W/i.test(parsingPart);
+      const hasD = /D/i.test(parsingPart);
+      const hasL = /L/i.test(parsingPart);
+
+      if (hasH || hasW || hasD || hasL) {
+        // 1️⃣ Strict identification by labels (H/W/D/L)
+        // H → height
+        // W → width
+        // L → length
+        // D → depth (mapping to length if length is 0, else width)
+        const hMatch = parsingPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+        const wMatch = parsingPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+        const lMatch = parsingPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+        const dMatch = parsingPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+
         if (hMatch) height = parseFloat(hMatch[1]);
         if (wMatch) width = parseFloat(wMatch[1]);
-        if (dMatch) length = parseFloat(dMatch[1]);
-
-        // If still all 0, try sequential extraction (L -> W -> H)
-        if (length === 0 && width === 0 && height === 0) {
-          const nums = cleanedLabel.match(/(\d+(\.\d+)?)/g);
-          if (nums) {
-            if (nums.length >= 1) length = parseFloat(nums[0]);
-            if (nums.length >= 2) width = parseFloat(nums[1]);
-            if (nums.length >= 3) height = parseFloat(nums[2]);
-          }
+        if (lMatch) length = parseFloat(lMatch[1]);
+        if (dMatch) {
+          const depthVal = parseFloat(dMatch[1]);
+          if (length === 0) length = depthVal;
+          else if (width === 0) width = depthVal;
         }
+      } else if (nums.length > 0) {
+        // 2️⃣ Pattern fallback: height -> length -> width
+        height = parseFloat(nums[0]);
+        if (nums.length >= 2) length = parseFloat(nums[1]);
+        if (nums.length >= 3) width = parseFloat(nums[2]);
       }
+      
+      // 3️⃣ If no numbers or fail, length/width/height remain 0.
 
       return { 
         ...d, 
-        label: cleanedLabel,
+        label: originalLabel.trim(),
         unit: d.unit === 'inch' ? 'inch' : 'cm',
         length,
         width,

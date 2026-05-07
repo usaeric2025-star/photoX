@@ -71,7 +71,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
-  const transformImage = async (type: 'rotate' | 'flip') => {
+  const transformImage = async () => {
     const src = props.newPhotoData || props.editPhotoPreview;
     if (!src) return;
 
@@ -86,18 +86,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      if (type === 'rotate') {
-        canvas.width = img.height;
-        canvas.height = img.width;
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate((90 * Math.PI) / 180);
-        ctx.drawImage(img, -img.width / 2, -img.height / 2);
-      } else {
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.scale(-1, 1);
-        ctx.drawImage(img, -img.width, 0);
-      }
+      canvas.width = img.height;
+      canvas.height = img.width;
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((90 * Math.PI) / 180);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
 
       const newData = canvas.toDataURL('image/jpeg', 0.95);
       if (props.setNewPhotoData) {
@@ -110,8 +103,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     }
   };
 
-  const flipPhoto = () => transformImage('flip');
-  const rotatePhoto = () => transformImage('rotate');
+  const rotatePhoto = () => transformImage();
 
   return (
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
@@ -269,18 +261,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                </div>
                <div className="flex gap-2">
                  <button 
-                   onClick={flipPhoto}
-                   disabled={isProcessingImage}
-                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200 active:bg-slate-50 disabled:opacity-50"
-                 >
-                   Flip
-                 </button>
-                 <button 
                    onClick={rotatePhoto}
                    disabled={isProcessingImage}
                    className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200 active:bg-slate-50 disabled:opacity-50"
                  >
-                   Rotate 90°
+                   旋转 90°
                  </button>
                </div>
             </div>

@@ -225,6 +225,8 @@ export const usePhotoManagement = (
           
           if (user) {
              await savePhotoToCloud(user.id, updatedPhoto);
+             // Final sync after cloud upload finishes (to get the real URLs)
+             setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, image_url: updatedPhoto.image_url, thumb_url: updatedPhoto.thumb_url, uri: undefined } : p));
           }
        } else if (newPhotoData) {
           const finalId = crypto.randomUUID();
@@ -264,6 +266,8 @@ export const usePhotoManagement = (
           
           if (user) {
             await savePhotoToCloud(user.id, newPhoto);
+            // Final sync to get real URLs
+            setPhotos(prev => prev.map(p => p.id === finalId ? { ...p, image_url: newPhoto.image_url, thumb_url: newPhoto.thumb_url, uri: undefined } : p));
           }
        }
        
