@@ -128,8 +128,7 @@ export const clearGroupIdInCloud = async (groupId: string) => {
     .update({ 
       group_id: null, 
       is_pinned: false,
-      is_group_cover: false,
-      group_order: 0
+      is_group_cover: false
     })
     .eq('group_id', groupId)
     .select('id');

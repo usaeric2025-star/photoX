@@ -152,7 +152,6 @@ export const savePhotosToCloudBatch = async (
       created_at: photo.createdAt,
       group_id: photo.groupId || null,
       is_group_cover: photo.isGroupCover || false,
-      group_order: photo.groupOrder || Number(photo.createdAt) || 0,
       isHidden: photo.isHidden || false,
       updated_at: photo.updatedAt || new Date().toISOString()
     };
@@ -253,7 +252,6 @@ export const updatePhoto = async (
   if ('manufacturerId' in updates) dbUpdates.manufacturer_id = updates.manufacturerId;
   // REMOVED: if ('tagIds' in updates) dbUpdates.tags = updates.tagIds;
   if ('isGroupCover' in updates) dbUpdates.is_group_cover = updates.isGroupCover;
-  if ('groupOrder' in updates) dbUpdates.group_order = updates.groupOrder;
   if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
   if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
   if ('isHidden' in updates) {
