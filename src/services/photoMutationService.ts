@@ -73,31 +73,14 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     }
   }
 
-  // Ensure ID is UUID format
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
   
   normalizeDimensionsBeforeSave(photo.dimensions);
 
-  const payload: any = {
-    user_id: session.user.id,
-    item_code: photo.item_code,
-    manual_code: photo.manual_code || '',
-    image_hash: photo.image_hash,
-    name: photo.name,
-    category_id: photo.categoryId || null,
-    manufacturer_id: photo.manufacturerId || null,
-    description: photo.description || '',
-    image_url: photo.image_url,
-    thumb_url: photo.thumb_url || null,
-    dimensions: photo.dimensions || null,
-    model_number: photo.model_number || '',
-    description_translations: photo.description_translations || null,
-    created_at: photo.createdAt,
-    group_id: photo.groupId || null,
-    is_group_cover: photo.isGroupCover || false,
-    isHidden: photo.isHidden || false,
-    updated_at: photo.updatedAt || new Date().toISOString()
-  };
+  const payload: any = mapToDb({
+    ...photo,
+    userId: session.user.id,
+  }, !isUUID);
 
   if (isUUID) {
     payload.id = photo.id;
