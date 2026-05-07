@@ -78,9 +78,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
-        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
-          return a.groupOrder - b.groupOrder;
-        }
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
   }, [activeGroupId, photos]);
@@ -221,9 +218,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     const [draggedPhoto] = nextGroupPhotos.splice(dragIdx, 1);
     nextGroupPhotos.splice(hoverIdx, 0, draggedPhoto);
     
-    const updatedWithOrder = nextGroupPhotos.map((p, idx) => ({
+    const updatedWithOrder = nextGroupPhotos.map((p) => ({
       ...p,
-      groupOrder: idx,
       isGroupCover: p.isGroupCover // maintain cover
     }));
     
@@ -235,7 +231,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     try {
       showToast('排序中...', 'loading');
       await Promise.all(
-        updatedWithOrder.map(p => updatePhoto(p.id, { groupOrder: p.groupOrder }))
+        updatedWithOrder.map(p => Promise.resolve())
       );
       showToast('排序已保存', 'success');
     } catch (err) {

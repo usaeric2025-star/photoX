@@ -7,7 +7,8 @@ export function usePhotoUpdate() {
   const { setPhotos } = useAdminPhoto();
 
   const updatePhotoHook = useCallback(async (photoId: string, updates: Partial<Photo>) => {
-    return updatePhoto(photoId, updates, setPhotos);
+    setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
+    return updatePhoto(photoId, updates);
   }, [setPhotos]);
 
   return { updatePhoto: updatePhotoHook };

@@ -95,7 +95,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
               if (remainingPhotos.length <= 1) {
                   // Dissolve group: clear group_id for remaining photo if any, and delete group metadata
                   if (remainingPhotos.length === 1) {
-                      await updatePhoto(remainingPhotos[0].id, { groupId: null, isGroupCover: false, groupOrder: 0 });
+                      await updatePhoto(remainingPhotos[0].id, { groupId: null, isGroupCover: false });
                   }
                   // Delete group metadata
                   await adminPhoto?.deleteGroup(groupId as string);

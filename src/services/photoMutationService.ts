@@ -5,6 +5,55 @@ import { uploadImages } from './storageService';
 import { validateDimension } from '../utils/dimensionValidator';
 import { mapSupabasePhoto, photoCache } from './photoService';
 
+const FIELD_MAP: Record<string, string> = {
+  groupId: 'group_id',
+  isHidden: 'is_hidden',
+  isGroupCover: 'is_group_cover',
+  categoryId: 'category_id',
+  manufacturerId: 'manufacturer_id',
+  isPinned: 'is_pinned',
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+  itemCode: 'item_code',
+  manualCode: 'manual_code',
+  imageHash: 'image_hash',
+  imageUrl: 'image_url',
+  thumbUrl: 'thumb_url',
+  modelNumber: 'model_number',
+  userId: 'user_id',
+  descriptionTranslations: 'description_translations',
+};
+
+const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
+    const dbUpdates: any = {};
+    
+    // Map fields
+    for (const [key, value] of Object.entries(updates)) {
+        // Exclude relational/array fields that are handled separately
+        if (['tagIds', 'dimensions'].includes(key)) continue;
+        
+        if (FIELD_MAP[key]) {
+            dbUpdates[FIELD_MAP[key]] = value;
+        } else {
+            dbUpdates[key] = value;
+        }
+    }
+    
+    // Auto-timestamps
+    dbUpdates.updated_at = new Date().toISOString();
+    if (isCreate && !dbUpdates.created_at) {
+        dbUpdates.created_at = new Date().toISOString();
+    }
+    
+    // Array safety
+    if ('dimensions' in updates) {
+        dbUpdates.dimensions = Array.isArray(updates.dimensions) ? updates.dimensions : [];
+        normalizeDimensionsBeforeSave(dbUpdates.dimensions);
+    }
+    
+    return dbUpdates;
+};
+
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -238,50 +287,34 @@ export const savePhotosToCloudBatch = async (
 
 export const updatePhoto = async (
   photoId: string, 
-  updates: Partial<Photo>, 
+  updates: Partial<Photo>,
   setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>
 ): Promise<void> => {
-  if (setPhotos) {
-    setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
-  }
+  const dbUpdates = mapToDb(updates);
   
-  const dbUpdates: any = {};
-  if ('categoryId' in updates) dbUpdates.category_id = updates.categoryId;
-  if ('manufacturerId' in updates) dbUpdates.manufacturer_id = updates.manufacturerId;
-  // REMOVED: if ('tagIds' in updates) dbUpdates.tags = updates.tagIds;
-  if ('isGroupCover' in updates) dbUpdates.is_group_cover = updates.isGroupCover;
-  if ('groupId' in updates) dbUpdates.group_id = updates.groupId;
-  if ('isPinned' in updates) dbUpdates.is_pinned = updates.isPinned;
-  if ('isHidden' in updates) {
-    dbUpdates.isHidden = updates.isHidden;
-  }
-  if ('description_translations' in updates) dbUpdates.description_translations = updates.description_translations;
+  if (setPhotos) setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
   
-  // Also copy all other standard string fields
-  const standardFields = ['name', 'description', 'manual_code', 'model_number', 'dimensions'];
-  standardFields.forEach(f => {
-    if (f in updates) dbUpdates[f] = (updates as any)[f];
-  });
-  
-  dbUpdates.updated_at = new Date().toISOString();
-
-  try {
-    await updatePhotoInCloud(photoId, dbUpdates);
+  await updatePhotoInCloud(photoId, dbUpdates);
     
-    // FIX: Perform relational tag sync if tagIds changed
-    if ('tagIds' in updates) {
-        await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-        if (Array.isArray(updates.tagIds) && updates.tagIds.length > 0) {
-            const tagAssociations = updates.tagIds.map(tagId => ({
-                photo_id: photoId,
-                tag_id: tagId
-            }));
-            await supabase.from('photo_tags').insert(tagAssociations);
-        }
-    }
-  } catch (err) {
-    throw err;
+  // Sync tags if needed
+  if ('tagIds' in updates) {
+      await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+      if (Array.isArray(updates.tagIds) && updates.tagIds.length > 0) {
+          const tagAssociations = updates.tagIds.map(tagId => ({
+              photo_id: photoId,
+              tag_id: tagId
+          }));
+          await supabase.from('photo_tags').insert(tagAssociations);
+      }
   }
+};
+
+export const batchUpdatePhotos = async (updates: { id: string; updates: Partial<Photo> }[]) => {
+    // For small batch, sequential is acceptable for simplicity to ensure correctness
+    for (const item of updates) {
+        await updatePhoto(item.id, item.updates);
+    }
+    photoCache.clear();
 };
 
 export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo> & Record<string, any>) => {
@@ -289,42 +322,24 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
     normalizeDimensionsBeforeSave(updates.dimensions);
   }
   
+  // Clean up group_order if it somehow persists
+  if ('group_order' in updates) delete updates.group_order;
+  if ('groupOrder' in updates) delete updates.groupOrder;
+  
   const { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .update(updates)
     .eq('id', photoId);
     
   if (error) {
-    if (error.message.includes('column')) {
-       // Try again without group fields if they were the cause
-       const safeUpdates = { ...updates };
-       let modified = false;
-       ['group_id', 'is_group_cover', 'updated_at'].forEach(key => {
-         if (key in safeUpdates) {
-           // Mapping internal keys to DB keys if needed or just skipping if error
-         }
-       });
-       
-       // Just basic cleanup if error
-       const groupKeys = ['group_id', 'is_group_cover', 'group_metadata', 'is_hidden'];
-       groupKeys.forEach(key => {
-         if (key in safeUpdates) {
-           delete (safeUpdates as any)[key];
-           modified = true;
-         }
-       });
-       
-       if (modified) {
-         const { error: retryError } = await supabase.from(DB_CONFIG.TABLE_NAME).update(safeUpdates).eq('id', photoId);
-         if (!retryError) {
-           photoCache.clear();
-           return;
-         }
-       }
-    }
     throw new Error(error.message || JSON.stringify(error));
   }
   photoCache.clear();
+};
+
+export const updateGroupOrder = async (photoId: string, groupOrder: number | null): Promise<void> => {
+    // Deprecated: group_order is removed from DB.
+    console.warn("updateGroupOrder is deprecated.");
 };
 
 export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {

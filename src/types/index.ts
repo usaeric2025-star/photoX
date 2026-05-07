@@ -63,7 +63,6 @@ export interface Photo {
   };
   groupId?: string | null;
   isGroupCover?: boolean; // New field
-  groupOrder?: number; // Order within group
   isPinned?: boolean; // Pinned to top
   isAnalyzing?: boolean;
   isHidden?: boolean;
@@ -77,6 +76,7 @@ export interface Photo {
   note?: string;
   category_id?: string | null;
   sub_category?: string | null;
+  _time?: number; // Temporary UI field
 }
 
 export interface User {

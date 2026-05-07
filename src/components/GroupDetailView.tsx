@@ -75,9 +75,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
-        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
-          return a.groupOrder - b.groupOrder;
-        }
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
   }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);

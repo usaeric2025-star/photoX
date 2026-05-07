@@ -152,3 +152,12 @@ const uiValueForLogin = React.useMemo(() => ({
 2.  **严禁**在任何涉及 `furniture_items` 表的操作中引入或引用 `tagIds` 或 `tag_ids` 字段。
 3.  标签逻辑**必须**且**唯一**地通过 `photo_tags` 关联表维护。
 4.  违反此规则的操作将被要求立即回退。
+
+---
+
+## 十四、数据库写操作规范（新规则）
+
+1.  任何组件、Hook、页面不得直接调用 `supabase.from('furniture_items').update`。
+2.  所有对 `furniture_items` 表的写操作必须通过 `src/services/photoMutationService.ts` 中的统一函数进行。
+3.  严禁在调用处自行组装数据库字段，字段映射和过滤逻辑由服务层统一处理。
+4.  写入操作时，数据对象的字段名必须使用驼峰（如 groupId、isHidden）。严禁在组件代码中出现蛇形字段名（如 group_id、is_hidden）。

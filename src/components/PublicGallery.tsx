@@ -32,6 +32,7 @@ interface PublicGalleryProps {
   onRefresh?: () => void;
   user?: User | null;
   isAdminMode?: boolean;
+  isStaffMode?: boolean;
   onEditPhoto?: (id: string) => void;
   onDeletePhotos?: (ids: string[]) => void;
   onGroupPhotos?: (ids: string[]) => void;
