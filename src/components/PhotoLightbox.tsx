@@ -259,11 +259,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4"
           >
             {/* Info Card Content */}
-                 {/* 1. 标题与动作条 */}
-                 <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
+                  {/* 1. 标题与动作条 */}
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1 border-l-[3px] border-blue-600 pl-3">
                       <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
-                      <h2 className="text-lg font-black text-[#1D3557] leading-tight uppercase">
+                      <h2 className="text-xl md:text-2xl font-black text-[#1D3557] leading-tight uppercase tracking-tight">
                         {photoDisplayName}
                       </h2>
                     </div>
@@ -279,107 +279,120 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                         )}
                       </div>
                     )}
-                 </div>
+                  </div>
 
-                 {/* 2. 价格与型号组合 */}
-                 {(photo.price || photo.model_number) && (
-                   <div className="flex flex-wrap items-stretch gap-3">
-                      {photo.price && (
-                        <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
-                          <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{t.price}</span>
-                          <p className="text-xl font-bold leading-none">{photo.price}</p>
-                        </div>
-                      )}
-                      {photo.model_number && (
-                        <div className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl flex-1 min-w-[120px] flex flex-col justify-center">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">{t.modelNumber}</span>
-                          <p className="font-mono font-bold text-slate-700">{photo.model_number}</p>
-                        </div>
-                      )}
-                   </div>
-                 )}
+                  {/* 2. 价格与型号组合 */}
+                  {(photo.price || photo.model_number) && (
+                    <div className="flex flex-wrap items-stretch gap-3">
+                       {photo.price && (
+                         <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
+                           <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{t.price}</span>
+                           <p className="text-xl font-bold leading-none">{photo.price}</p>
+                         </div>
+                       )}
+                       {photo.model_number && (
+                         <div className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl flex-1 min-w-[120px] flex flex-col justify-center">
+                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">{t.modelNumber}</span>
+                           <p className="font-mono font-bold text-slate-700">{photo.model_number}</p>
+                         </div>
+                       )}
+                    </div>
+                  )}
 
-                 {/* 3. 厂商与标签 */}
-                 {((mfrName && mfrName !== catName) || displayTags.length > 0) && (
-                   <div className="flex flex-wrap items-center gap-2">
-                      {(mfrName && mfrName !== catName) && (
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            console.log("Filtering by:", mfrName);
-                          }}
-                          className="bg-orange-50 text-orange-600 px-2.5 py-1 border border-orange-200 rounded-lg text-xs font-bold flex items-center hover:bg-orange-100 transition-colors"
-                        >
-                          <Key size={10} className="mr-1.5" />
-                          {mfrName}
-                        </button>
-                      )}
-                      {displayTags.map((tagName: string, i: number) => (
-                        <span key={i} className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border border-slate-200">#{tagName}</span>
-                      ))}
-                   </div>
-                 )}
+                  {/* 3. 厂商与标签 */}
+                  {((mfrName && mfrName !== catName) || displayTags.length > 0) && (
+                    <div className="flex flex-wrap items-center gap-2">
+                       {(mfrName && mfrName !== catName) && (
+                         <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             console.log("Filtering by:", mfrName);
+                           }}
+                           className="bg-orange-50 text-orange-600 px-2.5 py-1 border border-orange-200 rounded-lg text-xs font-bold flex items-center hover:bg-orange-100 transition-colors"
+                         >
+                           <Key size={10} className="mr-1.5" />
+                           {mfrName}
+                         </button>
+                       )}
+                       {displayTags.map((tagName: string, i: number) => (
+                         <span key={i} className="bg-slate-50 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight border border-slate-200">#{tagName}</span>
+                       ))}
+                    </div>
+                  )}
 
-                 {/* Admin Group Controls */}
-                 {isAdminMode && photo.groupId && (
-                   <div className="grid grid-cols-2 gap-2 mt-2">
-                        <button 
-                          onClick={() => onUngroup?.(photo.id)}
-                          className="bg-red-50 text-red-600 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-red-100"
-                        >
-                          {t.ungroup || 'Ungroup'}
-                        </button>
-                        <button 
-                          onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
-                          className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
-                        >
-                          {t.setCover || 'Set Cover'}
-                        </button>
-                   </div>
-                 )}
+                  {/* Admin Group Controls */}
+                  {isAdminMode && photo.groupId && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                         <button 
+                           onClick={() => onUngroup?.(photo.id)}
+                           className="bg-red-50 text-red-600 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-red-100"
+                         >
+                           {t.ungroup || 'Ungroup'}
+                         </button>
+                         <button 
+                           onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
+                           className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+                         >
+                           {t.setCover || 'Set Cover'}
+                         </button>
+                    </div>
+                  )}
 
-                 {/* 4. 尺寸详情 */}
-                 {Array.isArray(photo.dimensions) && photo.dimensions.length > 0 && (
-                   <div className="space-y-2">
-                      <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.dimensions || 'Dimensions'}</h3>
-                      <div className="grid grid-cols-2 gap-2">
-                        {photo.dimensions.map((dim: Dimension, i: number) => {
-                          const hasVolumeParams = dim.length || dim.width || dim.height;
-                          const isQuickLabel = dim.label && !hasVolumeParams && dim.unit;
-                          
-                          if (isQuickLabel) {
-                            return (
-                              <div key={i} className="bg-slate-50 p-2.5 border border-slate-100 rounded-xl flex items-center justify-between col-span-2">
-                                <p className="font-bold text-slate-700 text-sm">{dim.label}</p>
-                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">{dim.unit}</span>
-                              </div>
-                            )
-                          }
-                          
-                          return (
-                              <div key={i} className="bg-slate-50 p-3 rounded-xl space-y-2 border border-slate-100 col-span-2 sm:col-span-1">
-                                {dim.label && <p className="font-black text-slate-600 text-xs">{dim.label}</p>}
-                                <div className="grid grid-cols-3 gap-2">
-                                  <div>
-                                     <span className="text-[9px] font-bold text-slate-400 uppercase block">L</span>
-                                     <p className="font-bold text-slate-700 text-sm">{dim.length || '-'}</p>
+                  {/* 4. 尺寸详情 */}
+                  {Array.isArray(photo.dimensions) && photo.dimensions.length > 0 && (
+                    <div className="space-y-3">
+                       <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] pl-1">{t.dimensions || 'Dimensions'}</h3>
+                       <div className="grid grid-cols-2 gap-3">
+                         {photo.dimensions.map((dim: Dimension, i: number) => {
+                           const label = dim.label || '';
+                           const prefixMatch = label.match(/^([A-Z]+):\s*(.*)/);
+                           const prefix = prefixMatch ? prefixMatch[1] : '';
+                           const dimStr = prefixMatch ? prefixMatch[2] : label;
+                           
+                           return (
+                             <div key={i} className="bg-white p-3.5 border border-slate-100 rounded-[24px] col-span-2 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    {prefix && (
+                                      <span className="bg-[#1D3557] text-white text-[9px] font-black px-2.5 py-0.5 rounded-lg tracking-tighter uppercase whitespace-nowrap">
+                                        {prefix}
+                                      </span>
+                                    )}
+                                    <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">
+                                      SPEC
+                                    </span>
                                   </div>
-                                  <div>
-                                     <span className="text-[9px] font-bold text-slate-400 uppercase block">W</span>
-                                     <p className="font-bold text-slate-700 text-sm">{dim.width || '-'}</p>
-                                  </div>
-                                  <div>
-                                     <span className="text-[9px] font-bold text-slate-400 uppercase block">H</span>
-                                     <p className="font-bold text-slate-700 text-sm">{dim.height || '-'}</p>
-                                  </div>
+                                  <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full uppercase tracking-tighter">
+                                    {dim.unit || 'cm'}
+                                  </span>
                                 </div>
-                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full inline-block mt-1 uppercase">{dim.unit || 'cm'}</span>
-                              </div>
-                          )
-                        })}
-                      </div>
-                   </div>
-                 )}
+                                
+                                <p className="font-black text-[#1D3557] text-base md:text-lg leading-snug tracking-tight">
+                                  {dimStr || '-'}
+                                </p>
+                                
+                                {(!/\d/.test(dimStr) && (dim.length || dim.width || dim.height)) && (
+                                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100">
+                                    <div>
+                                       <span className="text-[8px] font-bold text-slate-400 uppercase block mb-0.5">L</span>
+                                       <p className="font-bold text-slate-700 text-sm">{dim.length || '-'}</p>
+                                    </div>
+                                    <div>
+                                       <span className="text-[8px] font-bold text-slate-400 uppercase block mb-0.5">W</span>
+                                       <p className="font-bold text-slate-700 text-sm">{dim.width || '-'}</p>
+                                    </div>
+                                    <div>
+                                       <span className="text-[8px] font-bold text-slate-400 uppercase block mb-0.5">H</span>
+                                       <p className="font-bold text-slate-700 text-sm">{dim.height || '-'}</p>
+                                    </div>
+                                  </div>
+                                )}
+                             </div>
+                           );
+                         })}
+                       </div>
+                    </div>
+                  )}
 
                  {/* 5. 描述内容 - 优先显示个人描述 */}
                  {(photo.description || (groupData && (groupData.description || groupData.description_translations))) && (

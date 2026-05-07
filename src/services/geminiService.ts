@@ -426,7 +426,8 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         unit: d.unit === 'inch' ? 'inch' : 'cm',
         length,
         width,
-        height
+        height,
+        isAI: true
       };
     })
     .filter(Boolean);

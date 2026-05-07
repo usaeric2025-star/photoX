@@ -50,6 +50,63 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  
   const isSyncing = sessionSyncing;
 
+  // 1. 合并逻辑工具函数
+  const mergeDimensionsIfNeeded = (dims: any[]) => {
+    if (!dims || dims.length === 0) return dims;
+    
+    // 检查是否已经是完整描述的正则 (包含 H/W/D 或 数字+单位)
+    const isComplete = (s: string) => {
+      const lower = s.toLowerCase();
+      const hasLabels = lower.includes('h') || lower.includes('w') || lower.includes('d') || lower.includes('l');
+      const hasUnit = lower.match(/\d+(\.\d+)?\s*(cm|mm|inch|in|")/i);
+      return hasLabels || hasUnit;
+    };
+
+    // 如果长度 <= 3 且都不是完整描述，则合并
+    if (dims.length > 1 && dims.length <= 3) {
+      const allIncomplete = dims.every(d => !isComplete(d.label || ''));
+      if (allIncomplete) {
+        const combinedLabel = dims.map(d => d.label).join(' ').trim();
+        return [{
+          ...dims[0],
+          label: combinedLabel,
+          isAI: true
+        }];
+      }
+    }
+    return dims;
+  };
+
+  // 2. 自动触发 AI 识别逻辑
+  React.useEffect(() => {
+    const photoData = newPhotoData || editPhotoPreview;
+    const hasNoDims = !formState.dimensions || formState.dimensions.length === 0 || 
+                     (formState.dimensions.length === 1 && !formState.dimensions[0].label && !formState.dimensions[0].length);
+
+    if (photoData && hasNoDims && !isAnalyzing) {
+      console.log('Auto-triggering AI Dimension Analysis...');
+      const trigger = async () => {
+        if (handleSingleAiAnalyzeCallback) {
+          await handleSingleAiAnalyzeCallback(
+            photoData,
+            formState.categoryId || undefined,
+            editPhotoId || undefined,
+            formState,
+            (updates) => {
+              // 拦截尺寸更新并执行合并
+              if (updates.dimensions) {
+                updates.dimensions = mergeDimensionsIfNeeded(updates.dimensions);
+              }
+              updateForm(updates);
+            },
+            handleSingleAiAnalyze!
+          );
+        }
+      };
+      trigger();
+    }
+  }, [editPhotoId, !!newPhotoData, !!editPhotoPreview]);
+
   const isPartOfGroup = useMemo(() => {
     if (!editPhotoId) return false;
     const photo = photos.find(p => p.id === editPhotoId);
@@ -455,9 +512,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   </div>
 
                   <div className="space-y-3">
-                    {safeArray<any>(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim: any, idx) => {
+                    {safeArray<any>(formState.dimensions && formState.dimensions.length > 0 ? formState.dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' }]).map((dim: any, idx) => {
                       const label = dim.label || '';
-                      const prefixMatch = label.match(/^([A-Z]+):\s*(.*)/);
+                      // 增强正则，支持中文冒号
+                      const prefixMatch = label.match(/^([A-Z0-9\u4e00-\u9fa5]+)\s*[:：]\s*(.*)$/i);
                       const prefix = prefixMatch ? prefixMatch[1] : '';
                       const dimensionsPart = prefixMatch ? prefixMatch[2] : label;
                       
@@ -465,9 +523,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                         const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
                         const newDims = [...((formState.dimensions && formState.dimensions.length > 0) ? formState.dimensions : [{...dim}])];
                         newDims[idx].label = finalLabel;
+                        newDims[idx].isAI = false; // 用户修改后移除 AI 标记
                         
-                        // Try to re-parse H/W/D if possible to keep numeric fields somewhat relevant,
-                        // though they are no longer exposed in the UI.
+                        // 尝试重新解析数值，保持后台数据尽可能真实
                         const hMatch = newDimPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
                         const wMatch = newDimPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
                         const lMatch = newDimPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
@@ -496,8 +554,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                           <div className="grid grid-cols-2 gap-2">
                              <div className="space-y-1">
                                 <div className="flex items-center justify-between pl-1">
-                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">规格名称 / PART</span>
-                                  {dim.isAI && <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">AI</span>}
+                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">部分 / PART</span>
+                                  {dim.isAI && (
+                                    <div className="flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 animate-pulse">
+                                      <Sparkles size={8} />
+                                      <span className="text-[8px] font-black">AI</span>
+                                    </div>
+                                  )}
                                 </div>
                                 <input 
                                   type="text" 
@@ -531,8 +594,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">尺寸内容 / DIMENSIONS</span>
                              <input 
                                type="text" 
-                               placeholder="H94 x W96 x D23" 
-                               value={dimensionsPart} 
+                               placeholder={isAnalyzing ? "AI 识别尺寸中..." : "H94 x W96 x D23"} 
+                               value={dimensionsPart || (isAnalyzing ? "" : "—")} 
                                onChange={e => handleUpdateLabel(prefix, e.target.value)}
                                className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold" 
                              />
