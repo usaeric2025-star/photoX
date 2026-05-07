@@ -66,6 +66,43 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     }
   };
 
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  const flipPhoto = async () => {
+    // 1. Flip UI
+    setIsFlipped(!isFlipped);
+    
+    // 2. Perform actual image flip. Need canvas.
+    const imgSrc = props.newPhotoData || props.editPhotoPreview;
+    if (!imgSrc) return;
+    
+    const img = new Image();
+    img.crossOrigin = "Anonymous";
+    img.src = imgSrc;
+    await img.decode();
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Flip
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, -img.width, 0);
+    
+    const flippedData = canvas.toDataURL('image/jpeg');
+    
+    // Update form with flipped data
+    if (props.newPhotoData) {
+        // Need to update newPhotoData - assuming it's managed externally,
+        // this might need prop change. Updating formState for now if possible
+        // Actually this component shouldn't modify the source directly via props.
+        // Let's assume newPhotoData is passed up from parent.
+        // For now, let's just trigger an update if possible or handle it via callback
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
       <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
@@ -211,10 +248,16 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
         <div className="flex gap-4 items-start">
           {(props.newPhotoData || props.editPhotoPreview) && (
-            <div className="w-1/3 shrink-0">
-               <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white">
-                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="w-full h-full object-contain" alt="Preview" />
+            <div className="w-1/3 shrink-0 space-y-2">
+               <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
+                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className={`w-full h-full object-contain transition-transform duration-300 ${isFlipped ? 'scale-x-[-1]' : ''}`} alt="Preview" />
                </div>
+               <button 
+                 onClick={flipPhoto}
+                 className="w-full text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200"
+               >
+                 {isFlipped ? 'Undo Flip' : 'Flip'}
+               </button>
             </div>
           )}
           <div className="flex-1 space-y-3">

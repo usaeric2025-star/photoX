@@ -388,26 +388,42 @@ export const analyzeProductPhoto = async (
  */
 export const normalizeDimensions = (dims: any[]): any[] => {
   if (!Array.isArray(dims) || dims.length === 0) return [];
-  console.log("Normalizing dimensions:", dims); // Debug
 
-  // Instead of collapsing all to one label, we clean each item individually.
+  // Define regex to match only valid dimension-like strings
+  // e.g., "120", "120 cm", "120x60x75"
+  const dimensionRegex = /^\d+(\.\d+)?\s*(cm|mm|inch|in)?(\s*x\s*\d+(\.\d+)?\s*(cm|mm|inch|in)?)*$/i;
+
   return dims
     .map(d => {
       if (!d) return null;
-      // Handle the case where the AI returns an object like { label: "..." }
-      const label = typeof d === 'string' ? d : String(d.label || '');
-      if (!label || label.toLowerCase().includes('overall')) return null;
+      let label = typeof d === 'string' ? d : String(d.label || '');
+      if (!label) return null;
 
-      // Extract numbers to ensure clean format, add cm if missing
-      const match = label.match(/\d+(\.\d+)?/);
+      // 1. Clean common descriptive language that gets caught in AI label extraction
+      // Remove "H", "W", "D", "L", "Overall", "approx", "size" if they are clearly descriptive markers
+      // but keep them if they might be part of the actual data, this is tricky.
+      // Let's strip typical junk:
+      label = label.replace(/(overall|size|dimension|measurement|approx)/gi, '').trim();
+
+      // 2. If it still looks like "H49", try to strip the letter prefix if it's just a label marker
+      // This is high risk, let's just attempt to extract the first number found if the rule fits
+      const match = label.match(/(\d+(\.\d+)?)/);
       if (!match) return null;
       
-      const num = match[0];
-      const hasUnit = /[a-zA-Z]+/.test(label.replace(num, '').trim());
+      // If the label is just a messy descriptive string like "H49\"/9\"", 
+      // extract the core numeric part.
+      const cleanLabel = label.replace(/[^\d\.\sx\s]/gi, '').trim();
       
+      // Re-validate against our strict regex
+      if (!dimensionRegex.test(cleanLabel)) {
+          // If it fails, only keep the numeric part if it seems plausible
+          // For now, return null to be safe rather than poisoning data
+          return null;
+      }
+
       return { 
         ...d,
-        label: hasUnit ? label : `${label} cm` 
+        label: cleanLabel
       };
     })
     .filter(Boolean);
