@@ -1,6 +1,6 @@
 import { Photo, Category, Tag } from '../types';
 
-const cleanPhotos = (photos: any[]): Photo[] => {
+export const cleanPhotos = (photos: any[]): Photo[] => {
   if (!Array.isArray(photos)) return [];
   return photos
     .filter(p => p != null && typeof p === 'object')

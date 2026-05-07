@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { Photo, Category, Tag } from '../types';
-import { filterPhotos, groupPhotos } from '../lib/filters';
+import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { safeArray } from '../utils/safeAccess';
 import { injectBadData } from '../utils/debugInjector';
 
