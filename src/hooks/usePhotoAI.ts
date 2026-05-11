@@ -96,6 +96,7 @@ export const usePhotoAI = (
     }
     
     return runWithLoading('analyzing', async () => {
+        setAiDebugInfo({ step: '准备中', message: '批量分析初始化...' });
         setBatchProgress({ current: 0, total: sUnProcessed.length });
         const taskId = existingTaskId || addTask({
           name: `批量 AI 识别 (${sUnProcessed.length} 张)`,
@@ -176,7 +177,7 @@ export const usePhotoAI = (
                 return next;
             });
         } catch (err: any) {
-            setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: err.message });
+            setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: err.message || String(err) });
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
             if (err.message && (err.message.includes('401') || err.message.includes('403'))) {
                 throw new Error(`FATAL_AI_ERROR: ${err.message}`);
@@ -189,6 +190,9 @@ export const usePhotoAI = (
         for (let i = 0; i < sUnProcessed.length; i += CONCURRENCY) {
             if (currentAnalysisController.current?.signal.aborted) break;
             const batch = sUnProcessed.slice(i, i + CONCURRENCY);
+            // Before starting a batch, clear global error if any
+            setAiDebugInfo(prev => prev?.error ? { ...prev, error: undefined } : prev);
+
             const batchResults = await Promise.allSettled(safeArray(batch).map(p => processPhoto(p)));
             const fulfilledCount = safeArray(batchResults).filter(r => r.status === 'fulfilled').length;
             completedCount += fulfilledCount;
@@ -200,6 +204,9 @@ export const usePhotoAI = (
         if (completedCount > 0) {
             updateTask(taskId, { status: 'completed', progress: 100, message: `完成！处理 ${completedCount} 张` });
             showToast(`AI 识别成功处理 ${completedCount} 张。`, 'success');
+            if (completedCount === sUnProcessed.length) {
+                setAiDebugInfo(null);
+            }
         } else {
             updateTask(taskId, { status: 'error', message: '任务执行失败。' });
             showToast('AI 识别失败。', 'error');
@@ -276,12 +283,13 @@ export const usePhotoAI = (
             await saveData('product_photos', nextPhotos);
           }
         }
+        setAiDebugInfo(null);
         return result;
       } catch (err: any) {
         if (err.name === 'AbortError') {
           setAiDebugInfo({ step: '已取消', message: '识别任务已由用户中断' });
         } else {
-          setAiDebugInfo({ step: '错误', message: '识别失败' });
+          setAiDebugInfo({ step: '错误', message: '识别失败', error: err.message || String(err) });
         }
         if (editPhotoId) {
           setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
@@ -338,8 +346,10 @@ export const usePhotoAI = (
           photosRef.current = next;
           return next;
         });
+        setAiDebugInfo(null);
         return result;
-      } catch (err) {
+      } catch (err: any) {
+        setAiDebugInfo({ step: '错误', message: '群组识别失败', error: err.message || String(err) });
         setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
         photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
         throw err;

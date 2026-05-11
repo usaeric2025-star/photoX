@@ -151,8 +151,22 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         {/* Left: AI/Status Info */}
         <div className="flex-none flex items-center gap-2">
           {aiDebugInfo?.error ? (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-1.5 rounded-xl text-[10px] font-bold truncate max-w-[100px]">
-              AI: {aiDebugInfo.error}
+            <div 
+              onClick={() => {
+                const fullError = aiDebugInfo.error || '';
+                // If it's our internal format, clean it up for the toast
+                const readableError = fullError.includes('|') ? fullError.split('|').slice(1).join(': ') : fullError;
+                showToast(`AI Error: ${readableError}`, 'error');
+              }}
+              title="點擊查看詳細錯誤"
+              className="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1 cursor-help max-w-[140px]"
+            >
+              <div className="w-1 h-1 rounded-full bg-red-400 animate-pulse shrink-0" />
+              <span className="truncate">
+                {aiDebugInfo.error.includes('|') 
+                  ? (aiDebugInfo.error.split('|')[2] || aiDebugInfo.error.split('|')[1] || '识别失败') 
+                  : aiDebugInfo.error}
+              </span>
             </div>
           ) : (
             <div 

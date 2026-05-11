@@ -336,12 +336,16 @@ OUTPUT JSON example:
     }
 
     // Safely extract the most descriptive error message possible
-    let errorMsg = error.message || `API 请求发送失败 (status: ${status}, url: ${url})。详细错误: ${errorDetail}`;
+    let errorMsg = error.message || '';
     
     if (error.response?.data?.error?.message) {
         errorMsg = error.response.data.error.message;
     } else if (error.error?.message) {
         errorMsg = error.error.message;
+    }
+
+    if (!errorMsg || errorMsg.trim() === '') {
+        errorMsg = `API 请求发送失败 (status: ${status}, url: ${url})。详细错误: ${errorDetail.slice(0, 500)}`;
     }
     
     // Check if body is plain text or json
