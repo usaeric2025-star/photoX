@@ -195,18 +195,42 @@ export const usePhotoAI = (
             setAiDebugInfo(prev => prev?.error ? { ...prev, error: undefined } : prev);
 
             const batchResults = await Promise.allSettled(safeArray(batch).map(p => processPhoto(p)));
-            const fulfilledCount = safeArray(batchResults).filter(r => r.status === 'fulfilled').length;
-            completedCount += fulfilledCount;
+            
+            const batchFailures: string[] = [];
+            batchResults.forEach((result, idx) => {
+              if (result.status === 'fulfilled') {
+                completedCount++;
+              } else {
+                const photo = batch[idx];
+                const errorMsg = result.reason?.message || '未知錯誤';
+                batchFailures.push(photo.name || photo.id.slice(0, 8));
+                console.error(`[AI Batch Fail] ID: ${photo.id}, Title: ${photo.name}, Err: ${errorMsg}`);
+              }
+            });
+
             const currentProgress = Math.min(i + CONCURRENCY, sUnProcessed.length);
             const progressPercent = (currentProgress / sUnProcessed.length) * 100;
             setBatchProgress({ current: currentProgress, total: sUnProcessed.length });
-            updateTask(taskId, { progress: progressPercent, message: `已处理 ${currentProgress}/${sUnProcessed.length} 张...` });
+            
+            const statusMsg = batchFailures.length > 0 
+              ? `已處理 ${currentProgress}/${sUnProcessed.length} (失敗: ${batchFailures.join(', ')})`
+              : `已處理 ${currentProgress}/${sUnProcessed.length}...`;
+            
+            updateTask(taskId, { progress: progressPercent, message: statusMsg });
         }
-        if (completedCount > 0) {
-            updateTask(taskId, { status: 'completed', progress: 100, message: `完成！处理 ${completedCount} 张` });
-            showToast(`AI 识别成功处理 ${completedCount} 张。`, 'success');
-            if (completedCount === sUnProcessed.length) {
-                setAiDebugInfo(null);
+        if (completedCount > 0 || sUnProcessed.length > 0) {
+            const isAllSuccess = completedCount === sUnProcessed.length;
+            updateTask(taskId, { 
+              status: isAllSuccess ? 'completed' : 'warning', 
+              progress: 100, 
+              message: isAllSuccess ? `全數完成！共 ${completedCount} 張` : `完成，但有部分失敗 (${completedCount} 成功)` 
+            });
+            
+            if (isAllSuccess) {
+              showToast(`AI 識別成功處理 ${completedCount} 張。`, 'success');
+              setAiDebugInfo(null);
+            } else {
+              showToast(`AI 識別完成，但有部分圖片失敗。請檢查任務日誌。`, 'warning');
             }
         } else {
             updateTask(taskId, { status: 'error', message: '任务执行失败。' });

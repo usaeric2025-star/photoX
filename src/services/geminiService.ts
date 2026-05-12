@@ -460,13 +460,22 @@ export const normalizeDimensions = (dims: any[]): any[] => {
       // and the other is nearby in the array, it's a strong merge signal.
       const isSimpleLabel = (s: string) => /^[HWDL]\s*\d+$/i.test(s.trim());
 
-      const shouldMerge = !hasOverlap && bothAreIncomplete && (isSimpleLabel(d.label) || isSimpleLabel(current.label));
+      const shouldMerge = !hasOverlap && bothAreIncomplete && (
+        isSimpleLabel(d.label) || 
+        isSimpleLabel(current.label) || 
+        // Or if both are very incomplete (only 1 field filled each)
+        ((current.height > 0 ? 1 : 0) + (current.width > 0 ? 1 : 0) + (current.length > 0 ? 1 : 0) <= 1 &&
+         (d.height > 0 ? 1 : 0) + (d.width > 0 ? 1 : 0) + (d.length > 0 ? 1 : 0) <= 1)
+      );
 
       if (shouldMerge) {
         if (d.height > 0) current.height = d.height;
         if (d.width > 0) current.width = d.width;
         if (d.length > 0) current.length = d.length;
-        current.label = `${current.label} ${d.label}`.trim();
+        // Smart label: don't repeat the same thing if labels are similar
+        if (!current.label.includes(d.label)) {
+          current.label = `${current.label} ${d.label}`.trim();
+        }
         if (d.unit === 'inch') current.unit = 'inch';
       } else {
         merged.push(current);
