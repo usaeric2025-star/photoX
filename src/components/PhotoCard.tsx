@@ -64,6 +64,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     const url = photo.thumb_url || photo.image_url || photo.uri;
     if (!url) return undefined;
     
+    // Do not append timestamp to data URIs (base64)
+    if (url.startsWith('data:')) return url;
+    
     // Add cache busting based on updatedAt
     const timestamp = photo.updatedAt ? new Date(photo.updatedAt).getTime() : 
                       (photo.createdAt ? new Date(photo.createdAt).getTime() : Date.now());

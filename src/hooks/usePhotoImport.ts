@@ -227,7 +227,9 @@ export const usePhotoImport = (
                   const finalTagIds = await resolveTagIdsBatch(allSuggestedTags, tags, tagNameToIdMap, setTags);
 
                   setPhotos(prev => prev.map(p => {
-                     if (p.id !== photoId) return p;
+                     // Robust matching using storageId or original id
+                     if (p.storageId !== photoId && p.id !== photoId) return p;
+                     
                      const updatedPhoto = {
                        ...p,
                        isAnalyzing: false,
@@ -240,7 +242,15 @@ export const usePhotoImport = (
                      };
                      
                      if (user) {
-                       savePhotoToCloud(user.id, updatedPhoto).catch(e => console.error("Process queue backup failed:", e));
+                       savePhotoToCloud(user.id, updatedPhoto).then(persistedId => {
+                          // If savePhotoToCloud updated URLs in updatedPhoto (it does in-place), 
+                          // we should trigger another refresh to ensure state has them.
+                          setPhotos(curr => curr.map(item => 
+                            (item.storageId === photoId || item.id === persistedId)
+                              ? { ...item, ...updatedPhoto, id: persistedId } 
+                              : item
+                          ));
+                       }).catch(e => console.error("Process queue backup failed:", e));
                      }
                      
                      return updatedPhoto;
@@ -280,7 +290,12 @@ export const usePhotoImport = (
                  (p.image_hash && s.image_hash === p.image_hash)
                );
                if (found) {
-                 return { ...p, id: found.id };
+                 return { 
+                   ...p, 
+                   id: found.id,
+                   image_url: found.image_url,
+                   thumb_url: found.thumb_url
+                 };
                }
                return p;
             });

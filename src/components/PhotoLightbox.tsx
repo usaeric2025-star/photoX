@@ -216,7 +216,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
               <img 
                 key={photo.id}
                 referrerPolicy="no-referrer"
-                src={(photo.image_url || photo.uri || '') + (photo.image_url ? `?t=${new Date(photo.updatedAt || '0').getTime()}` : '')}
+                src={(() => {
+                  const url = photo.image_url || photo.uri || '';
+                  if (!url || url.startsWith('data:')) return url;
+                  const t = new Date(photo.updatedAt || photo.createdAt || '0').getTime();
+                  return `${url}${url.includes('?') ? '&' : '?'}t=${t}`;
+                })()}
                 alt={photo.name || 'Photo'}
                 className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-300 ${isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} 
                 onLoad={() => {
