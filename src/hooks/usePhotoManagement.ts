@@ -2,7 +2,6 @@ import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
 import { useErrorHandler } from '../utils/errorHandler';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { formatDate } from '../utils/dateFormat';
-import { photoApi } from '../api/photos';
 import { Photo, Tag, ProductFormData, User, Dimension } from '../types';
 import { safeArray } from '../lib/utils';
 import { saveData, loadData } from '../utils/indexedDB';

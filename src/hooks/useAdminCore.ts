@@ -1,6 +1,4 @@
 import { useDelete } from './useDelete';
-import { groupApi } from '../api/groups';
-import { photoApi } from '../api/photos';
 import React, { useState, useCallback } from 'react';
 import { Photo, User, AppSettings, ProductFormData } from '../types';
 import { safeArray } from '../lib/utils';

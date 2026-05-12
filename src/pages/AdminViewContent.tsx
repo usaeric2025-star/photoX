@@ -20,7 +20,6 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { useErrorHandler } from '../utils/errorHandler';
 import { usePermission } from '../hooks/usePermission';
 import { useDelete } from '../hooks/useDelete';
-import { photoApi } from '../api/photos';
 import { Photo, Category, Tag, Manufacturer, User, ProductFormData } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
@@ -369,7 +368,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 onToggleHidden={async (photo) => {
                   const newStatus = !photo.isHidden;
                   try {
-                    await photoApi.update(photo.id, { isHidden: newStatus, updatedAt: new Date().toISOString() });
+                    const m = await import('../services/photoMutationService');
+                    await m.updatePhotoHidden(photo.id, newStatus);
                     setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
                   } catch (e) {
                     handleError(e, '切换隐藏状态失败');
