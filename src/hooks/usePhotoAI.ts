@@ -77,6 +77,7 @@ export const usePhotoAI = (
   };
 
   const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
+    setAiDebugInfo(null);
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     const sPhotosToProcess = safeArray(photosToProcess);
     const unProcessed = sPhotosToProcess.filter(p => {
@@ -222,6 +223,7 @@ export const usePhotoAI = (
 
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
     if (!imageData) return;
+    setAiDebugInfo(null);
     return runWithLoading('analyzing', async () => {
       if (editPhotoId) {
         setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p));
@@ -303,6 +305,7 @@ export const usePhotoAI = (
   const handleGroupAiIdentify = async (groupPhotos: Photo[]) => {
     const sGroupPhotos = safeArray(groupPhotos);
     if (sGroupPhotos.length === 0) return;
+    setAiDebugInfo(null);
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     if (!effectiveKey) return;
     return runWithLoading('analyzing', async () => {

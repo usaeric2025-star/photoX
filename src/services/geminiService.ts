@@ -111,6 +111,7 @@ export const analyzeProductPhoto = async (
 - "price": ONLY numeric part (e.g., "1200").
 - "dimensions": Array of objects with length/width/height (numbers).
 - FORBID putting dimensions, model numbers, or price into "name".
+- IMPORTANT: If a single product's dimensions are scattered (e.g., Height shown separately from Width/Length), you MUST combine them into a single object in the 'dimensions' array. DO NOT return separate objects for H, W, and L if they describe the same item.
 
 【NAME RULES】
 - name MUST NOT contain H/W/D, numbers+units (like 53cm), or "x"/×.
@@ -371,7 +372,7 @@ OUTPUT JSON example:
 export const normalizeDimensions = (dims: any[]): any[] => {
   if (!Array.isArray(dims) || dims.length === 0) return [];
 
-  return dims
+  const rawProcessed = dims
     .map(d => {
       if (!d) return null;
       const originalLabel = typeof d === 'string' ? d : String(d.label || '');
@@ -395,9 +396,6 @@ export const normalizeDimensions = (dims: any[]): any[] => {
 
       if (hasH || hasW || hasD || hasL) {
         // 1️⃣ Strict identification by labels (H/W/D/L)
-        // H → height
-        // W 或 L → width / length
-        // D → depth (mapping to length if length is 0, else width)
         const hMatch = parsingPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
         const wMatch = parsingPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
         const lMatch = parsingPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
@@ -405,7 +403,6 @@ export const normalizeDimensions = (dims: any[]): any[] => {
 
         if (hMatch) height = parseFloat(hMatch[1]);
         
-        // Handle W and L competing for width/length slots
         if (wMatch && lMatch) {
           width = parseFloat(wMatch[1]);
           length = parseFloat(lMatch[1]);
@@ -415,7 +412,6 @@ export const normalizeDimensions = (dims: any[]): any[] => {
           length = parseFloat(lMatch[1]);
         }
 
-        // Handle D (Depth) mapping to length if not used, else width
         if (dMatch) {
           const depthVal = parseFloat(dMatch[1]);
           if (length === 0) length = depthVal;
@@ -428,8 +424,6 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         if (nums.length >= 3) width = parseFloat(nums[2]);
       }
       
-      // 3️⃣ If no numbers or fail, length/width/height remain 0.
-
       return { 
         ...d, 
         label: originalLabel.trim(),
@@ -440,7 +434,49 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         isAI: true
       };
     })
-    .filter(Boolean);
+    .filter(Boolean) as any[];
+
+  // Heuristic Merge: Combine sequential dimension objects that describe components of a single set
+  const merged: any[] = [];
+  let current: any = null;
+
+  for (const d of rawProcessed) {
+    if (!current) {
+      current = { ...d };
+    } else {
+      // Logic for merging: 
+      // 1. Both objects must be "incomplete" (at least one H/W/L is 0)
+      // 2. They must not have overlapping H/W/L values (unless both are 0)
+      const hasOverlap = 
+        (d.height > 0 && current.height > 0) ||
+        (d.width > 0 && current.width > 0) ||
+        (d.length > 0 && current.length > 0);
+      
+      const bothAreIncomplete = 
+        (current.height === 0 || current.width === 0 || current.length === 0) &&
+        (d.height === 0 || d.width === 0 || d.length === 0);
+
+      // Label check: if one object looks like a single component label (e.g., "H855") 
+      // and the other is nearby in the array, it's a strong merge signal.
+      const isSimpleLabel = (s: string) => /^[HWDL]\s*\d+$/i.test(s.trim());
+
+      const shouldMerge = !hasOverlap && bothAreIncomplete && (isSimpleLabel(d.label) || isSimpleLabel(current.label));
+
+      if (shouldMerge) {
+        if (d.height > 0) current.height = d.height;
+        if (d.width > 0) current.width = d.width;
+        if (d.length > 0) current.length = d.length;
+        current.label = `${current.label} ${d.label}`.trim();
+        if (d.unit === 'inch') current.unit = 'inch';
+      } else {
+        merged.push(current);
+        current = { ...d };
+      }
+    }
+  }
+  if (current) merged.push(current);
+  
+  return merged;
 };
 
 export const translateDescription = async (
