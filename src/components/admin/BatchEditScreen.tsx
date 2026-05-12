@@ -149,6 +149,42 @@ export const BatchEditScreen = ({
         </section>
 
         <section className="space-y-4">
+            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">显示状态 / VISIBILITY</h3>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setBatchIsHiddenApplied(true);
+                  updateForm({ isHidden: false });
+                }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && !formState.isHidden ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
+              >
+                <Eye size={16} />
+                <span className="text-[10px] font-black uppercase">全部显示</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBatchIsHiddenApplied(true);
+                  updateForm({ isHidden: true });
+                }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && formState.isHidden ? 'bg-orange-50 border-orange-500 text-orange-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
+              >
+                <EyeOff size={16} />
+                <span className="text-[10px] font-black uppercase">全部屏蔽</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setBatchIsHiddenApplied(false)}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${!batchIsHiddenApplied ? 'bg-slate-100 border-slate-400 text-slate-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
+              >
+                <RefreshCcw size={14} />
+                <span className="text-[10px] font-black uppercase">保持现状</span>
+              </button>
+            </div>
+        </section>
+
+        <section className="space-y-4">
           <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
           <CategoryGrid 
             categories={categories}

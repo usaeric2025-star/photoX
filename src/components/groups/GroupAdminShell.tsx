@@ -43,7 +43,7 @@ export interface GroupAdminShellProps {
 import { useGroupSync } from '../../hooks/useGroupSync';
 import { useAdminUI } from '../../context/AdminContexts';
 
-const DIMENSION_PRESETS = ['120x60', '140x80', '160x90'];
+import { DimensionEditor } from '../admin/edit/DimensionEditor';
 
 export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   activeGroupId, setActiveGroupId, photos,
@@ -200,9 +200,27 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     persistPhotoChange(photo.id, { tagIds: nextTags });
   };
 
-  const handleSetDim = (photo: Photo, label: string) => {
-    persistPhotoChange(photo.id, { 
-      dimensions: [{ label, unit: 'cm', length: 0, width: 0, height: 0, isAI: false }] 
+  const handleBatchUpdateDimensions = async (newDims: Dimension[]) => {
+    if (!activeGroupId || newDims.length === 0) return;
+    
+    setAlertDialog({
+      title: '确认批量修改尺寸',
+      message: `确定要将群组内所有 ${activeGroupPhotos.length} 张照片的尺寸更新为当前设置吗？此操作不可撤销。`,
+      onConfirm: async () => {
+        try {
+          showToast('正在批量更新尺寸...', 'loading');
+          await Promise.all(
+            activeGroupPhotos.map(p => updatePhoto(p.id, { dimensions: newDims }))
+          );
+          setPhotos?.(prev => prev.map(p => 
+            p.groupId === activeGroupId ? { ...p, dimensions: newDims } : p
+          ));
+          showToast('批量更新成功', 'success');
+        } catch (err) {
+          showToast(`更新失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
+        }
+        setAlertDialog(null);
+      }
     });
   };
 
@@ -586,6 +604,46 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                             />
                           </div>
                         </div>
+                      </div>
+                    </section>
+
+                    {/* Dimensions Section */}
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Maximize size={16} className="text-indigo-500" />
+                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">批量尺寸 / Dimensions (Batch)</h4>
+                      </div>
+                      
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p className="text-[10px] text-slate-400 font-bold mb-4 px-1 leading-relaxed">
+                          在下方设置尺寸后，可点击“应用到全组”批量更新该群组内的所有产品尺寸。
+                        </p>
+                        <DimensionEditor 
+                          dimensions={groupData?.dimensions || []}
+                          onAddDimension={() => {
+                            const current = groupData?.dimensions || [];
+                            handleUpdateGroupData({ dimensions: [...current, { label: '', unit: 'cm', length: 0, width: 0, height: 0 }] });
+                          }}
+                          onRemoveDimension={(idx) => {
+                            const current = groupData?.dimensions || [];
+                            handleUpdateGroupData({ dimensions: current.filter((_, i) => i !== idx) });
+                          }}
+                          onUpdateDimension={(idx, dim) => {
+                            const current = [...(groupData?.dimensions || [])];
+                            current[idx] = dim;
+                            handleUpdateGroupData({ dimensions: current });
+                          }}
+                        />
+                        
+                        {(groupData?.dimensions || []).length > 0 && (
+                          <button
+                            onClick={() => handleBatchUpdateDimensions(groupData!.dimensions!)}
+                            className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                          >
+                            <Save size={14} />
+                            <span>应用到全组 / Apply to Group</span>
+                          </button>
+                        )}
                       </div>
                     </section>
 

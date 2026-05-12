@@ -103,6 +103,7 @@ export interface ProductGroup {
   };
   colors: string[];
   materials: string[];
+  dimensions?: Dimension[] | null;
   cover_photo_id?: string | null;
   isHidden?: boolean;
   user_id: string;

@@ -292,6 +292,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     }
   };
   
+  const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
+  
   return (
     <ErrorBoundary key="admin-main">
       <AdminSessionProvider value={sessionValue}>
@@ -311,8 +313,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 batchEditIds={batchEditIds}
                 formState={formState}
                 updateForm={updateForm}
-                batchIsHiddenApplied={false}
-                setBatchIsHiddenApplied={() => {}}
+                batchIsHiddenApplied={batchIsHiddenApplied}
+                setBatchIsHiddenApplied={setBatchIsHiddenApplied}
                 showOtherFields={showOtherFields}
                 setShowOtherFields={setShowOtherFields}
                 onDelete={async (ids) => {

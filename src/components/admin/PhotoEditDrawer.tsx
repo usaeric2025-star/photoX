@@ -122,7 +122,24 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             </div>
           ) : (
             <div 
-              onClick={() => updateForm({ isHidden: !formState.isHidden })}
+              onClick={async () => {
+                const nextValue = !formState.isHidden;
+                updateForm({ isHidden: nextValue });
+                
+                // If editing an existing photo, attempt immediate persistence for this toggle
+                if (props.editPhotoId) {
+                  try {
+                    const m = await import('../../services/photoMutationService');
+                    await m.updatePhotoHidden(props.editPhotoId, nextValue);
+                    
+                    // Update local context photos as well
+                    setPhotos(prev => prev.map(p => p.id === props.editPhotoId ? { ...p, isHidden: nextValue } : p));
+                    showToast(`已${nextValue ? '隐藏' : '显示'}产品`, 'success');
+                  } catch (e) {
+                    console.error('Auto-save visibility failed:', e);
+                  }
+                }
+              }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
               {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}

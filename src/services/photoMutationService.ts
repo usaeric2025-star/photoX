@@ -22,12 +22,14 @@ const FIELD_MAP: Record<string, string> = {
   modelNumber: 'model_number',
   userId: 'user_id',
   descriptionTranslations: 'description_translations',
+  isHidden: 'isHidden',
 };
 
 const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'categoryId',
   'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId',
-  'image_url', 'thumb_url', 'price', 'updated_at', 'created_at', 'userId'
+  'image_url', 'thumb_url', 'price', 'updated_at', 'created_at', 'userId',
+  'isHidden'
 ];
 
 const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false): Record<string, any> => {
@@ -47,7 +49,7 @@ const mapToDb = (updates: Partial<Photo> & Record<string, any>, isCreate = false
         if (['tagIds', 'dimensions'].includes(key)) continue;
 
         // Ensure we explicitly ignore UI-only fields if they somehow slip through
-        if (['isAnalyzing', 'isHidden'].includes(key)) continue;
+        if (['isAnalyzing'].includes(key)) continue;
         
         if (FIELD_MAP[key]) {
             dbUpdates[FIELD_MAP[key]] = value;

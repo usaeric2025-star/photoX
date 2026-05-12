@@ -160,7 +160,10 @@ const uiValueForLogin = React.useMemo(() => ({
 1.  任何组件、Hook、页面不得直接调用 `supabase.from('furniture_items').update`。
 2.  所有对 `furniture_items` 表的写操作必须通过 `src/services/photoMutationService.ts` 中的统一函数进行。
 3.  严禁在调用处自行组装数据库字段，字段映射和过滤逻辑由服务层统一处理。
-4.  写入操作时，数据对象的字段名必须使用驼峰（如 groupId、isHidden）。严禁在组件代码中出现蛇形字段名（如 group_id、is_hidden）。
+4.  写入操作时，数据对象的字段名必须使用驼峰（如 groupId、isHidden）。
+    - **NEVER** use `is_hidden` (snake_case).
+    - **ALWAYS** use `isHidden` (camelCase) for both UI state and database persistence fields.
+    - Our database uses `isHidden` as the column name.
 5.  任何组件、Hook、页面不得直接调用 `supabase.from('groups').update` 或 `insert`。
 6.  所有对 `groups` 表的写操作必须通过 `src/services/groupMutationService.ts` 中的统一函数进行。
 
@@ -173,5 +176,10 @@ const uiValueForLogin = React.useMemo(() => ({
 所有数据库字段映射（驼峰 ↔ 蛇形）和白名单过滤，必须在 `MutationService` 中完成。
 
 违反此规则的代码将被拒绝合并。
+
+## XVI. 组件选用规范 (Component Selection)
+
+- **标签编辑**：对于照片标签，**必须**使用 `PhotoTagSelector` 而非 `TagEditor`。
+- **尺寸编辑**：**必须**使用 `DimensionEditor` 以确保数据结构一致性与验证逻辑统一。
 
 

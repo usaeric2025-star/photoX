@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
+    "lint": "npm run lint:db && tsc --noEmit",
+    "lint:db": "grep -rn 'is_hidden' src/ --include='*.ts' --include='*.tsx' && (echo '❌ 发现 is_hidden 字段名错误' && exit 1) || (echo '✅ 字段名检查通过')",
     "check-tags": "grep -rI 'from(DB_CONFIG.TABLE_NAME)' src | grep -E 'tag_ids|tagIds' && echo 'Schema Conflict Found' || echo 'No Schema Conflict Found'"
   },
   "dependencies": {

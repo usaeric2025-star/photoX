@@ -4,7 +4,7 @@ import { Category } from '../types';
 const TABLE_NAME = 'categories';
 
 const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'subcategories', 'userId', 'code', 'sortOrder'];
-const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
+const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'isHidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
 const FIELD_MAP: Record<string, string> = {
     userId: 'user_id',
