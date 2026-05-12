@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { PublicGallery } from './PublicGallery';
 import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } from '../context/AdminContexts';
 import { useGalleryContext } from '../context/GalleryContext';
-import { Layers, Pencil, Trash2, Share2, X, Eye, EyeOff } from 'lucide-react';
+import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
 import { translations, LanguageCode } from '../lib/translations';
 import { updatePhoto } from '../services/photoMutationService';
 import { usePhotoUpdate } from '../hooks/usePhotoUpdate';
@@ -62,6 +62,17 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     }
   };
 
+  const handleToggleHidden = async (photo: Photo) => {
+    const newStatus = !photo.isHidden;
+    try {
+      await updatePhoto(photo.id, { isHidden: newStatus });
+      adminUI?.showToast(newStatus ? '已设置为隐藏' : '已设置为显示', 'success');
+    } catch (e) {
+      console.error("[ERROR] Failed to toggle hidden:", e);
+      adminUI?.showToast(`操作失败: 无法更新隐藏状态。`, 'error');
+    }
+  };
+
   const handleGroup = () => {
     if (selectedIds.length > 0) {
       adminPhoto?.handleGroupPhotos(selectedIds);
@@ -112,19 +123,6 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     });
   };
 
-  const handleBatchToggleVisibility = async (hidden: boolean) => {
-    if (selectedIds.length === 0) return;
-    
-    const count = selectedIds.length;
-    
-    try {
-      await Promise.all(selectedIds.map(id => updatePhoto(id, { isHidden: hidden })));
-      adminUI?.showToast(`已${hidden ? '隐藏' : '显示'} ${count} 张照片`, 'success');
-    } catch (e) {
-      adminUI?.showToast(`操作失败: 部分照片更新失败。`, 'error');
-    }
-  };
-
   const handleBatchShare = async () => {
     const filtered = photos.filter(p => selectedIds.includes(p.id));
     const text = filtered.map(p => p.name || t.furniture).join(', ');
@@ -153,6 +151,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         tags={tags}
         isAdminMode={true}
         onTogglePinned={handleTogglePinned}
+        onToggleHidden={handleToggleHidden}
         onExit={onExit}
         showExit={true}
         hideHeader={true}
@@ -207,8 +206,6 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
            <div className="flex items-center gap-2">
              <button onClick={handleGroup} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title={t.merge}><Layers size={18} /></button>
              <button onClick={handleBatchEdit} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="统一编辑"><Pencil size={18} /></button>
-             <button onClick={() => handleBatchToggleVisibility(true)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="批量隐藏"><EyeOff size={18} /></button>
-             <button onClick={() => handleBatchToggleVisibility(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="批量显示"><Eye size={18} /></button>
              <button onClick={handleBatchDelete} className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20" title={t.delete}><Trash2 size={18} /></button>
              <button onClick={handleBatchShare} className="w-10 h-10 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl flex items-center justify-center text-blue-400 transition-all active:scale-95 border border-blue-500/20" title={t.share}><Share2 size={18} /></button>
            </div>

@@ -59,6 +59,7 @@ interface PublicGalleryProps {
   setAlertDialog?: (d: { title: string, message: string }) => void;
   totalCount?: number;
   onTogglePinned?: (photo: Photo) => void;
+  onToggleHidden?: (photo: Photo) => void;
 }
 
 const MemoizedPhotoCard = React.memo(({ 
@@ -156,6 +157,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   onAiAnalyze,
   onBatchAiAnalyze,
   onCancelAnalyze,
+  onToggleHidden,
   isAnalyzing,
   onSetGroupCover,
   setAlertDialog: propsSetAlertDialog,
@@ -522,16 +524,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         setAlertDialog={setAlertDialog}
         shareGroup={shareGroup}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
-        onToggleHidden={async (photo) => {
+        onToggleHidden={onToggleHidden || (async (photo) => {
            const newStatus = !photo.isHidden;
            import('../services/photoMutationService').then(async (m) => {
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
-              } catch (e) {
+              } catch (e: any) {
                 console.error("[ERROR] Failed to toggle hidden:", e);
+                setAlertDialog?.({ title: '操作失败', message: e.message || 'Error' });
               }
            });
-        }}
+        })}
       />
 
       {/* Dialogs */}
@@ -607,16 +610,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
            setLightboxIndex(null);
            if (onEditPhoto) onEditPhoto(photo.id);
         }}
-        onToggleHidden={async (photo) => {
+        onToggleHidden={onToggleHidden || (async (photo) => {
            const newStatus = !photo.isHidden;
            import('../services/photoMutationService').then(async (m) => {
               try {
                 await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
-              } catch (e) {
+              } catch (e: any) {
                 console.error("[ERROR] Failed to toggle hidden:", e);
+                setAlertDialog?.({ title: '操作失败', message: e.message || 'Error' });
               }
            });
-        }}
+        })}
       />
 
       <WhatsAppChoiceDialog 

@@ -353,9 +353,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 tags={tags}
                 selectedTagIds={safeArray<string>(formState.tagIds)}
                 onChange={(newIds) => updateForm({ tagIds: newIds })}
-                addTag={addTag}
-                updateTag={updateTag}
-                deleteTag={deleteTag}
+                addTag={async (name) => { return await addTag(name); }}
+                updateTag={async (id, name) => { await updateTag(id, name); return true; }}
+                deleteTag={async (id) => { await deleteTag(id); return true; }}
              />
           </section>
 

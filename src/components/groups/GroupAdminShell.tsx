@@ -5,7 +5,7 @@ import {
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon, Eye, EyeOff
 } from 'lucide-react';
-import { Photo, Tag, Category, ProductGroup, Manufacturer } from '../../types';
+import { Photo, Tag, Category, ProductGroup, Manufacturer, Dimension } from '../../types';
 import { updatePhotosGroupInCloud } from '../../services/photoSyncService';
 import { updatePhoto, savePhotoToCloud } from '../../services/photoMutationService';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
@@ -620,18 +620,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         </p>
                         <DimensionEditor 
                           dimensions={groupData?.dimensions || []}
-                          onAddDimension={() => {
-                            const current = groupData?.dimensions || [];
-                            handleUpdateGroupData({ dimensions: [...current, { label: '', unit: 'cm', length: 0, width: 0, height: 0 }] });
-                          }}
-                          onRemoveDimension={(idx) => {
-                            const current = groupData?.dimensions || [];
-                            handleUpdateGroupData({ dimensions: current.filter((_, i) => i !== idx) });
-                          }}
-                          onUpdateDimension={(idx, dim) => {
-                            const current = [...(groupData?.dimensions || [])];
-                            current[idx] = dim;
-                            handleUpdateGroupData({ dimensions: current });
+                          onChange={(newDims) => {
+                             handleUpdateGroupData({ dimensions: newDims as any });
                           }}
                         />
                         
@@ -755,7 +745,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                       }}
                       onSetGroupCover={(photoId, groupId) => setCover(photoId)}
                       onEditPhoto={onEditPhoto}
-                      onToggleHidden={(p) => persistPhotoChange(p.id, { isHidden: !p.isHidden })}
+                      onToggleHidden={(p) => {
+                        const newStatus = !p.isHidden;
+                        persistPhotoChange(p.id, { isHidden: newStatus });
+                      }}
                       onAiAnalyze={onAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}
                       isAnalyzing={isAnalyzing}
