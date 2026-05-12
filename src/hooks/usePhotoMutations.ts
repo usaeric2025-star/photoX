@@ -1,8 +1,6 @@
 import { Photo, User } from '../types';
-import { cleanObject } from '../services/utils';
 import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
-import { savePhotoToCloud } from '../services/photoMutationService';
 
 export const usePhotoMutations = (
   user: User | null,
@@ -21,16 +19,21 @@ export const usePhotoMutations = (
     }
   };
 
-  const updatePhoto = async (updatedPhoto: Photo) => {
-    const photoWithTime = { ...updatedPhoto, updatedAt: formatDate(new Date()) };
-    setPhotos(prev => prev.map(p => p.id === photoWithTime.id ? photoWithTime : p));
+  const updatePhoto = async (id: string, updates: Partial<Photo>) => {
+    const updatedAt = formatDate(new Date());
+    const finalUpdates = { ...updates, updatedAt };
     
-    const nextPhotos = photosRef.current.map(p => p.id === photoWithTime.id ? photoWithTime : p);
+    setPhotos(prev => prev.map(p => p.id === id ? { ...p, ...finalUpdates } : p));
+    
+    const nextPhotos = photosRef.current.map(p => p.id === id ? { ...p, ...finalUpdates } : p);
     photosRef.current = nextPhotos;
     saveData('product_photos', nextPhotos);
     
     if (user) {
-       await savePhotoToCloud(user.id, photoWithTime).catch(e => console.error("Update photo cloud sync failed:", e));
+       // Import the service dynamically or use injected if preferred, 
+       // but here we use the one from photoMutationService.
+       const m = await import('../services/photoMutationService');
+       await m.updatePhoto(id, finalUpdates).catch(e => console.error("Update photo cloud sync failed:", e));
     }
   };
 

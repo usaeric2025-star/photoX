@@ -193,7 +193,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     batchProgress, 
     aiDebugInfo, setAiDebugInfo, abortAnalysis, 
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto 
+    handlePhotoImport, deletePhoto, updatePhoto
   } = useAdminPhotos(
     user, 
     settings?.gemini_api_key, 
@@ -263,13 +263,14 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     addTag, removeTagFromPhoto,
     quickAddTag,
     quickAddManufacturer,
-    deleteGroup
+    deleteGroup,
+    updatePhoto
   }), [
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers,
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
     handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, deleteGroup
+    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, deleteGroup, updatePhoto
   ]);
 
   const uiValue = React.useMemo(() => ({
@@ -368,9 +369,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 onToggleHidden={async (photo) => {
                   const newStatus = !photo.isHidden;
                   try {
-                    const m = await import('../services/photoMutationService');
-                    await m.updatePhotoHidden(photo.id, newStatus);
-                    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isHidden: newStatus } : p));
+                    await updatePhoto(photo.id, { isHidden: newStatus });
                   } catch (e) {
                     handleError(e, '切换隐藏状态失败');
                   }

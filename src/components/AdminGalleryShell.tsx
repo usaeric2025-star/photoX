@@ -4,8 +4,6 @@ import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } fr
 import { useGalleryContext } from '../context/GalleryContext';
 import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
 import { translations, LanguageCode } from '../lib/translations';
-import { updatePhoto } from '../services/photoMutationService';
-import { usePhotoUpdate } from '../hooks/usePhotoUpdate';
 import { useTasks } from '../hooks/useTasks';
 import { Photo } from '../types';
 
@@ -35,7 +33,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] || translations['en'];
 
-  const { updatePhoto } = usePhotoUpdate();
+  const { updatePhoto } = adminPhoto || {};
   const { setAvoidingSelection } = useTasks();
 
   useEffect(() => {

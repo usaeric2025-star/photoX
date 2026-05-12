@@ -63,6 +63,7 @@ export interface AdminPhotoContextType {
   handleUngroup: (groupId: string) => Promise<ApiResponse>;
   saveNewPhoto: () => Promise<void>;
   saveBatchEdit: () => Promise<void>;
+  updatePhoto: (id: string, updates: Partial<Photo>) => Promise<void>;
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
   addTag: (name: string) => Promise<Tag>;

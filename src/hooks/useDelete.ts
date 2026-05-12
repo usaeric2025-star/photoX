@@ -72,17 +72,15 @@ export function useDelete() {
 
   const deleteCategory = async (categoryId: string): Promise<{ success: boolean, error?: any }> => {
     try {
-      // 1. Update photos using this category in cloud
-      // Keep this direct Supabase here for now as it crosses table boundaries, 
-      // but acknowledge boundary crossing.
-      const { data: affected } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ category_id: null })
-        .eq('category_id', categoryId)
-        .select('id');
+      // 1. Update photos using this category in cloud via service
+      const { clearCategoryFromPhotos, deleteCategoryFromDB } = await import('../services/photoMutationService').then(async m => {
+          const catM = await import('../services/categoryService');
+          return { clearCategoryFromPhotos: m.clearCategoryFromPhotos, deleteCategoryFromDB: catM.deleteCategoryFromDB };
+      });
+      
+      const affected = await clearCategoryFromPhotos(categoryId);
       
       // 2. Delete the category itself using service layer
-      const { deleteCategoryFromDB } = await import('../services/categoryService');
       await deleteCategoryFromDB(categoryId);
 
       // 3. Update local state
@@ -101,15 +99,15 @@ export function useDelete() {
 
   const deleteManufacturer = async (mfrId: string): Promise<{ success: boolean, error?: any }> => {
     try {
-      // 1. Update photos in cloud (this side-effect should ideally be in manufacturerService or orchestrator, but keeping consistent with existing structure)
-      const { data: affected } = await supabase
-        .from(DB_CONFIG.TABLE_NAME)
-        .update({ manufacturer_id: null })
-        .eq('manufacturer_id', mfrId)
-        .select('id');
+      // 1. Update photos in cloud via service helper
+      const { clearManufacturerFromPhotos, deleteManufacturerFromDB } = await import('../services/photoMutationService').then(async m => {
+          const mfrM = await import('../services/manufacturerService');
+          return { clearManufacturerFromPhotos: m.clearManufacturerFromPhotos, deleteManufacturerFromDB: mfrM.deleteManufacturerFromDB };
+      });
+      
+      const affected = await clearManufacturerFromPhotos(mfrId);
 
       // 2. Delete manufacturer using service layer
-      const { deleteManufacturerFromDB } = await import('../services/manufacturerService');
       await deleteManufacturerFromDB(mfrId);
 
       // 3. Update local state

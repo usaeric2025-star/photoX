@@ -408,6 +408,30 @@ export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
   await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove(filePaths);
 };
 
+export const clearCategoryFromPhotos = async (categoryId: string) => {
+  const { data, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .update({ category_id: null })
+    .eq('category_id', categoryId)
+    .select('id');
+    
+  if (error) throw error;
+  photoCache.clear();
+  return data;
+};
+
+export const clearManufacturerFromPhotos = async (mfrId: string) => {
+  const { data, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .update({ manufacturer_id: null })
+    .eq('manufacturer_id', mfrId)
+    .select('id');
+    
+  if (error) throw error;
+  photoCache.clear();
+  return data;
+};
+
 export const checkImageHashExists = async (hash: string): Promise<{image_url: string, manual_code: string} | null> => {
   try {
     const { data, error } = await supabase
