@@ -8,6 +8,7 @@ import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
 import { savePhotoToCloud } from '../services/photoMutationService';
 import { AI_CONFIG } from '../constants/config';
+import { showSystemError } from '../context/ErrorContext';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name || name.trim() === '') return true;
@@ -205,6 +206,7 @@ export const usePhotoAI = (
                 const errorMsg = result.reason?.message || '未知錯誤';
                 batchFailures.push(photo.name || photo.id.slice(0, 8));
                 console.error(`[AI Batch Fail] ID: ${photo.id}, Title: ${photo.name}, Err: ${errorMsg}`);
+                showSystemError(`AI 識別失敗 (${photo.name || photo.id.slice(0, 8)}): ${errorMsg}`);
               }
             });
 
@@ -315,7 +317,9 @@ export const usePhotoAI = (
         if (err.name === 'AbortError') {
           setAiDebugInfo({ step: '已取消', message: '识别任务已由用户中断' });
         } else {
-          setAiDebugInfo({ step: '错误', message: '识别失败', error: err.message || String(err) });
+          const errorMsg = err.message || String(err);
+          setAiDebugInfo({ step: '错误', message: '识别失败', error: errorMsg });
+          showSystemError(`AI 識別失敗: ${errorMsg}`);
         }
         if (editPhotoId) {
           setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));

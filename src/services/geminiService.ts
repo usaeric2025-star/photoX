@@ -457,15 +457,20 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         (d.height === 0 || d.width === 0 || d.length === 0);
 
       // Label check: if one object looks like a single component label (e.g., "H855") 
-      // and the other is nearby in the array, it's a strong merge signal.
-      const isSimpleLabel = (s: string) => /^[HWDL]\s*\d+$/i.test(s.trim());
+      // or the other is nearby in the array, it's a strong merge signal.
+      const isSimpleLabel = (s: string) => /^[HWDL]\s*\d+(\.\d+)?$/i.test(s.trim());
+
+      // Component count: how many of H, W, L are filled (>0)
+      const currentFillCount = (current.height > 0 ? 1 : 0) + (current.width > 0 ? 1 : 0) + (current.length > 0 ? 1 : 0);
+      const nextFillCount = (d.height > 0 ? 1 : 0) + (d.width > 0 ? 1 : 0) + (d.length > 0 ? 1 : 0);
 
       const shouldMerge = !hasOverlap && bothAreIncomplete && (
         isSimpleLabel(d.label) || 
         isSimpleLabel(current.label) || 
         // Or if both are very incomplete (only 1 field filled each)
-        ((current.height > 0 ? 1 : 0) + (current.width > 0 ? 1 : 0) + (current.length > 0 ? 1 : 0) <= 1 &&
-         (d.height > 0 ? 1 : 0) + (d.width > 0 ? 1 : 0) + (d.length > 0 ? 1 : 0) <= 1)
+        (currentFillCount <= 1 && nextFillCount <= 1) ||
+        // Or if merging them would create a more complete object without exceeding 3 parts
+        (currentFillCount + nextFillCount <= 3)
       );
 
       if (shouldMerge) {

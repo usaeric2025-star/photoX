@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, CheckSquare, Settings2, Eye, EyeOff, LogIn, Plus, Globe, RefreshCcw, ChevronDown, FileText, CheckCircle2, Menu, LayoutTemplate } from 'lucide-react';
+import { Sparkles, CheckSquare, Settings2, Eye, EyeOff, LogIn, Plus, Globe, RefreshCcw, ChevronDown, FileText, CheckCircle2, Menu, LayoutTemplate, AlertCircle } from 'lucide-react';
 import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminSession, useAdminUI } from '../../context/AdminContexts';
 import { useGalleryContext } from '../../context/GalleryContext';
+import { useError } from '../../context/ErrorContext';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { Photo } from '../../types';
@@ -34,6 +35,7 @@ export const AdminHeader: React.FC<Props> = ({
   const { settings, user, viewMode, setViewMode } = useAdminSession();
   const { isAnalyzing, batchProgress, activeScreen, setActiveScreen, showToast } = useAdminUI();
   const { isInfiniteMode, setIsInfiniteMode } = useGalleryContext();
+  const { errors } = useError();
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -217,9 +219,14 @@ export const AdminHeader: React.FC<Props> = ({
                 <div className="relative" ref={toolsRef}>
                   <button 
                     onClick={() => setShowToolsMenu(!showToolsMenu)}
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${activeScreen === 'manage' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
+                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative ${activeScreen === 'manage' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
                   >
                     <Menu size={18} />
+                    {errors.length > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center border-2 border-[#FDFAF6] shadow-sm animate-pulse-slow">
+                        <span className="text-[8px] font-black text-white">{errors.length > 9 ? '9+' : errors.length}</span>
+                      </span>
+                    )}
                   </button>
                   <AnimatePresence>
                     {showToolsMenu && (

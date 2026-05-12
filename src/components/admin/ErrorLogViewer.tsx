@@ -22,12 +22,15 @@ export const ErrorLogViewer = () => {
         </div>
       ) : (
         <div className="space-y-2 max-h-60 overflow-y-auto">
-          {errors.map((error, index) => (
-            <div key={index} className="text-xs bg-white p-2 rounded border border-red-100 text-red-900 font-mono">
-              <span className="text-gray-400 mr-2">[{new Date(error.timestamp).toLocaleTimeString()}]</span>
-              {error.message}
-            </div>
-          ))}
+          {errors.map((error, index) => {
+            const isAiError = error.message.includes('AI 識別失敗');
+            return (
+              <div key={index} className={`text-xs p-2 rounded border font-mono ${isAiError ? 'bg-purple-50 border-purple-100 text-purple-900' : 'bg-white border-red-100 text-red-900'}`}>
+                <span className="text-gray-400 mr-2">[{new Date(error.timestamp).toLocaleTimeString()}]</span>
+                <span className={isAiError ? 'font-black' : ''}>{error.message}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
