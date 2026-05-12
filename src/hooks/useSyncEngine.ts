@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Photo } from '../types';
+import { cleanPhotos } from '../lib/filters';
 import { saveData, loadData } from '../utils/indexedDB';
 import { 
     loadAllPhotosFromCloud, 
@@ -158,7 +159,7 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 });
             }
 
-            const finalPhotos = Array.from(localMap.values());
+            const finalPhotos = cleanPhotos(Array.from(localMap.values()));
             setPublicPhotos(finalPhotos);
             await saveData('product_photos', finalPhotos);
             

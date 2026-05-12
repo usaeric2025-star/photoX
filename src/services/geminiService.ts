@@ -220,17 +220,47 @@ OUTPUT JSON example:
       throw new Error(`AI 未回传分析结果`);
     }
 
-    // Safely extract JSON in case the model wraps it in markdown blocks or has leading/trailing fluff
+    // Safely extract the first valid JSON object by finding balanced braces
     let cleanText = textOutput.trim();
-    if (cleanText.includes('```')) {
-      const match = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-      if (match) cleanText = match[1];
-    }
-    
     const startIndex = cleanText.indexOf('{');
-    const endIndex = cleanText.lastIndexOf('}');
-    if (startIndex === -1 || endIndex === -1) {
+    if (startIndex === -1) {
       throw new Error('回传格式错误，找不到 JSON 对象');
+    }
+
+    // Balanced brace matching to find the true end of the JSON object
+    let braceCount = 0;
+    let endIndex = -1;
+    let inString = false;
+    let escaping = false;
+
+    for (let i = startIndex; i < cleanText.length; i++) {
+        const char = cleanText[i];
+        if (escaping) {
+            escaping = false;
+            continue;
+        }
+        if (char === '\\') {
+            escaping = true;
+            continue;
+        }
+        if (char === '"') {
+            inString = !inString;
+            continue;
+        }
+        if (!inString) {
+            if (char === '{') braceCount++;
+            if (char === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    endIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (endIndex === -1) {
+      throw new Error('回传格式错误，JSON 对象未闭合');
     }
     
     const jsonStr = cleanText.substring(startIndex, endIndex + 1);
@@ -458,7 +488,7 @@ export const normalizeDimensions = (dims: any[]): any[] => {
 
       // Label check: if one object looks like a single component label (e.g., "H855") 
       // or the other is nearby in the array, it's a strong merge signal.
-      const isSimpleLabel = (s: string) => /^[HWDL]\s*\d+(\.\d+)?$/i.test(s.trim());
+      const isSimpleLabel = (s: string) => /^(H|W|D|L|Height|Width|Depth|Length)\s*[:：]?\s*\d+(\.\d+)?\s*(cm|mm|inch|in|")?$/i.test(s.trim());
 
       // Component count: how many of H, W, L are filled (>0)
       const currentFillCount = (current.height > 0 ? 1 : 0) + (current.width > 0 ? 1 : 0) + (current.length > 0 ? 1 : 0);
@@ -467,9 +497,7 @@ export const normalizeDimensions = (dims: any[]): any[] => {
       const shouldMerge = !hasOverlap && bothAreIncomplete && (
         isSimpleLabel(d.label) || 
         isSimpleLabel(current.label) || 
-        // Or if both are very incomplete (only 1 field filled each)
-        (currentFillCount <= 1 && nextFillCount <= 1) ||
-        // Or if merging them would create a more complete object without exceeding 3 parts
+        // Or if both are very incomplete (only 1 or 2 fields filled each)
         (currentFillCount + nextFillCount <= 3)
       );
 
@@ -478,8 +506,10 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         if (d.width > 0) current.width = d.width;
         if (d.length > 0) current.length = d.length;
         // Smart label: don't repeat the same thing if labels are similar
-        if (!current.label.includes(d.label)) {
+        if (current.label && d.label && !current.label.includes(d.label)) {
           current.label = `${current.label} ${d.label}`.trim();
+        } else if (!current.label) {
+          current.label = d.label;
         }
         if (d.unit === 'inch') current.unit = 'inch';
       } else {
@@ -543,7 +573,45 @@ ${zhText}
     
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content;
-    const parsed = JSON.parse(content || '{}');
+    if (!content) return { en: '', ms: '' };
+
+    let cleanedContent = content.trim();
+    const startIndex = cleanedContent.indexOf('{');
+    if (startIndex === -1) return { en: '', ms: '' };
+    
+    let braceCount = 0;
+    let endIndex = -1;
+    let inString = false;
+    let escaping = false;
+
+    for (let i = startIndex; i < cleanedContent.length; i++) {
+        const char = cleanedContent[i];
+        if (escaping) {
+            escaping = false;
+            continue;
+        }
+        if (char === '\\') {
+            escaping = true;
+            continue;
+        }
+        if (char === '"') {
+            inString = !inString;
+            continue;
+        }
+        if (!inString) {
+            if (char === '{') braceCount++;
+            if (char === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                    endIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    const jsonStr = endIndex !== -1 ? cleanedContent.substring(startIndex, endIndex + 1) : cleanedContent;
+    const parsed = JSON.parse(jsonStr || '{}');
     
     return {
       en: parsed.en || '',

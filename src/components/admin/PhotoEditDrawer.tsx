@@ -50,43 +50,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  
   const isSyncing = sessionSyncing;
 
-  // 1. 合并逻辑工具函数
-  const mergeDimensionsIfNeeded = (dims: any[]) => {
-    const sDims = safeArray(dims);
-    if (sDims.length === 0) return dims;
-    
-    // 检查是否已经是完整描述的正则 (包含 H/W/D 或 数字+单位)
-    const isComplete = (s: string) => {
-      const lower = (s || '').toLowerCase();
-      const hasLabels = lower.includes('h') || lower.includes('w') || lower.includes('d') || lower.includes('l');
-      const hasUnit = lower.match(/\d+(\.\d+)?\s*(cm|mm|inch|in|")/i);
-      return hasLabels || hasUnit;
-    };
-
-    // 如果长度 <= 3 且都不是完整描述，则合并
-    if (sDims.length > 1 && sDims.length <= 3) {
-      const allIncomplete = sDims.every(d => !isComplete(d.label || ''));
-      if (allIncomplete) {
-        const combinedLabel = sDims.map(d => d.label).join(' ').trim();
-        return [{
-          ...sDims[0],
-          label: combinedLabel,
-          isAI: true
-        }];
-      }
-    }
-    return dims;
-  };
-
   // 2. 自动触发 AI 识别逻辑
-  const hasAutoTriggered = React.useRef<string | null>(null);
-
-  // Disabled auto-trigger
-  /* React.useEffect(() => {
-    ...
-  }, [editPhotoId, !!newPhotoData, !!editPhotoPreview]); */
-
-
   const isPartOfGroup = useMemo(() => {
     if (!editPhotoId) return false;
     const photo = photos.find(p => p.id === editPhotoId);

@@ -207,6 +207,13 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
 
   const actualLoadingState = loadingState;
 
+  // Clear stale AI errors when entering edit mode, unless we are currently analyzing
+  useEffect(() => {
+    if (editPhotoId && actualLoadingState !== 'analyzing') {
+       setAiDebugInfo(null);
+    }
+  }, [editPhotoId, actualLoadingState, setAiDebugInfo]);
+
   const handleDeletePhoto = useCallback(async (id: string) => {
      const { success, error } = await deletePhotos(id);
      if (success) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
 import { updatePhoto } from '../services/photoMutationService';
 import { PublicGallery } from '../components/PublicGallery';
@@ -59,7 +60,7 @@ export default function PublicView() {
       ]);
       const sCloudPhotos = safeArray(cloudPhotos);
       if (cloudPhotos) {
-        setPhotos(sCloudPhotos);
+        setPhotos(cleanPhotos(sCloudPhotos));
         setPage(0);
         setHasMore(sCloudPhotos.length === 1000);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
@@ -81,7 +82,7 @@ export default function PublicView() {
     const cachedSettings = await loadData('product_settings');
 
     if (cachedPhotos && !filterCatId && safeArray(filterTagIds).length === 0 && !debouncedSearchQuery) {
-      setPhotos(cachedPhotos);
+      setPhotos(cleanPhotos(cachedPhotos));
       if (!isBackground) setIsInitializing(false);
     }
     if (cachedCats) setCategories(cachedCats);
@@ -109,13 +110,14 @@ export default function PublicView() {
 
       const sCloudPhotos = safeArray(cloudPhotos);
       if (cloudPhotos) {
-        setPhotos(sCloudPhotos);
+        const cleanedCloud = cleanPhotos(sCloudPhotos);
+        setPhotos(cleanedCloud);
         setPage(0);
         setHasMore(sCloudPhotos.length === PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
         if (!filterCatId && sFilterTagIds.length === 0 && !debouncedSearchQuery) {
-          saveData('product_photos', sCloudPhotos);
+          saveData('product_photos', cleanedCloud);
         }
       }
       
@@ -163,7 +165,7 @@ export default function PublicView() {
       const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PUBLIC_PAGE_SIZE, filterCatId, sFilterTagIds.length > 0 ? sFilterTagIds[0] : null, debouncedSearchQuery);
       const sMorePhotos = safeArray(morePhotos);
       if (morePhotos && sMorePhotos.length > 0) {
-        setPhotos(prev => [...prev, ...sMorePhotos]);
+        setPhotos(prev => [...prev, ...cleanPhotos(sMorePhotos)]);
         setPage(nextPage);
         setHasMore(sMorePhotos.length === PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => prev + sMorePhotos.length);

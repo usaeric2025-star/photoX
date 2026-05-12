@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, LayoutGrid, Grid3X3, Layers, ArrowDown, ArrowUp } from 'lucide-react';
+import { Search, X, LayoutGrid, Grid3X3, Layers, ArrowDown, ArrowUp, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, SubCategory, Tag } from '../../types';
 import { useGalleryContext } from '../../context/GalleryContext';
@@ -151,7 +151,16 @@ export const SearchAndFilter: React.FC<Props> = ({
               </div>
             )}
             
-            <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth px-1">
+            <div className="flex overflow-x-auto pb-1 gap-2 no-scrollbar scroll-smooth px-1 items-center">
+              {filterTagIds.length > 0 && (
+                <button 
+                  onClick={() => setFilterTagIds([])}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest bg-red-50 text-red-600 border border-red-100 shadow-sm active:scale-95 transition-all"
+                >
+                  <RotateCcw size={10} />
+                  清除
+                </button>
+              )}
               {tags.map((tag: Tag) => {
                 const strTagId = String(tag.id);
                 return (

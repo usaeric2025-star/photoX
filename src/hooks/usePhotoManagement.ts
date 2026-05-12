@@ -21,15 +21,10 @@ const INITIAL_FORM_STATE: ProductFormData = {
   dimensions: [],
   isHidden: false,
   price: '',
-  dimL: '',
-  dimW: '',
-  dimH: '',
   isGroupCover: false,
 };
 
 import { useGalleryContext } from '../context/GalleryContext';
-
-import { useOptionalAdminSession, useOptionalAdminUI } from '../context/AdminContexts';
 
 export const usePhotoManagement = (
   user: User | null,
@@ -110,9 +105,6 @@ export const usePhotoManagement = (
           isHidden: !!photo.isHidden,
           isGroupCover: !!photo.isGroupCover,
           price: photo.price || '',
-          dimL: dims[0]?.length?.toString() || '',
-          dimW: dims[0]?.width?.toString() || '',
-          dimH: dims[0]?.height?.toString() || '',
         });
         lastInitializedId.current = editPhotoId;
       }
@@ -166,8 +158,7 @@ export const usePhotoManagement = (
   const saveNewPhoto = async () => {
     const { 
       name, categoryId, manufacturerId, tagIds, description, description_translations,
-      manual_code, model_number, dimensions, isHidden, price,
-      dimL, dimW, dimH
+      manual_code, model_number, dimensions, isHidden, price
     } = formState;
 
     if (!categoryId && !name && !editPhotoId && !newPhotoData) {
@@ -191,13 +182,7 @@ export const usePhotoManagement = (
            if (!original) throw new Error('Photo not found');
 
            const sDimensions = safeArray(dimensions);
-           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [{
-             label: '',
-             length: parseFloat(dimL || '0') || 0,
-             width: parseFloat(dimW || '0') || 0,
-             height: parseFloat(dimH || '0') || 0,
-             unit: 'cm'
-           }];
+           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [];
 
            const updatedPhoto: Photo = {
              ...original,
@@ -236,13 +221,7 @@ export const usePhotoManagement = (
         } else if (newPhotoData) {
            const finalId = crypto.randomUUID();
            const sDimensions = safeArray(dimensions);
-           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [{
-             label: '',
-             length: parseFloat(dimL || '0') || 0,
-             width: parseFloat(dimW || '0') || 0,
-             height: parseFloat(dimH || '0') || 0,
-             unit: 'cm'
-           }];
+           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [];
 
            const newPhoto: Photo = {
              id: finalId,
