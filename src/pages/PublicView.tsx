@@ -60,11 +60,17 @@ export default function PublicView() {
       ]);
       const sCloudPhotos = safeArray(cloudPhotos);
       if (cloudPhotos) {
-        setPhotos(cleanPhotos(sCloudPhotos));
+        const cleaned = cleanPhotos(sCloudPhotos);
+        setPhotos(cleaned);
         setPage(0);
         setHasMore(sCloudPhotos.length === 1000);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
+        
+        // Sync to cache to ensure consistency and fix "refresh to see" issue
+        if (!filterCatId && safeArray(filterTagIds).length === 0 && !debouncedSearchQuery) {
+          saveData('product_photos', cleaned);
+        }
       }
     } catch (e) {
       handleError(e, "fetchFilteredPhotos");

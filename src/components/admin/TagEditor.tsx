@@ -99,7 +99,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
             <button 
               type="button" 
               onClick={() => setSearchTerm('')} 
-              className="absolute right-[5.5rem] top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 p-1"
+              className="absolute right-[5.5rem] top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 p-1 bg-white/80 rounded-full shadow-sm"
             >
               <X size={12} />
             </button>

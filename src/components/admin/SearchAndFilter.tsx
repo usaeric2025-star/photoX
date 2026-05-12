@@ -52,7 +52,7 @@ export const SearchAndFilter: React.FC<Props> = ({
             onChange={(e) => handleSearchChange(e.target.value)}
           />
           {localSearch && (
-            <button onClick={() => handleSearchChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1D3557]/30 hover:text-[#1D3557]/60 p-1">
+            <button onClick={() => handleSearchChange('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#1D3557]/60 hover:text-[#1D3557] p-1 bg-white/80 rounded-full shadow-sm">
               <X size={14} />
             </button>
           )}

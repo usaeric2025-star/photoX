@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 import { ProductFormData } from '../../types';
 import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
-import { TagEditor } from './TagEditor';
+import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { useAdminUI } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 
@@ -172,39 +172,13 @@ export const BatchEditScreen = ({
         </section>
 
          <section className="space-y-4">
-          <TagEditor 
+          <PhotoTagSelector 
             tags={tags}
-            selectedTagIds={formState.tagIds}
-            onToggleTag={(tag) => {
-              const tagIdStr = String(tag.id);
-              const sTagIds = safeArray<string>(formState.tagIds);
-              const exists = sTagIds.map(String).includes(tagIdStr);
-              if (exists) {
-                updateForm({ 
-                  tagIds: sTagIds.filter((tid: string) => String(tid) !== tagIdStr) 
-                });
-              } else if (sTagIds.length < 3) {
-                updateForm({ 
-                  tagIds: [...sTagIds, tagIdStr] 
-                });
-              }
-            }}
-            onUpdateTag={updateTag}
-            onDeleteTag={deleteTag}
-            onQuickAdd={quickAddT}
-            onRenameTagRequest={(tag) => {
-              setPromptDialog({
-                title: '编辑标签 / Edit Tag',
-                message: "输入标签名称 / Enter Tag Name:",
-                placeholder: tag.name,
-                onSubmit: (n) => {
-                  if(n && n.trim()) { 
-                    updateTag(tag.id, n.trim()); 
-                  }
-                }
-              });
-            }}
-            showHotEffects={false}
+            selectedTagIds={safeArray<string>(formState.tagIds)}
+            onChange={(newIds) => updateForm({ tagIds: newIds })}
+            addTag={useAdminPhoto().addTag}
+            updateTag={updateTag}
+            deleteTag={deleteTag}
           />
         </section>
       </div>

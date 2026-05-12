@@ -2,11 +2,12 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { useErrorHandler } from '../../utils/errorHandler';
-import { Photo, ProductFormData } from '../../types';
+import { Photo, ProductFormData, Dimension, Tag } from '../../types';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight, Trash2 } from 'lucide-react';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
-import { TagEditor } from './TagEditor';
+import { PhotoTagSelector } from './edit/PhotoTagSelector';
+import { DimensionEditor } from './edit/DimensionEditor';
 import { Button } from "@/components/ui/button"
 import { cn, safeArray } from '../../lib/utils';
 
@@ -56,19 +57,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     const photo = photos.find(p => p.id === editPhotoId);
     return !!(photo && photo.groupId);
   }, [editPhotoId, photos]);
-
-  const sortedTags = useMemo(() => {
-    return [...tags].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-  }, [tags]);
-  
-  const handleToggleTag = (tag: any) => {
-    const currentTagIds = safeArray<string>(formState.tagIds);
-    if (currentTagIds.includes(tag.id)) {
-        updateForm({ tagIds: currentTagIds.filter(id => id !== tag.id) });
-    } else if (currentTagIds.length < 3) {
-        updateForm({ tagIds: [...currentTagIds, tag.id] });
-    }
-  };
 
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
@@ -230,8 +218,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
               onClick={async () => {
                 const { valid, errors } = validatePhotoForm(formState);
                 if (!valid) {
-                  // The validation hook handles visual feedback if integrated with a form library,
-                  // but here we just block and show toast for simplicity since it's a raw object.
                   handleError(new Error(errors[0]), '表單驗證失敗');
                   return;
                 }
@@ -250,7 +236,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 await props.saveNewPhoto();
               }}
               disabled={isSyncing}
-              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isSyncing ? 'bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700'}`}
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isSyncing ? 'bg-blue-400 text-white border-blue-400 animate-pulse cursor-wait' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700'}`}
               title="保存"
             >
               {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18}/>}
@@ -289,31 +275,49 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
             </div>
           )}
           <div className="flex-1 space-y-3">
-             <div className="space-y-1.5">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 / PRODUCT NAME</h3>
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 / PRODUCT NAME</h3>
+              <input 
+                key={editPhotoId || 'new'}
+                type="text" 
+                placeholder="輸入名稱..." 
+                defaultValue={formState.name} 
+                onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
+                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+              />
+            </div>
+            <div className="flex w-full gap-2 pt-1">
+              <div className="flex-1 space-y-1.5">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">編號 / CODE</h3>
                 <input 
-                  key={editPhotoId || 'new'}
                   type="text" 
-                  placeholder="輸入名稱..." 
-                  defaultValue={formState.name} 
-                  onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
-                  className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+                  placeholder="編號..." 
+                  value={formState.manual_code || ''} 
+                  onChange={e => updateForm({ manual_code: e.target.value })} 
+                  className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" 
                 />
-             </div>
-             <div className="flex w-full gap-2 pt-1">
-                 <div className="flex-1 space-y-1.5">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">編號 / CODE</h3>
-                  <input type="text" placeholder="編號..." value={formState.manual_code} onChange={e => updateForm({ manual_code: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" />
-                </div>
-                <div className="flex-1 space-y-1.5">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">型號 / MODEL</h3>
-                  <input type="text" placeholder="型號..." value={formState.model_number} onChange={e => updateForm({ model_number: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" />
-                </div>
-                <div className="flex-1 space-y-1.5">
-                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">價格 / PRICE</h3>
-                  <input type="text" placeholder="價格..." value={formState.price||''} onChange={e => updateForm({ price: e.target.value })} className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold text-blue-600 outline-none focus:border-blue-500" />
-                </div>
-             </div>
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">型號 / MODEL</h3>
+                <input 
+                  type="text" 
+                  placeholder="型號..." 
+                  value={formState.model_number || ''} 
+                  onChange={e => updateForm({ model_number: e.target.value })} 
+                  className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" 
+                />
+              </div>
+              <div className="flex-1 space-y-1.5">
+                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">價格 / PRICE</h3>
+                <input 
+                  type="text" 
+                  placeholder="價格..." 
+                  value={formState.price || ''} 
+                  onChange={e => updateForm({ price: e.target.value })} 
+                  className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold text-blue-600 outline-none focus:border-blue-500" 
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -328,56 +332,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </section>
 
         <section className="space-y-2">
-             <TagEditor 
-                tags={sortedTags} 
-                selectedTagIds={formState.tagIds} 
-                onToggleTag={handleToggleTag}
-                onUpdateTag={updateTag}
-                onDeleteTag={(tagId) => deleteTag(tagId)}
-                onQuickAdd={() => {
-                  setPromptDialog({
-                    title: '新增标签 / Add Tag',
-                    message: '输入标签名称 / Enter Tag Name',
-                    onSubmit: async (name) => {
-                      const trimmed = name.trim();
-                      if (!trimmed) return;
-                      
-                      const existing = tags.find(t => t.name.toUpperCase() === trimmed.toUpperCase());
-                      if (existing) {
-                        const currentIds = formState.tagIds || [];
-                        if (currentIds.length < 3) {
-                          const nextTagIds = [...new Set([...currentIds, String(existing.id)])];
-                          updateForm({ tagIds: nextTagIds });
-                        }
-                        showToast(`标签 "${trimmed}" 已存在 (自动选择)`, 'success');
-                        return;
-                      }
-
-                      const saved = await addTag(trimmed);
-                      if (saved) {
-                         const currentIds = formState.tagIds || [];
-                         if (currentIds.length < 3) {
-                           const nextTagIds = [...new Set([...currentIds, String(saved.id)])];
-                           updateForm({ tagIds: nextTagIds });
-                         }
-                         showToast(`已新增标签 "${trimmed}"`, 'success');
-                      }
-                    }
-                  });
-                }}
-                onRenameTagRequest={(tag) => {
-                  setPromptDialog({
-                    title: '编辑标签 / Edit Tag',
-                    message: "输入标签名称 / Enter Tag Name:",
-                    placeholder: tag.name,
-                    onSubmit: (n) => {
-                      if(n && n.trim()) { 
-                        updateTag(tag.id, n.trim()); 
-                      }
-                    }
-                  });
-                }}
-                showHotEffects={false}
+             <PhotoTagSelector 
+                tags={tags}
+                selectedTagIds={safeArray<string>(formState.tagIds)}
+                onChange={(newIds) => updateForm({ tagIds: newIds })}
+                addTag={addTag}
+                updateTag={updateTag}
+                deleteTag={deleteTag}
              />
           </section>
 
@@ -429,144 +390,21 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
              
              {props.showOtherFields && (
                 <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between pl-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1 leading-none">产品尺寸 / DIMENSIONS</span>
-                    <div className="flex items-center gap-2">
-                      {handleSingleAiAnalyze && (
-                        <button 
-                          onClick={() => {
-                            if (isAnalyzing) return;
-                            const data = props.newPhotoData || props.editPhotoPreview;
-                            if (!data) return;
-
-                            if (handleSingleAiAnalyzeCallback) {
-                              handleSingleAiAnalyzeCallback(
-                                data, 
-                                formState.categoryId || undefined, 
-                                editPhotoId || undefined, 
-                                formState, 
-                                updateForm, 
-                                handleSingleAiAnalyze
-                              );
-                            } else {
-                              handleSingleAiAnalyze!(data, formState.categoryId || undefined);
-                            }
-                          }}
-                          disabled={isAnalyzing}
-                          className={`text-[9px] font-black px-2 py-1 rounded-lg border flex items-center gap-1 transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
-                        >
-                          <Sparkles size={10} className={isAnalyzing ? 'animate-spin' : ''} /> 
-                          {isAnalyzing ? '识别中...' : 'AI 识别尺寸'}
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => {
-                          const newDims = [...safeArray(formState.dimensions)];
-                          newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
-                          updateForm({ dimensions: newDims });
-                        }}
-                        className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
-                      >
-                        + 增加规格 / ADD SIZE
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {safeArray<any>(safeArray(formState.dimensions).length > 0 ? formState.dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' }]).map((dim: any, idx) => {
-                      const label = dim.label || '';
-                      // 增强正则，支持中文冒号
-                      const prefixMatch = label.match(/^([A-Z0-9\u4e00-\u9fa5]+)\s*[:：]\s*(.*)$/i);
-                      const prefix = prefixMatch ? prefixMatch[1] : '';
-                      const dimensionsPart = prefixMatch ? prefixMatch[2] : label;
-                      
-                      const handleUpdateLabel = (newPrefix: string, newDimPart: string) => {
-                        const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
-                        const currDims = safeArray(formState.dimensions);
-                        const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
-                        newDims[idx].label = finalLabel;
-                        newDims[idx].isAI = false; // 用户修改后移除 AI 标记
-                        
-                        // 尝试重新解析数值，保持后台数据尽可能真实
-                        const hMatch = newDimPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-                        const wMatch = newDimPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-                        const lMatch = newDimPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-                        const dMatch = newDimPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-                        
-                        if (hMatch) newDims[idx].height = parseFloat(hMatch[1]);
-                        if (wMatch) newDims[idx].width = parseFloat(wMatch[1]);
-                        if (lMatch) newDims[idx].length = parseFloat(lMatch[1]);
-                        else if (dMatch) newDims[idx].length = parseFloat(dMatch[1]);
-
-                        updateForm({ dimensions: newDims });
-                      };
-
-                      return (
-                        <div key={`dim-${idx}`} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
-                          { (safeArray(formState.dimensions).length > 1) && (
-                            <button 
-                              onClick={() => {
-                                updateForm({ dimensions: safeArray(formState.dimensions).filter((_, i) => i !== idx) });
-                              }}
-                              className="absolute top-2 right-2 p-1 text-slate-300 hover:text-red-500 transition-colors"
-                            >
-                              <CloseIcon size={14} />
-                            </button>
-                          )}
-                          <div className="grid grid-cols-2 gap-2">
-                             <div className="space-y-1">
-                                <div className="flex items-center justify-between pl-1">
-                                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">部分 / PART</span>
-                                  {dim.isAI && (
-                                    <div className="flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 animate-pulse">
-                                      <Sparkles size={8} />
-                                      <span className="text-[8px] font-black">AI</span>
-                                    </div>
-                                  )}
-                                </div>
-                                <input 
-                                  type="text" 
-                                  placeholder="如: WD" 
-                                  value={prefix} 
-                                  onChange={e => handleUpdateLabel(e.target.value.toUpperCase().trim(), dimensionsPart)}
-                                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold" 
-                                />
-                             </div>
-                             <div className="space-y-1">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
-                                <div className="flex gap-1">
-                                  {['cm', 'mm', 'inch'].map(u => (
-                                    <button 
-                                      key={u}
-                                      onClick={() => {
-                                        const currDims = safeArray(formState.dimensions);
-                                        const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
-                                        newDims[idx].unit = u as any;
-                                        newDims[idx].isAI = false;
-                                        updateForm({ dimensions: newDims });
-                                      }}
-                                      className={`flex-1 p-2 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}
-                                    >
-                                      {u}
-                                    </button>
-                                  ))}
-                                </div>
-                             </div>
-                          </div>
-                          <div className="space-y-1">
-                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">尺寸内容 / DIMENSIONS</span>
-                             <input 
-                               type="text" 
-                               placeholder={isAnalyzing ? "AI 识别尺寸中..." : "H94 x W96 x D23"} 
-                               value={dimensionsPart || (isAnalyzing ? "" : "—")} 
-                               onChange={e => handleUpdateLabel(prefix, e.target.value)}
-                               className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold" 
-                             />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <DimensionEditor 
+                    dimensions={safeArray<Dimension>(formState.dimensions)}
+                    onChange={(newDims) => updateForm({ dimensions: newDims })}
+                    showAiButton={!!handleSingleAiAnalyze}
+                    isAnalyzing={isAnalyzing}
+                    onAiAnalyze={() => {
+                      const data = newPhotoData || editPhotoPreview;
+                      if (!data) return;
+                      if (handleSingleAiAnalyzeCallback) {
+                        handleSingleAiAnalyzeCallback(data, formState.categoryId || undefined, editPhotoId || undefined, formState, updateForm, handleSingleAiAnalyze);
+                      } else if (handleSingleAiAnalyze) {
+                        handleSingleAiAnalyze(data, formState.categoryId || undefined);
+                      }
+                    }}
+                  />
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between px-1">

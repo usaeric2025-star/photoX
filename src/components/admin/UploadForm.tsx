@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
-import { Category, Tag, ProductFormData, Manufacturer } from '../../types';
+import { Category, Tag, ProductFormData, Manufacturer, Dimension } from '../../types';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../../context/AdminContexts';
-import { TagEditor } from './TagEditor';
-
+import { PhotoTagSelector } from './edit/PhotoTagSelector';
+import { DimensionEditor } from './edit/DimensionEditor';
 import { safeArray } from '../../lib/utils';
 
 interface UploadFormProps {
@@ -204,34 +204,13 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         </section>
 
         <section className="space-y-4">
-          <TagEditor 
+          <PhotoTagSelector 
             tags={tags}
-            selectedTagIds={formState.tagIds}
-            onToggleTag={(tag) => {
-              const sTagIds = safeArray<string>(formState.tagIds);
-              const isSelected = sTagIds.includes(tag.id);
-              if (isSelected) {
-                updateForm({ tagIds: sTagIds.filter(tid => tid !== tag.id) });
-              } else if (sTagIds.length < 3) {
-                updateForm({ tagIds: [...sTagIds, tag.id] });
-              }
-            }}
-            onUpdateTag={updateTag}
-            onDeleteTag={deleteTag}
-            onQuickAdd={quickAddTag}
-            onRenameTagRequest={(tag) => {
-              setPromptDialog({
-                title: '编辑标签 / Edit Tag',
-                message: "输入标签名称 / Enter Tag Name:",
-                placeholder: tag.name,
-                onSubmit: (n) => {
-                  if(n && n.trim()) { 
-                    updateTag(tag.id, n.trim()); 
-                  }
-                }
-              });
-            }}
-            showHotEffects={false}
+            selectedTagIds={safeArray<string>(formState.tagIds)}
+            onChange={(newIds) => updateForm({ tagIds: newIds })}
+            addTag={useAdminPhoto().addTag}
+            updateTag={updateTag}
+            deleteTag={deleteTag}
           />
         </section>
 
@@ -257,129 +236,13 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden space-y-4 pt-2"
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between pl-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1 font-mono tracking-tight">产品尺寸 / DIMENSIONS</label>
-                    <button 
-                      onClick={() => {
-                        const newDims = [...safeArray(formState.dimensions)];
-                        newDims.push({ label: '', length: 0, width: 0, height: 0, unit: 'cm' });
-                        updateForm({ dimensions: newDims });
-                      }}
-                      className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
-                    >
-                      + 增加规格
-                    </button>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {(safeArray(formState.dimensions).length > 0 ? formState.dimensions : [{ label: '', length: parseFloat(formState.dimL||'0')||0, width: parseFloat(formState.dimW||'0')||0, height: parseFloat(formState.dimH||'0')||0, unit: 'cm' }]).map((dim, idx) => {
-                      const sDims = safeArray(formState.dimensions);
-                      return (
-                      <div key={idx} className="bg-slate-100/30 p-4 rounded-3xl border border-slate-100 space-y-3 relative">
-                        { (sDims.length > 1) && (
-                          <button 
-                            onClick={() => {
-                              updateForm({ dimensions: sDims.filter((_, i) => i !== idx) });
-                            }}
-                            className="absolute top-3 right-3 p-1 text-slate-300 hover:text-red-500 transition-colors"
-                          >
-                            <X size={16} />
-                          </button>
-                        )}
-                        <div className="grid grid-cols-2 gap-3">
-                           <div className="space-y-1">
-                              <div className="flex items-center justify-between pl-1">
-                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">规格名称 / Label</span>
-                                {dim.isAI && <span className="text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">AI</span>}
-                              </div>
-                              <input 
-                                type="text" 
-                                placeholder="如: 3-Seater" 
-                                value={dim.label || ''} 
-                                onChange={e => {
-                                  const currDims = safeArray(formState.dimensions);
-                                  const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
-                                  newDims[idx].label = e.target.value;
-                                  updateForm({ dimensions: newDims });
-                                }}
-                                className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-xs font-bold outline-none focus:border-blue-500" 
-                              />
-                           </div>
-                           <div className="space-y-1">
-                              <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
-                              <div className="flex gap-1 h-[38px]">
-                                {['cm', 'inch'].map(u => (
-                                  <button 
-                                    key={u}
-                                    onClick={() => {
-                                      const currDims = safeArray(formState.dimensions);
-                                      const newDims = [...(currDims.length > 0 ? currDims : [{...dim}])];
-                                      newDims[idx].unit = u;
-                                      updateForm({ dimensions: newDims });
-                                    }}
-                                    className={`flex-1 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-200'}`}
-                                  >
-                                    {u}
-                                  </button>
-                                ))}
-                              </div>
-                           </div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-3">
-                          <div className="space-y-1">
-                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">长 / L</span>
-                             <input 
-                               type="number" 
-                               value={dim.length || ''} 
-                               onChange={e => {
-                                 const curDims = safeArray(formState.dimensions);
-                                 const newDims = [...(curDims.length > 0 ? curDims : [{...dim}])];
-                                 newDims[idx].length = parseFloat(e.target.value) || 0;
-                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
-                                 if (idx === 0) updates.dimL = e.target.value;
-                                 updateForm(updates);
-                               }}
-                               className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
-                             />
-                          </div>
-                          <div className="space-y-1">
-                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">宽 / W</span>
-                             <input 
-                               type="number" 
-                               value={dim.width || ''} 
-                               onChange={e => {
-                                 const curDims = safeArray(formState.dimensions);
-                                 const newDims = [...(curDims.length > 0 ? curDims : [{...dim}])];
-                                 newDims[idx].width = parseFloat(e.target.value) || 0;
-                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
-                                 if (idx === 0) updates.dimW = e.target.value;
-                                 updateForm(updates);
-                               }}
-                               className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
-                             />
-                          </div>
-                          <div className="space-y-1">
-                             <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">高 / H</span>
-                             <input 
-                               type="number" 
-                               value={dim.height || ''} 
-                               onChange={e => {
-                                 const curDims = safeArray(formState.dimensions);
-                                 const newDims = [...(curDims.length > 0 ? curDims : [{...dim}])];
-                                 newDims[idx].height = parseFloat(e.target.value) || 0;
-                                 const updates: Partial<ProductFormData> = { dimensions: newDims };
-                                 if (idx === 0) updates.dimH = e.target.value;
-                                 updateForm(updates);
-                               }}
-                               className="w-full bg-white border border-slate-200 p-2.5 rounded-xl text-center text-sm font-bold outline-none focus:border-blue-500" 
-                             />
-                          </div>
-                        </div>
-                      </div>
-                    )})}
-                  </div>
-                </div>
+                <DimensionEditor 
+                  dimensions={safeArray<Dimension>(formState.dimensions)}
+                  onChange={(newDims) => updateForm({ dimensions: newDims })}
+                  showAiButton={!editPhotoId && !!newPhotoData}
+                  isAnalyzing={isAnalyzing}
+                  onAiAnalyze={() => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)}
+                />
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-1">

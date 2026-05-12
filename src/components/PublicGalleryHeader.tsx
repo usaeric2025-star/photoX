@@ -87,7 +87,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className={`w-9 h-9 flex items-center justify-center rounded-xl bg-[#1D3557]/5 text-[#1D3557] hover:bg-[#1D3557]/10 transition-all shadow-sm ${isRefreshing ? 'animate-spin opacity-50' : 'active:scale-90'}`}
+            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all shadow-sm ${isRefreshing ? 'bg-blue-600 text-white animate-spin ring-4 ring-blue-100' : 'bg-[#1D3557]/5 text-[#1D3557] hover:bg-[#1D3557]/10 active:scale-90'}`}
           >
             <RefreshCcw size={18} />
           </button>
@@ -108,7 +108,10 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
                className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
                title={t.login}
             >
-              <Globe size={20} />
+              <div className="flex items-center justify-center relative">
+                <Globe size={18} className="opacity-40" />
+                <Plus size={10} className="absolute -top-1 -right-1 text-blue-600 stroke-[3px]" />
+              </div>
             </button>
           )}
 
