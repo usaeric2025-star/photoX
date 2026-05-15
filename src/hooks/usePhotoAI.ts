@@ -95,6 +95,10 @@ export const usePhotoAI = (
     });
     
     const sUnProcessed = safeArray(unProcessed);
+    
+    // Guard: Prevent double-triggering
+    if (loadingState === 'analyzing') return;
+
     if (sUnProcessed.length === 0) {
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });

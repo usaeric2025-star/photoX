@@ -79,7 +79,6 @@ export default function AppRoutes() {
 
   return (
     <HashRouter>
-      <Toaster position="top-center" richColors />
       <AnimatedRoutes />
     </HashRouter>
   );
