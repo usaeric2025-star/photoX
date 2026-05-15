@@ -29,8 +29,9 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
 const cleanAiName = (name: string | null | undefined): string | null => {
   if (!name) return null;
   const trimmed = name.trim();
-  const measurementPattern = /([hwdlt]\d+)|(\d+["”']|cm|inch|mm)|(\d+\s*x\s*\d+)/i;
-  if (measurementPattern.test(trimmed)) return null;
+  // Only reject if it's ONLY measurements. If it has other text (like a code), keep it.
+  const measurementOnlyPattern = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
+  if (measurementOnlyPattern.test(trimmed)) return null;
   return trimmed;
 };
 
@@ -97,18 +98,19 @@ export const usePhotoAI = (
       return;
     }
     
-    return runWithLoading('analyzing', async () => {
-        setAiDebugInfo({ step: '准备中', message: '批量分析初始化...' });
-        setBatchProgress({ current: 0, total: sUnProcessed.length });
-        const taskId = existingTaskId || addTask({
-          name: `批量 AI 识别 (${sUnProcessed.length} 张)`,
-          onCancel: () => abortAnalysis()
-        });
+    // Background task: avoid setting global loading state
+    setAiDebugInfo({ step: '准备中', message: '批量分析初始化...' });
+    setBatchProgress({ current: 0, total: sUnProcessed.length });
+    const taskId = existingTaskId || addTask({
+      name: `批量 AI 识别 (${sUnProcessed.length} 张)`,
+      onCancel: () => abortAnalysis()
+    });
 
-        const CONCURRENCY = AI_CONFIG.CONCURRENCY;
-        let completedCount = 0;
-        
-        const processPhoto = async (photo: Photo): Promise<void> => {
+    const CONCURRENCY = AI_CONFIG.CONCURRENCY;
+    let completedCount = 0;
+    
+    const processPhoto = async (photo: Photo): Promise<void> => {
+        // ... (rest of processPhoto is same)
             const controller = new AbortController();
             currentAnalysisController.current = controller;
             const signal = controller.signal;
@@ -119,15 +121,20 @@ export const usePhotoAI = (
                 const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
             const result = cleanObject(resRaw);
             
-            if (result.name) {
-              if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) {
-                result.name = '';
-              }
-              if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
-                result.modelNumber = result.name;
-                result.name = '';
-              }
-            }
+    // Clean name logic - be less aggressive
+    if (result.name) {
+      // Only clear if it actually looks like a measurement, not just any numbers
+      const measurementOnlyPattern = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
+      if (measurementOnlyPattern.test(result.name)) {
+        result.name = '';
+      }
+      
+      // If AI put code in name and modelNumber is empty, keep it in name for consistency with "manual code" usage
+      if (!result.modelNumber && /^[A-Z0-9\-]+$/.test(result.name) && result.name.length > 2) {
+        result.modelNumber = result.name;
+        // Optimization: if it's a code, we might want it in name too if displayed as name
+      }
+    }
             if (result.dimensions) {
                result.dimensions = normalizeDimensions(result.dimensions);
             }
@@ -244,7 +251,6 @@ export const usePhotoAI = (
         currentAnalysisController.current = null;
         setBatchProgress({ current: 0, total: 0 });
     }
-    });
   };
 
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
@@ -270,13 +276,17 @@ export const usePhotoAI = (
         }
         const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
         const result = cleanObject(resRaw);
+        
+        // Clean name logic - be less aggressive
         if (result.name) {
-          if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) result.name = '';
-          if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
+          const measurementOnly = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
+          if (measurementOnly.test(result.name)) result.name = '';
+          
+          if (!result.modelNumber && /^[A-Z0-9\-]+$/.test(result.name) && result.name.length > 2) {
             result.modelNumber = result.name;
-            result.name = '';
           }
         }
+        
         if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
         const aiName = cleanAiName(result.name);
         if (result.description) {
@@ -335,57 +345,97 @@ export const usePhotoAI = (
     if (sGroupPhotos.length === 0) return;
     setAiDebugInfo(null);
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
-    if (!effectiveKey) return;
-    return runWithLoading('analyzing', async () => {
-      const photoIds = sGroupPhotos.map(p => p.id);
-      setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p));
-      photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p);
+    if (!effectiveKey) throw new Error('请先在管理设置中设定 AI 密钥');
 
-      setAiDebugInfo({ step: '群组识别', message: '正在分析第一张照片...' });
-      try {
-        const firstPhoto = sGroupPhotos.find(p => p.isGroupCover) || sGroupPhotos[0];
-        const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.categoryId);
-        const result = cleanObject(resRaw);
-        if (result.name) {
-          if (/[\d"']|cm|inch|H|W|D|\d+\s*x/i.test(result.name)) result.name = '';
-          if (!result.modelNumber && result.name && /^[A-Z0-9]+$/.test(result.name)) {
-            result.modelNumber = result.name;
-            result.name = '';
-          }
-        }
-        if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
-        const aiName = cleanAiName(result.name);
-        if (result.description) {
-          const translations = await translateDescription(result.description, effectiveKey, customModel);
-          result.description_translations = { zh: result.description, en: translations.en, ms: translations.ms };
-        }
-        const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
-        const groupIds = sGroupPhotos.map(p => p.id);
-        setPhotos(prev => {
-          const next = prev.map(p => groupIds.includes(p.id) ? {
-            ...p,
-            categoryId: result.categoryId || p.categoryId,
-            tagIds: finalTagIds.slice(0, 3),
-            name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
-            description: result.description,
-            description_translations: result.description_translations,
-            model_number: result.modelNumber || p.model_number,
-            dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : p.dimensions,
-            updatedAt: formatDate(new Date()),
-            isAnalyzing: false
-          } : p);
-          photosRef.current = next;
-          return next;
-        });
-        setAiDebugInfo(null);
-        return result;
-      } catch (err: any) {
-        setAiDebugInfo({ step: '错误', message: '群组识别失败', error: err.message || String(err) });
-        setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
-        photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
-        throw err;
-      }
+    const taskId = addTask({
+      name: `群组 AI 识别 (${sGroupPhotos.length} 张)`,
+      onCancel: () => abortAnalysis()
     });
+
+    const photoIds = sGroupPhotos.map(p => p.id);
+    setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p));
+    photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p);
+
+    setAiDebugInfo({ step: '群组识别', message: '正在分析封面/首张照片...' });
+    updateTask(taskId, { progress: 10, message: '分析产品特征中...' });
+
+    try {
+      const controller = new AbortController();
+      currentAnalysisController.current = controller;
+      const signal = controller.signal;
+
+      const firstPhoto = sGroupPhotos.find(p => p.isGroupCover) || sGroupPhotos[0];
+      const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.categoryId, firstPhoto.name, signal);
+      const result = cleanObject(resRaw);
+
+      if (result.name) {
+        const measurementOnly = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
+        if (measurementOnly.test(result.name)) result.name = '';
+      }
+      
+      if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
+      const aiName = cleanAiName(result.name);
+      
+      if (result.description) {
+        try {
+          const translations = await translateDescription(result.description, effectiveKey, customModel, signal);
+          result.description_translations = { zh: result.description, en: translations.en, ms: translations.ms };
+        } catch (e) {}
+      }
+
+      const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
+      
+      setAiDebugInfo({ step: '保存中', message: '同步识别结果到所有照片...' });
+      updateTask(taskId, { progress: 80, message: '正在同步及保存结果...' });
+
+      const updatedPhotosList: Photo[] = [];
+      for (const p of sGroupPhotos) {
+        const updated = {
+          ...p,
+          categoryId: result.categoryId || p.categoryId,
+          tagIds: Array.from(new Set([...safeArray(p.tagIds), ...finalTagIds])).slice(0, 3),
+          name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
+          description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+          description_translations: result.description_translations || p.description_translations,
+          model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
+          dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : safeArray(p.dimensions),
+          updatedAt: formatDate(new Date()),
+          isAnalyzing: false
+        };
+        
+        if (user) {
+          await savePhotoToCloud(user.id, updated).catch(e => console.error("Group sync cloud failed:", e));
+        }
+        updatedPhotosList.push(updated);
+      }
+
+      setPhotos(prev => {
+        const next = prev.map(p => {
+           const found = updatedPhotosList.find(up => up.id === p.id);
+           return found || p;
+        });
+        photosRef.current = next;
+        saveData('product_photos', next);
+        return next;
+      });
+
+      updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
+      setAiDebugInfo(null);
+      showToast('群组 AI 识别成功并已保存。', 'success');
+      return result;
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        updateTask(taskId, { status: 'cancelled', message: '已取消' });
+      } else {
+        setAiDebugInfo({ step: '错误', message: '群组识别失败', error: err.message || String(err) });
+        updateTask(taskId, { status: 'error', message: `失败: ${err.message || '未知错误'}` });
+      }
+      setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
+      photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
+      throw err;
+    } finally {
+      currentAnalysisController.current = null;
+    }
   };
 
   return { handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, aiDebugInfo, setAiDebugInfo, batchProgress, abortAnalysis };

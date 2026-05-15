@@ -106,17 +106,18 @@ export const analyzeProductPhoto = async (
   const promptText = `You are a furniture product analyzer. Extract data STRICTLY as follows:
 
 【CRITICAL - FIELD SEPARATION】
-- "name": ONLY product model or brand name (e.g., "IMCOCO"). MUST be in English.
-- "modelNumber": ONLY SKU/Model code (e.g., "B728").
+- "name": Product identification name or code (e.g., "IMCOCO" or "M123"). 
+- "modelNumber": SKU/Model code found on labels (e.g., "B728"). If clear, use this.
+- If only one identification code is found, you can put it in BOTH "name" and "modelNumber".
 - "price": ONLY numeric part (e.g., "1200").
 - "dimensions": Array of objects with length/width/height (numbers).
-- FORBID putting dimensions, model numbers, or price into "name".
-- IMPORTANT: If a single product's dimensions are scattered (e.g., Height shown separately from Width/Length), you MUST combine them into a single object in the 'dimensions' array. DO NOT return separate objects for H, W, and L if they describe the same item.
+- FORBID putting dimensions or price into "name".
+- IMPORTANT: If a single product's dimensions are scattered, you MUST combine them.
 
 【NAME RULES】
-- name MUST NOT contain H/W/D, numbers+units (like 53cm), or "x"/×.
-- If detected, move those contents to dimensions.
-- name should be professional and concise.
+- "name" SHOULD NOT just be measurement text like "53cm x 40cm". If that's all you find, leave "name" empty.
+- "name" SHOULD be the most prominent identifier (Brand or Code) found in the image.
+- professional and concise.
 
 【LANGUAGE & DESCRIPTION】
 - "description": Generate a professional description in 【简体中文 (Simplified Chinese)】.
