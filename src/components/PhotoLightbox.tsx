@@ -3,7 +3,7 @@ import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
-import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight, Share2, Check, RefreshCcw } from 'lucide-react';
 import { Photo, Category, ProductGroup, Manufacturer, Dimension } from '../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../lib/ui-helpers';
 import { Skeleton } from './ui/Skeleton';
@@ -43,6 +43,16 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleShare = () => {
+    if (!photo?.image_hash) return;
+    const url = `${window.location.origin}${window.location.pathname}#/h/${photo.image_hash}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    });
+  };
 
   const slides = React.useMemo(() => {
     return (displayPhotos || [])
@@ -298,14 +308,43 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                     </div>
                     {isAdminMode && (
                       <div className="flex items-center gap-2">
-                        {onToggleHidden && (
-                          <button 
-                            onClick={() => onToggleHidden(photo)}
-                            className={`p-2 rounded-full border transition-all ${photo.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
-                          >
-                            {photo.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
-                          </button>
-                        )}
+                        <button
+                          onClick={handleShare}
+                          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${isCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                          title="Copy Direct Link"
+                        >
+                          {isCopied ? <Check size={16} /> : <Share2 size={16} />}
+                        </button>
+                        <button 
+                          onClick={() => onAiAnalyze?.(photo)}
+                          disabled={isAnalyzing}
+                          className={`w-9 h-9 flex items-center justify-center rounded-xl border border-blue-100 transition-all ${isAnalyzing ? 'bg-blue-100 text-blue-600' : 'bg-blue-50 text-blue-600'}`}
+                        >
+                          {isAnalyzing ? <RefreshCcw size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                        </button>
+                        <button 
+                          onClick={() => onEditPhoto?.(photo)}
+                          className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all"
+                        >
+                          <Edit3 size={16}/>
+                        </button>
+                        <button 
+                          onClick={() => onToggleHidden?.(photo)}
+                          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${photo.isHidden ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                        >
+                          {photo.isHidden ? <EyeOff size={16}/> : <Eye size={16}/>}
+                        </button>
+                      </div>
+                    )}
+                    {!isAdminMode && (
+                      <div className="flex items-center gap-2">
+                         <button
+                          onClick={handleShare}
+                          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${isCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                          title="Copy Direct Link"
+                        >
+                          {isCopied ? <Check size={16} /> : <Share2 size={16} />}
+                        </button>
                       </div>
                     )}
                   </div>

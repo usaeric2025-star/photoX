@@ -180,12 +180,28 @@ export default function AdminView() {
     return (
        <ErrorBoundary key="auth-verifying">
         {errorContent}
-        <div className="w-full h-full min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
-           <div className="w-8 h-8 relative animate-spin">
-              <div className="absolute inset-0 bg-[#D4A853] rounded-full opacity-20"></div>
-              <div className="absolute inset-0 border-t-2 border-[#D4A853] rounded-full"></div>
+        <div className="w-full h-full min-h-screen flex flex-col bg-[#FDFBF7] overflow-hidden">
+           {/* Mock Header */}
+           <div className="h-16 px-6 border-b border-slate-100 flex items-center justify-between">
+              <div className="h-6 w-32 bg-slate-100 rounded-lg animate-pulse" />
+              <div className="h-8 w-8 bg-slate-100 rounded-full animate-pulse" />
            </div>
-           <p className="text-[10px] uppercase font-black tracking-widest text-[#1D3557]/40 mt-4">Verifying session...</p>
+           {/* Skeleton Grid */}
+           <div className="flex-1 p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {Array.from({ length: 15 }).map((_, i) => (
+                <div key={i} className="aspect-square bg-white rounded-2xl border border-slate-100 animate-pulse relative overflow-hidden">
+                   <div className="absolute inset-0 bg-slate-50" />
+                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/80 backdrop-blur-sm space-y-2">
+                      <div className="h-3 w-3/4 bg-slate-100 rounded" />
+                      <div className="h-2 w-1/2 bg-slate-50 rounded" />
+                   </div>
+                </div>
+              ))}
+           </div>
+           <div className="fixed inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px] z-50">
+              <div className="w-10 h-10 border-4 border-[#D4A853]/20 border-t-[#D4A853] rounded-full animate-spin"></div>
+              <p className="text-[10px] uppercase font-black tracking-widest text-[#D4A853] mt-4">Verifying session...</p>
+           </div>
         </div>
        </ErrorBoundary>
     );

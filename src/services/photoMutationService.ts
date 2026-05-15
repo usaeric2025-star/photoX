@@ -8,7 +8,6 @@ import { safeArray } from '../lib/utils';
 
 const FIELD_MAP: Record<string, string> = {
   groupId: 'group_id',
-  groupOrder: 'group_order',
   isGroupCover: 'is_group_cover',
   categoryId: 'category_id',
   manufacturerId: 'manufacturer_id',
@@ -28,7 +27,7 @@ const FIELD_MAP: Record<string, string> = {
 
 const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'categoryId',
-  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'groupOrder',
+  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'isGroupCover',
   'image_url', 'thumb_url', 'price', 'updated_at', 'created_at', 'userId',
   'isHidden'
 ];
@@ -210,7 +209,6 @@ export const savePhotosToCloudBatch = async (
       description_translations: photo.description_translations || null,
       created_at: photo.createdAt,
       group_id: photo.groupId || null,
-      group_order: photo.groupOrder ?? null,
       is_group_cover: photo.isGroupCover || false,
       isHidden: photo.isHidden || false,
       updated_at: photo.updatedAt || new Date().toISOString()
@@ -236,6 +234,7 @@ export const savePhotosToCloudBatch = async (
        const safeChunk = chunk.map(p => {
          const cp = { ...p };
          delete cp.group_id;
+         delete cp.group_order;
          delete cp.is_group_cover;
          delete cp.group_metadata;
          return cp;
@@ -405,13 +404,29 @@ export const deletePhotosBatch = async (
       throw new Error(error.message || JSON.stringify(error));
     }
     
-    // 2. Delete files
-    const filePaths = chunk.flatMap(p => {
-      const filename = p.storageId || p.id;
-      return [`public/${filename}.webp`, `public/thumb_${filename}.webp`];
-    });
+    // 2. Delete files - ONLY if no other records use this specific URL/hash
+    const potentiallyDeletable = chunk.filter(p => !!p.image_url);
+    const filesToRemove: string[] = [];
     
-    await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove(filePaths);
+    for (const p of potentiallyDeletable) {
+      // Check if ANY other record (not just mine) still uses this image_url
+      const { count } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select('*', { count: 'exact', head: true })
+        .eq('image_url', p.image_url);
+      
+      if (count === 0) {
+        const filename = p.storageId || p.id;
+        filesToRemove.push(`public/${filename}.webp`);
+        filesToRemove.push(`public/thumb_${filename}.webp`);
+      } else {
+        console.log(`[Storage] Skipping file deletion for ${p.id} as ${count} other records use its URL.`);
+      }
+    }
+    
+    if (filesToRemove.length > 0) {
+        await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove(filesToRemove);
+    }
     
     if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
   }

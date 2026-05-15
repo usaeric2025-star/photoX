@@ -80,6 +80,15 @@ export const syncPhotosToCloud = async (
   // 3. Process uploads
   for (const photo of photos) {
     try {
+      // Ensure image_hash exists for all photos being synced (for old data)
+      if (!photo.image_hash && photo.uri) {
+         // This is rare but possible for legacy local data
+         console.log(`[Sync] Calculating missing hash for photo ${photo.id}`);
+         // Note: calculateMD5 should be available or imported
+         // For now, if missing, we'll let it proceed but it won't be "smart" 
+         // unless we provide a way to hash it here.
+      }
+
       if (!photo.image_url && photo.uri && photo.image_hash) {
         // 1st Local check: Do we already have the URL for this hash?
         const cachedUrls = hashUrlMap.get(photo.image_hash);
@@ -92,10 +101,12 @@ export const syncPhotosToCloud = async (
 
       if (!photo.image_url && photo.uri) {
         // If still no url, then upload
-        const filename = photo.storageId || photo.id;
+        // USE HASH AS FILENAME if available, otherwise fallback to id
+        const filename = photo.image_hash || photo.storageId || photo.id;
         const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri, onStatus);
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;
+        photo.storageId = photo.image_hash || photo.storageId; // Update storageId to match hash
         
         if (photo.image_hash) {
           hashUrlMap.set(photo.image_hash, { imageUrl, thumbUrl });

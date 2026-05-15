@@ -67,17 +67,30 @@ export const uploadImages = async (
 
     onStatus?.('uploading');
     const uploadFile = async (base64: string, fileName: string) => {
-      const res = await fetch(base64);
-      const blob = await res.blob();
-      
-      const { error: storageError } = await supabase.storage
+      // 1. Check if file already exists in storage
+      const { data: existingFile } = await supabase.storage
         .from(DB_CONFIG.BUCKET_NAME)
-        .upload(fileName, blob, {
-          contentType: 'image/webp',
-          upsert: true
+        .list(fileName.split('/')[0], {
+          search: fileName.split('/')[1]
         });
+      
+      const fileExists = existingFile && existingFile.length > 0;
+      
+      if (!fileExists) {
+        const res = await fetch(base64);
+        const blob = await res.blob();
+        
+        const { error: storageError } = await supabase.storage
+          .from(DB_CONFIG.BUCKET_NAME)
+          .upload(fileName, blob, {
+            contentType: 'image/webp',
+            upsert: true
+          });
 
-      if (storageError) throw storageError;
+        if (storageError) throw storageError;
+      } else {
+        console.log(`[Storage] File ${fileName} already exists, skipping upload.`);
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from(DB_CONFIG.BUCKET_NAME)

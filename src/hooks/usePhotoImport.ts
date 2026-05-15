@@ -179,7 +179,7 @@ export const usePhotoImport = (
             
             const newPhoto: Photo = {
               id: photoId,
-              storageId: photoId,
+              storageId: hash, // Use hash as storageId for persistent, content-addressable storage
               item_code: generateItemCode(),
               manual_code: '',
               image_hash: hash,

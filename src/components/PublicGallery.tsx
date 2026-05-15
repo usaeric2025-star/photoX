@@ -61,6 +61,8 @@ interface PublicGalleryProps {
   totalCount?: number;
   onTogglePinned?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
+  initialHash?: string;
+  initialGroupId?: string;
 }
 
 const MemoizedPhotoCard = React.memo(({ 
@@ -153,6 +155,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   setAlertDialog: propsSetAlertDialog,
   totalCount,
   onTogglePinned,
+  initialHash,
+  initialGroupId,
 }) => {
   const user = propsUser;
   const settings = propsSettings;
@@ -235,6 +239,29 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
+  // Handle initial hash or group link
+  useEffect(() => {
+    if (initialHash && lightboxIndex === null && displayPhotos.length > 0) {
+      const idx = displayPhotos.findIndex(p => p.image_hash === initialHash);
+      if (idx !== -1) {
+        console.log(`[PublicGallery] Auto-opening photo from hash: ${initialHash}`);
+        setLightboxIndex(idx);
+      }
+    }
+  }, [initialHash, displayPhotos, lightboxIndex]);
+
+  useEffect(() => {
+    if (initialGroupId && activeGroupId === null && photos.length > 0) {
+        const groupExists = photos.some(p => p.groupId === initialGroupId);
+        if (groupExists) {
+            console.log(`[PublicGallery] Auto-opening group detail: ${initialGroupId}`);
+            setActiveGroupId(initialGroupId);
+        } else {
+            console.warn(`[PublicGallery] Group ID ${initialGroupId} not found in current photo set.`);
+        }
+    }
+  }, [initialGroupId, photos, activeGroupId]);
+
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};
     safeArray(tags).forEach(t => { map[String(t.id)] = t.name; });
@@ -273,13 +300,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     const manualCodeStr = p.manual_code ? ` [${p.manual_code}]` : '';
     const suffix = isStaffMode ? manualCodeStr : modelStr;
     const photoUrl = p.image_url || p.uri || '';
+    const shareUrl = `${window.location.origin}${window.location.pathname}#/h/${p.image_hash}`;
 
     if (lang === 'ms') {
-      return `Halo, saya berminat dengan perabot ini:\n\n${displayName}${suffix}\n\nFoto: ${photoUrl}\n\nLihat lagi: photo-x-one.vercel.app`;
+      return `Halo, saya berminat dengan perabot ini:\n\n${displayName}${suffix}\n\nLink: ${shareUrl}`;
     } else if (lang === 'en') {
-      return `Hello, I'm interested in this furniture:\n\n${displayName}${suffix}\n\nPhoto: ${photoUrl}\n\nView more: photo-x-one.vercel.app`;
+      return `Hello, I'm interested in this furniture:\n\n${displayName}${suffix}\n\nLink: ${shareUrl}`;
     } else {
-      return `你好，我对这个家具有兴趣：\n\n${displayName}${suffix}\n\n照片: ${photoUrl}\n\n查看更多：photo-x-one.vercel.app`;
+      return `你好，我对这个家具有兴趣：\n\n${displayName}${suffix}\n\n链接: ${shareUrl}`;
     }
   };
 
@@ -320,38 +348,44 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const shareSinglePhoto = useCallback(async (photo: Photo) => {
     const msg = getShareMessage(photo);
+    const shareUrl = `${window.location.origin}${window.location.pathname}#/h/${photo.image_hash}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: t.shareTitle, text: msg, url: window.location.origin });
+        // Many platforms (iOS/Android) append the 'url' to the 'text' automatically. 
+        // Since 'msg' already includes the link from getShareMessage, we pass empty url to avoid duplication.
+        await navigator.share({ title: t.shareTitle, text: msg });
       } else {
-        // Fallback alert is handled by the component or set via prop?
-        // We'll keep it simple for public view
-        alert(t.shareNotSupported);
+        await navigator.clipboard.writeText(msg);
+        alert("分享信息已复制到剪贴板！/ Share info copied to clipboard!");
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
         console.error("Share failed:", e);
       }
     }
-  }, [t.shareTitle, t.shareNotSupported]);
+  }, [t.shareTitle, t.shareNotSupported, lang]);
 
   const shareGroup = useCallback(async (photos: Photo[]) => {
     const safePhotos = safeArray(photos).filter(p => !!p);
-    const msg = safePhotos.map(p => p.name || 'Furniture').join(', ');
-    const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView more: ${window.location.origin}`;
+    const gId = safePhotos[0]?.groupId || activeGroupId;
+    const shareUrl = `${window.location.origin}${window.location.pathname}#/g/${gId}`;
+    const msg = safePhotos.map(p => p.name || 'Furniture').slice(0, 3).join(', ') + (safePhotos.length > 3 ? '...' : '');
+    const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView full collection: ${shareUrl}`;
     
     try {
       if (navigator.share) {
-        await navigator.share({ title: t.shareTitle, text: shareText, url: window.location.origin });
+        // Pass empty url to avoid duplication as it's already in shareText
+        await navigator.share({ title: t.shareTitle, text: shareText });
       } else {
-        alert(t.shareNotSupported);
+        await navigator.clipboard.writeText(shareText);
+        alert("群组分享链接已复制！/ Group share link copied!");
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
         console.error("Group share failed:", e);
       }
     }
-  }, [t]);
+  }, [t, activeGroupId, lang]);
 
   const handleLoadMore = useCallback(() => {
     if (onLoadMore) {

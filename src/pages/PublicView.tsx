@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
@@ -47,6 +47,7 @@ export default function PublicView() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
+  const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
 
   const fetchFilteredPhotos = async () => {
     setIsRefreshing(true);
@@ -197,66 +198,61 @@ export default function PublicView() {
 
   return (
     <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
-      {isInitializing && safeArray(photos).length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center space-y-4">
-          <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-          <Skeleton className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading Gallery...</Skeleton>
-        </div>
-      ) : (
-        <ErrorBoundary key="publicGallery">
-          <PublicGallery 
-            photos={photos}
-            categories={categories}
-            tags={[]} // Tags from context will be used, but interface requires it
-            onExit={() => navigate('/admin')}
-            onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
-            showExit={false}
-            onLogin={() => navigate('/admin')}
-            loginWithGoogle={loginWithGoogle}
-            user={user}
-            internalPassword={settings?.access_passcode || ""}
-            settings={settings}
-            isRefreshing={isRefreshing}
-            onRefresh={() => syncWithCloud(true)}
-            onLoadMore={loadMore}
-            hasMore={hasMore}
-            totalCount={totalCloudCount}
-            onTogglePinned={async (photo) => {
-              const newStatus = !photo.isPinned;
+      <ErrorBoundary key="publicGallery">
+        <PublicGallery 
+          photos={photos}
+          categories={categories}
+          tags={[]} // Tags from context will be used, but interface requires it
+          onExit={() => navigate('/admin')}
+          onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
+          showExit={false}
+          onLogin={() => navigate('/admin')}
+          loginWithGoogle={loginWithGoogle}
+          user={user}
+          internalPassword={settings?.access_passcode || ""}
+          settings={settings}
+          isRefreshing={isRefreshing || isInitializing}
+          onRefresh={() => syncWithCloud(true)}
+          onLoadMore={loadMore}
+          hasMore={hasMore}
+          totalCount={totalCloudCount}
+          initialHash={hash}
+          initialGroupId={groupId}
+          onTogglePinned={async (photo) => {
+            const newStatus = !photo.isPinned;
+            
+            // Identify affected photos (the photo itself + any other photos in the same group)
+            const sPhotos = safeArray(photos);
+            const affectedPhotos = photo.groupId 
+              ? sPhotos.filter(p => p.groupId === photo.groupId)
+              : [photo];
               
-              // Identify affected photos (the photo itself + any other photos in the same group)
-              const sPhotos = safeArray(photos);
-              const affectedPhotos = photo.groupId 
-                ? sPhotos.filter(p => p.groupId === photo.groupId)
-                : [photo];
-                
-              const sAffected = safeArray(affectedPhotos);
-              // Optimistic update for all affected photos
+            const sAffected = safeArray(affectedPhotos);
+            // Optimistic update for all affected photos
+            setPhotos(prev => prev.map(p => 
+              sAffected.some(ap => ap.id === p.id) 
+                ? { ...p, isPinned: newStatus } 
+                : p
+            ));
+            
+            try {
+              await Promise.all(
+                sAffected.map(p => 
+                  updatePhoto(p.id, { isPinned: newStatus })
+                )
+              );
+            } catch (e: any) {
+              handleError(e, "togglePinned");
+              // Revert changes
               setPhotos(prev => prev.map(p => 
                 sAffected.some(ap => ap.id === p.id) 
-                  ? { ...p, isPinned: newStatus } 
+                  ? { ...p, isPinned: !newStatus } 
                   : p
               ));
-              
-              try {
-                await Promise.all(
-                  sAffected.map(p => 
-                    updatePhoto(p.id, { isPinned: newStatus })
-                  )
-                );
-              } catch (e: any) {
-                handleError(e, "togglePinned");
-                // Revert changes
-                setPhotos(prev => prev.map(p => 
-                  sAffected.some(ap => ap.id === p.id) 
-                    ? { ...p, isPinned: !newStatus } 
-                    : p
-                ));
-              }
-            }}
-          />
-        </ErrorBoundary>
-      )}
+            }
+          }}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

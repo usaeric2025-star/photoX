@@ -27,6 +27,8 @@ export default function AppRoutes() {
     <HashRouter>
       <Routes>
         <Route path="/" element={user ? <Navigate to="/admin" replace /> : <PublicView />} />
+        <Route path="/h/:hash" element={<PublicView />} />
+        <Route path="/g/:groupId" element={<PublicView />} />
         <Route path="/admin" element={<AdminView />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
