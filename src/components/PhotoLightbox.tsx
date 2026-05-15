@@ -316,11 +316,16 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                           {isCopied ? <Check size={16} /> : <Share2 size={16} />}
                         </button>
                         <button 
-                          onClick={() => onAiAnalyze?.(photo)}
-                          disabled={isAnalyzing}
-                          className={`w-9 h-9 flex items-center justify-center rounded-xl border border-blue-100 transition-all ${isAnalyzing ? 'bg-blue-100 text-blue-600' : 'bg-blue-50 text-blue-600'}`}
+                          onClick={() => {
+                            if (isAnalyzing && onCancelAnalyze) {
+                              onCancelAnalyze();
+                            } else if (!isAnalyzing) {
+                              onAiAnalyze?.(photo);
+                            }
+                          }}
+                          className={`w-9 h-9 flex items-center justify-center rounded-xl border border-blue-100 transition-all ${isAnalyzing ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-blue-50 text-blue-600'}`}
                         >
-                          {isAnalyzing ? <RefreshCcw size={16} className="animate-spin" /> : <Sparkles size={16} />}
+                          {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}
                         </button>
                         <button 
                           onClick={() => onEditPhoto?.(photo)}
@@ -422,7 +427,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-2">
                                     {prefix && (
-                                      <span className="bg-brand-navy text-white text-[9px] font-black px-2.5 py-0.5 rounded-lg tracking-tighter uppercase whitespace-nowrap">
+                                      <span className="bg-brand-navy text-white text-[9px] font-black px-2.5 py-0.5 rounded-lg tracking-tighter uppercase whitespace-nowrap mr-2">
                                         {prefix}
                                       </span>
                                     )}

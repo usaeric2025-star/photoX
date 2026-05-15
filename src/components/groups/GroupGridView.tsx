@@ -102,12 +102,12 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps
             </span>
           )}
         </div>
-        <div className="flex items-center justify-between">
-          <p className="text-[9px] font-bold text-slate-400 font-mono">
+        <div className="flex items-center justify-between gap-2 mt-0.5">
+          <p className="text-[9px] font-bold text-slate-400 font-mono truncate min-w-0">
             {photo.model_number || photo.item_code || '-'}
           </p>
           {photo.dimensions?.[0] && (
-            <span className="text-[8px] font-black text-slate-300">
+            <span className="text-[8px] font-black text-slate-300 truncate shrink-0 max-w-[50%] text-right">
               {photo.dimensions[0].label}
             </span>
           )}

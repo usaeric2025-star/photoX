@@ -103,7 +103,7 @@ export function filterPhotos(
   return result;
 }
 
-export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Photo[] {
+export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'asc' | 'desc' = 'desc'): Photo[] {
   const cleanedPhotos = cleanPhotos(photos);
   if (cleanedPhotos.length === 0 && Array.isArray(photos) && photos.length > 0) return [];
   if (!showGroupsCollapsed) return cleanedPhotos;
@@ -140,7 +140,11 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Phot
     }
   });
   
-  representatives.sort((a, b) => b._time - a._time);
+  representatives.sort((a, b) => {
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+    return sortOrder === 'desc' ? b._time - a._time : a._time - b._time;
+  });
 
   return representatives;
 }

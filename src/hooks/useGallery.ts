@@ -32,8 +32,8 @@ export const useGallery = () => {
     }, [store.photos, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder, store.isAdminMode, store.isStaffMode, store.tags]);
 
     const gridPhotos = useMemo(() => {
-        return groupPhotos(displayPhotos, store.showGroupsCollapsed);
-    }, [displayPhotos, store.showGroupsCollapsed]);
+        return groupPhotos(displayPhotos, store.showGroupsCollapsed, store.sortOrder);
+    }, [displayPhotos, store.showGroupsCollapsed, store.sortOrder]);
 
     const stableTagCounts = useMemo(() => {
         const counts: Record<string, number> = {};

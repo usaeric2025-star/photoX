@@ -126,9 +126,11 @@ export const analyzeProductPhoto = async (
 
 【DIMENSIONS RULES】
 - Each dimension object MUST include label, length, width, height, unit.
+- CRITICAL: Extract ANY visible measurements (e.g. "80", "120", "200x120", "H40 W60") directly from the image text or diagrams.
 - If label shows H/W/D/L: height = H, width OR length = W/L, depth = D. Assign strictly by labels, ignore item name or number order.
 - If label format is "PART: Dimensions" (e.g., "WD: H94 x W96 x D23"): maintain the "PART:" prefix but parse only the dimensions for numeric values.
-- If NO H/W/D/L labels: use order height → length → width.
+- If NO H/W/D/L labels but you see a format like "A x B x C" or numbers placed around the object: guess the height/length/width based on proportions.
+- If no explicit part name exists for the dimension, use "整体" (Overall) or "尺寸" (Dimensions) as the label.
 - Default unit = "cm" if missing.
 
 【CATEGORY & TAGS】

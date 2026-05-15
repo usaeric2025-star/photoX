@@ -625,7 +625,12 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                         <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列正式名称 (Group Display Name)</label>
                         <input 
                           value={groupData?.name || ''}
-                          onChange={(e) => handleUpdateGroupData({ name: e.target.value })}
+                          onChange={(e) => {
+                             setGroupData(prev => prev ? { ...prev, name: e.target.value } : null);
+                          }}
+                          onBlur={(e) => {
+                             if (groupData) handleUpdateGroupData({ name: e.target.value });
+                          }}
                           className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
                           placeholder="例如: 意式极简沙发系列..."
                         />
@@ -638,9 +643,17 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                             value={groupData?.description_translations?.zh || groupData?.description || ''}
                             onChange={(e) => {
                               const zh = e.target.value;
-                              handleUpdateGroupData({ 
+                              setGroupData(prev => prev ? { 
+                                ...prev, 
                                 description: zh, 
-                                description_translations: { ...groupData?.description_translations, zh } 
+                                description_translations: { ...prev.description_translations, zh } 
+                              } : null);
+                            }}
+                            onBlur={(e) => {
+                              const zh = e.target.value;
+                              if (groupData) handleUpdateGroupData({ 
+                                description: zh, 
+                                description_translations: { ...groupData.description_translations, zh } 
                               });
                             }}
                             className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
@@ -654,8 +667,15 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                             value={groupData?.description_translations?.en || ''}
                             onChange={(e) => {
                               const en = e.target.value;
-                              handleUpdateGroupData({ 
-                                description_translations: { ...groupData?.description_translations, en } 
+                              setGroupData(prev => prev ? { 
+                                ...prev, 
+                                description_translations: { ...prev.description_translations, en } 
+                              } : null);
+                            }}
+                            onBlur={(e) => {
+                              const en = e.target.value;
+                              if (groupData) handleUpdateGroupData({ 
+                                description_translations: { ...groupData.description_translations, en } 
                               });
                             }}
                             className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
@@ -669,8 +689,15 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                             value={groupData?.description_translations?.ms || ''}
                             onChange={(e) => {
                               const ms = e.target.value;
-                              handleUpdateGroupData({ 
-                                description_translations: { ...groupData?.description_translations, ms } 
+                              setGroupData(prev => prev ? { 
+                                ...prev, 
+                                description_translations: { ...prev.description_translations, ms } 
+                              } : null);
+                            }}
+                            onBlur={(e) => {
+                              const ms = e.target.value;
+                              if (groupData) handleUpdateGroupData({ 
+                                description_translations: { ...groupData.description_translations, ms } 
                               });
                             }}
                             className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"

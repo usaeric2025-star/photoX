@@ -347,7 +347,18 @@ export const usePhotoAI = (
       } else {
         const errorMsg = err.message || String(err);
         setAiDebugInfo({ step: '错误', message: '识别失败', error: errorMsg });
-        updateTask(taskId, { status: 'error', message: `失败: ${errorMsg.slice(0, 30)}` });
+        
+        // Extract inner JSON error if present for better readability
+        let displayError = errorMsg;
+        if (errorMsg.includes('{')) {
+           try {
+             const jsonPart = errorMsg.substring(errorMsg.indexOf('{'));
+             const parsed = JSON.parse(jsonPart);
+             displayError = parsed.error?.message || parsed.message || errorMsg;
+           } catch(e) {}
+        }
+        
+        updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
         handleError(err, 'AI 识别失败');
       }
       if (editPhotoId) {
@@ -456,8 +467,19 @@ export const usePhotoAI = (
       if (err.name === 'AbortError') {
         removeTask(taskId);
       } else {
-        setAiDebugInfo({ step: '错误', message: '群组识别失败', error: err.message || String(err) });
-        updateTask(taskId, { status: 'error', message: `失败: ${err.message?.slice(0, 30) || '未知错误'}` });
+        const errorMsg = err.message || String(err);
+        setAiDebugInfo({ step: '错误', message: '群组识别失败', error: errorMsg });
+        
+        let displayError = errorMsg;
+        if (errorMsg.includes('{')) {
+           try {
+             const jsonPart = errorMsg.substring(errorMsg.indexOf('{'));
+             const parsed = JSON.parse(jsonPart);
+             displayError = parsed.error?.message || parsed.message || errorMsg;
+           } catch(e) {}
+        }
+        
+        updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
         handleError(err, '群组 AI 识别失败');
       }
       setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
