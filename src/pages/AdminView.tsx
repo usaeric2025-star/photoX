@@ -10,6 +10,7 @@ import { useAdminDialogs } from '../hooks/useAdminDialogs';
 import { useLoading } from '../hooks/useLoading';
 import { useAuth } from '../hooks/useAuth';
 import { useGallery } from '../hooks/useGallery';
+import { loadData } from '../utils/indexedDB';
 import { translations, LanguageCode } from '../lib/translations';
 import { showSystemError } from '../context/ErrorContext';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
@@ -86,6 +87,16 @@ export default function AdminView() {
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers
   } = useGallery();
+  
+  useEffect(() => {
+    const loadInitialData = async () => {
+      const storedPhotos = await loadData('product_photos');
+      if (storedPhotos && Array.isArray(storedPhotos)) {
+        setPhotos(storedPhotos);
+      }
+    };
+    loadInitialData();
+  }, []);
   
   const { viewMode, setViewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
   
