@@ -89,6 +89,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
@@ -584,11 +585,19 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                      </button>
 
                      <button 
-                       onClick={() => setShowGroupSettings(false)}
-                       className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white text-indigo-600 hover:bg-white shadow-xl transition-all font-black"
+                       onClick={async () => {
+                         if (groupData) {
+                           setIsSaving(true);
+                           await saveGroupToCloud(groupData);
+                           setIsSaving(false);
+                         }
+                         setShowGroupSettings(false);
+                       }}
+                       disabled={isSaving}
+                       className="w-24 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white text-indigo-600 hover:bg-white shadow-xl transition-all font-black disabled:opacity-50"
                        title="保存并关闭"
                      >
-                       <Save size={18} />
+                       {isSaving ? 'Saving...' : '保存'}
                      </button>
                   </div>
                 </SheetHeader>

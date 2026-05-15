@@ -78,7 +78,7 @@ window.onunhandledrejection = (event) => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Toaster position="top-right" richColors />
+    <Toaster position="top-right" richColors closeButton />
     <ErrorProvider>
       <ErrorBoundary>
         <GalleryProvider>
