@@ -8,7 +8,8 @@ import { PublicGallery } from '../components/PublicGallery';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from '../hooks/useGallery';
+import { useErrorHandler } from '../utils/errorHandler';
 import { PAGINATION } from '../constants/config';
 import { AppSettings } from '../types';
 import { safeArray } from '../lib/utils';
@@ -31,11 +32,9 @@ export default function PublicView() {
     setIsAdminMode,
     setIsMultiSelect,
     setSelectedIds
-  } = useGalleryContext();
+  } = useGallery();
 
-  const handleError = (error: any, context?: string) => {
-    console.error(`[PublicView] ${context}:`, error);
-  };
+  const { handleError } = useErrorHandler();
 
   useEffect(() => {
     setIsAdminMode(false);
@@ -211,7 +210,7 @@ export default function PublicView() {
   }, []);
 
   return (
-    <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
+    <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <ErrorBoundary key="publicGallery">
         <PublicGallery 
           photos={photos}

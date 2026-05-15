@@ -82,6 +82,7 @@ export interface Photo {
   category_id?: string | null;
   sub_category?: string | null;
   _time?: number; // Temporary UI field
+  createdAtTimestamp?: number; // Pre-computed timestamp for sorting
 }
 
 export interface User {

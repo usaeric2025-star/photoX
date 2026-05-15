@@ -61,7 +61,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   }, [settings?.hotTagsCount, settings?.pinnedTags, sortedTags, showHotEffects]);
 
   return (
-    <div className="shrink-0 p-3 z-40 bg-[#FDFAF6] border-b border-[#1D3557]/5">
+    <div className="shrink-0 p-3 z-40 bg-brand-bg border-b border-brand-navy/5">
       <div className="space-y-2.5 pb-2">
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -70,15 +70,15 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/40 border border-[#1D3557]/5 rounded-xl py-2 pl-10 pr-4 text-base md:text-xs text-[#1D3557] placeholder-[#1D3557]/30 focus:outline-none focus:bg-white transition-colors shadow-sm"
+              className="w-full bg-white/40 border border-brand-navy/5 rounded-xl py-2 pl-10 pr-4 text-base md:text-xs text-brand-navy placeholder-brand-navy/30 focus:outline-none focus:bg-white transition-colors shadow-sm"
             />
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#1D3557]/30" />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-navy/30" />
           </div>
           
           <div className="flex gap-1.5 shrink-0">
             <button 
               onClick={(e) => { e.stopPropagation(); toggleSortOrder(); }}
-              className="w-9 h-9 bg-white border border-[#1D3557]/5 text-[#1D3557] rounded-xl flex items-center justify-center shadow-sm hover:bg-[#1D3557]/5 active:scale-95 transition-all"
+              className="w-9 h-9 bg-white border border-brand-navy/5 text-brand-navy rounded-xl flex items-center justify-center shadow-sm hover:bg-brand-navy/5 active:scale-95 transition-all"
               title={sortOrder === 'desc' ? t.sortOldest : t.sortNewest}
             >
               {sortOrder === 'desc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
@@ -89,14 +89,14 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   else if (columns === 3) setColumns(5);
                   else setColumns(2);
                 }}
-                className="w-9 h-9 rounded-xl transition-all border shadow-sm flex items-center justify-center bg-white border-[#1D3557]/5 text-[#1D3557]"
+                className="w-9 h-9 rounded-xl transition-all border shadow-sm flex items-center justify-center bg-white border-brand-navy/5 text-brand-navy"
                 title={`Switch layout`}
             >
                 <LayoutGrid size={16} className="opacity-40" />
             </button>
             <button
                 onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-                className={`w-9 h-9 rounded-xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/40 hover:text-[#1D3557]'}`}
+                className={`w-9 h-9 rounded-xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/40 hover:text-brand-navy'}`}
                 title={showGroupsCollapsed ? "Show All" : "Group Photos"}
             >
                 <Layers size={16} />
@@ -107,7 +107,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
         <div className="grid grid-cols-4 gap-1.5 px-0.5">
             <button 
               onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); onScrollToTop(); }}
-              className={`w-full h-[34px] rounded-md text-[11px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+              className={`w-full h-[34px] rounded-md text-[11px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
             >
               {t.allCats}
             </button>
@@ -129,7 +129,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       setSelectedSubId(null);
                       onScrollToTop();
                     }}
-                    className={`w-full h-[34px] rounded-md text-[11px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6]' : 'bg-white border-[#1D3557]/10 text-[#1D3557]/60'}`}
+                    className={`w-full h-[34px] rounded-md text-[11px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
                   >
                     {displayName}
                   </button>
@@ -138,7 +138,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
         </div>
       </div>
       
-      <div className="pt-1.5 border-t border-[#1D3557]/5 space-y-1.5">
+      <div className="pt-1.5 border-t border-brand-navy/5 space-y-1.5">
         <AnimatePresence>
           {selectedCatCode && (
               <motion.div 
@@ -200,9 +200,9 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     className={cn(
                       "px-2.5 py-1 rounded-xl text-[9px] font-black transition-colors border-2 shadow-sm flex items-center gap-1",
                       isSelected 
-                        ? 'bg-[#1D3557] border-[#1D3557] text-[#FDFAF6] shadow-md z-10' 
-                        : 'bg-white border-slate-100 text-[#1D3557]/40 hover:text-[#1D3557] hover:border-[#1D3557]/20',
-                      isHot && !isSelected && "border-[#D4A853]/30 bg-[#D4A853]/5 text-[#D4A853] hover:border-[#D4A853]/50 hover:bg-[#D4A853]/10"
+                        ? 'bg-brand-navy border-brand-navy text-brand-bg shadow-md z-10' 
+                        : 'bg-white border-slate-100 text-brand-navy/40 hover:text-brand-navy hover:border-brand-navy/20',
+                      isHot && !isSelected && "border-brand-gold/30 bg-brand-gold/5 text-brand-gold hover:border-brand-gold/50 hover:bg-brand-gold/10"
                     )}
                   >
                     {!isHot && <span className={cn(
@@ -210,13 +210,13 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       isSelected ? "bg-white" : "bg-slate-200"
                     )} />}
                     {toTitleCase(tag.name)}
-                    {isPinned && !isSelected && <span className="bg-[#D4A853] text-white p-0.5 rounded-full shadow-sm flex items-center justify-center"><Heart size={8} className="fill-white"/></span>}
-                    {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-[#D4A853]/20 text-[#D4A853] px-1.5 py-[1px] rounded font-black tracking-tighter">HOT</span>}
+                    {isPinned && !isSelected && <span className="bg-brand-gold text-white p-0.5 rounded-full shadow-sm flex items-center justify-center"><Heart size={8} className="fill-white"/></span>}
+                    {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-brand-gold/20 text-brand-gold px-1.5 py-[1px] rounded font-black tracking-tighter">HOT</span>}
                   </button>
                 );
               })}
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#FDFAF6]/90 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-brand-bg/90 to-transparent pointer-events-none" />
         </div>
       </div>
     </div>

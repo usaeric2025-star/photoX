@@ -8,6 +8,7 @@ export const cleanPhotos = (photos: any[]): Photo[] => {
       ...p,
       tagIds: Array.isArray(p.tagIds) ? p.tagIds : [],
       dimensions: Array.isArray(p.dimensions) ? p.dimensions : [],
+      createdAtTimestamp: new Date(p.createdAt || (p as any).created_at || 0).getTime(),
     }));
 };
 
@@ -40,7 +41,7 @@ export function filterPhotos(
 
   let result = photos.map(p => ({
     ...p,
-    _time: new Date(p.createdAt || (p as any).created_at || 0).getTime()
+    _time: p.createdAtTimestamp || new Date(p.createdAt || (p as any).created_at || 0).getTime()
   }));
 
   // 1. Basic Visibility Filter
@@ -112,7 +113,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean): Phot
 
   cleanedPhotos.forEach(p => {
     if (p.groupId) {
-      const time = new Date(p.createdAt || (p as any).created_at || 0).getTime();
+      const time = p.createdAtTimestamp || new Date(p.createdAt || (p as any).created_at || 0).getTime();
       
       const maxT = groupMaxTime.get(p.groupId) || 0;
       groupMaxTime.set(p.groupId, Math.max(maxT, time));

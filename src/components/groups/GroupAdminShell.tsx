@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 import { 
   X, Edit3, Settings2, Plus, ChevronLeft, ChevronRight, ChevronDown, Layers, Pencil, Sparkles, 
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
@@ -55,7 +56,7 @@ export interface GroupAdminShellProps {
 
 import { useGroupSync } from '../../hooks/useGroupSync';
 import { useAdminUI } from '../../context/AdminContexts';
-import { showSystemError } from '../../context/ErrorContext';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 import { DimensionEditor } from '../admin/edit/DimensionEditor';
 
@@ -75,8 +76,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     updatePhoto: hookUpdatePhoto
   } = props;
 
-  const { setAlertDialog: contextSetAlertDialog, setPromptDialog, showToast } = useAdminUI();
+  const { setAlertDialog: contextSetAlertDialog, setPromptDialog } = useAdminUI();
   const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
+  const { handleError } = useErrorHandler();
   const { setCover } = useGroupSync(activeGroupId);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -178,10 +180,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
           ));
           setIsMultiSelectMode(false);
           setSelectedPhotoIds([]);
-          showToast('已移出 / Removed', 'success');
+          toast.success('已移出 / Removed');
         } catch (err: any) {
-          showSystemError(`Bulk Remove Fail: ${err.message || String(err)}`);
-          showToast('操作失败 / Failed', 'error');
+          handleError(err, '批量移出失败');
         }
         setAlertDialog(null);
       }
@@ -198,10 +199,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
          await serviceUpdatePhoto(photoId, updates);
          setPhotos?.(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
       }
-      showToast('已保存 / Saved', 'success');
+      toast.success('已保存 / Saved');
     } catch (err: any) {
-      showSystemError(`Persist Photo Change Fail: ${err.message || String(err)}`);
-      showToast('保存失败 / Failed', 'error');
+      handleError(err, '保存照片修改失败');
     }
   };
 
@@ -211,7 +211,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     const nextGroupData = { ...groupData, ...updates };
     setGroupData(nextGroupData);
     
-    showToast('群组资料已更新 / Group info updated', 'success');
+    toast.success('群组资料已更新 / Group info updated');
 
     try {
       await saveGroupToCloud(nextGroupData);
@@ -225,12 +225,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
              groupPhotos.map(p => hookUpdatePhoto(p.id, { isHidden }))
            );
            setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isHidden: isHidden! } : p));
-           showToast(`群组内照片已${isHidden ? '屏蔽' : '显示'}`, 'success');
+           toast.success(`群组内照片已${isHidden ? '屏蔽' : '显示'}`);
         }
       }
     } catch (err: any) {
-      showSystemError(`Update Group Data Fail: ${err.message || String(err)}`);
-      showToast(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
+      handleError(err, '更新群组资料失败');
     }
   };
 
@@ -251,7 +250,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
       message: `确定要将群组内所有 ${activeGroupPhotos.length} 张照片的尺寸更新为当前设置吗？此操作不可撤销。`,
       onConfirm: async () => {
         try {
-          showToast('正在批量更新尺寸...', 'loading');
+          const toastId = toast.loading('正在批量更新尺寸...');
           if (hookUpdatePhoto) {
             await Promise.all(
               activeGroupPhotos.map(p => hookUpdatePhoto(p.id, { dimensions: newDims }))
@@ -265,10 +264,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
               p.groupId === activeGroupId ? { ...p, dimensions: newDims } : p
             ));
           }
-          showToast('批量更新成功', 'success');
+          toast.success('批量更新成功', { id: toastId });
         } catch (err: any) {
-          showSystemError(`Batch Update Dimensions Fail: ${err.message || String(err)}`);
-          showToast('更新失败 / Failed', 'error');
+          handleError(err, '批量更新尺寸失败');
         }
         setAlertDialog(null);
       }
@@ -309,11 +307,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
         updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { groupOrder: p.groupOrder }))
       );
       
-      showToast('顺序已保存 / Order saved', 'success');
+      toast.success('顺序已保存 / Order saved');
     } catch (err: any) {
-      console.error("Failed to persist order:", err);
-      showSystemError(`Reorder Fail: ${err.message || String(err)}`);
-      showToast('顺序保存失败 / Save failed', 'error');
+      handleError(err, '保存排序失败');
     }
   };
 
@@ -344,10 +340,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] bg-[#FDFAF6] overflow-y-auto pt-safe flex flex-col"
+            className="fixed inset-0 z-[200] bg-brand-bg overflow-y-auto pt-safe flex flex-col"
           >
            {/* Top Header */}
-           <div className="sticky top-0 bg-[#FDFAF6]/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+           <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => setActiveGroupId(null)}
@@ -481,7 +477,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                  if ('vibrate' in navigator) navigator.vibrate(50);
                }
              }}
-             getPhotoProps={(photo) => ({
+             getPhotoProps={useCallback((photo) => ({
                draggable: isAdminMode && !isMultiSelectMode,
                onDragStart: () => setDraggedPhotoId(photo.id),
                onDragOver: (e: React.DragEvent) => e.preventDefault(),
@@ -492,7 +488,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                    setDraggedPhotoId(null);
                  }
                }
-             })}
+             }), [isAdminMode, isMultiSelectMode, draggedPhotoId, handleReorder])}
            />
 
            {/* Multi-Select Floating Bar */}
@@ -502,7 +498,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                  initial={{ y: 100, opacity: 0 }}
                  animate={{ y: 0, opacity: 1 }}
                  exit={{ y: 100, opacity: 0 }}
-                 className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] bg-[#1D3557] px-5 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 min-w-[320px]"
+                 className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] bg-brand-navy px-5 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 min-w-[320px]"
                >
                   <div className="bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5">
                     <Check size={14} className="text-white" />
@@ -574,7 +570,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                                  }
                                  setAlertDialog?.(null);
                                } catch (e) {
-                                 console.error('Failed to ungroup:', e);
+                                 handleError(e, '解散群组失败');
                                  setAlertDialog?.(null);
                                }
                              }

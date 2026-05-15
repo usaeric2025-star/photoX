@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 import { User, Photo, Category, Tag, Manufacturer } from '../types';
 import { 
   checkImageHashExists, 
@@ -59,13 +60,13 @@ export const usePhotoImport = (
   setCloudCount: (c: number | null) => void,
   addManufacturer: (name: string) => Promise<Manufacturer>,
   runWithLoading: <T>(state: any, fn: () => Promise<T>) => Promise<T>,
-  showToast: (msg: string, type?: any) => void,
   addTask: (task: any) => string,
   updateTask: (id: string, updates: any) => void,
   abortAnalysis: () => void,
   tagNameToIdMap: Map<string, string>,
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
-  photosRef: React.MutableRefObject<Photo[]>
+  photosRef: React.MutableRefObject<Photo[]>,
+  handleError: (error: any, context?: string) => void
 ) => {
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
@@ -86,7 +87,7 @@ export const usePhotoImport = (
     // HEIC Detection Alert
     const hasHeic = sFileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
     if (hasHeic) {
-      showToast('检测到 HEIC 格式照片，部分手机浏览器可能无法直接显示，建议转换为 JPG 后上传', 'info');
+      toast.info('检测到 HEIC 格式照片，部分手机浏览器可能无法直接显示，建议转换为 JPG 后上传');
     }
     
     return runWithLoading('importing', async () => {
@@ -228,7 +229,7 @@ export const usePhotoImport = (
 
                   setPhotos(prev => prev.map(p => {
                      // Robust matching using storageId or original id
-                     if (p.storageId !== photoId && p.id !== photoId) return p;
+                     if (p.id !== photoId) return p;
                      
                      const updatedPhoto = {
                        ...p,
@@ -250,7 +251,7 @@ export const usePhotoImport = (
                               ? { ...item, ...updatedPhoto, id: persistedId } 
                               : item
                           ));
-                       }).catch(e => console.error("Process queue backup failed:", e));
+                       }).catch(e => handleError(e, "同步备份失败"));
                      }
                      
                      return updatedPhoto;
@@ -263,7 +264,7 @@ export const usePhotoImport = (
               })(newPhoto);
             }
           } catch (err) {
-            console.error("Import processing error", err);
+            handleError(err, `导入过程处理文件失败: ${file.name}`);
             failCount++;
             failedFiles.push(file.name);
           }
@@ -306,8 +307,7 @@ export const usePhotoImport = (
           
           setCloudCount(photosRef.current.length);
         } catch (e) {
-           console.error('Cloud upload block failed:', e);
-           showToast('云端同步过程出现问题，但已保存在本地', 'error');
+           handleError(e, '云端同步过程出现问题');
         }
       }
       
@@ -318,7 +318,8 @@ export const usePhotoImport = (
          if (duplicateCount > 0) msg += ` 跳过了 ${duplicateCount} 张重复。`;
          if (failCount > 0) msg += ` 有 ${failCount} 张失败: ${failedFiles.join(', ')}`;
          
-         showToast(msg, successCount > 0 ? 'success' : 'error');
+         if (successCount > 0) toast.success(msg);
+         else toast.error(msg);
       }
     });
   };

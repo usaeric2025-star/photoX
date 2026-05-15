@@ -1,12 +1,12 @@
-import React, {StrictMode} from 'react';
+import React, {StrictMode, useState} from 'react';
 import {createRoot} from 'react-dom/client';
+import { Toaster, toast } from 'sonner';
 import App from './App';
 import { GalleryProvider } from './context/GalleryContext';
 import { ErrorProvider, showSystemError } from './context/ErrorContext';
 import { TaskProvider } from './hooks/useTasks';
 import { AdminUIProvider, AdminSessionProvider } from './context/AdminContexts';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { useState } from 'react';
 import './index.css';
 
 
@@ -16,18 +16,15 @@ const RootAdminUIProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [activeScreen, setActiveScreen] = useState('home');
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
-  const [toast, setToast] = useState<any>(null);
   const [loadingState, setLoadingState] = useState<'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting'>('idle');
   const [batchProgress] = useState({ current: 0, total: 0 });
   const [aiDebugInfo] = useState<any>(null);
   
-  const showToast = (message: string, type: 'success' | 'error') => { setToast({ message, type }); setTimeout(() => setToast(null), 3000); };
   const withLoading = async <T,>(state: any, fn: () => Promise<T>) => { setLoadingState(state); try { return await fn(); } finally { setLoadingState('idle'); } };
 
   const value = {
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast,
     loadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, 
     abortAnalysis: () => console.log('abort'), isAnalyzing: false 
   };
@@ -39,20 +36,21 @@ const RootAdminSessionProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [settings, setSettings] = useState<any>({});
   
   const value = {
-    user: null, // Should be lifted from top-level auth, if applicable
+    user: null, 
     isAdminMode: false,
     settings,
     setSettings,
     geminiApiKey: '',
     setGeminiApiKey: () => {},
-    internalPassword: '',
-    setInternalPassword: () => {},
+    accessPasscode: '',
+    setAccessPasscode: () => {},
     customModel: '',
     setCustomModel: () => {},
     viewMode: 'public',
     setViewMode: () => {},
-    syncPercent: 0,
-    setSyncPercent: () => {},
+    isSyncing: false,
+    setIsSyncing: () => {},
+    onRefresh: async () => {},
     loginWithGoogle: async () => {},
     logout: () => {},
     appLang: 'zh'
@@ -68,8 +66,19 @@ declare global {
 }
 
 
+// Global error logging
+window.onerror = (message, source, lineno, colno, error) => {
+  showSystemError(`Unhandled Error: ${message} at ${source}:${lineno}:${colno}`);
+  return false;
+};
+
+window.onunhandledrejection = (event) => {
+  showSystemError(`Unhandled Promise Rejection: ${event.reason}`);
+};
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <Toaster position="top-right" richColors />
     <ErrorProvider>
       <ErrorBoundary>
         <GalleryProvider>

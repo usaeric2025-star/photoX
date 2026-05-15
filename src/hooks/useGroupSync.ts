@@ -1,10 +1,11 @@
 import { useCallback } from 'react';
 import { useAdminPhoto, useAdminUI } from '../context/AdminContexts';
 import { updatePhotosGroupInCloud } from '../services/photoSyncService';
+import { toast } from 'sonner';
 
 export function useGroupSync(activeGroupId: string | null) {
   const { photos, setPhotos } = useAdminPhoto();
-  const { setAlertDialog, showToast, withLoading } = useAdminUI();
+  const { setAlertDialog, withLoading } = useAdminUI();
 
   const setCover = useCallback(async (photoId: string) => {
     if (!activeGroupId) return;
@@ -24,14 +25,14 @@ export function useGroupSync(activeGroupId: string | null) {
             await updatePhotosGroupInCloud([photoId], { is_group_cover: true });
             
             setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isGroupCover: p.id === photoId } : p));
-            showToast('已设为封面', 'success');
+            toast.success('已设为封面');
           } catch (err: any) {
-            showToast(`设为封面失败: ${err.message}`, 'error');
+            toast.error(`设为封面失败: ${err.message}`);
           }
         });
       }
     });
-  }, [activeGroupId, photos, setPhotos, setAlertDialog, showToast, withLoading]);
+  }, [activeGroupId, photos, setPhotos, setAlertDialog, withLoading]);
 
   return { setCover };
 }

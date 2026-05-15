@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { 
   ChevronLeft, X, Cloud, LogOut,
@@ -15,10 +16,11 @@ import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
 import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
 import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
+import { useErrorHandler } from '../utils/errorHandler';
 
 interface SettingsScreenProps {
   setActiveScreen: (screen: 'home' | 'manage' | 'login') => void;
-  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: Category[], tags: Tag[], manufacturers: Manufacturer[], showToast: (msg: string, type?: any) => void) => Promise<void>;
+  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: Category[], tags: Tag[], manufacturers: Manufacturer[]) => Promise<void>;
   performPushSync: () => Promise<ApiResponse>;
   performPullSync: () => Promise<ApiResponse>;
   saveSettings: (s: AppSettings) => Promise<ApiResponse>;
@@ -62,7 +64,7 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
 
   return (
     <div 
-      className={`bg-white border border-[#1D3557]/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeTagMenuId === tag.id ? 'bg-[#D4A853]/10 border-[#D4A853]/30 scale-95' : ''}`}
+      className={`bg-white border border-brand-navy/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeTagMenuId === tag.id ? 'bg-brand-gold/10 border-brand-gold/30 scale-95' : ''}`}
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
       onMouseDown={handleStart}
@@ -73,8 +75,8 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
         setActiveTagMenuId(tag.id);
       }}
     >
-      <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none flex items-center gap-1">
-        {isPinned && <Heart size={10} className="text-[#D4A853] fill-[#D4A853] shrink-0" />}
+      <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none flex items-center gap-1">
+        {isPinned && <Heart size={10} className="text-brand-gold fill-brand-gold shrink-0" />}
         {tag.name}
       </span>
       
@@ -88,7 +90,7 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
             type: 'danger'
           });
         }}
-        className="text-[#1D3557]/20 hover:text-[#D4A853] p-1 rounded-full"
+        className="text-brand-navy/20 hover:text-brand-gold p-1 rounded-full"
       >
         <X size={14} />
       </button>
@@ -99,7 +101,7 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1D3557] rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[120px]"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[120px]"
           >
             <button 
               onClick={(e) => {
@@ -132,7 +134,7 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
               <Trash2 size={12} /> 删除
             </button>
             <div 
-              className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1D3557] rotate-45 -mt-1"
+              className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1"
             />
           </motion.div>
         )}
@@ -152,9 +154,9 @@ const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName
 };
 
 const BUTTON_STYLES = {
-  primary: "px-5 py-2.5 bg-[#1D3557] hover:bg-[#1D3557]/90 text-[#FDFAF6] rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
-  secondary: "px-5 py-2.5 bg-[#FDFAF6] border border-[#1D3557]/20 hover:bg-[#1D3557]/5 text-[#1D3557] rounded-2xl text-xs font-medium tracking-wide shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
-  accent: "px-5 py-2.5 bg-[#D4A853] hover:bg-[#D4A853]/90 text-white rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  secondary: "px-5 py-2.5 bg-brand-bg border border-brand-navy/20 hover:bg-brand-navy/5 text-brand-navy rounded-2xl text-xs font-medium tracking-wide shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  accent: "px-5 py-2.5 bg-brand-gold hover:bg-brand-gold/90 text-white rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
 };
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
@@ -169,7 +171,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTags, setCategories, setManufacturers, setPhotos,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag
   } = useAdminPhoto();
-  const { loadingState, setAlertDialog, setPromptDialog, showToast, withLoading } = useAdminUI();
+  const { loadingState, setAlertDialog, setPromptDialog, withLoading } = useAdminUI();
+  const { handleError } = useErrorHandler();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
@@ -223,7 +226,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             setTags((prev: Tag[]) => [...prev, newTag]);
           }
         } catch (error: any) {
-          showToast(`添加失败: ${error.message}`, 'error');
+          handleError(error, '添加标签失败');
         }
       }
     });
@@ -231,7 +234,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const handleDeduplicate = async () => {
     if (!user) {
-      showToast('请先登录云端', 'error');
+      toast.error('请先登录云端');
       return;
     }
 
@@ -244,15 +247,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           await withLoading('syncing', async () => {
             const { removed } = await deduplicatePhotos(user.id);
             if (removed > 0) {
-              showToast(`排重完成！共清理了 ${removed} 张重复记录。`, 'success');
+              toast.success(`排重完成！共清理了 ${removed} 张重复记录。`);
               // Optionally trigger a refresh
               await performPullSync();
             } else {
-              showToast('未发现重复照片', 'info');
+              toast.info('未发现重复照片');
             }
           });
         } catch (error: any) {
-          showToast(`排重失败: ${error.message}`, 'error');
+          handleError(error, '排重清理失败');
         }
       }
     });
@@ -329,45 +332,45 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setHasChanges(true);
   };
 
-  const inputClass = "flex-1 min-w-0 bg-[#1D3557]/5 border border-[#1D3557]/10 p-3 rounded-2xl text-sm outline-none focus:border-[#D4A853] focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-[#1D3557]/30 text-[#1D3557]";
-  const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-[#1D3557]/10 space-y-4";
+  const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
+  const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
 
   return (
-    <div className="fixed inset-0 z-[500] bg-[#FDFAF6] flex flex-col pt-safe">
+    <div className="fixed inset-0 z-[500] bg-brand-bg flex flex-col pt-safe">
       {/* Settings Header */}
-      <div className="px-6 py-4 flex items-center gap-3 bg-[#FDFAF6] sticky top-0 z-10">
+      <div className="px-6 py-4 flex items-center gap-3 bg-brand-bg sticky top-0 z-10">
         <button 
           onClick={() => setActiveScreen('home')} 
-          className="p-2 -ml-2 text-[#1D3557]/50 hover:text-[#1D3557] transition-colors rounded-full active:bg-[#1D3557]/5"
+          className="p-2 -ml-2 text-brand-navy/50 hover:text-brand-navy transition-colors rounded-full active:bg-brand-navy/5"
           id="btn-settings-back"
         >
           <ChevronLeft size={24} />
         </button>
-        <h2 className="font-black text-xs text-[#1D3557] border border-[#1D3557]/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">设置与管理</h2>
+        <h2 className="font-black text-xs text-brand-navy border border-brand-navy/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">设置与管理</h2>
         <button 
            onClick={async () => {
              if (hasChanges) {
                await saveSettings({ ...settings });
                setHasChanges(false);
-               showToast("保存成功 / Saved successfully", "success");
+               toast.success("保存成功 / Saved successfully");
              } else {
-               showToast("没有更改需要保存 / No changes to save", "success");
+               toast.success("没有更改需要保存 / No changes to save");
              }
            }}
-           className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center ${hasChanges ? 'bg-[#D4A853] hover:bg-[#D4A853]/90 text-white' : 'bg-[#1D3557] hover:bg-[#1D3557]/90 text-white'}`}
+           className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center ${hasChanges ? 'bg-brand-gold hover:bg-brand-gold/90 text-white' : 'bg-brand-navy hover:bg-brand-navy/90 text-white'}`}
         >
             <Save size={16} />
         </button>
-        <Settings2 size={20} className="text-[#1D3557]/20" />
+        <Settings2 size={20} className="text-brand-navy/20" />
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
         <div className="space-y-6">
               {/* Logo Section */}
               <div className={cardClass} id="section-logo">
-            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
+            <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center justify-between gap-2">
               <span className="flex items-center gap-2">
-                <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
+                <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
                 Logo 设置
               </span>
             </h4>
@@ -376,7 +379,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                   {settings?.logo_url ? (
                       <img src={settings.logo_url} className="w-16 h-16 rounded-3xl object-cover shadow-md border-2 border-white p-1 bg-white" alt="Logo" />
                   ) : (
-                      <div className="w-16 h-16 bg-[#1D3557]/5 rounded-3xl flex flex-col items-center justify-center text-[#1D3557]/20 shadow-inner border border-[#1D3557]/10 italic">
+                      <div className="w-16 h-16 bg-brand-navy/5 rounded-3xl flex flex-col items-center justify-center text-brand-navy/20 shadow-inner border border-brand-navy/10 italic">
                         <ImageIcon size={20} className="mb-1" />
                         <span className="text-[8px]">暂无 Logo</span>
                       </div>
@@ -389,29 +392,29 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                     </span>
                     <input 
                       type="file" 
-                      onChange={(e) => handleLogoUpload(e, categories, tags, manufacturers, showToast)} 
+                      onChange={(e) => handleLogoUpload(e, categories, tags, manufacturers)} 
                       className="absolute inset-0 opacity-0 cursor-pointer" 
                       accept="image/*" 
                     />
                   </label>
-                  <p className="text-[9px] text-[#1D3557]/40 font-black uppercase tracking-tighter leading-relaxed px-1">推荐比例 1:1</p>
+                  <p className="text-[9px] text-brand-navy/40 font-black uppercase tracking-tighter leading-relaxed px-1">推荐比例 1:1</p>
                 </div>
             </div>
         </div>
 
         {/* Sync Section Refined */}
-        <div className="bg-[#1D3557] rounded-[32px] p-6 shadow-xl border border-white/5 space-y-4 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A853]/10 blur-3xl -mr-10 -mt-10 group-hover:bg-[#D4A853]/20 transition-all duration-700"></div>
+        <div className="bg-brand-navy rounded-[32px] p-6 shadow-xl border border-white/5 space-y-4 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 blur-3xl -mr-10 -mt-10 group-hover:bg-brand-gold/20 transition-all duration-700"></div>
           
           <div className="flex items-center justify-between">
             <h4 className="font-black text-white text-[10px] uppercase tracking-widest flex items-center gap-2">
-              <Cloud size={18} className={user ? 'text-[#D4A853]' : 'text-white/30'} />
+              <Cloud size={18} className={user ? 'text-brand-gold' : 'text-white/30'} />
               云端存储管理
             </h4>
             {user && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-[#D4A853]/20 rounded-full border border-[#D4A853]/30">
-                <Skeleton className="w-1.5 h-1.5 bg-[#D4A853] rounded-full" />
-                <span className="text-[10px] font-black text-[#D4A853] uppercase tracking-wider">已连接</span>
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-brand-gold/20 rounded-full border border-brand-gold/30">
+                <Skeleton className="w-1.5 h-1.5 bg-brand-gold rounded-full" />
+                <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider">已连接</span>
               </div>
             )}
           </div>
@@ -419,7 +422,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           {!user ? (
             <button 
               onClick={loginWithGoogle}
-              className="w-full py-4 bg-white hover:bg-[#FDFAF6] text-[#1D3557] rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
+              className="w-full py-4 bg-white hover:bg-brand-bg text-brand-navy rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
             >
               <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
               使用 Google 登录
@@ -430,7 +433,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 {user?.avatarUrl ? (
                   <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20" alt="Avatar" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-[#D4A853]/20 flex items-center justify-center text-[#D4A853] font-black border border-[#D4A853]/20">
+                  <div className="w-10 h-10 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold font-black border border-brand-gold/20">
                     {String(user?.displayName || 'U').charAt(0)}
                   </div>
                 )}
@@ -440,7 +443,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 </div>
                 <button 
                   onClick={logout}
-                  className="p-2 text-white/30 hover:text-[#D4A853] transition-colors"
+                  className="p-2 text-white/30 hover:text-brand-gold transition-colors"
                   title="Logout"
                 >
                   <LogOut size={18} />
@@ -451,7 +454,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 <button 
                   onClick={performPushSync}
                   disabled={isSyncing}
-                  className="bg-[#D4A853] hover:bg-[#D4A853]/90 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
+                  className="bg-brand-gold hover:bg-brand-gold/90 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
                 >
                   <CloudUpload size={16} /> 备份至云端
                 </button>
@@ -477,13 +480,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         {/* AI & Password Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className={cardClass} id="section-ai">
-              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-                <Sparkles size={16} className="text-[#D4A853]" />
+              <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
+                <Sparkles size={16} className="text-brand-gold" />
                 AI 智能设定
               </h4>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <p className="text-[9px] font-black text-[#1D3557]/40 uppercase ml-1 tracking-widest">AI API 密钥</p>
+                  <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">AI API 密钥</p>
                   <input 
                     type="password" 
                     placeholder="输入 API 密钥..."
@@ -499,7 +502,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[9px] font-black text-[#1D3557]/40 uppercase ml-1 tracking-widest">自定义模型</p>
+                  <p className="text-[9px] font-black text-brand-navy/40 uppercase ml-1 tracking-widest">自定义模型</p>
                   <input 
                     type="text" 
                     placeholder="例如 gemini-2.0-flash"
@@ -531,11 +534,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           </div>
 
           <div className={cardClass} id="section-password">
-              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-                <Lock size={16} className="text-[#D4A853]" />
+              <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
+                <Lock size={16} className="text-brand-gold" />
                 员工密钥
               </h4>
-              <p className="text-[10px] text-[#1D3557]/40 font-black uppercase tracking-tight leading-relaxed">
+              <p className="text-[10px] text-brand-navy/40 font-black uppercase tracking-tight leading-relaxed">
                 执行内部可见内容操作时需要此密钥。
               </p>
               <input 
@@ -557,17 +560,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         {/* Categories Section (Read-only) */}
         <section className={cardClass} id="section-categories">
           <div className="flex items-center justify-between">
-            <h3 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+            <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
               <div className="w-1.5 h-3.5 bg-blue-500 rounded-full"></div>
                 分类 / Categories (只读 / Read-only)
             </h3>
-            <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{categories.length} 个项目</span>
+            <span className="text-[10px] text-brand-navy/40 font-black uppercase">{categories.length} 个项目</span>
           </div>
           
-          <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
+          <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
             {categories.map(cat => (
-              <div key={cat.id} className="bg-white border border-[#1D3557]/10 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
-                <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight">
+              <div key={cat.id} className="bg-white border border-brand-navy/10 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-sm">
+                <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight">
                    {cat.name}
                 </span>
               </div>
@@ -578,18 +581,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         {/* Manufacturers Section */}
         <section className={cardClass} id="section-manufacturers">
           <div className="flex items-center justify-between">
-            <h3 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-[#1D3557] rounded-full"></div>
+            <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-brand-navy rounded-full"></div>
               生产商
             </h3>
-            <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(manufacturers || []).length} 个项目</span>
+            <span className="text-[10px] text-brand-navy/40 font-black uppercase">{(manufacturers || []).length} 个项目</span>
           </div>
           <div className="flex gap-2">
             <button onClick={handleAddManufacturer} className={BUTTON_STYLES.accent}>
               <Plus size={16} /> 新增生产商
             </button>
           </div>
-          <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
+          <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
             {(manufacturers || []).map(sub => (
               <ManufacturerItem 
                 key={sub.id} 
@@ -604,25 +607,25 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         {/* Tags Section */}
         <section className={cardClass} id="section-tags">
           <div className="flex items-center justify-between">
-            <h3 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
-              <div className="w-1.5 h-3.5 bg-[#D4A853] rounded-full"></div>
+            <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
               常用标签
             </h3>
-            <span className="text-[10px] text-[#1D3557]/40 font-black uppercase">{(tags || []).length} 个项目</span>
+            <span className="text-[10px] text-brand-navy/40 font-black uppercase">{(tags || []).length} 个项目</span>
           </div>
           <div className="flex gap-2 items-center">
             <button onClick={handleAddTag} className={BUTTON_STYLES.accent}>
               <Plus size={16} /> 新增标签
             </button>
-            <div className="flex items-center gap-2 bg-[#1D3557]/5 px-3 py-1.5 rounded-full border border-[#1D3557]/10 ml-auto h-full">
-               <span className="text-[10px] font-black text-[#1D3557] uppercase tracking-widest flex items-center gap-1">
-                 <Heart size={12} className="text-[#D4A853] fill-[#D4A853]" /> 推荐数量
+            <div className="flex items-center gap-2 bg-brand-navy/5 px-3 py-1.5 rounded-full border border-brand-navy/10 ml-auto h-full">
+               <span className="text-[10px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
+                 <Heart size={12} className="text-brand-gold fill-brand-gold" /> 推荐数量
                </span>
                <input 
                  type="number"
                  min={1}
                  max={50}
-                 className="w-12 text-center bg-white border border-[#1D3557]/10 text-xs font-black text-[#1D3557] rounded-md py-1 outline-none focus:border-[#D4A853]"
+                 className="w-12 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
                  value={settings?.hotTagsCount !== undefined ? settings.hotTagsCount : 9}
                  onChange={(e) => {
                    let num: any = parseInt(e.target.value);
@@ -635,7 +638,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2 p-3 bg-[#1D3557]/5 rounded-[28px] border border-[#1D3557]/10 shadow-inner min-h-[48px]">
+          <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
             {(Array.from(tags || []) as Tag[]).sort((a, b) => {
                const ap = (settings?.pinnedTags || []).includes(a.id) ? 1 : 0;
                const bp = (settings?.pinnedTags || []).includes(b.id) ? 1 : 0;
@@ -659,7 +662,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
         {/* Export Data */}
         <div className={cardClass}>
-            <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+            <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
               <div className="w-1.5 h-3.5 bg-slate-800 rounded-full"></div>
               数据维护
             </h4>
@@ -700,9 +703,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                         if (Array.isArray(json.photos)) setPhotos(json.photos);
                         if (json.tags) setTags(json.tags);
                         if (json.manufacturers) setManufacturers(json.manufacturers);
-                        showToast('数据导入成功！', 'success');
+                        toast.success('数据导入成功！');
                       } catch (err) {
-                        showToast('导入失败: 格式错误', 'error');
+                        handleError(err, '导入JSON失败');
                       }
                     };
                     reader.readAsText(file);
@@ -715,7 +718,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
           {/* WhatsApp 联系人设定 (Original Location) */}
           <div className={cardClass} id="section-whatsapp">
-              <h4 className="font-black text-[#1D3557] text-[10px] uppercase tracking-widest flex items-center gap-2">
+              <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
                 <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
                 WhatsApp 联系人设定
               </h4>
@@ -723,7 +726,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-2 pl-1 mb-2">
                       <UserIcon size={12} className="text-slate-400" />
-                      <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">联系人 A</label>
+                      <label className="text-[10px] font-black text-brand-navy/40 uppercase tracking-widest leading-none pt-0.5">联系人 A</label>
                   </div>
                   <div className="flex gap-2">
                     <input type="text" placeholder="姓名" className={inputClass} value={settings?.whatsapp_1_name || ''} onChange={(e) => setSettingField('whatsapp_1_name', e.target.value)} />
@@ -733,7 +736,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                   <div className="flex items-center gap-2 pl-1 mb-2">
                       <UserIcon size={12} className="text-slate-400" />
-                      <label className="text-[10px] font-black text-[#1D3557]/40 uppercase tracking-widest leading-none pt-0.5">联系人 B</label>
+                      <label className="text-[10px] font-black text-brand-navy/40 uppercase tracking-widest leading-none pt-0.5">联系人 B</label>
                   </div>
                   <div className="flex gap-2">
                     <input type="text" placeholder="姓名" className={inputClass} value={settings?.whatsapp_2_name || ''} onChange={(e) => setSettingField('whatsapp_2_name', e.target.value)} />

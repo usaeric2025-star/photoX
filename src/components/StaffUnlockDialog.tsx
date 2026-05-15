@@ -1,5 +1,5 @@
 import React from 'react';
-import { useOptionalAdminUI } from '../context/AdminContexts';
+import { toast } from 'sonner';
 import { motion } from 'motion/react';
 import { Lock, LogIn } from 'lucide-react';
 
@@ -18,7 +18,6 @@ interface StaffUnlockDialogProps {
 export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, loginWithGoogle, t
 }) => {
-  const adminUI = useOptionalAdminUI();
   if (!isOpen) return null;
 
   return (
@@ -78,7 +77,7 @@ export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
                       // Don't close modal immediately to show intent
                       await loginWithGoogle?.();
                     } catch (e: any) { 
-                      adminUI?.showToast(`${t.loginFailed}: ${e.message || String(e)}`, 'error');
+                      toast.error(`${t.loginFailed}: ${e.message || String(e)}`);
                     }
                   }}
                   className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"

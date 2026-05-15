@@ -7,6 +7,7 @@ import { safeArray } from '../lib/utils';
 import { saveData, loadData } from '../utils/indexedDB';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, generateItemCode, checkImageHashExists, uploadImages } from '../services/supabaseService';
+import { toast } from 'sonner';
 
 const INITIAL_FORM_STATE: ProductFormData = {
   name: '',
@@ -23,13 +24,12 @@ const INITIAL_FORM_STATE: ProductFormData = {
   isGroupCover: false,
 };
 
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from './useGallery';
 
 export const usePhotoManagement = (
   user: User | null,
   adminUI?: {
     setAlertDialog: (d: any) => void;
-    showToast?: (msg: string, type: 'success'|'error') => void;
     setActiveScreen: (s: string) => void;
     editPhotoId?: string | null;
     setEditPhotoId?: (id: string | null) => void;
@@ -48,11 +48,10 @@ export const usePhotoManagement = (
     categories,
     tags, setTags, tagNameToIdMap, tagIdToNameMap,
     manufacturers
-  } = useGalleryContext();
+  } = useGallery();
 
   const { 
     setAlertDialog = () => {}, 
-    showToast = () => {},
     setActiveScreen = () => {},
     editPhotoId: externalEditPhotoId,
     setEditPhotoId: externalSetEditPhotoId,
@@ -161,7 +160,7 @@ export const usePhotoManagement = (
     } = formState;
 
     if (!categoryId && !name && !editPhotoId && !newPhotoData) {
-       showToast('请填写基本信息或选择分类', 'error');
+       toast.error('请填写基本信息或选择分类');
        return;
     }
 
@@ -336,7 +335,7 @@ export const usePhotoManagement = (
            resetAddState();
            setActiveScreen('home');
         } catch (err: any) {
-           showToast(`批量储存失败: ${err.message}`, 'error');
+           toast.error(`批量储存失败: ${err.message}`);
         } finally {
            if (adminUI?.setBatchProgress) {
              adminUI.setBatchProgress({ current: 0, total: 0 });

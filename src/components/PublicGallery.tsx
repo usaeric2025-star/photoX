@@ -4,7 +4,7 @@ import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types'
 import { X, ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, RefreshCcw } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from '../hooks/useGallery';
 import { PAGINATION } from '../constants/config';
 import { PhotoCard } from './PhotoCard';
 import { PhotoCardSkeleton } from './ui/Skeleton';
@@ -17,6 +17,7 @@ import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 import { getTranslatedCategoryName, getPhotoDisplayName } from '../lib/ui-helpers';
 import { safeArray } from '../lib/utils';
+import { useErrorHandler } from '../utils/errorHandler';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -165,7 +166,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   
   const accessPasscode = settings?.access_passcode;
 
-  const context = useGalleryContext();
+  const context = useGallery();
   const {
     photos,
     categories,
@@ -228,6 +229,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     localStorage.setItem('appLang', lang);
   }, [lang]);
   const navigate = useNavigate();
+  const { handleError } = useErrorHandler();
 
   const [showPassPrompt, setShowPassPrompt] = useState(false);
   const [passInput, setPassInput] = useState('');
@@ -360,7 +362,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
-        console.error("Share failed:", e);
+        handleError(e, "shareSinglePhoto");
       }
     }
   }, [t.shareTitle, t.shareNotSupported, lang]);
@@ -460,7 +462,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       />
 
       {/* Grid */}
-      <div className="flex-1 overflow-hidden bg-[#FDFAF6] relative">
+      <div className="flex-1 overflow-hidden bg-brand-bg relative">
         {isSyncing && safePhotosToShow.length === 0 ? (
           <div className={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}>
             {Array.from({ length: 15 }).map((_, i) => (
@@ -468,7 +470,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             ))}
           </div>
         ) : safePhotosToShow.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-[#1D3557]/20">
+          <div className="flex flex-col items-center justify-center py-20 text-brand-navy/20">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
                 <ImageIcon size={32} className="opacity-20" />
             </div>
@@ -516,10 +518,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     <button 
                       onClick={handleLoadMore}
                       disabled={isSyncing}
-                      className="px-6 py-2.5 bg-white border border-[#1D3557]/10 text-[#1D3557] text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-2"
+                      className="px-6 py-2.5 bg-white border border-brand-navy/10 text-brand-navy text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-2"
                     >
                       {isSyncing ? (
-                        <div className="w-3 h-3 border-2 border-[#1D3557]/20 border-t-[#1D3557] rounded-full animate-spin" />
+                        <div className="w-3 h-3 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
                       ) : (
                         <RefreshCcw size={12} />
                       )}
@@ -527,7 +529,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                     </button>
                   ) : safePhotosToShow.length > 0 ? (
                     <div className="flex flex-col items-center gap-2 opacity-20">
-                      <div className="h-[1px] w-12 bg-[#1D3557]" />
+                      <div className="h-[1px] w-12 bg-brand-navy" />
                       <p className="text-[8px] font-black uppercase tracking-[0.2em]">{t.endOfList || '已经到底了 / End'}</p>
                     </div>
                   ) : null}
@@ -541,7 +543,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       {/* Floating Action Buttons */}
       {lightboxIndex === null && !isAdminMode && (
         <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-[400]">
-            <button onClick={scrollToTop} className="bg-[#1D3557] text-[#FDFAF6] p-3 rounded-full shadow-lg transition-all active:scale-95 border border-[#1D3557]/10"><ArrowUpToLine size={20} /></button>
+            <button onClick={scrollToTop} className="bg-brand-navy text-brand-bg p-3 rounded-full shadow-lg transition-all active:scale-95 border border-brand-navy/10"><ArrowUpToLine size={20} /></button>
             <button onClick={() => setShowWhatsAppChoice(true)} className="bg-[#25D366] text-white p-3 rounded-full shadow-lg"><MessageCircle size={20} /></button>
         </div>
       )}
@@ -652,10 +654,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                   groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
                );
              } catch (err: any) {
-               setAlertDialog?.({ title: '设置封面失败', message: err.message });
+               handleError(err, "setGroupCover");
              }
           }).catch(err => {
-             console.error("[ERROR] Failed to update group cover:", err);
+             handleError(err, "importMutationService");
           });
         }}
         onEditPhoto={(photo) => {

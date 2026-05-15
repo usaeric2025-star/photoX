@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import React, { useState, useEffect, useCallback } from 'react';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -15,7 +16,7 @@ import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
 import { useAdminCore } from '../hooks/useAdminCore';
 import { usePhotoManagement } from '../hooks/usePhotoManagement';
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from '../hooks/useGallery';
 import { useErrorHandler } from '../utils/errorHandler';
 import { usePermission } from '../hooks/usePermission';
 import { useDelete } from '../hooks/useDelete';
@@ -30,8 +31,10 @@ import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
 
 // ... (in AdminViewContent component)
 const errorGuard = (name: string) => () => {
-  console.error(`Blocked call to ${name}`);
-  throw new Error(`[Architecture Error] Illegal call to "${name}".`);
+  const { handleError } = useErrorHandler();
+  const err = new Error(`[Architecture Error] Illegal call to "${name}".`);
+  handleError(err, "errorGuard");
+  throw err;
 };
 
 export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps, dialogProps }: { 
@@ -61,8 +64,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
     promptValue: string;
     setPromptValue: (v: string) => void;
-    toast: { message: string, type: 'success' | 'error' | 'loading' } | null;
-    showToast: (msg: string, type?: 'success' | 'error' | 'loading') => void;
   }
 }) {
   const { 
@@ -70,9 +71,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode,
     visibleCount, setVisibleCount, tagIdToNameMap, clearSelection, totalGridCount
-  } = useGalleryContext();
+  } = useGallery();
   
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, toast, showToast } = dialogProps;
+  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = dialogProps;
   const { activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, loadingState, setLoadingState, withLoading, cloudCount, setCloudCount } = uiProps;
 
   const { handleError } = useErrorHandler();
@@ -119,11 +120,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     withLoading,
     setCloudCount,
     cloudCount,
-    showToast,
     editPhotoId, setEditPhotoId,
     batchEditIds, setBatchEditIds,
     abortAnalysis: errorGuard('abortAnalysis')
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     settings,
@@ -156,7 +156,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
         const existing = safeArray(tags).find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
           updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...safeArray(prev.tagIds), String(existing.id)])] }));
-          showToast(`标签 "${normalized}" 已存在`);
+          toast.error(`标签 "${normalized}" 已存在`);
           return;
         }
         const saved = await addTag(normalized);
@@ -165,11 +165,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
              ...prev, 
              tagIds: [...new Set([...safeArray(prev.tagIds), String(saved.id)])] 
            }));
-           showToast(`已新增标签 "${normalized}"`);
+           toast.success(`已新增标签 "${normalized}"`);
         }
       }
     });
-  }, [setPromptDialog, tags, addTag, updateForm, showToast]);
+  }, [setPromptDialog, tags, addTag, updateForm]);
 
   const quickAddManufacturer = useCallback(() => {
     setPromptDialog({
@@ -181,11 +181,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
         const saved = await addManufacturer(trimmed);
         if (saved) {
            updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
-           showToast(`已新增厂商 "${trimmed}"`);
+           toast.success(`已新增厂商 "${trimmed}"`);
         }
       }
     });
-  }, [setPromptDialog, addManufacturer, updateForm, showToast]);
+  }, [setPromptDialog, addManufacturer, updateForm]);
 
 
   const { 
@@ -215,21 +215,21 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   const handleDeletePhoto = useCallback(async (id: string) => {
      const { success, error } = await deletePhotos(id);
      if (success) {
-         showToast('照片已成功删除', 'success');
+         toast.success('照片已成功删除');
          setEditPhotoId(null);
      } else {
          handleError(error, '删除照片失败');
      }
-  }, [deletePhotos, setEditPhotoId, showToast, handleError]);
+  }, [deletePhotos, setEditPhotoId, handleError]);
 
   const handleDeleteTag = useCallback(async (id: string) => {
     const { success, error } = await deleteTagHook(id);
     if (success) {
-        showToast('标签已成功删除', 'success');
+        toast.success('标签已成功删除');
     } else {
         handleError(error, '删除标签失败');
     }
-  }, [deleteTagHook, showToast, handleError]);
+  }, [deleteTagHook, handleError]);
   
   // Auto refresh
   useEffect(() => {
@@ -276,12 +276,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast,
     loadingState: actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
     isAnalyzing: actualLoadingState === 'analyzing'
   }), [
     activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast, actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis
+    actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis
   ]);
 
   const handleBatchAiIdentifyTrigger = () => {
@@ -321,7 +320,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                   const sIds = safeArray(ids);
                   const { success, error } = await deletePhotos(sIds);
                   if (success) {
-                    showToast(`已成功删除 ${sIds.length} 张照片`, 'success');
+                    toast.success(`已成功删除 ${sIds.length} 张照片`);
                     resetAddState();
                   } else {
                     handleError(error, '批量删除失败');
@@ -409,7 +408,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
             )}
             
             {activeScreen === 'home' && viewMode === 'private' && (
-              <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
+              <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
                       <AdminHeader 
                           isMultiSelect={isMultiSelect}
                           selectedIds={selectedIds}
@@ -445,7 +444,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
             )}
 
             {activeScreen === 'home' && viewMode === 'public' && (
-              <div className="flex flex-col fixed inset-0 bg-[#FDFAF6] overflow-hidden">
+              <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
                  <div className="flex-1 min-h-0 relative bg-bg">
                       <PublicGallery 
                          photos={photos}
@@ -468,8 +467,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                                  )
                                );
                              } catch (e: any) {
-                               console.error("[ERROR] Failed to toggle pinned:", e);
-                               showToast('Failed to toggle pin status', 'error');
+                               handleError(e, '置顶状态切换失败');
                              }
                            });
                          }}

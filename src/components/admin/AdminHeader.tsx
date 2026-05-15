@@ -3,9 +3,10 @@ import { Sparkles, CheckSquare, Settings2, Eye, EyeOff, LogIn, Plus, Globe, Refr
 import { Skeleton } from '../ui/Skeleton';
 import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminSession, useAdminUI } from '../../context/AdminContexts';
-import { useGalleryContext } from '../../context/GalleryContext';
+import { useGallery } from '../../hooks/useGallery';
 import { useError } from '../../context/ErrorContext';
 import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 
 import { Photo } from '../../types';
 
@@ -34,8 +35,8 @@ export const AdminHeader: React.FC<Props> = ({
   appLang = 'zh'
 }) => {
   const { settings, user, viewMode, setViewMode } = useAdminSession();
-  const { isAnalyzing, batchProgress, activeScreen, setActiveScreen, showToast } = useAdminUI();
-  const { isInfiniteMode, setIsInfiniteMode } = useGalleryContext();
+  const { isAnalyzing, batchProgress, activeScreen, setActiveScreen } = useAdminUI();
+  const { isInfiniteMode, setIsInfiniteMode } = useGallery();
   const { errors } = useError();
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -62,35 +63,35 @@ export const AdminHeader: React.FC<Props> = ({
     setIsInfiniteMode(nextValue);
     setShowRefreshMenu(false);
     if (nextValue) {
-      showToast?.('无限加载模式已开启 / Infinite mode ON', 'success');
+      toast.success('无限加载模式已开启 / Infinite mode ON');
     } else {
-      showToast?.('懒加载模式已恢复 / Lazy loading ON', 'success');
+      toast.success('懒加载模式已恢复 / Lazy loading ON');
     }
   };
 
   return (
     <>
-      <header className="shrink-0 z-[110] bg-[#FDFAF6] px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#1D3557]/5">
+      <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-12 max-w-[120px] sm:max-w-[180px] object-contain rounded-lg border border-[#1D3557]/10 p-0.5 bg-white shadow-sm" />
+            <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-12 max-w-[120px] sm:max-w-[180px] object-contain rounded-lg border border-brand-navy/10 p-0.5 bg-white shadow-sm" />
           ) : (
-            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-[#1D3557] border border-[#1D3557]/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none shrink-0">Admin</h1>
+            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none shrink-0">Admin</h1>
           )}
           
           {photosCount !== undefined && (
-            <div className="flex items-center gap-1.5 bg-[#1D3557]/5 px-2 py-1 rounded-full border border-[#1D3557]/10 shrink-0">
+            <div className="flex items-center gap-1.5 bg-brand-navy/5 px-2 py-1 rounded-full border border-brand-navy/10 shrink-0">
               <div className="flex items-center gap-1">
-                <span className="text-xs font-medium text-[#1D3557]/60">
+                <span className="text-xs font-medium text-brand-navy/60">
                   {photosCount}
                 </span>
-                <span className="text-xs font-medium text-[#1D3557]/20">/</span>
+                <span className="text-xs font-medium text-brand-navy/20">/</span>
                 <span className="text-xs font-medium text-blue-600/60">
                   {cloudCount || 0}
                 </span>
               </div>
               {isInfiniteMode && (
-                <div className="flex items-center gap-1 pl-1 border-l border-[#1D3557]/10 ml-0.5">
+                <div className="flex items-center gap-1 pl-1 border-l border-brand-navy/10 ml-0.5">
                   <Skeleton className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                   <span className="text-xs font-semibold text-green-600">INF</span>
                 </div>
@@ -107,42 +108,42 @@ export const AdminHeader: React.FC<Props> = ({
                   await loginWithGoogle();
                 } catch(e) {
                   const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
-                  showToast?.(`Log in failed: ${errMsg}`, 'error');
+                  toast.error(`Log in failed: ${errMsg}`);
                 }
               }}
-              className="px-4 py-2 rounded-2xl text-xs font-medium uppercase tracking-wide bg-[#1D3557] text-[#FDFAF6] shadow-sm active:scale-95 transition-all flex items-center gap-2"
+              className="px-4 py-2 rounded-2xl text-xs font-medium uppercase tracking-wide bg-brand-navy text-brand-bg shadow-sm active:scale-95 transition-all flex items-center gap-2"
             >
               <LogIn size={14} />
               {t.login}
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="hidden lg:flex items-center gap-2 bg-[#1D3557]/5 py-1 px-3 rounded-2xl border border-[#1D3557]/10 mr-1">
+              <div className="hidden lg:flex items-center gap-2 bg-brand-navy/5 py-1 px-3 rounded-2xl border border-brand-navy/10 mr-1">
                 {user && user.avatarUrl ? (
                   <img src={user.avatarUrl} className="w-5 h-5 rounded-full" alt="Avatar" />
                 ) : (
-                  <div className="w-5 h-5 rounded-full bg-[#1D3557] text-[#FDFAF6] flex items-center justify-center text-xs font-medium">
+                  <div className="w-5 h-5 rounded-full bg-brand-navy text-brand-bg flex items-center justify-center text-xs font-medium">
                     {!user ? 'S' : (user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="text-xs font-normal text-[#1D3557] truncate max-w-[60px]">
+                <span className="text-xs font-normal text-brand-navy truncate max-w-[60px]">
                   {!user ? 'Staff' : (user?.displayName || user?.email?.split('@')[0])}
                 </span>
               </div>
               
-              <div className="flex items-center gap-1.5 bg-[#1D3557]/5 p-1 rounded-2xl border border-[#1D3557]/10 shadow-inner">
+              <div className="flex items-center gap-1.5 bg-brand-navy/5 p-1 rounded-2xl border border-brand-navy/10 shadow-inner">
                 {/* Refresh with Dropdown */}
                 <div className="relative flex items-center" ref={dropdownRef}>
                   <button 
                     onClick={onRefresh}
-                    className="w-10 h-10 rounded-xl bg-white text-[#1D3557]/40 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm border border-[#1D3557]/10 active:scale-95 group"
+                    className="w-10 h-10 rounded-xl bg-white text-brand-navy/40 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm border border-brand-navy/10 active:scale-95 group"
                     title={t.refresh}
                   >
                     <RefreshCcw size={18} className="group-active:animate-spin" />
                   </button>
                   <button 
                     onClick={() => setShowRefreshMenu(!showRefreshMenu)}
-                    className={`absolute -right-1 bottom-0 w-4 h-4 rounded-full bg-[#1D3557] text-white flex items-center justify-center border-2 border-[#FDFAF6] transition-transform ${showRefreshMenu ? 'rotate-180' : ''}`}
+                    className={`absolute -right-1 bottom-0 w-4 h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-brand-bg transition-transform ${showRefreshMenu ? 'rotate-180' : ''}`}
                   >
                     <ChevronDown size={10} />
                   </button>
@@ -153,20 +154,20 @@ export const AdminHeader: React.FC<Props> = ({
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-[#1D3557]/10 overflow-hidden z-[120]"
+                        className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-brand-navy/10 overflow-hidden z-[120]"
                       >
                         <button 
                           onClick={toggleInfinite}
-                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[#1D3557]/5 transition-colors text-left"
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-brand-navy/5 transition-colors text-left"
                         >
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInfiniteMode ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
                             {isInfiniteMode ? <CheckCircle2 size={16} /> : <FileText size={16} />}
                           </div>
                           <div>
-                            <div className="text-[11px] font-black text-[#1D3557] uppercase tracking-wide">
+                            <div className="text-[11px] font-black text-brand-navy uppercase tracking-wide">
                               {isInfiniteMode ? '已开启无限加载' : '开启无限加载'}
                             </div>
-                            <div className="text-[9px] text-[#1D3557]/40 font-medium leading-none mt-1">
+                            <div className="text-[9px] text-brand-navy/40 font-medium leading-none mt-1">
                               {isInfiniteMode ? '一键显示所有照片' : '分批次逐步加载'}
                             </div>
                           </div>
@@ -199,7 +200,7 @@ export const AdminHeader: React.FC<Props> = ({
                         setIsMultiSelect(true);
                       }
                     }}
-                    className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg scale-105 ring-4 ring-blue-500/30' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
+                    className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg scale-105 ring-4 ring-blue-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
                     title={isMultiSelect ? t.cancelSelect : t.selectMode}
                   >
                     <CheckSquare size={18} />
@@ -210,7 +211,7 @@ export const AdminHeader: React.FC<Props> = ({
                   onClick={() => {
                     setViewMode(viewMode === 'public' ? 'private' : 'public')
                   }}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-[#1D3557]/40 hover:text-[#1D3557] bg-white border border-[#1D3557]/10 shadow-sm'}`}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
                   title={viewMode === 'public' ? "退出访客视图" : "访客视图预览"}
                 >
                   {viewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
@@ -224,7 +225,7 @@ export const AdminHeader: React.FC<Props> = ({
                   >
                     <Menu size={18} />
                     {errors.length > 0 && (
-                      <Skeleton className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center border-2 border-[#FDFAF6] shadow-sm">
+                      <Skeleton className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center border-2 border-brand-bg shadow-sm">
                         <span className="text-[8px] font-black text-white">{errors.length > 9 ? '9+' : errors.length}</span>
                       </Skeleton>
                     )}

@@ -13,7 +13,7 @@ interface GroupGridViewProps {
   getPhotoProps?: (photo: Photo) => Record<string, any>; // Returns props to spread on the photo card wrapper (like drag events)
 }
 
-const PhotoItem: React.FC<{
+const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps, onPhotoClick, onPhotoContextMenu, longPressTimers }: {
   photo: Photo;
   isSelected: boolean;
   isMultiSelectMode: boolean;
@@ -21,13 +21,13 @@ const PhotoItem: React.FC<{
   onPhotoClick: (photo: Photo) => void;
   onPhotoContextMenu?: (e: any, photo: Photo) => void;
   longPressTimers: React.MutableRefObject<Record<string, NodeJS.Timeout>>;
-}> = ({ photo, isSelected, isMultiSelectMode, extraProps, onPhotoClick, onPhotoContextMenu, longPressTimers }) => {
+}) => {
   const [isLoaded, setIsLoaded] = React.useState(false);
   
   return (
     <div 
       {...extraProps}
-      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer ${photo.isGroupCover ? 'ring-4 ring-[#D4A853] border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${extraProps?.className || ''}`}
+      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer ${photo.isGroupCover ? 'ring-4 ring-brand-gold border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${extraProps?.className || ''}`}
       onClick={(e) => {
          if (extraProps.onClick) extraProps.onClick(e);
          onPhotoClick(photo);
@@ -69,7 +69,7 @@ const PhotoItem: React.FC<{
         {/* Status Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
            {photo.isGroupCover && !isMultiSelectMode && (
-             <div className="bg-[#D4A853] text-white p-1 rounded-lg flex items-center justify-center shadow-lg">
+             <div className="bg-brand-gold text-white p-1 rounded-lg flex items-center justify-center shadow-lg">
                <Star size={12} fill="currentColor" />
              </div>
            )}
@@ -115,7 +115,7 @@ const PhotoItem: React.FC<{
       </div>
     </div>
   );
-};
+});
 
 export const GroupGridView: React.FC<GroupGridViewProps> = ({
   photos,

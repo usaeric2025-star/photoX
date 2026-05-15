@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -8,7 +9,7 @@ import { useSyncEngine } from '../hooks/useSyncEngine';
 import { useAdminDialogs } from '../hooks/useAdminDialogs';
 import { useLoading } from '../hooks/useLoading';
 import { useAuth } from '../hooks/useAuth';
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from '../hooks/useGallery';
 import { translations, LanguageCode } from '../lib/translations';
 import { showSystemError } from '../context/ErrorContext';
 import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
@@ -47,16 +48,7 @@ export default function AdminView() {
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
   const { loadingState, setLoadingState, withLoading } = useLoading();
   const [cloudCount, setCloudCount] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'loading' } | null>(null);
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
-
-  const showToast = useCallback((message: string, type: 'success' | 'error' | 'loading' = 'success', persistent = false) => {
-    setToast({ message, type });
-    if (!persistent) {
-      setTimeout(() => setToast(null), 3000);
-    }
-    return () => setToast(null);
-  }, []);
 
   const [pageError, setPageError] = useState<string | null>(null);
 
@@ -93,7 +85,7 @@ export default function AdminView() {
 
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers
-  } = useGalleryContext();
+  } = useGallery();
   
   const { viewMode, setViewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
   
@@ -106,11 +98,10 @@ export default function AdminView() {
     withLoading,
     setCloudCount,
     cloudCount,
-    showToast,
     editPhotoId, setEditPhotoId,
     batchEditIds, setBatchEditIds,
     abortAnalysis: errorGuard('abortAnalysis')
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, showToast, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     settings,
@@ -167,14 +158,13 @@ export default function AdminView() {
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    toast, showToast,
     loadingState, setLoadingState, withLoading, 
     batchProgress: { current: 0, total: 0 },
     isAnalyzing: loadingState === 'analyzing',
     aiDebugInfo,
     setAiDebugInfo,
     abortAnalysis: () => {}
-  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, toast, showToast, loadingState, setLoadingState, withLoading, aiDebugInfo, setAiDebugInfo]);
+  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, loadingState, setLoadingState, withLoading, aiDebugInfo, setAiDebugInfo]);
 
   if (!authChecked) {
     return (
@@ -200,8 +190,8 @@ export default function AdminView() {
            </div>
            {/* Subtle loading indicator instead of full overlay */}
            <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm border border-slate-100 z-50 flex items-center gap-3">
-              <div className="w-3 h-3 border-2 border-[#D4A853]/20 border-t-[#D4A853] rounded-full animate-spin"></div>
-              <p className="text-[10px] uppercase font-bold tracking-widest text-[#D4A853]">Session Check</p>
+              <div className="w-3 h-3 border-2 border-brand-gold/20 border-t-brand-gold rounded-full animate-spin"></div>
+              <p className="text-[10px] uppercase font-bold tracking-widest text-brand-gold">Session Check</p>
            </div>
         </div>
        </ErrorBoundary>
@@ -221,12 +211,12 @@ export default function AdminView() {
                     <p className="text-sm text-slate-500 mb-8">{t.adminSub}</p>
                     <button 
                       onClick={async () => {
-                        try {
-                          await loginWithGoogle();
-                        } catch(e) {
-                          const error = e instanceof Error ? e : new Error(String(e));
-                          showToast(`${t.loginFailedAlert} ${error.message || JSON.stringify(e)}`, 'error');
-                        }
+                          try {
+                            await loginWithGoogle();
+                          } catch(e) {
+                            const error = e instanceof Error ? e : new Error(String(e));
+                            toast.error(`${t.loginFailedAlert} ${error.message || JSON.stringify(e)}`);
+                          }
                       }}
                       className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"
                     >
@@ -269,8 +259,7 @@ export default function AdminView() {
               cloudCount, setCloudCount
             }}
             dialogProps={{
-              alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue,
-              toast, showToast
+              alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue
             }}
           />
         </AdminPhotoProvider>

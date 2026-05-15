@@ -5,16 +5,24 @@ import { ErrorAlert } from '../components/ErrorAlert';
 let showErrorGlobal: (msg: string) => void = () => console.error("Error Alert not initialized");
 export const showSystemError = (message: string) => showErrorGlobal(message);
 
+interface ErrorLog {
+  message: string;
+  timestamp: number;
+  context?: string;
+  type?: 'error' | 'warning' | 'info';
+}
+
 interface ErrorContextType {
-  showError: (message: string) => void;
-  errors: { message: string, timestamp: number }[];
+  showError: (message: string, context?: string) => void;
+  addLog: (message: string, context?: string, type?: 'error' | 'warning' | 'info') => void;
+  errors: ErrorLog[];
   clearErrors: () => void;
 }
 
 const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
 
 export const ErrorProvider = ({ children }: { children: ReactNode }) => {
-  const [errors, setErrors] = useState<{ message: string, timestamp: number }[]>([]);
+  const [errors, setErrors] = useState<ErrorLog[]>([]);
   const [lastError, setLastError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,8 +31,12 @@ export const ErrorProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const showError = (message: string) => {
-    setErrors(prev => [{ message, timestamp: Date.now() }, ...prev]);
+  const addLog = (message: string, context?: string, type: 'error' | 'warning' | 'info' = 'error') => {
+    setErrors(prev => [{ message, timestamp: Date.now(), context, type }, ...prev].slice(0, 100)); // Keep last 100
+  };
+
+  const showError = (message: string, context?: string) => {
+    addLog(message, context, 'error');
     setLastError(message);
     setTimeout(() => setLastError(null), 5000);
   };
@@ -32,7 +44,7 @@ export const ErrorProvider = ({ children }: { children: ReactNode }) => {
   const clearErrors = () => setErrors([]);
 
   return (
-    <ErrorContext.Provider value={{ showError, errors, clearErrors }}>
+    <ErrorContext.Provider value={{ showError, addLog, errors, clearErrors }}>
       {children}
       {lastError && <ErrorAlert message={lastError} onClose={() => setLastError(null)} />}
     </ErrorContext.Provider>

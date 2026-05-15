@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import React from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers } from 'lucide-react';
 import { useOptionalAdminUI } from '../../context/AdminContexts';
@@ -7,7 +8,6 @@ interface LoginScreenProps {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => {
-  const adminUI = useOptionalAdminUI();
   return (
   <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-10 text-center">
     <div className="relative">
@@ -31,7 +31,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle }) => 
           try {
             await loginWithGoogle();
           } catch(e) {
-            adminUI?.showToast(`登录失败: ${e instanceof Error ? e.message : '未知错误'}`, 'error');
+            toast.error(`登录失败: ${e instanceof Error ? e.message : '未知错误'}`);
           }
         }}
         className="w-full bg-slate-900 text-white py-5 rounded-[24px] text-sm font-bold flex items-center justify-center gap-3 shadow-xl transition-all active:scale-[0.98] active:bg-black"

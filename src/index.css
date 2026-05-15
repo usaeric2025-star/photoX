@@ -6,9 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-bg: var(--custom-bg, #FDFAF6);
-  --color-text: var(--custom-text, #1D3557);
-  --color-accent: var(--custom-accent, #D4A853);
+  --color-brand-bg: var(--brand-bg, #FDFAF6);
+  --color-brand-navy: var(--brand-navy, #1D3557);
+  --color-brand-gold: var(--brand-gold, #D4A853);
   --font-sans: "Geist Variable", "Inter", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
   
   /* 自定义呼吸动画 */
@@ -31,9 +31,9 @@
 }
 
 :root {
-  --custom-bg: #FDFAF6;
-  --custom-text: #1D3557;
-  --custom-accent: #D4A853;
+  --brand-bg: #FDFAF6;
+  --brand-navy: #1D3557;
+  --brand-gold: #D4A853;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -72,8 +72,8 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--brand-bg);
+  color: var(--brand-navy);
   font-family: var(--font-sans);
 }
 

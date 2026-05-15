@@ -4,7 +4,30 @@ import { useDelete } from './useDelete';
 import { Category, Tag, SubCategory } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from './useGallery';
+import { safeArray } from '../lib/utils';
+import { 
+  updateTagInDB, 
+  deleteTagFromDB, 
+  updateCategoryInDB, 
+  deleteCategoryFromDB, 
+  addTagToDB,
+  addCategoryToDB,
+  addManufacturerToDB,
+  updateManufacturerInDB,
+  deleteManufacturerFromDB,
+  savePhotoToCloud,
+  supabase
+} from '../services/supabaseService';
+
+import { toast } from 'sonner';
+import { useState, useEffect, useRef } from 'react';
+import { useErrorHandler } from '../utils/errorHandler';
+import { useDelete } from './useDelete';
+import { Category, Tag, SubCategory } from '../types';
+import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
+import { loadData, saveData } from '../utils/indexedDB';
+import { useGallery } from './useGallery';
 import { safeArray } from '../lib/utils';
 import { 
   updateTagInDB, 
@@ -22,18 +45,17 @@ import {
 
 export const useAdminCategory = (adminUI: {
   setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
-  showToast: (msg: string, type?: 'success' | 'error' | 'loading' | 'info') => void;
 }) => {
   const { handleError } = useErrorHandler();
   const { deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook } = useDelete();
-  const { setAlertDialog = () => {}, showToast = () => {} } = adminUI || {};
+  const { setAlertDialog = () => {} } = adminUI || {};
 
   const {
     categories, setCategories,
     tags, setTags,
     manufacturers, setManufacturers,
     photos, setPhotos
-  } = useGalleryContext();
+  } = useGallery();
 
   const isMounted = useRef(true);
 
@@ -65,7 +87,7 @@ export const useAdminCategory = (adminUI: {
       setIsLoaded(true);
     };
     loadInit();
-  }, [setCategories, setTags, setManufacturers]); // Add setters if needed, but they are constant from useGalleryContext memo
+  }, [setCategories, setTags, setManufacturers]);
 
   // Persist categories/tags/manufacturers locally
   useEffect(() => {
@@ -115,9 +137,8 @@ export const useAdminCategory = (adminUI: {
       setPhotos(prev => safeArray(prev).map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
       await saveData('product_photos', safeArray(photos).map(p => p.id === photoId ? { ...p, tagIds: newTagIds } : p));
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      showToast(`移除标签失败: ${error.message}`, 'error');
-      throw error;
+      handleError(err, '从照片移除标签失败');
+      throw err;
     }
   };
 
@@ -132,9 +153,8 @@ export const useAdminCategory = (adminUI: {
       setPhotos(prev => safeArray(prev).map(p => p.id === photoId ? { ...p, categoryId: null } : p));
       await saveData('product_photos', safeArray(photos).map(p => p.id === photoId ? { ...p, categoryId: null } : p));
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      showToast(`移除分类失败: ${error.message}`, 'error');
-      throw error;
+      handleError(err, '从照片移除分类失败');
+      throw err;
     }
   };
 
@@ -166,11 +186,10 @@ export const useAdminCategory = (adminUI: {
           setTags(newTags);
           await saveData('product_tags', newTags);
           
-          showToast('标签删除成功');
+          toast.success('标签删除成功');
         } catch (err) {
-          const error = err instanceof Error ? err : new Error(String(err));
-          showToast(`标签删除失败: ${error.message}`, 'error');
-          throw error;
+          handleError(err, '彻底删除标签失败');
+          throw err;
         }
   };
 
@@ -211,7 +230,7 @@ export const useAdminCategory = (adminUI: {
     if (!success) {
       handleError(error, '删除分类失败');
     } else {
-      showToast('分类已成功删除', 'success');
+      toast.success('分类已成功删除');
     }
   };
 
@@ -241,8 +260,7 @@ export const useAdminCategory = (adminUI: {
             if (userObj) await Promise.allSettled(sAffected.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        if (isMounted.current) showToast(`分类删除失败: ${error.message}`, 'error');
+        handleError(err, '分类下架失败');
       }
   };
 
@@ -256,9 +274,7 @@ export const useAdminCategory = (adminUI: {
       await saveData('product_manufacturers', newMfrs);
       return saved;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      console.error("[useAdminCategory] Add manufacturer failed:", error);
-      showToast(`添加厂商失败: ${error.message || '网络连接或数据库权限问题'}`, 'error');
+      handleError(err, '添加厂商失败');
     }
   };
 
@@ -273,9 +289,7 @@ export const useAdminCategory = (adminUI: {
       setManufacturers(newMfrs);
       await saveData('product_manufacturers', newMfrs);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      console.error("[useAdminCategory] Update manufacturer failed:", error);
-      showToast(`更新厂商失败: ${error.message || '网络连接或数据库权限问题'}`, 'error');
+      handleError(err, '更新厂商失败');
     }
   };
 
@@ -296,10 +310,9 @@ export const useAdminCategory = (adminUI: {
         if (error) throw error;
       }
       await performDeleteManufacturer(strId, id);
-      showToast('厂商删除成功');
+      toast.success('厂商删除成功');
     } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      showToast(`删除失败: ${error.message}`, 'error');
+      handleError(err, '删除厂商失败');
     }
   };
 
@@ -330,8 +343,7 @@ export const useAdminCategory = (adminUI: {
           if (userObj) await Promise.allSettled(sAffected.map(p => savePhotoToCloud(userObj.id, p)));
         }
       } catch (err) {
-         const error = err instanceof Error ? err : new Error(String(err));
-         if (isMounted.current) showToast(`删除厂商失败: ${error.message}`, 'error');
+          handleError(err, '物理删除厂商失败');
       }
   };
 

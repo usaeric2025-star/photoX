@@ -10,11 +10,11 @@ import {
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from './useGallery';
 
 export const useAdminCore = (user: User | null) => {
   const { deleteGroup } = useDelete();
-  const { photos, setPhotos, categories, manufacturers } = useGalleryContext();
+  const { photos, setPhotos, categories, manufacturers } = useGallery();
 
   const saveSettings = useCallback(async (s: AppSettings) => {
     try {

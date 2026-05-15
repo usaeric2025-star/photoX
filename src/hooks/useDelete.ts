@@ -1,5 +1,5 @@
 
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from './useGallery';
 import { saveData } from '../utils/indexedDB';
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
@@ -9,7 +9,7 @@ export function useDelete() {
   const { 
     setPhotos, setCategories, setTags, setManufacturers, 
     photos, user 
-  } = useGalleryContext();
+  } = useGallery();
 
   const deletePhotos = async (
     idOrIds: string | string[], 

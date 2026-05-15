@@ -1,4 +1,5 @@
 import React from 'react';
+import { toast } from 'sonner';
 import { TagEditor } from '../TagEditor';
 import { Tag } from '../../../types';
 import { useAdminUI } from '../../../context/AdminContexts';
@@ -20,7 +21,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
   updateTag,
   deleteTag
 }) => {
-  const { setPromptDialog, showToast } = useAdminUI();
+  const { setPromptDialog } = useAdminUI();
   const sortedTags = [...tags].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
   const handleToggleTag = (tag: Tag) => {
@@ -30,7 +31,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
     } else if (selectedTagIds.length < 3) {
       onChange([...selectedTagIds, strId]);
     } else {
-      showToast('最多选 3 个', 'info');
+      toast.info('最多选 3 个');
     }
   };
 
@@ -47,7 +48,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
           if (selectedTagIds.length < 3) {
             onChange([...new Set([...selectedTagIds, String(existing.id)])]);
           }
-          showToast(`标签 "${trimmed}" 已存在 (自动选择)`, 'success');
+          toast.success(`标签 "${trimmed}" 已存在 (自动选择)`);
           return;
         }
 
@@ -56,7 +57,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
           if (selectedTagIds.length < 3) {
             onChange([...new Set([...selectedTagIds, String(saved.id)])]);
           }
-          showToast(`已新增标签 "${trimmed}"`, 'success');
+          toast.success(`已新增标签 "${trimmed}"`);
         }
       }
     });

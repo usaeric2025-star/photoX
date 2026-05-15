@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 import { Photo, Category, Tag, Manufacturer, User } from '../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
@@ -46,13 +47,13 @@ export const usePhotoAI = (
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>,
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
   tagNameToIdMap: Map<string, string>,
-  showToast: (msg: string, type?: any) => void,
   addTask: (task: any) => string,
   updateTask: (id: string, updates: any) => void,
   removeTask: (id: string) => void,
   runWithLoading: <T>(state: any, fn: () => Promise<T>) => Promise<T>,
   setLoadingState: (s: any) => void,
-  photosRef: React.MutableRefObject<Photo[]>
+  photosRef: React.MutableRefObject<Photo[]>,
+  handleError: (error: any, context?: string) => void
 ) => {
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
@@ -77,7 +78,7 @@ export const usePhotoAI = (
     setAiDebugInfo({ step: '已取消', message: '用户中断了 AI 识别任务' });
     setTimeout(() => setAiDebugInfo(null), 3000);
     
-    showToast('AI 识别已取消 / AI Analysis Cancelled', 'info');
+    toast.info('AI 识别已取消 / AI Analysis Cancelled');
   };
 
   const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
@@ -95,7 +96,7 @@ export const usePhotoAI = (
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
-        showToast('选中的照片已经包含完整的类别、标签和翻译，无需重新识别。', 'success');
+        toast.success('选中的照片已经包含完整的类别、标签和翻译，无需重新识别。');
       }
       return;
     }
@@ -214,8 +215,7 @@ export const usePhotoAI = (
                 const photo = batch[idx];
                 const errorMsg = result.reason?.message || '未知錯誤';
                 batchFailures.push(photo.name || photo.id.slice(0, 8));
-                console.error(`[AI Batch Fail] ID: ${photo.id}, Title: ${photo.name}, Err: ${errorMsg}`);
-                showToast(`识别失败: ${photo.name?.slice(0, 10)}...`, 'error');
+                handleError(result.reason, `AI 识别失败: ${photo.name?.slice(0, 10)}...`);
               }
             });
 
@@ -238,14 +238,14 @@ export const usePhotoAI = (
             });
             
             if (isAllSuccess) {
-              showToast(`AI 識別成功處理 ${completedCount} 張。`, 'success');
+              toast.success(`AI 識別成功處理 ${completedCount} 張。`);
               setAiDebugInfo(null);
             } else {
-              showToast(`AI 識別完成，但有部分圖片失敗。請檢查任務日誌。`, 'warning');
+              toast.warning(`AI 識別完成，但有部分圖片失敗。請檢查任務日誌。`);
             }
         } else {
             updateTask(taskId, { status: 'error', message: '任务执行失败。' });
-            showToast('AI 识别失败。', 'error');
+            toast.error('AI 识别失败。');
         }
     } catch (err) {
         updateTask(taskId, { status: 'error', message: `錯誤: ${err instanceof Error ? err.message : String(err)}` });
@@ -348,12 +348,13 @@ export const usePhotoAI = (
         const errorMsg = err.message || String(err);
         setAiDebugInfo({ step: '错误', message: '识别失败', error: errorMsg });
         updateTask(taskId, { status: 'error', message: `失败: ${errorMsg.slice(0, 30)}` });
-        showToast(`AI 識別失敗 / Analysis Failed`, 'error');
+        handleError(err, 'AI 识别失败');
       }
       if (editPhotoId) {
         setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
-        photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p);
+        photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
       }
+      handleError(err, 'AI 单图识别失败');
       throw err;
     } finally {
       currentAnalysisController.current = null;
@@ -429,7 +430,7 @@ export const usePhotoAI = (
           const { savePhotosToCloudBatch } = await import('../services/photoMutationService');
           await savePhotosToCloudBatch(user.id, updatedPhotosList);
         } catch (e) {
-          console.error("Group sync cloud batch failed:", e);
+          handleError(e, "群组同步到云端失败");
           // Fallback to individual if batch fails
           for (const up of updatedPhotosList) {
              await savePhotoToCloud(user.id, up).catch(() => {});
@@ -449,7 +450,7 @@ export const usePhotoAI = (
 
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
       setAiDebugInfo(null);
-      showToast('群组 AI 识别成功并已保存。', 'success');
+      toast.success('群组 AI 识别成功并已保存。');
       return result;
     } catch (err: any) {
       if (err.name === 'AbortError') {
@@ -457,7 +458,7 @@ export const usePhotoAI = (
       } else {
         setAiDebugInfo({ step: '错误', message: '群组识别失败', error: err.message || String(err) });
         updateTask(taskId, { status: 'error', message: `失败: ${err.message?.slice(0, 30) || '未知错误'}` });
-        showToast('群组 AI 识别失败 / Failed', 'error');
+        handleError(err, '群组 AI 识别失败');
       }
       setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
       photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);

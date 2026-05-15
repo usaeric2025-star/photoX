@@ -32,7 +32,7 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
 
   return (
     <div 
-      className={`bg-white border border-[#1D3557]/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeMenuId === manufacturer.id ? 'bg-[#D4A853]/10 border-[#D4A853]/30 scale-95' : ''}`}
+      className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeMenuId === manufacturer.id ? 'bg-brand-gold/10 border-brand-gold/30 scale-95' : ''}`}
       onTouchStart={handleStart}
       onTouchEnd={handleEnd}
       onMouseDown={handleStart}
@@ -43,7 +43,7 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
         setActiveMenuId(manufacturer.id);
       }}
     >
-      <span className="text-[11px] font-black text-[#1D3557] uppercase tracking-tight select-none">
+      <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
         {manufacturer.name}
       </span>
 
@@ -53,7 +53,7 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-[#1D3557] rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[120px]"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-brand-navy rounded-xl shadow-xl p-1 flex flex-col gap-0.5 z-[101] min-w-[120px]"
           >
             <button 
               onClick={(e) => {
@@ -82,7 +82,7 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
               <Trash2 size={12} /> 删除
             </button>
             <div 
-              className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1D3557] rotate-45 -mt-1"
+              className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-brand-navy rotate-45 -mt-1"
             />
           </motion.div>
         )}

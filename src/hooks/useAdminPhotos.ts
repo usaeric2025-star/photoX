@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
 import { Photo, User, Manufacturer } from '../types';
 import { translateDescription } from '../services/geminiService';
 import { saveData } from '../utils/indexedDB';
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from './useGallery';
 import { useTasks } from './useTasks';
 
 // Import new hooks
@@ -24,7 +25,6 @@ export const useAdminPhotos = (
     loadingState?: any;
     setLoadingState?: (s: any) => void;
     setAlertDialog: (d: any | null) => void;
-    showToast: (msg: string, type?: 'success' | 'error' | 'loading' | 'info') => void;
     setActiveScreen: (s: 'home' | 'manage' | 'login') => void;
     abortAnalysis: () => void;
     withLoading?: <T>(state: any, fn: () => Promise<T>) => Promise<T>;
@@ -39,12 +39,12 @@ export const useAdminPhotos = (
     categories,
     tags, setTags, tagNameToIdMap,
     manufacturers
-  } = useGalleryContext();
+  } = useGallery();
 
   const { handleError } = useErrorHandler();
   const { deletePhotos } = useDelete();
   const { tasks, addTask, updateTask, removeTask } = useTasks();
-  const { showToast = () => {}, setLoadingState: uiSetLoadingState } = adminUI || {};
+  const { setLoadingState: uiSetLoadingState } = adminUI || {};
   
   const [internalCloudCount, setInternalCloudCount] = useState<number | null>(null);
   const cloudCount = adminUI?.cloudCount ?? internalCloudCount;
@@ -89,9 +89,10 @@ export const useAdminPhotos = (
     user, geminiApiKey, aiProvider, customModel, 
     categories, tags, manufacturers, 
     setPhotos, setTags, tagNameToIdMap, 
-    showToast, addTask, updateTask, removeTask, runWithLoading, 
+    addTask, updateTask, removeTask, runWithLoading, 
     setLoadingState,
-    photosRef
+    photosRef,
+    handleError
   );
 
   // 2. Initialize Photo Import Hook
@@ -99,13 +100,14 @@ export const useAdminPhotos = (
     user, adminUI, adminSession, geminiApiKey, aiProvider, customModel,
     categories, tags, manufacturers,
     setPhotos, setCloudCount, addManufacturer!,
-    runWithLoading, showToast, addTask, updateTask, aiHook.abortAnalysis,
-    tagNameToIdMap, setTags, photosRef
+    runWithLoading, addTask, updateTask, aiHook.abortAnalysis,
+    tagNameToIdMap, setTags, photosRef,
+    handleError
   );
 
   // 3. Initialize Photo Mutations Hook
   const mutationHook = usePhotoMutations(
-    user, setPhotos, showToast, handleError, deletePhotos, photosRef,
+    user, setPhotos, handleError, deletePhotos, photosRef,
     addTask, updateTask, removeTask
   );
 
@@ -119,7 +121,7 @@ export const useAdminPhotos = (
     handlePhotoImport: importHook.handlePhotoImport,
     importProgress: importHook.importProgress,
     importTotal: importHook.importTotal,
-
+    
     // AI Hook
     handleSingleAiAnalyze: aiHook.handleSingleAiAnalyze,
     handleBatchAiIdentify: aiHook.handleBatchAiIdentify,

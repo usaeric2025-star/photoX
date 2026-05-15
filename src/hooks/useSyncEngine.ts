@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { Photo } from '../types';
 import { cleanPhotos } from '../lib/filters';
 import { saveData, loadData } from '../utils/indexedDB';
@@ -16,7 +17,8 @@ import { loadTagsFromCloud } from '../services/tagService';
 import { loadManufacturersFromCloud } from '../services/manufacturerService';
 import { uploadLogo } from '../services/settingService';
 
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from './useGallery';
+import { useErrorHandler } from '../utils/errorHandler';
 
 export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzing' | 'importing', fn: () => Promise<T>) => Promise<T>) => {
     const { 
@@ -25,7 +27,9 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
         setTags, 
         setManufacturers,
         setVisibleCount
-    } = useGalleryContext();
+    } = useGallery();
+
+    const { handleError } = useErrorHandler();
 
     const [internalSyncing, setInternalSyncing] = React.useState(false);
 
@@ -93,11 +97,11 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
             const effectiveSyncTime = (force || localPhotos.length === 0) ? null : localStorage.getItem('lastSyncTime');
             
             const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, cloudPhotos] = await Promise.all([
-                fetchSettings().catch(err => { console.error("fetchSettings failed:", err); return null; }),
-                loadManufacturersFromCloud().catch(err => { console.error("loadManufacturersFromCloud failed:", err); return null; }),
-                loadTagsFromCloud().catch(err => { console.error("loadTagsFromCloud failed:", err); return null; }),
-                loadCategoriesFromCloud().catch(err => { console.error("loadCategoriesFromCloud failed:", err); return []; }),
-                loadAllPhotosFromCloud(effectiveSyncTime || undefined).catch(err => { console.error("loadAllPhotosFromCloud failed:", err); return []; })
+                fetchSettings().catch(err => { handleError(err, '获取设置失败'); return null; }),
+                loadManufacturersFromCloud().catch(err => { handleError(err, '获取厂商失败'); return null; }),
+                loadTagsFromCloud().catch(err => { handleError(err, '获取标签失败'); return null; }),
+                loadCategoriesFromCloud().catch(err => { handleError(err, '获取分类失败'); return []; }),
+                loadAllPhotosFromCloud(effectiveSyncTime || undefined).catch(err => { handleError(err, '获取照片列表失败'); return []; })
             ]);
 
             if (cloudSettings) {
@@ -175,13 +179,13 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
 
             localStorage.setItem('lastSyncTime', new Date().toISOString());
         } catch (err) {
-            console.error("Cloud synchronization failed:", err);
+            handleError(err, '云端同步失败');
             throw err;
         }
         });
-    };
+    }
 
-    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, categories: any[], tags: any[], manufacturers: any[], showToast: (msg: string, type: 'success'|'error') => void) => {
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, categories: any[], tags: any[], manufacturers: any[]) => {
         if (e.target.files && e.target.files[0]) {
             try {
                 const url = await uploadLogo(e.target.files[0]);
@@ -193,10 +197,9 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 tags,
                 manufacturers
                 });
-                showToast('上传成功: 品牌 Logo 已更新', 'success');
+                toast.success('上传成功: 品牌 Logo 已更新');
             } catch (err: any) {
-                console.error("Logo upload failed:", err);
-                showToast(`上传失败: ${err.message || '请检查网络连线或储存空间权限'}`, 'error');
+                handleError(err, 'Logo 上传失败');
             }
         }
     };

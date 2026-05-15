@@ -1,11 +1,11 @@
 import { Photo, User } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
+import { toast } from 'sonner';
 
 export const usePhotoMutations = (
   user: User | null,
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>,
-  showToast: (msg: string, type?: any) => void,
   handleError: (error: any, context?: string) => void,
   deletePhotos: (ids: string | string[], onProgress?: any, signal?: AbortSignal) => Promise<{ success: boolean; error?: any }>,
   photosRef: React.MutableRefObject<Photo[]>,
@@ -33,14 +33,14 @@ export const usePhotoMutations = (
       
       if (!success) {
         if (controller.signal.aborted) {
-           showToast('删除已中止 / Aborted', 'info');
+           toast.info('删除已中止 / Aborted');
         } else {
            updateTask(taskId, { status: 'error', message: `删除失败: ${error?.message || '未知错误'}` });
            handleError(error, '批量删除失败');
         }
       } else {
         updateTask(taskId, { status: 'completed', progress: 100, message: '删除成功' });
-        showToast('照片已成功删除', 'success');
+        toast.success('照片已成功删除');
         setTimeout(() => removeTask(taskId), 5000);
       }
     } else {
@@ -48,7 +48,7 @@ export const usePhotoMutations = (
       if (!success) {
         handleError(error, '删除照片失败');
       } else {
-        showToast('照片已成功删除', 'success');
+        toast.success('照片已成功删除');
       }
     }
   };
@@ -83,20 +83,20 @@ export const usePhotoMutations = (
             updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在处理 ${current} / ${total}` });
           }, controller.signal);
           updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
-          showToast('已完成批量更新', 'success');
+          toast.success('已完成批量更新');
           setTimeout(() => removeTask(taskId), 5000);
         } catch (e: any) {
           if (controller.signal.aborted) {
-             showToast('操作已中止 / Aborted', 'info');
+             toast.info('操作已中止 / Aborted');
           } else {
              updateTask(taskId, { status: 'error', message: '部分更新失败' });
-             console.error("Bulk sync cloud failed:", e);
+             handleError(e, "批量云端同步失败");
           }
         }
       } else {
         const m = await import('../services/photoMutationService');
         for (const id of ids) {
-           await m.updatePhoto(id, finalUpdates).catch(e => console.error("Update photo cloud sync failed:", e));
+           await m.updatePhoto(id, finalUpdates).catch(e => handleError(e, "单张照片云端同步失败"));
         }
       }
     }

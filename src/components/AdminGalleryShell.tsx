@@ -1,9 +1,11 @@
+import { toast } from 'sonner';
 import React, { useEffect } from 'react';
 import { PublicGallery } from './PublicGallery';
 import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } from '../context/AdminContexts';
-import { useGalleryContext } from '../context/GalleryContext';
+import { useGallery } from '../hooks/useGallery';
 import { Layers, Pencil, Trash2, Share2, X, EyeOff } from 'lucide-react';
 import { translations, LanguageCode } from '../lib/translations';
+import { useErrorHandler } from '../utils/errorHandler';
 import { useTasks } from '../hooks/useTasks';
 import { Photo } from '../types';
 
@@ -28,13 +30,14 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     isMultiSelect,
     togglePhotoSelection,
     setPhotos
-  } = useGalleryContext();
+  } = useGallery();
 
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] || translations['en'];
 
   const { updatePhoto } = adminPhoto || {};
   const { setAvoidingSelection } = useTasks();
+  const { handleError } = useErrorHandler();
 
   useEffect(() => {
     setAvoidingSelection(selectedIds.length > 0);
@@ -55,8 +58,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         )
       );
     } catch (e) {
-      console.error("[ERROR] Failed to toggle pinned:", e);
-      adminUI?.showToast(`置顶失败: 无法同步到服务器。`, 'error');
+      handleError(e, '置顶状态切换失败');
     }
   };
 
@@ -64,10 +66,9 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     const newStatus = !photo.isHidden;
     try {
       await updatePhoto(photo.id, { isHidden: newStatus });
-      adminUI?.showToast(newStatus ? '已设置为隐藏' : '已设置为显示', 'success');
+      toast.success(newStatus ? '已设置为隐藏' : '已设置为显示');
     } catch (e) {
-      console.error("[ERROR] Failed to toggle hidden:", e);
-      adminUI?.showToast(`操作失败: 无法更新隐藏状态。`, 'error');
+      handleError(e, '隐藏状态切换失败');
     }
   };
 
@@ -94,7 +95,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           await adminPhoto?.updatePhotosBulk(selectedIds, { isHidden: true }, `批量隐藏 (${selectedIds.length} 张)`);
           clearSelection();
         } catch (e) {
-          adminUI?.showToast(`隐藏失败: ${e instanceof Error ? e.message : '未知错误'}`, 'error');
+          handleError(e, '批量隐藏失败');
         }
       }
     });
@@ -124,12 +125,11 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
                   }
                   // Delete group metadata
                   await adminPhoto?.deleteGroup(groupId as string);
-                  adminUI?.showToast(`群组 ${groupId!.slice(-4)} 已自动解散`, 'info');
+                  toast.info(`群组 ${groupId!.slice(-4)} 已自动解散`);
               }
           }
         } catch (e) {
-          const error = e instanceof Error ? e : new Error(String(e));
-          adminUI?.showToast(`操作失败: ${error.message}`, 'error');
+          handleError(e, '批量删除失败');
         }
       }
     });
@@ -146,11 +146,11 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           url: window.location.origin 
         });
       } else {
-        adminUI?.showToast(`${t.shareTitle}: ${t.shareNotSupported}`, 'error');
+        toast.error(`${t.shareTitle}: ${t.shareNotSupported}`);
       }
     } catch (e) {
       if (e instanceof Error && e.name !== 'AbortError') {
-        console.error("[ERROR] Batch share failed:", e);
+        handleError(e, '批量分享失败');
       }
     }
   };
@@ -199,8 +199,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
                 groupPhotos.map(p => updatePhoto(p.id, { isGroupCover: p.id === id }))
              );
           } catch (err) {
-             const error = err instanceof Error ? err : new Error(String(err));
-             adminUI?.showToast(`设置封面失败: ${error.message}`, 'error');
+             handleError(err, '设置封面失败');
           }
         }}
         user={adminSession?.user}
@@ -211,7 +210,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
 
       {/* Admin Bulk Actions */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-10 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[500] flex items-center gap-3 bg-[#1D3557] px-4 sm:px-6 py-4 rounded-3xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300 transition-all">
+        <div className="fixed bottom-10 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[500] flex items-center gap-3 bg-brand-navy px-4 sm:px-6 py-4 rounded-3xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300 transition-all">
            <div className="bg-white/10 px-3 py-1 rounded-full flex items-center justify-center min-w-[2.5rem]">
              <span className="text-xs font-black text-white">{selectedIds.length}</span>
            </div>

@@ -161,7 +161,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`fixed inset-0 z-[500] bg-white flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden`}
+      className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden`}
     >
       {/* --- 左侧/上方：图片展示区 --- */}
       <div 
@@ -300,9 +300,9 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             {/* Info Card Content */}
                   {/* 1. 标题与动作条 */}
                   <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1 border-l-[3px] border-blue-600 pl-3">
-                      <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
-                      <h2 className="text-xl md:text-2xl font-black text-[#1D3557] leading-tight uppercase tracking-tight">
+                    <div className="flex-1 border-l-[3px] border-brand-gold pl-3">
+                      <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
+                      <h2 className="text-xl md:text-2xl font-black text-brand-navy leading-tight uppercase tracking-tight">
                         {photoDisplayName}
                       </h2>
                     </div>
@@ -353,7 +353,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   {(photo.price || photo.model_number) && (
                     <div className="flex flex-wrap items-stretch gap-3">
                        {photo.price && (
-                         <div className="bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
+                         <div className="bg-brand-navy text-brand-bg px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
                            <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{t.price}</span>
                            <p className="text-xl font-bold leading-none">{photo.price}</p>
                          </div>
@@ -422,7 +422,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-2">
                                     {prefix && (
-                                      <span className="bg-[#1D3557] text-white text-[9px] font-black px-2.5 py-0.5 rounded-lg tracking-tighter uppercase whitespace-nowrap">
+                                      <span className="bg-brand-navy text-white text-[9px] font-black px-2.5 py-0.5 rounded-lg tracking-tighter uppercase whitespace-nowrap">
                                         {prefix}
                                       </span>
                                     )}
@@ -435,7 +435,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                                   </span>
                                 </div>
                                 
-                                <p className="font-black text-[#1D3557] text-base md:text-lg leading-snug tracking-tight">
+                                <p className="font-black text-brand-navy text-base md:text-lg leading-snug tracking-tight">
                                   {dimStr || '-'}
                                 </p>
                                 

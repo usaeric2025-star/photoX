@@ -123,10 +123,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
-          className="fixed inset-0 z-[200] bg-[#FDFAF6] overflow-y-auto pt-safe flex flex-col"
+          className="fixed inset-0 z-[200] bg-brand-bg overflow-y-auto pt-safe flex flex-col"
         >
            {/* Top Header */}
-           <div className="sticky top-0 bg-[#FDFAF6]/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+           <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => setActiveGroupId(null)}

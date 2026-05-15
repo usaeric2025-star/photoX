@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { useErrorHandler } from '../../utils/errorHandler';
@@ -51,7 +52,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag,
     removeTagFromPhoto
   } = useAdminPhoto();
-  const { isAnalyzing, aiDebugInfo, setPromptDialog, showToast, setAlertDialog } = useAdminUI();
+  const { isAnalyzing, aiDebugInfo, setPromptDialog, setAlertDialog } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { validatePhotoForm } = useFormValidation();
   const { handleError } = useErrorHandler();
@@ -93,7 +94,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         props.setNewPhotoData(newData);
       }
     } catch (err) {
-      console.error('Image transform failed:', err);
+      handleError(err, '图像旋转处理失败');
     } finally {
       setIsProcessingImage(false);
     }
@@ -115,7 +116,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 const fullError = aiDebugInfo.error || '';
                 // If it's our internal format, clean it up for the toast
                 const readableError = fullError.includes('|') ? fullError.split('|').slice(1).join(': ') : fullError;
-                showToast(`AI Error: ${readableError}`, 'error');
+                handleError(new Error(readableError), 'AI识别错误');
               }}
               title="點擊查看詳細錯誤"
               className="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1 cursor-help max-w-[140px]"
@@ -141,9 +142,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     
                     // Update local context photos as well
                     setPhotos(prev => prev.map(p => p.id === props.editPhotoId ? { ...p, isHidden: nextValue } : p));
-                    showToast(`已${nextValue ? '隐藏' : '显示'}产品`, 'success');
+                    toast.success(`已${nextValue ? '隐藏' : '显示'}产品`);
                   } catch (e) {
-                    console.error('Auto-save visibility failed:', e);
+                    handleError(e, '自动保存可见性失败');
                   }
                 }
               }}
@@ -200,7 +201,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       console.log('Calling handleSingleAiAnalyze');
                       handleSingleAiAnalyze(data, formState.categoryId || undefined);
                     } else {
-                      console.error('AI Identification methods are missing from context');
+                      handleError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
                     }
                   }}
                   disabled={isAnalyzing && !props.abortAnalysis}
