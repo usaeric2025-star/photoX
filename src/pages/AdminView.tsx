@@ -188,8 +188,8 @@ export default function AdminView() {
            </div>
            {/* Skeleton Grid */}
            <div className="flex-1 p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {Array.from({ length: 15 }).map((_, i) => (
-                <div key={i} className="aspect-square bg-white rounded-2xl border border-slate-100 animate-pulse relative overflow-hidden">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="aspect-[4/5] bg-white rounded-2xl border border-slate-100 animate-pulse relative overflow-hidden">
                    <div className="absolute inset-0 bg-slate-50" />
                    <div className="absolute bottom-0 left-0 right-0 p-3 bg-white/80 backdrop-blur-sm space-y-2">
                       <div className="h-3 w-3/4 bg-slate-100 rounded" />
@@ -198,9 +198,10 @@ export default function AdminView() {
                 </div>
               ))}
            </div>
-           <div className="fixed inset-0 flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px] z-50">
-              <div className="w-10 h-10 border-4 border-[#D4A853]/20 border-t-[#D4A853] rounded-full animate-spin"></div>
-              <p className="text-[10px] uppercase font-black tracking-widest text-[#D4A853] mt-4">Verifying session...</p>
+           {/* Subtle loading indicator instead of full overlay */}
+           <div className="fixed top-20 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm border border-slate-100 z-50 flex items-center gap-3">
+              <div className="w-3 h-3 border-2 border-[#D4A853]/20 border-t-[#D4A853] rounded-full animate-spin"></div>
+              <p className="text-[10px] uppercase font-bold tracking-widest text-[#D4A853]">Session Check</p>
            </div>
         </div>
        </ErrorBoundary>

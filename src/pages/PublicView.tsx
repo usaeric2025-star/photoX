@@ -54,8 +54,10 @@ export default function PublicView() {
     try {
       const sFilterTagIds = safeArray(filterTagIds);
       const tagId = sFilterTagIds.length > 0 ? sFilterTagIds[0] : null;
+      
+      // Use a smaller initial fetch for speed (e.g. PAGINATION.PUBLIC_PAGE_SIZE = 100)
       const [cloudPhotos, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, PAGINATION.PUBLIC_PAGE_SIZE * 10, filterCatId, tagId, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, PAGINATION.PUBLIC_PAGE_SIZE, filterCatId, tagId, debouncedSearchQuery),
         getPhotoCount(filterCatId, tagId, debouncedSearchQuery)
       ]);
       const sCloudPhotos = safeArray(cloudPhotos);
@@ -63,11 +65,11 @@ export default function PublicView() {
         const cleaned = cleanPhotos(sCloudPhotos);
         setPhotos(cleaned);
         setPage(0);
-        setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE * 10);
+        setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
         
-        // Sync to cache to ensure consistency and fix "refresh to see" issue
+        // Sync to cache
         if (!filterCatId && safeArray(filterTagIds).length === 0 && !debouncedSearchQuery) {
           saveData('product_photos', cleaned);
         }
@@ -80,31 +82,43 @@ export default function PublicView() {
   };
 
   const syncWithCloud = async (isBackground = false) => {
-    // 1. 先读本地缓存
-    const cachedPhotos = await loadData('product_photos');
-    const cachedCats = await loadData('product_categories');
-    const cachedTags = await loadData('product_tags');
-    const cachedManufacturers = await loadData('product_manufacturers');
-    const cachedSettings = await loadData('product_settings');
+    // 1. First, load everything from Local Cache (IndexedDB)
+    // This happens instantly, allowing for a fast first render if data exists
+    const [cachedPhotos, cachedCats, cachedTags, cachedManufacturers, cachedSettings] = await Promise.all([
+      loadData('product_photos'),
+      loadData('product_categories'),
+      loadData('product_tags'),
+      loadData('product_manufacturers'),
+      loadData('product_settings')
+    ]);
 
+    // Apply cache immediately if available
+    const hasCache = !!cachedPhotos || !!cachedCats;
     if (cachedPhotos && !filterCatId && safeArray(filterTagIds).length === 0 && !debouncedSearchQuery) {
       setPhotos(cleanPhotos(cachedPhotos));
-      if (!isBackground) setIsInitializing(false);
     }
     if (cachedCats) setCategories(cachedCats);
     if (cachedTags) setTags(cachedTags);
     if (cachedManufacturers) setManufacturers(cachedManufacturers);
-    if (cachedSettings) {
-      setSettings(cachedSettings as AppSettings);
+    if (cachedSettings) setSettings(cachedSettings as AppSettings);
+
+    // If we have cache, we can hide the BIG initialization screen and just show a small refresh spinner later
+    if (hasCache && !isBackground) {
+      setIsInitializing(false);
     }
 
-    if (!isBackground && !cachedPhotos) setIsInitializing(true);
-    else setIsRefreshing(true);
+    // Set refreshing state for the background cloud sync
+    if (isBackground || hasCache) {
+      setIsRefreshing(true);
+    } else {
+      setIsInitializing(true);
+    }
 
     try {
       const sFilterTagIds = safeArray(filterTagIds);
       const tagId = sFilterTagIds.length > 0 ? sFilterTagIds[0] : null;
       
+      // Parallel fetch all data from Supabase
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
         loadAllPhotosFromCloud(undefined, 0, PAGINATION.PUBLIC_PAGE_SIZE, filterCatId, tagId, debouncedSearchQuery),
         loadCategoriesFromCloud().catch(() => []),
