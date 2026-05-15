@@ -21,27 +21,6 @@ import {
 } from '../services/supabaseService';
 
 import { toast } from 'sonner';
-import { useState, useEffect, useRef } from 'react';
-import { useErrorHandler } from '../utils/errorHandler';
-import { useDelete } from './useDelete';
-import { Category, Tag, SubCategory } from '../types';
-import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
-import { loadData, saveData } from '../utils/indexedDB';
-import { useGallery } from './useGallery';
-import { safeArray } from '../lib/utils';
-import { 
-  updateTagInDB, 
-  deleteTagFromDB, 
-  updateCategoryInDB, 
-  deleteCategoryFromDB, 
-  addTagToDB,
-  addCategoryToDB,
-  addManufacturerToDB,
-  updateManufacturerInDB,
-  deleteManufacturerFromDB,
-  savePhotoToCloud,
-  supabase
-} from '../services/supabaseService';
 
 export const useAdminCategory = (adminUI: {
   setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;

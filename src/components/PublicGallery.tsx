@@ -453,7 +453,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         selectedSubId={selectedSubId}
         setSelectedSubId={setSelectedSubId}
         selectedTagIds={selectedTagIds}
-        setSelectedTagIds={setSelectedTagIds}
+        setSelectedTagIds={(fnOrIds) => {
+          if (typeof fnOrIds === 'function') {
+            setSelectedTagIds(fnOrIds(selectedTagIds));
+          } else {
+            setSelectedTagIds(fnOrIds);
+          }
+        }}
         sortedTags={sortedTags}
         lang={lang}
         t={t}

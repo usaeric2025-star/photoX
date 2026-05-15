@@ -87,7 +87,7 @@ export const AdminHeader: React.FC<Props> = ({
                 </span>
                 <span className="text-xs font-medium text-brand-navy/20">/</span>
                 <span className="text-xs font-medium text-blue-600/60">
-                  {cloudCount || 0}
+                  {Math.max(cloudCount || 0, photosCount || 0)}
                 </span>
               </div>
               {isInfiniteMode && (

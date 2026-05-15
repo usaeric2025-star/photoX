@@ -57,13 +57,12 @@ export const usePhotoAI = (
 ) => {
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
-  const currentAnalysisController = useRef<AbortController | null>(null);
+  const currentAnalysisControllers = useRef<Map<string, AbortController>>(new Map());
 
   const abortAnalysis = (taskId?: string) => {
-    if (currentAnalysisController.current) {
-        currentAnalysisController.current.abort();
-        currentAnalysisController.current = null;
-    }
+    currentAnalysisControllers.current.forEach(controller => controller.abort());
+    currentAnalysisControllers.current.clear();
+    
     setBatchProgress({ current: 0, total: 0 });
     setLoadingState('idle'); // Safety: reset global state
     
@@ -115,7 +114,7 @@ export const usePhotoAI = (
     const processPhoto = async (photo: Photo): Promise<void> => {
         // ... (rest of processPhoto is same)
             const controller = new AbortController();
-            currentAnalysisController.current = controller;
+            currentAnalysisControllers.current.set(taskId, controller);
             const signal = controller.signal;
             
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
@@ -200,7 +199,7 @@ export const usePhotoAI = (
 
     try {
         for (let i = 0; i < sUnProcessed.length; i += CONCURRENCY) {
-            if (currentAnalysisController.current?.signal.aborted) break;
+            if (currentAnalysisControllers.current.get(taskId)?.signal.aborted) break;
             const batch = sUnProcessed.slice(i, i + CONCURRENCY);
             // Before starting a batch, clear global error if any
             setAiDebugInfo(prev => prev?.error ? { ...prev, error: undefined } : prev);
@@ -250,7 +249,7 @@ export const usePhotoAI = (
     } catch (err) {
         updateTask(taskId, { status: 'error', message: `錯誤: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
-        currentAnalysisController.current = null;
+        currentAnalysisControllers.current.delete(taskId);
         setBatchProgress({ current: 0, total: 0 });
     }
   };
@@ -273,7 +272,7 @@ export const usePhotoAI = (
     updateTask(taskId, { progress: 10, message: '分析图片中...' });
 
     const controller = new AbortController();
-    currentAnalysisController.current = controller;
+    currentAnalysisControllers.current.set(taskId, controller);
     const signal = controller.signal;
     
     try {
@@ -368,7 +367,7 @@ export const usePhotoAI = (
       handleError(err, 'AI 单图识别失败');
       throw err;
     } finally {
-      currentAnalysisController.current = null;
+      currentAnalysisControllers.current.delete(taskId);
     }
   };
 
@@ -393,7 +392,7 @@ export const usePhotoAI = (
 
     try {
       const controller = new AbortController();
-      currentAnalysisController.current = controller;
+      currentAnalysisControllers.current.set(taskId, controller);
       const signal = controller.signal;
 
       const firstPhoto = sGroupPhotos.find(p => p.isGroupCover) || sGroupPhotos[0];
@@ -486,7 +485,7 @@ export const usePhotoAI = (
       photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
       throw err;
     } finally {
-      currentAnalysisController.current = null;
+      currentAnalysisControllers.current.delete(taskId);
     }
   };
 

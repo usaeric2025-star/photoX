@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAdminUI } from '../../context/AdminContexts';
 import { PromptDialog } from './PromptDialog';
 import {
@@ -15,7 +16,7 @@ import {
 } from "../ui/alert-dialog";
 
 export const AdminGlobalModals: React.FC = () => {
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, toast } = useAdminUI();
+  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminUI();
 
   return (
     <>
@@ -79,22 +80,6 @@ export const AdminGlobalModals: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-slate-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold flex items-center gap-3 border border-slate-700 pointer-events-none"
-          >
-            {toast.type === 'success' ? <CheckSquare size={18} className="text-green-400" /> : 
-             toast.type === 'loading' ? <div className="w-4 h-4 border-2 border-slate-500 border-t-white rounded-full animate-spin" /> : 
-             <X size={18} className="text-red-400" />}
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
     </>
