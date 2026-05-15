@@ -43,7 +43,7 @@ export const useAdminPhotos = (
 
   const { handleError } = useErrorHandler();
   const { deletePhotos } = useDelete();
-  const { tasks, addTask, updateTask } = useTasks();
+  const { tasks, addTask, updateTask, removeTask } = useTasks();
   const { showToast = () => {}, setLoadingState: uiSetLoadingState } = adminUI || {};
   
   const [internalCloudCount, setInternalCloudCount] = useState<number | null>(null);
@@ -89,7 +89,7 @@ export const useAdminPhotos = (
     user, geminiApiKey, aiProvider, customModel, 
     categories, tags, manufacturers, 
     setPhotos, setTags, tagNameToIdMap, 
-    showToast, addTask, updateTask, runWithLoading, 
+    showToast, addTask, updateTask, removeTask, runWithLoading, 
     setLoadingState,
     photosRef
   );
@@ -105,7 +105,8 @@ export const useAdminPhotos = (
 
   // 3. Initialize Photo Mutations Hook
   const mutationHook = usePhotoMutations(
-    user, setPhotos, showToast, handleError, deletePhotos, photosRef
+    user, setPhotos, showToast, handleError, deletePhotos, photosRef,
+    addTask, updateTask, removeTask
   );
 
   return {
@@ -135,6 +136,7 @@ export const useAdminPhotos = (
 
     // Mutation Hook
     deletePhoto: mutationHook.deletePhoto,
-    updatePhoto: mutationHook.updatePhoto
+    updatePhoto: mutationHook.updatePhoto,
+    updatePhotosBulk: mutationHook.updatePhotosBulk
   };
 };

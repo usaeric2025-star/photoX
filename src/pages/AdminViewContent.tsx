@@ -10,7 +10,6 @@ import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
 import { SettingsScreen } from '../components/SettingsScreen';
 import { GroupDetailView } from '../components/GroupDetailView';
-import { LoadingOverlay } from '../components/admin/LoadingOverlay';
 import { useSyncEngine } from '../hooks/useSyncEngine';
 import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
@@ -193,7 +192,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     batchProgress, 
     aiDebugInfo, setAiDebugInfo, abortAnalysis, 
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto, updatePhoto
+    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk
   } = useAdminPhotos(
     user, 
     settings?.gemini_api_key, 
@@ -264,13 +263,14 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     quickAddTag,
     quickAddManufacturer,
     deleteGroup,
-    updatePhoto
+    updatePhoto,
+    updatePhotosBulk
   }), [
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers,
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
     handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, deleteGroup, updatePhoto
+    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, deleteGroup, updatePhoto, updatePhotosBulk
   ]);
 
   const uiValue = React.useMemo(() => ({
@@ -374,6 +374,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                     handleError(e, '切换隐藏状态失败');
                   }
                 }}
+                updatePhoto={updatePhoto}
               />
             )}
       
@@ -496,16 +497,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                  </div>
               </div>
             )}
-      
-            <LoadingOverlay 
-              loadingState={actualLoadingState}
-              batchProgress={batchProgress}
-              t={t}
-              abortAnalysis={() => {
-                abortAnalysis?.();
-                cancelBatchAiRef.current = true;
-              }}
-            />
           </AdminUIProvider>
         </AdminPhotoProvider>
       </AdminSessionProvider>

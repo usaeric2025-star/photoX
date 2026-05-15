@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { loadAllPhotosFromCloud, loadCategoriesFromCloud, loadTagsFromCloud, loadManufacturersFromCloud, fetchSettings, loginWithGoogle, getPhotoCount } from '../services/supabaseService';
 import { updatePhoto } from '../services/photoMutationService';
@@ -11,8 +12,6 @@ import { useGalleryContext } from '../context/GalleryContext';
 import { PAGINATION } from '../constants/config';
 import { AppSettings } from '../types';
 import { safeArray } from '../lib/utils';
-
-const PUBLIC_PAGE_SIZE = 50;
 
 export default function PublicView() {
   const { user } = useAuth();
@@ -55,7 +54,7 @@ export default function PublicView() {
       const sFilterTagIds = safeArray(filterTagIds);
       const tagId = sFilterTagIds.length > 0 ? sFilterTagIds[0] : null;
       const [cloudPhotos, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, 1000, filterCatId, tagId, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, PAGINATION.PUBLIC_PAGE_SIZE * 10, filterCatId, tagId, debouncedSearchQuery),
         getPhotoCount(filterCatId, tagId, debouncedSearchQuery)
       ]);
       const sCloudPhotos = safeArray(cloudPhotos);
@@ -63,7 +62,7 @@ export default function PublicView() {
         const cleaned = cleanPhotos(sCloudPhotos);
         setPhotos(cleaned);
         setPage(0);
-        setHasMore(sCloudPhotos.length === 1000);
+        setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE * 10);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
         
@@ -106,7 +105,7 @@ export default function PublicView() {
       const tagId = sFilterTagIds.length > 0 ? sFilterTagIds[0] : null;
       
       const [cloudPhotos, cloudCats, cloudTags, cloudManufacturers, cloudSettings, total] = await Promise.all([
-        loadAllPhotosFromCloud(undefined, 0, PUBLIC_PAGE_SIZE, filterCatId, tagId, debouncedSearchQuery),
+        loadAllPhotosFromCloud(undefined, 0, PAGINATION.PUBLIC_PAGE_SIZE, filterCatId, tagId, debouncedSearchQuery),
         loadCategoriesFromCloud().catch(() => []),
         loadTagsFromCloud().catch(() => []),
         loadManufacturersFromCloud().catch(() => []),
@@ -119,7 +118,7 @@ export default function PublicView() {
         const cleanedCloud = cleanPhotos(sCloudPhotos);
         setPhotos(cleanedCloud);
         setPage(0);
-        setHasMore(sCloudPhotos.length === PUBLIC_PAGE_SIZE);
+        setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
         if (!filterCatId && sFilterTagIds.length === 0 && !debouncedSearchQuery) {
@@ -168,12 +167,12 @@ export default function PublicView() {
     
     try {
       const sFilterTagIds = safeArray(filterTagIds);
-      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PUBLIC_PAGE_SIZE, filterCatId, sFilterTagIds.length > 0 ? sFilterTagIds[0] : null, debouncedSearchQuery);
+      const morePhotos = await loadAllPhotosFromCloud(undefined, nextPage, PAGINATION.PUBLIC_PAGE_SIZE, filterCatId, sFilterTagIds.length > 0 ? sFilterTagIds[0] : null, debouncedSearchQuery);
       const sMorePhotos = safeArray(morePhotos);
       if (morePhotos && sMorePhotos.length > 0) {
         setPhotos(prev => [...prev, ...cleanPhotos(sMorePhotos)]);
         setPage(nextPage);
-        setHasMore(sMorePhotos.length === PUBLIC_PAGE_SIZE);
+        setHasMore(sMorePhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => prev + sMorePhotos.length);
       } else {
         setHasMore(false);
@@ -201,7 +200,7 @@ export default function PublicView() {
       {isInitializing && safeArray(photos).length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center space-y-4">
           <div className="w-10 h-10 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading Gallery...</p>
+          <Skeleton className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Loading Gallery...</Skeleton>
         </div>
       ) : (
         <ErrorBoundary key="publicGallery">

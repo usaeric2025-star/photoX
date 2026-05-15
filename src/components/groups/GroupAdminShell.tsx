@@ -6,8 +6,20 @@ import {
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon, Eye, EyeOff
 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup, Manufacturer, Dimension } from '../../types';
+import { Skeleton } from '../ui/Skeleton';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "../../components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../components/ui/dropdown-menu";
 import { updatePhotosGroupInCloud } from '../../services/photoSyncService';
-import { updatePhoto, savePhotoToCloud } from '../../services/photoMutationService';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupGridView } from './GroupGridView';
@@ -38,26 +50,31 @@ export interface GroupAdminShellProps {
   allTags?: Tag[];
   isMultiSelect?: boolean;
   setAlertDialog?: (d: { title: string; message: string; onConfirm: () => void } | null) => void;
+  updatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
 }
 
 import { useGroupSync } from '../../hooks/useGroupSync';
 import { useAdminUI } from '../../context/AdminContexts';
+import { showSystemError } from '../../context/ErrorContext';
 
 import { DimensionEditor } from '../admin/edit/DimensionEditor';
 
-export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
-  activeGroupId, setActiveGroupId, photos,
-  isAdminMode, onEditPhoto,
-  onBatchEdit, onUngroup, onAddPhotoToGroup,
-  setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
-  manufacturers = [],
-  isStaffMode = false,
-  contactWhatsApp = () => {},
-  onToggleHidden = () => {},
-  lang = 'zh',
-  t, categories, tagMap, allTags = [],
-  setAlertDialog: propsSetAlertDialog
-}) => {
+export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
+  const {
+    activeGroupId, setActiveGroupId, photos,
+    isAdminMode, onEditPhoto,
+    onBatchEdit, onUngroup, onAddPhotoToGroup,
+    setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
+    manufacturers = [],
+    isStaffMode = false,
+    contactWhatsApp = () => {},
+    onToggleHidden = () => {},
+    lang = 'zh',
+    t, categories, tagMap, allTags = [],
+    setAlertDialog: propsSetAlertDialog,
+    updatePhoto: hookUpdatePhoto
+  } = props;
+
   const { setAlertDialog: contextSetAlertDialog, setPromptDialog, showToast } = useAdminUI();
   const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
   const { setCover } = useGroupSync(activeGroupId);
@@ -68,8 +85,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editingGroupName, setEditingGroupName] = useState('');
   const [showGroupSettings, setShowGroupSettings] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
@@ -78,6 +95,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
+        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
+          return a.groupOrder - b.groupOrder;
+        }
+        if (a.groupOrder !== undefined) return -1;
+        if (b.groupOrder !== undefined) return 1;
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
   }, [activeGroupId, photos]);
@@ -86,10 +108,33 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const groupIdRef = useRef(activeGroupId);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeGroupId && containerRef.current) {
+      const saved = sessionStorage.getItem(`group_scroll_${activeGroupId}`);
+      if (saved) {
+        setTimeout(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTop = parseInt(saved, 10);
+          }
+        }, 50);
+      }
+    }
+  }, [activeGroupId]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (activeGroupId) {
+      sessionStorage.setItem(`group_scroll_${activeGroupId}`, e.currentTarget.scrollTop.toString());
+    }
+  };
   
   useEffect(() => {
     if (activeGroupId) {
       groupIdRef.current = activeGroupId;
+      // Reset group data immediately to avoid showing stale data
+      setGroupData(null);
+      setIsGroupDataLoading(true);
       // Fetch group data
       getGroupById(activeGroupId).then(data => {
         if (data) {
@@ -107,9 +152,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
             updated_at: new Date().toISOString()
           });
         }
-      });
+        setIsGroupDataLoading(false);
+      }).catch(() => setIsGroupDataLoading(false));
     } else {
       setGroupData(null);
+      setIsGroupDataLoading(false);
     }
   }, [activeGroupId, groupCover?.id, groupCover?.userId]);
 
@@ -132,8 +179,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
           setIsMultiSelectMode(false);
           setSelectedPhotoIds([]);
           showToast('已移出 / Removed', 'success');
-        } catch (err) {
-          showToast(`操作失败: ${err instanceof Error ? err.message : '未知錯誤'}`, 'error');
+        } catch (err: any) {
+          showSystemError(`Bulk Remove Fail: ${err.message || String(err)}`);
+          showToast('操作失败 / Failed', 'error');
         }
         setAlertDialog(null);
       }
@@ -141,25 +189,19 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
   };
 
   const persistPhotoChange = async (photoId: string, updates: Partial<Photo>) => {
-    const photo = photos.find(p => p.id === photoId);
-    if (!photo) return;
-
-    const updatedPhoto = { ...photo, ...updates, updatedAt: new Date().toISOString() };
-    
-    // 1. Update UI
-    setPhotos?.(prev => prev.map(p => p.id === photoId ? updatedPhoto : p));
-
-    // 2. Sync to cloud
     try {
-      if (updates.tagIds) {
-        // use local instance if available or 'default'
-        await savePhotoToCloud(photo.userId || 'default', updatedPhoto);
+      if (hookUpdatePhoto) {
+        await hookUpdatePhoto(photoId, updates);
       } else {
-        await updatePhoto(photoId, updates);
+         // Fallback if hook not passed (unlikely)
+         const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
+         await serviceUpdatePhoto(photoId, updates);
+         setPhotos?.(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
       }
       showToast('已保存 / Saved', 'success');
-    } catch (err) {
-      showToast(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
+    } catch (err: any) {
+      showSystemError(`Persist Photo Change Fail: ${err.message || String(err)}`);
+      showToast('保存失败 / Failed', 'error');
     }
   };
 
@@ -178,15 +220,16 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       if (updates.hasOwnProperty('isHidden')) {
         const isHidden = updates.isHidden;
         const groupPhotos = photos.filter(p => p.groupId === activeGroupId);
-        if (groupPhotos.length > 0) {
+        if (groupPhotos.length > 0 && hookUpdatePhoto) {
            await Promise.all(
-             groupPhotos.map(p => updatePhoto(p.id, { isHidden }))
+             groupPhotos.map(p => hookUpdatePhoto(p.id, { isHidden }))
            );
            setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isHidden: isHidden! } : p));
            showToast(`群组内照片已${isHidden ? '屏蔽' : '显示'}`, 'success');
         }
       }
-    } catch (err) {
+    } catch (err: any) {
+      showSystemError(`Update Group Data Fail: ${err.message || String(err)}`);
       showToast(`保存失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
     }
   };
@@ -209,15 +252,23 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       onConfirm: async () => {
         try {
           showToast('正在批量更新尺寸...', 'loading');
-          await Promise.all(
-            activeGroupPhotos.map(p => updatePhoto(p.id, { dimensions: newDims }))
-          );
-          setPhotos?.(prev => prev.map(p => 
-            p.groupId === activeGroupId ? { ...p, dimensions: newDims } : p
-          ));
+          if (hookUpdatePhoto) {
+            await Promise.all(
+              activeGroupPhotos.map(p => hookUpdatePhoto(p.id, { dimensions: newDims }))
+            );
+          } else {
+            const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
+            await Promise.all(
+              activeGroupPhotos.map(p => serviceUpdatePhoto(p.id, { dimensions: newDims }))
+            );
+            setPhotos?.(prev => prev.map(p => 
+              p.groupId === activeGroupId ? { ...p, dimensions: newDims } : p
+            ));
+          }
           showToast('批量更新成功', 'success');
-        } catch (err) {
-          showToast(`更新失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
+        } catch (err: any) {
+          showSystemError(`Batch Update Dimensions Fail: ${err.message || String(err)}`);
+          showToast('更新失败 / Failed', 'error');
         }
         setAlertDialog(null);
       }
@@ -236,24 +287,33 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
     const [draggedPhoto] = nextGroupPhotos.splice(dragIdx, 1);
     nextGroupPhotos.splice(hoverIdx, 0, draggedPhoto);
     
-    const updatedWithOrder = nextGroupPhotos.map((p) => ({
+    // Assign new orders
+    const updatedPhotosWithOrder = nextGroupPhotos.map((p, index) => ({
       ...p,
-      isGroupCover: p.isGroupCover // maintain cover
+      groupOrder: index
     }));
-    
-    setPhotos?.(prev => prev.map(p => {
-      const updated = updatedWithOrder.find(up => up.id === p.id);
-      return updated ? updated : p;
-    }));
+
+    setPhotos?.(prev => {
+        const next = prev.map(p => {
+          const found = updatedPhotosWithOrder.find(up => up.id === p.id);
+          return found ? found : p;
+        });
+        return next;
+    });
     
     try {
-      showToast('排序中...', 'loading');
+      const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
+      
+      // Persist each changed photo
       await Promise.all(
-        updatedWithOrder.map(p => Promise.resolve())
+        updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { groupOrder: p.groupOrder }))
       );
-      showToast('排序已保存', 'success');
-    } catch (err) {
-      showToast(`排序同步失败: ${err instanceof Error ? err.message : '未知错误'}`, 'error');
+      
+      showToast('顺序已保存 / Order saved', 'success');
+    } catch (err: any) {
+      console.error("Failed to persist order:", err);
+      showSystemError(`Reorder Fail: ${err.message || String(err)}`);
+      showToast('顺序保存失败 / Save failed', 'error');
     }
   };
 
@@ -279,6 +339,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
       <AnimatePresence mode="wait">
         {activeGroupId !== null && (
           <motion.div 
+            ref={containerRef}
+            onScroll={handleScroll}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -303,15 +365,27 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                     }
                   }}
                 >
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
-                      {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
-                    </h2>
-                    {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  <div className="flex items-center gap-2 min-h-[1.5rem]">
+                    {isGroupDataLoading ? (
+                      <Skeleton className="h-6 w-32 bg-slate-200" />
+                    ) : (
+                      <>
+                        <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
+                          {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                        </h2>
+                        {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                      </>
+                    )}
                   </div>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    {groupData?.name ? `封面产品: ${activeGroupPhotos[0]?.name || ''}` : `${activeGroupPhotos.length} 张照片 / Photos`}
-                  </p>
+                  <div className="min-h-[0.8rem]">
+                    {isGroupDataLoading ? (
+                      <Skeleton className="h-3 w-40 mt-1 bg-slate-100" />
+                    ) : (
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                        {groupData?.name ? `封面产品: ${activeGroupPhotos[0]?.name || ''}` : `${activeGroupPhotos.length} 张照片 / Photos`}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -331,40 +405,44 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                         <span className="text-xs">AI</span>
                       </button>
 
-                        <button onClick={() => setShowGroupSettings(true)} className="w-10 h-10 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all" title="群组数据库">
+                        <button onClick={() => setShowGroupSettings(true)} className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all" title="群组数据库">
                           <Settings2 size={18} />
                         </button>
-                      <div className="relative">
-                        <button onClick={() => setShowMenu(!showMenu)} className="w-10 h-10 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
-                          <MoreVertical size={18} />
-                        </button>
-                        {showMenu && <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
-                           <button 
-                             onClick={() => {
-                               const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
-                               onBatchEdit?.(ids);
-                               setIsMultiSelectMode(false);
-                               setSelectedPhotoIds([]);
-                               setShowMenu(false);
-                             }}
-                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                           >
-                             <Pencil size={16} /> 批量编辑 / Batch Edit
-                           </button>
-                           <button 
-                             onClick={() => {
-                               if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);
-                               setShowMenu(false);
-                             }}
-                             className="w-full px-4 py-2 text-left text-sm font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
-                           >
-                             <Sparkles size={16} /> AI 識別 / AI Identify
-                           </button>
-                         </div>
-                       }
-                     </div>
 
-                      <button onClick={onAddPhotoToGroup} className="w-10 h-10 flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <button className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
+                              <MoreVertical size={18} />
+                            </button>
+                          }
+                        />
+                        <DropdownMenuContent align="end" className="w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
+                              onBatchEdit?.(ids);
+                              setIsMultiSelectMode(false);
+                              setSelectedPhotoIds([]);
+                            }}
+                            className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
+                          >
+                            <Pencil size={16} className="text-slate-500" />
+                            <span className="text-sm font-bold text-slate-700">批量编辑 / Batch Edit</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => {
+                              if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);
+                            }}
+                            className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
+                          >
+                            <Sparkles size={16} className="text-purple-500" />
+                            <span className="text-sm font-bold text-slate-700">AI 識別 / AI Identify</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <button onClick={onAddPhotoToGroup} className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
                         <Plus size={18} />
                       </button>
                     </div>
@@ -375,10 +453,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                    </button>
                  )}
                  {isAdminMode && (
-                   <button onClick={() => setActiveGroupId(null)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-2 border border-slate-200 bg-white">
-                     <X size={20} />
-                   </button>
-                 )}
+                    <button onClick={() => setActiveGroupId(null)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors ml-2 border border-slate-200 bg-white">
+                      <X size={20} />
+                    </button>
+                  )}
               </div>
            </div>
 
@@ -416,6 +494,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
                }
              })}
            />
+
            {/* Multi-Select Floating Bar */}
            <AnimatePresence>
              {isMultiSelectMode && selectedPhotoIds.length > 0 && (
@@ -471,244 +550,233 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = ({
              )}
            </AnimatePresence>
 
-            {/* Group Settings Drawer */}
-            <AnimatePresence>
-              {showGroupSettings && (
-                <motion.div 
-                  initial={{ x: '100%' }}
-                  animate={{ x: 0 }}
-                  exit={{ x: '100%' }}
-                  className="fixed inset-y-0 right-0 z-[500] w-full sm:w-[400px] bg-white shadow-2xl flex flex-col border-l border-slate-100"
-                >
-                  <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-indigo-600 text-white">
-                    <div className="flex items-center gap-3">
-                      <Settings2 size={20} />
-                      <h3 className="font-black text-lg tracking-tight">群组数据库 / DB</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                       <button 
-                         onClick={() => {
-                           if (onUngroup && activeGroupId) {
-                             setAlertDialog?.({
-                               title: '确定要解散整个群组？',
-                               message: '解散后，群组关系、排序信息及DNA数据将被移除，照片将变回单张展示。',
-                               onConfirm: async () => {
-                                 try {
-                                   if (onUngroup && activeGroupId) {
-                                     onUngroup(activeGroupId);
-                                     setActiveGroupId(null);
-                                     setShowGroupSettings(false);
-                                   }
-                                   setAlertDialog?.(null);
-                                 } catch (e) {
-                                   console.error('Failed to ungroup:', e);
-                                   setAlertDialog?.(null);
-                                 }
-                               }
-                             });
-                           }
-                         }}
-                         className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all"
-                         title="解散群组"
-                       >
-                         <Trash2 size={18} />
-                       </button>
-
-                       <button 
-                         onClick={() => setShowGroupSettings(false)}
-                         className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white text-indigo-600 hover:bg-white shadow-xl transition-all font-black"
-                         title="保存并关闭"
-                       >
-                         <Save size={18} />
-                       </button>
-
-                       <button onClick={() => setShowGroupSettings(false)} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors ml-1">
-                         <X size={18} />
-                       </button>
-                    </div>
+            {/* Group Settings Sheet */}
+            <Sheet open={showGroupSettings} onOpenChange={setShowGroupSettings}>
+              <SheetContent side="right" className="w-full sm:max-w-[400px] p-0 border-l border-slate-100 bg-white">
+                <SheetHeader className="p-6 border-b border-slate-50 bg-indigo-600 text-white space-y-0 flex-row items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Settings2 size={20} />
+                    <SheetTitle className="font-black text-lg tracking-tight text-white m-0">群组数据库 / DB</SheetTitle>
                   </div>
+                  <div className="flex items-center gap-2">
+                     <button 
+                       onClick={() => {
+                         if (onUngroup && activeGroupId) {
+                           setAlertDialog?.({
+                             title: '确定要解散整个群组？',
+                             message: '解散后，群组关系、排序信息及DNA数据将被移除，照片将变回单张展示。',
+                             onConfirm: async () => {
+                               try {
+                                 if (onUngroup && activeGroupId) {
+                                   onUngroup(activeGroupId);
+                                   setActiveGroupId(null);
+                                   setShowGroupSettings(false);
+                                 }
+                                 setAlertDialog?.(null);
+                               } catch (e) {
+                                 console.error('Failed to ungroup:', e);
+                                 setAlertDialog?.(null);
+                               }
+                             }
+                           });
+                         }
+                       }}
+                       className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all"
+                       title="解散群组"
+                     >
+                       <Trash2 size={18} />
+                     </button>
 
-                  <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
-                      {/* Series Identity */}
-                      <section className="space-y-4">
-                        <div className="flex items-center gap-2 mb-1 justify-between">
-                          <div className="flex items-center gap-2">
-                             <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
-                             <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列基本信息 / Series Identity</h4>
-                          </div>
-                          
-                          <button 
-                            onClick={() => handleUpdateGroupData({ isHidden: !groupData?.isHidden })}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${groupData?.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
-                          >
-                             {groupData?.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
-                             <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{groupData?.isHidden ? '屏蔽中' : '显示中'}</span>
-                          </button>
+                     <button 
+                       onClick={() => setShowGroupSettings(false)}
+                       className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white text-indigo-600 hover:bg-white shadow-xl transition-all font-black"
+                       title="保存并关闭"
+                     >
+                       <Save size={18} />
+                     </button>
+                  </div>
+                </SheetHeader>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide h-[calc(100vh-80px)] pb-20">
+                    {/* Series Identity */}
+                    <section className="space-y-4">
+                      <div className="flex items-center gap-2 mb-1 justify-between">
+                        <div className="flex items-center gap-2">
+                           <div className="w-1.5 h-4 bg-indigo-600 rounded-full"></div>
+                           <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列基本信息 / Series Identity</h4>
                         </div>
                         
-                        <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <button 
+                          onClick={() => handleUpdateGroupData({ isHidden: !groupData?.isHidden })}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${groupData?.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+                        >
+                           {groupData?.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
+                           <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{groupData?.isHidden ? '屏蔽中' : '显示中'}</span>
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列正式名称 (Group Display Name)</label>
+                        <input 
+                          value={groupData?.name || ''}
+                          onChange={(e) => handleUpdateGroupData({ name: e.target.value })}
+                          className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
+                          placeholder="例如: 意式极简沙发系列..."
+                        />
+                      </div>
+
+                      <div className="space-y-4">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列正式名称 (Group Display Name)</label>
-                          <input 
-                            value={groupData?.name || ''}
-                            onChange={(e) => handleUpdateGroupData({ name: e.target.value })}
-                            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-black text-slate-800 outline-none focus:border-indigo-500 transition-all shadow-sm"
-                            placeholder="例如: 意式极简沙发系列..."
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列共同故事 (中文)</label>
+                          <textarea 
+                            value={groupData?.description_translations?.zh || groupData?.description || ''}
+                            onChange={(e) => {
+                              const zh = e.target.value;
+                              handleUpdateGroupData({ 
+                                description: zh, 
+                                description_translations: { ...groupData?.description_translations, zh } 
+                              });
+                            }}
+                            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                            placeholder="描述這個系列的設計理念 (中文)..."
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Series Story (English)</label>
+                          <textarea 
+                            value={groupData?.description_translations?.en || ''}
+                            onChange={(e) => {
+                              const en = e.target.value;
+                              handleUpdateGroupData({ 
+                                description_translations: { ...groupData?.description_translations, en } 
+                              });
+                            }}
+                            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                            placeholder="Describe the series design concept (English)..."
                           />
                         </div>
 
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列共同故事 (中文)</label>
-                            <textarea 
-                              value={groupData?.description_translations?.zh || groupData?.description || ''}
-                              onChange={(e) => {
-                                const zh = e.target.value;
-                                handleUpdateGroupData({ 
-                                  description: zh, 
-                                  description_translations: { ...groupData?.description_translations, zh } 
-                                });
-                              }}
-                              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
-                              placeholder="描述這個系列的設計理念 (中文)..."
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Series Story (English)</label>
-                            <textarea 
-                              value={groupData?.description_translations?.en || ''}
-                              onChange={(e) => {
-                                const en = e.target.value;
-                                handleUpdateGroupData({ 
-                                  description_translations: { ...groupData?.description_translations, en } 
-                                });
-                              }}
-                              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
-                              placeholder="Describe the series design concept (English)..."
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Cerita Siri (Malay)</label>
-                            <textarea 
-                              value={groupData?.description_translations?.ms || ''}
-                              onChange={(e) => {
-                                const ms = e.target.value;
-                                handleUpdateGroupData({ 
-                                  description_translations: { ...groupData?.description_translations, ms } 
-                                });
-                              }}
-                              className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
-                              placeholder="Terangkan konsep reka bentuk siri (Bahasa Melayu)..."
-                            />
-                          </div>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Cerita Siri (Malay)</label>
+                          <textarea 
+                            value={groupData?.description_translations?.ms || ''}
+                            onChange={(e) => {
+                              const ms = e.target.value;
+                              handleUpdateGroupData({ 
+                                description_translations: { ...groupData?.description_translations, ms } 
+                              });
+                            }}
+                            className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                            placeholder="Terangkan konsep reka bentuk siri (Bahasa Melayu)..."
+                          />
                         </div>
                       </div>
-                    </section>
+                    </div>
+                  </section>
 
-                    {/* Dimensions Section */}
-                    <section className="space-y-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Maximize size={16} className="text-indigo-500" />
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">批量尺寸 / Dimensions (Batch)</h4>
-                      </div>
+                  {/* Dimensions Section */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Maximize size={16} className="text-indigo-500" />
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">批量尺寸 / Dimensions (Batch)</h4>
+                    </div>
+                    
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <p className="text-[10px] text-slate-400 font-bold mb-4 px-1 leading-relaxed">
+                        在下方设置尺寸后，可点击“应用到全组”批量更新该群组内的所有产品尺寸。
+                      </p>
+                      <DimensionEditor 
+                        dimensions={groupData?.dimensions || []}
+                        onChange={(newDims) => {
+                           handleUpdateGroupData({ dimensions: newDims as any });
+                        }}
+                      />
                       
+                      {(groupData?.dimensions || []).length > 0 && (
+                        <button
+                          onClick={() => handleBatchUpdateDimensions(groupData!.dimensions!)}
+                          className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                        >
+                          <Save size={14} />
+                          <span>应用到全组 / Apply to Group</span>
+                        </button>
+                      )}
+                    </div>
+                  </section>
+
+                  {/* DNA Elements */}
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles size={16} className="text-indigo-500" />
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列DNA / DNA Elements</h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-4">
                       <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <p className="text-[10px] text-slate-400 font-bold mb-4 px-1 leading-relaxed">
-                          在下方设置尺寸后，可点击“应用到全组”批量更新该群组内的所有产品尺寸。
-                        </p>
-                        <DimensionEditor 
-                          dimensions={groupData?.dimensions || []}
-                          onChange={(newDims) => {
-                             handleUpdateGroupData({ dimensions: newDims as any });
-                          }}
-                        />
-                        
-                        {(groupData?.dimensions || []).length > 0 && (
-                          <button
-                            onClick={() => handleBatchUpdateDimensions(groupData!.dimensions!)}
-                            className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                          >
-                            <Save size={14} />
-                            <span>应用到全组 / Apply to Group</span>
-                          </button>
-                        )}
+                         <label className="text-[10px] font-bold text-slate-400 uppercase block mb-3">系列配色库 (Colors)</label>
+                         <div className="flex flex-wrap gap-2">
+                            {(groupData?.colors || []).map((color: string, idx: number) => (
+                              <div key={idx} className="group relative">
+                                <div className="w-8 h-8 rounded-lg border-2 border-white shadow-sm" style={{ backgroundColor: color }} />
+                                <button 
+                                  onClick={() => {
+                                    const next = (groupData?.colors || []).filter((_, i) => i !== idx);
+                                    handleUpdateGroupData({ colors: next });
+                                  }}
+                                  className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X size={8} />
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              onClick={() => {
+                                setPromptDialog({
+                                  title: '新增系列配色 / Add Color',
+                                  message: '輸入顏色十六進制碼 (例如: #FF0000) / Enter Color Hex Code:',
+                                  placeholder: '#',
+                                  onSubmit: (c) => {
+                                    if (c && c.trim()) handleUpdateGroupData({ colors: [...(groupData?.colors || []), c.trim()] });
+                                  }
+                                });
+                              }}
+                              className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:text-indigo-400"
+                            >
+                              <Plus size={16} />
+                            </button>
+                         </div>
                       </div>
-                    </section>
 
-                    {/* DNA Elements */}
-                    <section className="space-y-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Sparkles size={16} className="text-indigo-500" />
-                        <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">系列DNA / DNA Elements</h4>
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                         <label className="text-[10px] font-bold text-slate-400 uppercase block mb-3">系列材質库 (Materials)</label>
+                         <div className="flex flex-wrap gap-1.5">
+                           {['实木', '真皮', '金属', '布艺', '岩板', '钢化玻璃'].map(mat => {
+                             const isSelected = (groupData?.materials || []).includes(mat);
+                             return (
+                               <button 
+                                 key={mat}
+                                 onClick={() => {
+                                   const current = groupData?.materials || [];
+                                   const next = isSelected ? current.filter(m => m !== mat) : [...current, mat];
+                                   handleUpdateGroupData({ materials: next });
+                                 }}
+                                 className={`px-2.5 py-1 rounded-lg text-[9px] font-black border-2 transition-all ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
+                               >
+                                 {mat}
+                               </button>
+                             )
+                           })}
+                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-1 gap-4">
-                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase block mb-3">系列配色库 (Colors)</label>
-                           <div className="flex flex-wrap gap-2">
-                              {(groupData?.colors || []).map((color: string, idx: number) => (
-                                <div key={idx} className="group relative">
-                                  <div className="w-8 h-8 rounded-lg border-2 border-white shadow-sm" style={{ backgroundColor: color }} />
-                                  <button 
-                                    onClick={() => {
-                                      const next = (groupData?.colors || []).filter((_, i) => i !== idx);
-                                      handleUpdateGroupData({ colors: next });
-                                    }}
-                                    className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <X size={8} />
-                                  </button>
-                                </div>
-                              ))}
-                              <button 
-                                onClick={() => {
-                                  setPromptDialog({
-                                    title: '新增系列配色 / Add Color',
-                                    message: '輸入顏色十六進制碼 (例如: #FF0000) / Enter Color Hex Code:',
-                                    placeholder: '#',
-                                    onSubmit: (c) => {
-                                      if (c && c.trim()) handleUpdateGroupData({ colors: [...(groupData?.colors || []), c.trim()] });
-                                    }
-                                  });
-                                }}
-                                className="w-8 h-8 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:text-indigo-400"
-                              >
-                                <Plus size={16} />
-                              </button>
-                           </div>
-                        </div>
+                    </div>
+                  </section>
 
-                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase block mb-3">系列材質庫 (Materials)</label>
-                           <div className="flex flex-wrap gap-1.5">
-                             {['实木', '真皮', '金属', '布艺', '岩板', '钢化玻璃'].map(mat => {
-                               const isSelected = (groupData?.materials || []).includes(mat);
-                               return (
-                                 <button 
-                                   key={mat}
-                                   onClick={() => {
-                                     const current = groupData?.materials || [];
-                                     const next = isSelected ? current.filter(m => m !== mat) : [...current, mat];
-                                     handleUpdateGroupData({ materials: next });
-                                   }}
-                                   className={`px-2.5 py-1 rounded-lg text-[9px] font-black border-2 transition-all ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-400'}`}
-                                 >
-                                   {mat}
-                                 </button>
-                               )
-                             })}
-                           </div>
-                        </div>
-                      </div>
-                    </section>
-
-                    <div className="h-12"></div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <div className="h-12"></div>
+                </div>
+              </SheetContent>
+            </Sheet>
 
            {/* Unified Photo Lightbox */}
            <AnimatePresence>

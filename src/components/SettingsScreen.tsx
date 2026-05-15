@@ -6,6 +6,7 @@ import {
   User as UserIcon, Heart, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
+import { Skeleton } from './ui/Skeleton';
 import { Tag, Category, Photo, Manufacturer, AppSettings, User, ApiResponse } from '../types';
 import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
@@ -379,7 +380,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             </h4>
             {user && (
               <div className="flex items-center gap-1.5 px-3 py-1 bg-[#D4A853]/20 rounded-full border border-[#D4A853]/30">
-                <div className="w-1.5 h-1.5 bg-[#D4A853] rounded-full animate-pulse"></div>
+                <Skeleton className="w-1.5 h-1.5 bg-[#D4A853] rounded-full" />
                 <span className="text-[10px] font-black text-[#D4A853] uppercase tracking-wider">已连接</span>
               </div>
             )}

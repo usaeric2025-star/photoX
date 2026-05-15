@@ -167,13 +167,9 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }, [photos, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, isAdminMode, isStaffMode, tags]);
 
   // final grid: with grouping
-  const gridPhotosFull = useMemo(() => {
+  const gridPhotos = useMemo(() => {
     return groupPhotos(displayPhotos, showGroupsCollapsed);
   }, [displayPhotos, showGroupsCollapsed]);
-
-  const gridPhotos = useMemo(() => {
-    return gridPhotosFull.slice(0, visibleCount);
-  }, [gridPhotosFull, visibleCount]);
 
   const stableTagCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -245,14 +241,14 @@ export const GalleryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isPhotoSelected,
       displayPhotos,
       gridPhotos,
-      totalGridCount: gridPhotosFull.length,
+      totalGridCount: gridPhotos.length,
       totalCloudCount
     };
   }, [
     photos, categories, tags, manufacturers, searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, 
     sortOrder, selectedIds, isMultiSelect, showGroupsCollapsed, visibleCount, isInfiniteMode, isStaffMode, user, isAdminMode, page, hasMore,
     tagNameToIdMap, tagIdToNameMap, sortedTags,
-    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, gridPhotosFull.length, totalCloudCount
+    togglePhotoSelection, clearSelection, isPhotoSelected, displayPhotos, gridPhotos, totalCloudCount
   ]);
 
   return (

@@ -182,4 +182,41 @@ const uiValueForLogin = React.useMemo(() => ({
 - **标签编辑**：对于照片标签，**必须**使用 `PhotoTagSelector` 而非 `TagEditor`。
 - **尺寸编辑**：**必须**使用 `DimensionEditor` 以确保数据结构一致性与验证逻辑统一。
 
+## 十七、骨架屏规范
+
+1. 统一使用 `src/components/ui/Skeleton.tsx` 中的预设骨架屏组件：
+   - `PhotoCardSkeleton`：照片卡片骨架
+   - `GroupCardSkeleton`：群组卡片骨架
+   - `TagSkeleton`：标签骨架
+   - `PhotoGridSkeleton`：照片网格骨架（支持 `count` 属性）
+
+2. 禁止在组件中内联手写 `animate-pulse`。
+
+3. 禁止引入第三方骨架屏库（如 `react-loading-skeleton`）。
+
+4. 骨架屏的动画效果必须由 CSS（`animate-pulse`）驱动，不使用 JavaScript 动画。
+
+## 十八、shadcn/ui 组件使用规范
+
+1. 弹窗（确认/删除）：使用 `<AlertDialog>`（已集成到 `AdminGlobalModals`）
+2. 输入弹窗：使用 `<PromptDialog>`
+3. 下拉菜单：使用 `<DropdownMenu>`
+4. 抽屉（侧边栏）：使用 `<Sheet>`
+5. 标签页：使用 `<Tabs>`
+6. 按钮：使用项目内封装的 `<Button>`（基于 shadcn）
+7. 禁止在组件内手写固定定位的抽屉、菜单或折叠面板
+
+## 十九、批量操作与 AI 识别反馈规范
+
+1. 批量删除、批量隐藏、批量编辑等操作，必须使用左下角任务面板（Task Panel）显示进度
+2. 禁止使用全屏遮罩（`LoadingOverlay`）阻塞 UI
+3. 支持取消操作，取消后已处理部分保留
+4. 任务面板复用 `useTasks` Hook
+
+## 二十、手机触摸交互规范
+
+1. 所有可点击元素（按钮、菜单项、标签）的最小触摸区域为 44x44px
+2. 长按操作统一延迟 500ms，并配合 `navigator.vibrate?.(50)` 提供触觉反馈
+3. 弹窗在小屏幕上宽度为 90%，最大 400px
+
 

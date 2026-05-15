@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { PublicGallery } from './PublicGallery';
 import { useOptionalAdminPhoto, useOptionalAdminUI, useOptionalAdminSession } from '../context/AdminContexts';
 import { useGalleryContext } from '../context/GalleryContext';
-import { Layers, Pencil, Trash2, Share2, X } from 'lucide-react';
+import { Layers, Pencil, Trash2, Share2, X, EyeOff } from 'lucide-react';
 import { translations, LanguageCode } from '../lib/translations';
 import { useTasks } from '../hooks/useTasks';
 import { Photo } from '../types';
@@ -84,6 +84,22 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
     }
   };
 
+  const handleBatchHide = () => {
+    if (selectedIds.length === 0) return;
+    adminUI?.setAlertDialog({
+      title: `确定要批量隐藏这 ${selectedIds.length} 张照片吗？`,
+      message: '隐藏后的照片将不会在公共展厅中显示。',
+      onConfirm: async () => {
+        try {
+          await adminPhoto?.updatePhotosBulk(selectedIds, { isHidden: true }, `批量隐藏 (${selectedIds.length} 张)`);
+          clearSelection();
+        } catch (e) {
+          adminUI?.showToast(`隐藏失败: ${e instanceof Error ? e.message : '未知错误'}`, 'error');
+        }
+      }
+    });
+  };
+
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
     
@@ -95,7 +111,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
           // Identify groups before deletion
           const groupsToCheck = new Set(photos.filter(p => selectedIds.includes(p.id) && p.groupId).map(p => p.groupId));
           
-          await adminPhoto?.deletePhoto(selectedIds, true);
+          await adminPhoto?.deletePhoto(selectedIds);
           clearSelection();
           
           // Check groups after deletion
@@ -104,18 +120,16 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
               if (remainingPhotos.length <= 1) {
                   // Dissolve group: clear group_id for remaining photo if any, and delete group metadata
                   if (remainingPhotos.length === 1) {
-                      await updatePhoto(remainingPhotos[0].id, { groupId: null, isGroupCover: false });
+                      await updatePhoto!(remainingPhotos[0].id, { groupId: null, isGroupCover: false });
                   }
                   // Delete group metadata
                   await adminPhoto?.deleteGroup(groupId as string);
                   adminUI?.showToast(`群组 ${groupId!.slice(-4)} 已自动解散`, 'info');
               }
           }
-
-          adminUI?.showToast(`已成功删除 ${selectedIds.length} 张照片`, 'success');
         } catch (e) {
           const error = e instanceof Error ? e : new Error(String(e));
-          adminUI?.showToast(`删除失败: ${error.message}`, 'error');
+          adminUI?.showToast(`操作失败: ${error.message}`, 'error');
         }
       }
     });
@@ -197,18 +211,19 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
 
       {/* Admin Bulk Actions */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-3 bg-[#1D3557] px-5 py-3 rounded-2xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300 transition-all">
-           <div className="bg-white/10 px-2 py-1 rounded-lg">
+        <div className="fixed bottom-10 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-[500] flex items-center gap-3 bg-[#1D3557] px-4 sm:px-6 py-4 rounded-3xl shadow-2xl border border-white/10 animate-in fade-in slide-in-from-bottom-5 duration-300 transition-all">
+           <div className="bg-white/10 px-3 py-1 rounded-full flex items-center justify-center min-w-[2.5rem]">
              <span className="text-xs font-black text-white">{selectedIds.length}</span>
            </div>
-           <div className="flex items-center gap-2">
-             <button onClick={handleGroup} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title={t.merge}><Layers size={18} /></button>
-             <button onClick={handleBatchEdit} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center text-white transition-all active:scale-95 border border-white/10" title="统一编辑"><Pencil size={18} /></button>
-             <button onClick={handleBatchDelete} className="w-10 h-10 bg-red-500/20 hover:bg-red-500/30 rounded-xl flex items-center justify-center text-red-400 transition-all active:scale-95 border border-red-500/20" title={t.delete}><Trash2 size={18} /></button>
-             <button onClick={handleBatchShare} className="w-10 h-10 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl flex items-center justify-center text-blue-400 transition-all active:scale-95 border border-blue-500/20" title={t.share}><Share2 size={18} /></button>
+           <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-around sm:justify-start overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+             <button onClick={handleGroup} className="w-12 h-12 sm:w-11 sm:h-11 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center text-white transition-all active:scale-90 border border-white/10 shrink-0" title={t.merge}><Layers size={20} /></button>
+             <button onClick={handleBatchEdit} className="w-12 h-12 sm:w-11 sm:h-11 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center text-white transition-all active:scale-90 border border-white/10 shrink-0" title="统一编辑"><Pencil size={20} /></button>
+             <button onClick={handleBatchDelete} className="w-12 h-12 sm:w-11 sm:h-11 bg-red-500/20 hover:bg-red-500/30 rounded-2xl flex items-center justify-center text-red-400 transition-all active:scale-90 border border-red-500/20 shrink-0" title={t.delete}><Trash2 size={20} /></button>
+             <button onClick={handleBatchHide} className="w-12 h-12 sm:w-11 sm:h-11 bg-slate-500/20 hover:bg-slate-500/30 rounded-2xl flex items-center justify-center text-slate-300 transition-all active:scale-90 border border-slate-500/20 shrink-0" title="批量隐藏"><EyeOff size={20} /></button>
+             <button onClick={handleBatchShare} className="w-12 h-12 sm:w-11 sm:h-11 bg-blue-500/20 hover:bg-blue-500/30 rounded-2xl flex items-center justify-center text-blue-400 transition-all active:scale-90 border border-blue-500/20 shrink-0" title={t.share}><Share2 size={20} /></button>
            </div>
-           <div className="w-px h-6 bg-white/10 mx-1" />
-           <button onClick={clearSelection} className="p-2 text-white/40 hover:text-white transition-colors"><X size={18} /></button>
+           <div className="w-px h-8 bg-white/10 mx-1 hidden sm:block" />
+           <button onClick={clearSelection} className="p-3 text-white/40 hover:text-white transition-colors"><X size={20} /></button>
         </div>
       )}
     </div>

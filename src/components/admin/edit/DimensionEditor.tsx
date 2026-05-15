@@ -56,22 +56,26 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
             <button 
               onClick={onAiAnalyze}
               disabled={isAnalyzing}
-              className={`text-[9px] font-black px-2 py-1 rounded-lg border flex items-center gap-1 transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100'}`}
+              className={`min-h-[44px] min-w-[44px] text-[9px] font-black px-3 py-1 rounded-xl border flex items-center gap-1.5 transition-all shadow-sm active:scale-95 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100'}`}
+              title="AI 识别尺寸"
             >
-              <Sparkles size={10} className={isAnalyzing ? 'animate-spin' : ''} /> 
-              {isAnalyzing ? '识别中...' : 'AI 识别尺寸'}
+              <Sparkles size={16} className={isAnalyzing ? 'animate-spin' : ''} /> 
+              <span className="hidden sm:inline">{isAnalyzing ? '识别中...' : 'AI 识别'}</span>
+              <span className="sm:hidden">{isAnalyzing ? '...' : 'AI'}</span>
             </button>
           )}
           <button 
             onClick={onAddDimension}
-            className="text-[9px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg border border-blue-100"
+            className="min-h-[44px] px-3 sm:px-4 text-[9px] sm:text-xs font-black text-blue-600 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
           >
-            + 增加规格 / ADD SIZE
+            <span className="text-base sm:text-lg">+</span>
+            <span className="hidden sm:inline">增加规格</span>
+            <span className="sm:hidden">增加</span>
           </button>
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {displayDims.map((dim, idx) => {
           const label = dim.label || '';
           const prefixMatch = label.match(/^([A-Z0-9\u4e00-\u9fa5]+)\s*[:：]\s*(.*)$/i);
@@ -79,21 +83,22 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
           const dimensionsPart = prefixMatch ? prefixMatch[2] : label;
 
           return (
-            <div key={`dim-${idx}`} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3 relative">
+            <div key={`dim-${idx}`} className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-100 space-y-3 relative group">
               {dimensions.length > 1 && (
                 <button 
                   onClick={() => onRemoveDimension(idx)}
-                  className="absolute top-2 right-2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                  className="absolute -top-2 -right-2 sm:top-2 sm:right-2 p-1.5 bg-white sm:bg-transparent text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shadow-sm sm:shadow-none border border-slate-100 sm:border-0 z-10"
+                  title="删除此规格"
                 >
-                  <CloseIcon size={14} />
+                  <CloseIcon size={16} />
                 </button>
               )}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
+              <div className="grid grid-cols-5 gap-2">
+                <div className="col-span-2 space-y-1">
                   <div className="flex items-center justify-between pl-1">
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">部分 / PART</span>
                     {dim.isAI && (
-                      <div className="flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 animate-pulse">
+                      <div className="flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                         <Sparkles size={8} />
                         <span className="text-[8px] font-black">AI</span>
                       </div>
@@ -104,11 +109,11 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
                     placeholder="如: WD" 
                     value={prefix} 
                     onChange={e => handleUpdateLabel(idx, e.target.value.toUpperCase().trim(), dimensionsPart)}
-                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold" 
+                    className="w-full p-2 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
                   />
                 </div>
-                <div className="space-y-1">
-                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / Unit</span>
+                <div className="col-span-3 space-y-1">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">单位 / UNIT</span>
                   <div className="flex gap-1">
                     {['cm', 'mm', 'inch'].map(u => (
                       <button 
@@ -119,22 +124,24 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
                           newDims[idx].isAI = false;
                           onChange(newDims);
                         }}
-                        className={`flex-1 p-2 rounded-xl text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-500 border-slate-200'}`}
+                        className={`flex-1 py-2 rounded-xl text-[9px] sm:text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800 shadow-md translate-z-1' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                       >
-                        {u}
+                        {u === 'inch' ? 'in' : u}
                       </button>
                     ))}
                   </div>
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter pl-1">尺寸内容 / DIMENSIONS</span>
+                <div className="flex justify-between items-center pl-1">
+                  <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">尺寸内容 / DIMENSIONS (H x W x D)</span>
+                </div>
                 <input 
                   type="text" 
-                  placeholder={isAnalyzing ? "AI 识别尺寸中..." : "H94 x W96 x D23"} 
-                  value={dimensionsPart || (isAnalyzing ? "" : "—")} 
+                  placeholder={isAnalyzing ? "AI 识别中..." : "H94 x W96 x D23"} 
+                  value={dimensionsPart || (isAnalyzing ? "" : "")} 
                   onChange={e => handleUpdateLabel(idx, prefix, e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold" 
+                  className="w-full p-2.5 rounded-xl border border-slate-200 bg-white text-sm font-bold focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all" 
                 />
               </div>
             </div>

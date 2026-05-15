@@ -70,6 +70,7 @@ export interface Photo {
   isPinned?: boolean; // Pinned to top
   isAnalyzing?: boolean;
   isHidden?: boolean;
+  groupOrder?: number;
   userId?: string;
   // UI legacy fields mapping if needed
   uri?: string; // For local preview
@@ -128,10 +129,6 @@ export interface ProductFormData {
   isHidden: boolean;
   price: string;
   isGroupCover: boolean;
-  // Temporary single dim fields if needed for backward compatibility or simple UI
-  dimL?: string;
-  dimW?: string;
-  dimH?: string;
 }
 
 export interface AppSettings {

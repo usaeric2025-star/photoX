@@ -1,9 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup } from '../types';
 import { PhotoLightbox } from './PhotoLightbox';
 import { getGroupById } from '../services/groupService';
+import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
 import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService';
@@ -27,9 +28,32 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
   const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeGroupId && containerRef.current) {
+      const saved = sessionStorage.getItem(`group_scroll_${activeGroupId}`);
+      if (saved) {
+        // Small delay to ensure content is rendered
+        setTimeout(() => {
+          if (containerRef.current) containerRef.current.scrollTop = parseInt(saved, 10);
+        }, 50);
+      }
+    }
+  }, [activeGroupId]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (activeGroupId) {
+      sessionStorage.setItem(`group_scroll_${activeGroupId}`, e.currentTarget.scrollTop.toString());
+    }
+  };
 
   useEffect(() => {
     if (activeGroupId) {
+      // Reset state immediately to avoid showing stale data from previous group
+      setGroupData(null);
+      setLocalGroupPhotos([]);
+      
       // 1. Fetch group metadata
       setIsGroupDataLoading(true);
       getGroupById(activeGroupId).then(data => {
@@ -75,6 +99,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
+        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
+          return a.groupOrder - b.groupOrder;
+        }
+        if (a.groupOrder !== undefined) return -1;
+        if (b.groupOrder !== undefined) return 1;
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
   }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);
@@ -89,6 +118,8 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     <AnimatePresence>
       {activeGroupId !== null && (
         <motion.div 
+          ref={containerRef}
+          onScroll={handleScroll}
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.98 }}
@@ -103,13 +134,21 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 >
                   <ChevronLeft size={24} />
                 </button>
-                <div className="flex flex-col">
+                <div className="flex flex-col min-h-[3rem]">
                   <div className="flex items-center gap-2">
-                     <h2 className="text-lg font-bold text-slate-800 tracking-tight">
-                       {isGroupDataLoading ? '...' : (groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`)}
-                     </h2>
+                     {isGroupDataLoading ? (
+                       <Skeleton className="h-6 w-32 bg-slate-200" />
+                     ) : (
+                       <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                         {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                       </h2>
+                     )}
                   </div>
-                  <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>
+                  {isGroupDataLoading ? (
+                    <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
+                  ) : (
+                    <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -131,15 +170,22 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
             </div>
             
             {/* Series Story Section */}
-            {(groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description) && (
+            {(isGroupDataLoading || (groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description)) && (
               <div className="px-5 py-4 bg-white border-b border-slate-100">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-3 bg-blue-600 rounded-full" />
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{props.t?.seriesStory || 'Series Story'}</span>
                 </div>
-                <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
-                  {groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description}
-                </p>
+                {isGroupDataLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-5/6" />
+                  </div>
+                ) : (
+                  <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
+                    {groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description}
+                  </p>
+                )}
               </div>
             )}
 

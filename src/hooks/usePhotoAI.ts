@@ -49,6 +49,7 @@ export const usePhotoAI = (
   showToast: (msg: string, type?: any) => void,
   addTask: (task: any) => string,
   updateTask: (id: string, updates: any) => void,
+  removeTask: (id: string) => void,
   runWithLoading: <T>(state: any, fn: () => Promise<T>) => Promise<T>,
   setLoadingState: (s: any) => void,
   photosRef: React.MutableRefObject<Photo[]>
@@ -70,7 +71,8 @@ export const usePhotoAI = (
     photosRef.current = photosRef.current.map(p => p.isAnalyzing ? { ...p, isAnalyzing: false } : p);
     
     if (taskId) {
-        updateTask(taskId, { status: 'cancelled', message: '用户已取消任务' });
+        updateTask(taskId, { status: 'cancelled', message: '已取消 AI 识别任务' });
+        removeTask(taskId); // Immediate removal
     }
     setAiDebugInfo({ step: '已取消', message: '用户中断了 AI 识别任务' });
     setTimeout(() => setAiDebugInfo(null), 3000);
@@ -103,7 +105,7 @@ export const usePhotoAI = (
     setBatchProgress({ current: 0, total: sUnProcessed.length });
     const taskId = existingTaskId || addTask({
       name: `批量 AI 识别 (${sUnProcessed.length} 张)`,
-      onCancel: () => abortAnalysis()
+      onCancel: () => abortAnalysis(taskId)
     });
 
     const CONCURRENCY = AI_CONFIG.CONCURRENCY;
@@ -213,7 +215,7 @@ export const usePhotoAI = (
                 const errorMsg = result.reason?.message || '未知錯誤';
                 batchFailures.push(photo.name || photo.id.slice(0, 8));
                 console.error(`[AI Batch Fail] ID: ${photo.id}, Title: ${photo.name}, Err: ${errorMsg}`);
-                showSystemError(`AI 識別失敗 (${photo.name || photo.id.slice(0, 8)}): ${errorMsg}`);
+                showToast(`识别失败: ${photo.name?.slice(0, 10)}...`, 'error');
               }
             });
 
@@ -256,88 +258,106 @@ export const usePhotoAI = (
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
     if (!imageData) return;
     setAiDebugInfo(null);
-    return runWithLoading('analyzing', async () => {
-      if (editPhotoId) {
-        setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p));
-        // Also update local ref
-        photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
-      }
-      setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
-      const controller = new AbortController();
-      currentAnalysisController.current = controller;
-      const signal = controller.signal;
-      try {
-        const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
-        if (!apiKey) throw new Error('API Key 为空');
-        let originalName;
-        if (editPhotoId) {
-            const photo = photosRef.current.find(p => p.id === editPhotoId);
-            originalName = photo?.name;
-        }
-        const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
-        const result = cleanObject(resRaw);
-        
-        // Clean name logic - be less aggressive
-        if (result.name) {
-          const measurementOnly = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
-          if (measurementOnly.test(result.name)) result.name = '';
-          
-          if (!result.modelNumber && /^[A-Z0-9\-]+$/.test(result.name) && result.name.length > 2) {
-            result.modelNumber = result.name;
-          }
-        }
-        
-        if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
-        const aiName = cleanAiName(result.name);
-        if (result.description) {
-          try {
-            const translations = await translateDescription(result.description, apiKey, customModel, signal);
-            result.description_translations = { zh: result.description, en: translations.en, ms: translations.ms };
-          } catch (e) {}
-        }
-        if (editPhotoId) {
-          const photo = photosRef.current.find(p => p.id === editPhotoId);
-          if (photo) {
-            const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
-            let updatedPhoto = { 
-              ...photo, 
-              categoryId: result.categoryId || photo.categoryId,
-              tagIds: Array.from(new Set([...safeArray(photo.tagIds), ...resolvedTags])).slice(0, 3),
-              name: shouldUpdateName(photo.name) ? (aiName || photo.name) : photo.name,
-              description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
-              description_translations: result.description_translations || photo.description_translations,
-              model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
-              dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : photo.dimensions,
-              updatedAt: formatDate(new Date()),
-              isAnalyzing: false 
-            };
-            if (user) {
-              const finalId = await savePhotoToCloud(user.id, updatedPhoto);
-              updatedPhoto.id = finalId;
-            }
-            const nextPhotos = photosRef.current.map(p => p.id === editPhotoId ? updatedPhoto : p);
-            setPhotos(nextPhotos);
-            photosRef.current = nextPhotos;
-            await saveData('product_photos', nextPhotos);
-          }
-        }
-        setAiDebugInfo(null);
-        return result;
-      } catch (err: any) {
-        if (err.name === 'AbortError') {
-          setAiDebugInfo({ step: '已取消', message: '识别任务已由用户中断' });
-        } else {
-          const errorMsg = err.message || String(err);
-          setAiDebugInfo({ step: '错误', message: '识别失败', error: errorMsg });
-          showSystemError(`AI 識別失敗: ${errorMsg}`);
-        }
-        if (editPhotoId) {
-          setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
-          photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p);
-        }
-        throw err;
-      }
+    
+    const taskId = addTask({
+      name: `AI 单图识别 ${editPhotoId ? '(编辑中)' : ''}`,
+      onCancel: () => abortAnalysis(taskId)
     });
+
+    if (editPhotoId) {
+      setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p));
+      photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
+    }
+    
+    setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
+    updateTask(taskId, { progress: 10, message: '分析图片中...' });
+
+    const controller = new AbortController();
+    currentAnalysisController.current = controller;
+    const signal = controller.signal;
+    
+    try {
+      const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
+      if (!apiKey) throw new Error('API Key 为空');
+      
+      let originalName;
+      if (editPhotoId) {
+          const photo = photosRef.current.find(p => p.id === editPhotoId);
+          originalName = photo?.name;
+      }
+      
+      const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
+      const result = cleanObject(resRaw);
+      
+      // Clean name logic
+      if (result.name) {
+        const measurementOnly = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
+        if (measurementOnly.test(result.name)) result.name = '';
+        
+        if (!result.modelNumber && /^[A-Z0-9\-]+$/.test(result.name) && result.name.length > 2) {
+          result.modelNumber = result.name;
+        }
+      }
+      
+      if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
+      const aiName = cleanAiName(result.name);
+      
+      if (result.description) {
+        try {
+          const translations = await translateDescription(result.description, apiKey, customModel, signal);
+          result.description_translations = { zh: result.description, en: translations.en, ms: translations.ms };
+        } catch (e) {}
+      }
+      
+      if (editPhotoId) {
+        const photo = photosRef.current.find(p => p.id === editPhotoId);
+        if (photo) {
+          updateTask(taskId, { progress: 80, message: '正在保存结果...' });
+          const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
+          let updatedPhoto = { 
+            ...photo, 
+            categoryId: result.categoryId || photo.categoryId,
+            tagIds: Array.from(new Set([...safeArray(photo.tagIds), ...resolvedTags])).slice(0, 3),
+            name: shouldUpdateName(photo.name) ? (aiName || photo.name) : photo.name,
+            description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
+            description_translations: result.description_translations || photo.description_translations,
+            model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
+            dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : photo.dimensions,
+            updatedAt: formatDate(new Date()),
+            isAnalyzing: false 
+          };
+          if (user) {
+            const finalId = await savePhotoToCloud(user.id, updatedPhoto);
+            updatedPhoto.id = finalId;
+          }
+          const nextPhotos = photosRef.current.map(p => p.id === editPhotoId ? updatedPhoto : p);
+          setPhotos(nextPhotos);
+          photosRef.current = nextPhotos;
+          await saveData('product_photos', nextPhotos);
+        }
+      }
+      
+      updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
+      setAiDebugInfo(null);
+      return result;
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        removeTask(taskId);
+        setAiDebugInfo({ step: '已取消', message: '识别任务已由用户中断' });
+      } else {
+        const errorMsg = err.message || String(err);
+        setAiDebugInfo({ step: '错误', message: '识别失败', error: errorMsg });
+        updateTask(taskId, { status: 'error', message: `失败: ${errorMsg.slice(0, 30)}` });
+        showToast(`AI 識別失敗 / Analysis Failed`, 'error');
+      }
+      if (editPhotoId) {
+        setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
+        photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p);
+      }
+      throw err;
+    } finally {
+      currentAnalysisController.current = null;
+    }
   };
 
   const handleGroupAiIdentify = async (groupPhotos: Photo[]) => {
@@ -349,7 +369,7 @@ export const usePhotoAI = (
 
     const taskId = addTask({
       name: `群组 AI 识别 (${sGroupPhotos.length} 张)`,
-      onCancel: () => abortAnalysis()
+      onCancel: () => abortAnalysis(taskId)
     });
 
     const photoIds = sGroupPhotos.map(p => p.id);
@@ -366,10 +386,13 @@ export const usePhotoAI = (
 
       const firstPhoto = sGroupPhotos.find(p => p.isGroupCover) || sGroupPhotos[0];
       const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.categoryId, firstPhoto.name, signal);
+      
+      if (signal?.aborted) return;
+      
       const result = cleanObject(resRaw);
 
       if (result.name) {
-        const measurementOnly = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
+        const measurementOnly = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]|x|X))(\s*(x|X)\s*(\d+(\.\d+)?\s*(cm|inch|mm|["'”]|x|X)))*$/i;
         if (measurementOnly.test(result.name)) result.name = '';
       }
       
@@ -388,25 +411,30 @@ export const usePhotoAI = (
       setAiDebugInfo({ step: '保存中', message: '同步识别结果到所有照片...' });
       updateTask(taskId, { progress: 80, message: '正在同步及保存结果...' });
 
-      const updatedPhotosList: Photo[] = [];
-      for (const p of sGroupPhotos) {
-        const updated = {
-          ...p,
-          categoryId: result.categoryId || p.categoryId,
-          tagIds: Array.from(new Set([...safeArray(p.tagIds), ...finalTagIds])).slice(0, 3),
-          name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
-          description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
-          description_translations: result.description_translations || p.description_translations,
-          model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
-          dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : safeArray(p.dimensions),
-          updatedAt: formatDate(new Date()),
-          isAnalyzing: false
-        };
-        
-        if (user) {
-          await savePhotoToCloud(user.id, updated).catch(e => console.error("Group sync cloud failed:", e));
+      const updatedPhotosList: Photo[] = sGroupPhotos.map(p => ({
+        ...p,
+        categoryId: result.categoryId || p.categoryId,
+        tagIds: Array.from(new Set([...safeArray(p.tagIds), ...finalTagIds])).slice(0, 3),
+        name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
+        description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+        description_translations: result.description_translations || p.description_translations,
+        model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
+        dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : safeArray(p.dimensions),
+        updatedAt: formatDate(new Date()),
+        isAnalyzing: false
+      }));
+      
+      if (user) {
+        try {
+          const { savePhotosToCloudBatch } = await import('../services/photoMutationService');
+          await savePhotosToCloudBatch(user.id, updatedPhotosList);
+        } catch (e) {
+          console.error("Group sync cloud batch failed:", e);
+          // Fallback to individual if batch fails
+          for (const up of updatedPhotosList) {
+             await savePhotoToCloud(user.id, up).catch(() => {});
+          }
         }
-        updatedPhotosList.push(updated);
       }
 
       setPhotos(prev => {
@@ -425,10 +453,11 @@ export const usePhotoAI = (
       return result;
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        updateTask(taskId, { status: 'cancelled', message: '已取消' });
+        removeTask(taskId);
       } else {
         setAiDebugInfo({ step: '错误', message: '群组识别失败', error: err.message || String(err) });
-        updateTask(taskId, { status: 'error', message: `失败: ${err.message || '未知错误'}` });
+        updateTask(taskId, { status: 'error', message: `失败: ${err.message?.slice(0, 30) || '未知错误'}` });
+        showToast('群组 AI 识别失败 / Failed', 'error');
       }
       setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
       photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);

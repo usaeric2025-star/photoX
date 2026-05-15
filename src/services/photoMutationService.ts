@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { DB_CONFIG } from '../constants/config';
+import { DB_CONFIG, PAGINATION } from '../constants/config';
 import { Photo } from '../types';
 import { uploadImages } from './storageService';
 import { validateDimension } from '../utils/dimensionValidator';
@@ -8,6 +8,7 @@ import { safeArray } from '../lib/utils';
 
 const FIELD_MAP: Record<string, string> = {
   groupId: 'group_id',
+  groupOrder: 'group_order',
   isGroupCover: 'is_group_cover',
   categoryId: 'category_id',
   manufacturerId: 'manufacturer_id',
@@ -27,7 +28,7 @@ const FIELD_MAP: Record<string, string> = {
 
 const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'categoryId',
-  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId',
+  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'groupOrder',
   'image_url', 'thumb_url', 'price', 'updated_at', 'created_at', 'userId',
   'isHidden'
 ];
@@ -209,6 +210,7 @@ export const savePhotosToCloudBatch = async (
       description_translations: photo.description_translations || null,
       created_at: photo.createdAt,
       group_id: photo.groupId || null,
+      group_order: photo.groupOrder ?? null,
       is_group_cover: photo.isGroupCover || false,
       isHidden: photo.isHidden || false,
       updated_at: photo.updatedAt || new Date().toISOString()
@@ -220,7 +222,7 @@ export const savePhotosToCloudBatch = async (
   });
 
   // 1. Bulk Upsert Photos
-  const chunkSize = 100;
+  const chunkSize = PAGINATION.CHUNK_SIZE;
   for (let i = 0; i < payloads.length; i += chunkSize) {
     const chunk = payloads.slice(i, i + chunkSize);
     let { data: savedRows, error: dbError } = await supabase
@@ -337,10 +339,6 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
     normalizeDimensionsBeforeSave(updates.dimensions);
   }
   
-  // Clean up group_order if it somehow persists
-  if ('group_order' in updates) delete updates.group_order;
-  if ('groupOrder' in updates) delete updates.groupOrder;
-  
   const { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .update(updates)
@@ -376,36 +374,97 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
   photoCache.clear();
 };
 
-export const deletePhotosBatch = async (userId: string, photos: Photo[]) => {
+export const deletePhotosBatch = async (
+  userId: string, 
+  photos: Photo[], 
+  onProgress?: (current: number, total: number) => void,
+  signal?: AbortSignal
+) => {
   const sPhotos = safeArray(photos);
   if (sPhotos.length === 0) return;
   
-  // 1. Delete DB records
-  const ids = sPhotos.map(p => p.id);
-  console.log(`[photoService] deletePhotosBatch: Attempting to delete ${ids.length} records. IDs:`, ids);
+  const total = sPhotos.length;
+  const BATCH_SIZE = PAGINATION.BATCH_SIZE;
   
-  const { data, error } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .delete()
-    .in('id', ids)
-    .eq('user_id', userId)
-    .select('id');
-  
-  if (error) {
-    console.error(`[photoService] deletePhotosBatch DB error:`, error);
-    throw new Error(error.message || JSON.stringify(error));
+  for (let i = 0; i < sPhotos.length; i += BATCH_SIZE) {
+    if (signal?.aborted) throw new Error('Operation aborted');
+    
+    const chunk = sPhotos.slice(i, i + BATCH_SIZE);
+    const ids = chunk.map(p => p.id);
+    
+    // 1. Delete DB records
+    const { data, error } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .delete()
+      .in('id', ids)
+      .eq('user_id', userId)
+      .select('id');
+    
+    if (error) {
+      console.error(`[photoService] deletePhotosBatch DB error:`, error);
+      throw new Error(error.message || JSON.stringify(error));
+    }
+    
+    // 2. Delete files
+    const filePaths = chunk.flatMap(p => {
+      const filename = p.storageId || p.id;
+      return [`public/${filename}.webp`, `public/thumb_${filename}.webp`];
+    });
+    
+    await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove(filePaths);
+    
+    if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
   }
   
   photoCache.clear();
-  console.log(`[photoService] deletePhotosBatch DB success. Rows affected: ${data?.length || 0}`);
+};
+
+export const updatePhotosBatch = async (
+  userId: string,
+  ids: string[],
+  updates: Partial<Photo>,
+  onProgress?: (current: number, total: number) => void,
+  signal?: AbortSignal
+) => {
+  if (ids.length === 0) return;
   
-  // 2. Delete files
-  const filePaths = photos.flatMap(p => {
-    const filename = p.storageId || p.id;
-    return [`public/${filename}.webp`, `public/thumb_${filename}.webp`];
-  });
+  const total = ids.length;
+  const BATCH_SIZE = PAGINATION.BATCH_SIZE;
+  const dbUpdates = mapToDb(updates);
   
-  await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove(filePaths);
+  for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+    if (signal?.aborted) throw new Error('Operation aborted');
+    
+    const chunkIds = ids.slice(i, i + BATCH_SIZE);
+    
+    const { error } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update(dbUpdates)
+      .in('id', chunkIds)
+      .eq('user_id', userId);
+      
+    if (error) throw error;
+    
+    // Also sync tags if provided in updates
+    if ('tagIds' in updates) {
+       for (const photoId of chunkIds) {
+          if (signal?.aborted) throw new Error('Operation aborted');
+          await supabase.from('photo_tags').delete().eq('photo_id', photoId);
+          const uTagIds = safeArray(updates.tagIds);
+          if (uTagIds.length > 0) {
+            const tagAssociations = uTagIds.map(tagId => ({
+              photo_id: photoId,
+              tag_id: tagId
+            }));
+            await supabase.from('photo_tags').insert(tagAssociations);
+          }
+       }
+    }
+    
+    if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
+  }
+  
+  photoCache.clear();
 };
 
 export const clearCategoryFromPhotos = async (categoryId: string) => {

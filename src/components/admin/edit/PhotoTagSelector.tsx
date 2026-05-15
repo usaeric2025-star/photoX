@@ -29,6 +29,8 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
       onChange(selectedTagIds.filter(id => id !== strId));
     } else if (selectedTagIds.length < 3) {
       onChange([...selectedTagIds, strId]);
+    } else {
+      showToast('最多选 3 个', 'info');
     }
   };
 

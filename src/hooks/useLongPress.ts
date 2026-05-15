@@ -21,8 +21,9 @@ export const useLongPress = <T = any>(onLongPress: (item: T) => void) => {
     pressTimer.current = setTimeout(() => {
       hasLongPressed.current = true;
       setActiveItem(item);
+      if ('vibrate' in navigator) navigator.vibrate(50);
       onLongPress(item);
-    }, 400);
+    }, 500);
   };
 
   const clearTimer = () => {

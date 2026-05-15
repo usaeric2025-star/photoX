@@ -160,7 +160,8 @@ export default function AdminView() {
     removeTagFromPhoto: async () => {},
     quickAddTag: () => {},
     quickAddManufacturer: () => {},
-    updatePhoto: async () => {}
+    updatePhoto: async () => {},
+    updatePhotosBulk: async () => {}
   }), [photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers]);
 
   const uiValue = React.useMemo(() => ({

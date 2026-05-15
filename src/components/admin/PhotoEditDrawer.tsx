@@ -3,12 +3,19 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { useErrorHandler } from '../../utils/errorHandler';
 import { Photo, ProductFormData, Dimension, Tag } from '../../types';
+import { Skeleton } from '../ui/Skeleton';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight, Trash2 } from 'lucide-react';
 import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { DimensionEditor } from './edit/DimensionEditor';
 import { Button } from "@/components/ui/button"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../../components/ui/tabs";
 import { cn, safeArray } from '../../lib/utils';
 
 interface Props {
@@ -113,7 +120,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
               title="點擊查看詳細錯誤"
               className="bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded-xl text-[10px] font-bold flex items-center gap-1 cursor-help max-w-[140px]"
             >
-              <div className="w-1 h-1 rounded-full bg-red-400 animate-pulse shrink-0" />
+              <Skeleton className="w-1 h-1 rounded-full bg-red-400 shrink-0" />
               <span className="truncate">
                 {aiDebugInfo.error.includes('|') 
                   ? (aiDebugInfo.error.split('|')[2] || aiDebugInfo.error.split('|')[1] || '识别失败') 
@@ -253,10 +260,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 await props.saveNewPhoto();
               }}
               disabled={isSyncing}
-              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isSyncing ? 'bg-blue-400 text-white border-blue-400 animate-pulse cursor-wait' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700'}`}
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isSyncing ? 'bg-blue-400 text-white border-blue-400 cursor-wait' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700'}`}
               title="保存"
             >
-              {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18}/>}
+              {isSyncing ? <Skeleton className="bg-transparent text-white"><RefreshCcw size={18} className="animate-spin" /></Skeleton> : <Save size={18}/>}
             </button>
             <button 
               onClick={props.resetAddState} 
@@ -268,222 +275,236 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar pb-24">
-        <div className="flex gap-4 items-start">
-          {(props.newPhotoData || props.editPhotoPreview) && (
-            <div className="w-1/3 shrink-0 space-y-2">
-               <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
-                  {isProcessingImage && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
-                      <RefreshCcw className="text-white animate-spin" size={24} />
-                    </div>
-                  )}
-                  <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="w-full h-full object-contain" alt="Preview" />
-               </div>
-               <div className="flex gap-2">
-                 <button 
-                   onClick={rotatePhoto}
-                   disabled={isProcessingImage}
-                   className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200 active:bg-slate-50 disabled:opacity-50"
-                 >
-                   旋转 90°
-                 </button>
-               </div>
-            </div>
-          )}
-          <div className="flex-1 space-y-3">
-            <div className="space-y-1.5">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 / PRODUCT NAME</h3>
-              <input 
-                key={editPhotoId || 'new'}
-                type="text" 
-                placeholder="輸入名稱..." 
-                defaultValue={formState.name} 
-                onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
-                className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
-              />
-            </div>
-            <div className="flex w-full gap-2 pt-1">
-              <div className="flex-1 space-y-1.5">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">編號 / CODE</h3>
-                <input 
-                  type="text" 
-                  placeholder="編號..." 
-                  value={formState.manual_code || ''} 
-                  onChange={e => updateForm({ manual_code: e.target.value })} 
-                  className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" 
-                />
-              </div>
-              <div className="flex-1 space-y-1.5">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">型號 / MODEL</h3>
-                <input 
-                  type="text" 
-                  placeholder="型號..." 
-                  value={formState.model_number || ''} 
-                  onChange={e => updateForm({ model_number: e.target.value })} 
-                  className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold outline-none focus:border-blue-500" 
-                />
-              </div>
-              <div className="flex-1 space-y-1.5">
-                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">價格 / PRICE</h3>
-                <input 
-                  type="text" 
-                  placeholder="價格..." 
-                  value={formState.price || ''} 
-                  onChange={e => updateForm({ price: e.target.value })} 
-                  className="w-full bg-white border border-slate-200 p-3 rounded-2xl text-base md:text-[11px] font-bold text-blue-600 outline-none focus:border-blue-500" 
-                />
-              </div>
-            </div>
+      <div className="flex-1 overflow-hidden flex flex-col pt-2">
+        <Tabs defaultValue="basic" className="flex-1 flex flex-col overflow-hidden">
+          <div className="px-4 pb-2 border-b border-slate-100 bg-white">
+            <TabsList className="w-full bg-slate-100/50 p-1 rounded-2xl h-12 flex items-center gap-1 border border-slate-200">
+              <TabsTrigger 
+                value="basic" 
+                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all h-full"
+              >
+                基础 / BASIC
+              </TabsTrigger>
+              <TabsTrigger 
+                value="org" 
+                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all h-full"
+              >
+                分类 / ORG
+              </TabsTrigger>
+              <TabsTrigger 
+                value="details" 
+                className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all h-full"
+              >
+                细节 / DETAIL
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </div>
 
-        <section className="space-y-4">
-            <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
-            <CategoryGrid 
-              categories={categories}
-              selectedId={formState.categoryId}
-              onSelect={(id) => updateForm({ categoryId: id })}
-              appLang={appLang}
-            />
-        </section>
+          <div className="flex-1 overflow-y-auto no-scrollbar pt-2">
+            <TabsContent value="basic" className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
+              <div className="flex gap-4 items-start">
+                {(props.newPhotoData || props.editPhotoPreview) && (
+                  <div className="w-1/3 shrink-0 space-y-2">
+                     <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
+                        {isProcessingImage && (
+                          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
+                            <RefreshCcw className="text-white animate-spin" size={24} />
+                          </div>
+                        )}
+                        <img src={props.newPhotoData || props.editPhotoPreview || undefined} className="w-full h-full object-contain" alt="Preview" />
+                     </div>
+                     <div className="flex gap-2">
+                       <button 
+                         onClick={rotatePhoto}
+                         disabled={isProcessingImage}
+                         className="flex-1 text-[10px] font-bold bg-white text-slate-600 p-1.5 rounded-xl border border-slate-200 active:bg-slate-50 disabled:opacity-50"
+                       >
+                         旋转 90°
+                       </button>
+                     </div>
+                  </div>
+                )}
+                <div className="flex-1 space-y-3">
+                  <div className="space-y-1.5">
+                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">产品名称 / PRODUCT NAME</h3>
+                    <input 
+                      key={editPhotoId || 'new'}
+                      type="text" 
+                      placeholder="輸入名稱..." 
+                      defaultValue={formState.name} 
+                      onBlur={e => updateForm({ name: e.target.value.toUpperCase().trim() })} 
+                      className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-base md:text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+                    />
+                  </div>
+                </div>
+              </div>
 
-        <section className="space-y-2">
-             <PhotoTagSelector 
-                tags={tags}
-                selectedTagIds={safeArray<string>(formState.tagIds)}
-                onChange={(newIds) => updateForm({ tagIds: newIds })}
-                addTag={async (name) => { return await addTag(name); }}
-                updateTag={async (id, name) => { await updateTag(id, name); return true; }}
-                deleteTag={async (id) => { await deleteTag(id); return true; }}
-             />
-          </section>
-
-        <section className="space-y-4">
-          <FormSectionHeader 
-            title="厂商名称" 
-            subtitle="MANUFACTURER" 
-            onAction={() => {
-              setPromptDialog({
-                title: '新增厂商 / New Manufacturer',
-                placeholder: '输入厂商名称',
-                onSubmit: (name) => addManufacturer(name)
-              })
-            }} 
-          />
-          <ManufacturerList 
-            manufacturers={manufacturers}
-            selectedId={formState.manufacturerId}
-            onSelect={(id) => updateForm({ manufacturerId: id })}
-            onEdit={(mfr) => {
-                setPromptDialog({
-                  title: '编辑生产商 / Edit Manufacturer',
-                  placeholder: mfr.name,
-                  onSubmit: async (name) => {
-                    const trimmed = name.trim();
-                    if(trimmed) await updateManufacturer(mfr.id, trimmed);
-                  }
-                });
-            }}
-            onDelete={(mfr) => {
-                deleteManufacturer(mfr.id);
-            }}
-          />
-        </section>
-
-          <section className="space-y-3">
-             <button 
-               onClick={() => props.setShowOtherFields(!props.showOtherFields)}
-               className="w-full flex items-center justify-between p-5 bg-white border border-slate-200 rounded-3xl text-sm font-bold text-slate-800 shadow-sm transition-all"
-             >
-               <div className="flex items-center gap-3">
-                 <div className={`p-1 rounded-full bg-slate-100 text-slate-500 transition-transform duration-300 ${props.showOtherFields ? 'rotate-90' : ''}`}>
-                    <ChevronRight size={16} />
-                 </div>
-                 <span>其他详细信息 (编号、尺寸、备注)</span>
-               </div>
-               <div className="w-2 h-2 rounded-full bg-slate-200"></div>
-             </button>
-             
-             {props.showOtherFields && (
-                <div className="space-y-3 pt-2">
-                  <DimensionEditor 
-                    dimensions={safeArray<Dimension>(formState.dimensions)}
-                    onChange={(newDims) => updateForm({ dimensions: newDims })}
-                    showAiButton={!!handleSingleAiAnalyze}
-                    isAnalyzing={isAnalyzing}
-                    onAiAnalyze={() => {
-                      const data = newPhotoData || editPhotoPreview;
-                      if (!data) return;
-                      if (handleSingleAiAnalyzeCallback) {
-                        handleSingleAiAnalyzeCallback(data, formState.categoryId || undefined, editPhotoId || undefined, formState, updateForm, handleSingleAiAnalyze);
-                      } else if (handleSingleAiAnalyze) {
-                        handleSingleAiAnalyze(data, formState.categoryId || undefined);
-                      }
-                    }}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1.5">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">編號 / CODE</h3>
+                  <input 
+                    type="text" 
+                    placeholder="編號..." 
+                    value={formState.manual_code || ''} 
+                    onChange={e => updateForm({ manual_code: e.target.value })} 
+                    className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">型號 / MODEL</h3>
+                  <input 
+                    type="text" 
+                    placeholder="型號..." 
+                    value={formState.model_number || ''} 
+                    onChange={e => updateForm({ model_number: e.target.value })} 
+                    className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold outline-none focus:border-blue-500 shadow-sm" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1">價格 / PRICE</h3>
+                  <input 
+                    type="text" 
+                    placeholder="價格..." 
+                    value={formState.price || ''} 
+                    onChange={e => updateForm({ price: e.target.value })} 
+                    className="w-full bg-white border border-slate-200 p-4 rounded-2xl text-sm font-bold text-blue-600 outline-none focus:border-blue-500 shadow-sm" 
+                  />
+                </div>
+              </div>
+            </TabsContent>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">多语言说明 / MULTI-LANG DESCRIPTIONS</span>
-                    </div>
+            <TabsContent value="org" className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
+              <section className="space-y-4">
+                  <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
+                  <CategoryGrid 
+                    categories={categories}
+                    selectedId={formState.categoryId}
+                    onSelect={(id) => updateForm({ categoryId: id })}
+                    appLang={appLang}
+                  />
+              </section>
 
-                    <div className="space-y-3">
-                      <div className="space-y-1.5">
-                        <span className="text-[9px] font-black text-slate-400 uppercase px-1">中文说明</span>
-                        <textarea 
-                          placeholder="输入中文产品说明..." 
-                          value={formState.description_translations?.zh || formState.description || ''} 
-                          onChange={e => {
-                            const val = e.target.value;
-                            updateForm({ 
-                              description: val, 
-                              description_translations: { ...(formState.description_translations || {}), zh: val } 
-                            });
-                          }} 
-                          className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-24 text-sm font-medium outline-none focus:border-blue-500" 
-                        />
-                      </div>
+              <section className="space-y-2">
+                   <PhotoTagSelector 
+                      tags={tags}
+                      selectedTagIds={safeArray<string>(formState.tagIds)}
+                      onChange={(newIds) => updateForm({ tagIds: newIds })}
+                      addTag={async (name) => { return await addTag(name); }}
+                      updateTag={async (id, name) => { await updateTag(id, name); return true; }}
+                      deleteTag={async (id) => { await deleteTag(id); return true; }}
+                   />
+                </section>
 
-                      <div className="space-y-1.5">
-                        <span className="text-[9px] font-black text-slate-400 uppercase px-1">English Description</span>
-                        <textarea 
-                          placeholder="Enter English description..." 
-                          value={formState.description_translations?.en || ''} 
-                          onChange={e => {
-                            const val = e.target.value;
-                            updateForm({ 
-                              description_translations: { ...(formState.description_translations || {}), en: val } 
-                            });
-                          }} 
-                          className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-24 text-sm font-medium outline-none focus:border-blue-500" 
-                        />
-                      </div>
+              <section className="space-y-4">
+                <FormSectionHeader 
+                  title="厂商名称" 
+                  subtitle="MANUFACTURER" 
+                  onAction={() => {
+                    setPromptDialog({
+                      title: '新增厂商 / New Manufacturer',
+                      placeholder: '输入厂商名称',
+                      onSubmit: (name) => addManufacturer(name)
+                    })
+                  }} 
+                />
+                <ManufacturerList 
+                  manufacturers={manufacturers}
+                  selectedId={formState.manufacturerId}
+                  onSelect={(id) => updateForm({ manufacturerId: id })}
+                  onEdit={(mfr) => {
+                      setPromptDialog({
+                        title: '编辑生产商 / Edit Manufacturer',
+                        placeholder: mfr.name,
+                        onSubmit: async (name) => {
+                          const trimmed = name.trim();
+                          if(trimmed) await updateManufacturer(mfr.id, trimmed);
+                        }
+                      });
+                  }}
+                  onDelete={(mfr) => {
+                      deleteManufacturer(mfr.id);
+                  }}
+                />
+              </section>
+            </TabsContent>
 
-                      <div className="space-y-1.5">
-                        <span className="text-[9px] font-black text-slate-400 uppercase px-1">Bahasa Melayu</span>
-                        <textarea 
-                          placeholder="Masukkan penerangan Bahasa Melayu..." 
-                          value={formState.description_translations?.ms || ''} 
-                          onChange={e => {
-                            const val = e.target.value;
-                            updateForm({ 
-                              description_translations: { ...(formState.description_translations || {}), ms: val } 
-                            });
-                          }} 
-                          className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-24 text-sm font-medium outline-none focus:border-blue-500" 
-                        />
-                      </div>
-                    </div>
+            <TabsContent value="details" className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <DimensionEditor 
+                dimensions={safeArray<Dimension>(formState.dimensions)}
+                onChange={(newDims) => updateForm({ dimensions: newDims })}
+                showAiButton={!!handleSingleAiAnalyze}
+                isAnalyzing={isAnalyzing}
+                onAiAnalyze={() => {
+                  const data = newPhotoData || editPhotoPreview;
+                  if (!data) return;
+                  if (handleSingleAiAnalyzeCallback) {
+                    handleSingleAiAnalyzeCallback(data, formState.categoryId || undefined, editPhotoId || undefined, formState, updateForm, handleSingleAiAnalyze);
+                  } else if (handleSingleAiAnalyze) {
+                    handleSingleAiAnalyze(data, formState.categoryId || undefined);
+                  }
+                }}
+              />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1 border-b border-slate-100 pb-2">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">多语言说明 / MULTI-LANG DESCRIPTIONS</span>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-black text-slate-400 uppercase px-1">中文说明 / CHINESE</span>
+                    <textarea 
+                      placeholder="输入中文产品说明..." 
+                      value={formState.description_translations?.zh || formState.description || ''} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        updateForm({ 
+                          description: val, 
+                          description_translations: { ...(formState.description_translations || {}), zh: val } 
+                        });
+                      }} 
+                      className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
+                    />
                   </div>
 
-               </div>
-             )}
-          </section>
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-black text-slate-400 uppercase px-1">English Description</span>
+                    <textarea 
+                      placeholder="Enter English description..." 
+                      value={formState.description_translations?.en || ''} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        updateForm({ 
+                          description_translations: { ...(formState.description_translations || {}), en: val } 
+                        });
+                      }} 
+                      className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
+                    />
+                  </div>
 
-           {/* Bottom space */}
-           <div className="h-8"></div>
-       </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[9px] font-black text-slate-400 uppercase px-1">Bahasa Melayu</span>
+                    <textarea 
+                      placeholder="Masukkan penerangan Bahasa Melayu..." 
+                      value={formState.description_translations?.ms || ''} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        updateForm({ 
+                          description_translations: { ...(formState.description_translations || {}), ms: val } 
+                        });
+                      }} 
+                      className="w-full p-4 rounded-2xl border border-slate-200 bg-white h-32 text-sm font-medium outline-none focus:border-blue-500 shadow-sm" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
+
+        {/* Bottom space */}
+        <div className="h-10 shrink-0"></div>
+      </div>
     </div>
   );
 };

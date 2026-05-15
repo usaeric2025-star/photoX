@@ -1,5 +1,6 @@
 import { Category, Tag } from '../types';
 import { normalizeTagIds } from '../utils/aiNormalizer';
+import { AI_CONFIG } from '../constants/config';
 
 const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -185,7 +186,7 @@ OUTPUT JSON example:
     
     // Internal timeout to prevent hangs
     const timeoutAbort = new AbortController();
-    const timeoutId = setTimeout(() => timeoutAbort.abort(), 45000);
+    const timeoutId = setTimeout(() => timeoutAbort.abort(), AI_CONFIG.TIMEOUT);
     
     // Combine signals if necessary
     let combinedSignal;

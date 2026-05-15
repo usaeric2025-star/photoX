@@ -112,6 +112,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
           const isPinned = (settings?.pinnedTags || []).includes(String(tag.id));
+          const isDisabled = !isSelected && selectedTagIds.length >= 3;
 
           return (
             <div key={tag.id} className="relative">
@@ -139,12 +140,13 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                   }
                 }}
                 className={cn(
-                  "px-3 py-2 rounded-lg text-[11px] font-bold transition-all border select-none flex items-center gap-1.5 w-auto shadow-sm",
+                  "px-3 py-2 rounded-lg text-[11px] font-bold transition-all border select-none flex items-center gap-1.5 w-auto shadow-sm min-h-[44px] active:scale-95",
                   isSelected 
                     ? "bg-blue-600 text-white border-blue-600 z-10" 
                     : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 active:bg-slate-50",
                   isHot && !isSelected && "border-amber-300 bg-amber-50 text-amber-800",
-                  isHot && isSelected && "ring-2 ring-amber-400"
+                  isHot && isSelected && "ring-2 ring-amber-400",
+                  isDisabled && "opacity-30 grayscale saturate-50"
                 )}
               >
                 <span className={cn(

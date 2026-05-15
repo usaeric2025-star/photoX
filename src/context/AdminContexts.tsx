@@ -57,13 +57,14 @@ export interface AdminPhotoContextType {
   handleBatchAiIdentify: (photos: Photo[], existingTaskId?: string) => Promise<void>;
   handleGroupAiIdentify: (photos: Photo[]) => Promise<void>;
   handlePhotoImport: (e: React.ChangeEvent<HTMLInputElement>, isGroup: boolean) => Promise<void>;
-  deletePhoto: (ids: string[], isBatch: boolean) => Promise<void>;
+  deletePhoto: (ids: string | string[]) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<ApiResponse>;
   handleGroupPhotos: (ids: string[]) => Promise<ApiResponse>;
   handleUngroup: (groupId: string) => Promise<ApiResponse>;
   saveNewPhoto: () => Promise<void>;
   saveBatchEdit: () => Promise<void>;
   updatePhoto: (id: string, updates: Partial<Photo>) => Promise<void>;
+  updatePhotosBulk: (ids: string[], updates: Partial<Photo>, taskName?: string) => Promise<void>;
   updateTag: (id: string, name: string) => Promise<void>;
   deleteTag: (id: string) => Promise<void>;
   addTag: (name: string) => Promise<Tag>;

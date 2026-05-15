@@ -1,9 +1,5 @@
 
 import { useGalleryContext } from '../context/GalleryContext';
-import { photoApi } from '../api/photos';
-import { groupApi } from '../api/groups';
-import { tagApi } from '../api/tags';
-import { categoryApi } from '../api/categories';
 import { saveData } from '../utils/indexedDB';
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
@@ -15,7 +11,11 @@ export function useDelete() {
     photos, user 
   } = useGalleryContext();
 
-  const deletePhotos = async (idOrIds: string | string[]): Promise<{ success: boolean, error?: any }> => {
+  const deletePhotos = async (
+    idOrIds: string | string[], 
+    onProgress?: (current: number, total: number) => void,
+    signal?: AbortSignal
+  ): Promise<{ success: boolean, error?: any }> => {
     const ids = safeArray(Array.isArray(idOrIds) ? idOrIds : [idOrIds]);
     const sPhotos = safeArray(photos);
     const photosToDelete = sPhotos.filter(p => ids.includes(p.id));
@@ -30,7 +30,7 @@ export function useDelete() {
 
       if (userId) {
           const { deletePhotosBatch } = await import('../services/photoMutationService');
-          await deletePhotosBatch(userId, photosToDelete);
+          await deletePhotosBatch(userId, photosToDelete, onProgress, signal);
       }
       return { success: true };
     } catch (err) {

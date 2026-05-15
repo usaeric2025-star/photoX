@@ -76,6 +76,8 @@ export const translations = {
     saveSuccess: 'Information saved successfully!',
     refresh: 'Refresh',
     seriesStory: 'Series Story',
+    loadMore: 'Load More',
+    endOfList: 'End of list',
   },
   zh: {
     galleryName: '画廊',
@@ -154,6 +156,8 @@ export const translations = {
     saveSuccess: '信息保存成功！',
     refresh: '刷新数据',
     seriesStory: '系列故事',
+    loadMore: '加载更多',
+    endOfList: '已经到底了',
   },
   ms: {
     galleryName: 'Galeri',
@@ -232,6 +236,8 @@ export const translations = {
     saveSuccess: 'Maklumat berjaya disimpan!',
     refresh: 'Segar Semula',
     seriesStory: 'Kisah Siri',
+    loadMore: 'Muat lagi',
+    endOfList: 'Tamat senarai',
   }
 };
 

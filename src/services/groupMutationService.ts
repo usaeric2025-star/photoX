@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { ProductGroup } from '../types';
+import { showSystemError } from '../context/ErrorContext';
 
 const TABLE_NAME = 'groups';
 
@@ -57,6 +58,7 @@ export const updateGroup = async (groupId: string, updates: Partial<ProductGroup
 
     if (error) {
         console.error("Failed to update group:", error);
+        showSystemError(`Update Group Fail: ${error.message}`);
         throw new Error(error.message);
     }
 };
@@ -70,6 +72,7 @@ export const upsertGroup = async (group: Partial<ProductGroup> & { id: string })
 
     if (error) {
         console.error("Failed to upsert group:", error);
+        showSystemError(`Upsert Group Fail: ${error.message}`);
         throw new Error(error.message);
     }
 };
@@ -85,6 +88,7 @@ export const createGroup = async (groupData: ProductGroup) => {
 
     if (error) {
         console.error("Failed to create group:", error);
+        showSystemError(`Create Group Fail: ${error.message}`);
         throw new Error(error.message);
     }
     return data;
@@ -98,6 +102,7 @@ export const deleteGroup = async (id: string, userId?: string) => {
     const { error } = await query;
     if (error) {
         console.error(`Failed to delete group ${id}:`, error);
+        showSystemError(`Delete Group Fail: ${error.message}`);
         throw new Error(error.message);
     }
 };

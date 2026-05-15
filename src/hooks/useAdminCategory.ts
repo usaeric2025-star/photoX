@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
-import { categoryApi } from '../api/categories';
-import { tagApi } from '../api/tags';
-import { photoApi } from '../api/photos';
-import { Category, Tag, SubCategory, Photo } from '../types';
+import { Category, Tag, SubCategory } from '../types';
 import { DEFAULT_CATEGORIES, DEFAULT_TAGS } from '../constants';
 import { loadData, saveData } from '../utils/indexedDB';
 import { useGalleryContext } from '../context/GalleryContext';
@@ -90,7 +87,7 @@ export const useAdminCategory = (adminUI: {
       setTags(nextTags);
       await saveData('product_tags', nextTags);
       
-      await tagApi.update(tagId, upName);
+      await updateTagInDB(tagId, upName);
     } catch (err) {
       // Revert local state if cloud failed
       const error = err instanceof Error ? err : new Error(String(err));
@@ -186,7 +183,7 @@ export const useAdminCategory = (adminUI: {
     try {
       const trimmed = name.trim();
       if (!trimmed) return;
-      const saved = await categoryApi.create(trimmed);
+      const saved = await addCategoryToDB(trimmed);
       if (saved) {
         const nextCategories = [...categories, saved];
         setCategories(nextCategories);
@@ -203,7 +200,7 @@ export const useAdminCategory = (adminUI: {
       const nextCategories = safeArray(categories).map(c => String(c.id) === String(id) ? { ...c, ...updates } : c);
       setCategories(nextCategories);
       await saveData('product_categories', nextCategories);
-      await categoryApi.update(id, updates);
+      await updateCategoryInDB(id, updates);
     } catch (err) {
       handleError(err, '更新分类失败');
     }
@@ -341,7 +338,7 @@ export const useAdminCategory = (adminUI: {
 
   const addTag = async (name: string) => {
     try {
-      const saved = await tagApi.create(name);
+      const saved = await addTagToDB(name);
       if(saved) {
         setTags(prev => safeArray(prev).concat(saved).sort((a,b) => a.name.localeCompare(b.name)));
         await saveData('product_tags', safeArray(tags).concat(saved).sort((a,b) => a.name.localeCompare(b.name)));

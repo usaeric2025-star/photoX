@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Photo, Category, ProductGroup, Manufacturer, Dimension } from '../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../lib/ui-helpers';
+import { Skeleton } from './ui/Skeleton';
 
 // ... (retain props and other logic)
 
@@ -69,6 +70,8 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     }
   };
 
+  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+
   useEffect(() => {
     setActiveLang(lang || 'zh');
   }, [lang]);
@@ -79,13 +82,16 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     
     // Fetch group context if part of a group
     if (photo?.groupId) {
+      setIsGroupDataLoading(true);
       import('../services/groupService').then(m => {
         m.getGroupById(photo.groupId!).then(data => {
           setGroupData(data);
-        });
+          setIsGroupDataLoading(false);
+        }).catch(() => setIsGroupDataLoading(false));
       });
     } else {
       setGroupData(null);
+      setIsGroupDataLoading(false);
     }
   }, [photo?.id, photo?.groupId]);
 
@@ -186,9 +192,19 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           </button>
         </div>
 
+        {/* Progressive Loading Background */}
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={photo.thumb_url || ''} 
+            className={`w-full h-full object-contain blur-xl opacity-30 transition-opacity duration-1000 ${isImageLoading ? 'opacity-30' : 'opacity-0'}`}
+            aria-hidden="true"
+          />
+        </div>
+
         {isImageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-             <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+             <div className="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin mb-4 shadow-xl"></div>
+             <Skeleton className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Loading High-Res</Skeleton>
           </div>
         )}
         <div className={`relative w-full h-full flex items-center justify-center overflow-hidden`}>
@@ -209,9 +225,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
             />
           ) : (
             <>
-              {/* Placeholder for loading state */}
-              <div 
-                className={`absolute inset-0 bg-slate-950 transition-opacity duration-300 ${isImageLoading ? 'opacity-100' : 'opacity-0'}`}
+              {/* Thumbnail Placeholder - Sharp version of what's already in the gallery */}
+              <img 
+                src={photo.thumb_url || ''}
+                className={`absolute inset-0 z-5 object-contain h-full w-full transition-opacity duration-500 ${isImageLoading ? 'opacity-100' : 'opacity-0'}`}
+                aria-hidden="true"
               />
               <img 
                 key={photo.id}
@@ -223,7 +241,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                   return `${url}${url.includes('?') ? '&' : '?'}t=${t}`;
                 })()}
                 alt={photo.name || 'Photo'}
-                className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-300 ${isImageLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`} 
+                className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-700 ${isImageLoading ? 'opacity-0 scale-105 blur-md' : 'opacity-100 scale-100 blur-0'}`} 
                 onLoad={() => {
                   setIsImageLoading(false);
                 }}
@@ -430,7 +448,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                       </div>
 
                       {/* Photo Description if exists */}
-                      {(photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && photo.description)) && (
+                      {(photo.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && photo.description)) ? (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-1.5">
                             <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
@@ -444,20 +462,29 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                             </p>
                           </div>
                         </div>
-                      )}
+                      ) : null}
 
                       {/* Group Story (Series Story) if exists and photo is in group */}
-                      {groupData && (groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && groupData.description)) && (
+                      {photo.groupId && (
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-3 bg-blue-600 rounded-full" />
                             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t.seriesStory || 'Series Context'}</h3>
                           </div>
-                          <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md">
-                            <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic opacity-80">
-                              {groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? groupData.description : '')}
-                            </p>
-                          </div>
+                          
+                          {isGroupDataLoading ? (
+                            <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md space-y-2">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-5/6" />
+                              <Skeleton className="h-4 w-4/6" />
+                            </div>
+                          ) : groupData && (groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' && groupData.description)) ? (
+                            <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md">
+                              <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic opacity-80">
+                                {groupData.description_translations?.[activeLang as 'zh'|'en'|'ms'] || (activeLang === 'zh' ? groupData.description : '')}
+                              </p>
+                            </div>
+                          ) : null}
                         </div>
                       )}
                    </div>

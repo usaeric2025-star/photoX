@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, CheckSquare, Settings2, Eye, EyeOff, LogIn, Plus, Globe, RefreshCcw, ChevronDown, FileText, CheckCircle2, Menu, LayoutTemplate, AlertCircle } from 'lucide-react';
+import { Skeleton } from '../ui/Skeleton';
 import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminSession, useAdminUI } from '../../context/AdminContexts';
 import { useGalleryContext } from '../../context/GalleryContext';
@@ -90,7 +91,7 @@ export const AdminHeader: React.FC<Props> = ({
               </div>
               {isInfiniteMode && (
                 <div className="flex items-center gap-1 pl-1 border-l border-[#1D3557]/10 ml-0.5">
-                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  <Skeleton className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                   <span className="text-xs font-semibold text-green-600">INF</span>
                 </div>
               )}
@@ -182,7 +183,7 @@ export const AdminHeader: React.FC<Props> = ({
                   title={t.batchAi}
                 >
                   {isAnalyzing ? (
-                    <span className="animate-pulse text-[9px] font-bold">{batchProgress.current}</span>
+                    <Skeleton className="text-[9px] font-bold bg-transparent text-white">{batchProgress.current}</Skeleton>
                   ) : (
                     <Sparkles size={18} />
                   )}
@@ -223,9 +224,9 @@ export const AdminHeader: React.FC<Props> = ({
                   >
                     <Menu size={18} />
                     {errors.length > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center border-2 border-[#FDFAF6] shadow-sm animate-pulse-slow">
+                      <Skeleton className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center border-2 border-[#FDFAF6] shadow-sm">
                         <span className="text-[8px] font-black text-white">{errors.length > 9 ? '9+' : errors.length}</span>
-                      </span>
+                      </Skeleton>
                     )}
                   </button>
                   <AnimatePresence>

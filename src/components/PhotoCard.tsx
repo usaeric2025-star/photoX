@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Photo, Category, Manufacturer } from '../types';
-import { X, Layers, Heart, EyeOff } from 'lucide-react';
+import { X, Layers, Heart, EyeOff, Check, Image as ImageIcon } from 'lucide-react';
+import { Skeleton } from './ui/Skeleton';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';
 
@@ -74,6 +75,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
   }, [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]);
 
+  const cardSelectedClasses = isAdminMode && isMultiSelect && isSelected 
+    ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
+    : 'hover:scale-[1.02] active:scale-[0.95]';
+
+  const [isImageLoaded, setIsImageLoaded] = React.useState(false);
+
   return (
     <div 
       onContextMenu={(e) => {
@@ -100,20 +107,34 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           onLightboxOpen(index);
         }
       }}
-      className={`aspect-square bg-white rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all active:scale-[0.95] group ${isAdminMode && isMultiSelect && isSelected ? 'ring-2 ring-blue-500 scale-[0.95]' : ''} ${photo.isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
+      className={`aspect-square bg-slate-50 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
+      {!isImageLoaded && (
+        <Skeleton className="absolute inset-0 bg-slate-100 flex items-center justify-center rounded-xl">
+          <ImageIcon className="text-slate-300 w-8 h-8" />
+        </Skeleton>
+      )}
+
       <img 
         draggable={false}
         loading="lazy"
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover transition-opacity duration-500 ${isAdminMode && isMultiSelect && isSelected ? 'opacity-50' : 'opacity-100'} ${photo.isHidden ? 'opacity-70' : ''}`}
-        onLoad={(e) => {
-          (e.currentTarget as HTMLImageElement).style.opacity = '1';
+        className={`w-full h-full object-cover transition-all duration-700 ${isImageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.isHidden ? 'opacity-70' : ''}`}
+        onLoad={() => {
+          setIsImageLoaded(true);
         }}
-        style={{ opacity: 0 }}
       />
+
+      {/* Selected Indicator (Blue Overlay + Icon) */}
+      {isAdminMode && isMultiSelect && (
+        <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
+           <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 group-hover:opacity-100'}`}>
+              {isSelected && <Check size={16} className="text-white sm:size-20" />}
+           </div>
+        </div>
+      )}
 
       {/* Top Left Indicators (Group only) */}
         <div className="absolute top-1 left-1 z-10 flex gap-0.5">
@@ -134,19 +155,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         </div>
       )}
 
-      {/* Top Right Admin Actions */}
-      {isAdminMode && isMultiSelect && isSelected && (
-        <div className="absolute top-1 right-1 bg-blue-600 text-white p-0.5 rounded-full shadow-lg z-10">
-          <X size={10} />
-        </div>
-      )}
       {isAdminMode && onTogglePinned && (
          <button 
            onClick={(e) => {
              e.stopPropagation();
              onTogglePinned(photo);
            }}
-           className={`absolute top-1 ${isAdminMode && isMultiSelect && isSelected ? 'right-7' : 'right-2'} bg-black/50 p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''} z-10`}
+           className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''} z-10`}
          >
            <Heart size={12} className={photo.isPinned ? 'fill-current' : ''} />
          </button>
