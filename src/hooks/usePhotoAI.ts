@@ -85,6 +85,7 @@ export const usePhotoAI = (
 
   const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
     setAiDebugInfo(null);
+    setLoadingState('analyzing'); // Set loading state to disable button
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     const sPhotosToProcess = safeArray(photosToProcess);
     const unProcessed = sPhotosToProcess.filter(p => {
@@ -261,6 +262,7 @@ export const usePhotoAI = (
             currentAnalysisControllers.current.delete(taskId);
         }
         setBatchProgress({ current: 0, total: 0 });
+        setLoadingState('idle'); 
     }
   };
 
@@ -392,6 +394,7 @@ export const usePhotoAI = (
     const sGroupPhotos = safeArray(groupPhotos);
     if (sGroupPhotos.length === 0) return;
     setAiDebugInfo(null);
+    setLoadingState('analyzing'); 
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     if (!effectiveKey) throw new Error('请先在管理设置中设定 AI 密钥');
 
@@ -511,6 +514,7 @@ export const usePhotoAI = (
           clearTimeout(task.timeoutId);
           currentAnalysisControllers.current.delete(taskId);
       }
+      setLoadingState('idle');
     }
   };
 
