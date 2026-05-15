@@ -425,6 +425,12 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         parsingPart = partPrefixMatch[2];
       }
 
+      // Helper to strip non-numeric/non-decimal characters just in case
+      const cleanNum = (s: string) => {
+          const match = s.match(/(\d+(\.\d+)?)/);
+          return match ? parseFloat(match[1]) : 0;
+      };
+
       const nums = parsingPart.match(/(\d+(\.\d+)?)/g) || [];
       const hasH = /H/i.test(parsingPart);
       const hasW = /W/i.test(parsingPart);
@@ -461,9 +467,14 @@ export const normalizeDimensions = (dims: any[]): any[] => {
         if (nums.length >= 3) width = parseFloat(nums[2]);
       }
       
+      // Clean label: remove Chinese, common unit labels, symbols.
+      const cleanedLabel = originalLabel.replace(/[\u4e00-\u9fa5]+/g, '')
+                                       .replace(/(cm|mm|inch|in|寸|["'”])/gi, '')
+                                       .trim();
+
       return { 
         ...d, 
-        label: originalLabel.trim(),
+        label: cleanedLabel,
         unit: d.unit === 'inch' ? 'inch' : 'cm',
         length,
         width,

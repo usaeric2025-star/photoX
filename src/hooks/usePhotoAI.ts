@@ -55,8 +55,10 @@ export const usePhotoAI = (
   photosRef: React.MutableRefObject<Photo[]>,
   handleError: (error: any, context?: string) => void
 ) => {
+  const [loadingState, setLocalLoadingState] = useState<'idle' | 'analyzing'>('idle');
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
+  const isAnalyzingRef = useRef(false);
   const currentAnalysisControllers = useRef<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>(new Map());
 
   const abortAnalysis = (taskId?: string) => {
@@ -97,9 +99,11 @@ export const usePhotoAI = (
     const sUnProcessed = safeArray(unProcessed);
     
     // Guard: Prevent double-triggering
-    if (loadingState === 'analyzing') return;
-
+    if (isAnalyzingRef.current) return;
+    isAnalyzingRef.current = true;
+    
     if (sUnProcessed.length === 0) {
+      isAnalyzingRef.current = false;
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
@@ -260,6 +264,7 @@ export const usePhotoAI = (
     } catch (err) {
         updateTask(taskId, { status: 'error', message: `錯誤: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
+        isAnalyzingRef.current = false;
         const task = currentAnalysisControllers.current.get(taskId);
         if (task) {
             clearTimeout(task.timeoutId);
@@ -522,5 +527,15 @@ export const usePhotoAI = (
     }
   };
 
-  return { handleSingleAiAnalyze, handleBatchAiIdentify, handleGroupAiIdentify, aiDebugInfo, setAiDebugInfo, batchProgress, abortAnalysis };
+  return { 
+    handleSingleAiAnalyze, 
+    handleBatchAiIdentify, 
+    handleGroupAiIdentify, 
+    aiDebugInfo, 
+    setAiDebugInfo, 
+    batchProgress, 
+    abortAnalysis,
+    loadingState,
+    setLoadingState: setLocalLoadingState
+  };
 };
