@@ -274,6 +274,7 @@ export const usePhotoImport = (
           setPhotos(prev => {
             const next = [...newPhotosDraft, ...prev];
             photosRef.current = next;
+            saveData('product_photos', next);
             return next;
           });
           await new Promise(resolve => setTimeout(resolve, 50));
