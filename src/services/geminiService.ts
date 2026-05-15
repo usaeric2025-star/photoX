@@ -111,7 +111,10 @@ export const analyzeProductPhoto = async (
 - "modelNumber": SKU/Model code found on labels (e.g., "B728"). If clear, use this.
 - If only one identification code is found, you can put it in BOTH "name" and "modelNumber".
 - "price": ONLY numeric part (e.g., "1200").
-- "dimensions": Array of objects with length/width/height (numbers).
+- "dimensions": Array of objects with length/width/height. 
+  - STRICTLY NUMERIC VALUES ONLY for length, width, height.
+  - MUST NOT contain any Chinese characters, symbols, or unit labels (like "cm/mm/寸") in the numeric fields.
+  - Label field MUST only contain English text or be empty.
 - FORBID putting dimensions or price into "name".
 - IMPORTANT: If a single product's dimensions are scattered, you MUST combine them.
 

@@ -215,10 +215,12 @@ export const usePhotoAI = (
             
             const batchFailures: string[] = [];
             batchResults.forEach((result, idx) => {
-              if (result.status === 'fulfilled') {
+              const photo = batch[idx];
+              // Only consider fulfilled if not aborted
+              const isAborted = currentAnalysisControllers.current.get(taskId)?.controller.signal.aborted;
+              if (result.status === 'fulfilled' && !isAborted) {
                 completedCount++;
-              } else {
-                const photo = batch[idx];
+              } else if (result.status === 'rejected' && (!result.reason || result.reason.name !== 'AbortError')) {
                 batchFailures.push(photo.name || photo.id.slice(0, 8));
                 handleError(result.reason, `AI 识别失败: ${photo.name?.slice(0, 10)}...`);
               }
@@ -370,13 +372,13 @@ export const usePhotoAI = (
         }
         
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
+        if (editPhotoId) {
+          setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
+          photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
+        }
+        handleError(err, 'AI 单图识别失败');
+        throw err;
       }
-      if (editPhotoId) {
-        setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
-        photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
-      }
-      handleError(err, 'AI 单图识别失败');
-      throw err;
     } finally {
       const task = currentAnalysisControllers.current.get(taskId);
       if (task) {
@@ -499,10 +501,10 @@ export const usePhotoAI = (
         
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
         handleError(err, '群组 AI 识别失败');
+        setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
+        photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
+        throw err;
       }
-      setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
-      photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
-      throw err;
     } finally {
       const task = currentAnalysisControllers.current.get(taskId);
       if (task) {
