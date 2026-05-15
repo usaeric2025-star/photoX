@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { Skeleton } from './ui/Skeleton';
+import { deduplicatePhotos } from '../services/photoSyncService';
 import { Tag, Category, Photo, Manufacturer, AppSettings, User, ApiResponse } from '../types';
 import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
@@ -223,6 +224,35 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           }
         } catch (error: any) {
           showToast(`添加失败: ${error.message}`, 'error');
+        }
+      }
+    });
+  };
+
+  const handleDeduplicate = async () => {
+    if (!user) {
+      showToast('请先登录云端', 'error');
+      return;
+    }
+
+    setAlertDialog({
+      title: '确认执行排重清理吗？',
+      message: '系统将扫描云端数据库，保留最早上传的版本，删除重复的照片记录。此操作不可撤销。',
+      confirmLabel: '执行排重',
+      onConfirm: async () => {
+        try {
+          await withLoading('syncing', async () => {
+            const { removed } = await deduplicatePhotos(user.id);
+            if (removed > 0) {
+              showToast(`排重完成！共清理了 ${removed} 张重复记录。`, 'success');
+              // Optionally trigger a refresh
+              await performPullSync();
+            } else {
+              showToast('未发现重复照片', 'info');
+            }
+          });
+        } catch (error: any) {
+          showToast(`排重失败: ${error.message}`, 'error');
         }
       }
     });
@@ -634,6 +664,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
               数据维护
             </h4>
             <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={handleDeduplicate}
+                disabled={isSyncing || !user}
+                className={BUTTON_STYLES.accent + " col-span-2"}
+              >
+                <Trash2 size={16} /> 排重清理 / Clean Duplicates
+              </button>
               <button 
                 onClick={() => {
                   const data = JSON.stringify({ photos, categories, tags, manufacturers });
