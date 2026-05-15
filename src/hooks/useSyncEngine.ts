@@ -172,10 +172,8 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 setCloudCount(finalPhotos.length);
             }
             
-            if (!effectiveSyncTime) {
-              console.log("SyncEngine: Full sync complete, setting visibleCount to cover all photos.");
-              setVisibleCount?.(Math.max(100, finalPhotos.length + 50));
-            }
+            // Fix scrolling and update issue: ensure visibleCount covers finalPhotos.length
+            setVisibleCount(prev => Math.max(prev, finalPhotos.length));
 
             localStorage.setItem('lastSyncTime', new Date().toISOString());
         } catch (err) {

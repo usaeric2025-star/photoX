@@ -219,7 +219,6 @@ export const usePhotoAI = (
                 completedCount++;
               } else {
                 const photo = batch[idx];
-                const errorMsg = result.reason?.message || '未知錯誤';
                 batchFailures.push(photo.name || photo.id.slice(0, 8));
                 handleError(result.reason, `AI 识别失败: ${photo.name?.slice(0, 10)}...`);
               }
@@ -246,12 +245,10 @@ export const usePhotoAI = (
             if (isAllSuccess) {
               toast.success(`AI 識別成功處理 ${completedCount} 張。`);
               setAiDebugInfo(null);
-            } else {
-              toast.warning(`AI 識別完成，但有部分圖片失敗。請檢查任務日誌。`);
             }
         } else {
             updateTask(taskId, { status: 'error', message: '任务执行失败。' });
-            toast.error('AI 识别失败。');
+            handleError(new Error('任务执行失败'), 'AI_BATCH_IDENTIFY');
         }
     } catch (err) {
         updateTask(taskId, { status: 'error', message: `錯誤: ${err instanceof Error ? err.message : String(err)}` });
@@ -373,7 +370,6 @@ export const usePhotoAI = (
         }
         
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
-        handleError(err, 'AI 识别失败');
       }
       if (editPhotoId) {
         setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
