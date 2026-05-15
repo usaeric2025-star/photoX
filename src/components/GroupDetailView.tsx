@@ -136,7 +136,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 </button>
                 <div className="flex flex-col min-h-[3rem]">
                   <div className="flex items-center gap-2">
-                     {isGroupDataLoading ? (
+                     {isGroupDataLoading && activeGroupPhotos.length === 0 ? (
                        <Skeleton className="h-6 w-32 bg-slate-200" />
                      ) : (
                        <h2 className="text-lg font-bold text-slate-800 tracking-tight">

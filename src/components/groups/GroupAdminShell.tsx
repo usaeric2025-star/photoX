@@ -362,7 +362,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                   }}
                 >
                   <div className="flex items-center gap-2 min-h-[1.5rem]">
-                    {isGroupDataLoading ? (
+                    {isGroupDataLoading && activeGroupPhotos.length === 0 ? (
                       <Skeleton className="h-6 w-32 bg-slate-200" />
                     ) : (
                       <>
