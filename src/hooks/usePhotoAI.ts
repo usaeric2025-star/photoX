@@ -55,7 +55,6 @@ export const usePhotoAI = (
   photosRef: React.MutableRefObject<Photo[]>,
   handleError: (error: any, context?: string) => void
 ) => {
-  const [loadingState, setLocalLoadingState] = useState<'idle' | 'analyzing'>('idle');
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const isAnalyzingRef = useRef(false);
@@ -534,8 +533,6 @@ export const usePhotoAI = (
     aiDebugInfo, 
     setAiDebugInfo, 
     batchProgress, 
-    abortAnalysis,
-    loadingState,
-    setLoadingState: setLocalLoadingState
+    abortAnalysis
   };
 };
