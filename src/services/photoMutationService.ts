@@ -543,6 +543,19 @@ export const clearGroupIdInCloud = async (groupId: string) => {
   return data;
 };
 
+export const ungroupPhotos = async (groupId: string) => {
+  return clearGroupIdInCloud(groupId);
+};
+
+export const groupPhotos = async (photoIds: string[]) => {
+  if (photoIds.length === 0) return;
+  const groupId = `group_${Date.now()}`;
+  return updatePhotosGroupInCloud(photoIds, { 
+    group_id: groupId,
+    is_group_cover: false 
+  });
+};
+
 export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {
   const { data, error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)

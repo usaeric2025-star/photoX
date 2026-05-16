@@ -22,9 +22,156 @@ const errorGuard = (name: string) => () => {
   throw new Error(`[Architecture Error] Illegal call to "${name}".`);
 };
 
+import { 
+  useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
+  useAddCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,
+  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation
+} from '../hooks/mutations/useAdminMutations';
+import { useUpdatePhotoMutation, useBatchUpdatePhotosMutation } from '../hooks/mutations/useUpdatePhoto';
+import { useDeletePhotoMutation } from '../hooks/mutations/useDeletePhoto';
+import { useGroupPhotosMutation, useUngroupMutation } from '../hooks/mutations/useGroupOperations';
+
+import { useAdminCategory } from '../hooks/useAdminCategory';
+import { useAdminPhotos } from '../hooks/useAdminPhotos';
+import { useAdminCore } from '../hooks/useAdminCore';
+import { usePhotoManagement } from '../hooks/usePhotoManagement';
+import { useDelete } from '../hooks/useDelete';
+import { ProductFormData } from '../types';
+
 export default function AdminView() {
   const { user, authChecked, logout } = useAuth();
   const navigate = useNavigate();
+
+  // Mutations
+  const addTagMutation = useAddTagMutation();
+  const updateTagMutation = useUpdateTagMutation();
+  const deleteTagMutation = useDeleteTagMutation();
+  const addCategoryMutation = useAddCategoryMutation();
+  const updateCategoryMutation = useUpdateCategoryMutation();
+  const deleteCategoryMutation = useDeleteCategoryMutation();
+  const addManufacturerMutation = useAddManufacturerMutation();
+  const updateManufacturerMutation = useUpdateManufacturerMutation();
+  const deleteManufacturerMutation = useDeleteManufacturerMutation();
+  const updatePhotoMutation = useUpdatePhotoMutation();
+  const batchUpdatePhotosMutation = useBatchUpdatePhotosMutation();
+  const deletePhotoMutation = useDeletePhotoMutation();
+  const groupPhotosMutation = useGroupPhotosMutation();
+  const ungroupMutation = useUngroupMutation();
+
+  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
+
+  const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
+  const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
+  const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
+  const { loadingState: loadingType, setLoadingState: setLoadingType, withLoading } = useLoading();
+  const [cloudCount, setCloudCount] = useState<number | null>(null);
+
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [accessPasscode, setAccessPasscode] = useState('');
+  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
+
+  const { 
+    photos, categories, tags, manufacturers, tagNameToIdMap
+  } = useGallery();
+  
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
+
+  const uiBasicValue = React.useMemo(() => ({ 
+    setAlertDialog, 
+    setPromptDialog, 
+    setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
+    setLoadingType,
+    loadingType,
+    withLoading,
+    setCloudCount,
+    cloudCount,
+    editPhotoId, setEditPhotoId,
+    batchEditIds, setBatchEditIds,
+    abortAnalysis: errorGuard('abortAnalysis')
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
+
+  const sessionBasicValue = React.useMemo(() => ({ 
+    settings,
+    setSettings,
+    setIsSyncing
+  }), [settings, setSettings, setIsSyncing]);
+
+  const { 
+    updateTag, deleteTag,
+    addCategory, updateCategory, deleteCategory, 
+    addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag, removeTagFromPhoto
+  } = useAdminCategory(uiBasicValue);
+
+  const { 
+    saveSettings,
+    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
+    handleUngroup, handleGroupPhotos 
+  } = useAdminCore(user);
+
+  const { 
+    batchProgress, 
+    aiDebugInfo, setAiDebugInfo, abortAnalysis, 
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
+    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk
+  } = useAdminPhotos(
+    user, 
+    settings?.gemini_api_key, 
+    settings?.provider || 'openrouter', 
+    settings?.custom_model || '', 
+    uiBasicValue,
+    sessionBasicValue,
+    addManufacturer
+  );
+
+  const { 
+    newPhotoData, setNewPhotoData, formState, updateForm, 
+    showOtherFields, setShowOtherFields, resetAddState, 
+    saveNewPhoto, saveBatchEdit 
+  } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
+
+  const quickAddTag = useCallback(() => {
+    setPromptDialog({
+      title: '自定义标签 / Custom Tag',
+      placeholder: '输入新标签名称 (例如: 清货)',
+      onSubmit: async (val: string) => {
+        const normalized = val.trim();
+        if (!normalized) return;
+        const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
+        if (existing) {
+          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
+          toast.error(`标签 "${normalized}" 已存在`);
+          return;
+        }
+        const saved = await addTag(normalized);
+        if (saved) {
+           updateForm((prev: ProductFormData) => ({ 
+             ...prev, 
+             tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
+           }));
+           toast.success(`已新增标签 "${normalized}"`);
+        }
+      }
+    });
+  }, [setPromptDialog, tags, addTag, updateForm]);
+
+  const quickAddManufacturer = useCallback(() => {
+    setPromptDialog({
+      title: '新增厂商 / New Manufacturer',
+      placeholder: '输入新厂商名称',
+      onSubmit: async (val: string) => {
+        const trimmed = val.trim();
+        if (!trimmed) return;
+        const saved = await addManufacturer(trimmed);
+        if (saved) {
+           updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
+           toast.success(`已新增厂商 "${trimmed}"`);
+        }
+      }
+    });
+  }, [setPromptDialog, addManufacturer, updateForm]);
+
+  const { deleteGroup } = useDelete();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -42,20 +189,7 @@ export default function AdminView() {
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
   const t = translations[lang] ?? translations.en;
 
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue } = useAdminDialogs();
-
-  const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
-  const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
-  const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
-  const { loadingState: loadingType, setLoadingState: setLoadingType, withLoading } = useLoading();
-  const [cloudCount, setCloudCount] = useState<number | null>(null);
-  const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
-
   const [pageError, setPageError] = useState<string | null>(null);
-
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [accessPasscode, setAccessPasscode] = useState('');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
   useEffect(() => {
     const handleError = (e: ErrorEvent) => {
@@ -84,42 +218,6 @@ export default function AdminView() {
     </div>
   ) : null;
 
-  const { 
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers
-  } = useGallery();
-  
-  useEffect(() => {
-    const loadInitialData = async () => {
-      const storedPhotos = await loadData('product_photos');
-      if (storedPhotos && Array.isArray(storedPhotos)) {
-        setPhotos(storedPhotos);
-      }
-    };
-    loadInitialData();
-  }, []);
-  
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
-  
-  const uiBasicValue = React.useMemo(() => ({ 
-    setAlertDialog, 
-    setPromptDialog, 
-    setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
-    setLoadingType,
-    loadingType,
-    withLoading,
-    setCloudCount,
-    cloudCount,
-    editPhotoId, setEditPhotoId,
-    batchEditIds, setBatchEditIds,
-    abortAnalysis: errorGuard('abortAnalysis')
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
-
-  const sessionBasicValue = React.useMemo(() => ({ 
-    settings,
-    setSettings,
-    setIsSyncing
-  }), [settings, setSettings, setIsSyncing]);
-
   const onRefresh = useCallback(() => 
     refreshCloudData(user, true, setCloudCount), 
     [user, refreshCloudData]);
@@ -136,45 +234,37 @@ export default function AdminView() {
   }), [user, settings, setSettings, geminiApiKey, accessPasscode, customModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
-    photos, setPhotos, categories, setCategories, tags, setTags,
-    manufacturers, setManufacturers,
-    handleSingleAiAnalyze: async () => ({}),
-    handleTranslate: async () => ({ en: '', ms: '' }),
-    handleBatchAiIdentify: async () => {},
-    handleGroupAiIdentify: async () => {},
-    handlePhotoImport: async () => {},
-    handleSingleAiAnalyzeCallback: async () => ({ success: true }),
-    handleGroupPhotos: async () => ({ success: true }),
-    handleUngroup: async () => ({ success: true }),
-    saveNewPhoto: async () => {},
-    saveBatchEdit: async () => {},
-    deletePhoto: async () => {},
-    deleteGroup: async () => ({ success: true }),
-    updateTag: async () => {},
-    deleteTag: async () => {},
-    addTag: async () => ({} as Tag),
-    updateCategory: async () => {},
-    deleteCategory: async () => {},
-    addCategory: async () => {},
-    addManufacturer: async () => ({} as Manufacturer),
-    updateManufacturer: async () => {},
-    deleteManufacturer: async () => {},
-    removeTagFromPhoto: async () => {},
-    quickAddTag: () => {},
-    quickAddManufacturer: () => {},
-    updatePhoto: async () => {},
-    updatePhotosBulk: async () => {}
-  }), [photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers]);
+    photos, categories, tags, manufacturers,
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
+    handleSingleAiAnalyzeCallback,
+    deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory,
+    addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag, removeTagFromPhoto,
+    quickAddTag,
+    quickAddManufacturer,
+    deleteGroup,
+    updatePhoto,
+    updatePhotosBulk
+  }), [
+    photos, categories, tags, manufacturers,
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
+    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, deleteGroup, updatePhoto, updatePhotosBulk
+  ]);
 
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    cloudCount, setCloudCount,
-    batchProgress: { current: 0, total: 0 },
-    aiDebugInfo,
-    setAiDebugInfo,
-    abortAnalysis: () => {}
-  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, aiDebugInfo, setAiDebugInfo, cloudCount, setCloudCount]);
+    loadingType, setLoadingType, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
+    isAnalyzing: loadingType === 'analyzing',
+    cloudCount, setCloudCount
+  }), [
+    activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    loadingType, setLoadingType, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
+    cloudCount, setCloudCount
+  ]);
 
   if (!authChecked) {
     return (

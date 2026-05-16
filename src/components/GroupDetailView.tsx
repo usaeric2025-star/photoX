@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup } from '../types';
 import { TranslationType } from '../lib/ui-helpers';
+import { sortGroupPhotos } from '../lib/filters';
 import { PhotoLightbox } from './PhotoLightbox';
 import { getGroupById } from '../services/groupService';
 import { Skeleton } from './ui/Skeleton';
@@ -20,17 +21,33 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
   onLongPressEnd?: () => void;
   shareGroup?: (photos: Photo[]) => void;
   t: TranslationType;
+  initialPhotoId?: string | null;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
-  const { activeGroupId, setActiveGroupId, photos, setPhotos, isAdminMode, shareGroup } = props;
+  const { activeGroupId, setActiveGroupId, photos, isAdminMode, shareGroup, initialPhotoId } = props;
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
-  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+
   const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const virtuosoRef = useRef<any>(null);
+  const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
+
+  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeGroupId && initialPhotoId) {
+       setCurrentHighlightId(initialPhotoId);
+       // Clear highlight after 5 seconds
+       const timer = setTimeout(() => setCurrentHighlightId(null), 5000);
+       return () => clearTimeout(timer);
+    } else {
+       setCurrentHighlightId(null);
+    }
+  }, [activeGroupId, initialPhotoId]);
 
   useEffect(() => {
     if (activeGroupId && containerRef.current) {
@@ -92,23 +109,34 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     // Use localGroupPhotos in public mode (to bypass pagination), props.photos in admin mode
     const sourcePhotos = isAdminMode ? photos : localGroupPhotos;
 
-    return sourcePhotos
+    const groupPhotos = sourcePhotos
       .filter(p => {
         const pGid = p.groupId || (p as any).group_id;
         return String(pGid) === String(activeGroupId);
       })
-      .filter(p => isAdminMode || !p.isHidden || p.isGroupCover)
-      .sort((a, b) => {
-        if (a.isGroupCover) return -1;
-        if (b.isGroupCover) return 1;
-        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
-          return a.groupOrder - b.groupOrder;
-        }
-        if (a.groupOrder !== undefined) return -1;
-        if (b.groupOrder !== undefined) return 1;
-        return (a.item_code || '').localeCompare(b.item_code || '');
-      });
+      .filter(p => isAdminMode || !p.isHidden || p.isGroupCover);
+
+    return sortGroupPhotos(groupPhotos);
   }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);
+
+  useEffect(() => {
+    if (activeGroupId && initialPhotoId) {
+      // Auto-scroll to the photo if list is loaded
+      if (!isLoading && activeGroupPhotos.length > 0) {
+        const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
+        if (index !== -1) {
+          // VirtuosoGrid scrollTo might need a small delay
+          setTimeout(() => {
+             virtuosoRef.current?.scrollToIndex({
+                index,
+                align: 'center',
+                behavior: 'smooth'
+             });
+          }, 300);
+        }
+      }
+    }
+  }, [activeGroupId, initialPhotoId, isLoading, activeGroupPhotos]);
 
   if (!activeGroupId) return null;
 
@@ -197,7 +225,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
              </div>
            ) : (
              <GroupGridView 
+               virtuosoRef={virtuosoRef}
                photos={activeGroupPhotos} 
+               highlightId={currentHighlightId}
                onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
              />
            )}

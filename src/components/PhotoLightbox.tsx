@@ -5,7 +5,7 @@ import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight, Share2, Check, RefreshCcw } from 'lucide-react';
 import { Photo, Category, ProductGroup, Manufacturer, Dimension } from '../types';
-import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName, TranslationType } from '../lib/ui-helpers';
+import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName, TranslationType, getCacheBustedImageUrl } from '../lib/ui-helpers';
 import { Skeleton } from './ui/Skeleton';
 
 // ... (retain props and other logic)
@@ -45,6 +45,8 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
   const [isCopied, setIsCopied] = useState(false);
 
+  if (index === null || !photo) return null;
+
   const handleShare = () => {
     if (!photo?.image_hash) return;
     const url = `${window.location.origin}/h/${photo.image_hash}`;
@@ -57,7 +59,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   const slides = React.useMemo(() => {
     return (displayPhotos || [])
       .filter(p => !!p)
-      .map(p => ({ src: p.image_url || p.uri || '' }));
+      .map(p => ({ src: getCacheBustedImageUrl(p, 'image') }));
   }, [displayPhotos]);
 
   const handleDownload = async () => {
@@ -135,10 +137,10 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   const onTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
+    setTouchStart(e.targetTouches[0]?.clientX);
   };
 
-  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0]?.clientX);
 
   const onTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
@@ -149,12 +151,10 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
     if (isRightSwipe) onPrev();
   };
 
-  if (index === null || !photo) return null;
-
   // Header/Meta info calculation using shared helpers
-  const catName = getTranslatedCategoryName(photo.categoryId, categories, lang, t);
+  const catName = getTranslatedCategoryName(photo.categoryId, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
-  const photoDisplayName = getPhotoDisplayName(photo, categories, lang, t);
+  const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
 
   return (
     <motion.div 
@@ -243,12 +243,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
               <img 
                 key={photo.id}
                 referrerPolicy="no-referrer"
-                src={(() => {
-                  const url = photo.image_url || photo.uri || '';
-                  if (!url || url.startsWith('data:')) return url;
-                  const t = new Date(photo.updatedAt || photo.createdAt || '0').getTime();
-                  return `${url}${url.includes('?') ? '&' : '?'}t=${t}`;
-                })()}
+                src={getCacheBustedImageUrl(photo, 'image')}
                 alt={photo.name || 'Photo'}
                 className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-700 ${isImageLoading ? 'opacity-0 scale-105 blur-md' : 'opacity-100 scale-100 blur-0'}`} 
                 onLoad={() => {

@@ -127,6 +127,12 @@ export const loadAllPhotosFromCloud = async (
     const tagIds = (tagsRes.data || []).map(t => t.id);
     const catIds = (catsRes.data || []).map(c => c.id);
 
+    let photoIdsFromTags: string[] = [];
+    if (tagIds.length > 0) {
+      const { data: ptData } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
+      if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
+    }
+
     let orSegments = [
       `name.ilike.%${q}%`,
       `manual_code.ilike.%${q}%`,
@@ -137,6 +143,10 @@ export const loadAllPhotosFromCloud = async (
 
     if (catIds.length > 0) {
       orSegments.push(`category_id.in.(${catIds.join(',')})`);
+    }
+
+    if (photoIdsFromTags.length > 0) {
+      orSegments.push(`id.in.(${photoIdsFromTags.join(',')})`);
     }
 
     query = query.or(orSegments.join(','));
@@ -222,6 +232,12 @@ export const getPhotoCount = async (
     const tagIds = (tagsRes.data || []).map(t => t.id);
     const catIds = (catsRes.data || []).map(c => c.id);
 
+    let photoIdsFromTags: string[] = [];
+    if (tagIds.length > 0) {
+      const { data: ptData } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
+      if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
+    }
+
     let orSegments = [
       `name.ilike.%${q}%`,
       `manual_code.ilike.%${q}%`,
@@ -232,6 +248,10 @@ export const getPhotoCount = async (
 
     if (catIds.length > 0) {
       orSegments.push(`category_id.in.(${catIds.join(',')})`);
+    }
+
+    if (photoIdsFromTags.length > 0) {
+      orSegments.push(`id.in.(${photoIdsFromTags.join(',')})`);
     }
 
     query = query.or(orSegments.join(','));

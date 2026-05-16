@@ -40,7 +40,9 @@ export function filterPhotos(
   photos: Photo[],
   options: FilterOptions,
   tags: Tag[],
-  categories?: Category[]
+  categories?: Category[],
+  preCalculatedTagMap?: Map<string, string[]>,
+  preCalculatedCatMap?: Map<string, string[]>
 ): Photo[] {
   if (!Array.isArray(photos)) return [];
   
@@ -69,17 +71,19 @@ export function filterPhotos(
     const q = searchQuery.toLowerCase();
     
     // Pre-calculate tag names and category names for each photo to avoid O(N*M) in filter
-    const tagMap = new Map<string, string[]>();
-    tags.forEach(t => {
-      const terms = [t.name.toLowerCase()];
-      if (Array.isArray(t.aliases)) {
-        t.aliases.forEach(a => terms.push(a.toLowerCase()));
-      }
-      tagMap.set(String(t.id), terms);
-    });
+    const tagMap = preCalculatedTagMap || new Map<string, string[]>();
+    if (!preCalculatedTagMap) {
+      tags.forEach(t => {
+        const terms = [t.name.toLowerCase()];
+        if (Array.isArray(t.aliases)) {
+          t.aliases.forEach(a => terms.push(a.toLowerCase()));
+        }
+        tagMap.set(String(t.id), terms);
+      });
+    }
     
-    const catMap = new Map<string, string[]>();
-    if (categories) {
+    const catMap = preCalculatedCatMap || new Map<string, string[]>();
+    if (!preCalculatedCatMap && categories) {
       categories.forEach(c => {
         const terms = [(c.zh || c.name || '').toLowerCase()];
         if (Array.isArray(c.aliases)) {
@@ -172,25 +176,40 @@ export function filterPhotos(
   return result;
 }
 
+export function sortGroupPhotos(photos: Photo[]): Photo[] {
+  return [...photos].sort((a, b) => {
+    if (a.isGroupCover && !b.isGroupCover) return -1;
+    if (!a.isGroupCover && b.isGroupCover) return 1;
+    
+    const aOrder = a.groupOrder ?? (a as any).group_order;
+    const bOrder = b.groupOrder ?? (b as any).group_order;
+
+    if (aOrder !== undefined && bOrder !== undefined) {
+      return aOrder - bOrder;
+    }
+    if (aOrder !== undefined) return -1;
+    if (bOrder !== undefined) return 1;
+
+    return (a.item_code || '').localeCompare(b.item_code || '');
+  });
+}
+
 export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'asc' | 'desc' = 'desc'): Photo[] {
   const cleanedPhotos = cleanPhotos(photos);
   if (cleanedPhotos.length === 0 && Array.isArray(photos) && photos.length > 0) return [];
   if (!showGroupsCollapsed) return cleanedPhotos;
 
-  const groupCovers = new Map<string, Photo>();
+  const groups = new Map<string, Photo[]>();
   const groupMaxTime = new Map<string, number>();
 
   cleanedPhotos.forEach(p => {
     if (p.groupId) {
+      if (!groups.has(p.groupId)) groups.set(p.groupId, []);
+      groups.get(p.groupId)!.push(p);
+
       const time = p.createdAtTimestamp || new Date(p.createdAt || (p as any).created_at || 0).getTime();
-      
       const maxT = groupMaxTime.get(p.groupId) || 0;
       groupMaxTime.set(p.groupId, Math.max(maxT, time));
-      
-      const existing = groupCovers.get(p.groupId);
-      if (!existing || (p.isGroupCover && !existing.isGroupCover)) {
-        groupCovers.set(p.groupId, p);
-      }
     }
   });
 
@@ -202,8 +221,9 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
       representatives.push(p);
     } else if (!groupsSeen.has(p.groupId)) {
       groupsSeen.add(p.groupId);
-      const coverData = groupCovers.get(p.groupId);
-      const cover = coverData ? { ...coverData } : { ...p, groupId: p.groupId };
+      const groupList = groups.get(p.groupId) || [];
+      const sorted = sortGroupPhotos(groupList);
+      const cover = { ...sorted[0] };
       cover._time = groupMaxTime.get(p.groupId)!;
       representatives.push(cover);
     }

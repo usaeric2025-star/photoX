@@ -35,9 +35,9 @@ export const useAdminPhotos = (
   addManufacturer?: (name: string) => Promise<Manufacturer>
 ) => {
   const {
-    photos, setPhotos,
+    photos,
     categories,
-    tags, setTags, tagNameToIdMap,
+    tags, tagNameToIdMap,
     manufacturers
   } = useGallery();
 
@@ -88,7 +88,7 @@ export const useAdminPhotos = (
   const aiHook = usePhotoAI(
     user, geminiApiKey, aiProvider, customModel, 
     categories, tags, manufacturers, 
-    setPhotos, setTags, tagNameToIdMap, 
+    tagNameToIdMap, 
     addTask, updateTask, removeTask,
     photosRef,
     handleError
@@ -98,21 +98,21 @@ export const useAdminPhotos = (
   const importHook = usePhotoImport(
     user, adminUI, adminSession, geminiApiKey, aiProvider, customModel,
     categories, tags, manufacturers,
-    setPhotos, setCloudCount, addManufacturer!,
+    setCloudCount, addManufacturer!,
     runWithLoading, addTask, updateTask, aiHook.abortAnalysis,
-    tagNameToIdMap, setTags, photosRef,
+    tagNameToIdMap, photosRef,
     handleError
   );
 
   // 3. Initialize Photo Mutations Hook
   const mutationHook = usePhotoMutations(
-    user, setPhotos, handleError, deletePhotos, photosRef,
+    user, handleError, deletePhotos, photosRef,
     addTask, updateTask, removeTask
   );
 
   return {
     // Photos & Basic State
-    photos, setPhotos,
+    photos,
     isImporting: currentLoadingState === 'importing',
     cloudCount, setCloudCount,
     

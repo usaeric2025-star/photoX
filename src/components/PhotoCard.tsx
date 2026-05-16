@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Photo, Category, Manufacturer } from '../types';
 import { X, Layers, Heart, EyeOff, Check, Image as ImageIcon } from 'lucide-react';
 import { Skeleton } from './ui/Skeleton';
-import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType } from '../lib/ui-helpers';
+import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';
 
 interface PhotoCardProps {
@@ -33,9 +33,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned
 }) => {
+  if (!photo) return null;
+
   const mfrName = useMemo(() => {
-    return getManufacturerName(photo.manufacturerId || photo.sub_category, manufacturers);
-  }, [photo.manufacturerId, photo.sub_category, manufacturers]);
+    return getManufacturerName(photo?.manufacturerId || photo?.sub_category, manufacturers);
+  }, [photo?.manufacturerId, photo?.sub_category, manufacturers]);
 
   const displayCatName = useMemo(() => {
     return getTranslatedCategoryName(photo.categoryId || photo.category_id, categories, lang, t);
@@ -62,17 +64,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [photo.tagIds, tagMap]);
 
   const thumbSrc = useMemo(() => {
-    const url = photo.thumb_url || photo.image_url || photo.uri;
-    if (!url) return undefined;
-    
-    // Do not append timestamp to data URIs (base64)
-    if (url.startsWith('data:')) return url;
-    
-    // Add cache busting based on updatedAt
-    const timestamp = photo.updatedAt ? new Date(photo.updatedAt).getTime() : 
-                      (photo.createdAt ? new Date(photo.createdAt).getTime() : Date.now());
-                      
-    return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+    return getCacheBustedImageUrl(photo, 'thumb');
   }, [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]);
 
   const cardSelectedClasses = isAdminMode && isMultiSelect && isSelected 

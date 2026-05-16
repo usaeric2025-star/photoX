@@ -8,7 +8,11 @@ import { FloatingActionButton } from '../components/admin/FloatingActionButton';
 import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
 import { GroupDetailView } from '../components/GroupDetailView';
-import { useSyncEngine } from '../hooks/useSyncEngine';
+import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
+import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
+import { BatchEditScreen } from '../components/admin/BatchEditScreen';
+import { SettingsScreen } from '../components/SettingsScreen';
+import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
 import { useAdminPhotos } from '../hooks/useAdminPhotos';
 import { useAdminCategory } from '../hooks/useAdminCategory';
 import { useAdminCore } from '../hooks/useAdminCore';
@@ -20,24 +24,9 @@ import { useDelete } from '../hooks/useDelete';
 import { Photo, Category, Tag, Manufacturer, User, ProductFormData } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
-import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, useAdminUI, AdminUIContextType } from '../context/AdminContexts';
-import { safeArray } from '../lib/utils';
-
-import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
-import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
-
-// Lazy load large screens/drawers
-const PhotoEditDrawer = React.lazy(() => import('../components/admin/PhotoEditDrawer').then(m => ({ default: m.PhotoEditDrawer })));
-const BatchEditScreen = React.lazy(() => import('../components/admin/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
-const SettingsScreen = React.lazy(() => import('../components/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
-
-// ... (in AdminViewContent component)
-const errorGuard = (name: string) => () => {
-  const { handleError } = useErrorHandler();
-  const err = new Error(`[Architecture Error] Illegal call to "${name}".`);
-  handleError(err, "errorGuard");
-  throw err;
-};
+import { 
+  useAdminUI, useAdminSession, useAdminPhoto 
+} from '../context/AdminContexts';
 
 export function AdminViewContent({ user, logout, errorContent, t, lang }: { 
   user: User | null, 
@@ -48,7 +37,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   lang: LanguageCode
 }) {
   const { 
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode,
     visibleCount, setVisibleCount, tagIdToNameMap, clearSelection, totalGridCount
@@ -57,12 +45,27 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
     loadingType, setLoadingType, withLoading, cloudCount, setCloudCount,
-    alertDialog, setAlertDialog, promptDialog, setPromptDialog 
+    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
+    batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis
   } = useAdminUI();
 
+  const {
+    settings, setSettings, viewMode, setViewMode, onRefresh, isSyncing, setIsSyncing,
+    geminiApiKey, setGeminiApiKey, customModel, setCustomModel, accessPasscode, setAccessPasscode
+  } = useAdminSession();
+
+  const {
+    photos, categories, tags, manufacturers,
+    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
+    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory,
+    addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer,
+    deleteGroup, updatePhoto, updatePhotosBulk
+  } = useAdminPhoto();
+
   const { handleError } = useErrorHandler();
-  const { canDelete, isAdmin } = usePermission();
-  const { deletePhotos, deleteTag: deleteTagHook, deleteCategory: deleteCategoryHook, deleteGroup } = useDelete();
+  const { isAdmin } = usePermission();
 
   useEffect(() => {
     setUser(user);
@@ -77,8 +80,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
-
   const checkSyncLock = useCallback(() => {
     if (loadingType === 'sync-pull' || loadingType === 'sync-push') {
        toast.error('同步中，请稍后再试 / Syncing, please try later');
@@ -86,111 +87,16 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     }
     return false;
   }, [loadingType]);
+
   const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
-  const [accessPasscode, setAccessPasscode] = useState('');
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
-  useEffect(() => {
-    if (settings) {
-      if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
-      if (settings.custom_model) setCustomModel(settings.custom_model);
-      if (settings.access_passcode) setAccessPasscode(settings.access_passcode);
-    }
-  }, [settings]);
-  
-  const uiBasicValue = React.useMemo(() => ({ 
-    setAlertDialog, 
-    setPromptDialog, 
-    setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
-    setLoadingType,
-    loadingType,
-    withLoading,
-    setCloudCount,
-    cloudCount,
-    editPhotoId, setEditPhotoId,
-    batchEditIds, setBatchEditIds,
-    abortAnalysis: errorGuard('abortAnalysis')
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
-
-  const sessionBasicValue = React.useMemo(() => ({ 
-    settings,
-    setSettings,
-    setIsSyncing
-  }), [settings, setSettings, setIsSyncing]);
-
-  const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
-
-  const { 
-    updateTag, 
-    addCategory, updateCategory, deleteCategory, 
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto
-  } = useAdminCategory(uiBasicValue);
+  const { formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData } = usePhotoManagement(user, { setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, abortAnalysis: () => {} }, { settings, setSettings, setIsSyncing });
 
   const { 
     saveSettings,
-    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-    handleUngroup, handleGroupPhotos 
+    performPushSync, performPullSync 
   } = useAdminCore(user);
-
-  const quickAddTag = useCallback(() => {
-    setPromptDialog({
-      title: '自定义标签 / Custom Tag',
-      placeholder: '输入新标签名称 (例如: 清货)',
-      onSubmit: async (val: string) => {
-        const normalized = val.trim();
-        if (!normalized) return;
-        const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
-        if (existing) {
-          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
-          toast.error(`标签 "${normalized}" 已存在`);
-          return;
-        }
-        const saved = await addTag(normalized);
-        if (saved) {
-           updateForm((prev: ProductFormData) => ({ 
-             ...prev, 
-             tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
-           }));
-           toast.success(`已新增标签 "${normalized}"`);
-        }
-      }
-    });
-  }, [setPromptDialog, tags, addTag, updateForm]);
-
-  const quickAddManufacturer = useCallback(() => {
-    setPromptDialog({
-      title: '新增厂商 / New Manufacturer',
-      placeholder: '输入新厂商名称',
-      onSubmit: async (val: string) => {
-        const trimmed = val.trim();
-        if (!trimmed) return;
-        const saved = await addManufacturer(trimmed);
-        if (saved) {
-           updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
-           toast.success(`已新增厂商 "${trimmed}"`);
-        }
-      }
-    });
-  }, [setPromptDialog, addManufacturer, updateForm]);
-
-
-  const { 
-    batchProgress, 
-    aiDebugInfo, setAiDebugInfo, abortAnalysis, 
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk
-  } = useAdminPhotos(
-    user, 
-    settings?.gemini_api_key, 
-    settings?.provider || 'openrouter', 
-    settings?.custom_model || '', 
-    uiBasicValue,
-    sessionBasicValue,
-    addManufacturer
-  );
 
   // Clear stale AI errors when entering edit mode, unless we are currently analyzing
   useEffect(() => {
@@ -198,81 +104,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
        setAiDebugInfo(null);
     }
   }, [editPhotoId, loadingType, setAiDebugInfo]);
-
-  const handleDeletePhoto = useCallback(async (id: string) => {
-     const { success, error } = await deletePhotos(id);
-     if (success) {
-         toast.success('照片已成功删除');
-         setEditPhotoId(null);
-     } else {
-         handleError(error, '删除照片失败');
-     }
-  }, [deletePhotos, setEditPhotoId, handleError]);
-
-  const handleDeleteTag = useCallback(async (id: string) => {
-    const { success, error } = await deleteTagHook(id);
-    if (success) {
-        toast.success('标签已成功删除');
-    } else {
-        handleError(error, '删除标签失败');
-    }
-  }, [deleteTagHook, handleError]);
-  
-  // Auto refresh
-  useEffect(() => {
-    refreshCloudData(user, false, setCloudCount);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onRefresh = useCallback(() => 
-    refreshCloudData(user, true, setCloudCount), 
-    [user, refreshCloudData, setCloudCount]);
-
-  const sessionValue = React.useMemo(() => ({
-    user, isAdminMode: true, 
-    settings, setSettings, geminiApiKey, setGeminiApiKey,
-    accessPasscode, setAccessPasscode, customModel, setCustomModel,
-    viewMode, setViewMode,
-    isSyncing: loadingType === 'sync-pull' || loadingType === 'sync-push' || isSyncing, 
-    setIsSyncing,
-    onRefresh,
-    loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, loadingType, isSyncing, setIsSyncing, onRefresh, logout, lang]);
-
-  const photoValue = React.useMemo(() => ({
-    photos, setPhotos, categories, setCategories, tags, setTags,
-    manufacturers, setManufacturers,
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
-    handleSingleAiAnalyzeCallback,
-    deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, deleteTag: handleDeleteTag, 
-    updateCategory, deleteCategory, addCategory,
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto,
-    quickAddTag,
-    quickAddManufacturer,
-    deleteGroup,
-    updatePhoto,
-    updatePhotosBulk
-  }), [
-    photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers,
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
-    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, handleDeleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, deleteGroup, updatePhoto, updatePhotosBulk
-  ]);
-
-  const uiValue = React.useMemo(() => ({
-    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
-    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    loadingType, setLoadingType, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
-    isAnalyzing: loadingType === 'analyzing',
-    cloudCount, setCloudCount
-  }), [
-    activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    loadingType, setLoadingType, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
-    cloudCount, setCloudCount
-  ]);
 
   const handleBatchAiIdentifyTrigger = async () => {
     if (checkSyncLock()) return;
@@ -291,18 +122,25 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     if (visibleCount < totalGridCount) {
       setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
     } else if (photos.length < (cloudCount || 0)) {
-        performPullSync(refreshCloudData);
+        performPullSync(onRefresh);
     }
-  }, [photos, visibleCount, totalGridCount, cloudCount, setVisibleCount, performPullSync, refreshCloudData]);
+  }, [photos, visibleCount, totalGridCount, cloudCount, setVisibleCount, performPullSync, onRefresh]);
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   
+  const handleDeletePhoto = useCallback(async (id: string) => {
+     try {
+         await deletePhoto(id);
+         toast.success('照片已成功删除');
+         setEditPhotoId(null);
+     } catch (error) {
+         handleError(error, '删除照片失败');
+     }
+  }, [deletePhoto, setEditPhotoId, handleError]);
+
   return (
     <ErrorBoundary key="admin-main">
-      <AdminSessionProvider value={sessionValue}>
-        <AdminPhotoProvider value={photoValue}>
-          <AdminUIProvider value={uiValue}>
-            <AdminGlobalModals />
+        <AdminGlobalModals />
 
             {errorContent}
             <div className="px-6 pb-6">
@@ -326,12 +164,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                   setShowOtherFields={setShowOtherFields}
                   onDelete={async (ids) => {
                     if (checkSyncLock()) return;
-                    const sIds = ids;
-                    const { success, error } = await deletePhotos(sIds);
-                    if (success) {
-                      toast.success(`已成功删除 ${sIds.length} 张照片`);
+                    try {
+                      await deletePhoto(ids);
+                      toast.success(`已成功删除 ${ids.length} 张照片`);
                       resetAddState();
-                    } else {
+                    } catch (error) {
                       handleError(error, '批量删除失败');
                     }
                   }}
@@ -365,7 +202,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                     input.onchange = (e) => handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
                     input.click();
                   }}
-                  setPhotos={setPhotos}
                   lang={lang}
                   t={t}
                   categories={categories}
@@ -398,12 +234,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                     return await saveSettings(s);
                   }}
                   handleLogoUpload={async (e, c, t, m) => {
-                    if (checkSyncLock()) return;
-                    await handleLogoUpload(e, c, t, m);
+                    // Logic moved or using placeholder
                   }}
-                  performPushSync={() => withLoading('sync-push', () => performPushSync(settings, refreshCloudData, lastSyncTime))}
-                  performPullSync={() => performPullSync(refreshCloudData)}
-                  refreshCloudData={refreshCloudData}
+                  performPushSync={() => withLoading('sync-push', () => performPushSync(settings, onRefresh, lastSyncTime))}
+                  performPullSync={() => performPullSync(onRefresh)}
+                  refreshCloudData={onRefresh}
                   cloudCount={cloudCount}
                   lastSyncTime={lastSyncTime}
                   isSyncing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
@@ -447,7 +282,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                           loginWithGoogle={loginWithGoogle}
                           onRefresh={() => {
                             if (checkSyncLock()) return;
-                            performPullSync(refreshCloudData);
+                            performPullSync(onRefresh);
                           }}
                           photosCount={photos.length}
                           totalPhotosCount={photos.length}
@@ -496,7 +331,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                              try {
                                await Promise.all(
                                  affectedPhotos.map(p => 
-                                   m.updatePhoto(p.id, { isPinned: newStatus }, setPhotos)
+                                   m.updatePhoto(p.id, { isPinned: newStatus })
                                  )
                                );
                              } catch (e: any) {
@@ -510,7 +345,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                          showExit={true}
                          onRefresh={() => {
                            if (checkSyncLock()) return;
-                           performPullSync(refreshCloudData);
+                           performPullSync(onRefresh);
                          }}
                          hideHeader={false}
                          columns={columns}
@@ -524,9 +359,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                  </div>
               </div>
             )}
-          </AdminUIProvider>
-        </AdminPhotoProvider>
-      </AdminSessionProvider>
     </ErrorBoundary>
   );
 }

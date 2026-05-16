@@ -64,6 +64,21 @@ export const isUncategorizedName = (name: string, t: TranslationType, catId?: st
 };
 
 /**
+ * Gets a cache-busted image URL.
+ */
+export const getCacheBustedImageUrl = (photo: Photo, type: 'image' | 'thumb' = 'image'): string => {
+  const url = type === 'thumb' ? (photo.thumb_url || photo.image_url || photo.uri) : (photo.image_url || photo.uri);
+  if (!url) return '';
+  if (url.startsWith('data:')) return url;
+  
+  const timestamp = photo.updatedAt ? new Date(photo.updatedAt).getTime() : 
+                   (photo.createdAt ? new Date(photo.createdAt).getTime() : 0);
+  
+  if (timestamp === 0) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;
+};
+
+/**
  * Gets the manufacturer name from the ID.
  */
 export const getManufacturerName = (

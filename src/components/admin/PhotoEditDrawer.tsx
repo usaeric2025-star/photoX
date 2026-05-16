@@ -42,7 +42,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     categories, 
     tags, 
     photos, 
-    setPhotos,
     manufacturers, 
     addTag,
     addManufacturer,
@@ -140,8 +139,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     const m = await import('../../services/photoMutationService');
                     await m.updatePhotoHidden(props.editPhotoId, nextValue);
                     
-                    // Update local context photos as well
-                    setPhotos(prev => prev.map(p => p.id === props.editPhotoId ? { ...p, isHidden: nextValue } : p));
                     toast.success(`已${nextValue ? '隐藏' : '显示'}产品`);
                   } catch (e) {
                     handleError(e, '自动保存可见性失败');
@@ -249,14 +246,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
 
                 if (isPartOfGroup) {
                   const photo = safeArray<Photo>(photos).find(p => p.id === editPhotoId);
-                  if (photo && photo.groupId) {
-                     setPhotos(prevPhotos => safeArray<Photo>(prevPhotos).map(p => {
-                         if (p.groupId === photo.groupId) {
-                             return { ...p, tagIds: formState.tagIds, categoryId: formState.categoryId };
-                         }
-                         return p;
-                     }));
-                  }
                 }
                 await props.saveNewPhoto();
               }}
@@ -410,7 +399,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 />
                 <ManufacturerList 
                   manufacturers={manufacturers}
-                  selectedId={formState.manufacturerId}
+                  selectedId={formState?.manufacturerId}
                   onSelect={(id) => updateForm({ manufacturerId: id })}
                   onEdit={(mfr) => {
                       setPromptDialog({

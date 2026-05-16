@@ -1,6 +1,7 @@
 import { useDelete } from './useDelete';
 import React, { useState, useCallback } from 'react';
-import { Photo, User, AppSettings, ProductFormData } from '../types';
+import { useGallery } from './useGallery';
+import { Photo, User, AppSettings, ProductFormData, Category } from '../types';
 import { safeArray } from '../lib/utils';
 import { 
   saveSettings as saveSettingsCloud, 
@@ -10,11 +11,13 @@ import {
 } from '../services/supabaseService';
 import { saveData } from '../utils/indexedDB';
 
-import { useGallery } from './useGallery';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from './queries/keys';
 
 export const useAdminCore = (user: User | null) => {
+  const queryClient = useQueryClient();
   const { deleteGroup } = useDelete();
-  const { photos, setPhotos, categories, manufacturers } = useGallery();
+  const { photos, categories, manufacturers } = useGallery();
 
   const saveSettings = useCallback(async (s: AppSettings) => {
     try {
@@ -51,7 +54,7 @@ export const useAdminCore = (user: User | null) => {
         if (result.categoryId && !catId && !formState.categoryId) {
           updates.categoryId = result.categoryId;
         } else if (result.newCategoryName && !catId && !formState.categoryId) {
-          const foundCat = safeArray(categories).find(c => c.zh === result.newCategoryName || c.en === result.newCategoryName || c.name === result.newCategoryName);
+          const foundCat = safeArray(categories).find((c: Category) => c.zh === result.newCategoryName || c.en === result.newCategoryName || c.name === result.newCategoryName);
           if (foundCat) updates.categoryId = foundCat.id;
         }
 
@@ -115,22 +118,21 @@ export const useAdminCore = (user: User | null) => {
     if (sIds.length < 2) return { success: false, error: 'Too few photos' };
     
     const existingGroupIds: string[] = Array.from(new Set(
-      sPhotos.filter(p => sIds.includes(p.id) && p.groupId).map(p => p.groupId as string)
+      sPhotos.filter((p: Photo) => sIds.includes(p.id) && p.groupId).map((p: Photo) => p.groupId as string)
     ));
     const sExistingGroupIds = safeArray(existingGroupIds);
     const groupIdToUse = sExistingGroupIds.length > 0 ? sExistingGroupIds[0]! : crypto.randomUUID();
-    const photoIdsToUpdate = sPhotos.filter(p => sIds.includes(p.id) || (p.groupId && sExistingGroupIds.includes(p.groupId))).map(p => p.id);
+    const photoIdsToUpdate = sPhotos.filter((p: Photo) => sIds.includes(p.id) || (p.groupId && sExistingGroupIds.includes(p.groupId))).map((p: Photo) => p.id);
     
     const sPhotoIdsToUpdate = safeArray(photoIdsToUpdate);
-    const updatedPhotos = sPhotos.map(p => sPhotoIdsToUpdate.includes(p.id) ? { ...p, groupId: groupIdToUse } : p);
-    setPhotos(updatedPhotos);
     try {
       await updatePhotosGroupInCloud(sPhotoIdsToUpdate, { group_id: groupIdToUse });
+      await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
       return { success: true };
     } catch (err) {
       return { success: false, error: err };
     }
-  }, [photos, setPhotos]);
+  }, [photos, queryClient]);
 
 
   return {

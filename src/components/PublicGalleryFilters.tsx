@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart } from 'lucide-react';
+import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Tag, AppSettings } from '../types';
 import { cn } from '../lib/utils';
@@ -70,9 +70,18 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
               placeholder={t.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/40 border border-brand-navy/5 rounded-xl py-2 pl-10 pr-4 text-base md:text-xs text-brand-navy placeholder-brand-navy/30 focus:outline-none focus:bg-white transition-colors shadow-sm"
+              className="w-full bg-white/40 border border-brand-navy/5 rounded-xl py-2 pl-10 pr-10 text-base md:text-xs text-brand-navy placeholder-brand-navy/30 focus:outline-none focus:bg-white transition-colors shadow-sm"
             />
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-navy/30" />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-brand-navy/30 hover:text-brand-navy transition-colors"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
           
           <div className="flex gap-1.5 shrink-0">

@@ -5,8 +5,7 @@ import { batchCreateTags } from '../services/supabaseService';
 export const resolveTagIdsBatch = async (
   tagNamesOrIds: string[],
   tags: Tag[],
-  tagNameToIdMap: Map<string, string>,
-  setTags: (updater: (prev: Tag[]) => Tag[]) => void
+  tagNameToIdMap: Map<string, string>
 ): Promise<string[]> => {
   // Helper for fuzzy matching: uppercase and remove non-alphas
   const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -45,8 +44,6 @@ export const resolveTagIdsBatch = async (
     }
 
     // NEW: Security fix to prevent re-creating deleted tags
-    // If it looks like an ID (numeric or UUID) but is NOT in the current tags list, 
-    // we should NOT treat it as a name to create. We skip it.
     const isNumericId = /^\d+$/.test(strItem);
     const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(strItem);
     
@@ -81,11 +78,6 @@ export const resolveTagIdsBatch = async (
 
   if (uniqueNewNames.length > 0) {
     newTagsMap = await batchCreateTags(uniqueNewNames);
-    // Update local tags state
-    setTags(prev => [
-      ...prev,
-      ...Array.from(newTagsMap.entries()).map(([name, id]) => ({ id: String(id), name, aliases: [] }))
-    ]);
   }
 
   // 3. Final mapping

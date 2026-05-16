@@ -4,7 +4,7 @@ import { updatePhotosGroupInCloud } from '../services/photoMutationService';
 import { toast } from 'sonner';
 
 export function useGroupSync(activeGroupId: string | null) {
-  const { photos, setPhotos } = useAdminPhoto();
+  const { photos } = useAdminPhoto();
   const { setAlertDialog, withLoading } = useAdminUI();
 
   const setCover = useCallback(async (photoId: string) => {
@@ -24,7 +24,6 @@ export function useGroupSync(activeGroupId: string | null) {
             }
             await updatePhotosGroupInCloud([photoId], { is_group_cover: true });
             
-            setPhotos(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isGroupCover: p.id === photoId } : p));
             toast.success('已设为封面');
           } catch (err: any) {
             toast.error(`设为封面失败: ${err.message}`);
@@ -32,7 +31,7 @@ export function useGroupSync(activeGroupId: string | null) {
         });
       }
     });
-  }, [activeGroupId, photos, setPhotos, setAlertDialog, withLoading]);
+  }, [activeGroupId, photos, setAlertDialog, withLoading]);
 
   return { setCover };
 }

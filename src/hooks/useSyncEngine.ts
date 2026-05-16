@@ -16,19 +16,15 @@ import { loadTagsFromCloud } from '../services/tagService';
 import { loadManufacturersFromCloud } from '../services/manufacturerService';
 import { uploadLogo } from '../services/settingService';
 
-import { useGallery } from './useGallery';
+import { useQueryClient } from '@tanstack/react-query';
+import { useGalleryStore } from '../store';
+import { QUERY_KEYS } from './queries/keys';
 import { useErrorHandler } from '../utils/errorHandler';
-
 import { PAGINATION } from '../constants/config';
-import { mergePhotos } from '../lib/photoSync';
 
 export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>) => {
-    const { 
-        setPhotos: setPublicPhotos, 
-        setCategories, 
-        setTags, 
-        setManufacturers,
-    } = useGallery();
+    const queryClient = useQueryClient();
+    const { isAdminMode } = useGalleryStore();
 
     const { handleError } = useErrorHandler();
 
@@ -112,80 +108,33 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'sync-pull' | 'sync-
         setCloudCount?: (c: number | null) => void
     ) => {
         return runWithSyncing('sync-pull', async () => {
-        console.log(`SyncEngine: Refresh started (Force: ${force}, User: ${user?.email})`);
-        try {
-            const localPhotos = await loadData('product_photos') || [];
-            let effectiveSyncTime = (force || localPhotos.length === 0) ? null : localStorage.getItem('lastSyncTime');
-            
-            // Fast check the total count to avoid partial sync glitches
-            const countCheck = await import('../services/photoService').then(m => m.getPhotoCount()).catch(() => null);
-            if (countCheck !== null && !force && effectiveSyncTime && localPhotos.length < countCheck) {
-                console.log(`SyncEngine: Cache correction. Local (${localPhotos.length}) < Cloud (${countCheck}).`);
-                effectiveSyncTime = null;
+            console.log(`SyncEngine: Invalidating queries...`);
+            try {
+                // Invalidate all related queries
+                await queryClient.invalidateQueries({ queryKey: ['photos'] });
+                await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
+                await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
+                await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
+                
+                // Fetch settings separately as they aren't in RQ yet
+                const cloudSettings = await fetchSettings().catch(err => { handleError(err, '获取设置失败'); return null; });
+                if (cloudSettings) {
+                    setSettings(cloudSettings);
+                    await saveData('product_settings', cloudSettings);
+                }
+                
+                // Fetch count for UI
+                const realCloudCount = await import('../services/photoService').then(m => m.getPhotoCount()).catch(() => null);
+                if (setCloudCount) {
+                    setCloudCount(realCloudCount);
+                }
+                
+                localStorage.setItem('lastSyncTime', new Date().toISOString());
+                console.log(`SyncEngine: Refresh triggered.`);
+            } catch (err) {
+                handleError(err, '云端同步异常');
+                throw err;
             }
-            
-            // 1. Fetch all photo updates/pages
-            const cloudPhotos = await fetchAllPages(effectiveSyncTime);
-
-            // 2. Fetch metadata in parallel
-            const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, realCloudCount] = await Promise.all([
-                fetchSettings().catch(err => { handleError(err, '获取设置失败'); return null; }),
-                loadManufacturersFromCloud().catch(err => { handleError(err, '获取厂商失败'); return null; }),
-                loadTagsFromCloud().catch(err => { handleError(err, '获取标签失败'); return null; }),
-                loadCategoriesFromCloud().catch(err => { handleError(err, '获取分类失败'); return []; }),
-                import('../services/photoService').then(m => m.getPhotoCount()).catch(() => null)
-            ]);
-            
-            // 3. Process Settings
-            if (cloudSettings) {
-                setSettings(cloudSettings);
-                await saveData('product_settings', cloudSettings);
-                if (cloudSettings.background_color) document.documentElement.style.setProperty('--custom-bg', cloudSettings.background_color);
-                if (cloudSettings.primary_color) document.documentElement.style.setProperty('--custom-text', cloudSettings.primary_color);
-                if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
-            }
-
-            // 4. Process Metadata Lists
-            if (cloudManufacturers) {
-                setManufacturers(cloudManufacturers);
-                await saveData('product_manufacturers', cloudManufacturers);
-            }
-
-            if (cloudTags) {
-              setTags?.(cloudTags);
-              await saveData('product_tags', cloudTags);
-            }
-
-            if (cloudCategories && cloudCategories.length > 0) {
-                const normalized = cloudCategories.map(c => ({
-                  ...c,
-                  id: String(c.id),
-                  name: c.name || c.zh || 'Uncategorized',
-                  subcategories: c.subcategories || [] 
-                }));
-                setCategories(normalized);
-                await saveData('product_categories', normalized);
-            } else {
-                setCategories([]);
-                await saveData('product_categories', []);
-            }
-            
-            // 5. Merge Photos & Final State Update
-            const finalPhotos = mergePhotos(localPhotos, cloudPhotos);
-            setPublicPhotos(finalPhotos);
-            await saveData('product_photos', finalPhotos);
-            
-            // 6. Update Cloud Count ONLY AT THE END to prevent flicker
-            if (setCloudCount) {
-                setCloudCount(realCloudCount !== null ? realCloudCount : finalPhotos.length);
-            }
-            
-            localStorage.setItem('lastSyncTime', new Date().toISOString());
-            console.log(`SyncEngine: Complete. Handled ${finalPhotos.length} total items.`);
-        } catch (err) {
-            handleError(err, '云端同步异常');
-            throw err;
-        }
         });
     }
 

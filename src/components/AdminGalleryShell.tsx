@@ -31,8 +31,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit, on
     clearSelection, 
     setIsMultiSelect,
     isMultiSelect,
-    togglePhotoSelection,
-    setPhotos
+    togglePhotoSelection
   } = useGallery();
 
   const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
@@ -51,7 +50,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit, on
     
     // Identify affected photos (the photo itself + any other photos in the same group)
     const affectedPhotos = photo.groupId 
-      ? photos.filter(p => p.groupId === photo.groupId)
+      ? photos.filter(p => p && p.groupId === photo.groupId)
       : [photo];
     
     try {
@@ -113,18 +112,18 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit, on
       onConfirm: async () => {
         try {
           // Identify groups before deletion
-          const groupsToCheck = new Set(photos.filter(p => selectedIds.includes(p.id) && p.groupId).map(p => p.groupId));
+          const groupsToCheck = new Set(photos.filter(p => p && selectedIds.includes(p.id) && p.groupId).map(p => p.groupId));
           
           await adminPhoto?.deletePhoto(selectedIds);
           clearSelection();
           
           // Check groups after deletion
           for (const groupId of groupsToCheck) {
-              const remainingPhotos = photos.filter(p => p.groupId === groupId && !selectedIds.includes(p.id));
+              const remainingPhotos = photos.filter(p => p && p.groupId === groupId && !selectedIds.includes(p.id));
               if (remainingPhotos.length <= 1) {
                   // Dissolve group: clear group_id for remaining photo if any, and delete group metadata
-                  if (remainingPhotos.length === 1) {
-                      await updatePhoto!(remainingPhotos[0].id, { groupId: null, isGroupCover: false });
+                  if (remainingPhotos.length === 1 && remainingPhotos[0] && updatePhoto) {
+                      await updatePhoto(remainingPhotos[0].id, { groupId: null, isGroupCover: false });
                   }
                   // Delete group metadata
                   await adminPhoto?.deleteGroup(groupId as string);
@@ -139,7 +138,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit, on
   };
 
   const handleBatchShare = async () => {
-    const filtered = photos.filter(p => selectedIds.includes(p.id));
+    const filtered = photos.filter(p => p && selectedIds.includes(p.id));
     const text = filtered.map(p => p.name || t.furniture).join(', ');
     try {
       if (navigator.share) {
@@ -192,15 +191,13 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit, on
         isAnalyzing={adminUI?.loadingType === 'analyzing'}
         setAlertDialog={(d) => adminUI?.setAlertDialog(d)}
         onSetGroupCover={async (id, groupId) => {
-          setPhotos(prev => prev.map(p => {
-             if (p.groupId !== groupId) return p;
-             return { ...p, isGroupCover: p.id === id };
-          }));
-          const groupPhotos = photos.filter(p => p.groupId === groupId);
+          const groupPhotos = photos.filter(p => p && p.groupId === groupId);
           try {
-             await Promise.all(
-                groupPhotos.map(p => updatePhoto(p.id, { isGroupCover: p.id === id }))
-             );
+             if (updatePhoto) {
+               await Promise.all(
+                  groupPhotos.map(p => updatePhoto(p.id, { isGroupCover: p.id === id }))
+               );
+             }
           } catch (err) {
              handleError(err, '设置封面失败');
           }

@@ -12,12 +12,14 @@ interface GroupGridViewProps {
   isMultiSelectMode?: boolean;
   selectedPhotoIds?: string[];
   getPhotoProps?: (photo: Photo) => React.HTMLAttributes<HTMLDivElement>;
+  highlightId?: string | null;
 }
 
-const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps, onPhotoClick, onPhotoContextMenu, longPressTimers }: {
+const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighlighted, extraProps, onPhotoClick, onPhotoContextMenu, longPressTimers }: {
   photo: Photo;
   isSelected: boolean;
   isMultiSelectMode: boolean;
+  isHighlighted?: boolean;
   extraProps: React.HTMLAttributes<HTMLDivElement>;
   onPhotoClick: (photo: Photo) => void;
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
@@ -28,7 +30,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps
   return (
     <div 
       {...extraProps}
-      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer h-full ${photo.isGroupCover ? 'ring-4 ring-brand-gold border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${extraProps.className || ''}`}
+      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer h-full ${photo.isGroupCover ? 'ring-4 ring-brand-gold border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${isHighlighted ? 'ring-4 ring-blue-400 animate-pulse bg-blue-50' : ''} ${extraProps.className || ''}`}
       onClick={(e) => {
          if (extraProps.onClick) extraProps.onClick(e);
          onPhotoClick(photo);
@@ -109,7 +111,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps
           </p>
           {photo.dimensions?.[0] && (
             <span className="text-[8px] font-black text-slate-300 truncate shrink-0 max-w-[50%] text-right">
-              {photo.dimensions[0].label}
+              {photo.dimensions[0]?.label}
             </span>
           )}
         </div>
@@ -118,14 +120,16 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps
   );
 });
 
-export const GroupGridView: React.FC<GroupGridViewProps> = ({
+export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.Ref<any> }> = ({
   photos,
   groupData,
   onPhotoClick,
   onPhotoContextMenu,
   isMultiSelectMode = false,
   selectedPhotoIds = [],
-  getPhotoProps
+  getPhotoProps,
+  virtuosoRef,
+  highlightId
 }) => {
   const longPressTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   
@@ -183,6 +187,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
   return (
     <div className={`flex-1 min-h-0 relative ${groupData?.isHidden ? 'grayscale opacity-70' : ''}`}>
       <VirtuosoGrid
+        ref={virtuosoRef}
         style={{ height: '100%', width: '100%' }}
         totalCount={photos.length}
         overscan={200}
@@ -196,6 +201,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
           if (!photo) return null;
           
           const isSelected = selectedPhotoIds.includes(photo.id);
+          const isHighlighted = highlightId === photo.id;
           const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
           
           return (
@@ -204,6 +210,7 @@ export const GroupGridView: React.FC<GroupGridViewProps> = ({
               photo={photo}
               isSelected={isSelected}
               isMultiSelectMode={isMultiSelectMode}
+              isHighlighted={isHighlighted}
               extraProps={extraProps}
               onPhotoClick={onPhotoClick}
               onPhotoContextMenu={onPhotoContextMenu}

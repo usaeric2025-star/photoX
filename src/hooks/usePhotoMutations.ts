@@ -1,17 +1,19 @@
 import { Photo, User, Task } from '../types';
 import { formatDate } from '../utils/dateFormat';
-import { saveData } from '../utils/indexedDB';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from './queries/keys';
 
 export const usePhotoMutations = (
   user: User | null,
-  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>,
   handleError: (error: unknown, context?: string) => void,
-  deletePhotos: (ids: string | string[], onProgress?: (current: number, total: number) => void, signal?: AbortSignal) => Promise<{ success: boolean; error?: Error }>,
+  deletePhotos: (ids: string | string[], photos: Photo[], onProgress?: (current: number, total: number) => void, signal?: AbortSignal) => Promise<{ success: boolean; error?: Error }>,
   photosRef: React.MutableRefObject<Photo[]>,
   addTask?: (t: Omit<Task, 'id'>) => string,
   updateTask?: (id: string, updates: Partial<Task>) => void,
   removeTask?: (id: string) => void
 ) => {
+  const queryClient = useQueryClient();
+
   const deletePhoto = async (idOrIds: string | string[]) => {
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
     
@@ -27,7 +29,7 @@ export const usePhotoMutations = (
         }
       });
       
-      const result = await deletePhotos(ids, (current: number, total: number) => {
+      const result = await deletePhotos(ids, photosRef.current, (current: number, total: number) => {
         updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在删除 ${current} / ${total}` });
       }, controller.signal);
       
@@ -38,7 +40,7 @@ export const usePhotoMutations = (
         setTimeout(() => removeTask(taskId), 5000);
       }
     } else {
-      await deletePhotos(idOrIds);
+      await deletePhotos(idOrIds, photosRef.current);
     }
   };
 
@@ -47,12 +49,6 @@ export const usePhotoMutations = (
     
     const updatedAt = formatDate(new Date());
     const finalUpdates = { ...updates, updatedAt };
-
-    // Optimistic UI Update
-    setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, ...finalUpdates } : p));
-    const nextPhotos = photosRef.current.map(p => ids.includes(p.id) ? { ...p, ...finalUpdates } : p);
-    photosRef.current = nextPhotos;
-    saveData('product_photos', nextPhotos);
 
     if (user) {
       if (ids.length > 1 && addTask && updateTask && removeTask) {
@@ -72,12 +68,10 @@ export const usePhotoMutations = (
             updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在处理 ${current} / ${total}` });
           }, controller.signal);
           updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
+          queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
           setTimeout(() => removeTask(taskId), 5000);
         } catch (e: any) {
-          if (controller.signal.aborted) {
-             // Operation aborted by user, no need to toast
-
-          } else {
+          if (!controller.signal.aborted) {
              updateTask(taskId, { status: 'error', message: '部分更新失败' });
              handleError(e, "批量云端同步失败");
           }
@@ -87,6 +81,7 @@ export const usePhotoMutations = (
         for (const id of ids) {
            await m.updatePhoto(id, finalUpdates).catch(e => handleError(e, "单张照片云端同步失败"));
         }
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
       }
     }
   };

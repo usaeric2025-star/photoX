@@ -42,16 +42,12 @@ export const useOptionalAdminSession = () => useContext(AdminSessionContext);
 export interface AdminPhotoContextType {
   // Data lists
   photos: Photo[];
-  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>;
   categories: Category[];
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
   tags: Tag[];
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>;
   manufacturers: Manufacturer[];
-  setManufacturers: React.Dispatch<React.SetStateAction<Manufacturer[]>>;
   
   // Method references
-  handleSingleAiAnalyze: (data: string, catId?: string) => Promise<any>;
+  handleSingleAiAnalyze: (data: string, catId?: string, editPhotoId?: string | null) => Promise<any>;
   handleTranslate: (zhText: string) => Promise<{ en: string, ms: string }>;
   handleSingleAiAnalyzeCallback?: (data: string, catId?: string, editPhotoId?: string, formState?: ProductFormData, updateFormFn?: (updates: Partial<ProductFormData>) => void, service?: any) => Promise<ApiResponse>;
   handleBatchAiIdentify: (photos: Photo[], existingTaskId?: string) => Promise<void>;
@@ -65,15 +61,15 @@ export interface AdminPhotoContextType {
   saveBatchEdit: () => Promise<void>;
   updatePhoto: (id: string, updates: Partial<Photo>) => Promise<void>;
   updatePhotosBulk: (ids: string[], updates: Partial<Photo>, taskName?: string) => Promise<void>;
-  updateTag: (id: string, name: string) => Promise<void>;
-  deleteTag: (id: string) => Promise<void>;
+  updateTag: (id: string, name: string) => Promise<any>;
+  deleteTag: (id: string) => Promise<any>;
   addTag: (name: string) => Promise<Tag>;
-  updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
-  deleteCategory: (id: string) => Promise<void>;
-  addCategory: (name: string) => Promise<void>;
+  updateCategory: (id: string, updates: Partial<Category>) => Promise<any>;
+  deleteCategory: (id: string) => Promise<any>;
+  addCategory: (name: string) => Promise<any>;
   addManufacturer: (name: string) => Promise<Manufacturer>;
-  updateManufacturer: (id: string, name: string) => Promise<void>;
-  deleteManufacturer: (id: string) => Promise<void>;
+  updateManufacturer: (id: string, name: string) => Promise<any>;
+  deleteManufacturer: (id: string) => Promise<any>;
   removeTagFromPhoto: (photoId: string, tagId: string) => Promise<void>;
   quickAddTag: () => void;
   quickAddManufacturer: () => void;

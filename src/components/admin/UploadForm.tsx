@@ -192,7 +192,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 key={mfr.id}
                 onClick={() => updateForm({ manufacturerId: String(mfr.id) })}
-                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all ${String(formState.manufacturerId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm active:bg-slate-50'}`}
+                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all ${String(formState?.manufacturerId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm active:bg-slate-50'}`}
               >
                 {mfr.name}
               </button>

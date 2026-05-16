@@ -1,17 +1,8 @@
 import { create } from 'zustand';
-import { Photo, Tag, Category, Manufacturer, AppSettings } from './types';
+import { AppSettings } from './types';
 
 interface GalleryState {
-  photos: Photo[];
-  tags: Tag[];
-  categories: Category[];
-  manufacturers: Manufacturer[];
-  settings: AppSettings | null;
-  cloudCount: number;
-  lastSyncTime: string | null;
-  isSyncing: boolean;
-  
-  // UI State migrated from GalleryContext
+  // UI State
   searchQuery: string;
   debouncedSearchQuery: string;
   filterCatId: string | null;
@@ -26,20 +17,9 @@ interface GalleryState {
   isStaffMode: boolean;
   user: any;
   isAdminMode: boolean;
-  page: number;
-  hasMore: boolean;
-  totalCloudCount: number;
+  settings: AppSettings | null;
   
   // Actions
-  setPhotos: (photos: Photo[] | ((prev: Photo[]) => Photo[])) => void;
-  setTags: (tags: Tag[] | ((prev: Tag[]) => Tag[])) => void;
-  setCategories: (categories: Category[] | ((prev: Category[]) => Category[])) => void;
-  setManufacturers: (manufacturers: Manufacturer[] | ((prev: Manufacturer[]) => Manufacturer[])) => void;
-  setSettings: (settings: AppSettings) => void;
-  setCloudCount: (count: number) => void;
-  setLastSyncTime: (time: string) => void;
-  setIsSyncing: (isSyncing: boolean) => void;
-  
   setSearchQuery: (query: string) => void;
   setDebouncedSearchQuery: (query: string) => void;
   setFilterCatId: (id: string | null) => void;
@@ -56,21 +36,10 @@ interface GalleryState {
   setIsStaffMode: (isStaff: boolean) => void;
   setUser: (user: any) => void;
   setIsAdminMode: (isAdmin: boolean) => void;
-  setPage: (page: number | ((prev: number) => number)) => void;
-  setHasMore: (hasMore: boolean) => void;
-  setTotalCloudCount: (count: number) => void;
+  setSettings: (settings: AppSettings | null) => void;
 }
 
 export const useGalleryStore = create<GalleryState>((set) => ({
-  photos: [],
-  tags: [],
-  categories: [],
-  manufacturers: [],
-  settings: null,
-  cloudCount: 0,
-  lastSyncTime: null,
-  isSyncing: false,
-
   searchQuery: '',
   debouncedSearchQuery: '',
   filterCatId: null,
@@ -85,30 +54,8 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   isStaffMode: false,
   user: null,
   isAdminMode: false,
-  page: 0,
-  hasMore: true,
-  totalCloudCount: 0,
+  settings: null,
 
-  setPhotos: (photos) => set((state) => {
-    const nextPhotos = typeof photos === 'function' ? photos(state.photos) : photos;
-    return { 
-      photos: nextPhotos.map(p => ({ ...p, tagIds: p.tagIds || [] }))
-    };
-  }),
-  setTags: (tags) => set((state) => ({ 
-    tags: typeof tags === 'function' ? tags(state.tags) : tags 
-  })),
-  setCategories: (categories) => set((state) => ({ 
-    categories: typeof categories === 'function' ? categories(state.categories) : categories 
-  })),
-  setManufacturers: (manufacturers) => set((state) => ({ 
-    manufacturers: typeof manufacturers === 'function' ? manufacturers(state.manufacturers) : manufacturers 
-  })),
-  setSettings: (settings) => set({ settings }),
-  setCloudCount: (cloudCount) => set({ cloudCount }),
-  setLastSyncTime: (lastSyncTime) => set({ lastSyncTime }),
-  setIsSyncing: (isSyncing) => set({ isSyncing }),
-  
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
   setFilterCatId: (filterCatId) => set({ filterCatId }),
@@ -133,9 +80,5 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setIsStaffMode: (isStaffMode) => set({ isStaffMode }),
   setUser: (user) => set({ user }),
   setIsAdminMode: (isAdminMode) => set({ isAdminMode }),
-  setPage: (page) => set((state) => ({
-    page: typeof page === 'function' ? page(state.page) : page
-  })),
-  setHasMore: (hasMore) => set({ hasMore }),
-  setTotalCloudCount: (totalCloudCount) => set({ totalCloudCount }),
+  setSettings: (settings) => set({ settings }),
 }));

@@ -202,7 +202,7 @@ export const BatchEditScreen = ({
           />
           <ManufacturerList 
             manufacturers={manufacturers}
-            selectedId={formState.manufacturerId}
+            selectedId={formState?.manufacturerId}
             onSelect={(id) => updateForm({ manufacturerId: id })}
           />
         </section>

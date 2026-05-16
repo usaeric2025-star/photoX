@@ -12,6 +12,8 @@ import { saveData } from '../utils/indexedDB';
 import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { safeArray } from '../lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from './queries/keys';
 
 // Helper functions 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
@@ -53,7 +55,6 @@ export const usePhotoImport = (
   categories: Category[],
   tags: Tag[],
   manufacturers: Manufacturer[],
-  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>,
   setCloudCount: (c: number | null) => void,
   addManufacturer: (name: string) => Promise<Manufacturer>,
   runWithLoading: <T>(state: any, fn: () => Promise<T>) => Promise<T>,
@@ -61,10 +62,10 @@ export const usePhotoImport = (
   updateTask: (id: string, updates: any) => void,
   abortAnalysis: () => void,
   tagNameToIdMap: Map<string, string>,
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
   photosRef: React.MutableRefObject<Photo[]>,
   handleError: (error: any, context?: string) => void
 ) => {
+  const queryClient = useQueryClient();
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
 
@@ -125,7 +126,6 @@ export const usePhotoImport = (
         setImportProgress(i + 1);
         
         try {
-          // Use the new centralized processing utility
           const { hash, dataUrl } = await processImageFile(file);
 
           const duplicate = photosRef.current.find(p => p.image_hash === hash);
@@ -165,17 +165,9 @@ export const usePhotoImport = (
             isAnalyzing: !!useAi
           };
           
-          // Optimistic local state update
-          setPhotos(prev => {
-            const next = [newPhoto, ...prev];
-            photosRef.current = next;
-            return next;
-          });
-          
           successCount++;
           
           if (useAi) {
-            // Async AI analysis logic (wrapped in closure to preserve photoId)
             (async (targetId: string, targetUri: string, initialPhoto: Photo) => {
                try {
                  const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
@@ -183,7 +175,6 @@ export const usePhotoImport = (
                  const result = cleanObject(resRaw);
                  const aiName = cleanAiName(result.name);
                  
-                 // Handle translations
                  if (result.description && apiKey) {
                    try {
                      const translations = await translateDescription(result.description, apiKey, customModel);
@@ -197,45 +188,34 @@ export const usePhotoImport = (
 
                  const finalTagIds = await resolveTagIdsBatch(
                    Array.from(new Set([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)])),
-                   tags, tagNameToIdMap, setTags
+                   tags, tagNameToIdMap
                  );
 
-                 setPhotos(prev => prev.map(p => {
-                    if (p.id !== targetId) return p;
-                    const updated = {
-                      ...p,
-                      isAnalyzing: false,
-                      name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
-                      categoryId: result.categoryId || p.categoryId,
-                      tagIds: finalTagIds.slice(0, 3),
-                      description_translations: result.description_translations || p.description_translations,
-                      model_number: p.model_number || result.modelNumber || '',
-                      dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : p.dimensions
-                    };
-                    
-                    if (user) {
-                      savePhotoToCloud(user.id, updated).then(persistedId => {
-                        setPhotos(curr => curr.map(item => 
-                          (item.id === targetId || item.id === persistedId) 
-                            ? { ...item, ...updated, id: persistedId } 
-                            : item
-                        ));
-                      }).catch(e => handleError(e, "AI 结果同步失败"));
-                    }
-                    return updated;
-                 }));
+                 const updated = {
+                   ...initialPhoto,
+                   isAnalyzing: false,
+                   name: shouldUpdateName(initialPhoto.name) ? (aiName || initialPhoto.name) : initialPhoto.name,
+                   categoryId: result.categoryId || initialPhoto.categoryId,
+                   tagIds: finalTagIds.slice(0, 3),
+                   description_translations: result.description_translations || initialPhoto.description_translations,
+                   model_number: initialPhoto.model_number || result.modelNumber || '',
+                   dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : initialPhoto.dimensions
+                 };
+                 
+                 if (user) {
+                   await savePhotoToCloud(user.id, updated);
+                   queryClient.invalidateQueries({ queryKey: ['photos'] });
+                   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
+                 }
                } catch (err) {
-                 setPhotos(prev => prev.map(p => p.id === targetId ? { ...p, isAnalyzing: false } : p));
+                 queryClient.invalidateQueries({ queryKey: ['photos'] });
                } finally {
                  updateAiProgress();
                }
             })(photoId, dataUrl, newPhoto);
           } else if (user) {
-            // Direct Cloud Save if AI is disabled
-            savePhotoToCloud(user.id, newPhoto).then(persistedId => {
-              setPhotos(curr => curr.map(item => 
-                item.id === photoId ? { ...item, id: persistedId } : item
-              ));
+            savePhotoToCloud(user.id, newPhoto).then(() => {
+              queryClient.invalidateQueries({ queryKey: ['photos'] });
             }).catch(e => handleError(e, "云端同步失败"));
           }
         } catch (err) {
@@ -245,7 +225,6 @@ export const usePhotoImport = (
         }
       } 
       
-      // Persist to indexedDB after batch loop completes
       saveData('product_photos', photosRef.current);
       setCloudCount(photosRef.current.length);
       setIsSyncing(false);

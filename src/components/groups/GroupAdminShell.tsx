@@ -35,7 +35,6 @@ export interface GroupAdminShellProps {
   onBatchEdit?: (ids: string[]) => void;
   onUngroup?: (groupId: string) => void;
   onAddPhotoToGroup?: () => void;
-  setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>;
   updateGroupPhotos?: (ids: string[], groupId: string | null) => void;
   onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
@@ -55,7 +54,7 @@ export interface GroupAdminShellProps {
   updatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
 }
 
-import { useGroupSync } from '../../hooks/useGroupSync';
+import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
 import { useAdminUI } from '../../context/AdminContexts';
 import { useErrorHandler } from '../../utils/errorHandler';
 
@@ -66,7 +65,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     activeGroupId, setActiveGroupId, photos,
     isAdminMode, onEditPhoto,
     onBatchEdit, onUngroup, onAddPhotoToGroup,
-    setPhotos, updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
+    updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
     manufacturers = [],
     isStaffMode = false,
     contactWhatsApp = () => {},
@@ -80,7 +79,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const { setAlertDialog: contextSetAlertDialog, setPromptDialog } = useAdminUI();
   const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
   const { handleError } = useErrorHandler();
-  const { setCover } = useGroupSync(activeGroupId);
+  const { mutate: mutateSetCover } = useGroupCoverMutation();
+  const setCover = useCallback(async (photoId: string) => {
+      mutateSetCover({ photoId });
+  }, [mutateSetCover]);
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
@@ -95,7 +97,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
     return photos
-      .filter(p => p.groupId === activeGroupId && (isAdminMode || !p.isHidden))
+      .filter(p => p && p.groupId === activeGroupId && (isAdminMode || !p.isHidden))
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;
@@ -177,9 +179,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
       onConfirm: async () => {
         try {
           await updatePhotosGroupInCloud(ids, { group_id: null });
-          setPhotos?.(prev => prev.map(p => 
-            ids.includes(p.id) ? { ...p, groupId: null } : p
-          ));
           setIsMultiSelectMode(false);
           setSelectedPhotoIds([]);
           toast.success('已移出 / Removed');
@@ -199,7 +198,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
          // Fallback if hook not passed (unlikely)
          const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
          await serviceUpdatePhoto(photoId, updates);
-         setPhotos?.(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
       }
       toast.success('已保存 / Saved');
     } catch (err: any) {
@@ -221,12 +219,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
       // If isHidden changed, update all photos in this group
       if (updates.hasOwnProperty('isHidden')) {
         const isHidden = updates.isHidden;
-        const groupPhotos = photos.filter(p => p.groupId === activeGroupId);
+        const groupPhotos = photos.filter(p => p && p.groupId === activeGroupId);
         if (groupPhotos.length > 0 && hookUpdatePhoto) {
            await Promise.all(
              groupPhotos.map(p => hookUpdatePhoto(p.id, { isHidden }))
            );
-           setPhotos?.(prev => prev.map(p => p.groupId === activeGroupId ? { ...p, isHidden: isHidden! } : p));
            toast.success(`群组内照片已${isHidden ? '屏蔽' : '显示'}`);
         }
       }
@@ -262,9 +259,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
             await Promise.all(
               activeGroupPhotos.map(p => serviceUpdatePhoto(p.id, { dimensions: newDims }))
             );
-            setPhotos?.(prev => prev.map(p => 
-              p.groupId === activeGroupId ? { ...p, dimensions: newDims } : p
-            ));
           }
           toast.success('批量更新成功', { id: toastId });
         } catch (err: any) {
@@ -292,14 +286,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
       ...p,
       groupOrder: index
     }));
-
-    setPhotos?.(prev => {
-        const next = prev.map(p => {
-          const found = updatedPhotosWithOrder.find(up => up.id === p.id);
-          return found ? found : p;
-        });
-        return next;
-    });
     
     try {
       const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
@@ -826,11 +812,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       onClose={() => setFocusedGroupPhotoId(null)}
                       onPrev={() => {
                         const prev = currentIndex > 0 ? currentIndex - 1 : activeGroupPhotos.length - 1;
-                        setFocusedGroupPhotoId(activeGroupPhotos[prev].id);
+                        if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[prev].id);
                       }}
                       onNext={() => {
                         const next = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
-                        setFocusedGroupPhotoId(activeGroupPhotos[next].id);
+                        if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[next].id);
                       }}
                       t={t}
                       lang={lang}

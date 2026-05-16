@@ -24,12 +24,15 @@ const INITIAL_FORM_STATE: ProductFormData = {
   isGroupCover: false,
 };
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useGallery } from './useGallery';
+import { QUERY_KEYS } from './queries/keys';
 
 export const usePhotoManagement = (
   user: User | null,
   adminUI?: {
     setAlertDialog: (d: any) => void;
+    setPromptDialog: (d: any) => void;
     setActiveScreen: (s: string) => void;
     editPhotoId?: string | null;
     setEditPhotoId?: (id: string | null) => void;
@@ -38,15 +41,21 @@ export const usePhotoManagement = (
     batchProgress?: { current: number, total: number };
     setBatchProgress?: (p: { current: number, total: number }) => void;
     withLoading?: <T>(state: string, fn: () => Promise<T>) => Promise<T>;
+    setLoadingType: (s: any) => void;
+    loadingType: any;
+    cloudCount: number | null;
+    setCloudCount: (c: number | null) => void;
+    abortAnalysis: () => void;
   },
   adminSession?: any
 ) => {
+  const queryClient = useQueryClient();
   const { handleError } = useErrorHandler();
   const { validatePhotoForm } = useFormValidation();
   const {
-    photos, setPhotos,
+    photos,
     categories,
-    tags, setTags, tagNameToIdMap, tagIdToNameMap,
+    tags, tagNameToIdMap, tagIdToNameMap,
     manufacturers
   } = useGallery();
 
@@ -173,7 +182,7 @@ export const usePhotoManagement = (
            }
            
            // Resolve tag names to IDs
-           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap);
 
         if (editPhotoId) {
            const original = safeArray(photos).find(p => p.id === editPhotoId);
@@ -207,14 +216,14 @@ export const usePhotoManagement = (
              updatedPhoto.image_hash = calculateMD5(newPhotoData);
            }
 
-           const nextPhotos = safeArray(photos).map(p => p.id === editPhotoId ? updatedPhoto : p);
-           setPhotos(nextPhotos);
-           await saveData('product_photos', nextPhotos);
+           // Update local state by invalidating queries
+           await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
+           await saveData('product_photos', photos); // Still sync to indexedDB for some offline parts
            
            if (user) {
               await savePhotoToCloud(user.id, updatedPhoto);
-              // Final sync after cloud upload finishes (to get the real URLs)
-              setPhotos(prev => safeArray(prev).map(p => p.id === editPhotoId ? { ...p, image_url: updatedPhoto.image_url, thumb_url: updatedPhoto.thumb_url, uri: undefined } : p));
+              // Final sync after cloud upload finishes
+              await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
            }
         } else if (newPhotoData) {
            const finalId = crypto.randomUUID();
@@ -243,14 +252,14 @@ export const usePhotoManagement = (
              groupId: null
            };
 
-           const nextPhotos = [newPhoto, ...photos];
-           setPhotos(nextPhotos);
-           await saveData('product_photos', nextPhotos);
+           // Update local state
+           await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
+           await saveData('product_photos', photos);
            
            if (user) {
              await savePhotoToCloud(user.id, newPhoto);
-             // Final sync to get real URLs
-             setPhotos(prev => prev.map(p => p.id === finalId ? { ...p, image_url: newPhoto.image_url, thumb_url: newPhoto.thumb_url, uri: undefined } : p));
+             // Final sync
+             await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
            }
         }
         
@@ -277,7 +286,7 @@ export const usePhotoManagement = (
      await run(async () => {
         try {
            // Resolve tag names to IDs
-           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap, setTags);
+           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap);
 
         const updatedPhotosList: Photo[] = [];
         const nextPhotos = photos.map(p => {
@@ -302,8 +311,9 @@ export const usePhotoManagement = (
              return p;
         });
 
-        setPhotos(nextPhotos);
-        await saveData('product_photos', nextPhotos);
+        // Update local and cloud
+        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
+        await saveData('product_photos', photos);
         
         if (user) {
            try {

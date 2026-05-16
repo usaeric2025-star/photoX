@@ -169,8 +169,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   } = useAdminSession();
   const { 
     manufacturers, tags, photos, categories,
-    setTags, setCategories, setManufacturers, setPhotos,
-    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag, addTag
   } = useAdminPhoto();
   const { loadingType, setAlertDialog, setPromptDialog, withLoading } = useAdminUI();
   const { handleError } = useErrorHandler();
@@ -222,10 +221,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         if (!name.trim()) return;
         const normalized = name.trim().toUpperCase();
         try {
-          const newTag = await addTagToDB(normalized);
-          if (newTag) {
-            setTags((prev: Tag[]) => [...prev, newTag]);
-          }
+          await addTag(normalized);
         } catch (error: any) {
           handleError(error, '添加标签失败');
         }
@@ -483,13 +479,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                 </div>
                 <button 
                   onClick={async () => {
-                    const ok = confirm('确定要清空本地数据缓存并强制从云端完整拉取吗？');
-                    if (ok) {
-                      localStorage.removeItem('lastSyncTime');
-                      localStorage.removeItem('uuid_v2_cleanup_done');
-                      await refreshCloudData(user, true);
-                      toast.success('本地缓存已重置，正在全量同步');
-                    }
+                    setAlertDialog({
+                      title: '确认清空',
+                      message: '确定要清空本地数据缓存并强制从云端完整拉取吗？',
+                      onConfirm: async () => {
+                        localStorage.removeItem('lastSyncTime');
+                        localStorage.removeItem('uuid_v2_cleanup_done');
+                        await refreshCloudData(user, true);
+                        toast.success('本地缓存已重置，正在全量同步');
+                      },
+                      type: 'danger'
+                    });
                   }}
                   className="text-[9px] font-black text-brand-gold hover:text-white uppercase tracking-[0.2em] px-4 py-2 border border-brand-gold/30 rounded-full bg-brand-gold/5 transition-all active:scale-95"
                 >
@@ -723,10 +723,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                     reader.onload = (event) => {
                       try {
                         const json = JSON.parse(event.target?.result as string);
-                        if (Array.isArray(json.photos)) setPhotos(json.photos);
-                        if (json.tags) setTags(json.tags);
-                        if (json.manufacturers) setManufacturers(json.manufacturers);
-                        toast.success('数据导入成功！');
+                        // Migration note: Direct import to state is disabled as we moved to server state.
+                        // Future: implement batch import to cloud if needed.
+                        toast.error('JSON 导入目前仅支持手动查看，不支持批量写入云端。');
                       } catch (err) {
                         handleError(err, '导入JSON失败');
                       }

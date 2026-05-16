@@ -1,26 +1,65 @@
 import { useGalleryStore } from '../store';
 import { useMemo } from 'react';
 import { filterPhotos, groupPhotos } from '../lib/filters';
-import { safeArray } from '../utils/safeAccess';
+import { usePhotosQuery } from './queries/usePhotos';
+import { useTagsQuery } from './queries/useTags';
+import { useCategoriesQuery } from './queries/useCategories';
+import { useManufacturersQuery } from './queries/useManufacturers';
 
 export const useGallery = () => {
     const store = useGalleryStore();
     
-    // Derived computations
+    // Server state via React Query
+    // Note: page is now managed locally in components or via infinite query
+    // For this hook, we'll provide a default or handle it via store if we decide to keep it there.
+    // However, store.page was removed, so we'll use a fixed initial range or allow passing it.
+    const { data: qPhotos = [] } = usePhotosQuery({ 
+        categoryId: store.filterCatId, 
+        tagId: store.filterTagIds.length === 1 ? store.filterTagIds[0] : null,
+        searchQuery: store.debouncedSearchQuery
+    }, 0, store.visibleCount);
+    
+    const { data: qTags = [] } = useTagsQuery();
+    const { data: qCategories = [] } = useCategoriesQuery();
+    const { data: qManufacturers = [] } = useManufacturersQuery();
+
+    const photos = qPhotos;
+    const tags = qTags;
+    const categories = qCategories;
+    const manufacturers = qManufacturers;
+
     const tagNameToIdMap = useMemo(() => {
         const map = new Map<string, string>();
-        store.tags.forEach(tag => map.set(tag.name, tag.id));
+        tags.forEach(tag => map.set(tag.name, tag.id));
         return map;
-    }, [store.tags]);
+    }, [tags]);
 
     const tagIdToNameMap = useMemo(() => {
         const map = new Map<string, string>();
-        store.tags.forEach(tag => map.set(tag.id, tag.name));
+        tags.forEach(tag => map.set(tag.id, tag.name));
         return map;
-    }, [store.tags]);
+    }, [tags]);
 
     const displayPhotos = useMemo(() => {
-        return filterPhotos(store.photos, {
+        const tagMap = new Map<string, string[]>();
+        tags.forEach(t => {
+          const terms = [t.name.toLowerCase()];
+          if (Array.isArray(t.aliases)) {
+            t.aliases.forEach(a => terms.push(a.toLowerCase()));
+          }
+          tagMap.set(String(t.id), terms);
+        });
+        
+        const catMap = new Map<string, string[]>();
+        categories.forEach(c => {
+          const terms = [(c.zh || c.name || '').toLowerCase()];
+          if (Array.isArray(c.aliases)) {
+            c.aliases.forEach(a => terms.push(a.toLowerCase()));
+          }
+          catMap.set(String(c.id), terms);
+        });
+
+        return filterPhotos(photos, {
             searchQuery: store.debouncedSearchQuery,
             filterCatId: store.filterCatId,
             filterSubId: store.filterSubId,
@@ -28,8 +67,8 @@ export const useGallery = () => {
             sortOrder: store.sortOrder,
             isAdminMode: store.isAdminMode,
             isStaffMode: store.isStaffMode
-        }, store.tags, store.categories);
-    }, [store.photos, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder, store.isAdminMode, store.isStaffMode, store.tags, store.categories]);
+        }, tags, categories, tagMap, catMap);
+    }, [photos, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder, store.isAdminMode, store.isStaffMode, tags, categories]);
 
     const gridPhotos = useMemo(() => {
         return groupPhotos(displayPhotos, store.showGroupsCollapsed, store.sortOrder);
@@ -37,26 +76,30 @@ export const useGallery = () => {
 
     const stableTagCounts = useMemo(() => {
         const counts: Record<string, number> = {};
-        store.photos.forEach(p => {
+        photos.forEach(p => {
             const ids = p.tagIds || [];
             ids.forEach(id => {
                 counts[String(id)] = (counts[String(id)] || 0) + 1;
             });
         });
         return counts;
-    }, [store.photos]);
+    }, [photos]);
 
     const sortedTags = useMemo(() => {
-        return [...store.tags].sort((a, b) => {
+        return [...tags].sort((a, b) => {
             const bCount = stableTagCounts[String(b.id)] || 0;
             const aCount = stableTagCounts[String(a.id)] || 0;
             if (bCount !== aCount) return bCount - aCount;
             return a.name.localeCompare(b.name, undefined, { numeric: true });
         });
-    }, [store.tags, stableTagCounts]);
+    }, [tags, stableTagCounts]);
 
     return {
         ...store,
+        photos,
+        tags,
+        categories,
+        manufacturers,
         tagNameToIdMap,
         tagIdToNameMap,
         displayPhotos,

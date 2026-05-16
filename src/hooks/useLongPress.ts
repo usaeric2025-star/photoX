@@ -11,8 +11,8 @@ export const useLongPress = <T = any>(onLongPress: (item: T) => void) => {
     hasLongPressed.current = false;
     
     if (e && 'touches' in e) {
-      activeTouchId.current = e.touches[0].identifier;
-      touchStartPoint.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      activeTouchId.current = e.touches[0]?.identifier;
+      touchStartPoint.current = { x: e.touches[0]?.clientX, y: e.touches[0]?.clientY };
     } else {
       activeTouchId.current = null;
       touchStartPoint.current = null;

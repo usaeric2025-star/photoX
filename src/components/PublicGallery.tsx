@@ -12,6 +12,7 @@ import { translations, LanguageCode } from '../lib/translations';
 import { PhotoLightbox } from './PhotoLightbox';
 import { StaffUnlockDialog } from './StaffUnlockDialog';
 import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
+import { toast } from 'sonner';
 import { PublicGalleryHeader } from './PublicGalleryHeader';
 import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
@@ -145,7 +146,7 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
     const timer = setTimeout(() => {
       observer = new IntersectionObserver(
         (entries) => {
-          if (entries[0].isIntersecting) {
+          if (entries[0]?.isIntersecting) {
             onLoadMore();
             observer?.disconnect();
           }
@@ -190,7 +191,12 @@ VirtuosoGridFooter.displayName = 'VirtuosoGridFooter';
 
 const virtuosoComponents = { Footer: VirtuosoGridFooter };
 
+import { filterPhotos, groupPhotos } from '../lib/filters';
+import { isValidPhoto } from '../lib/typeGuard';
+
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
+  photos: incomingPhotos, // Rename to avoid shadowing
+  categories: propCategories,
   onExit, onLogin, loginWithGoogle: propsLoginWithGoogle, 
   onRefresh,
   onEditPhoto, onDeletePhotos, onGroupPhotos, onBatchEdit, onGroupClick, onOpenSettings, onAddPhoto,
@@ -228,8 +234,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const context = useGallery();
   const {
-    photos,
-    categories,
+    categories: contextCategories,
     manufacturers,
     tags: contextTags,
     sortedTags,
@@ -241,9 +246,60 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
     isInfiniteMode, isStaffMode, setIsStaffMode,
-    displayPhotos, gridPhotos,
-    totalGridCount
+    totalGridCount: contextTotalGridCount
   } = context;
+
+  // Use prop categories if provided, otherwise context
+  const categories = propCategories || contextCategories;
+
+  // Derive final lists
+  const localPhotos = useMemo(() => {
+    if (incomingPhotos && incomingPhotos.length > 0) return incomingPhotos;
+    return context.photos || [];
+  }, [incomingPhotos, context.photos]);
+
+  const { displayPhotos, gridPhotos, totalGridCount } = useMemo(() => {
+    const validPhotos = localPhotos.filter(isValidPhoto);
+    
+    // Pre-calculate maps once
+    const tagMap = new Map<string, string[]>();
+    contextTags.forEach(t => {
+      const terms = [t.name.toLowerCase()];
+      if (Array.isArray(t.aliases)) {
+        t.aliases.forEach(a => terms.push(a.toLowerCase()));
+      }
+      tagMap.set(String(t.id), terms);
+    });
+    
+    const catMap = new Map<string, string[]>();
+    if (categories) {
+      categories.forEach(c => {
+        const terms = [(c.zh || c.name || '').toLowerCase()];
+        if (Array.isArray(c.aliases)) {
+          c.aliases.forEach(a => terms.push(a.toLowerCase()));
+        }
+        catMap.set(String(c.id), terms);
+      });
+    }
+
+    // Always run through filterPhotos to apply current search/filters
+    const dp = filterPhotos(validPhotos, {
+      searchQuery,
+      filterCatId: selectedCatCode,
+      filterSubId: selectedSubId,
+      filterTagIds: selectedTagIds,
+      sortOrder,
+      isAdminMode,
+      isStaffMode
+    }, contextTags, categories, tagMap, catMap);
+
+    const gp = groupPhotos(dp, showGroupsCollapsed, sortOrder);
+    return { displayPhotos: dp, gridPhotos: gp, totalGridCount: gp.length };
+  }, [
+    incomingPhotos, context.photos, filterPhotos, groupPhotos,
+    searchQuery, selectedCatCode, selectedSubId, selectedTagIds, sortOrder, 
+    isAdminMode, isStaffMode, contextTags, categories, showGroupsCollapsed
+  ]);
   
   // Use passed in selection state if provided (for AdminGalleryShell), otherwise use context
   const activeSelectedIds = selectedIds.length > 0 || isMultiSelect ? selectedIds : context.selectedIds;
@@ -252,7 +308,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const activeClearSelection = onClearSelection || context.clearSelection;
   const activeSetIsMultiSelect = onToggleMultiSelect || context.setIsMultiSelect;
 
-  const setAlertDialog = propsSetAlertDialog || ((d: { title: string, message: string }) => alert(d.message || d.title));
+  const setAlertDialog = propsSetAlertDialog || ((d: { title: string, message: string }) => {
+    console.error(d.message || d.title);
+    toast.error(d.message || d.title);
+  });
 
   // Handle infinite mode
   useEffect(() => {
@@ -266,11 +325,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
-    photos.forEach(p => {
+    localPhotos.forEach(p => {
        (p.tagIds || []).forEach(id => ids.add(id));
     });
     return ids;
-  }, [photos]);
+  }, [localPhotos]);
 
   const tags = useMemo(() => {
     const tMap = new Map<string, Tag>();
@@ -298,6 +357,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const columns = propColumns || internalColumns;
   const setColumns = propSetColumns || setInternalColumns;
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Handle initial hash or group link
@@ -312,8 +372,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [initialHash, displayPhotos, lightboxIndex]);
 
   useEffect(() => {
-    if (initialGroupId && activeGroupId === null && photos.length > 0) {
-        const groupExists = photos.some(p => p.groupId === initialGroupId);
+    if (initialGroupId && activeGroupId === null && localPhotos.length > 0) {
+        const groupExists = localPhotos.some(p => p.groupId === initialGroupId);
         if (groupExists) {
             console.log(`[PublicGallery] Auto-opening group detail: ${initialGroupId}`);
             setActiveGroupId(initialGroupId);
@@ -321,7 +381,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             console.warn(`[PublicGallery] Group ID ${initialGroupId} not found in current photo set.`);
         }
     }
-  }, [initialGroupId, photos, activeGroupId]);
+  }, [initialGroupId, localPhotos, activeGroupId]);
 
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -417,7 +477,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         await navigator.share({ title: t.shareTitle, text: msg });
       } else {
         await navigator.clipboard.writeText(msg);
-        alert("分享信息已复制到剪贴板！/ Share info copied to clipboard!");
+        toast.success("分享信息已复制到剪贴板！/ Share info copied to clipboard!");
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
@@ -439,7 +499,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         await navigator.share({ title: t.shareTitle, text: shareText });
       } else {
         await navigator.clipboard.writeText(shareText);
-        alert("群组分享链接已复制！/ Group share link copied!");
+        toast.success("群组分享链接已复制！/ Group share link copied!");
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') {
@@ -464,7 +524,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [gridPhotos, isSyncing]);
 
   const photosToShow = isSyncing && gridPhotos.length === 0
-    ? gridPhotos
+    ? prevPhotosRef.current
     : gridPhotos;
 
   const safePhotosToShow = photosToShow;
@@ -496,7 +556,7 @@ const virtuosoContext = useMemo(() => ({
         <PublicGalleryHeader 
           totalCount={totalCount}
           settings={settings}
-          photos={photos}
+          photos={localPhotos}
           isAdminMode={!!isAdminMode}
           isRefreshing={!!isSyncing}
           isMultiSelect={!!activeIsMultiSelect}
@@ -565,7 +625,7 @@ const virtuosoContext = useMemo(() => ({
           <VirtuosoGrid
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
-            totalCount={safePhotosToShow.length}
+            totalCount={totalCount || safePhotosToShow.length}
             computeItemKey={(index) => {
               const p = safePhotosToShow[index];
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
@@ -581,7 +641,7 @@ const virtuosoContext = useMemo(() => ({
                 isAdminMode={!!isAdminMode}
                 isMultiSelect={activeIsMultiSelect}
                 isStaffMode={isStaffMode}
-                isSelected={!!activeSelectedIds.includes(safePhotosToShow[index].id)}
+                isSelected={safePhotosToShow[index] ? !!activeSelectedIds.includes(safePhotosToShow[index].id) : false}
                 showGroupsCollapsed={showGroupsCollapsed}
                 lang={lang}
                 t={t}
@@ -590,7 +650,12 @@ const virtuosoContext = useMemo(() => ({
                 tagMap={tagMap}
                 onToggleSelection={activeToggleSelection}
                 onEditPhoto={onEditPhoto}
-                onGroupClick={onGroupClick || setActiveGroupId}
+                onGroupClick={(gid) => {
+                  setActiveGroupId(gid);
+                  if (safePhotosToShow[index]) {
+                    setActivePhotoId(safePhotosToShow[index].id);
+                  }
+                }}
                 onLightboxOpen={setLightboxIndex}
                 onLongPressStart={startLongPress}
                 onLongPressEnd={endLongPress}
@@ -617,8 +682,12 @@ const virtuosoContext = useMemo(() => ({
       {/* Group Detail View */}
       <GroupDetailView 
         activeGroupId={activeGroupId}
-        setActiveGroupId={setActiveGroupId}
-        photos={photos}
+        setActiveGroupId={(gid) => {
+          setActiveGroupId(gid);
+          if (gid === null) setActivePhotoId(null);
+        }}
+        initialPhotoId={activePhotoId}
+        photos={localPhotos}
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
         isAdminMode={!!isAdminMode}
@@ -633,11 +702,10 @@ const virtuosoContext = useMemo(() => ({
         onCancelAnalyze={onCancelAnalyze}
         isAnalyzing={isAnalyzing}
         onBatchAiAnalyze={onBatchAiAnalyze}
-        setPhotos={context.setPhotos}
         lang={lang}
         t={t}
         categories={categories}
-        manufacturers={context.manufacturers}
+        manufacturers={manufacturers}
         tagMap={tagMap}
         allTags={tags}
         isMultiSelect={activeIsMultiSelect}
@@ -648,7 +716,7 @@ const virtuosoContext = useMemo(() => ({
            const newStatus = !photo.isHidden;
            import('../services/photoMutationService').then(async (m) => {
               try {
-                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+                await m.updatePhoto(photo.id, { isHidden: newStatus });
               } catch (e: any) {
                 console.error("[ERROR] Failed to toggle hidden:", e);
                 setAlertDialog?.({ title: '操作失败', message: e.message || 'Error' });
@@ -700,7 +768,7 @@ const virtuosoContext = useMemo(() => ({
         t={t}
         lang={lang}
         categories={categories}
-        manufacturers={context.manufacturers}
+        manufacturers={manufacturers}
         tagMap={tagMap}
         isAdminMode={!!isAdminMode}
         isStaffMode={isStaffMode}
@@ -713,11 +781,11 @@ const virtuosoContext = useMemo(() => ({
           setLightboxIndex(null);
         }}
         onSetGroupCover={async (id, groupId) => {
-          const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
+          const groupPhotos = safeArray(localPhotos).filter(p => p.groupId === groupId);
           import('../services/photoMutationService').then(async (m) => {
              try {
                await Promise.all(
-                  groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }, context.setPhotos))
+                  groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }))
                );
              } catch (err: any) {
                handleError(err, "setGroupCover");
@@ -734,7 +802,7 @@ const virtuosoContext = useMemo(() => ({
            const newStatus = !photo.isHidden;
            import('../services/photoMutationService').then(async (m) => {
               try {
-                await m.updatePhoto(photo.id, { isHidden: newStatus }, context.setPhotos);
+                await m.updatePhoto(photo.id, { isHidden: newStatus });
               } catch (e: any) {
                 console.error("[ERROR] Failed to toggle hidden:", e);
                 setAlertDialog?.({ title: '操作失败', message: e.message || 'Error' });

@@ -35,6 +35,9 @@ const cleanAiName = (name: string | null | undefined): string | null => {
   return trimmed;
 };
 
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from './queries/keys';
+
 export const usePhotoAI = (
   user: User | null,
   geminiApiKey: string | undefined,
@@ -43,8 +46,6 @@ export const usePhotoAI = (
   categories: Category[],
   tags: Tag[],
   manufacturers: Manufacturer[],
-  setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>,
-  setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
   tagNameToIdMap: Map<string, string>,
   addTask: (task: Omit<Task, 'id'>) => string,
   updateTask: (id: string, updates: Partial<Task>) => void,
@@ -52,6 +53,7 @@ export const usePhotoAI = (
   photosRef: React.MutableRefObject<Photo[]>,
   handleError: (error: unknown, context?: string) => void
 ) => {
+  const queryClient = useQueryClient();
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const isAnalyzingRef = useRef(false);
@@ -66,9 +68,8 @@ export const usePhotoAI = (
     
     setBatchProgress({ current: 0, total: 0 });
     
-    // Safety: ensure any stuck isAnalyzing flags are cleared
-    setPhotos(prev => prev.map(p => p.isAnalyzing ? { ...p, isAnalyzing: false } : p));
-    photosRef.current = photosRef.current.map(p => p.isAnalyzing ? { ...p, isAnalyzing: false } : p);
+    // Invalidate photos to clear isAnalyzing flags if they were set in DB
+    queryClient.invalidateQueries({ queryKey: ['photos'] });
     
     if (taskId) {
         updateTask(taskId, { status: 'cancelled', message: '已取消 AI 识别任务' });
@@ -128,7 +129,7 @@ export const usePhotoAI = (
             currentAnalysisControllers.current.set(taskId, { controller, timeoutId });
             const signal = controller.signal;
             
-            setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: true } : p));
+            queryClient.invalidateQueries({ queryKey: ['photos'] });
             
             try {
                 const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
@@ -167,7 +168,7 @@ export const usePhotoAI = (
 
             let finalCatId = result.categoryId || null;
             const allTagNamesOrIds = [...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)];
-            const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap, setTags);
+            const finalTagIds = await resolveTagIdsBatch(allTagNamesOrIds, tags, tagNameToIdMap);
             const safeOldTagIds = safeArray(photo.tagIds);
             const mergedTagIds = Array.from(new Set([...safeOldTagIds, ...finalTagIds])).slice(0, 3);
 
@@ -192,15 +193,11 @@ export const usePhotoAI = (
                 updatedPhoto.id = finalId;
             }
 
-            setPhotos(prev => {
-                const next = prev.map(p => p.id === photo.id ? updatedPhoto : p);
-                photosRef.current = next;
-                saveData('product_photos', next);
-                return next;
-            });
+            queryClient.invalidateQueries({ queryKey: ['photos'] });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         } catch (err: any) {
             setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: err.message || String(err) });
-            setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, isAnalyzing: false } : p));
+            queryClient.invalidateQueries({ queryKey: ['photos'] });
             if (err.message && (err.message.includes('401') || err.message.includes('403'))) {
                 throw new Error(`FATAL_AI_ERROR: ${err.message}`);
             }
@@ -285,8 +282,7 @@ export const usePhotoAI = (
     });
 
     if (editPhotoId) {
-      setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p));
-      photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
     }
     
     setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
@@ -337,7 +333,7 @@ export const usePhotoAI = (
         const photo = photosRef.current.find(p => p.id === editPhotoId);
         if (photo) {
           updateTask(taskId, { progress: 80, message: '正在保存结果...' });
-          const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
+          const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
           let updatedPhoto = { 
             ...photo, 
             categoryId: result.categoryId || photo.categoryId,
@@ -354,10 +350,8 @@ export const usePhotoAI = (
             const finalId = await savePhotoToCloud(user.id, updatedPhoto);
             updatedPhoto.id = finalId;
           }
-          const nextPhotos = photosRef.current.map(p => p.id === editPhotoId ? updatedPhoto : p);
-          setPhotos(nextPhotos);
-          photosRef.current = nextPhotos;
-          await saveData('product_photos', nextPhotos);
+          queryClient.invalidateQueries({ queryKey: ['photos'] });
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         }
       }
       
@@ -385,8 +379,7 @@ export const usePhotoAI = (
         
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
         if (editPhotoId) {
-          setPhotos(prev => prev.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: false } : p));
-          photosRef.current = photosRef.current.map(p => p.id === editPhotoId ? { ...p, isAnalyzing: true } : p);
+          queryClient.invalidateQueries({ queryKey: ['photos'] });
         }
         handleError(err, 'AI 单图识别失败');
         throw err;
@@ -415,8 +408,7 @@ export const usePhotoAI = (
     });
 
     const photoIds = sGroupPhotos.map(p => p.id);
-    setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p));
-    photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: true } : p);
+    queryClient.invalidateQueries({ queryKey: ['photos'] });
 
     setAiDebugInfo({ step: '群组识别', message: '正在分析封面/首张照片...' });
     updateTask(taskId, { progress: 10, message: '分析产品特征中...' });
@@ -452,7 +444,7 @@ export const usePhotoAI = (
         } catch (e) {}
       }
 
-      const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap, setTags);
+      const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
       
       setAiDebugInfo({ step: '保存中', message: '同步识别结果到所有照片...' });
       updateTask(taskId, { progress: 80, message: '正在同步及保存结果...' });
@@ -483,15 +475,8 @@ export const usePhotoAI = (
         }
       }
 
-      setPhotos(prev => {
-        const next = prev.map(p => {
-           const found = updatedPhotosList.find(up => up.id === p.id);
-           return found || p;
-        });
-        photosRef.current = next;
-        saveData('product_photos', next);
-        return next;
-      });
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
 
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
       toast.success('多图识别完成');
@@ -514,9 +499,7 @@ export const usePhotoAI = (
         }
         
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
-        throw err;
-        setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
-        photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
+        queryClient.invalidateQueries({ queryKey: ['photos'] });
         throw err;
       }
     } finally {
