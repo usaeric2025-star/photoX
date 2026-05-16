@@ -10,16 +10,16 @@ interface GroupGridViewProps {
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
   isMultiSelectMode?: boolean;
   selectedPhotoIds?: string[];
-  getPhotoProps?: (photo: Photo) => Record<string, any>; // Returns props to spread on the photo card wrapper (like drag events)
+  getPhotoProps?: (photo: Photo) => React.HTMLAttributes<HTMLDivElement>;
 }
 
 const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps, onPhotoClick, onPhotoContextMenu, longPressTimers }: {
   photo: Photo;
   isSelected: boolean;
   isMultiSelectMode: boolean;
-  extraProps: any;
+  extraProps: React.HTMLAttributes<HTMLDivElement>;
   onPhotoClick: (photo: Photo) => void;
-  onPhotoContextMenu?: (e: any, photo: Photo) => void;
+  onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
   longPressTimers: React.MutableRefObject<Record<string, NodeJS.Timeout>>;
 }) => {
   const [isLoaded, setIsLoaded] = React.useState(false);
@@ -27,7 +27,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, extraProps
   return (
     <div 
       {...extraProps}
-      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer ${photo.isGroupCover ? 'ring-4 ring-brand-gold border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${extraProps?.className || ''}`}
+      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer ${photo.isGroupCover ? 'ring-4 ring-brand-gold border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${extraProps.className || ''}`}
       onClick={(e) => {
          if (extraProps.onClick) extraProps.onClick(e);
          onPhotoClick(photo);

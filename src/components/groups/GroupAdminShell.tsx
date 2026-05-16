@@ -7,6 +7,7 @@ import {
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon, Eye, EyeOff
 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup, Manufacturer, Dimension } from '../../types';
+import { TranslationType } from '../../lib/ui-helpers';
 import { Skeleton } from '../ui/Skeleton';
 import {
   Sheet,
@@ -45,7 +46,7 @@ export interface GroupAdminShellProps {
   contactWhatsApp?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
   lang?: string;
-  t?: Record<string, any>;
+  t?: TranslationType;
   categories?: Category[];
   tagMap?: Record<string, string>;
   allTags?: Tag[];

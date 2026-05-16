@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Photo, Category, Manufacturer } from '../types';
 import { X, Layers, Heart, EyeOff, Check, Image as ImageIcon } from 'lucide-react';
 import { Skeleton } from './ui/Skeleton';
-import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName } from '../lib/ui-helpers';
+import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';
 
 interface PhotoCardProps {
@@ -14,7 +14,7 @@ interface PhotoCardProps {
   isSelected: boolean;
   showGroupsCollapsed: boolean;
   lang: string;
-  t: Record<string, any>;
+  t: TranslationType;
   categories: Category[];
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;

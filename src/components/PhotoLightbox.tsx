@@ -5,7 +5,7 @@ import "yet-another-react-lightbox/styles.css";
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MessageCircle, Key, Maximize, Edit3, Eye, EyeOff, Sparkles, Download, ChevronLeft, ChevronRight, Share2, Check, RefreshCcw } from 'lucide-react';
 import { Photo, Category, ProductGroup, Manufacturer, Dimension } from '../types';
-import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../lib/ui-helpers';
+import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName, TranslationType } from '../lib/ui-helpers';
 import { Skeleton } from './ui/Skeleton';
 
 // ... (retain props and other logic)
@@ -17,7 +17,7 @@ interface PhotoLightboxProps {
   onClose: () => void;
   onPrev: (e?: React.MouseEvent) => void;
   onNext: (e?: React.MouseEvent) => void;
-  t: Record<string, any>;
+  t: TranslationType;
   lang: string;
   categories: Category[];
   manufacturers: Manufacturer[];
@@ -359,13 +359,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                     <div className="flex flex-wrap items-stretch gap-3">
                        {photo.price && (
                          <div className="bg-brand-navy text-brand-bg px-4 py-2 rounded-2xl shadow-md flex-1 min-w-[120px]">
-                           <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{t.price}</span>
+                           <span className="text-[10px] font-bold uppercase tracking-widest block opacity-70 mb-0.5">{(t as any).price}</span>
                            <p className="text-xl font-bold leading-none">{photo.price}</p>
                          </div>
                        )}
                        {photo.model_number && (
                          <div className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl flex-1 min-w-[120px] flex flex-col justify-center">
-                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">{t.modelNumber}</span>
+                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">{(t as any).modelNumber}</span>
                            <p className="font-mono font-bold text-slate-700">{photo.model_number}</p>
                          </div>
                        )}
@@ -400,13 +400,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
                            onClick={() => onUngroup?.(photo.id)}
                            className="bg-red-50 text-red-600 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-red-100"
                          >
-                           {t.ungroup || 'Ungroup'}
+                                                      { (t as any).ungroup || 'Ungroup' }
                          </button>
                          <button 
                            onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
                            className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
                          >
-                           {t.setCover || 'Set Cover'}
+                           { (t as any).setCover || 'Set Cover' }
                          </button>
                     </div>
                   )}

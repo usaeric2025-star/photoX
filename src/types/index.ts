@@ -3,6 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export interface Task {
+  id: string;
+  name: string;
+  status: 'running' | 'completed' | 'error' | 'cancelled' | 'warning';
+  progress?: number;
+  message?: string;
+  onCancel?: () => void;
+}
+
 export interface SubCategory {
   id: string;
   name: string;

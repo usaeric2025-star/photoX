@@ -1,4 +1,4 @@
-import { Photo, User } from '../types';
+import { Photo, User, Task } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
 import { toast } from 'sonner';
@@ -6,11 +6,11 @@ import { toast } from 'sonner';
 export const usePhotoMutations = (
   user: User | null,
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>,
-  handleError: (error: any, context?: string) => void,
-  deletePhotos: (ids: string | string[], onProgress?: any, signal?: AbortSignal) => Promise<{ success: boolean; error?: any }>,
+  handleError: (error: unknown, context?: string) => void,
+  deletePhotos: (ids: string | string[], onProgress?: (current: number, total: number) => void, signal?: AbortSignal) => Promise<{ success: boolean; error?: Error }>,
   photosRef: React.MutableRefObject<Photo[]>,
-  addTask?: (t: any) => string,
-  updateTask?: (id: string, updates: any) => void,
+  addTask?: (t: Omit<Task, 'id'>) => string,
+  updateTask?: (id: string, updates: Partial<Task>) => void,
   removeTask?: (id: string) => void
 ) => {
   const deletePhoto = async (idOrIds: string | string[]) => {

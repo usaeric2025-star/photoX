@@ -1,15 +1,21 @@
 import { Photo, Category, Tag } from '../types';
 
-export const cleanPhotos = (photos: any[]): Photo[] => {
+export const cleanPhotos = (photos: unknown[]): Photo[] => {
   if (!Array.isArray(photos)) return [];
   return photos
-    .filter(p => p != null && typeof p === 'object')
+    .filter((p): p is Record<string, unknown> => p != null && typeof p === 'object')
     .map(p => ({
       ...p,
-      tagIds: Array.isArray(p.tagIds) ? p.tagIds : [],
-      dimensions: Array.isArray(p.dimensions) ? p.dimensions : [],
-      createdAtTimestamp: new Date(p.createdAt || (p as any).created_at || 0).getTime(),
-    }));
+      id: String(p.id),
+      name: String(p.name || ''),
+      item_code: String(p.item_code || ''),
+      image_hash: String(p.image_hash || ''),
+      image_url: String(p.image_url || ''),
+      createdAt: String(p.createdAt || new Date().toISOString()),
+      tagIds: Array.isArray(p.tagIds) ? p.tagIds.map(String) : [],
+      dimensions: Array.isArray(p.dimensions) ? p.dimensions as any[] : [], // Still need to handle Dimension type properly later
+      createdAtTimestamp: new Date((p.createdAt as string) || (p.created_at as string) || 0).getTime(),
+    }) as unknown as Photo);
 };
 
 export interface FilterOptions {
@@ -97,7 +103,7 @@ export function filterPhotos(
   result.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
-    return sortOrder === 'desc' ? b._time - a._time : a._time - b._time;
+    return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
   });
 
   return result;
@@ -143,7 +149,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
   representatives.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
-    return sortOrder === 'desc' ? b._time - a._time : a._time - b._time;
+    return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
   });
 
   return representatives;

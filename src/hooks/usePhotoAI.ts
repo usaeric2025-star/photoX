@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { Photo, Category, Tag, Manufacturer, User } from '../types';
+import { Photo, Category, Tag, Manufacturer, User, Task } from '../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { safeArray } from '../lib/utils';
@@ -47,13 +47,13 @@ export const usePhotoAI = (
   setPhotos: React.Dispatch<React.SetStateAction<Photo[]>>,
   setTags: React.Dispatch<React.SetStateAction<Tag[]>>,
   tagNameToIdMap: Map<string, string>,
-  addTask: (task: any) => string,
-  updateTask: (id: string, updates: any) => void,
+  addTask: (task: Omit<Task, 'id'>) => string,
+  updateTask: (id: string, updates: Partial<Task>) => void,
   removeTask: (id: string) => void,
-  runWithLoading: <T>(state: any, fn: () => Promise<T>) => Promise<T>,
-  setLoadingState: (s: any) => void,
+  runWithLoading: <T>(state: 'idle' | 'analyzing', fn: () => Promise<T>) => Promise<T>,
+  setLoadingState: (s: 'idle' | 'analyzing') => void,
   photosRef: React.MutableRefObject<Photo[]>,
-  handleError: (error: any, context?: string) => void
+  handleError: (error: unknown, context?: string) => void
 ) => {
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
@@ -103,6 +103,7 @@ export const usePhotoAI = (
     
     if (sUnProcessed.length === 0) {
       isAnalyzingRef.current = false;
+      console.log('usePhotoAI: sUnProcessed.length is 0, setting idle');
       setLoadingState('idle'); // Reset loading state
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
@@ -265,6 +266,7 @@ export const usePhotoAI = (
         updateTask(taskId, { status: 'error', message: `錯誤: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
         isAnalyzingRef.current = false;
+        console.log('usePhotoAI: finally block, setting idle');
         const task = currentAnalysisControllers.current.get(taskId);
         if (task) {
             clearTimeout(task.timeoutId);

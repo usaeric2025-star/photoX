@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup } from '../types';
+import { TranslationType } from '../lib/ui-helpers';
 import { PhotoLightbox } from './PhotoLightbox';
 import { getGroupById } from '../services/groupService';
 import { Skeleton } from './ui/Skeleton';
@@ -18,6 +19,7 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
   onLongPressStart?: (photo: Photo) => void;
   onLongPressEnd?: () => void;
   shareGroup?: (photos: Photo[]) => void;
+  t: TranslationType;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
