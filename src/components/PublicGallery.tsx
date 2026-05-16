@@ -467,9 +467,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     ? gridPhotos
     : gridPhotos;
 
-  const safePhotosToShow = isInfiniteMode 
-    ? photosToShow
-    : photosToShow.slice(0, visibleCount);
+  const safePhotosToShow = photosToShow;
 
   const handleLoadMoreRef = useRef(handleLoadMore);
   useEffect(() => {

@@ -68,13 +68,10 @@ export const analyzeProductPhoto = async (
   originalName?: string | null,
   signal?: AbortSignal
 ) => {
-  const apiKey = customApiKey || process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('请先在管理设置中设定 AI 密钥');
-  }
+  // Determine if we use local proxy or direct OpenRouter
+  const isProxy = !customApiKey;
+  const apiKey = customApiKey; // Only direct key if provided
 
-  // Use OpenRouter endpoint
-  const baseURL = 'https://openrouter.ai/api/v1';
   // Strictly read from configuration, NO defaults allowed
   let modelName = customModel;
   
@@ -133,7 +130,9 @@ export const analyzeProductPhoto = async (
       max_tokens: 1024,
     };
 
-    const fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    const fetchUrl = apiKey === process.env.GEMINI_API_KEY || !apiKey 
+      ? '/api/ai/analyze' 
+      : 'https://openrouter.ai/api/v1/chat/completions';
     
     // Internal timeout to prevent hangs
     const timeoutAbort = new AbortController();
@@ -147,10 +146,41 @@ export const analyzeProductPhoto = async (
       combinedSignal = signal || timeoutAbort.signal;
     }
 
+    const isProxy = fetchUrl.startsWith('/api/');
+    
+    if (!isProxy) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+      headers['HTTP-Referer'] = window.location.href;
+      headers['X-Title'] = 'Product Cataloger AI';
+    }
+
+    const payload = isProxy ? {
+      base64Image: processedBase64Image,
+      promptText,
+      customModel: modelName,
+      // Pass other context if needed
+    } : {
+      model: modelName.replace('openrouter/', ''),
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: promptText },
+            {
+              type: "image_url",
+              image_url: { url: processedBase64Image }
+            }
+          ]
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 1024,
+    };
+
     const fetchResponse = await fetch(fetchUrl, {
       method: 'POST',
       headers,
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(payload),
       signal: combinedSignal
     });
 
@@ -417,18 +447,21 @@ export const translateDescription = async (
   const modelName = customModel;
   if (!modelName) throw new Error('请在设置中配置 AI 模型 (Model Name)');
 
+  const isProxy = !apiKey;
   const prompt = AI_PROMPTS.TRANSLATE_DESCRIPTION(zhText);
+  const fetchUrl = isProxy ? '/api/ai/translate' : 'https://openrouter.ai/api/v1/chat/completions';
 
   try {
-    const fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
     const response = await fetch(fetchUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': window.location.origin,
+        ...(isProxy ? {} : { 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': window.location.origin }),
       },
-      body: JSON.stringify({
+      body: JSON.stringify(isProxy ? {
+        promptText: prompt,
+        customModel: modelName
+      } : {
         model: modelName.includes('/') ? modelName : `google/${modelName}`,
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
