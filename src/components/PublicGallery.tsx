@@ -135,48 +135,32 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
   const footerRef = React.useRef<HTMLDivElement>(null);
   const stateRef = React.useRef({ hasMore, isSyncing, onLoadMore });
   
-  // Keep stateRef up to date without triggering effect re-runs
-  React.useEffect(() => {
-    stateRef.current = { hasMore, isSyncing, onLoadMore };
-  }, [hasMore, isSyncing, onLoadMore]);
-
-  // Observer is set up ONLY ONCE
   React.useEffect(() => {
     const el = footerRef.current;
-    if (!el) return;
+    if (!el || !hasMore || isSyncing || !onLoadMore) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          const { hasMore, isSyncing, onLoadMore } = stateRef.current;
-          if (hasMore && !isSyncing && onLoadMore) {
+    let observer: IntersectionObserver | null = null;
+    
+    // Use a short timeout to let layout settle
+    const timer = setTimeout(() => {
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
             onLoadMore();
+            observer?.disconnect();
           }
-        }
-      },
-      { rootMargin: '800px' }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []); // NO dynamic dependencies here!
-
-  // Fallback to check if we're still visible after a sync completed or items loaded
-  // but didn't push us out of view.
-  React.useEffect(() => {
-    if (!isSyncing && hasMore && onLoadMore && footerRef.current) {
-        const rect = footerRef.current.getBoundingClientRect();
-        if (rect.top <= window.innerHeight + 800) {
-            const timer = setTimeout(() => {
-                const latest = stateRef.current;
-                if (latest.hasMore && !latest.isSyncing && latest.onLoadMore) {
-                   latest.onLoadMore();
-                }
-            }, 100);
-            return () => clearTimeout(timer);
-        }
-    }
-  }, [isSyncing, hasMore, safePhotosLength]); // only trigger when exactly these state markers change
+        },
+        // We use a large rootMargin so it triggers well before the user hits the bottom
+        { rootMargin: '1200px' }
+      );
+      observer.observe(el);
+    }, 50);
+    
+    return () => {
+      clearTimeout(timer);
+      if (observer) observer.disconnect();
+    };
+  }, [isSyncing, hasMore, safePhotosLength, onLoadMore]);
 
   return (
     <div ref={footerRef} className="py-10 pb-32 flex flex-col items-center justify-center w-full min-h-[100px]">

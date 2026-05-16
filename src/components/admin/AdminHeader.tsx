@@ -34,7 +34,7 @@ export const AdminHeader: React.FC<Props> = ({
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
   appLang = 'zh'
 }) => {
-  const { settings, user, viewMode, setViewMode } = useAdminSession();
+  const { settings, user, viewMode, setViewMode, isSyncing } = useAdminSession();
   const { isAnalyzing, batchProgress, activeScreen, setActiveScreen } = useAdminUI();
   const { isInfiniteMode, setIsInfiniteMode } = useGallery();
   const { errors } = useError();
@@ -81,15 +81,22 @@ export const AdminHeader: React.FC<Props> = ({
           
           {photosCount !== undefined && (
             <div className="flex items-center gap-1.5 bg-brand-navy/5 px-2 py-1 rounded-full border border-brand-navy/10 shrink-0">
-              <div className="flex items-center gap-1">
-                <span className="text-xs font-medium text-brand-navy/60">
-                  {photosCount}
-                </span>
-                <span className="text-xs font-medium text-brand-navy/20">/</span>
-                <span className="text-xs font-medium text-blue-600/60">
-                  {Math.max(cloudCount || 0, photosCount || 0)}
-                </span>
-              </div>
+              {isSyncing && cloudCount !== null && photosCount < cloudCount ? (
+                <div className="flex items-center gap-1.5 px-1 w-16 justify-center">
+                  <RefreshCcw size={10} className="text-brand-navy/60 animate-spin" />
+                  <span className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest">{t.loading}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-medium text-brand-navy/60">
+                    {photosCount}
+                  </span>
+                  <span className="text-xs font-medium text-brand-navy/20">/</span>
+                  <span className="text-xs font-medium text-blue-600/60">
+                    {Math.max(cloudCount || 0, photosCount || 0)}
+                  </span>
+                </div>
+              )}
               {isInfiniteMode && (
                 <div className="flex items-center gap-1 pl-1 border-l border-brand-navy/10 ml-0.5">
                   <Skeleton className="w-1.5 h-1.5 bg-green-500 rounded-full" />

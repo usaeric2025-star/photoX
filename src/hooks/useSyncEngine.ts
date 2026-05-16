@@ -102,18 +102,29 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 let page = 0;
                 let hasMoreToFetch = true;
                 while (hasMoreToFetch) {
-                    const pagePhotos = await loadAllPhotosFromCloud(undefined, page, 1000).catch(err => { handleError(err, '获取照片列表失败'); return []; });
+                    const pagePhotos = await loadAllPhotosFromCloud(undefined, page, 100).catch(err => { handleError(err, '获取照片列表失败'); return []; });
                     if (pagePhotos.length > 0) {
                         allCloudPhotos = allCloudPhotos.concat(pagePhotos);
                         page++;
                     }
-                    if (pagePhotos.length < 1000) {
+                    if (pagePhotos.length < 100) {
                         hasMoreToFetch = false;
                     }
                 }
             } else {
                 // Incremental sync
-                allCloudPhotos = await loadAllPhotosFromCloud(effectiveSyncTime || undefined).catch(err => { handleError(err, '获取照片列表失败'); return []; });
+                let page = 0;
+                let hasMoreToFetch = true;
+                while (hasMoreToFetch) {
+                    const pagePhotos = await loadAllPhotosFromCloud(effectiveSyncTime || undefined, page, 100).catch(err => { handleError(err, '获取照片列表失败'); return []; });
+                    if (pagePhotos.length > 0) {
+                        allCloudPhotos = allCloudPhotos.concat(pagePhotos);
+                        page++;
+                    }
+                    if (pagePhotos.length < 100) {
+                        hasMoreToFetch = false;
+                    }
+                }
             }
 
             const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, realCloudCount] = await Promise.all([
