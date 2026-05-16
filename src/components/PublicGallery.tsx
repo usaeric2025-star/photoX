@@ -132,21 +132,54 @@ MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 const VirtuosoGridFooter = React.memo(({ context }: any) => {
   const { hasMore, isSyncing, onLoadMore, safePhotosLength, textLoadMore, textEndOfList } = context;
-
-  // Use IntersectionObserver or similar to auto-load if Virtuoso endReached is flaky?
-  // We can just call onLoadMore() in a useEffect if this footer mounts while hasMore and not syncing
+  const footerRef = React.useRef<HTMLDivElement>(null);
+  const stateRef = React.useRef({ hasMore, isSyncing, onLoadMore });
+  
+  // Keep stateRef up to date without triggering effect re-runs
   React.useEffect(() => {
-    if (hasMore && !isSyncing && onLoadMore) {
-      // Small timeout to prevent immediate rapid firing
-      const timer = setTimeout(() => {
-        onLoadMore();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
+    stateRef.current = { hasMore, isSyncing, onLoadMore };
   }, [hasMore, isSyncing, onLoadMore]);
 
+  // Observer is set up ONLY ONCE
+  React.useEffect(() => {
+    const el = footerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          const { hasMore, isSyncing, onLoadMore } = stateRef.current;
+          if (hasMore && !isSyncing && onLoadMore) {
+            onLoadMore();
+          }
+        }
+      },
+      { rootMargin: '800px' }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []); // NO dynamic dependencies here!
+
+  // Fallback to check if we're still visible after a sync completed or items loaded
+  // but didn't push us out of view.
+  React.useEffect(() => {
+    if (!isSyncing && hasMore && onLoadMore && footerRef.current) {
+        const rect = footerRef.current.getBoundingClientRect();
+        if (rect.top <= window.innerHeight + 800) {
+            const timer = setTimeout(() => {
+                const latest = stateRef.current;
+                if (latest.hasMore && !latest.isSyncing && latest.onLoadMore) {
+                   latest.onLoadMore();
+                }
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }
+  }, [isSyncing, hasMore, safePhotosLength]); // only trigger when exactly these state markers change
+
   return (
-    <div className="py-10 pb-32 flex flex-col items-center justify-center w-full min-h-[100px]">
+    <div ref={footerRef} className="py-10 pb-32 flex flex-col items-center justify-center w-full min-h-[100px]">
       {hasMore ? (
         <button 
           onClick={onLoadMore}
@@ -466,6 +499,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, []);
 
+const virtuosoContext = useMemo(() => ({
+    hasMore,
+    isSyncing,
+    onLoadMore: stableLoadMore,
+    safePhotosLength: safePhotosToShow.length,
+    textLoadMore: t.loadMore,
+    textEndOfList: t.endOfList
+  }), [hasMore, isSyncing, stableLoadMore, safePhotosToShow.length, t.loadMore, t.endOfList]);
+
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {/* Header */}
@@ -577,14 +619,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 gridPhotos={safePhotosToShow}
               />
             )}
-            context={{
-                hasMore,
-                isSyncing,
-                onLoadMore: stableLoadMore,
-                safePhotosLength: safePhotosToShow.length,
-                textLoadMore: t.loadMore,
-                textEndOfList: t.endOfList
-            }}
+            context={virtuosoContext}
             components={virtuosoComponents}
           />
         )}
