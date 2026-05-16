@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { Skeleton } from './ui/Skeleton';
-import { deduplicatePhotos } from '../services/photoSyncService';
+import { deduplicatePhotos } from '../services/photoMutationService';
 import { Tag, Category, Photo, Manufacturer, AppSettings, User, ApiResponse } from '../types';
 import { ManufacturerItem } from './admin/ManufacturerItem';
 import { motion, AnimatePresence } from 'motion/react';
@@ -472,6 +472,28 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                   云端: <span className="text-white font-black">{cloudCount !== null ? cloudCount : '---'} 张</span> | 
                   最近同步: <span className="text-white font-black">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-CN', { hour12: false }) : '无'}</span>
                 </p>
+              </div>
+
+              {/* Advanced: Reset Local Cache */}
+              <div className="flex border-t border-white/5 pt-4 justify-between items-center bg-black/20 -mx-6 -mb-6 p-6">
+                <div className="flex items-center gap-2">
+                  <Database size={16} className="text-white/20" />
+                  <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Local Cache</span>
+                </div>
+                <button 
+                  onClick={async () => {
+                    const ok = confirm('确定要清空本地数据缓存并强制从云端完整拉取吗？');
+                    if (ok) {
+                      localStorage.removeItem('lastSyncTime');
+                      localStorage.removeItem('uuid_v2_cleanup_done');
+                      await refreshCloudData(user, true);
+                      toast.success('本地缓存已重置，正在全量同步');
+                    }
+                  }}
+                  className="text-[9px] font-black text-brand-gold hover:text-white uppercase tracking-[0.2em] px-4 py-2 border border-brand-gold/30 rounded-full bg-brand-gold/5 transition-all active:scale-95"
+                >
+                  Reset & Full Sync
+                </button>
               </div>
             </div>
           )}

@@ -151,7 +151,7 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
           }
         },
         // We use a large rootMargin so it triggers well before the user hits the bottom
-        { rootMargin: '1200px' }
+        { rootMargin: PAGINATION.INFINITE_SCROLL_ROOT_MARGIN }
       );
       observer.observe(el);
     }, 50);
@@ -266,16 +266,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
-    const safePhotos = safeArray<Photo>(photos);
-    safePhotos.forEach(p => {
-       safeArray<string>(p.tagIds).forEach(id => ids.add(id));
+    photos.forEach(p => {
+       (p.tagIds || []).forEach(id => ids.add(id));
     });
     return ids;
   }, [photos]);
 
   const tags = useMemo(() => {
     const tMap = new Map<string, Tag>();
-    safeArray(contextTags).forEach(t => tMap.set(t.id, t));
+    contextTags.forEach(t => tMap.set(t.id, t));
     
     return Array.from(tMap.values());
   }, [contextTags, allTagIds]);
@@ -326,7 +325,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};
-    safeArray(tags).forEach(t => { map[String(t.id)] = t.name; });
+    tags.forEach(t => { map[String(t.id)] = t.name; });
     return map;
   }, [tags]);
 
@@ -362,7 +361,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     const manualCodeStr = p.manual_code ? ` [${p.manual_code}]` : '';
     const suffix = isStaffMode ? manualCodeStr : modelStr;
     const photoUrl = p.image_url || p.uri || '';
-    const shareUrl = `${window.location.origin}${window.location.pathname}#/h/${p.image_hash}`;
+    const shareUrl = `${window.location.origin}/h/${p.image_hash}`;
 
     if (lang === 'ms') {
       return `Halo, saya berminat dengan perabot ini:\n\n${displayName}${suffix}\n\nLink: ${shareUrl}`;
@@ -410,7 +409,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const shareSinglePhoto = useCallback(async (photo: Photo) => {
     const msg = getShareMessage(photo);
-    const shareUrl = `${window.location.origin}${window.location.pathname}#/h/${photo.image_hash}`;
+    const shareUrl = `${window.location.origin}/h/${photo.image_hash}`;
     try {
       if (navigator.share) {
         // Many platforms (iOS/Android) append the 'url' to the 'text' automatically. 
@@ -428,10 +427,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [t.shareTitle, t.shareNotSupported, lang]);
 
   const shareGroup = useCallback(async (photos: Photo[]) => {
-    const safePhotos = safeArray(photos).filter(p => !!p);
-    const gId = safePhotos[0]?.groupId || activeGroupId;
-    const shareUrl = `${window.location.origin}${window.location.pathname}#/g/${gId}`;
-    const msg = safePhotos.map(p => p.name || 'Furniture').slice(0, 3).join(', ') + (safePhotos.length > 3 ? '...' : '');
+    const validPhotos = photos.filter(p => !!p);
+    const gId = validPhotos[0]?.groupId || activeGroupId;
+    const shareUrl = `${window.location.origin}/g/${gId}`;
+    const msg = validPhotos.map(p => p.name || 'Furniture').slice(0, 3).join(', ') + (validPhotos.length > 3 ? '...' : '');
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView full collection: ${shareUrl}`;
     
     try {
@@ -464,13 +463,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, [gridPhotos, isSyncing]);
 
-  const photosToShow = isSyncing && safeArray(gridPhotos).length === 0
-    ? prevPhotosRef.current
+  const photosToShow = isSyncing && gridPhotos.length === 0
+    ? gridPhotos
     : gridPhotos;
 
   const safePhotosToShow = isInfiniteMode 
-    ? safeArray(photosToShow)
-    : safeArray(photosToShow).slice(0, visibleCount);
+    ? photosToShow
+    : photosToShow.slice(0, visibleCount);
 
   const handleLoadMoreRef = useRef(handleLoadMore);
   useEffect(() => {
@@ -574,7 +573,7 @@ const virtuosoContext = useMemo(() => ({
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
             }}
             endReached={stableLoadMore}
-            overscan={1000}
+            overscan={PAGINATION.VIRTUAL_SCROLL_OVERSCAN}
             listClassName={`grid gap-3 p-2 pb-24 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (
               <MemoizedPhotoCard

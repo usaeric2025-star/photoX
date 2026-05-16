@@ -5,7 +5,6 @@ import { cleanPhotos } from '../lib/filters';
 import { saveData, loadData } from '../utils/indexedDB';
 import { 
     loadAllPhotosFromCloud, 
-    loadPhotosFromCloud,
 } from '../services/photoService';
 import {
     savePhotoToCloud,
@@ -20,47 +19,47 @@ import { uploadLogo } from '../services/settingService';
 import { useGallery } from './useGallery';
 import { useErrorHandler } from '../utils/errorHandler';
 
-export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzing' | 'importing', fn: () => Promise<T>) => Promise<T>) => {
+import { PAGINATION } from '../constants/config';
+import { mergePhotos } from '../lib/photoSync';
+
+export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>) => {
     const { 
         setPhotos: setPublicPhotos, 
         setCategories, 
         setTags, 
         setManufacturers,
-        setVisibleCount
     } = useGallery();
 
     const { handleError } = useErrorHandler();
 
-    const [internalSyncing, setInternalSyncing] = React.useState(false);
+    const [internalSyncType, setInternalSyncType] = React.useState<'idle' | 'sync-pull' | 'sync-push' | null>(null);
 
-    // wrapper that executes with withLoading if provided
-    const runWithSyncing = async <T,>(fn: () => Promise<T>): Promise<T> => {
+    const runWithSyncing = async <T,>(type: 'sync-pull' | 'sync-push', fn: () => Promise<T>): Promise<T> => {
         if (withLoading) {
-            return await withLoading('syncing', fn);
+            return await withLoading(type, fn);
         } else {
-            setInternalSyncing(true);
+            setInternalSyncType(type);
             try {
                 return await fn();
             } finally {
-                setInternalSyncing(false);
+                setInternalSyncType(null);
             }
         }
     };
 
-    const isSyncing = withLoading ? false : internalSyncing;
-    const setIsSyncing = (v: boolean) => setInternalSyncing(v);
+    const isSyncing = withLoading ? false : internalSyncType !== null;
+    const currentSyncType = internalSyncType;
     const [viewMode, setViewMode] = useState<'public' | 'private'>('private');
     const [settings, setSettings] = useState<any>(null);
 
     React.useEffect(() => {
         const initSettings = async () => {
-            // Cleanup legacy localStorage data if requested to solve UUID issues once and for all
+            // Cleanup legacy localStorage data
             const hasCleaned = await loadData('uuid_v2_cleanup_done');
             if (!hasCleaned) {
                 console.log("SyncEngine: Performing one-time cleanup of legacy local data...");
                 const keysToClear = ['product_categories', 'db_categories', 'product_tags', 'temp_tags'];
                 for (const key of keysToClear) {
-                    // indexedDB saveData is our loadData wrapper
                     await saveData(key, null);
                 }
                 await saveData('uuid_v2_cleanup_done', true);
@@ -68,7 +67,6 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
 
             let s = await loadData('product_settings');
             if (!s) {
-                // Migrate from old key if exists
                 const oldS = await loadData('public_settings');
                 if (oldS) {
                     s = oldS;
@@ -78,55 +76,58 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
             if (s && !settings) setSettings(s);
         };
         initSettings();
-    // Run this effect only once on mount to perform initial data loading.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    /**
+     * Data fetcher that handles paging internally
+     */
+    const fetchAllPages = async (syncTime?: string | null): Promise<any[]> => {
+        let allPhotos: any[] = [];
+        let page = 0;
+        let hasMore = true;
+        const pageSize = PAGINATION.SYNC_PAGE_SIZE;
+
+        while (hasMore) {
+            const pagePhotos = await loadAllPhotosFromCloud(syncTime || undefined, page, pageSize)
+                .catch(err => { 
+                    handleError(err, '获取照片分页数据失败'); 
+                    return []; 
+                });
+            
+            if (pagePhotos.length > 0) {
+                allPhotos = allPhotos.concat(pagePhotos);
+                page++;
+            }
+            
+            if (pagePhotos.length < pageSize) {
+                hasMore = false;
+            }
+        }
+        return allPhotos;
+    };
 
     const refreshCloudData = async (
         user: any,
         force = false,
         setCloudCount?: (c: number | null) => void
     ) => {
-        return runWithSyncing(async () => {
-        console.log("SyncEngine: Refreshing data (Force:", force, ")...");
+        return runWithSyncing('sync-pull', async () => {
+        console.log(`SyncEngine: Refresh started (Force: ${force}, User: ${user?.email})`);
         try {
-            // Get current local state to merge properly
             const localPhotos = await loadData('product_photos') || [];
+            let effectiveSyncTime = (force || localPhotos.length === 0) ? null : localStorage.getItem('lastSyncTime');
             
-            // If local data is empty, force a full sync regardless of 'force' param
-            const effectiveSyncTime = (force || localPhotos.length === 0) ? null : localStorage.getItem('lastSyncTime');
-            
-            let allCloudPhotos: any[] = [];
-            if (!effectiveSyncTime) {
-                // Initial full sync or forced reload: loop to get all pages
-                let page = 0;
-                let hasMoreToFetch = true;
-                while (hasMoreToFetch) {
-                    const pagePhotos = await loadAllPhotosFromCloud(undefined, page, 100).catch(err => { handleError(err, '获取照片列表失败'); return []; });
-                    if (pagePhotos.length > 0) {
-                        allCloudPhotos = allCloudPhotos.concat(pagePhotos);
-                        page++;
-                    }
-                    if (pagePhotos.length < 100) {
-                        hasMoreToFetch = false;
-                    }
-                }
-            } else {
-                // Incremental sync
-                let page = 0;
-                let hasMoreToFetch = true;
-                while (hasMoreToFetch) {
-                    const pagePhotos = await loadAllPhotosFromCloud(effectiveSyncTime || undefined, page, 100).catch(err => { handleError(err, '获取照片列表失败'); return []; });
-                    if (pagePhotos.length > 0) {
-                        allCloudPhotos = allCloudPhotos.concat(pagePhotos);
-                        page++;
-                    }
-                    if (pagePhotos.length < 100) {
-                        hasMoreToFetch = false;
-                    }
-                }
+            // Fast check the total count to avoid partial sync glitches
+            const countCheck = await import('../services/photoService').then(m => m.getPhotoCount()).catch(() => null);
+            if (countCheck !== null && !force && effectiveSyncTime && localPhotos.length < countCheck) {
+                console.log(`SyncEngine: Cache correction. Local (${localPhotos.length}) < Cloud (${countCheck}).`);
+                effectiveSyncTime = null;
             }
+            
+            // 1. Fetch all photo updates/pages
+            const cloudPhotos = await fetchAllPages(effectiveSyncTime);
 
+            // 2. Fetch metadata in parallel
             const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, realCloudCount] = await Promise.all([
                 fetchSettings().catch(err => { handleError(err, '获取设置失败'); return null; }),
                 loadManufacturersFromCloud().catch(err => { handleError(err, '获取厂商失败'); return null; }),
@@ -135,18 +136,16 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 import('../services/photoService').then(m => m.getPhotoCount()).catch(() => null)
             ]);
             
-            const cloudPhotos = allCloudPhotos;
-
+            // 3. Process Settings
             if (cloudSettings) {
                 setSettings(cloudSettings);
                 await saveData('product_settings', cloudSettings);
-                
-                // Sync theme
                 if (cloudSettings.background_color) document.documentElement.style.setProperty('--custom-bg', cloudSettings.background_color);
                 if (cloudSettings.primary_color) document.documentElement.style.setProperty('--custom-text', cloudSettings.primary_color);
                 if (cloudSettings.accent_color) document.documentElement.style.setProperty('--custom-accent', cloudSettings.accent_color);
             }
 
+            // 4. Process Metadata Lists
             if (cloudManufacturers) {
                 setManufacturers(cloudManufacturers);
                 await saveData('product_manufacturers', cloudManufacturers);
@@ -164,7 +163,6 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                   name: c.name || c.zh || 'Uncategorized',
                   subcategories: c.subcategories || [] 
                 }));
-                
                 setCategories(normalized);
                 await saveData('product_categories', normalized);
             } else {
@@ -172,50 +170,25 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
                 await saveData('product_categories', []);
             }
             
-            // Get current local state to merge properly and get total count
-            const localMap = new Map((localPhotos as any[]).filter(p => p && p.id).map(p => [p.id, p]));
-
-            if (cloudPhotos && cloudPhotos.length > 0) {
-                console.log(`SyncEngine: Received ${cloudPhotos.length} new/updated items.`);
-                cloudPhotos.forEach(cp => {
-                    const local = localMap.get(cp.id);
-                    if (local) {
-                        localMap.set(cp.id, {
-                            ...local,
-                            ...cp,
-                            categoryId: cp.categoryId || local.categoryId,
-                            manufacturerId: cp.manufacturerId || local.manufacturerId,
-                            tagIds: (cp.tagIds && cp.tagIds.length > 0) ? cp.tagIds : local.tagIds,
-                            name: cp.name || local.name,
-                            manual_code: cp.manual_code || local.manual_code,
-                            description: cp.description || local.description
-                        });
-                    } else {
-                        localMap.set(cp.id, cp);
-                    }
-                });
-            }
-
-            const finalPhotos = cleanPhotos(Array.from(localMap.values()));
+            // 5. Merge Photos & Final State Update
+            const finalPhotos = mergePhotos(localPhotos, cloudPhotos);
             setPublicPhotos(finalPhotos);
             await saveData('product_photos', finalPhotos);
             
-            // Always set cloud count to the total photos length
+            // 6. Update Cloud Count ONLY AT THE END to prevent flicker
             if (setCloudCount) {
                 setCloudCount(realCloudCount !== null ? realCloudCount : finalPhotos.length);
             }
             
-            // Fix scrolling and update issue: ensure visibleCount covers finalPhotos.length ONLY IF we are catching up with what we already had locally. 
-            // Avoid pushing visibleCount to thousands simply because we have thousands of local items, as it will break the grid optimization.
-            // Leave visibleCount handling to the Infinite Scroll handler (it was previously causing a lag spike by setting visibleCount = finalPhotos.length)
-            
             localStorage.setItem('lastSyncTime', new Date().toISOString());
+            console.log(`SyncEngine: Complete. Handled ${finalPhotos.length} total items.`);
         } catch (err) {
-            handleError(err, '云端同步失败');
+            handleError(err, '云端同步异常');
             throw err;
         }
         });
     }
+
 
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, categories: any[], tags: any[], manufacturers: any[]) => {
         if (e.target.files && e.target.files[0]) {
@@ -237,7 +210,8 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
     };
 
     return { 
-        isSyncing, setIsSyncing,
+        isSyncing,
+        currentSyncType,
         viewMode, setViewMode,
         settings, setSettings,
         refreshCloudData,

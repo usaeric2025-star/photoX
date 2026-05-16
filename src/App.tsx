@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
@@ -78,8 +78,8 @@ export default function AppRoutes() {
   if (!authChecked) return null;
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <AnimatedRoutes />
-    </HashRouter>
+    </BrowserRouter>
   );
 }

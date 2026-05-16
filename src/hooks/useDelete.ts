@@ -46,7 +46,7 @@ export function useDelete() {
     if (!userId) return { success: false, error: 'User ID not found' };
 
     try {
-      const { clearGroupIdInCloud } = await import('../services/photoSyncService');
+      const { clearGroupIdInCloud } = await import('../services/photoMutationService');
       await clearGroupIdInCloud(groupId);
       
       const { deleteGroupFromCloud } = await import('../services/groupService');

@@ -81,10 +81,12 @@ export const AdminHeader: React.FC<Props> = ({
           
           {photosCount !== undefined && (
             <div className="flex items-center gap-1.5 bg-brand-navy/5 px-2 py-1 rounded-full border border-brand-navy/10 shrink-0">
-              {isSyncing && cloudCount !== null && photosCount < cloudCount ? (
-                <div className="flex items-center gap-1.5 px-1 w-16 justify-center">
+              {isSyncing ? (
+                <div className="flex items-center gap-1.5 px-1 w-20 justify-center">
                   <RefreshCcw size={10} className="text-brand-navy/60 animate-spin" />
-                  <span className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest">{t.loading}</span>
+                  <span className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest">
+                    {photosCount !== undefined && cloudCount ? `${photosCount}/${cloudCount}` : t.loading}
+                  </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1">

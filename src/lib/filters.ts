@@ -39,7 +39,8 @@ export interface FilterOptions {
 export function filterPhotos(
   photos: Photo[],
   options: FilterOptions,
-  tags: Tag[]
+  tags: Tag[],
+  categories?: Category[]
 ): Photo[] {
   if (!Array.isArray(photos)) return [];
   
@@ -66,11 +67,54 @@ export function filterPhotos(
   // 2. Search Filter
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
-    result = result.filter(p => 
-      (p.name || '').toLowerCase().includes(q) || 
-      (p.manual_code || '').toLowerCase().includes(q) ||
-      (p.model_number || '').toLowerCase().includes(q)
-    );
+    
+    // Pre-calculate tag names and category names for each photo to avoid O(N*M) in filter
+    const tagMap = new Map<string, string>();
+    tags.forEach(t => tagMap.set(String(t.id), t.name.toLowerCase()));
+    
+    const catMap = new Map<string, string>();
+    if (categories) {
+      categories.forEach(c => {
+        catMap.set(String(c.id), (c.zh || c.name || '').toLowerCase());
+      });
+    }
+
+    result = result.filter(p => {
+      // Basic text fields
+      const hasBasicMatch = 
+        (p.name || '').toLowerCase().includes(q) || 
+        (p.manual_code || '').toLowerCase().includes(q) ||
+        (p.model_number || '').toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q);
+      
+      if (hasBasicMatch) return true;
+
+      // Translation fields
+      if (p.description_translations) {
+        const trans = p.description_translations;
+        if (
+          (trans.zh || '').toLowerCase().includes(q) ||
+          (trans.en || '').toLowerCase().includes(q) ||
+          (trans.ms || '').toLowerCase().includes(q)
+        ) return true;
+      }
+
+      // Tags match
+      const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
+      const hasTagMatch = pTagIds.some(tid => {
+        const tagName = tagMap.get(String(tid));
+        return tagName && tagName.includes(q);
+      });
+      if (hasTagMatch) return true;
+
+      // Category match
+      if (p.categoryId) {
+        const catName = catMap.get(String(p.categoryId));
+        if (catName && catName.includes(q)) return true;
+      }
+
+      return false;
+    });
   }
 
   // 3. Category Filter

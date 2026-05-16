@@ -21,7 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { updatePhotosGroupInCloud } from '../../services/photoSyncService';
+import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupGridView } from './GroupGridView';

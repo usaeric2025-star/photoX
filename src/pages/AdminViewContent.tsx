@@ -23,11 +23,16 @@ import { useDelete } from '../hooks/useDelete';
 import { Photo, Category, Tag, Manufacturer, User, ProductFormData } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
-import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, useAdminUI } from '../context/AdminContexts';
+import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, useAdminUI, AdminUIContextType } from '../context/AdminContexts';
 import { safeArray } from '../lib/utils';
 
 import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
+
+// Lazy load large screens/drawers
+const PhotoEditDrawer = React.lazy(() => import('../components/admin/PhotoEditDrawer').then(m => ({ default: m.PhotoEditDrawer })));
+const BatchEditScreen = React.lazy(() => import('../components/admin/BatchEditScreen').then(m => ({ default: m.BatchEditScreen })));
+const SettingsScreen = React.lazy(() => import('../components/SettingsScreen').then(m => ({ default: m.SettingsScreen })));
 
 // ... (in AdminViewContent component)
 const errorGuard = (name: string) => () => {
@@ -54,7 +59,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
-    loadingState, setLoadingState, withLoading, cloudCount, setCloudCount,
+    loadingType, setLoadingType, withLoading, cloudCount, setCloudCount,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog 
   } = useAdminUI();
 
@@ -75,7 +80,15 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing } = useSyncEngine(withLoading);
+
+  const checkSyncLock = useCallback(() => {
+    if (loadingType === 'sync-pull' || loadingType === 'sync-push') {
+       toast.error('同步中，请稍后再试 / Syncing, please try later');
+       return true;
+    }
+    return false;
+  }, [loadingType]);
   const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
   const [accessPasscode, setAccessPasscode] = useState('');
@@ -94,21 +107,20 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     setAlertDialog, 
     setPromptDialog, 
     setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
-    setLoadingState,
-    loadingState,
+    setLoadingType,
+    loadingType,
     withLoading,
     setCloudCount,
     cloudCount,
     editPhotoId, setEditPhotoId,
     batchEditIds, setBatchEditIds,
     abortAnalysis: errorGuard('abortAnalysis')
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     settings,
     setSettings,
-    setIsSyncing
-  }), [settings, setSettings, setIsSyncing]);
+  }), [settings, setSettings]);
 
   const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 
@@ -132,9 +144,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
       onSubmit: async (val: string) => {
         const normalized = val.trim();
         if (!normalized) return;
-        const existing = safeArray(tags).find(t => t.name.toUpperCase() === normalized.toUpperCase());
+        const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
-          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...safeArray(prev.tagIds), String(existing.id)])] }));
+          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
           toast.error(`标签 "${normalized}" 已存在`);
           return;
         }
@@ -142,7 +154,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
         if (saved) {
            updateForm((prev: ProductFormData) => ({ 
              ...prev, 
-             tagIds: [...new Set([...safeArray(prev.tagIds), String(saved.id)])] 
+             tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] 
            }));
            toast.success(`已新增标签 "${normalized}"`);
         }
@@ -182,14 +194,12 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     addManufacturer
   );
 
-  const actualLoadingState = loadingState;
-
   // Clear stale AI errors when entering edit mode, unless we are currently analyzing
   useEffect(() => {
-    if (editPhotoId && actualLoadingState !== 'analyzing') {
+    if (editPhotoId && loadingType !== 'analyzing') {
        setAiDebugInfo(null);
     }
-  }, [editPhotoId, actualLoadingState, setAiDebugInfo]);
+  }, [editPhotoId, loadingType, setAiDebugInfo]);
 
   const handleDeletePhoto = useCallback(async (id: string) => {
      const { success, error } = await deletePhotos(id);
@@ -225,9 +235,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     accessPasscode, setAccessPasscode, customModel, setCustomModel,
     viewMode, setViewMode,
-    isSyncing: actualLoadingState === 'syncing' || isSyncing, setIsSyncing, onRefresh,
+    isSyncing: loadingType === 'sync-pull' || loadingType === 'sync-push' || isSyncing, 
+    onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, actualLoadingState, isSyncing, setIsSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, loadingType, isSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
@@ -255,17 +266,18 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    loadingState: actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
-    isAnalyzing: actualLoadingState === 'analyzing',
+    loadingType, setLoadingType, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
+    isAnalyzing: loadingType === 'analyzing',
     cloudCount, setCloudCount
   }), [
     activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
+    loadingType, setLoadingType, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
     cloudCount, setCloudCount
   ]);
 
   const handleBatchAiIdentifyTrigger = async () => {
-    if (actualLoadingState === 'analyzing') {
+    if (checkSyncLock()) return;
+    if (loadingType === 'analyzing') {
       abortAnalysis();
     } else {
       try {
@@ -277,10 +289,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   };
   
   const handleLoadMoreCallback = useCallback(() => {
-    const sPhotos = safeArray(photos);
     if (visibleCount < totalGridCount) {
       setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
-    } else if (sPhotos.length < (cloudCount || 0)) {
+    } else if (photos.length < (cloudCount || 0)) {
         performPullSync(refreshCloudData);
     }
   }, [photos, visibleCount, totalGridCount, cloudCount, setVisibleCount, performPullSync, refreshCloudData]);
@@ -299,105 +310,129 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                <ErrorLogViewer />
             </div>
       
-            {batchEditIds && (
-              <BatchEditScreen 
-                resetAddState={() => { resetAddState(); }}
-                saveBatchEdit={saveBatchEdit}
-                batchEditIds={batchEditIds}
-                formState={formState}
-                updateForm={updateForm}
-                batchIsHiddenApplied={batchIsHiddenApplied}
-                setBatchIsHiddenApplied={setBatchIsHiddenApplied}
-                showOtherFields={showOtherFields}
-                setShowOtherFields={setShowOtherFields}
-                onDelete={async (ids) => {
-                  const sIds = safeArray(ids);
-                  const { success, error } = await deletePhotos(sIds);
-                  if (success) {
-                    toast.success(`已成功删除 ${sIds.length} 张照片`);
-                    resetAddState();
-                  } else {
-                    handleError(error, '批量删除失败');
-                  }
-                }}
-              />
-            )}
-            
-            {activeGroupId && (
-              <GroupDetailView
-                activeGroupId={activeGroupId}
-                setActiveGroupId={setActiveGroupId}
-                setAlertDialog={setAlertDialog}
-                photos={photos}
-                displayPhotos={safeArray(photos).filter(p => p.groupId === activeGroupId)}
-                setLightboxIndex={() => {}}
-                isAdminMode={true}
-                isStaffMode={true}
-                onEditPhoto={(p) => { setEditPhotoId(p.id); }}
-                onLongPressStart={() => {}}
-                onLongPressEnd={() => {}}
-                onBatchEdit={(ids) => { setBatchEditIds(ids); }}
-                onUngroup={async (groupId) => { 
-                  await handleUngroup(groupId); 
-                }}
-                onAddPhotoToGroup={() => {
-                  const input = document.createElement('input');
-                  input.type = 'file';
-                  input.accept = 'image/*';
-                  input.multiple = true;
-                  input.onchange = (e) => handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
-                  input.click();
-                }}
-                setPhotos={setPhotos}
-                lang={lang}
-                t={t}
-                categories={categories}
-                manufacturers={manufacturers}
-                allTags={tags}
-                tagMap={Object.fromEntries(tagIdToNameMap)}
-                onBatchAiAnalyze={(photos) => withLoading('analyzing', () => handleGroupAiIdentify(photos))}
-                onAiAnalyze={(p) => withLoading('analyzing', () => handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id))}
-                onToggleHidden={async (photo) => {
-                  const newStatus = !photo.isHidden;
-                  try {
-                    await updatePhoto(photo.id, { isHidden: newStatus });
-                  } catch (e) {
-                    handleError(e, '切换隐藏状态失败');
-                  }
-                }}
-                updatePhoto={updatePhoto}
-              />
-            )}
-      
-            {activeScreen === 'manage' && (
-               <SettingsScreen 
-                 setActiveScreen={setActiveScreen}
-                 saveSettings={saveSettings}
-                 handleLogoUpload={handleLogoUpload}
-                 performPushSync={() => performPushSync(settings, refreshCloudData, lastSyncTime)}
-                 performPullSync={() => performPullSync(refreshCloudData)}
-                 cloudCount={cloudCount}
-                 lastSyncTime={lastSyncTime}
-                 isSyncing={isSyncing}
-               />
-            )}
-      
-            {(editPhotoId || newPhotoData) && (
-                <PhotoEditDrawer 
-                    editPhotoId={editPhotoId} 
-                    resetAddState={resetAddState} 
-                    saveNewPhoto={saveNewPhoto} 
-                    formState={formState}
-                    updateForm={updateForm}
-                    showOtherFields={showOtherFields} 
-                    setShowOtherFields={setShowOtherFields}
-                    newPhotoData={newPhotoData} 
-                    setNewPhotoData={setNewPhotoData}
-                    onDelete={handleDeletePhoto}
-                    editPhotoPreview={editPhotoId ? safeArray(photos).find(p => p.id === editPhotoId)?.image_url || safeArray(photos).find(p => p.id === editPhotoId)?.uri : null}
-                    abortAnalysis={abortAnalysis}
+            <React.Suspense fallback={<div className="flex items-center justify-center h-screen bg-brand-bg"><div className="w-12 h-12 border-4 border-brand-gold/20 border-t-brand-gold rounded-full animate-spin" /></div>}>
+              {batchEditIds && (
+                <BatchEditScreen 
+                  resetAddState={() => { resetAddState(); }}
+                  saveBatchEdit={async () => {
+                    if (checkSyncLock()) return;
+                    await saveBatchEdit();
+                  }}
+                  batchEditIds={batchEditIds}
+                  formState={formState}
+                  updateForm={updateForm}
+                  batchIsHiddenApplied={batchIsHiddenApplied}
+                  setBatchIsHiddenApplied={setBatchIsHiddenApplied}
+                  showOtherFields={showOtherFields}
+                  setShowOtherFields={setShowOtherFields}
+                  onDelete={async (ids) => {
+                    if (checkSyncLock()) return;
+                    const sIds = ids;
+                    const { success, error } = await deletePhotos(sIds);
+                    if (success) {
+                      toast.success(`已成功删除 ${sIds.length} 张照片`);
+                      resetAddState();
+                    } else {
+                      handleError(error, '批量删除失败');
+                    }
+                  }}
                 />
-            )}
+              )}
+              
+              {activeGroupId && (
+                <GroupDetailView
+                  activeGroupId={activeGroupId}
+                  setActiveGroupId={setActiveGroupId}
+                  setAlertDialog={setAlertDialog}
+                  photos={photos}
+                  displayPhotos={photos.filter(p => p.groupId === activeGroupId)}
+                  setLightboxIndex={() => {}}
+                  isAdminMode={true}
+                  isStaffMode={true}
+                  onEditPhoto={(p) => { setEditPhotoId(p.id); }}
+                  onLongPressStart={() => {}}
+                  onLongPressEnd={() => {}}
+                  onBatchEdit={(ids) => { setBatchEditIds(ids); }}
+                  onUngroup={async (groupId) => { 
+                    if (checkSyncLock()) return;
+                    await handleUngroup(groupId); 
+                  }}
+                  onAddPhotoToGroup={() => {
+                    if (checkSyncLock()) return;
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.multiple = true;
+                    input.onchange = (e) => handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
+                    input.click();
+                  }}
+                  setPhotos={setPhotos}
+                  lang={lang}
+                  t={t}
+                  categories={categories}
+                  manufacturers={manufacturers}
+                  allTags={tags}
+                  tagMap={Object.fromEntries(tagIdToNameMap)}
+                  onBatchAiAnalyze={(photos) => withLoading('analyzing', () => handleGroupAiIdentify(photos))}
+                  onAiAnalyze={(p) => withLoading('analyzing', () => handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id))}
+                  onToggleHidden={async (photo) => {
+                    if (checkSyncLock()) return;
+                    const newStatus = !photo.isHidden;
+                    try {
+                      await updatePhoto(photo.id, { isHidden: newStatus });
+                    } catch (e) {
+                      handleError(e, '切换隐藏状态失败');
+                    }
+                  }}
+                  updatePhoto={async (id, updates) => {
+                    if (checkSyncLock()) return;
+                    await updatePhoto(id, updates);
+                  }}
+                />
+              )}
+        
+              {activeScreen === 'manage' && (
+                <SettingsScreen 
+                  setActiveScreen={setActiveScreen}
+                  saveSettings={async (s) => {
+                    if (checkSyncLock()) return { success: false };
+                    return await saveSettings(s);
+                  }}
+                  handleLogoUpload={async (e, c, t, m) => {
+                    if (checkSyncLock()) return;
+                    await handleLogoUpload(e, c, t, m);
+                  }}
+                  performPushSync={() => withLoading('sync-push', () => performPushSync(settings, refreshCloudData, lastSyncTime))}
+                  performPullSync={() => performPullSync(refreshCloudData)}
+                  cloudCount={cloudCount}
+                  lastSyncTime={lastSyncTime}
+                  isSyncing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
+                />
+              )}
+        
+              {(editPhotoId || newPhotoData) && (
+                  <PhotoEditDrawer 
+                      editPhotoId={editPhotoId} 
+                      resetAddState={resetAddState} 
+                      saveNewPhoto={async () => {
+                        if (checkSyncLock()) return;
+                        await saveNewPhoto();
+                      }}
+                      formState={formState}
+                      updateForm={updateForm}
+                      showOtherFields={showOtherFields} 
+                      setShowOtherFields={setShowOtherFields}
+                      newPhotoData={newPhotoData} 
+                      setNewPhotoData={setNewPhotoData}
+                      onDelete={async (id) => {
+                        if (checkSyncLock()) return;
+                        await handleDeletePhoto(id);
+                      }}
+                      editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
+                      abortAnalysis={abortAnalysis}
+                  />
+              )}
+            </React.Suspense>
             
             {activeScreen === 'home' && viewMode === 'private' && (
               <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
@@ -410,9 +445,12 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                           handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
                           handleManageClick={() => setActiveScreen('manage')}
                           loginWithGoogle={loginWithGoogle}
-                          onRefresh={() => performPullSync(refreshCloudData)}
-                          photosCount={safeArray(photos).length}
-                          totalPhotosCount={safeArray(photos).length}
+                          onRefresh={() => {
+                            if (checkSyncLock()) return;
+                            performPullSync(refreshCloudData);
+                          }}
+                          photosCount={photos.length}
+                          totalPhotosCount={photos.length}
                           cloudCount={cloudCount}
                           appLang={lang}
                        />
@@ -420,11 +458,12 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                           <AdminGalleryShell 
                              onExit={() => setViewMode('public')}
                              onLoadMore={handleLoadMoreCallback}
-                             hasMore={visibleCount < totalGridCount || (cloudCount !== null && safeArray(photos).length < cloudCount)}
+                             hasMore={visibleCount < totalGridCount || (cloudCount !== null && photos.length < cloudCount)}
                              cloudCount={cloudCount}
                           />
                           <FloatingActionButton 
                             onClick={() => {
+                              if (checkSyncLock()) return;
                               const input = document.createElement('input');
                               input.type = 'file';
                               input.accept = 'image/*';
@@ -448,16 +487,15 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                          isAdminMode={false}
                          isStaffMode={true}
                          onTogglePinned={async (photo) => {
+                           if (checkSyncLock()) return;
                            const newStatus = !photo.isPinned;
-                           const sPhotos = safeArray(photos);
                            const affectedPhotos = photo.groupId 
-                             ? sPhotos.filter(p => p.groupId === photo.groupId)
+                             ? photos.filter(p => p.groupId === photo.groupId)
                              : [photo];
                            import('../services/photoMutationService').then(async (m) => {
                              try {
-                               const sAffected = safeArray(affectedPhotos);
                                await Promise.all(
-                                 sAffected.map(p => 
+                                 affectedPhotos.map(p => 
                                    m.updatePhoto(p.id, { isPinned: newStatus }, setPhotos)
                                  )
                                );
@@ -467,10 +505,13 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                            });
                          }}
                          settings={settings}
-                         isRefreshing={actualLoadingState === 'syncing'}
+                         isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
                          onExit={() => setViewMode('private')}
                          showExit={true}
-                         onRefresh={() => performPullSync(refreshCloudData)}
+                         onRefresh={() => {
+                           if (checkSyncLock()) return;
+                           performPullSync(refreshCloudData);
+                         }}
                          hideHeader={false}
                          columns={columns}
                          setColumns={setColumns}
@@ -478,7 +519,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                          user={user}
                          loginWithGoogle={loginWithGoogle}
                          onLoadMore={handleLoadMoreCallback}
-                         hasMore={visibleCount < totalGridCount || (cloudCount !== null && safeArray(photos).length < cloudCount)}
+                         hasMore={visibleCount < totalGridCount || (cloudCount !== null && photos.length < cloudCount)}
                       />
                  </div>
               </div>

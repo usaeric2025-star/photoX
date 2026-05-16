@@ -1,21 +1,19 @@
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { User, Photo, Category, Tag, Manufacturer } from '../types';
+import { processImageFile } from '../utils/imageProcess';
 import { 
   checkImageHashExists, 
-  savePhotosToCloudBatch,
   savePhotoToCloud
 } from '../services/photoMutationService';
-import { compressImage } from '../services/storageService';
-import { calculateMD5, calculateMD5FromFile, calculateMD5FromArrayBuffer, generateItemCode, cleanObject } from '../services/utils';
+import { generateItemCode, cleanObject } from '../services/utils';
 import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
-import { IMAGE_COMPRESS } from '../constants/config';
 import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { safeArray } from '../lib/utils';
 
-// Helper functions moved from useAdminPhotos
+// Helper functions 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name || name.trim() === '') return true;
   const trimmed = name.trim();
@@ -36,7 +34,6 @@ const shouldUpdateName = (name: string | null | undefined): boolean => {
 const cleanAiName = (name: string | null | undefined): string | null => {
   if (!name) return null;
   const trimmed = name.trim();
-  const lower = trimmed.toLowerCase();
   const measurementPattern = /([hwdlt]\d+)|(\d+["”']|cm|inch|mm)|(\d+\s*x\s*\d+)/i;
   
   if (measurementPattern.test(trimmed)) {
@@ -75,7 +72,7 @@ export const usePhotoImport = (
   const { setActiveScreen = () => {} } = adminUI || {};
 
   const handlePhotoImport = async (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList | null } },
     useAi: boolean
   ) => {
     const files = e.target.files;
@@ -87,7 +84,7 @@ export const usePhotoImport = (
     // HEIC Detection Alert
     const hasHeic = sFileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
     if (hasHeic) {
-      toast.info('检测到 HEIC 格式照片，部分手机浏览器可能无法直接显示，建议转换为 JPG 后上传');
+      toast.info('检测到 HEIC 格式照片，建议转换为 JPG 后上传 / HEIC detected, conversion recommended');
     }
     
     return runWithLoading('importing', async () => {
@@ -102,10 +99,6 @@ export const usePhotoImport = (
       let failCount = 0;
       const failedFiles: string[] = [];
 
-      const CHUNK_SIZE = 1;
-      let processed = 0;
-      const allAddedPhotos: Photo[] = [];
-      
       let aiTaskId = '';
       if (useAi && sFileArray.length > 0) {
         aiTaskId = addTask({
@@ -127,197 +120,140 @@ export const usePhotoImport = (
         }
       };
 
-      for (let i = 0; i < sFileArray.length; i += CHUNK_SIZE) {
-        const chunk = sFileArray.slice(i, i + CHUNK_SIZE);
-        const newPhotosDraft: Photo[] = [];
+      for (let i = 0; i < sFileArray.length; i++) {
+        const file = sFileArray[i];
+        setImportProgress(i + 1);
         
-        const sChunk = safeArray(chunk);
-        for (const file of sChunk) {
-          processed++;
-          setImportProgress(processed);
-          try {
-            const hash = await (async () => {
-               try {
-                 return await calculateMD5FromFile(file);
-               } catch (e) {
-                 const arrayBuffer = await file.arrayBuffer();
-                 return calculateMD5FromArrayBuffer(arrayBuffer);
-               }
-            })();
-
-            const duplicate = photosRef.current.find(p => p.image_hash === hash);
-            if (duplicate || sessionHashes.has(hash)) {
-              duplicateCount++;
-              if (useAi) updateAiProgress();
-              continue;
-            }
-
-            if (user) {
-               const dupInCloud = await checkImageHashExists(hash);
-               if (dupInCloud) {
-                  duplicateCount++;
-                  if (useAi) updateAiProgress();
-                  continue;
-               }
-            }
-            
-            sessionHashes.add(hash);
-
-            const rawUri = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = (event) => resolve(event.target?.result as string);
-              reader.onerror = () => reject(new Error('文件读取失败'));
-              reader.readAsDataURL(file);
-            });
-            
-            if (!rawUri) {
-              if (useAi) updateAiProgress();
-              continue;
-            }
-            
-            const compressedUri = await compressImage(rawUri, IMAGE_COMPRESS.MAX_WIDTH, IMAGE_COMPRESS.QUALITY);
-            const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            
-            const newPhoto: Photo = {
-              id: photoId,
-              storageId: hash, // Use hash as storageId for persistent, content-addressable storage
-              item_code: generateItemCode(),
-              manual_code: '',
-              image_hash: hash,
-              name: file.name.split('.')[0] || '未命名产品',
-              description: '',
-              image_url: '',
-              uri: compressedUri,
-              categoryId: null,
-              manufacturerId: null,
-              tagIds: [],
-              createdAt: formatDate(new Date()),
-              groupId: null,
-              isAnalyzing: !!useAi
-            };
-            
-            newPhotosDraft.push(newPhoto);
-            allAddedPhotos.push(newPhoto);
-            successCount++;
-            
-            if (useAi) {
-              (async (targetPhoto: Photo) => {
-                try {
-                  const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
-                  const resRaw = await analyzeProductPhoto(targetPhoto.uri!, categories, tags, manufacturers, apiKey, aiProvider, customModel);
-                  const result = cleanObject(resRaw);
-                  const aiName = cleanAiName(result.name);
-                  
-                  if (result.description && apiKey) {
-                    try {
-                      const translations = await translateDescription(result.description, apiKey, customModel);
-                      result.description_translations = {
-                        zh: result.description,
-                        en: translations.en,
-                        ms: translations.ms
-                      };
-                    } catch (e) {}
-                  }
-
-                  let finalCatId = result.categoryId || null;
-                  const allSuggestedTags = Array.from(new Set([
-                    ...safeArray<string>(result.tagIds),
-                    ...safeArray<string>(result.newTags)
-                  ]));
-                  
-                  const finalTagIds = await resolveTagIdsBatch(allSuggestedTags, tags, tagNameToIdMap, setTags);
-
-                  setPhotos(prev => prev.map(p => {
-                     // Robust matching using storageId or original id
-                     if (p.id !== photoId) return p;
-                     
-                     const updatedPhoto = {
-                       ...p,
-                       isAnalyzing: false,
-                       name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
-                       categoryId: finalCatId,
-                       tagIds: finalTagIds.slice(0, 3),
-                       description_translations: result.description_translations || p.description_translations,
-                       model_number: p.model_number || result.modelNumber || '',
-                       dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : p.dimensions
-                     };
-                     
-                     if (user) {
-                       savePhotoToCloud(user.id, updatedPhoto).then(persistedId => {
-                          // If savePhotoToCloud updated URLs in updatedPhoto (it does in-place), 
-                          // we should trigger another refresh to ensure state has them.
-                          setPhotos(curr => curr.map(item => 
-                            (item.storageId === photoId || item.id === persistedId)
-                              ? { ...item, ...updatedPhoto, id: persistedId } 
-                              : item
-                          ));
-                       }).catch(e => handleError(e, "同步备份失败"));
-                     }
-                     
-                     return updatedPhoto;
-                  }));
-                } catch (err) {
-                  setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, isAnalyzing: false } : p));
-                } finally {
-                  updateAiProgress();
-                }
-              })(newPhoto);
-            }
-          } catch (err) {
-            handleError(err, `导入过程处理文件失败: ${file.name}`);
-            failCount++;
-            failedFiles.push(file.name);
-          }
-        }
-        
-        if (newPhotosDraft.length > 0) {
-          setPhotos(prev => {
-            const next = [...newPhotosDraft, ...prev];
-            photosRef.current = next;
-            saveData('product_photos', next);
-            return next;
-          });
-          await new Promise(resolve => setTimeout(resolve, 50));
-        }
-      }
-      
-      if (user && successCount > 0 && safeArray(allAddedPhotos).length > 0) {
         try {
-          const syncedPhotos = await savePhotosToCloudBatch(user.id, allAddedPhotos);
+          // Use the new centralized processing utility
+          const { hash, dataUrl } = await processImageFile(file);
+
+          const duplicate = photosRef.current.find(p => p.image_hash === hash);
+          if (duplicate || sessionHashes.has(hash)) {
+            duplicateCount++;
+            if (useAi) updateAiProgress();
+            continue;
+          }
+
+          if (user) {
+             const dupInCloud = await checkImageHashExists(hash);
+             if (dupInCloud) {
+                duplicateCount++;
+                if (useAi) updateAiProgress();
+                continue;
+             }
+          }
           
+          sessionHashes.add(hash);
+          const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          
+          const newPhoto: Photo = {
+            id: photoId,
+            storageId: hash, 
+            item_code: generateItemCode(),
+            manual_code: '',
+            image_hash: hash,
+            name: file.name.split('.')[0] || '未命名产品',
+            description: '',
+            image_url: '',
+            uri: dataUrl,
+            categoryId: null,
+            manufacturerId: null,
+            tagIds: [],
+            createdAt: formatDate(new Date()),
+            groupId: null,
+            isAnalyzing: !!useAi
+          };
+          
+          // Optimistic local state update
           setPhotos(prev => {
-            const next = prev.map(p => {
-               const found = syncedPhotos.find(s => 
-                 (p.storageId && s.storageId === p.storageId) || 
-                 (p.image_hash && s.image_hash === p.image_hash)
-               );
-               if (found) {
-                 return { 
-                   ...p, 
-                   id: found.id,
-                   image_url: found.image_url,
-                   thumb_url: found.thumb_url
-                 };
-               }
-               return p;
-            });
+            const next = [newPhoto, ...prev];
             photosRef.current = next;
-            saveData('product_photos', next);
             return next;
           });
           
-          setCloudCount(photosRef.current.length);
-        } catch (e) {
-           handleError(e, '云端同步过程出现问题');
+          successCount++;
+          
+          if (useAi) {
+            // Async AI analysis logic (wrapped in closure to preserve photoId)
+            (async (targetId: string, targetUri: string, initialPhoto: Photo) => {
+               try {
+                 const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
+                 const resRaw = await analyzeProductPhoto(targetUri, categories, tags, manufacturers, apiKey, aiProvider, customModel);
+                 const result = cleanObject(resRaw);
+                 const aiName = cleanAiName(result.name);
+                 
+                 // Handle translations
+                 if (result.description && apiKey) {
+                   try {
+                     const translations = await translateDescription(result.description, apiKey, customModel);
+                     result.description_translations = {
+                       zh: result.description,
+                       en: translations.en,
+                       ms: translations.ms
+                     };
+                   } catch (e) {}
+                 }
+
+                 const finalTagIds = await resolveTagIdsBatch(
+                   Array.from(new Set([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)])),
+                   tags, tagNameToIdMap, setTags
+                 );
+
+                 setPhotos(prev => prev.map(p => {
+                    if (p.id !== targetId) return p;
+                    const updated = {
+                      ...p,
+                      isAnalyzing: false,
+                      name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
+                      categoryId: result.categoryId || p.categoryId,
+                      tagIds: finalTagIds.slice(0, 3),
+                      description_translations: result.description_translations || p.description_translations,
+                      model_number: p.model_number || result.modelNumber || '',
+                      dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : p.dimensions
+                    };
+                    
+                    if (user) {
+                      savePhotoToCloud(user.id, updated).then(persistedId => {
+                        setPhotos(curr => curr.map(item => 
+                          (item.id === targetId || item.id === persistedId) 
+                            ? { ...item, ...updated, id: persistedId } 
+                            : item
+                        ));
+                      }).catch(e => handleError(e, "AI 结果同步失败"));
+                    }
+                    return updated;
+                 }));
+               } catch (err) {
+                 setPhotos(prev => prev.map(p => p.id === targetId ? { ...p, isAnalyzing: false } : p));
+               } finally {
+                 updateAiProgress();
+               }
+            })(photoId, dataUrl, newPhoto);
+          } else if (user) {
+            // Direct Cloud Save if AI is disabled
+            savePhotoToCloud(user.id, newPhoto).then(persistedId => {
+              setPhotos(curr => curr.map(item => 
+                item.id === photoId ? { ...item, id: persistedId } : item
+              ));
+            }).catch(e => handleError(e, "云端同步失败"));
+          }
+        } catch (err) {
+          handleError(err, `处理文件失败: ${file.name}`);
+          failCount++;
+          failedFiles.push(file.name);
         }
-      }
+      } 
       
+      // Persist to indexedDB after batch loop completes
+      saveData('product_photos', photosRef.current);
+      setCloudCount(photosRef.current.length);
       setIsSyncing(false);
       
       if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
-         let msg = `成功处理并压缩了 ${successCount} 张照片。`;
-         if (duplicateCount > 0) msg += ` 跳过了 ${duplicateCount} 张重复。`;
-         if (failCount > 0) msg += ` 有 ${failCount} 张失败: ${failedFiles.join(', ')}`;
+         let msg = `已处理 ${successCount} 张照片。`;
+         if (duplicateCount > 0) msg += ` 跳过 ${duplicateCount} 张重复。`;
+         if (failCount > 0) msg += ` ${failCount} 张失败。`;
          
          if (successCount > 0) toast.success(msg);
          else toast.error(msg);

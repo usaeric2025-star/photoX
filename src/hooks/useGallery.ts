@@ -28,8 +28,8 @@ export const useGallery = () => {
             sortOrder: store.sortOrder,
             isAdminMode: store.isAdminMode,
             isStaffMode: store.isStaffMode
-        }, store.tags);
-    }, [store.photos, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder, store.isAdminMode, store.isStaffMode, store.tags]);
+        }, store.tags, store.categories);
+    }, [store.photos, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder, store.isAdminMode, store.isStaffMode, store.tags, store.categories]);
 
     const gridPhotos = useMemo(() => {
         return groupPhotos(displayPhotos, store.showGroupsCollapsed, store.sortOrder);
@@ -38,7 +38,7 @@ export const useGallery = () => {
     const stableTagCounts = useMemo(() => {
         const counts: Record<string, number> = {};
         store.photos.forEach(p => {
-            const ids = safeArray<string | number>(p.tagIds);
+            const ids = p.tagIds || [];
             ids.forEach(id => {
                 counts[String(id)] = (counts[String(id)] || 0) + 1;
             });

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAdminPhoto, useAdminUI } from '../context/AdminContexts';
-import { updatePhotosGroupInCloud } from '../services/photoSyncService';
+import { updatePhotosGroupInCloud } from '../services/photoMutationService';
 import { toast } from 'sonner';
 
 export function useGroupSync(activeGroupId: string | null) {

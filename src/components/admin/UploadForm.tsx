@@ -12,7 +12,7 @@ interface UploadFormProps {
   editPhotoId: string | null;
   newPhotoData: string | null;
   isAnalyzing: boolean;
-  handleSingleAiAnalyze: (imageData: string | null, catId?: string) => void;
+  handleSingleAiAnalyze: (imageData: string | null, catId?: string) => Promise<any>;
   deletePhoto: (id: string) => void;
   saveNewPhoto: () => void;
   isSyncing: boolean;

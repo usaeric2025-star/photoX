@@ -40,8 +40,8 @@
 ## 第四部分：重要档案说明
 
 *   `services/photoService.ts`: 负责数据查询与物件对映 (Read Only)。
-*   `services/photoMutationService.ts`: 负责数据新增、更新与删除 (Write)。
-*   `services/photoSyncService.ts`: 负责批量同步、去重与清理工作。
+*   `services/photoMutationService.ts`: 负责数据新增、更新、批量同步、去重与清理 (Write/Sync)。
+*   `lib/photoSync.ts`: 负责照片合并与清理的纯逻辑函数。
 *   `components/GroupDetailView.tsx`: 群组资料管理与展示。
 *   `pages/PublicView.tsx`: 公开相册首页核心逻辑。
 *   `lib/supabase.ts`: 正式存取的 Supabase 客户端。

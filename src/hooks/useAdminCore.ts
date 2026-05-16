@@ -4,7 +4,7 @@ import { Photo, User, AppSettings, ProductFormData } from '../types';
 import { safeArray } from '../lib/utils';
 import { 
   saveSettings as saveSettingsCloud, 
-  syncPhotosToCloud as syncPhotosToCloudService,
+  savePhotosToCloudBatch,
   updatePhotosGroupInCloud,
   supabase
 } from '../services/supabaseService';
@@ -85,8 +85,7 @@ export const useAdminCore = (user: User | null) => {
     if (!user) return { success: false, error: 'No user' };
     try {
       await saveSettingsCloud({...settings, categories, manufacturers});
-      const lastSyncISO = lastSyncTime ? new Date(lastSyncTime).toISOString() : undefined;
-      const result = await syncPhotosToCloudService(user.id, photos, lastSyncISO);
+      const result = await savePhotosToCloudBatch(user.id, photos);
       const now = new Date().toISOString();
       localStorage.setItem('lastSyncTime', now);
       await saveData('last_sync_time', Date.now());

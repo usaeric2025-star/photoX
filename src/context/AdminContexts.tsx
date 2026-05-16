@@ -133,8 +133,9 @@ export interface AdminUIContextType {
   promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
   setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
   
-  loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
-  withLoading: <T>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;
+  loadingType: 'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting' | null;
+  setLoadingType: (s: 'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting' | null) => void;
+  withLoading: <T>(state: 'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;
   isAnalyzing: boolean;
   batchProgress: { current: number, total: number };
   aiDebugInfo: { step: string; message: string; error?: string } | null;
@@ -142,14 +143,34 @@ export interface AdminUIContextType {
   abortAnalysis: () => void;
   cloudCount: number | null;
   setCloudCount: (c: number | null) => void;
-  setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting') => void;
 }
 
 const AdminUIContext = createContext<AdminUIContextType | undefined>(undefined);
 
-export const AdminUIProvider: React.FC<{ children: ReactNode, value: AdminUIContextType }> = ({ children, value }) => (
-  <AdminUIContext.Provider value={value}>{children}</AdminUIContext.Provider>
-);
+export const AdminUIProvider: React.FC<{ children: ReactNode, value: AdminUIContextType }> = ({ children, value }) => {
+  const [loadingType, setLoadingType] = useState<'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting' | null>('idle');
+  
+  const withLoading = async <T,>(type: 'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>): Promise<T> => {
+    setLoadingType(type);
+    try {
+      return await fn();
+    } finally {
+      setLoadingType('idle');
+    }
+  };
+
+  return (
+    <AdminUIContext.Provider value={{
+      ...value,
+      loadingType,
+      setLoadingType,
+      withLoading,
+      isAnalyzing: loadingType === 'analyzing'
+    }}>
+      {children}
+    </AdminUIContext.Provider>
+  );
+};
 
 export const useAdminUI = () => {
   const context = useContext(AdminUIContext);

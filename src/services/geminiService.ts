@@ -1,6 +1,8 @@
 import { Category, Tag } from '../types';
 import { normalizeTagIds } from '../utils/aiNormalizer';
 import { AI_CONFIG } from '../constants/config';
+import { AI_PROMPTS } from '../constants/ai';
+import { extractJsonObject } from '../lib/aiParsing';
 
 const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -98,68 +100,12 @@ export const analyzeProductPhoto = async (
     id: c.id, 
     name: c.zh || c.name || ''
   }));
-  const manufacturersJson = (manufacturers || []).map(m => ({ id: m.id, name: m.name }));
-  const tagsJson = (tags || []).map(t => ({ id: t.id, name: t.name }));
+  const tagsJson = JSON.stringify((tags || []).map(t => ({ id: t.id, name: t.name })));
   const categoryContext = targetCategoryId
     ? `【强制要求】系统已预设分类为: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.zh || (categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})`
-    : "请从清单选择最合适的分类";
+    : "请从清单选择最合适的分类. 已有分类列表: " + JSON.stringify(categoriesJson);
 
-  const promptText = `You are a furniture product analyzer. Extract data STRICTLY as follows:
-
-【CRITICAL - FIELD SEPARATION】
-- "name": Product identification name or code (e.g., "IMCOCO" or "M123"). 
-- "modelNumber": SKU/Model code found on labels (e.g., "B728"). If clear, use this.
-- If only one identification code is found, you can put it in BOTH "name" and "modelNumber".
-- "price": ONLY numeric part (e.g., "1200").
-- "dimensions": Array of objects with length/width/height. 
-  - STRICTLY NUMERIC VALUES ONLY for length, width, height.
-  - MUST NOT contain any Chinese characters, symbols, or unit labels (like "cm/mm/寸") in the numeric fields.
-  - Label field MUST only contain English text or be empty.
-- FORBID putting dimensions or price into "name".
-- IMPORTANT: If a single product's dimensions are scattered, you MUST combine them.
-
-【NAME RULES】
-- "name" SHOULD NOT just be measurement text like "53cm x 40cm". If that's all you find, leave "name" empty.
-- "name" SHOULD be the most prominent identifier (Brand or Code) found in the image.
-- professional and concise.
-
-【LANGUAGE & DESCRIPTION】
-- "description": Generate a professional description in 【简体中文 (Simplified Chinese)】.
-- MUST NOT be empty.
-
-【DIMENSIONS RULES】
-- Each dimension object MUST include label, length, width, height, unit.
-- CRITICAL: Extract ANY visible measurements (e.g. "80", "120", "200x120", "H40 W60") directly from the image text or diagrams.
-- If label shows H/W/D/L: height = H, width OR length = W/L, depth = D. Assign strictly by labels, ignore item name or number order.
-- If label format is "PART: Dimensions" (e.g., "WD: H94 x W96 x D23"): maintain the "PART:" prefix but parse only the dimensions for numeric values.
-- If NO H/W/D/L labels but you see a format like "A x B x C" or numbers placed around the object: guess the height/length/width based on proportions.
-- If no explicit part name exists for the dimension, use "整体" (Overall) or "尺寸" (Dimensions) as the label.
-- Default unit = "cm" if missing.
-
-【CATEGORY & TAGS】
-- "categoryId": ${categoryContext} Available Categories (id/name): ${JSON.stringify(categoriesJson)}
-- "tagIds": Select 2-3 most relevant existing tags (return their IDs): ${JSON.stringify(tagsJson)}
-- "newTags": If no existing tag fits, create NEW ones. Rules: UPPERCASE, single English word.
-
-【STRICT PROHIBITIONS】
-- DO NOT fill "manualCode". Leave it as null.
-- DO NOT invent dimensions. If not visible in photo, return empty array [].
-- DO NOT output markdown or extra text. Return ONLY valid JSON.
-
-OUTPUT JSON example:
-{
-  "name": "IMCOCO",
-  "modelNumber": "B728",
-  "price": "1200",
-  "dimensions": [
-    { "label": "H94\" x W96\" x D23\"", "length": 23, "width": 96, "height": 94, "unit": "inch" }
-  ],
-  "description": "这是一款现代风格的沙发床...",
-  "categoryId": "UUID-FROM-LIST or null",
-  "tagIds": ["UUID1", "UUID2"],
-  "newTags": []
-}
-`;
+  const promptText = AI_PROMPTS.ANALYZE_PRODUCT(categoryContext, tagsJson);
 
   try {
     const headers: Record<string, string> = {
@@ -227,83 +173,9 @@ OUTPUT JSON example:
       throw new Error(`AI 未回传分析结果`);
     }
 
-    // Safely extract the first valid JSON object by finding balanced braces
-    let cleanText = textOutput.trim();
-    const startIndex = cleanText.indexOf('{');
-    if (startIndex === -1) {
-      throw new Error('回传格式错误，找不到 JSON 对象');
-    }
-
-    // Balanced brace matching to find the true end of the JSON object
-    let braceCount = 0;
-    let endIndex = -1;
-    let inString = false;
-    let escaping = false;
-
-    for (let i = startIndex; i < cleanText.length; i++) {
-        const char = cleanText[i];
-        if (escaping) {
-            escaping = false;
-            continue;
-        }
-        if (char === '\\') {
-            escaping = true;
-            continue;
-        }
-        if (char === '"') {
-            inString = !inString;
-            continue;
-        }
-        if (!inString) {
-            if (char === '{') braceCount++;
-            if (char === '}') {
-                braceCount--;
-                if (braceCount === 0) {
-                    endIndex = i;
-                    break;
-                }
-            }
-        }
-    }
-
-    if (endIndex === -1) {
-      throw new Error('回传格式错误，JSON 对象未闭合');
-    }
-    
-    const jsonStr = cleanText.substring(startIndex, endIndex + 1);
-    
-    // Improved sanitization
-    // 1. Remove JavaScript-style comments
-    // 2. Remove non-printable control characters
-    // 3. Fix trailing commas
-    const minimalSanitize = jsonStr
-        .replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '') 
-        .replace(/[\u0000-\u0019]+/g, "")
-        .replace(/,\s*([\]}])/g, '$1')
-        .trim();
-
-    let parsedData;
-    try {
-      parsedData = JSON.parse(minimalSanitize);
-    } catch (parseErr) {
-      console.error("JSON Parse Error (Minimal):", parseErr, "Content:", minimalSanitize);
-      // Fallback: try to fix unescaped line breaks and quotes within values
-      try {
-          const secondPass = minimalSanitize
-            .replace(/\r?\n|\r/g, " ") 
-            .replace(/\\(?!"|u|n|r|t|b|f)/g, "\\\\");
-          parsedData = JSON.parse(secondPass);
-      } catch (e) {
-         // Final attempt: aggressive quote escaping for value strings
-         try {
-           const heuristicFixed = minimalSanitize.replace(/":\s*"(.*?)"(\s*[},])/g, (m, p1, p2) => {
-              return `": "${p1.replace(/"/g, '\\"')}"${p2}`;
-           });
-           parsedData = JSON.parse(heuristicFixed);
-         } catch (finalErr) {
-           throw new Error(`JSON 解析失败: ${parseErr instanceof Error ? parseErr.message : '解析格式错误'}`);
-         }
-      }
+    const parsedData = extractJsonObject(textOutput);
+    if (!parsedData) {
+      throw new Error('回传格式错误，找不到有效的 JSON 对象');
     }
     
     // description_translations initialization
@@ -338,16 +210,13 @@ OUTPUT JSON example:
       newTagList = parsedData.newTags.map(s => String(s).trim()).filter(Boolean);
     }
 
-    // Total tags enforcement: Ensure we have exactly 3 tags (ID or New Name)
+    // Total tags enforcement: Ensure we have exactly 3 tags
     let currentTagIds = parsedData.tagIds;
-    
-    // If we have more than 3 total, trim them down
     if (currentTagIds.length + newTagList.length > 3) {
       if (currentTagIds.length >= 3) {
         currentTagIds = currentTagIds.slice(0, 3);
         newTagList = [];
       } else {
-        // currentTagIds.length is 0, 1 or 2
         const needed = 3 - currentTagIds.length;
         newTagList = newTagList.slice(0, needed);
       }
@@ -355,8 +224,6 @@ OUTPUT JSON example:
     
     parsedData.tagIds = currentTagIds;
     parsedData.newTags = Array.from(new Set(newTagList));
-    
-    // Attach the model info so the UI can log/show it
     parsedData._aiModelUsed = modelName;
     return parsedData;
   } catch (error: any) {
@@ -550,24 +417,7 @@ export const translateDescription = async (
   const modelName = customModel;
   if (!modelName) throw new Error('请在设置中配置 AI 模型 (Model Name)');
 
-  const prompt = `
-你是一个专业的家具贸易翻译官。
-请将以下中文产品描述翻译成【英文】和【马来文】。
-
-【待翻译中文】：
-${zhText}
-
-【要求】：
-1. 翻译风格：专业、商务、吸引人。英译应符合欧美电商水平。马来文应符合马来西亚在地口语与专业术语。
-2. 保持专业术语的一致性（例如：Marble -> Guli/Marmar, Extendable -> Boleh dipanjangkan）。
-3. 仅返回 JSON 格式。
-
-【返回格式】：
-{
-  "en": "...",
-  "ms": "..."
-}
-  `;
+  const prompt = AI_PROMPTS.TRANSLATE_DESCRIPTION(zhText);
 
   try {
     const fetchUrl = 'https://openrouter.ai/api/v1/chat/completions';
@@ -593,43 +443,8 @@ ${zhText}
     const content = result.choices?.[0]?.message?.content;
     if (!content) return { en: '', ms: '' };
 
-    let cleanedContent = content.trim();
-    const startIndex = cleanedContent.indexOf('{');
-    if (startIndex === -1) return { en: '', ms: '' };
-    
-    let braceCount = 0;
-    let endIndex = -1;
-    let inString = false;
-    let escaping = false;
-
-    for (let i = startIndex; i < cleanedContent.length; i++) {
-        const char = cleanedContent[i];
-        if (escaping) {
-            escaping = false;
-            continue;
-        }
-        if (char === '\\') {
-            escaping = true;
-            continue;
-        }
-        if (char === '"') {
-            inString = !inString;
-            continue;
-        }
-        if (!inString) {
-            if (char === '{') braceCount++;
-            if (char === '}') {
-                braceCount--;
-                if (braceCount === 0) {
-                    endIndex = i;
-                    break;
-                }
-            }
-        }
-    }
-
-    const jsonStr = endIndex !== -1 ? cleanedContent.substring(startIndex, endIndex + 1) : cleanedContent;
-    const parsed = JSON.parse(jsonStr || '{}');
+    const parsed = extractJsonObject(content);
+    if (!parsed) return { en: '', ms: '' };
     
     return {
       en: parsed.en || '',

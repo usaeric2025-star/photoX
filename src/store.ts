@@ -89,9 +89,12 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   hasMore: true,
   totalCloudCount: 0,
 
-  setPhotos: (photos) => set((state) => ({ 
-    photos: typeof photos === 'function' ? photos(state.photos) : photos 
-  })),
+  setPhotos: (photos) => set((state) => {
+    const nextPhotos = typeof photos === 'function' ? photos(state.photos) : photos;
+    return { 
+      photos: nextPhotos.map(p => ({ ...p, tagIds: p.tagIds || [] }))
+    };
+  }),
   setTags: (tags) => set((state) => ({ 
     tags: typeof tags === 'function' ? tags(state.tags) : tags 
   })),

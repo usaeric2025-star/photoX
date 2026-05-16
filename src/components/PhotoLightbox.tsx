@@ -47,7 +47,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
 
   const handleShare = () => {
     if (!photo?.image_hash) return;
-    const url = `${window.location.origin}${window.location.pathname}#/h/${photo.image_hash}`;
+    const url = `${window.location.origin}/h/${photo.image_hash}`;
     navigator.clipboard.writeText(url).then(() => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
