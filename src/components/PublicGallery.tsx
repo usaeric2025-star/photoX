@@ -132,7 +132,7 @@ MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 const VirtuosoGridFooter = React.memo(({ context }: any) => {
   const { hasMore, isSyncing, onLoadMore, safePhotosLength, textLoadMore, textEndOfList } = context;
-  
+
   // Use IntersectionObserver or similar to auto-load if Virtuoso endReached is flaky?
   // We can just call onLoadMore() in a useEffect if this footer mounts while hasMore and not syncing
   React.useEffect(() => {
@@ -548,7 +548,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
             }}
             endReached={stableLoadMore}
-            overscan={200}
+            overscan={1000}
             listClassName={`grid gap-3 p-2 pb-24 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (
               <MemoizedPhotoCard

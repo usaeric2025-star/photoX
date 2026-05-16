@@ -225,9 +225,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     settings, setSettings, geminiApiKey, setGeminiApiKey,
     accessPasscode, setAccessPasscode, customModel, setCustomModel,
     viewMode, setViewMode,
-    isSyncing, setIsSyncing, onRefresh,
+    isSyncing: actualLoadingState === 'syncing' || isSyncing, setIsSyncing, onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, actualLoadingState, isSyncing, setIsSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
