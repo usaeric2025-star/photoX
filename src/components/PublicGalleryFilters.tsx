@@ -106,8 +106,8 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="grid grid-cols-4 gap-1.5 px-0.5">
             <button 
-              onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); onScrollToTop(); }}
-              className={`w-full h-[34px] rounded-md text-[11px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
+              onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); setSelectedTagIds(() => []); onScrollToTop(); }}
+              className={`w-full h-[34px] rounded-md text-[11px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode && selectedTagIds.length === 0 ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
             >
               {t.allCats}
             </button>
@@ -127,6 +127,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     onClick={() => { 
                       setSelectedCatCode(cat.id); 
                       setSelectedSubId(null);
+                      setSelectedTagIds(() => []);
                       onScrollToTop();
                     }}
                     className={`w-full h-[34px] rounded-md text-[11px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${selectedCatCode === cat.id ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
@@ -196,6 +197,8 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     key={strTagId}
                     onClick={() => { 
                       setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]);
+                      setSelectedCatCode(null);
+                      setSelectedSubId(null);
                     }}
                     className={cn(
                       "px-2.5 py-1 rounded-xl text-[9px] font-black transition-colors border-2 shadow-sm flex items-center gap-1",

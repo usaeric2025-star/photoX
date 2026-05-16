@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { ErrorAlert } from '../components/ErrorAlert';
 
-// Global trigger to use error alerts from outside components
+let addLogGlobal: (msg: string, ctx?: string, t?: 'error'|'warning'|'info') => void = () => {};
+export const addSystemLog = (message: string, context?: string, type?: 'error'|'warning'|'info') => addLogGlobal(message, context, type);
+
 let showErrorGlobal: (msg: string) => void = () => console.error("Error Alert not initialized");
 export const showSystemError = (message: string) => showErrorGlobal(message);
 
@@ -28,6 +30,9 @@ export const ErrorProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     showErrorGlobal = (message: string) => {
       showError(message);
+    };
+    addLogGlobal = (message: string, context?: string, type?: 'error'|'warning'|'info') => {
+      addLog(message, context, type || 'error');
     };
   }, []);
 

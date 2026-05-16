@@ -23,7 +23,7 @@ import { useDelete } from '../hooks/useDelete';
 import { Photo, Category, Tag, Manufacturer, User, ProductFormData } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
-import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
+import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider, useAdminUI } from '../context/AdminContexts';
 import { safeArray } from '../lib/utils';
 
 import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
@@ -37,34 +37,13 @@ const errorGuard = (name: string) => () => {
   throw err;
 };
 
-export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps, dialogProps }: { 
+export function AdminViewContent({ user, logout, errorContent, t, lang }: { 
   user: User | null, 
   authChecked: boolean, 
   logout: () => void, 
   errorContent: React.ReactNode,
   t: any,
-  lang: LanguageCode,
-  uiProps: {
-    activeScreen: 'home' | 'manage' | 'login';
-    setActiveScreen: (s: 'home' | 'manage' | 'login') => void;
-    editPhotoId: string | null;
-    setEditPhotoId: (id: string | null) => void;
-    batchEditIds: string[] | null;
-    setBatchEditIds: (ids: string[] | null) => void;
-    loadingState: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
-    setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting') => void;
-    withLoading: <T>(state: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>) => Promise<T>;
-    cloudCount: number | null;
-    setCloudCount: (c: number | null) => void;
-  },
-  dialogProps: {
-    alertDialog: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null;
-    setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
-    promptDialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
-    setPromptDialog: (d: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null) => void;
-    promptValue: string;
-    setPromptValue: (v: string) => void;
-  }
+  lang: LanguageCode
 }) {
   const { 
     photos, setPhotos, categories, setCategories, tags, setTags, manufacturers, setManufacturers, 
@@ -73,8 +52,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     visibleCount, setVisibleCount, tagIdToNameMap, clearSelection, totalGridCount
   } = useGallery();
   
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = dialogProps;
-  const { activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, loadingState, setLoadingState, withLoading, cloudCount, setCloudCount } = uiProps;
+  const { 
+    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
+    loadingState, setLoadingState, withLoading, cloudCount, setCloudCount,
+    alertDialog, setAlertDialog, promptDialog, setPromptDialog 
+  } = useAdminUI();
 
   const { handleError } = useErrorHandler();
   const { canDelete, isAdmin } = usePermission();
@@ -90,9 +72,6 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     window.__debug_photos = photos;
   }, [photos]);
   
-  const cancelBatchAiRef = React.useRef(false);
-  
-  const [appLang] = useState('zh');
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   
@@ -277,20 +256,35 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     loadingState: actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
-    isAnalyzing: actualLoadingState === 'analyzing'
+    isAnalyzing: actualLoadingState === 'analyzing',
+    cloudCount, setCloudCount
   }), [
     activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis
+    actualLoadingState, setLoadingState, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
+    cloudCount, setCloudCount
   ]);
 
-  const handleBatchAiIdentifyTrigger = () => {
+  const handleBatchAiIdentifyTrigger = async () => {
     if (actualLoadingState === 'analyzing') {
       abortAnalysis();
     } else {
-      handleBatchAiIdentify(displayPhotos);
+      try {
+        await withLoading('analyzing', () => handleBatchAiIdentify(displayPhotos));
+      } catch (err) {
+        handleError(err, 'ai-analyze');
+      }
     }
   };
   
+  const handleLoadMoreCallback = useCallback(() => {
+    const sPhotos = safeArray(photos);
+    if (visibleCount < totalGridCount) {
+      setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
+    } else if (sPhotos.length < (cloudCount || 0)) {
+        performPullSync(refreshCloudData);
+    }
+  }, [photos, visibleCount, totalGridCount, cloudCount, setVisibleCount, performPullSync, refreshCloudData]);
+
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   
   return (
@@ -361,10 +355,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                 manufacturers={manufacturers}
                 allTags={tags}
                 tagMap={Object.fromEntries(tagIdToNameMap)}
-                onBatchAiAnalyze={handleGroupAiIdentify}
-                onAiAnalyze={(p) => {
-                  handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id);
-                }}
+                onBatchAiAnalyze={(photos) => withLoading('analyzing', () => handleGroupAiIdentify(photos))}
+                onAiAnalyze={(p) => withLoading('analyzing', () => handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id))}
                 onToggleHidden={async (photo) => {
                   const newStatus = !photo.isHidden;
                   try {
@@ -422,11 +414,14 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                           photosCount={safeArray(photos).length}
                           totalPhotosCount={safeArray(photos).length}
                           cloudCount={cloudCount}
-                          appLang={appLang}
+                          appLang={lang}
                        />
                        <div className="flex-1 min-h-0 relative">
                           <AdminGalleryShell 
                              onExit={() => setViewMode('public')}
+                             onLoadMore={handleLoadMoreCallback}
+                             hasMore={visibleCount < totalGridCount || (cloudCount !== null && safeArray(photos).length < cloudCount)}
+                             cloudCount={cloudCount}
                           />
                           <FloatingActionButton 
                             onClick={() => {
@@ -482,14 +477,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, uiProps,
                          cloudCount={cloudCount}
                          user={user}
                          loginWithGoogle={loginWithGoogle}
-                         onLoadMore={() => {
-                           const sPhotos = safeArray(photos);
-                           if (visibleCount < totalGridCount) {
-                             setVisibleCount(prev => prev + PAGINATION.PUBLIC_PAGE_SIZE);
-                           } else if (sPhotos.length < (cloudCount || 0)) {
-                               performPullSync(refreshCloudData);
-                           }
-                         }}
+                         onLoadMore={handleLoadMoreCallback}
                          hasMore={visibleCount < totalGridCount || (cloudCount !== null && safeArray(photos).length < cloudCount)}
                       />
                  </div>

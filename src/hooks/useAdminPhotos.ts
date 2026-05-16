@@ -89,8 +89,7 @@ export const useAdminPhotos = (
     user, geminiApiKey, aiProvider, customModel, 
     categories, tags, manufacturers, 
     setPhotos, setTags, tagNameToIdMap, 
-    addTask, updateTask, removeTask, runWithLoading, 
-    setLoadingState,
+    addTask, updateTask, removeTask,
     photosRef,
     handleError
   );

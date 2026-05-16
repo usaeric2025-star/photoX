@@ -130,6 +130,35 @@ const MemoizedPhotoCard = React.memo(({
 MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 
+const VirtuosoGridFooter = React.memo(({ context }: any) => {
+  const { hasMore, isSyncing, onLoadMore, safePhotosLength, textLoadMore, textEndOfList } = context;
+  return (
+    <div className="py-10 pb-32 flex flex-col items-center justify-center w-full">
+      {hasMore ? (
+        <button 
+          onClick={onLoadMore}
+          disabled={isSyncing}
+          className="px-6 py-2.5 bg-white border border-brand-navy/10 text-brand-navy text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-2"
+        >
+          {isSyncing ? (
+            <div className="w-3 h-3 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
+          ) : (
+            <RefreshCcw size={12} />
+          )}
+          {textLoadMore || '加载更多 / Load More'}
+        </button>
+      ) : safePhotosLength > 0 ? (
+        <div className="flex flex-col items-center gap-2 opacity-20">
+          <div className="h-[1px] w-12 bg-brand-navy" />
+          <p className="text-[8px] font-black uppercase tracking-[0.2em]">{textEndOfList || '已经到底了 / End'}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+});
+
+const virtuosoComponents = { Footer: VirtuosoGridFooter };
+
 export const PublicGallery: React.FC<PublicGalleryProps> = ({ 
   onExit, onLogin, loginWithGoogle: propsLoginWithGoogle, 
   onRefresh,
@@ -408,7 +437,20 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     ? prevPhotosRef.current
     : gridPhotos;
 
-  const safePhotosToShow = safeArray(photosToShow);
+  const safePhotosToShow = isInfiniteMode 
+    ? safeArray(photosToShow)
+    : safeArray(photosToShow).slice(0, visibleCount);
+
+  const handleLoadMoreRef = useRef(handleLoadMore);
+  useEffect(() => {
+    handleLoadMoreRef.current = handleLoadMore;
+  }, [handleLoadMore]);
+
+  const stableLoadMore = useCallback(() => {
+    if (handleLoadMoreRef.current) {
+        handleLoadMoreRef.current();
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
@@ -487,9 +529,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
             totalCount={safePhotosToShow.length}
-            endReached={handleLoadMore}
+            computeItemKey={(index) => {
+              const p = safePhotosToShow[index];
+              return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
+            }}
+            endReached={stableLoadMore}
             overscan={200}
-            listClassName={`grid gap-3 p-2 pb-20 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
+            listClassName={`grid gap-3 p-2 pb-24 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (
               <MemoizedPhotoCard
                 key={index}
@@ -517,31 +563,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
                 gridPhotos={safePhotosToShow}
               />
             )}
-            components={{
-              Footer: () => (
-                <div className="py-10 pb-32 flex flex-col items-center justify-center">
-                  {hasMore ? (
-                    <button 
-                      onClick={handleLoadMore}
-                      disabled={isSyncing}
-                      className="px-6 py-2.5 bg-white border border-brand-navy/10 text-brand-navy text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-2"
-                    >
-                      {isSyncing ? (
-                        <div className="w-3 h-3 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
-                      ) : (
-                        <RefreshCcw size={12} />
-                      )}
-                      {t.loadMore || '加载更多 / Load More'}
-                    </button>
-                  ) : safePhotosToShow.length > 0 ? (
-                    <div className="flex flex-col items-center gap-2 opacity-20">
-                      <div className="h-[1px] w-12 bg-brand-navy" />
-                      <p className="text-[8px] font-black uppercase tracking-[0.2em]">{t.endOfList || '已经到底了 / End'}</p>
-                    </div>
-                  ) : null}
-                </div>
-              )
+            context={{
+                hasMore,
+                isSyncing,
+                onLoadMore: stableLoadMore,
+                safePhotosLength: safePhotosToShow.length,
+                textLoadMore: t.loadMore,
+                textEndOfList: t.endOfList
             }}
+            components={virtuosoComponents}
           />
         )}
       </div>

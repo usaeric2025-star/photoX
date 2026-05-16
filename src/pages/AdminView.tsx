@@ -170,6 +170,7 @@ export default function AdminView() {
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     loadingState, setLoadingState, withLoading, 
+    cloudCount, setCloudCount,
     batchProgress: { current: 0, total: 0 },
     isAnalyzing: loadingState === 'analyzing',
     aiDebugInfo,
@@ -262,16 +263,6 @@ export default function AdminView() {
             errorContent={errorContent}
             t={t}
             lang={lang as LanguageCode}
-            uiProps={{
-              activeScreen, setActiveScreen,
-              editPhotoId, setEditPhotoId,
-              batchEditIds, setBatchEditIds,
-              loadingState, setLoadingState, withLoading,
-              cloudCount, setCloudCount
-            }}
-            dialogProps={{
-              alertDialog, setAlertDialog, promptDialog, setPromptDialog, promptValue, setPromptValue
-            }}
           />
         </AdminPhotoProvider>
       </AdminSessionProvider>

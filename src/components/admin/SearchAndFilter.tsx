@@ -85,9 +85,10 @@ export const SearchAndFilter: React.FC<Props> = ({
           onClick={() => { 
             setFilterCatId(null); 
             setFilterSubId(null); 
+            setFilterTagIds([]);
             window.scrollTo({ top: 0, behavior: 'instant' });
           }}
-          className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!filterCatId ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
+          className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!filterCatId && filterTagIds.length === 0 ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
         >
           全部产品
         </button>
@@ -105,6 +106,7 @@ export const SearchAndFilter: React.FC<Props> = ({
                 onClick={() => { 
                   setFilterCatId(cat.id); 
                   setFilterSubId(null); 
+                  setFilterTagIds([]);
                   window.scrollTo({ top: 0, behavior: 'instant' });
                 }}
                 className={`w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${filterCatId === cat.id ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
@@ -166,7 +168,11 @@ export const SearchAndFilter: React.FC<Props> = ({
                 return (
                 <button 
                   key={strTagId}
-                  onClick={() => setFilterTagIds(filterTagIds.includes(strTagId) ? filterTagIds.filter(t => t !== strTagId) : [...filterTagIds, strTagId])}
+                  onClick={() => {
+                    setFilterTagIds(filterTagIds.includes(strTagId) ? filterTagIds.filter(t => t !== strTagId) : [...filterTagIds, strTagId]);
+                    setFilterCatId(null);
+                    setFilterSubId(null);
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-[8px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border shadow-sm ${filterTagIds.includes(strTagId) ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white/40 border-brand-navy/10 text-brand-navy/40 hover:bg-white'}`}
                 >
                   #{tag.name}

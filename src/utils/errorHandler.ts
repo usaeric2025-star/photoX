@@ -4,6 +4,13 @@ import { useAdminUI } from '../context/AdminContexts';
 import { useError } from '../context/ErrorContext';
 import { useCallback } from 'react';
 
+export class AppError extends Error {
+  constructor(public message: string, public context?: string, public code?: string) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
 /**
  * Unified error handling strategy.
  */
@@ -20,13 +27,25 @@ export function useErrorHandler() {
     }
 
     // 2. Extract meaningful message
-    const message = error?.message || error?.error?.message || (typeof error === 'string' ? error : '未知错误');
+    let message = error?.message || error?.error?.message || (typeof error === 'string' ? error : '未知错误');
+    let code = error?.code;
     
+    if (error instanceof AppError) {
+      if (error.code) code = error.code;
+      if (error.context && !context) context = error.context;
+    }
+
     // 3. Add to ErrorLog system
     addLog(message, context);
 
     // 4. Decision logic for user feedback
     const lowerMessage = message.toLowerCase();
+    
+    // Custom AppError
+    if (error instanceof AppError) {
+      toast.error(`操作失败 (${code || 'ERR'}): ${message}`);
+      return;
+    }
     
     // Condition A: Permission / Auth issues
     if (

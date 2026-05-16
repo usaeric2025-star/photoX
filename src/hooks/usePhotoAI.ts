@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import { toast } from 'sonner';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
@@ -9,7 +8,6 @@ import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
 import { savePhotoToCloud } from '../services/photoMutationService';
 import { AI_CONFIG } from '../constants/config';
-import { showSystemError } from '../context/ErrorContext';
 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
   if (!name || name.trim() === '') return true;
@@ -50,8 +48,6 @@ export const usePhotoAI = (
   addTask: (task: Omit<Task, 'id'>) => string,
   updateTask: (id: string, updates: Partial<Task>) => void,
   removeTask: (id: string) => void,
-  runWithLoading: <T>(state: 'idle' | 'analyzing', fn: () => Promise<T>) => Promise<T>,
-  setLoadingState: (s: 'idle' | 'analyzing') => void,
   photosRef: React.MutableRefObject<Photo[]>,
   handleError: (error: unknown, context?: string) => void
 ) => {
@@ -68,7 +64,6 @@ export const usePhotoAI = (
     currentAnalysisControllers.current.clear();
     
     setBatchProgress({ current: 0, total: 0 });
-    setLoadingState('idle'); // Safety: reset global state
     
     // Safety: ensure any stuck isAnalyzing flags are cleared
     setPhotos(prev => prev.map(p => p.isAnalyzing ? { ...p, isAnalyzing: false } : p));
@@ -80,13 +75,10 @@ export const usePhotoAI = (
     }
     setAiDebugInfo({ step: '已取消', message: '用户中断了 AI 识别任务' });
     setTimeout(() => setAiDebugInfo(null), 3000);
-    
-    toast.info('AI 识别已取消 / AI Analysis Cancelled');
   };
 
   const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
     setAiDebugInfo(null);
-    setLoadingState('analyzing'); // Set loading state to disable button
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     const sPhotosToProcess = safeArray(photosToProcess);
     const unProcessed = sPhotosToProcess.filter(p => {
@@ -103,12 +95,10 @@ export const usePhotoAI = (
     
     if (sUnProcessed.length === 0) {
       isAnalyzingRef.current = false;
-      console.log('usePhotoAI: sUnProcessed.length is 0, setting idle');
-      setLoadingState('idle'); // Reset loading state
+      console.log('usePhotoAI: sUnProcessed.length is 0');
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
-        toast.success('选中的照片已经包含完整的类别、标签和翻译，无需重新识别。');
       }
       return;
     }
@@ -116,8 +106,10 @@ export const usePhotoAI = (
     // Background task: avoid setting global loading state
     setAiDebugInfo({ step: '准备中', message: '批量分析初始化...' });
     setBatchProgress({ current: 0, total: sUnProcessed.length });
-    const taskId = existingTaskId || addTask({
+    const taskId = addTask({
       name: `批量 AI 识别 (${sUnProcessed.length} 张)`,
+      status: 'running',
+      progress: 0,
       onCancel: () => abortAnalysis(taskId)
     });
 
@@ -232,7 +224,7 @@ export const usePhotoAI = (
                 completedCount++;
               } else if (result.status === 'rejected' && (!result.reason || result.reason.name !== 'AbortError')) {
                 batchFailures.push(photo.name || photo.id.slice(0, 8));
-                handleError(result.reason, `AI 识别失败: ${photo.name?.slice(0, 10)}...`);
+                throw result.reason;
               }
             });
 
@@ -255,12 +247,11 @@ export const usePhotoAI = (
             });
             
             if (isAllSuccess) {
-              toast.success(`AI 識別成功處理 ${completedCount} 張。`);
               setAiDebugInfo(null);
             }
         } else {
             updateTask(taskId, { status: 'error', message: '任务执行失败。' });
-            handleError(new Error('任务执行失败'), 'AI_BATCH_IDENTIFY');
+            throw new Error('任务执行失败');
         }
     } catch (err) {
         updateTask(taskId, { status: 'error', message: `錯誤: ${err instanceof Error ? err.message : String(err)}` });
@@ -273,7 +264,6 @@ export const usePhotoAI = (
             currentAnalysisControllers.current.delete(taskId);
         }
         setBatchProgress({ current: 0, total: 0 });
-        setLoadingState('idle'); 
     }
   };
 
@@ -283,6 +273,8 @@ export const usePhotoAI = (
     
     const taskId = addTask({
       name: `AI 单图识别 ${editPhotoId ? '(编辑中)' : ''}`,
+      status: 'running',
+      progress: 0,
       onCancel: () => abortAnalysis(taskId)
     });
 
@@ -405,12 +397,13 @@ export const usePhotoAI = (
     const sGroupPhotos = safeArray(groupPhotos);
     if (sGroupPhotos.length === 0) return;
     setAiDebugInfo(null);
-    setLoadingState('analyzing'); 
     const effectiveKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
     if (!effectiveKey) throw new Error('请先在管理设置中设定 AI 密钥');
 
     const taskId = addTask({
       name: `群组 AI 识别 (${sGroupPhotos.length} 张)`,
+      status: 'running',
+      progress: 0,
       onCancel: () => abortAnalysis(taskId)
     });
 
@@ -495,7 +488,6 @@ export const usePhotoAI = (
 
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
       setAiDebugInfo(null);
-      toast.success('群组 AI 识别成功并已保存。');
       return result;
     } catch (err: any) {
       if (err.name === 'AbortError') {
@@ -514,7 +506,7 @@ export const usePhotoAI = (
         }
         
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
-        handleError(err, '群组 AI 识别失败');
+        throw err;
         setPhotos(prev => prev.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p));
         photosRef.current = photosRef.current.map(p => photoIds.includes(p.id) ? { ...p, isAnalyzing: false } : p);
         throw err;
@@ -525,7 +517,6 @@ export const usePhotoAI = (
           clearTimeout(task.timeoutId);
           currentAnalysisControllers.current.delete(taskId);
       }
-      setLoadingState('idle');
     }
   };
 

@@ -140,6 +140,9 @@ export interface AdminUIContextType {
   aiDebugInfo: { step: string; message: string; error?: string } | null;
   setAiDebugInfo: (d: { step: string; message: string; error?: string } | null) => void;
   abortAnalysis: () => void;
+  cloudCount: number | null;
+  setCloudCount: (c: number | null) => void;
+  setLoadingState: (s: 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting') => void;
 }
 
 const AdminUIContext = createContext<AdminUIContextType | undefined>(undefined);

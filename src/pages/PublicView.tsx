@@ -67,11 +67,6 @@ export default function PublicView() {
         setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
-        
-        // Sync to cache
-        if (!filterCatId && safeArray(filterTagIds).length === 0 && !debouncedSearchQuery) {
-          saveData('product_photos', cleaned);
-        }
       }
     } catch (e) {
       handleError(e, "fetchFilteredPhotos");
@@ -135,9 +130,6 @@ export default function PublicView() {
         setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
         setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
-        if (!filterCatId && sFilterTagIds.length === 0 && !debouncedSearchQuery) {
-          saveData('product_photos', cleanedCloud);
-        }
       }
       
       if (cloudCats) {

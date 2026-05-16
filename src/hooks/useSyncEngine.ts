@@ -96,13 +96,35 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
             // If local data is empty, force a full sync regardless of 'force' param
             const effectiveSyncTime = (force || localPhotos.length === 0) ? null : localStorage.getItem('lastSyncTime');
             
-            const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, cloudPhotos] = await Promise.all([
+            let allCloudPhotos: any[] = [];
+            if (!effectiveSyncTime) {
+                // Initial full sync or forced reload: loop to get all pages
+                let page = 0;
+                let hasMoreToFetch = true;
+                while (hasMoreToFetch) {
+                    const pagePhotos = await loadAllPhotosFromCloud(undefined, page, 1000).catch(err => { handleError(err, '获取照片列表失败'); return []; });
+                    if (pagePhotos.length > 0) {
+                        allCloudPhotos = allCloudPhotos.concat(pagePhotos);
+                        page++;
+                    }
+                    if (pagePhotos.length < 1000) {
+                        hasMoreToFetch = false;
+                    }
+                }
+            } else {
+                // Incremental sync
+                allCloudPhotos = await loadAllPhotosFromCloud(effectiveSyncTime || undefined).catch(err => { handleError(err, '获取照片列表失败'); return []; });
+            }
+
+            const [cloudSettings, cloudManufacturers, cloudTags, cloudCategories, realCloudCount] = await Promise.all([
                 fetchSettings().catch(err => { handleError(err, '获取设置失败'); return null; }),
                 loadManufacturersFromCloud().catch(err => { handleError(err, '获取厂商失败'); return null; }),
                 loadTagsFromCloud().catch(err => { handleError(err, '获取标签失败'); return null; }),
                 loadCategoriesFromCloud().catch(err => { handleError(err, '获取分类失败'); return []; }),
-                loadAllPhotosFromCloud(effectiveSyncTime || undefined).catch(err => { handleError(err, '获取照片列表失败'); return []; })
+                import('../services/photoService').then(m => m.getPhotoCount()).catch(() => null)
             ]);
+            
+            const cloudPhotos = allCloudPhotos;
 
             if (cloudSettings) {
                 setSettings(cloudSettings);
@@ -169,12 +191,13 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'syncing' | 'analyzi
             
             // Always set cloud count to the total photos length
             if (setCloudCount) {
-                setCloudCount(finalPhotos.length);
+                setCloudCount(realCloudCount !== null ? realCloudCount : finalPhotos.length);
             }
             
-            // Fix scrolling and update issue: ensure visibleCount covers finalPhotos.length
-            setVisibleCount(prev => Math.max(prev, finalPhotos.length));
-
+            // Fix scrolling and update issue: ensure visibleCount covers finalPhotos.length ONLY IF we are catching up with what we already had locally. 
+            // Avoid pushing visibleCount to thousands simply because we have thousands of local items, as it will break the grid optimization.
+            // Leave visibleCount handling to the Infinite Scroll handler (it was previously causing a lag spike by setting visibleCount = finalPhotos.length)
+            
             localStorage.setItem('lastSyncTime', new Date().toISOString());
         } catch (err) {
             handleError(err, '云端同步失败');

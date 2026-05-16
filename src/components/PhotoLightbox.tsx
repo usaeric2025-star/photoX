@@ -214,7 +214,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         {isImageLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
              <div className="w-12 h-12 border-4 border-white/10 border-t-white rounded-full animate-spin mb-4 shadow-xl"></div>
-             <Skeleton className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Loading High-Res</Skeleton>
           </div>
         )}
         <div className={`relative w-full h-full flex items-center justify-center overflow-hidden`}>

@@ -13,9 +13,12 @@ import { Photo } from '../types';
 
 interface AdminGalleryShellProps {
   onExit: () => void;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  cloudCount?: number | null;
 }
 
-export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) => {
+export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit, onLoadMore, hasMore, cloudCount }) => {
   const adminPhoto = useOptionalAdminPhoto();
   const adminUI = useOptionalAdminUI();
   const adminSession = useOptionalAdminSession();
@@ -206,6 +209,9 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit }) 
         settings={adminSession?.settings}
         isRefreshing={adminSession?.isSyncing}
         onRefresh={() => adminSession?.onRefresh?.()}
+        onLoadMore={onLoadMore}
+        hasMore={hasMore}
+        cloudCount={cloudCount}
       />
 
       {/* Admin Bulk Actions */}

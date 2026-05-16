@@ -1,7 +1,6 @@
 import { Photo, User, Task } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { saveData } from '../utils/indexedDB';
-import { toast } from 'sonner';
 
 export const usePhotoMutations = (
   user: User | null,
@@ -21,35 +20,25 @@ export const usePhotoMutations = (
       const taskId = addTask({
         name: `删除照片 (${ids.length} 张)`,
         status: 'running',
+        progress: 0,
         onCancel: () => {
           controller.abort();
           updateTask(taskId, { status: 'cancelled', message: '已取消操作' });
         }
       });
       
-      const { success, error } = await deletePhotos(ids, (current: number, total: number) => {
+      const result = await deletePhotos(ids, (current: number, total: number) => {
         updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在删除 ${current} / ${total}` });
       }, controller.signal);
       
-      if (!success) {
-        if (controller.signal.aborted) {
-           toast.info('删除已中止 / Aborted');
-        } else {
-           updateTask(taskId, { status: 'error', message: `删除失败: ${error?.message || '未知错误'}` });
-           handleError(error, '批量删除失败');
-        }
+      if (!result.success) {
+        updateTask(taskId, { status: 'error', message: `删除失败: ${result.error?.message || '未知错误'}` });
       } else {
         updateTask(taskId, { status: 'completed', progress: 100, message: '删除成功' });
-        toast.success('照片已成功删除');
         setTimeout(() => removeTask(taskId), 5000);
       }
     } else {
-      const { success, error } = await deletePhotos(idOrIds);
-      if (!success) {
-        handleError(error, '删除照片失败');
-      } else {
-        toast.success('照片已成功删除');
-      }
+      await deletePhotos(idOrIds);
     }
   };
 
@@ -83,11 +72,11 @@ export const usePhotoMutations = (
             updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在处理 ${current} / ${total}` });
           }, controller.signal);
           updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
-          toast.success('已完成批量更新');
           setTimeout(() => removeTask(taskId), 5000);
         } catch (e: any) {
           if (controller.signal.aborted) {
-             toast.info('操作已中止 / Aborted');
+             // Operation aborted by user, no need to toast
+
           } else {
              updateTask(taskId, { status: 'error', message: '部分更新失败' });
              handleError(e, "批量云端同步失败");

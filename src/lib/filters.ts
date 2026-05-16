@@ -1,9 +1,17 @@
 import { Photo, Category, Tag } from '../types';
+import { isValidPhoto } from './typeGuard';
 
 export const cleanPhotos = (photos: unknown[]): Photo[] => {
   if (!Array.isArray(photos)) return [];
   return photos
-    .filter((p): p is Record<string, unknown> => p != null && typeof p === 'object')
+    .filter((p): p is Record<string, unknown> => {
+      if (p == null || typeof p !== 'object') return false;
+      if (!isValidPhoto(p)) {
+        console.warn('Invalid photo data:', p);
+        return false;
+      }
+      return true;
+    })
     .map(p => ({
       ...p,
       id: String(p.id),
