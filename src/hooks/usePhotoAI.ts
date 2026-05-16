@@ -103,6 +103,7 @@ export const usePhotoAI = (
     
     if (sUnProcessed.length === 0) {
       isAnalyzingRef.current = false;
+      setLoadingState('idle'); // Reset loading state
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
