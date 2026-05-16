@@ -59,13 +59,13 @@ export default function PublicView() {
         loadAllPhotosFromCloud(undefined, 0, PAGINATION.PUBLIC_PAGE_SIZE, filterCatId, tagId, debouncedSearchQuery),
         getPhotoCount(filterCatId, tagId, debouncedSearchQuery)
       ]);
-      const sCloudPhotos = safeArray(cloudPhotos);
-      if (cloudPhotos) {
-        const cleaned = cleanPhotos(sCloudPhotos);
+      
+      if (Array.isArray(cloudPhotos)) {
+        const cleaned = cleanPhotos(cloudPhotos);
         setPhotos(cleaned);
         setPage(0);
-        setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
-        setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
+        setHasMore(cloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
+        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
       }
     } catch (e) {
@@ -122,13 +122,12 @@ export default function PublicView() {
         getPhotoCount(filterCatId, tagId, debouncedSearchQuery).catch(() => 0)
       ]);
 
-      const sCloudPhotos = safeArray(cloudPhotos);
-      if (cloudPhotos) {
-        const cleanedCloud = cleanPhotos(sCloudPhotos);
+      if (Array.isArray(cloudPhotos)) {
+        const cleanedCloud = cleanPhotos(cloudPhotos);
         setPhotos(cleanedCloud);
         setPage(0);
-        setHasMore(sCloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
-        setVisibleCount(prev => Math.max(prev, sCloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
+        setHasMore(cloudPhotos.length === PAGINATION.PUBLIC_PAGE_SIZE);
+        setVisibleCount(prev => Math.max(prev, cloudPhotos.length + PAGINATION.PUBLIC_LOAD_MORE_OFFSET));
         setTotalCloudCount(total);
       }
       

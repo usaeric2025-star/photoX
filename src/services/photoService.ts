@@ -117,7 +117,29 @@ export const loadAllPhotosFromCloud = async (
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');
   if (normSearchQuery) {
     const q = normSearchQuery;
-    query = query.or(`name.ilike.%${q}%,manual_code.ilike.%${q}%,model_number.ilike.%${q}%`);
+    
+    // Resolve matching tags & categories to improve Supabase OR filtering
+    const [tagsRes, catsRes] = await Promise.all([
+      supabase.from('tags').select('id').ilike('name', `%${q}%`),
+      supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`)
+    ]);
+
+    const tagIds = (tagsRes.data || []).map(t => t.id);
+    const catIds = (catsRes.data || []).map(c => c.id);
+
+    let orSegments = [
+      `name.ilike.%${q}%`,
+      `manual_code.ilike.%${q}%`,
+      `model_number.ilike.%${q}%`,
+      `description.ilike.%${q}%`,
+      `item_code.ilike.%${q}%`
+    ];
+
+    if (catIds.length > 0) {
+      orSegments.push(`category_id.in.(${catIds.join(',')})`);
+    }
+
+    query = query.or(orSegments.join(','));
   }
 
   const from = page * limit;
@@ -190,7 +212,29 @@ export const getPhotoCount = async (
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');
   if (normSearchQuery) {
     const q = normSearchQuery;
-    query = query.or(`name.ilike.%${q}%,manual_code.ilike.%${q}%,model_number.ilike.%${q}%`);
+    
+    // Resolve matching tags & categories to improve Supabase OR filtering
+    const [tagsRes, catsRes] = await Promise.all([
+      supabase.from('tags').select('id').ilike('name', `%${q}%`),
+      supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`)
+    ]);
+
+    const tagIds = (tagsRes.data || []).map(t => t.id);
+    const catIds = (catsRes.data || []).map(c => c.id);
+
+    let orSegments = [
+      `name.ilike.%${q}%`,
+      `manual_code.ilike.%${q}%`,
+      `model_number.ilike.%${q}%`,
+      `description.ilike.%${q}%`,
+      `item_code.ilike.%${q}%`
+    ];
+
+    if (catIds.length > 0) {
+      orSegments.push(`category_id.in.(${catIds.join(',')})`);
+    }
+
+    query = query.or(orSegments.join(','));
   }
 
   const { count, error } = await query;

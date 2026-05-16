@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export type LoadingState = 'idle' | 'syncing' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
+export type LoadingState = 'idle' | 'syncing' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
 
 export function useLoading(initialState: LoadingState = 'idle') {
   const [loadingState, setLoadingState] = useState<LoadingState>(initialState);

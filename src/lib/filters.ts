@@ -69,22 +69,33 @@ export function filterPhotos(
     const q = searchQuery.toLowerCase();
     
     // Pre-calculate tag names and category names for each photo to avoid O(N*M) in filter
-    const tagMap = new Map<string, string>();
-    tags.forEach(t => tagMap.set(String(t.id), t.name.toLowerCase()));
+    const tagMap = new Map<string, string[]>();
+    tags.forEach(t => {
+      const terms = [t.name.toLowerCase()];
+      if (Array.isArray(t.aliases)) {
+        t.aliases.forEach(a => terms.push(a.toLowerCase()));
+      }
+      tagMap.set(String(t.id), terms);
+    });
     
-    const catMap = new Map<string, string>();
+    const catMap = new Map<string, string[]>();
     if (categories) {
       categories.forEach(c => {
-        catMap.set(String(c.id), (c.zh || c.name || '').toLowerCase());
+        const terms = [(c.zh || c.name || '').toLowerCase()];
+        if (Array.isArray(c.aliases)) {
+          c.aliases.forEach(a => terms.push(a.toLowerCase()));
+        }
+        catMap.set(String(c.id), terms);
       });
     }
 
     result = result.filter(p => {
-      // Basic text fields
+      // Basic text fields (item_code, name, manual_code, etc)
       const hasBasicMatch = 
         (p.name || '').toLowerCase().includes(q) || 
         (p.manual_code || '').toLowerCase().includes(q) ||
         (p.model_number || '').toLowerCase().includes(q) ||
+        (p.item_code || '').toLowerCase().includes(q) ||
         (p.description || '').toLowerCase().includes(q);
       
       if (hasBasicMatch) return true;
@@ -99,18 +110,18 @@ export function filterPhotos(
         ) return true;
       }
 
-      // Tags match
+      // Tags match (including aliases)
       const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
       const hasTagMatch = pTagIds.some(tid => {
-        const tagName = tagMap.get(String(tid));
-        return tagName && tagName.includes(q);
+        const terms = tagMap.get(String(tid));
+        return terms && terms.some(term => term.includes(q));
       });
       if (hasTagMatch) return true;
 
-      // Category match
+      // Category match (including aliases)
       if (p.categoryId) {
-        const catName = catMap.get(String(p.categoryId));
-        if (catName && catName.includes(q)) return true;
+        const terms = catMap.get(String(p.categoryId));
+        if (terms && terms.some(term => term.includes(q))) return true;
       }
 
       return false;
