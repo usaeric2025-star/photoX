@@ -52,7 +52,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
     deleteTag,
     removeTagFromPhoto
   } = useAdminPhoto();
-  const { isAnalyzing, aiDebugInfo, setPromptDialog, setAlertDialog } = useAdminUI();
+  const { isAnalyzing, aiDebugInfo, setPromptDialog, setAlertDialog, withLoading } = useAdminUI();
   const { appLang, isSyncing: sessionSyncing } = useAdminSession();
   const { validatePhotoForm } = useFormValidation();
   const { handleError } = useErrorHandler();
@@ -199,7 +199,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       );
                     } else if (handleSingleAiAnalyze) {
                       console.log('Calling handleSingleAiAnalyze');
-                      handleSingleAiAnalyze(data, formState.categoryId || undefined);
+                      withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined));
                     } else {
                       handleError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
                     }
@@ -441,7 +441,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   if (handleSingleAiAnalyzeCallback) {
                     handleSingleAiAnalyzeCallback(data, formState.categoryId || undefined, editPhotoId || undefined, formState, updateForm, handleSingleAiAnalyze);
                   } else if (handleSingleAiAnalyze) {
-                    handleSingleAiAnalyze(data, formState.categoryId || undefined);
+                    withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined));
                   }
                 }}
               />

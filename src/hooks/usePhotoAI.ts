@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../services/geminiService';
 import { resolveTagIdsBatch } from '../utils/tagUtils';
@@ -99,6 +100,7 @@ export const usePhotoAI = (
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
+        toast.success("所有照片均已是最新，无需重新识别");
       }
       return;
     }
@@ -240,17 +242,21 @@ export const usePhotoAI = (
         }
         if (completedCount > 0 || sUnProcessed.length > 0) {
             const isAllSuccess = completedCount === sUnProcessed.length;
+            const message = isAllSuccess ? `全数完成！共 ${completedCount} 张` : `完成，但有部分失败 (${completedCount} 成功)`;
             updateTask(taskId, { 
               status: isAllSuccess ? 'completed' : 'warning', 
               progress: 100, 
-              message: isAllSuccess ? `全數完成！共 ${completedCount} 張` : `完成，但有部分失敗 (${completedCount} 成功)` 
+              message
             });
-            
             if (isAllSuccess) {
+              toast.success(message);
               setAiDebugInfo(null);
+            } else {
+              toast.error(message);
             }
         } else {
             updateTask(taskId, { status: 'error', message: '任务执行失败。' });
+            toast.error('任务执行失败');
             throw new Error('任务执行失败');
         }
     } catch (err) {
@@ -356,6 +362,7 @@ export const usePhotoAI = (
       }
       
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
+      toast.success('识别完成');
       setAiDebugInfo(null);
       return result;
     } catch (err: any) {
@@ -487,6 +494,7 @@ export const usePhotoAI = (
       });
 
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
+      toast.success('多图识别完成');
       setAiDebugInfo(null);
       return result;
     } catch (err: any) {

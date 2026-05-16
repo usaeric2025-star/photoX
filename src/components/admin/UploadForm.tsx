@@ -39,7 +39,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
 }) => {
   const { appLang } = useAdminSession();
   const { updateTag, deleteTag } = useAdminPhoto();
-  const { setPromptDialog, setAlertDialog } = useAdminUI();
+  const { setPromptDialog, setAlertDialog, withLoading } = useAdminUI();
   
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -73,7 +73,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 onClick={() => {
                   if (isAnalyzing) return;
-                  handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined);
+                  withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined));
                 }}
                 disabled={isAnalyzing && !abortAnalysis}
                 className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm ${isAnalyzing ? 'bg-slate-50 border-slate-100 text-slate-400' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-100 active:bg-purple-200'}`}
@@ -241,7 +241,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   onChange={(newDims) => updateForm({ dimensions: newDims })}
                   showAiButton={!editPhotoId && !!newPhotoData}
                   isAnalyzing={isAnalyzing}
-                  onAiAnalyze={() => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)}
+                  onAiAnalyze={() => withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined))}
                 />
 
                 <div className="space-y-4">
