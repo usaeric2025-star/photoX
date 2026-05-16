@@ -132,8 +132,21 @@ MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 const VirtuosoGridFooter = React.memo(({ context }: any) => {
   const { hasMore, isSyncing, onLoadMore, safePhotosLength, textLoadMore, textEndOfList } = context;
+  
+  // Use IntersectionObserver or similar to auto-load if Virtuoso endReached is flaky?
+  // We can just call onLoadMore() in a useEffect if this footer mounts while hasMore and not syncing
+  React.useEffect(() => {
+    if (hasMore && !isSyncing && onLoadMore) {
+      // Small timeout to prevent immediate rapid firing
+      const timer = setTimeout(() => {
+        onLoadMore();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [hasMore, isSyncing, onLoadMore]);
+
   return (
-    <div className="py-10 pb-32 flex flex-col items-center justify-center w-full">
+    <div className="py-10 pb-32 flex flex-col items-center justify-center w-full min-h-[100px]">
       {hasMore ? (
         <button 
           onClick={onLoadMore}
@@ -156,6 +169,7 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
     </div>
   );
 });
+VirtuosoGridFooter.displayName = 'VirtuosoGridFooter';
 
 const virtuosoComponents = { Footer: VirtuosoGridFooter };
 
