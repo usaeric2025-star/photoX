@@ -184,7 +184,11 @@ export const AdminHeader: React.FC<Props> = ({
                   title={t.batchAi}
                 >
                   {isAnalyzing ? (
-                    <Skeleton className="text-[9px] font-bold bg-transparent text-white">{batchProgress.current}</Skeleton>
+                    batchProgress.current > 0 ? (
+                      <span className="text-[9px] font-bold text-white">{batchProgress.current}</span>
+                    ) : (
+                      <Sparkles size={14} className="animate-spin" />
+                    )
                   ) : (
                     <Sparkles size={18} />
                   )}
