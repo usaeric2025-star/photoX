@@ -81,6 +81,7 @@ export interface Photo {
   isHidden?: boolean;
   groupOrder?: number;
   userId?: string;
+  type?: string;
   // UI legacy fields mapping if needed
   uri?: string; // For local preview
   categoryId: string | null; // For local filter

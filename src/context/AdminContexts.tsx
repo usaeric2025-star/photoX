@@ -147,10 +147,10 @@ export interface AdminUIContextType {
 
 const AdminUIContext = createContext<AdminUIContextType | undefined>(undefined);
 
-export const AdminUIProvider: React.FC<{ children: ReactNode, value: AdminUIContextType }> = ({ children, value }) => {
-  const [loadingType, setLoadingType] = useState<'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting' | null>('idle');
+export const AdminUIProvider: React.FC<{ children: ReactNode, value: Omit<AdminUIContextType, 'loadingType' | 'setLoadingType' | 'withLoading' | 'isAnalyzing'> }> = ({ children, value }) => {
+  const [loadingType, setLoadingType] = useState<AdminUIContextType['loadingType']>('idle');
   
-  const withLoading = async <T,>(type: 'idle' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting', fn: () => Promise<T>): Promise<T> => {
+  const withLoading = async <T,>(type: Exclude<AdminUIContextType['loadingType'], 'idle' | null>, fn: () => Promise<T>): Promise<T> => {
     setLoadingType(type);
     try {
       return await fn();
@@ -166,7 +166,7 @@ export const AdminUIProvider: React.FC<{ children: ReactNode, value: AdminUICont
       setLoadingType,
       withLoading,
       isAnalyzing: loadingType === 'analyzing'
-    }}>
+    } as AdminUIContextType}>
       {children}
     </AdminUIContext.Provider>
   );

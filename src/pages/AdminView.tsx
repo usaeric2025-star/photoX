@@ -47,7 +47,7 @@ export default function AdminView() {
   const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
-  const { loadingState, setLoadingState, withLoading } = useLoading();
+  const { loadingState: loadingType, setLoadingState: setLoadingType, withLoading } = useLoading();
   const [cloudCount, setCloudCount] = useState<number | null>(null);
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
 
@@ -104,15 +104,15 @@ export default function AdminView() {
     setAlertDialog, 
     setPromptDialog, 
     setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
-    setLoadingState,
-    loadingState,
+    setLoadingType,
+    loadingType,
     withLoading,
     setCloudCount,
     cloudCount,
     editPhotoId, setEditPhotoId,
     batchEditIds, setBatchEditIds,
     abortAnalysis: errorGuard('abortAnalysis')
-  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingState, loadingState, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
+  }), [setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds]);
 
   const sessionBasicValue = React.useMemo(() => ({ 
     settings,
@@ -169,14 +169,12 @@ export default function AdminView() {
   const uiValue = React.useMemo(() => ({
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    loadingState, setLoadingState, withLoading, 
     cloudCount, setCloudCount,
     batchProgress: { current: 0, total: 0 },
-    isAnalyzing: loadingState === 'analyzing',
     aiDebugInfo,
     setAiDebugInfo,
     abortAnalysis: () => {}
-  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, loadingState, setLoadingState, withLoading, aiDebugInfo, setAiDebugInfo]);
+  }), [activeScreen, editPhotoId, batchEditIds, alertDialog, setAlertDialog, promptDialog, setPromptDialog, aiDebugInfo, setAiDebugInfo, cloudCount, setCloudCount]);
 
   if (!authChecked) {
     return (

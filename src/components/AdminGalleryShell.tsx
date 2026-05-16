@@ -189,7 +189,7 @@ export const AdminGalleryShell: React.FC<AdminGalleryShellProps> = ({ onExit, on
         onAiAnalyze={(p) => adminPhoto?.handleSingleAiAnalyze(p.uri!, p.categoryId || undefined)}
         onBatchAiAnalyze={(photos) => adminPhoto?.handleGroupAiIdentify(photos)}
         onCancelAnalyze={() => adminUI?.abortAnalysis()}
-        isAnalyzing={adminUI?.loadingState === 'analyzing'}
+        isAnalyzing={adminUI?.loadingType === 'analyzing'}
         setAlertDialog={(d) => adminUI?.setAlertDialog(d)}
         onSetGroupCover={async (id, groupId) => {
           setPhotos(prev => prev.map(p => {

@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { 
   ChevronLeft, X, Cloud, LogOut,
-  Trash2, Upload,
+  Trash2, Upload, Database,
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
   User as UserIcon, Heart, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
@@ -23,6 +23,7 @@ interface SettingsScreenProps {
   handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: Category[], tags: Tag[], manufacturers: Manufacturer[]) => Promise<void>;
   performPushSync: () => Promise<ApiResponse>;
   performPullSync: () => Promise<ApiResponse>;
+  refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
   saveSettings: (s: AppSettings) => Promise<ApiResponse>;
   cloudCount: number | null;
   lastSyncTime: number | null;
@@ -171,10 +172,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setTags, setCategories, setManufacturers, setPhotos,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag
   } = useAdminPhoto();
-  const { loadingState, setAlertDialog, setPromptDialog, withLoading } = useAdminUI();
+  const { loadingType, setAlertDialog, setPromptDialog, withLoading } = useAdminUI();
   const { handleError } = useErrorHandler();
 
-  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
+  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, refreshCloudData, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -244,18 +245,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       confirmLabel: '执行排重',
       onConfirm: async () => {
         try {
-          await withLoading('syncing', async () => {
+          await withLoading('sync-push', async () => {
             const { removed } = await deduplicatePhotos(user.id);
             if (removed > 0) {
               toast.success(`排重完成！共清理了 ${removed} 张重复记录。`);
-              // Optionally trigger a refresh
+              // Force fresh refresh
               await performPullSync();
             } else {
-              toast.info('未发现重复照片');
+              toast.info('未发现重复记录。');
             }
           });
-        } catch (error: any) {
-          handleError(error, '排重清理失败');
+        } catch (e: any) {
+          handleError(e, '排重失败');
         }
       }
     });

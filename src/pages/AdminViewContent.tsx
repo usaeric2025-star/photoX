@@ -3,13 +3,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
-import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { FloatingActionButton } from '../components/admin/FloatingActionButton';
-import { BatchEditScreen } from '../components/admin/BatchEditScreen';
 import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
-import { SettingsScreen } from '../components/SettingsScreen';
 import { GroupDetailView } from '../components/GroupDetailView';
 import { useSyncEngine } from '../hooks/useSyncEngine';
 import { useAdminPhotos } from '../hooks/useAdminPhotos';
@@ -80,7 +77,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing } = useSyncEngine(withLoading);
+  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, handleLogoUpload, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
 
   const checkSyncLock = useCallback(() => {
     if (loadingType === 'sync-pull' || loadingType === 'sync-push') {
@@ -120,7 +117,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   const sessionBasicValue = React.useMemo(() => ({ 
     settings,
     setSettings,
-  }), [settings, setSettings]);
+    setIsSyncing
+  }), [settings, setSettings, setIsSyncing]);
 
   const { newPhotoData, setNewPhotoData, formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, saveNewPhoto, saveBatchEdit } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
 
@@ -236,9 +234,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     accessPasscode, setAccessPasscode, customModel, setCustomModel,
     viewMode, setViewMode,
     isSyncing: loadingType === 'sync-pull' || loadingType === 'sync-push' || isSyncing, 
+    setIsSyncing,
     onRefresh,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, loadingType, isSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode, loadingType, isSyncing, setIsSyncing, onRefresh, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, setPhotos, categories, setCategories, tags, setTags,
@@ -404,6 +403,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                   }}
                   performPushSync={() => withLoading('sync-push', () => performPushSync(settings, refreshCloudData, lastSyncTime))}
                   performPullSync={() => performPullSync(refreshCloudData)}
+                  refreshCloudData={refreshCloudData}
                   cloudCount={cloudCount}
                   lastSyncTime={lastSyncTime}
                   isSyncing={loadingType === 'sync-pull' || loadingType === 'sync-push'}

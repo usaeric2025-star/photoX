@@ -215,6 +215,7 @@ export const useSyncEngine = (withLoading?: <T>(s: 'idle' | 'sync-pull' | 'sync-
         viewMode, setViewMode,
         settings, setSettings,
         refreshCloudData,
-        handleLogoUpload
+        handleLogoUpload,
+        setIsSyncing: (v: boolean) => setInternalSyncType(v ? 'sync-pull' : null)
     };
 };

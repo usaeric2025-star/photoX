@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
+import { useGalleryStore } from './store';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
 import { useError } from './context/ErrorContext';
@@ -74,6 +75,15 @@ export default function AppRoutes() {
         window.removeEventListener('unhandledrejection', handlePromiseRejection);
     };
   }, [user, addLog]);
+
+  // Handle Global Search Debouncing
+  const { searchQuery, setDebouncedSearchQuery } = useGalleryStore();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 400); // 400ms debounce
+    return () => clearTimeout(timer);
+  }, [searchQuery, setDebouncedSearchQuery]);
   
   if (!authChecked) return null;
 
