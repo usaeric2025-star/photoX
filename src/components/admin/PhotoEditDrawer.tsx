@@ -6,17 +6,22 @@ import { useErrorHandler } from '../../utils/errorHandler';
 import { Photo, ProductFormData, Dimension, Tag } from '../../types';
 import { Skeleton } from '../ui/Skeleton';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, ChevronRight, Trash2 } from 'lucide-react';
-import { useAdminPhoto, useAdminUI, useAdminSession } from '../../context/AdminContexts';
+import { useGalleryStore } from '../../store';
+import { 
+  useCategoriesQuery, useTagsQuery, useManufacturersQuery,
+  useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
+  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation
+} from '../../hooks';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { DimensionEditor } from './edit/DimensionEditor';
-import { Button } from "@/components/ui/button"
+import { Button } from "../ui/button"
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "../../components/ui/tabs";
+} from "../ui/tabs";
 import { cn, safeArray } from '../../lib/utils';
 
 interface Props {
@@ -32,27 +37,32 @@ interface Props {
   newPhotoData?: string | null;
   setNewPhotoData?: (data: string | null) => void;
   abortAnalysis?: () => void;
+  handleSingleAiAnalyze: (imageData: string | null, catId?: string, editId?: string) => Promise<any>;
+  handleTranslate: (text: string, currentLang: string, targetLang: string) => Promise<string>;
+  photos: Photo[];
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
-  const { 
-    handleSingleAiAnalyze, 
-    handleTranslate,
-    handleSingleAiAnalyzeCallback,
-    categories, 
-    tags, 
-    photos, 
-    manufacturers, 
-    addTag,
-    addManufacturer,
-    updateManufacturer,
-    deleteManufacturer,
-    updateTag,
-    deleteTag,
-    removeTagFromPhoto
-  } = useAdminPhoto();
-  const { isAnalyzing, aiDebugInfo, setPromptDialog, setAlertDialog, withLoading } = useAdminUI();
-  const { appLang, isSyncing: sessionSyncing } = useAdminSession();
+  const { handleSingleAiAnalyze, handleTranslate, photos } = props;
+  const { isAnalyzing, aiDebugInfo, setPromptDialog, setAlertDialog, withLoading, appLang, isSyncing: sessionSyncing } = useGalleryStore();
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: tags = [] } = useTagsQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
+
+  const { mutateAsync: addTagMut } = useAddTagMutation();
+  const { mutateAsync: updateTagMut } = useUpdateTagMutation();
+  const { mutateAsync: deleteTagMut } = useDeleteTagMutation();
+  const { mutateAsync: addManMut } = useAddManufacturerMutation();
+  const { mutateAsync: updateManMut } = useUpdateManufacturerMutation();
+  const { mutateAsync: deleteManMut } = useDeleteManufacturerMutation();
+
+  const addTag = async (name: string) => { return await addTagMut(name); };
+  const updateTag = async (id: string, name: string) => { await updateTagMut({ id, name }); return true; };
+  const deleteTag = async (id: string) => { await deleteTagMut(id); return true; };
+  const addManufacturer = async (name: string) => { return await addManMut(name); };
+  const updateManufacturer = async (id: string, name: string) => { await updateManMut({ id, name }); return true; };
+  const deleteManufacturer = async (id: string) => { await deleteManMut(id); return true; };
+
   const { validatePhotoForm } = useFormValidation();
   const { handleError } = useErrorHandler();
   const { editPhotoId, resetAddState, saveNewPhoto, formState, updateForm, showOtherFields, setShowOtherFields, editPhotoPreview, onDelete, newPhotoData, abortAnalysis } = props;  
@@ -184,19 +194,9 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                       return;
                     }
                     
-                    if (handleSingleAiAnalyzeCallback) {
-                      console.log('Calling handleSingleAiAnalyzeCallback');
-                      handleSingleAiAnalyzeCallback(
-                        data, 
-                        formState.categoryId || undefined, 
-                        editPhotoId || undefined, 
-                        formState, 
-                        updateForm, 
-                        handleSingleAiAnalyze
-                      );
-                    } else if (handleSingleAiAnalyze) {
+                    if (handleSingleAiAnalyze) {
                       console.log('Calling handleSingleAiAnalyze');
-                      withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined));
+                      withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined, editPhotoId || undefined));
                     } else {
                       handleError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
                     }
@@ -427,10 +427,8 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 onAiAnalyze={() => {
                   const data = newPhotoData || editPhotoPreview;
                   if (!data) return;
-                  if (handleSingleAiAnalyzeCallback) {
-                    handleSingleAiAnalyzeCallback(data, formState.categoryId || undefined, editPhotoId || undefined, formState, updateForm, handleSingleAiAnalyze);
-                  } else if (handleSingleAiAnalyze) {
-                    withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined));
+                  if (handleSingleAiAnalyze) {
+                    withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined, editPhotoId || undefined));
                   }
                 }}
               />

@@ -5,7 +5,7 @@ import { useDelete } from './useDelete';
 import { Photo, User, Manufacturer } from '../types';
 import { translateDescription } from '../services/geminiService';
 import { saveData } from '../utils/indexedDB';
-import { useGallery } from './useGallery';
+import { useGalleryStore } from '../store';
 import { useTasks } from './useTasks';
 
 // Import new hooks
@@ -37,10 +37,16 @@ export const useAdminPhotos = (
   const {
     photos,
     categories,
-    tags, tagNameToIdMap,
+    tags, tagIdToNameMap,
     manufacturers
-  } = useGallery();
+  } = useGalleryStore();
 
+  const tagNameToIdMap = tags.reduce((acc, tag) => {
+    acc.set(tag.name.toLowerCase(), tag.id);
+    if ((tag as any).zh) acc.set((tag as any).zh.toLowerCase(), tag.id);
+    if ((tag as any).aliases) (tag as any).aliases.forEach((a: string) => acc.set(a.toLowerCase(), tag.id));
+    return acc;
+  }, new Map<string, string>());
   const { handleError } = useErrorHandler();
   const { deletePhotos } = useDelete();
   const { tasks, addTask, updateTask, removeTask } = useTasks();

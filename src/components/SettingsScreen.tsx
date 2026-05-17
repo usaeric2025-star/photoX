@@ -15,8 +15,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { testAiConnection } from '../services/geminiService';
 import { addTagToDB, deleteTagFromDB } from '../services/supabaseService';
 import { normalizeTagName, normalizeManufacturerName } from '../utils/stringHelper';
-import { useAdminSession, useAdminPhoto, useAdminUI } from '../context/AdminContexts';
-import { useErrorHandler } from '../utils/errorHandler';
+import { useGalleryStore } from '../store';
 
 interface SettingsScreenProps {
   setActiveScreen: (screen: 'home' | 'manage' | 'login') => void;
@@ -46,7 +45,7 @@ interface TagItemProps {
 }
 
 const TagItem = ({ tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin }: TagItemProps) => {
-  const { setAlertDialog } = useAdminUI();
+  const { setAlertDialog } = useGalleryStore();
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -162,17 +161,13 @@ const BUTTON_STYLES = {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
-    settings, user, loginWithGoogle, logout, 
-    geminiApiKey, setGeminiApiKey, customModel, setCustomModel, 
-    accessPasscode, setAccessPasscode,
-    setSettings
-  } = useAdminSession();
-  const { 
+    settings, user, geminiApiKey, customModel, accessPasscode,
+    setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
     manufacturers, tags, photos, categories,
-    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, quickAddTag, addTag
-  } = useAdminPhoto();
-  const { loadingType, setAlertDialog, setPromptDialog, withLoading } = useAdminUI();
-  const { handleError } = useErrorHandler();
+    updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer, addTag,
+    loadingType, setAlertDialog, setPromptDialog, withLoading,
+    logout, loginWithGoogle
+  } = useGalleryStore();
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, refreshCloudData, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
@@ -223,7 +218,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         try {
           await addTag(normalized);
         } catch (error: any) {
-          handleError(error, '添加标签失败');
+          console.error('添加标签失败', error);
         }
       }
     });
@@ -252,7 +247,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             }
           });
         } catch (e: any) {
-          handleError(e, '排重失败');
+          console.error('排重失败', e);
         }
       }
     });
@@ -316,7 +311,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       placeholder: cat.name,
       onSubmit: async (newName) => {
         if (newName && newName.trim() !== cat.name) {
-          await updateCategory(cat.id, { name: newName.trim() });
+          await updateCategory(cat.id, newName.trim());
           setHasChanges(true);
         }
       }
@@ -727,7 +722,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
                         // Future: implement batch import to cloud if needed.
                         toast.error('JSON 导入目前仅支持手动查看，不支持批量写入云端。');
                       } catch (err) {
-                        handleError(err, '导入JSON失败');
+                        console.error('导入JSON失败', err);
                       }
                     };
                     reader.readAsText(file);

@@ -2,7 +2,7 @@ import React from 'react';
 import { toast } from 'sonner';
 import { TagEditor } from '../TagEditor';
 import { Tag } from '../../../types';
-import { useAdminUI } from '../../../context/AdminContexts';
+import { useGalleryStore } from '../../../store';
 
 interface PhotoTagSelectorProps {
   tags: Tag[];
@@ -21,7 +21,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
   updateTag,
   deleteTag
 }) => {
-  const { setPromptDialog } = useAdminUI();
+  const { setPromptDialog } = useGalleryStore();
   const sortedTags = [...tags].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
   const handleToggleTag = (tag: Tag) => {

@@ -5,15 +5,9 @@ import { supabase } from '../lib/supabase';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
-import { useSyncEngine } from '../hooks/useSyncEngine';
-import { useAdminDialogs } from '../hooks/useAdminDialogs';
-import { useLoading } from '../hooks/useLoading';
 import { useAuth } from '../hooks/useAuth';
-import { useGallery } from '../hooks/useGallery';
 import { loadData } from '../utils/indexedDB';
 import { translations, LanguageCode } from '../lib/translations';
-import { showSystemError } from '../context/ErrorContext';
-import { AdminSessionProvider, AdminPhotoProvider, AdminUIProvider } from '../context/AdminContexts';
 import { AdminViewContent } from './AdminViewContent';
 import { Photo, Category, Tag, Manufacturer } from '../types';
 
@@ -25,17 +19,14 @@ const errorGuard = (name: string) => () => {
 import { 
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
   useAddCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,
-  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation
-} from '../hooks/mutations/useAdminMutations';
-import { useUpdatePhotoMutation, useBatchUpdatePhotosMutation } from '../hooks/mutations/useUpdatePhoto';
-import { useDeletePhotoMutation } from '../hooks/mutations/useDeletePhoto';
-import { useGroupPhotosMutation, useUngroupMutation } from '../hooks/mutations/useGroupOperations';
+  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
+  useUpdatePhotoMutation, useBatchEditMutation, useDeletePhotoMutation, useGroupPhotosMutation, useUngroupMutation,
+  useGroupsQuery, useSettingsMutation, useSyncMutation,
+  useAdminDialogs, useLoading, usePhotosQuery, useInfinitePhotosQuery, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
+  useSyncEngine, usePhotoManagement, useAdminPhotos, useAdminCategory
+} from '../hooks';
 
-import { useAdminCategory } from '../hooks/useAdminCategory';
-import { useAdminPhotos } from '../hooks/useAdminPhotos';
-import { useAdminCore } from '../hooks/useAdminCore';
-import { usePhotoManagement } from '../hooks/usePhotoManagement';
-import { useDelete } from '../hooks/useDelete';
+import { useGalleryStore } from '../store';
 import { ProductFormData } from '../types';
 
 export default function AdminView() {
@@ -53,7 +44,7 @@ export default function AdminView() {
   const updateManufacturerMutation = useUpdateManufacturerMutation();
   const deleteManufacturerMutation = useDeleteManufacturerMutation();
   const updatePhotoMutation = useUpdatePhotoMutation();
-  const batchUpdatePhotosMutation = useBatchUpdatePhotosMutation();
+  const batchUpdatePhotosMutation = useBatchEditMutation(user?.id ?? '');
   const deletePhotoMutation = useDeletePhotoMutation();
   const groupPhotosMutation = useGroupPhotosMutation();
   const ungroupMutation = useUngroupMutation();
@@ -71,9 +62,39 @@ export default function AdminView() {
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
   const { 
-    photos, categories, tags, manufacturers, tagNameToIdMap
-  } = useGallery();
-  
+    filterCatId, filterTagIds, debouncedSearchQuery, appLang 
+  } = useGalleryStore();
+
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: tags = [] } = useTagsQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
+
+  const infinitePhotosQuery = useInfinitePhotosQuery({
+    categoryId: filterCatId,
+    tagId: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: debouncedSearchQuery
+  }, 50);
+
+  const { data: cloudCountData = 0 } = usePhotoCountQuery({
+    categoryId: filterCatId,
+    tagId: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: debouncedSearchQuery
+  });
+
+  const photos = React.useMemo(() => {
+    return infinitePhotosQuery.data?.pages.flat() || [];
+  }, [infinitePhotosQuery.data]);
+
+  useEffect(() => {
+    setCloudCount(cloudCountData);
+  }, [cloudCountData, setCloudCount]);
+
+  const handleLoadMoreAdmin = useCallback(() => {
+    if (infinitePhotosQuery.hasNextPage && !infinitePhotosQuery.isFetchingNextPage) {
+      infinitePhotosQuery.fetchNextPage();
+    }
+  }, [infinitePhotosQuery.hasNextPage, infinitePhotosQuery.isFetchingNextPage, infinitePhotosQuery.fetchNextPage]);
+
   const { viewMode, setViewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
 
   const uiBasicValue = React.useMemo(() => ({ 
@@ -96,18 +117,25 @@ export default function AdminView() {
     setIsSyncing
   }), [settings, setSettings, setIsSyncing]);
 
-  const { 
-    updateTag, deleteTag,
-    addCategory, updateCategory, deleteCategory, 
+  const {
+    addCategory, updateCategory, deleteCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto
+    addTag, updateTag, deleteTag, removeTagFromPhoto
   } = useAdminCategory(uiBasicValue);
 
-  const { 
-    saveSettings,
-    performPushSync, performPullSync, handleSingleAiAnalyzeCallback, 
-    handleUngroup, handleGroupPhotos 
-  } = useAdminCore(user);
+  // Hook into pull sync handler to actually load more using react query
+  const { mutateAsync: performPushSync } = useSyncMutation();
+  const performPullSync = useCallback((loadNext?: boolean | any) => {
+    if (loadNext === 1 || loadNext === true) { 
+      handleLoadMoreAdmin(); 
+      return Promise.resolve();
+    }
+    return infinitePhotosQuery.refetch();
+  }, [handleLoadMoreAdmin, infinitePhotosQuery]);
+
+  const { mutateAsync: handleUngroup } = useUngroupMutation();
+  const { mutateAsync: handleGroupPhotos } = useGroupPhotosMutation();
+  const { mutateAsync: saveSettings } = useSettingsMutation();
 
   const { 
     batchProgress, 
@@ -171,7 +199,9 @@ export default function AdminView() {
     });
   }, [setPromptDialog, addManufacturer, updateForm]);
 
-  const { deleteGroup } = useDelete();
+  const deleteGroup = async (id: string) => {
+    await handleUngroup(id);
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -194,12 +224,12 @@ export default function AdminView() {
   useEffect(() => {
     const handleError = (e: ErrorEvent) => {
       setPageError(e.message);
-      showSystemError(`[Runtime] ${e.message}`);
+      console.error(`[Runtime] ${e.message}`);
     };
     const handleRejection = (e: PromiseRejectionEvent) => {
       const msg = String(e.reason?.message || e.reason);
       setPageError(msg);
-      showSystemError(`[UncaughtRejection] ${msg}`);
+      console.error(`[UncaughtRejection] ${msg}`);
     };
     window.addEventListener('error', handleError);
     window.addEventListener('unhandledrejection', handleRejection);
@@ -230,13 +260,13 @@ export default function AdminView() {
     customModel, setCustomModel,
     viewMode, setViewMode,
     isSyncing, setIsSyncing, onRefresh,
+    performPushSync, performPullSync, saveSettings,
     loginWithGoogle, logout, appLang: lang
-  }), [user, settings, setSettings, geminiApiKey, accessPasscode, customModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, logout, lang]);
+  }), [user, settings, setSettings, geminiApiKey, accessPasscode, customModel, viewMode, setViewMode, isSyncing, setIsSyncing, onRefresh, performPushSync, performPullSync, saveSettings, logout, lang]);
 
   const photoValue = React.useMemo(() => ({
     photos, categories, tags, manufacturers,
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
-    handleSingleAiAnalyzeCallback,
     deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,
@@ -249,7 +279,7 @@ export default function AdminView() {
   }), [
     photos, categories, tags, manufacturers,
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport, 
-    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
     addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, deleteGroup, updatePhoto, updatePhotosBulk
   ]);
@@ -300,9 +330,6 @@ export default function AdminView() {
 
   if (!user && sessionStorage.getItem('isStaffMode') !== 'true') {
     return (
-      <AdminUIProvider value={uiValue}>
-        <AdminSessionProvider value={sessionValue}>
-          <AdminPhotoProvider value={photoValue}>
              <ErrorBoundary key="login-gate">
               {errorContent}
               <div className="w-full h-full min-h-screen flex items-center justify-center bg-[#FDFBF7]">
@@ -334,26 +361,20 @@ export default function AdminView() {
                  </div>
               </div>
              </ErrorBoundary>
-          </AdminPhotoProvider>
-        </AdminSessionProvider>
-      </AdminUIProvider>
     );
   }
 
   return (
-    <AdminUIProvider value={uiValue}>
-      <AdminSessionProvider value={sessionValue}>
-        <AdminPhotoProvider value={photoValue}>
-          <AdminViewContent 
-            user={user} 
-            authChecked={authChecked} 
-            logout={logout} 
-            errorContent={errorContent}
-            t={t}
-            lang={lang as LanguageCode}
-          />
-        </AdminPhotoProvider>
-      </AdminSessionProvider>
-    </AdminUIProvider>
+        <AdminViewContent 
+          user={user} 
+          authChecked={authChecked} 
+          logout={logout} 
+          errorContent={errorContent}
+          t={t}
+          lang={lang as LanguageCode}
+          sessionValue={sessionValue}
+          photoValue={photoValue}
+          uiValue={uiValue}
+        />
   );
 }

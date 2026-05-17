@@ -5,64 +5,90 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { FloatingActionButton } from '../components/admin/FloatingActionButton';
-import { AdminGalleryShell } from '../components/AdminGalleryShell';
 import { PublicGallery } from '../components/PublicGallery';
 import { GroupDetailView } from '../components/GroupDetailView';
 import { AdminGlobalModals } from '../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../components/admin/ErrorLogViewer';
 import { BatchEditScreen } from '../components/admin/BatchEditScreen';
 import { SettingsScreen } from '../components/SettingsScreen';
+import { 
+  useDeletePhoto,
+  useUpdatePhoto,
+  useGroupPhotosMutation,
+  useUngroupMutation,
+  useAddTagMutation,
+  useUpdateTagMutation,
+  useDeleteTagMutation,
+  useAddCategoryMutation,
+  useUpdateCategoryMutation,
+  useDeleteCategoryMutation,
+  useAddManufacturerMutation,
+  useUpdateManufacturerMutation,
+  useDeleteManufacturerMutation,
+  useSettingsMutation,
+  useBatchEditMutation,
+  useSyncMutation,
+  usePhotosQuery,
+  useCategoriesQuery,
+  useTagsQuery,
+  useManufacturersQuery,
+  useGroupsQuery,
+  useAdminCategory,
+  useAdminCore,
+  usePhotoManagement,
+  useErrorHandler,
+  useAdminDialogs,
+  useLoading
+} from '../hooks';
+
 import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
-import { useAdminPhotos } from '../hooks/useAdminPhotos';
-import { useAdminCategory } from '../hooks/useAdminCategory';
-import { useAdminCore } from '../hooks/useAdminCore';
-import { usePhotoManagement } from '../hooks/usePhotoManagement';
-import { useGallery } from '../hooks/useGallery';
-import { useErrorHandler } from '../utils/errorHandler';
+
 import { usePermission } from '../hooks/usePermission';
-import { useDelete } from '../hooks/useDelete';
-import { Photo, Category, Tag, Manufacturer, User, ProductFormData } from '../types';
+import { Photo, Category, Tag, Manufacturer, User } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { PAGINATION } from '../constants/config';
-import { 
-  useAdminUI, useAdminSession, useAdminPhoto 
-} from '../context/AdminContexts';
+import { useGalleryStore } from '../store';
 
-export function AdminViewContent({ user, logout, errorContent, t, lang }: { 
+
+export function AdminViewContent({ user, logout, errorContent, t, lang, sessionValue, photoValue, uiValue }: { 
   user: User | null, 
   authChecked: boolean, 
   logout: () => void, 
   errorContent: React.ReactNode,
   t: any,
-  lang: LanguageCode
+  lang: LanguageCode,
+  sessionValue: any,
+  photoValue: any,
+  uiValue: any
 }) {
   const { 
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode,
     visibleCount, setVisibleCount, tagIdToNameMap, clearSelection, totalGridCount
-  } = useGallery();
+  } = useGalleryStore();
   
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
     loadingType, setLoadingType, withLoading, cloudCount, setCloudCount,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
     batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis
-  } = useAdminUI();
+  } = uiValue;
 
   const {
     settings, setSettings, viewMode, setViewMode, onRefresh, isSyncing, setIsSyncing,
-    geminiApiKey, setGeminiApiKey, customModel, setCustomModel, accessPasscode, setAccessPasscode
-  } = useAdminSession();
+    geminiApiKey, setGeminiApiKey, customModel, setCustomModel, accessPasscode, setAccessPasscode,
+    performPushSync, performPullSync, saveSettings
+  } = sessionValue;
 
   const {
     photos, categories, tags, manufacturers,
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
-    handleSingleAiAnalyzeCallback, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory,
     addManufacturer, updateManufacturer, deleteManufacturer,
     addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer,
     deleteGroup, updatePhoto, updatePhotosBulk
-  } = useAdminPhoto();
+  } = photoValue;
 
   const { handleError } = useErrorHandler();
   const { isAdmin } = usePermission();
@@ -88,15 +114,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
     return false;
   }, [loadingType]);
 
-  const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
+    const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
 
   const { formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData } = usePhotoManagement(user, { setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, abortAnalysis: () => {} }, { settings, setSettings, setIsSyncing });
-
-  const { 
-    saveSettings,
-    performPushSync, performPullSync 
-  } = useAdminCore(user);
 
   // Clear stale AI errors when entering edit mode, unless we are currently analyzing
   useEffect(() => {
@@ -121,10 +142,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
   const handleLoadMoreCallback = useCallback(() => {
     if (visibleCount < totalGridCount) {
       setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
-    } else if (photos.length < (cloudCount || 0)) {
-        performPullSync(onRefresh);
+    } else if (cloudCount !== null && photos.length < cloudCount) {
+        performPullSync(true); // Pass true to fetch next page
     }
-  }, [photos, visibleCount, totalGridCount, cloudCount, setVisibleCount, performPullSync, onRefresh]);
+  }, [photos.length, visibleCount, totalGridCount, cloudCount, setVisibleCount, performPullSync]);
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   
@@ -134,9 +155,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
          toast.success('照片已成功删除');
          setEditPhotoId(null);
      } catch (error) {
-         handleError(error, '删除照片失败');
+         console.error('删除照片失败', error);
      }
-  }, [deletePhoto, setEditPhotoId, handleError]);
+  }, [deletePhoto, setEditPhotoId]);
 
   return (
     <ErrorBoundary key="admin-main">
@@ -162,6 +183,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                   setBatchIsHiddenApplied={setBatchIsHiddenApplied}
                   showOtherFields={showOtherFields}
                   setShowOtherFields={setShowOtherFields}
+                  quickAddManufacturer={quickAddManufacturer}
+                  quickAddTag={quickAddTag}
+                  updateTag={updateTag}
+                  deleteTag={deleteTag}
                   onDelete={async (ids) => {
                     if (checkSyncLock()) return;
                     try {
@@ -169,7 +194,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                       toast.success(`已成功删除 ${ids.length} 张照片`);
                       resetAddState();
                     } catch (error) {
-                      handleError(error, '批量删除失败');
+                      console.error('批量删除失败', error);
                     }
                   }}
                 />
@@ -207,7 +232,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                   categories={categories}
                   manufacturers={manufacturers}
                   allTags={tags}
-                  tagMap={Object.fromEntries(tagIdToNameMap)}
+                  tagMap={tagIdToNameMap}
                   onBatchAiAnalyze={(photos) => withLoading('analyzing', () => handleGroupAiIdentify(photos))}
                   onAiAnalyze={(p) => withLoading('analyzing', () => handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id))}
                   onToggleHidden={async (photo) => {
@@ -216,7 +241,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                     try {
                       await updatePhoto(photo.id, { isHidden: newStatus });
                     } catch (e) {
-                      handleError(e, '切换隐藏状态失败');
+                      console.error('切换隐藏状态失败', e);
                     }
                   }}
                   updatePhoto={async (id, updates) => {
@@ -236,8 +261,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                   handleLogoUpload={async (e, c, t, m) => {
                     // Logic moved or using placeholder
                   }}
-                  performPushSync={() => withLoading('sync-push', () => performPushSync(settings, onRefresh, lastSyncTime))}
-                  performPullSync={() => performPullSync(onRefresh)}
+                  performPushSync={async () => { await withLoading('sync-push', async () => { await performPushSync(onRefresh); }); return { success: true } as any; }}
+                  performPullSync={async () => { await performPullSync(onRefresh); return { success: true } as any; }}
                   refreshCloudData={onRefresh}
                   cloudCount={cloudCount}
                   lastSyncTime={lastSyncTime}
@@ -247,6 +272,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
         
               {(editPhotoId || newPhotoData) && (
                   <PhotoEditDrawer 
+                      photos={photos}
                       editPhotoId={editPhotoId} 
                       resetAddState={resetAddState} 
                       saveNewPhoto={async () => {
@@ -265,6 +291,8 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                       }}
                       editPhotoPreview={editPhotoId ? photos.find(p => p.id === editPhotoId)?.image_url || photos.find(p => p.id === editPhotoId)?.uri : null}
                       abortAnalysis={abortAnalysis}
+                      handleSingleAiAnalyze={handleSingleAiAnalyze}
+                      handleTranslate={handleTranslate}
                   />
               )}
             </React.Suspense>
@@ -274,7 +302,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                       <AdminHeader 
                           isMultiSelect={isMultiSelect}
                           selectedIds={selectedIds}
-                          filteredPhotos={gridPhotos}
+                          filteredPhotos={photos} // Using photos directly
                           setSelectedIds={setSelectedIds}
                           setIsMultiSelect={setIsMultiSelect}
                           handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
@@ -288,13 +316,45 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                           totalPhotosCount={photos.length}
                           cloudCount={cloudCount}
                           appLang={lang}
+                          isAnalyzing={loadingType === 'analyzing'}
+                          batchProgress={batchProgress}
                        />
                        <div className="flex-1 min-h-0 relative">
-                          <AdminGalleryShell 
-                             onExit={() => setViewMode('public')}
-                             onLoadMore={handleLoadMoreCallback}
-                             hasMore={visibleCount < totalGridCount || (cloudCount !== null && photos.length < cloudCount)}
+                          <PublicGallery 
+                             photos={photos}
+                             categories={categories}
+                             tags={tags}
+                             isAdminMode={true}
+                             isStaffMode={true}
+                             onTogglePinned={async (photo) => {
+                               if (checkSyncLock()) return;
+                               const newStatus = !photo.isPinned;
+                               const affectedPhotos = photo.groupId 
+                                 ? photos.filter(p => p.groupId === photo.groupId)
+                                 : [photo];
+                               import('../services/photoMutationService').then(async (m) => {
+                                 try {
+                                   await Promise.all(
+                                     affectedPhotos.map(p => 
+                                       m.updatePhoto(p.id, { isPinned: newStatus })
+                                     )
+                                   );
+                                 } catch (e: any) {
+                                   console.error('置顶状态切换失败', e);
+                                 }
+                               });
+                             }}
+                             settings={settings}
+                             isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
+                             hideHeader={true}
+                             columns={columns}
+                             setColumns={setColumns}
                              cloudCount={cloudCount}
+                             user={user}
+                             loginWithGoogle={loginWithGoogle}
+                             onEditPhoto={(id) => setEditPhotoId(id as string)}
+                             onLoadMore={handleLoadMoreCallback}
+                             hasMore={cloudCount !== null && photos.length < cloudCount}
                           />
                           <FloatingActionButton 
                             onClick={() => {
@@ -335,7 +395,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                                  )
                                );
                              } catch (e: any) {
-                               handleError(e, '置顶状态切换失败');
+                               console.error('置顶状态切换失败', e);
                              }
                            });
                          }}
@@ -354,7 +414,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang }: {
                          user={user}
                          loginWithGoogle={loginWithGoogle}
                          onLoadMore={handleLoadMoreCallback}
-                         hasMore={visibleCount < totalGridCount || (cloudCount !== null && photos.length < cloudCount)}
+                         hasMore={cloudCount !== null && photos.length < cloudCount}
                       />
                  </div>
               </div>

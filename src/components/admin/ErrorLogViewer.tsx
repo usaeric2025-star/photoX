@@ -1,9 +1,9 @@
 import React from 'react';
-import { useError } from '../../context/ErrorContext';
+import { useGalleryStore } from '../../store';
 import { Trash2, Download } from 'lucide-react';
 
 export const ErrorLogViewer = () => {
-  const { errors, clearErrors } = useError();
+  const { errors, clearErrors } = useGalleryStore();
 
   const exportLogs = () => {
     const blob = new Blob([JSON.stringify(errors, null, 2)], { type: 'application/json' });

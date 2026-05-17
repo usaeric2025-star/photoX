@@ -3,20 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
-  useCategoriesQuery 
-} from '../hooks/queries/useCategories';
-import { 
-  useInfinitePhotosQuery, 
-  usePhotoCountQuery 
-} from '../hooks/queries/usePhotos';
+  useCategoriesQuery, useInfinitePhotosQuery, usePhotoCountQuery 
+} from '../hooks';
 import { fetchSettings, loginWithGoogle } from '../services/supabaseService';
 import { updatePhoto } from '../services/photoMutationService';
 import { PublicGallery } from '../components/PublicGallery';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { loadData, saveData } from '../utils/indexedDB';
+import { saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
-import { useGallery } from '../hooks/useGallery';
-import { useErrorHandler } from '../utils/errorHandler';
+import { useGalleryStore } from '../store';
 import { PAGINATION } from '../constants/config';
 import { AppSettings } from '../types';
 import { safeArray } from '../lib/utils';
@@ -30,9 +25,8 @@ export default function PublicView() {
     setIsAdminMode,
     setIsMultiSelect,
     setSelectedIds
-  } = useGallery();
+  } = useGalleryStore();
 
-  const { handleError } = useErrorHandler();
 
   const { data: categoriesData = [] } = useCategoriesQuery();
 
@@ -76,7 +70,7 @@ export default function PublicView() {
     fetchSettings().then(s => {
       setSettings(s as AppSettings);
       saveData('product_settings', s);
-    }).catch(e => handleError(e, "fetchSettings"));
+    }).catch(e => console.error("fetchSettings", e));
   }, []);
 
   const handleRefresh = async () => {
@@ -134,7 +128,7 @@ export default function PublicView() {
                 )
               );
             } catch (e: any) {
-              handleError(e, "togglePinned");
+              console.error("togglePinned", e);
             }
           }}
         />

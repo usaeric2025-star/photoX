@@ -6,4 +6,5 @@ export const QUERY_KEYS = {
   manufacturers: ['manufacturers'] as const,
   photoCount: (filters: any) => ['photos', 'count', filters] as const,
   groupPhotos: (groupId: string) => ['photos', 'group', groupId] as const,
+  groups: ['groups'] as const,
 };

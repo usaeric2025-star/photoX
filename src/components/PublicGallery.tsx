@@ -4,7 +4,8 @@ import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types'
 import { X, ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, RefreshCcw } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { useGallery } from '../hooks/useGallery';
+import { usePhotosQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../hooks';
+import { useGalleryStore } from '../store';
 import { PAGINATION } from '../constants/config';
 import { PhotoCard } from './PhotoCard';
 import { PhotoCardSkeleton } from './ui/Skeleton';
@@ -18,7 +19,6 @@ import { PublicGalleryFilters } from './PublicGalleryFilters';
 import { GroupDetailView } from './GroupDetailView';
 import { getTranslatedCategoryName, getPhotoDisplayName } from '../lib/ui-helpers';
 import { safeArray } from '../lib/utils';
-import { useErrorHandler } from '../utils/errorHandler';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -132,39 +132,17 @@ MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 
 const VirtuosoGridFooter = React.memo(({ context }: any) => {
-  const { hasMore, isSyncing, onLoadMore, safePhotosLength, textLoadMore, textEndOfList } = context;
-  const footerRef = React.useRef<HTMLDivElement>(null);
-  const stateRef = React.useRef({ hasMore, isSyncing, onLoadMore });
-  
-  React.useEffect(() => {
-    const el = footerRef.current;
-    if (!el || !hasMore || isSyncing || !onLoadMore) return;
-
-    let observer: IntersectionObserver | null = null;
-    
-    // Use a short timeout to let layout settle
-    const timer = setTimeout(() => {
-      observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0]?.isIntersecting) {
-            onLoadMore();
-            observer?.disconnect();
-          }
-        },
-        // We use a large rootMargin so it triggers well before the user hits the bottom
-        { rootMargin: PAGINATION.INFINITE_SCROLL_ROOT_MARGIN }
-      );
-      observer.observe(el);
-    }, 50);
-    
-    return () => {
-      clearTimeout(timer);
-      if (observer) observer.disconnect();
-    };
-  }, [isSyncing, hasMore, safePhotosLength, onLoadMore]);
+  const {
+    hasMore,
+    isSyncing,
+    onLoadMore,
+    safePhotosLength,
+    textLoadMore,
+    textEndOfList
+  } = context || {};
 
   return (
-    <div ref={footerRef} className="py-10 pb-32 flex flex-col items-center justify-center w-full min-h-[100px]">
+    <div className="py-10 pb-32 flex flex-col items-center justify-center w-full min-h-[100px] clear-both">
       {hasMore ? (
         <button 
           onClick={onLoadMore}
@@ -232,12 +210,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   
   const accessPasscode = settings?.access_passcode;
 
-  const context = useGallery();
   const {
-    categories: contextCategories,
-    manufacturers,
-    tags: contextTags,
-    sortedTags,
     searchQuery, setSearchQuery,
     filterCatId: selectedCatCode, setFilterCatId: setSelectedCatCode,
     filterSubId: selectedSubId, setFilterSubId: setSelectedSubId,
@@ -246,20 +219,43 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     showGroupsCollapsed, setShowGroupsCollapsed,
     visibleCount, setVisibleCount,
     isInfiniteMode, isStaffMode, setIsStaffMode,
-    totalGridCount: contextTotalGridCount
-  } = context;
+    selectedIds: storeSelectedIds,
+    isMultiSelect: storeIsMultiSelect,
+    togglePhotoSelection,
+    clearSelection,
+    setIsMultiSelect: setStoreIsMultiSelect,
+    setErrors
+  } = useGalleryStore();
+  
+  const handleError = (error: any, context: string) => {
+    console.error(`[Error] ${context}:`, error);
+    setErrors([{ message: error.message || String(error), context, timestamp: Date.now() }]);
+  };
 
-  // Use prop categories if provided, otherwise context
-  const categories = propCategories || contextCategories;
+  const { data: qCategories = [] } = useCategoriesQuery();
+  const { data: qManufacturers = [] } = useManufacturersQuery();
+  const { data: qTags = [] } = useTagsQuery();
+  const { data: qPhotos = [] } = usePhotosQuery({ userId: user?.id ?? '' }, 0, 1000);
+
+  const categories = propCategories || qCategories || [];
+  const manufacturers = qManufacturers;
+  const contextTags = qTags;
+  const contextPhotos = qPhotos;
 
   // Derive final lists
   const localPhotos = useMemo(() => {
     if (incomingPhotos && incomingPhotos.length > 0) return incomingPhotos;
-    return context.photos || [];
-  }, [incomingPhotos, context.photos]);
-
+    return contextPhotos || [];
+  }, [incomingPhotos, contextPhotos]);
+  // Use passed in selection state if provided (for AdminGalleryShell), otherwise use store
+  const activeSelectedIds = selectedIds.length > 0 || isMultiSelect ? selectedIds : storeSelectedIds;
+  const activeIsMultiSelect = isMultiSelect || storeIsMultiSelect;
+  const activeToggleSelection = onToggleSelection || togglePhotoSelection;
+  const activeClearSelection = onClearSelection || clearSelection;
+  const activeSetIsMultiSelect = onToggleMultiSelect || setStoreIsMultiSelect;
+  
   const { displayPhotos, gridPhotos, totalGridCount } = useMemo(() => {
-    const validPhotos = localPhotos.filter(isValidPhoto);
+    const validPhotos = (incomingPhotos && incomingPhotos.length > 0 ? incomingPhotos : localPhotos).filter(isValidPhoto);
     
     // Pre-calculate maps once
     const tagMap = new Map<string, string[]>();
@@ -272,7 +268,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     });
     
     const catMap = new Map<string, string[]>();
-    if (categories) {
+    if (categories.length > 0) {
       categories.forEach(c => {
         const terms = [(c.zh || c.name || '').toLowerCase()];
         if (Array.isArray(c.aliases)) {
@@ -296,17 +292,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     const gp = groupPhotos(dp, showGroupsCollapsed, sortOrder);
     return { displayPhotos: dp, gridPhotos: gp, totalGridCount: gp.length };
   }, [
-    incomingPhotos, context.photos, filterPhotos, groupPhotos,
+    incomingPhotos, localPhotos, filterPhotos, groupPhotos,
     searchQuery, selectedCatCode, selectedSubId, selectedTagIds, sortOrder, 
-    isAdminMode, isStaffMode, contextTags, categories, showGroupsCollapsed
+    isAdminMode, isStaffMode, contextTags, propCategories, categories, showGroupsCollapsed
   ]);
-  
-  // Use passed in selection state if provided (for AdminGalleryShell), otherwise use context
-  const activeSelectedIds = selectedIds.length > 0 || isMultiSelect ? selectedIds : context.selectedIds;
-  const activeIsMultiSelect = isMultiSelect || context.isMultiSelect;
-  const activeToggleSelection = onToggleSelection || context.togglePhotoSelection;
-  const activeClearSelection = onClearSelection || context.clearSelection;
-  const activeSetIsMultiSelect = onToggleMultiSelect || context.setIsMultiSelect;
 
   const setAlertDialog = propsSetAlertDialog || ((d: { title: string, message: string }) => {
     console.error(d.message || d.title);
@@ -338,6 +327,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     return Array.from(tMap.values());
   }, [contextTags, allTagIds]);
 
+  const sortedTags = useMemo(() => {
+    return [...tags].sort((a, b) => a.name.localeCompare(b.name));
+  }, [tags]);
+
   const [lang, setLang] = useState<LanguageCode>(() => {
     return (localStorage.getItem('appLang') as LanguageCode) || 'en';
   });
@@ -347,7 +340,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     localStorage.setItem('appLang', lang);
   }, [lang]);
   const navigate = useNavigate();
-  const { handleError } = useErrorHandler();
 
   const [showPassPrompt, setShowPassPrompt] = useState(false);
   const [passInput, setPassInput] = useState('');
@@ -511,21 +503,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const handleLoadMore = useCallback(() => {
     if (onLoadMore) {
       onLoadMore();
-    } else if (!isInfiniteMode && visibleCount < totalGridCount) {
-      setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
     }
-  }, [onLoadMore, isInfiniteMode, setVisibleCount, visibleCount, totalGridCount]);
+  }, [onLoadMore]);
 
   const prevPhotosRef = useRef<any[]>([]);
   useEffect(() => {
-    if (!isSyncing) {
+    // Only update ref if new photos are not empty to preserve last valid state
+    if (gridPhotos && gridPhotos.length > 0) {
       prevPhotosRef.current = gridPhotos;
     }
-  }, [gridPhotos, isSyncing]);
+  }, [gridPhotos]);
 
-  const photosToShow = isSyncing && gridPhotos.length === 0
+  const photosToShow = (isSyncing && gridPhotos.length === 0 && prevPhotosRef.current.length > 0)
     ? prevPhotosRef.current
     : gridPhotos;
+
+  const showSkeleton = isSyncing && gridPhotos.length === 0 && prevPhotosRef.current.length === 0;
 
   const safePhotosToShow = photosToShow;
 
@@ -541,7 +534,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, []);
 
 const virtuosoContext = useMemo(() => ({
-    hasMore,
+    hasMore: hasMore,
     isSyncing,
     onLoadMore: stableLoadMore,
     safePhotosLength: safePhotosToShow.length,
@@ -630,6 +623,8 @@ const virtuosoContext = useMemo(() => ({
               const p = safePhotosToShow[index];
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
             }}
+            components={virtuosoComponents}
+            context={virtuosoContext}
             endReached={stableLoadMore}
             overscan={PAGINATION.VIRTUAL_SCROLL_OVERSCAN}
             listClassName={`grid gap-3 p-2 pb-24 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
@@ -665,8 +660,6 @@ const virtuosoContext = useMemo(() => ({
                 gridPhotos={safePhotosToShow}
               />
             )}
-            context={virtuosoContext}
-            components={virtuosoComponents}
           />
         )}
       </div>
@@ -788,10 +781,10 @@ const virtuosoContext = useMemo(() => ({
                   groupPhotos.map(p => m.updatePhoto(p.id, { isGroupCover: p.id === id }))
                );
              } catch (err: any) {
-               handleError(err, "setGroupCover");
+               console.error("setGroupCover", err);
              }
           }).catch(err => {
-             handleError(err, "importMutationService");
+             console.error("importMutationService", err);
           });
         }}
         onEditPhoto={(photo) => {

@@ -1,6 +1,5 @@
 import React, { ErrorInfo, ReactNode } from 'react';
 import { logErrorToSupabase } from '../services/logService';
-import { showSystemError } from '../context/ErrorContext';
 import { AlertCircle, RefreshCcw } from 'lucide-react';
 
 interface Props {
@@ -30,9 +29,6 @@ export class ErrorBoundary extends React.Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ error, errorInfo });
     console.error("Uncaught error:", error, errorInfo);
-    
-    // Log to local context for the ErrorLogViewer to see
-    showSystemError(`[ErrorBoundary] ${error.message || 'Unknown error'}`);
     
     // Fallback to supabase log if it exists
     logErrorToSupabase(error, errorInfo);

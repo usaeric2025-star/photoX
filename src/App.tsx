@@ -6,7 +6,6 @@ import { useAuth } from './hooks/useAuth';
 import { useGalleryStore } from './store';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
-import { useError } from './context/ErrorContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster } from 'sonner';
 
@@ -46,27 +45,26 @@ function AnimatedRoutes() {
 
 export default function AppRoutes() {
   const { user, authChecked } = useAuth();
-  const { addLog } = useError();
   
   useEffect(() => {
-    // 1. Global Error Handlers
+    // 1. Global Error Handlers (console only)
     const handleGlobalError = (event: ErrorEvent) => {
-        addLog(event.message || 'Unhandled Error', 'Global', 'error');
+        console.error('Global Error: ', event.message || 'Unhandled Error');
     };
     const handlePromiseRejection = (event: PromiseRejectionEvent) => {
-        addLog(String(event.reason) || 'Unhandled Promise Rejection', 'Promise', 'error');
+        console.error('Promise Rejection: ', String(event.reason) || 'Unhandled Promise Rejection');
     };
 
     window.addEventListener('error', handleGlobalError);
     window.addEventListener('unhandledrejection', handlePromiseRejection);
 
     // 2. Background cache cleanup
-    clearExpiredCaches(7).catch(err => addLog(String(err), 'IndexedDB Cleanup'));
+    clearExpiredCaches(7).catch(err => console.error('IndexedDB Cleanup: ', String(err)));
     
     // 3. Supabase Session Health Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && user) {
-        addLog('Session 丢失，建议重新登录', 'Auth', 'warning');
+        console.warn('Session 丢失，建议重新登录');
       }
     });
 
@@ -74,7 +72,7 @@ export default function AppRoutes() {
         window.removeEventListener('error', handleGlobalError);
         window.removeEventListener('unhandledrejection', handlePromiseRejection);
     };
-  }, [user, addLog]);
+  }, [user]);
 
   // Handle Global Search Debouncing
   const { searchQuery, setDebouncedSearchQuery } = useGalleryStore();

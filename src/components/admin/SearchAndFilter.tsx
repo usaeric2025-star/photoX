@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Search, X, LayoutGrid, Grid3X3, Layers, ArrowDown, ArrowUp, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, SubCategory, Tag } from '../../types';
-import { useGallery } from '../../hooks/useGallery';
+import { useCategoriesQuery, useTagsQuery } from '../../hooks';
+import { useGalleryStore } from '../../store';
 
 interface Props {
   displayMode: 'grid' | 'list';
@@ -22,10 +23,11 @@ export const SearchAndFilter: React.FC<Props> = ({
     filterCatId, setFilterCatId,
     filterSubId, setFilterSubId,
     filterTagIds, setFilterTagIds,
-    sortOrder, setSortOrder,
-    categories,
-    tags
-  } = useGallery();
+    sortOrder, setSortOrder
+  } = useGalleryStore();
+
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: tags = [] } = useTagsQuery();
 
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
@@ -36,7 +38,7 @@ export const SearchAndFilter: React.FC<Props> = ({
 
   const handleSearchChange = (val: string) => {
     setLocalSearch(val);
-    setSearchQuery(val); // Context handles the debounce internaly now
+    setSearchQuery(val);
   };
 
   return (

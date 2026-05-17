@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppSettings } from './types';
+import { AppSettings, Photo, Tag, Category, Manufacturer } from './types';
 
 interface GalleryState {
   // UI State
@@ -18,7 +18,44 @@ interface GalleryState {
   user: any;
   isAdminMode: boolean;
   settings: AppSettings | null;
-  
+  errors: any[];
+  isAnalyzing: boolean;
+  batchProgress: number;
+  activeScreen: string;
+  alertDialog: any | null;
+  promptDialog: any | null;
+  appLang: string;
+  viewMode: 'public' | 'private';
+  isSyncing: boolean;
+  loadingType: 'none' | 'global' | 'local';
+  withLoading: <T>(type: string, fn: () => Promise<T>) => Promise<T>;
+  gridPhotos: Photo[];
+  displayPhotos: Photo[];
+  tagIdToNameMap: Record<string, string>;
+  totalGridCount: number;
+
+  // AI/Settings State
+  geminiApiKey: string;
+  customModel: string;
+  accessPasscode: string;
+  aiDebugInfo: any;
+  setAiDebugInfo: (info: any) => void;
+  setLoadingType: (type: 'none' | 'global' | 'local' | 'analyzing' | 'sync-pull' | 'sync-push') => void;
+  editPhotoId: string | null;
+  setEditPhotoId: (id: string | null) => void;
+  batchEditIds: string[] | null;
+  setBatchEditIds: (ids: string[] | null) => void;
+  cloudCount: number;
+  setCloudCount: (count: number) => void;
+  abortAnalysis: () => void;
+  onRefresh: () => void;
+
+  // Data
+  photos: Photo[];
+  categories: Category[];
+  tags: Tag[];
+  manufacturers: Manufacturer[];
+
   // Actions
   setSearchQuery: (query: string) => void;
   setDebouncedSearchQuery: (query: string) => void;
@@ -37,6 +74,38 @@ interface GalleryState {
   setUser: (user: any) => void;
   setIsAdminMode: (isAdmin: boolean) => void;
   setSettings: (settings: AppSettings | null) => void;
+  setErrors: (errors: any[]) => void;
+  clearErrors: () => void;
+  setIsAnalyzing: (isAnalyzing: boolean) => void;
+  setBatchProgress: (progress: number) => void;
+  setActiveScreen: (screen: string) => void;
+  setAlertDialog: (dialog: any | null) => void;
+  setPromptDialog: (dialog: any | null) => void;
+  setAppLang: (lang: string) => void;
+  setViewMode: (mode: 'public' | 'private') => void;
+  setIsSyncing: (isSyncing: boolean) => void;
+  setGeminiApiKey: (key: string) => void;
+  setCustomModel: (model: string) => void;
+  setAccessPasscode: (passcode: string) => void;
+  
+  // Data Actions
+  addTag: (name: string) => Promise<any>;
+  updateTag: (id: string, name: string) => Promise<void>;
+  deleteTag: (id: string) => Promise<void>;
+  addCategory: (name: string) => Promise<any>;
+  updateCategory: (id: string, name: string) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+  addManufacturer: (name: string) => Promise<any>;
+  updateManufacturer: (id: string, name: string) => Promise<void>;
+  deleteManufacturer: (id: string) => Promise<void>;
+  removeTagFromPhoto: (photoId: string, tagId: string) => Promise<void>;
+  quickAddManufacturer: (name: string) => Promise<void>;
+  quickAddTag: (name: string) => Promise<void>;
+  handleSingleAiAnalyze: (photoId: string) => Promise<void>;
+  handleTranslate: (photoId: string, targetLang: string) => Promise<void>;
+  handleSingleAiAnalyzeCallback: (photoId: string, data: any) => void;
+  logout: () => void;
+  loginWithGoogle: () => Promise<void>;
 }
 
 export const useGalleryStore = create<GalleryState>((set) => ({
@@ -55,6 +124,51 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   user: null,
   isAdminMode: false,
   settings: null,
+  errors: [],
+  isAnalyzing: false,
+  batchProgress: 0,
+  activeScreen: 'home',
+  alertDialog: null,
+  promptDialog: null,
+  appLang: 'zh',
+  viewMode: 'private',
+  isSyncing: false,
+  
+  // Data State
+  photos: [],
+  categories: [],
+  tags: [],
+  manufacturers: [],
+  loadingType: 'none',
+  withLoading: async (type, fn) => {
+    // Basic implementation
+    set({ loadingType: type as any });
+    try {
+        return await fn();
+    } finally {
+        set({ loadingType: 'none' as any });
+    }
+  },
+  gridPhotos: [],
+  displayPhotos: [],
+  tagIdToNameMap: {},
+  totalGridCount: 0,
+  
+  // AI/Settings
+  geminiApiKey: '',
+  customModel: '',
+  accessPasscode: '',
+  aiDebugInfo: null,
+  setAiDebugInfo: (aiDebugInfo) => set({ aiDebugInfo }),
+  setLoadingType: (loadingType) => set({ loadingType: loadingType as any }),
+  editPhotoId: null,
+  setEditPhotoId: (editPhotoId) => set({ editPhotoId }),
+  batchEditIds: null,
+  setBatchEditIds: (batchEditIds) => set({ batchEditIds }),
+  cloudCount: 0,
+  setCloudCount: (cloudCount) => set({ cloudCount }),
+  abortAnalysis: () => {},
+  onRefresh: () => {},
 
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
@@ -81,4 +195,36 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setUser: (user) => set({ user }),
   setIsAdminMode: (isAdminMode) => set({ isAdminMode }),
   setSettings: (settings) => set({ settings }),
+  setErrors: (errors) => set({ errors }),
+  clearErrors: () => set({ errors: [] }),
+  setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
+  setBatchProgress: (batchProgress) => set({ batchProgress }),
+  setActiveScreen: (screen) => set({ activeScreen: screen }),
+  setAlertDialog: (alertDialog) => set({ alertDialog }),
+  setPromptDialog: (promptDialog) => set({ promptDialog }),
+  setAppLang: (appLang) => set({ appLang }),
+  setViewMode: (viewMode) => set({ viewMode }),
+  setIsSyncing: (isSyncing) => set({ isSyncing }),
+  setGeminiApiKey: (geminiApiKey) => set({ geminiApiKey }),
+  setCustomModel: (customModel) => set({ customModel }),
+  setAccessPasscode: (accessPasscode) => set({ accessPasscode }),
+  
+  // Data actions stubs
+  addTag: async () => ({}),
+  updateTag: async () => {},
+  deleteTag: async () => {},
+  addCategory: async () => ({}),
+  updateCategory: async () => {},
+  deleteCategory: async () => {},
+  addManufacturer: async () => ({}),
+  updateManufacturer: async () => {},
+  deleteManufacturer: async () => {},
+  removeTagFromPhoto: async () => {},
+  quickAddManufacturer: async () => {},
+  quickAddTag: async () => {},
+  handleSingleAiAnalyze: async () => {},
+  handleTranslate: async () => {},
+  handleSingleAiAnalyzeCallback: () => {},
+  logout: () => {},
+  loginWithGoogle: async () => {},
 }));

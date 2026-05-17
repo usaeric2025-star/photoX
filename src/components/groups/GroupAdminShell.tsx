@@ -55,8 +55,7 @@ export interface GroupAdminShellProps {
 }
 
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
-import { useAdminUI } from '../../context/AdminContexts';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useGalleryStore } from '../../store';
 
 import { DimensionEditor } from '../admin/edit/DimensionEditor';
 
@@ -76,9 +75,19 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     updatePhoto: hookUpdatePhoto
   } = props;
 
-  const { setAlertDialog: contextSetAlertDialog, setPromptDialog } = useAdminUI();
+  const { 
+    setAlertDialog: contextSetAlertDialog, 
+    setPromptDialog,
+    setErrors
+  } = useGalleryStore();
+  
   const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
-  const { handleError } = useErrorHandler();
+  
+  const handleError = (error: any, context: string) => {
+    console.error(`[Error] ${context}:`, error);
+    setErrors([{ message: error.message || String(error), context, timestamp: Date.now() }]);
+  };
+
   const { mutate: mutateSetCover } = useGroupCoverMutation();
   const setCover = useCallback(async (photoId: string) => {
       mutateSetCover({ photoId });

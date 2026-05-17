@@ -2,9 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, CheckSquare, Settings2, Eye, EyeOff, LogIn, Plus, Globe, RefreshCcw, ChevronDown, FileText, CheckCircle2, Menu, LayoutTemplate, AlertCircle } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
 import { translations, LanguageCode } from '../../lib/translations';
-import { useAdminSession, useAdminUI } from '../../context/AdminContexts';
-import { useGallery } from '../../hooks/useGallery';
-import { useError } from '../../context/ErrorContext';
+import { useGalleryStore } from '../../store';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
@@ -25,6 +23,8 @@ interface Props {
   totalPhotosCount?: number;
   cloudCount?: number | null;
   appLang?: string;
+  isAnalyzing: boolean;
+  batchProgress: { current: number; total: number };
 }
 
 export const AdminHeader: React.FC<Props> = ({ 
@@ -32,12 +32,15 @@ export const AdminHeader: React.FC<Props> = ({
   filteredPhotos, setSelectedIds, setIsMultiSelect, 
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
-  appLang = 'zh'
+  appLang = 'zh',
+  isAnalyzing, batchProgress
 }) => {
-  const { settings, user, viewMode, setViewMode, isSyncing } = useAdminSession();
-  const { isAnalyzing, batchProgress, activeScreen, setActiveScreen } = useAdminUI();
-  const { isInfiniteMode, setIsInfiniteMode } = useGallery();
-  const { errors } = useError();
+  const { 
+    settings, user, viewMode, setViewMode, isSyncing, 
+    activeScreen, setActiveScreen,
+    isInfiniteMode, setIsInfiniteMode 
+  } = useGalleryStore();
+  
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -237,11 +240,6 @@ export const AdminHeader: React.FC<Props> = ({
                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative ${activeScreen === 'manage' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
                   >
                     <Menu size={18} />
-                    {errors.length > 0 && (
-                      <Skeleton className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 rounded-full flex items-center justify-center border-2 border-brand-bg shadow-sm">
-                        <span className="text-[8px] font-black text-white">{errors.length > 9 ? '9+' : errors.length}</span>
-                      </Skeleton>
-                    )}
                   </button>
                   <AnimatePresence>
                     {showToolsMenu && (

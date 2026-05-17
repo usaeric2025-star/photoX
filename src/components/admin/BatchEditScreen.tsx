@@ -1,14 +1,11 @@
 import React from 'react';
-import { useErrorHandler } from '../../utils/errorHandler';
 import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { ProductFormData } from '../../types';
-import { useAdminPhoto, useAdminSession } from '../../context/AdminContexts';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
-import { useAdminUI } from '../../context/AdminContexts';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
-
+import { useGalleryStore } from '../../store';
 import { safeArray } from '../../lib/utils';
 
 export const BatchEditScreen = ({
@@ -22,6 +19,10 @@ export const BatchEditScreen = ({
   showOtherFields,
   setShowOtherFields,
   onDelete,
+  quickAddManufacturer: quickAddMfr,
+  quickAddTag: quickAddT,
+  updateTag,
+  deleteTag
 }: {
   resetAddState: () => void;
   saveBatchEdit: (batchIsHiddenApplied: boolean) => Promise<void>;
@@ -33,19 +34,20 @@ export const BatchEditScreen = ({
   showOtherFields: boolean;
   setShowOtherFields: (s: boolean) => void;
   onDelete?: (ids: string[]) => void;
+  quickAddManufacturer: () => void;
+  quickAddTag: () => void;
+  updateTag: (id: string, name: string) => Promise<boolean | void>;
+  deleteTag: (id: string) => Promise<boolean | void>;
 }) => {
-  const { handleError } = useErrorHandler();
   const { 
-    quickAddManufacturer: quickAddMfr, 
-    quickAddTag: quickAddT,
     categories,
     manufacturers,
     tags,
-    updateTag,
-    deleteTag
-  } = useAdminPhoto();
-  const { setPromptDialog, setAlertDialog } = useAdminUI();
-  const { isSyncing, appLang } = useAdminSession();
+    setPromptDialog, 
+    setAlertDialog,
+    isSyncing,
+    appLang
+  } = useGalleryStore();
 
   const handleDelete = () => {
     if (!batchEditIds || !onDelete) return;
@@ -212,9 +214,9 @@ export const BatchEditScreen = ({
             tags={tags}
             selectedTagIds={safeArray<string>(formState.tagIds)}
             onChange={(newIds) => updateForm({ tagIds: newIds })}
-            addTag={async (name) => { return await useAdminPhoto().addTag(name); }}
-            updateTag={async (id, name) => { await updateTag(id, name); return true; }}
-            deleteTag={async (id) => { await deleteTag(id); return true; }}
+            addTag={async (name) => { return await useGalleryStore.getState().addTag(name); }}
+            updateTag={async (id, name) => { await useGalleryStore.getState().updateTag(id, name); return true; }}
+            deleteTag={async (id) => { await useGalleryStore.getState().deleteTag(id); return true; }}
           />
         </section>
       </div>

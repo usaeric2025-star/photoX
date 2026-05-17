@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadAllPhotosFromCloud, loadPhotosByGroupId, getPhotoCount } from '../../services/photoService';
 import { QUERY_KEYS } from './keys';
 
@@ -13,6 +13,7 @@ export const usePhotosQuery = (filters: any, page: number, limit: number) => {
       filters.tagId, 
       filters.searchQuery
     ),
+    placeholderData: keepPreviousData,
   });
   return { ...result, data: result.data ?? [] };
 };
@@ -32,6 +33,7 @@ export const useInfinitePhotosQuery = (filters: any, limit: number = 20) => {
       return lastPage.length === limit ? allPages.length : undefined;
     },
     initialPageParam: 0,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -39,6 +41,7 @@ export const usePhotoCountQuery = (filters: any) => {
   return useQuery({
     queryKey: QUERY_KEYS.photoCount(filters),
     queryFn: () => getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery),
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -47,5 +50,6 @@ export const useGroupPhotosQuery = (groupId: string) => {
     queryKey: QUERY_KEYS.groupPhotos(groupId),
     queryFn: () => loadPhotosByGroupId(groupId),
     enabled: !!groupId,
+    placeholderData: keepPreviousData,
   });
 };

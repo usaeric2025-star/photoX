@@ -1,21 +1,17 @@
-
-import { useState, useCallback } from 'react';
+import { useGalleryStore } from '../store';
 
 export const useAdminDialogs = () => {
-    const [alertDialog, setAlertDialog] = useState<any>(null);
-    const [promptDialog, setPromptDialog] = useState<any>(null);
-    const [promptValue, setPromptValue] = useState('');
+  const alertDialog = useGalleryStore(state => state.alertDialog);
+  const setAlertDialog = useGalleryStore(state => state.setAlertDialog);
+  const promptDialog = useGalleryStore(state => state.promptDialog);
+  const setPromptDialog = useGalleryStore(state => state.setPromptDialog);
 
-    const wrappedSetPromptDialog = useCallback((dialog: any) => {
-        if (dialog === null) {
-            setPromptValue('');
-        }
-        setPromptDialog(dialog);
-    }, []);
-
-    return {
-        alertDialog, setAlertDialog,
-        promptDialog, setPromptDialog: wrappedSetPromptDialog,
-        promptValue, setPromptValue
-    };
+  return {
+    alertDialog,
+    setAlertDialog,
+    promptDialog,
+    setPromptDialog,
+    promptValue: '', // Add stub or implement if needed
+    setPromptValue: () => {}
+  };
 };

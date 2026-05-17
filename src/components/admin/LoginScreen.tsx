@@ -1,7 +1,6 @@
 import { toast } from 'sonner';
 import React from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers } from 'lucide-react';
-import { useOptionalAdminUI } from '../../context/AdminContexts';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;

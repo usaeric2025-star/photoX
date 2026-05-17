@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAdminUI } from '../../context/AdminContexts';
+import { useGalleryStore } from '../../store';
 import { PromptDialog } from './PromptDialog';
 import {
   AlertDialog,
@@ -16,7 +16,7 @@ import {
 } from "../ui/alert-dialog";
 
 export const AdminGlobalModals: React.FC = () => {
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminUI();
+  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useGalleryStore();
 
   return (
     <>

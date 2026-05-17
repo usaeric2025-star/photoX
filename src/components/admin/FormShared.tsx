@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Category, Manufacturer } from '../../types';
 import { useLongPress } from '../../hooks/useLongPress';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useAdminUI } from '../../context/AdminContexts';
+import { useGalleryStore } from '../../store';
 
 interface SectionHeaderProps {
   title: string;
@@ -65,7 +65,7 @@ interface ManufacturerSelectorProps {
 }
 
 export const ManufacturerList: React.FC<ManufacturerSelectorProps> = ({ manufacturers, selectedId, onSelect, onEdit, onDelete }) => {
-    const { setAlertDialog } = useAdminUI();
+    const { setAlertDialog } = useGalleryStore();
     const { startPress, endPress, cancelPress, handleTouchMove } = useLongPress<Manufacturer>(
         (mfr) => { 
             if (onEdit || onDelete) {

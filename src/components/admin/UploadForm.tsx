@@ -2,7 +2,9 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
 import { Category, Tag, ProductFormData, Manufacturer, Dimension } from '../../types';
-import { useAdminSession, useAdminPhoto, useAdminUI } from '../../context/AdminContexts';
+import { useGalleryStore } from '../../store';
+import { useUpdateTagMutation, useDeleteTagMutation, useAddTagMutation } from '../../hooks';
+import { useAdminPhotos } from '../../hooks/useAdminPhotos';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { DimensionEditor } from './edit/DimensionEditor';
 import { safeArray } from '../../lib/utils';
@@ -37,9 +39,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   categories, tags, quickAddSubCategory, quickAddTag, quickAddManufacturer, manufacturers,
   aiDebugInfo, abortAnalysis
 }) => {
-  const { appLang } = useAdminSession();
-  const { updateTag, deleteTag } = useAdminPhoto();
-  const { setPromptDialog, setAlertDialog, withLoading } = useAdminUI();
+  const { appLang, setPromptDialog, setAlertDialog, withLoading } = useGalleryStore();
+  const { mutateAsync: addTagMut } = useAddTagMutation();
+  const { mutateAsync: updateTagMut } = useUpdateTagMutation();
+  const { mutateAsync: deleteTagMut } = useDeleteTagMutation();
   
   return (
     <div className="fixed inset-0 z-[100] bg-slate-50 flex flex-col pt-safe">
@@ -208,9 +211,9 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             tags={tags}
             selectedTagIds={safeArray<string>(formState.tagIds)}
             onChange={(newIds) => updateForm({ tagIds: newIds })}
-            addTag={async (name) => { return await useAdminPhoto().addTag(name); }}
-            updateTag={async (id, name) => { await updateTag(id, name); return true; }}
-            deleteTag={async (id) => { await deleteTag(id); return true; }}
+            addTag={async (name) => { return await addTagMut(name); }}
+            updateTag={async (id, name) => { await updateTagMut({ id, name }); return true; }}
+            deleteTag={async (id) => { await deleteTagMut(id); return true; }}
           />
         </section>
 

@@ -122,12 +122,6 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             </button>
             
             {categories
-              .filter(c => c.name && c.name.trim())
-              .filter(c => {
-                const n = (c.name || '').toLowerCase();
-                const z = (c.zh || '').toLowerCase();
-                return !['all', '全部', '全部产品'].includes(n) && !['all', '全部', '全部产品'].includes(z);
-              })
               .map(cat => {
                 const displayName = lang === 'zh' ? (cat.zh || cat.name) : lang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
                 return (
@@ -161,10 +155,6 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   const currentCat = categories.find(c => (c.id === selectedCatCode || c.code === selectedCatCode));
                   const subList = currentCat?.subcategories || [];
                   return Array.from(new Map(subList.map((s: any) => [s.id, s])).values())
-                    .filter((s: any) => {
-                      const n = (s.name || '').toLowerCase();
-                      return !['all', '全部', '全部产品'].includes(n);
-                    })
                     .map((sub: any) => (
                     <button 
                       key={sub.id}

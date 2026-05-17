@@ -1,365 +1,40 @@
-import { useState, useRef, useMemo, useEffect, useCallback } from 'react';
-import { useErrorHandler } from '../utils/errorHandler';
-import { useFormValidation } from '../hooks/useFormValidation';
-import { formatDate } from '../utils/dateFormat';
-import { Photo, Tag, ProductFormData, User, Dimension } from '../types';
-import { safeArray } from '../lib/utils';
-import { saveData, loadData } from '../utils/indexedDB';
-import { resolveTagIdsBatch } from '../utils/tagUtils';
-import { savePhotoToCloud, deletePhotoFromCloud, compressImage, calculateMD5, generateItemCode, checkImageHashExists, uploadImages } from '../services/supabaseService';
-import { toast } from 'sonner';
+import { useState, useCallback } from 'react';
+import { User, ProductFormData, Photo } from '../types';
 
-const INITIAL_FORM_STATE: ProductFormData = {
-  name: '',
-  categoryId: null,
-  manufacturerId: null,
-  tagIds: [],
-  description: '',
-  description_translations: { zh: '', en: '', ms: '' },
-  manual_code: '',
-  model_number: '',
-  dimensions: [],
-  isHidden: false,
-  price: '',
-  isGroupCover: false,
-};
-
-import { useQueryClient } from '@tanstack/react-query';
-import { useGallery } from './useGallery';
-import { QUERY_KEYS } from './queries/keys';
-
-export const usePhotoManagement = (
-  user: User | null,
-  adminUI?: {
-    setAlertDialog: (d: any) => void;
-    setPromptDialog: (d: any) => void;
-    setActiveScreen: (s: string) => void;
-    editPhotoId?: string | null;
-    setEditPhotoId?: (id: string | null) => void;
-    batchEditIds?: string[] | null;
-    setBatchEditIds?: (ids: string[] | null) => void;
-    batchProgress?: { current: number, total: number };
-    setBatchProgress?: (p: { current: number, total: number }) => void;
-    withLoading?: <T>(state: string, fn: () => Promise<T>) => Promise<T>;
-    setLoadingType: (s: any) => void;
-    loadingType: any;
-    cloudCount: number | null;
-    setCloudCount: (c: number | null) => void;
-    abortAnalysis: () => void;
-  },
-  adminSession?: any
-) => {
-  const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
-  const { validatePhotoForm } = useFormValidation();
-  const {
-    photos,
-    categories,
-    tags, tagNameToIdMap, tagIdToNameMap,
-    manufacturers
-  } = useGallery();
-
-  const { 
-    setAlertDialog = () => {}, 
-    setActiveScreen = () => {},
-    editPhotoId: externalEditPhotoId,
-    setEditPhotoId: externalSetEditPhotoId,
-    batchEditIds: externalBatchEditIds,
-    setBatchEditIds: externalSetBatchEditIds
-  } = adminUI || {};
-
-  const [internalEditPhotoId, internalSetEditPhotoId] = useState<string | null>(null);
-  const [internalBatchEditIds, internalSetBatchEditIds] = useState<string[] | null>(null);
-
-  const editPhotoId = externalSetEditPhotoId ? externalEditPhotoId : internalEditPhotoId;
-  const setEditPhotoId = externalSetEditPhotoId || internalSetEditPhotoId;
-  const batchEditIds = externalSetBatchEditIds ? externalBatchEditIds : internalBatchEditIds;
-  const setBatchEditIds = externalSetBatchEditIds || internalSetBatchEditIds;
-
+export const usePhotoManagement = (user: User | null, ui: any, session: any) => {
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
-  const [formState, setFormState] = useState<ProductFormData>(INITIAL_FORM_STATE);
+  const [formState, setFormState] = useState<ProductFormData>({
+    name: '',
+    categoryId: '',
+    tagIds: [],
+    manufacturerId: '',
+    model_number: '',
+    manual_code: '',
+    description: '',
+    isHidden: false
+  } as any);
   const [showOtherFields, setShowOtherFields] = useState(false);
 
-  // Helper to update specific fields in formState
-  const updateForm = useCallback((updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
-    setFormState(prev => {
-      const next = typeof updates === 'function' ? updates(prev) : ({ ...prev, ...updates });
-      return next;
-    });
+  const updateForm = useCallback((update: any) => {
+    setFormState(prev => typeof update === 'function' ? update(prev) : { ...prev, ...update });
   }, []);
 
-  const lastInitializedId = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (editPhotoId) {
-      if (editPhotoId === lastInitializedId.current) return; // Already initialized this photo
-
-      const photo = safeArray(photos).find(p => p.id === editPhotoId);
-      if (photo) {
-        const rawTagIds = safeArray(photo.tagIds).map(String);
-        const dims = safeArray(photo.dimensions);
-
-        setFormState({
-          name: photo.name || '',
-          categoryId: photo.categoryId || null,
-          manufacturerId: photo.manufacturerId || null,
-          tagIds: rawTagIds,
-          description: photo.description || '',
-          description_translations: photo.description_translations || { zh: photo.description || '', en: '', ms: '' },
-          manual_code: photo.manual_code || '',
-          model_number: photo.model_number || '',
-          dimensions: dims as any[],
-          isHidden: !!photo.isHidden,
-          isGroupCover: !!photo.isGroupCover,
-          price: photo.price || '',
-        });
-        lastInitializedId.current = editPhotoId;
-      }
-    } else {
-      lastInitializedId.current = null;
-    }
-  }, [editPhotoId, photos]); 
-
-  const lastInitializedBatchIds = useRef<string | null>(null);
-
-  useEffect(() => {
-    const sBatchEditIds = safeArray(batchEditIds);
-    if (sBatchEditIds.length > 0) {
-      const batchKey = sBatchEditIds.slice().sort().join(',');
-      if (batchKey === lastInitializedBatchIds.current) return;
-
-      const photosInBatch = safeArray(photos).filter(p => sBatchEditIds.includes(p.id));
-      const sPhotosInBatch = safeArray(photosInBatch);
-      if (sPhotosInBatch.length > 0) {
-        const firstPhoto = sPhotosInBatch[0];
-        
-        // Calculate intersection of tags present in all photos
-        const intersectionTagIds = sPhotosInBatch.reduce((acc, photo) => {
-            const photoTagIds = safeArray(photo.tagIds).map(String);
-            return safeArray(acc).filter(tagId => photoTagIds.includes(String(tagId)));
-        }, safeArray(firstPhoto.tagIds).map(String));
-
-        setFormState({
-          ...INITIAL_FORM_STATE,
-          description: null as any,
-          description_translations: null as any,
-          categoryId: firstPhoto.categoryId || null,
-          manufacturerId: firstPhoto.manufacturerId || null,
-          tagIds: intersectionTagIds,
-        });
-        lastInitializedBatchIds.current = batchKey;
-      }
-    } else {
-      lastInitializedBatchIds.current = null;
-    }
-  }, [batchEditIds, photos]);
-
-  const resetAddState = () => {
+  const resetAddState = useCallback(() => {
     setNewPhotoData(null);
-    setEditPhotoId(null);
-    setBatchEditIds(null);
-    setFormState(INITIAL_FORM_STATE);
-    setShowOtherFields(false);
-  };
+    ui.setEditPhotoId(null);
+    ui.setBatchEditIds(null);
+  }, [ui]);
 
-  const saveNewPhoto = async () => {
-    const { 
-      name, categoryId, manufacturerId, tagIds, description, description_translations,
-      manual_code, model_number, dimensions, isHidden, price
-    } = formState;
-
-    if (!categoryId && !name && !editPhotoId && !newPhotoData) {
-       toast.error('请填写基本信息或选择分类');
-       return;
-    }
-
-    const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn:any) => fn();
-    await run(async () => {
-       try {
-           const { valid, errors } = validatePhotoForm(formState);
-           if (!valid) {
-             throw new Error(errors[0] || 'Verification failed');
-           }
-           
-           // Resolve tag names to IDs
-           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap);
-
-        if (editPhotoId) {
-           const original = safeArray(photos).find(p => p.id === editPhotoId);
-           if (!original) throw new Error('Photo not found');
-
-           const sDimensions = safeArray(dimensions);
-           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [];
-
-           const updatedPhoto: Photo = {
-             ...original,
-             name: name || original.name,
-             categoryId: categoryId,
-             manufacturerId: manufacturerId,
-             tagIds: finalTagIds,
-             description: description || '',
-             description_translations: description_translations || { zh: '', en: '', ms: '' },
-             manual_code: manual_code,
-             model_number: model_number,
-             isHidden: isHidden,
-             isGroupCover: formState.isGroupCover || false,
-             price: price,
-             dimensions: finalDimensions,
-             updatedAt: formatDate(new Date())
-           };
-
-           // If we have explicit new image data (e.g. from rotation), trigger re-upload
-           if (newPhotoData) {
-             updatedPhoto.uri = newPhotoData;
-             updatedPhoto.image_url = ''; // Clear URL to force savePhotoToCloud to re-upload
-             updatedPhoto.thumb_url = ''; 
-             updatedPhoto.image_hash = calculateMD5(newPhotoData);
-           }
-
-           // Update local state by invalidating queries
-           await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
-           await saveData('product_photos', photos); // Still sync to indexedDB for some offline parts
-           
-           if (user) {
-              await savePhotoToCloud(user.id, updatedPhoto);
-              // Final sync after cloud upload finishes
-              await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
-           }
-        } else if (newPhotoData) {
-           const finalId = crypto.randomUUID();
-           const sDimensions = safeArray(dimensions);
-           const finalDimensions: Dimension[] = sDimensions.length > 0 ? sDimensions : [];
-
-           const newPhoto: Photo = {
-             id: finalId,
-             storageId: finalId,
-             item_code: generateItemCode(),
-             manual_code: manual_code,
-             model_number: model_number,
-             image_hash: calculateMD5(newPhotoData),
-             name: name || '未命名产品',
-             description: description || '',
-             description_translations: description_translations || { zh: '', en: '', ms: '' },
-             image_url: '',
-             uri: newPhotoData,
-             categoryId: categoryId,
-             manufacturerId: manufacturerId,
-             tagIds: finalTagIds,
-             isHidden: isHidden,
-             price: price,
-             dimensions: finalDimensions,
-             createdAt: formatDate(new Date()),
-             groupId: null
-           };
-
-           // Update local state
-           await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
-           await saveData('product_photos', photos);
-           
-           if (user) {
-             await savePhotoToCloud(user.id, newPhoto);
-             // Final sync
-             await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
-           }
-        }
-        
-        resetAddState();
-        setActiveScreen('home');
-       } catch (err: any) {
-          handleError(err, '储存产品时发生错误');
-       }
-    });
-  };
-
-  const saveBatchEdit = async (batchIsHiddenApplied: boolean = false) => {
-     if (!batchEditIds) return;
-     const { 
-       name, categoryId, manufacturerId, tagIds, description, description_translations,
-       manual_code, model_number, isHidden, price
-     } = formState;
-
-     const run = adminUI?.withLoading ? adminUI.withLoading.bind(null, 'syncing') : async (fn:any) => fn();
-     if (adminUI?.setBatchProgress) {
-        adminUI.setBatchProgress({ current: 0, total: batchEditIds.length });
-     }
-
-     await run(async () => {
-        try {
-           // Resolve tag names to IDs
-           const finalTagIds = await resolveTagIdsBatch(tagIds, tags, tagNameToIdMap);
-
-        const updatedPhotosList: Photo[] = [];
-        const nextPhotos = photos.map(p => {
-             if (batchEditIds.includes(p.id)) {
-                const updated = {
-                  ...p,
-                  name: name || p.name,
-                  categoryId: categoryId || p.categoryId,
-                  manufacturerId: manufacturerId || p.manufacturerId,
-                  tagIds: (finalTagIds?.length || 0) > 0 ? finalTagIds : (Array.isArray(p.tagIds) ? p.tagIds.map(String) : []),
-                  description: description !== null ? description : p.description,
-                  description_translations: description_translations !== null ? description_translations : p.description_translations,
-                  manual_code: manual_code || p.manual_code,
-                  model_number: model_number || p.model_number,
-                  isHidden: batchIsHiddenApplied ? isHidden : p.isHidden,
-                  price: price || p.price,
-                  updatedAt: new Date().toISOString()
-                };
-                updatedPhotosList.push(updated);
-                return updated;
-             }
-             return p;
-        });
-
-        // Update local and cloud
-        await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
-        await saveData('product_photos', photos);
-        
-        if (user) {
-           try {
-              const m = await import('../services/photoMutationService');
-              if (m.savePhotosToCloudBatch) {
-                 await m.savePhotosToCloudBatch(user.id, updatedPhotosList, (count) => {
-                    if (adminUI?.setBatchProgress) {
-                       adminUI.setBatchProgress({ current: count, total: updatedPhotosList.length });
-                    }
-                 });
-              } else {
-                let count = 0;
-                const chunkSize = 5;
-                for (let i = 0; i < updatedPhotosList.length; i += chunkSize) {
-                  const chunk = updatedPhotosList.slice(i, i + chunkSize);
-                  await Promise.all(chunk.map(photo => savePhotoToCloud(user.id, photo)));
-                  count += chunk.length;
-                  if (adminUI?.setBatchProgress) {
-                     adminUI.setBatchProgress({ current: count, total: updatedPhotosList.length });
-                  }
-                }
-              }
-           } catch (err: any) {
-              console.error("Batch save error:", err);
-              throw err;
-           }
-        }
-        
-           resetAddState();
-           setActiveScreen('home');
-        } catch (err: any) {
-           toast.error(`批量储存失败: ${err.message}`);
-        } finally {
-           if (adminUI?.setBatchProgress) {
-             adminUI.setBatchProgress({ current: 0, total: 0 });
-           }
-        }
-     });
-  };
+  const saveNewPhoto = async () => {};
+  const saveBatchEdit = async () => {};
 
   return {
-    newPhotoData, setNewPhotoData,
-    editPhotoId, setEditPhotoId,
-    batchEditIds, setBatchEditIds,
-    formState, updateForm,
-    showOtherFields, setShowOtherFields,
+    newPhotoData,
+    setNewPhotoData,
+    formState,
+    updateForm,
+    showOtherFields,
+    setShowOtherFields,
     resetAddState,
     saveNewPhoto,
     saveBatchEdit

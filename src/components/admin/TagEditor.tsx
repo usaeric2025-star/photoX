@@ -2,9 +2,8 @@ import React, { useState, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Heart, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLongPress } from '../../hooks/useLongPress';
-import { useErrorHandler } from '../../utils/errorHandler';
-import { saveSettings } from '../../services/supabaseService';
-import { useAdminSession, useAdminUI } from '../../context/AdminContexts';
+import { saveSettings } from '../../services/settingService';
+import { useGalleryStore } from '../../store';
 import { Tag } from '../../types';
 
 interface TagEditorProps {
@@ -22,10 +21,9 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd, onRenameTagRequest,
   showHotEffects = false
 }) => {
-  const { handleError } = useErrorHandler();
-  const { setAlertDialog } = useAdminUI();
+  const { setAlertDialog } = useGalleryStore();
   const [searchTerm, setSearchTerm] = useState('');
-  const { settings, setSettings } = useAdminSession();
+  const { settings, setSettings } = useGalleryStore();
   
   const { startPress, endPress, cancelPress, handleTouchMove, hasLongPressed, activeItem: activeActionTag, setActiveItem: setActiveActionTag } = useLongPress(
       (tag) => setActiveActionTag(tag)
@@ -42,7 +40,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       setSettings(nextSettings);
       await saveSettings(nextSettings);
     } catch (err) {
-      handleError(err, '切换置顶状态失败');
+      console.error('切换置顶状态失败:', err);
     }
   };
 

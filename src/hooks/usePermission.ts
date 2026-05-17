@@ -1,11 +1,13 @@
 
-import { useAdminSession } from '../context/AdminContexts';
+import { useGalleryStore } from '../store';
+import { useAuth } from './useAuth';
 
 /**
  * Unified permission and role checking hook.
  */
 export function usePermission() {
-  const { user, isAdminMode, isStaffMode } = useAdminSession();
+  const { user } = useAuth();
+  const { isAdminMode, isStaffMode } = useGalleryStore();
 
   const isAdmin = !!user && isAdminMode;
   const isStaff = !!user && (isAdminMode || isStaffMode);

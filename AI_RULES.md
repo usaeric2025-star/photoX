@@ -219,4 +219,14 @@ const uiValueForLogin = React.useMemo(() => ({
 2. 长按操作统一延迟 500ms，并配合 `navigator.vibrate?.(50)` 提供触觉反馈
 3. 弹窗在小屏幕上宽度为 90%，最大 400px
 
+## 二十一、数据匹配规范（强制执行）
 
+### 检查清单（修改代码前必读）
+- [ ] 所有 filter/find 使用 ID 字段，禁止使用 name
+- [ ] 禁止 `.name.includes` 或 `.name ===`
+- [ ] 禁止 `toLowerCase()` 用于数据匹配
+- [ ] 「全部」按钮独立于数据库，不参与过滤
+
+### 违规示例
+❌ categories.filter(cat => cat.name === '全部')
+✅ categories.filter(cat => cat.id === selectedId)

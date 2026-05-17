@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Trash2, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAdminUI } from '../../context/AdminContexts';
+import { useGalleryStore } from '../../store';
 
 import { Manufacturer } from '../../types';
 
@@ -12,7 +12,7 @@ interface ManufacturerProps {
 }
 
 export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: ManufacturerProps) => {
-  const { setAlertDialog } = useAdminUI();
+  const { setAlertDialog } = useGalleryStore();
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
