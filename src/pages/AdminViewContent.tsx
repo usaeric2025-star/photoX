@@ -142,12 +142,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
   };
   
   const handleLoadMoreCallback = useCallback(() => {
-    if (visibleCount < totalGridCount) {
-       setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
-    } else if (hasNextPage) {
+    if (hasNextPage) {
        performPullSync(true); // Pass true to fetch next page
     }
-  }, [visibleCount, totalGridCount, hasNextPage, performPullSync, setVisibleCount]);
+  }, [hasNextPage, performPullSync]);
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   

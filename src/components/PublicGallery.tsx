@@ -514,11 +514,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, [gridPhotos]);
 
-  const photosToShow = (isSyncing && gridPhotos.length === 0 && prevPhotosRef.current.length > 0)
-    ? prevPhotosRef.current
-    : gridPhotos;
+  const photosToShow = gridPhotos;
 
-  const showSkeleton = isSyncing && gridPhotos.length === 0 && prevPhotosRef.current.length === 0;
+  const showSkeleton = isSyncing && gridPhotos.length === 0;
 
   const safePhotosToShow = photosToShow;
 
@@ -601,7 +599,7 @@ const virtuosoContext = useMemo(() => ({
 
       {/* Grid */}
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
-        {isSyncing && safePhotosToShow.length === 0 ? (
+        {showSkeleton ? (
           <div className={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}>
             {Array.from({ length: 15 }).map((_, i) => (
               <PhotoCardSkeleton key={i} />
@@ -628,11 +626,13 @@ const virtuosoContext = useMemo(() => ({
             endReached={stableLoadMore}
             overscan={PAGINATION.VIRTUAL_SCROLL_OVERSCAN}
             listClassName={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
-            itemContent={(index) => (
-              <MemoizedPhotoCard
-                key={index}
-                index={index}
-                photo={safePhotosToShow[index]}
+            itemContent={(index) => {
+              const photo = safePhotosToShow[index];
+              return (
+                <MemoizedPhotoCard
+                  key={photo ? (photo.type === 'group' ? `group-${photo.groupId}` : photo.id) : index}
+                  index={index}
+                  photo={photo}
                 isAdminMode={!!isAdminMode}
                 isMultiSelect={activeIsMultiSelect}
                 isStaffMode={isStaffMode}
@@ -658,8 +658,9 @@ const virtuosoContext = useMemo(() => ({
                 onTogglePinned={onTogglePinned}
                 displayPhotos={displayPhotos}
                 gridPhotos={safePhotosToShow}
-              />
-            )}
+                />
+              );
+            }}
           />
         )}
       </div>

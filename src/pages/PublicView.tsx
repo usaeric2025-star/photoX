@@ -80,9 +80,7 @@ export default function PublicView() {
   };
 
   const handleLoadMore = () => {
-    if (visibleCount < totalGridCount) {
-       setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
-    } else if (hasNextPage && !isFetchingNextPage) {
+    if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   };
