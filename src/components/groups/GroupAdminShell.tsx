@@ -60,10 +60,12 @@ export interface GroupAdminShellProps {
 
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
 import { useGalleryStore } from '../../store';
+import { useErrorHandler } from '../../hooks';
 
 import { DimensionEditor } from '../admin/edit/DimensionEditor';
 
 export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
+  const { handleError } = useErrorHandler();
   const {
     activeGroupId, setActiveGroupId, photos,
     isAdminMode, onEditPhoto,

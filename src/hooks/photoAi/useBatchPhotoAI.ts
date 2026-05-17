@@ -24,6 +24,7 @@ interface BatchAiProps {
   updateTask: (id: string, updates: Partial<Task>) => void;
   removeTask: (id: string) => void;
   setAiDebugInfo: (info: { step: string; message: string; error?: string } | null) => void;
+  aiDebugInfo: { step: string; message: string; error?: string } | null;
   setBatchProgress: (progress: { current: 0, total: 0 } | any) => void;
   isAnalyzingRef: React.MutableRefObject<boolean>;
   currentAnalysisControllers: React.MutableRefObject<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>;
@@ -34,7 +35,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
   const queryClient = useQueryClient();
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
-    tagNameToIdMap, addTask, updateTask, removeTask, setAiDebugInfo, setBatchProgress,
+    tagNameToIdMap, addTask, updateTask, removeTask, setAiDebugInfo, aiDebugInfo, setBatchProgress,
     isAnalyzingRef, currentAnalysisControllers, abortAnalysis
   } = props;
 
@@ -144,7 +145,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
         for (let i = 0; i < unProcessed.length; i += CONCURRENCY) {
             if (currentAnalysisControllers.current.get(taskId)?.controller.signal.aborted) break;
             const batch = unProcessed.slice(i, i + CONCURRENCY);
-            setAiDebugInfo(prev => prev?.error ? { ...prev, error: undefined } : prev);
+            setAiDebugInfo(aiDebugInfo?.error ? { ...aiDebugInfo, error: undefined } : aiDebugInfo);
 
             const batchResults = await Promise.allSettled(batch.map(p => processPhoto(p)));
             

@@ -42,7 +42,8 @@ export const uploadImages = async (
   userId: string, 
   photoId: string, 
   base64Data: string,
-  onStatus?: (status: 'compressing' | 'uploading' | 'done') => void
+  onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
+  onProgress?: (percent: number) => void
 ): Promise<{imageUrl: string, thumbUrl: string}> => {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -66,7 +67,7 @@ export const uploadImages = async (
     }
 
     onStatus?.('uploading');
-    const uploadFile = async (base64: string, fileName: string) => {
+    const uploadFile = async (base64: string, fileName: string, isMain=false) => {
       // 1. Check if file already exists in storage
       const { data: existingFile } = await supabase.storage
         .from(DB_CONFIG.BUCKET_NAME)
@@ -80,6 +81,8 @@ export const uploadImages = async (
         const res = await fetch(base64);
         const blob = await res.blob();
         
+        // Supabase upload doesn't natively support onUploadProgress.
+        // We will invoke onProgress at the end of upload, or if the SDK supports it.
         const { error: storageError } = await supabase.storage
           .from(DB_CONFIG.BUCKET_NAME)
           .upload(fileName, blob, {
@@ -88,8 +91,11 @@ export const uploadImages = async (
           });
 
         if (storageError) throw storageError;
+
+        if (isMain && onProgress) onProgress(100);
       } else {
         console.log(`[Storage] File ${fileName} already exists, skipping upload.`);
+        if (isMain && onProgress) onProgress(100);
       }
 
       const { data: { publicUrl } } = supabase.storage
@@ -99,8 +105,8 @@ export const uploadImages = async (
       return publicUrl;
     };
 
-    const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`);
-    const thumbUrl = await uploadFile(thumbBase64, `public/thumb_${photoId}.webp`);
+    const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`, true);
+    const thumbUrl = await uploadFile(thumbBase64, `public/thumb_${photoId}.webp`, false);
 
     return { imageUrl, thumbUrl };
   } catch (err: unknown) {

@@ -41,7 +41,7 @@ export const usePhotoEditLogic = (props: Props) => {
 
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
-  const addTag = async (name: string) => { return await addTagMut(name); };
+  const addTag = async (name: string) => { const tag = await addTagMut(name); return tag.id; };
   const updateTag = async (id: string, name: string) => { await updateTagMut({ id, name }); return true; };
   const deleteTag = async (id: string) => { await deleteTagMut(id); return true; };
   const addManufacturer = async (name: string) => { return await addManMut(name); };

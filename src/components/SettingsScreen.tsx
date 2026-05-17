@@ -171,7 +171,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       placeholder: cat.name,
       onSubmit: async (newName) => {
         if (newName && newName.trim() !== cat.name) {
-          await updateCategory({ id: cat.id, updates: { name: newName.trim() } });
+          await updateCategory(cat.id, { name: newName.trim() });
         }
       }
     });

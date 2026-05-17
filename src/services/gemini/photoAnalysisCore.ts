@@ -190,8 +190,8 @@ export const analyzeProductPhoto = async (
         errorMsg = "AI API 代理未启动或不支持此部署环境 (如 Vercel Static)。请在「设置」中手动填写您的 API Key 以绕过服务器代理。";
     }
 
-    if (error.response?.data && typeof error.response.data === 'string' && error.response.data.includes('does not have permission')) {
-        errorMsg = "API Key 没有权限、遭停权，或是此地区被封锁: " + error.response.data;
+    if (errObj.response?.data && typeof errObj.response.data === 'string' && errObj.response.data.includes('does not have permission')) {
+        errorMsg = "API Key 没有权限、遭停权，或是此地区被封锁: " + errObj.response.data;
     }
 
     throw new Error(`AI_FAIL|${status}|${errorMsg}`);

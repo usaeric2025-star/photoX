@@ -31,7 +31,7 @@ interface Props {
   hasNextPage: boolean;
   onImport: () => void;
   t: any;
-  loginWithGoogle: () => void;
+  loginWithGoogle: () => Promise<any>;
 }
 
 export const MainAdminScreen: React.FC<Props> = ({

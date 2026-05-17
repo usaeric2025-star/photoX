@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   Cloud, LogOut, CloudUpload, CloudDownload, Database 
 } from 'lucide-react';
-import { User, ApiResponse } from '../../types';
+import { User, ApiResponse, DialogData } from '../../types';
 import { Skeleton } from '../ui/Skeleton';
 import { toast } from 'sonner';
 
@@ -16,7 +16,7 @@ interface SyncSectionProps {
   cloudCount: number | null;
   lastSyncTime: number | null;
   isSyncing: boolean;
-  setAlertDialog: (d: { title: string; message: string; onConfirm: () => void; type?: 'danger' | 'default' } | null) => void;
+  setAlertDialog: (d: DialogData | null) => void;
 }
 
 export const SyncSection: React.FC<SyncSectionProps> = ({

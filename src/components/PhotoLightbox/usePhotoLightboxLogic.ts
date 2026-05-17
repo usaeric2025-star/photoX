@@ -78,6 +78,8 @@ export const usePhotoLightboxLogic = ({
     navigator.clipboard.writeText(url).then(() => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
     });
   }, [photo?.image_hash]);
 

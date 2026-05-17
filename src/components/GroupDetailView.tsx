@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react'
 import { Photo, Tag, Category, ProductGroup } from '../types';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
+import { filterPhotosByMode } from '../utils/photoVisibility';
 import { PhotoLightbox } from './PhotoLightbox';
 import { getGroupById } from '../services/groupService';
 import { Skeleton } from './ui/Skeleton';
@@ -110,13 +111,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     const sourcePhotos = isAdminMode ? photos : localGroupPhotos;
 
     const groupPhotos = sourcePhotos
-      .filter(p => {
-        const pGid = p.groupId;
-        return String(pGid) === String(activeGroupId);
-      })
-      .filter(p => isAdminMode || !p.isHidden || p.isGroupCover);
+      .filter(p => String(p.groupId) === String(activeGroupId));
 
-    return sortGroupPhotos(groupPhotos);
+    const visiblePhotos = isAdminMode 
+      ? groupPhotos 
+      : groupPhotos.filter(p => !p.isHidden || p.isGroupCover);
+
+    return sortGroupPhotos(visiblePhotos);
   }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);
 
   useEffect(() => {

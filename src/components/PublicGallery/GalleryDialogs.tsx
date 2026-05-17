@@ -2,7 +2,7 @@ import React from 'react';
 import { AnimatePresence } from 'motion/react';
 import { StaffUnlockDialog } from '../StaffUnlockDialog';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
-import { AppSettings, User } from '../../../types';
+import { AppSettings, User } from '../../types';
 
 interface GalleryDialogsProps {
   showPassPrompt: boolean;

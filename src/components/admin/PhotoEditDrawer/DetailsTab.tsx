@@ -9,10 +9,11 @@ interface Props {
   showAiButton: boolean;
   isAnalyzing: boolean;
   onAiAnalyze: () => void;
+  t: any;
 }
 
 export const DetailsTab: React.FC<Props> = ({
-  formState, updateForm, showAiButton, isAnalyzing, onAiAnalyze
+  formState, updateForm, showAiButton, isAnalyzing, onAiAnalyze, t
 }) => {
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -22,6 +23,7 @@ export const DetailsTab: React.FC<Props> = ({
         showAiButton={showAiButton}
         isAnalyzing={isAnalyzing}
         onAiAnalyze={onAiAnalyze}
+        t={t}
       />
 
       <div className="space-y-4">

@@ -5,6 +5,7 @@ import { AdminGlobalModals } from '../../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../../components/admin/ErrorLogViewer';
 import { BatchEditScreen } from '../../components/admin/BatchEditScreen';
 import { SettingsScreen } from '../../components/SettingsScreen';
+import { PublicGallery } from '../../components/PublicGallery';
 import { PhotoEditDrawer } from '../../components/admin/PhotoEditDrawer';
 import { GroupDetailView } from '../../components/GroupDetailView';
 import { MainAdminScreen } from './MainAdminScreen';
@@ -136,15 +137,17 @@ export const AdminViewContent: React.FC<Props> = ({
             handleLogoUpload={async (e, c, t, m) => {}}
             performPushSync={async () => { 
               await logic.withLoading('sync-push', async () => { 
-                await logic.performPushSync(logic.onRefresh); 
+                await logic.performPushSync(true); 
               }); 
               return { success: true } as any; 
             }}
             performPullSync={async () => { 
-              await logic.performPullSync(logic.onRefresh); 
+              await logic.performPullSync(true); 
               return { success: true } as any; 
             }}
-            refreshCloudData={logic.onRefresh}
+            refreshCloudData={async (user, force) => {
+              await logic.onRefresh();
+            }}
             cloudCount={logic.cloudCount}
             lastSyncTime={lastSyncTime}
             isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
@@ -174,6 +177,7 @@ export const AdminViewContent: React.FC<Props> = ({
                 abortAnalysis={logic.abortAnalysis}
                 handleSingleAiAnalyze={logic.handleSingleAiAnalyze}
                 handleTranslate={logic.handleTranslate}
+                t={t}
             />
         )}
       </React.Suspense>
@@ -181,12 +185,13 @@ export const AdminViewContent: React.FC<Props> = ({
       {logic.activeScreen === 'home' && logic.viewMode === 'private' && (
         <MainAdminScreen 
           {...logic}
+          user={user}
           lang={lang}
           t={t}
           onManageClick={() => logic.setActiveScreen('manage')}
           onRefresh={() => {
             if (logic.checkSyncLock()) return;
-            logic.performPullSync(logic.onRefresh);
+            logic.performPullSync(true);
           }}
           onTogglePinned={logic.togglePinned}
           onToggleHidden={logic.toggleHidden}
@@ -222,7 +227,7 @@ export const AdminViewContent: React.FC<Props> = ({
                    showExit={true}
                    onRefresh={() => {
                      if (logic.checkSyncLock()) return;
-                     logic.performPullSync(logic.onRefresh);
+                     logic.performPullSync(true);
                    }}
                    hideHeader={false}
                    columns={logic.columns}

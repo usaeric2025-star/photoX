@@ -3,6 +3,8 @@ import { RefreshCcw, Grid3X3, Plus, Globe, Settings2, Sparkles } from 'lucide-re
 import { Photo, AppSettings } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { LanguageCode } from '../lib/translations';
+import { filterPhotosByMode } from '../utils/photoVisibility';
+
 
 interface PublicGalleryHeaderProps {
   settings: AppSettings;
@@ -47,7 +49,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
             ) : (
               <>
                 <div className="w-2 h-2 border border-brand-navy/20 border-t-brand-navy rounded-full animate-spin shrink-0" />
-                {t.gallerySub(photos.filter(p => !p.isHidden).length)}
+                {t.gallerySub(filterPhotosByMode(photos, isAdminMode).length)}
               </>
             )}
           </span>

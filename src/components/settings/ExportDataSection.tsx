@@ -1,7 +1,7 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
-import { Category, Tag, Photo, Manufacturer, User } from '../../../types';
+import { Category, Tag, Photo, Manufacturer, User } from '../../types';
 
 interface ExportDataSectionProps {
   photos: Photo[];

@@ -76,7 +76,7 @@ export const upsertGroup = async (group: Partial<ProductGroup> & { id: string })
 
 export const createGroup = async (groupData: ProductGroup) => {
     const userId = await getCurrentUserId();
-    const dbUpdates = mapToDb(groupData, true, userId);
+    const dbUpdates = mapToDb(groupData as unknown as Record<string, unknown>, true, userId);
     const { error, data } = await supabase
         .from(TABLE_NAME)
         .insert(dbUpdates)

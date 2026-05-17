@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
-import { Manufacturer } from '../../../types';
+import { Manufacturer } from '../../types';
 import { ManufacturerItem } from '../admin/ManufacturerItem';
 
 interface ManufacturersSectionProps {

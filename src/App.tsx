@@ -52,7 +52,7 @@ export default function AppRoutes() {
         console.error('Global Error: ', event.message || 'Unhandled Error');
     };
     const handlePromiseRejection = (event: PromiseRejectionEvent) => {
-        console.error('Promise Rejection: ', String(event.reason) || 'Unhandled Promise Rejection');
+        console.error('Unhandled Promise Rejection: ', event.reason);
     };
 
     window.addEventListener('error', handleGlobalError);

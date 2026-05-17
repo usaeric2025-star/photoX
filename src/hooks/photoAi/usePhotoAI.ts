@@ -46,7 +46,7 @@ export const usePhotoAI = (
   const commonProps = {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
     tagNameToIdMap, addTask, updateTask, removeTask, handleError,
-    setAiDebugInfo, currentAnalysisControllers, abortAnalysis,
+    setAiDebugInfo, aiDebugInfo, currentAnalysisControllers, abortAnalysis,
     photosRef, setBatchProgress, isAnalyzingRef
   };
 

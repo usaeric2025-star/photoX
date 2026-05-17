@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { Photo, ProductGroup, Dimension } from '../../types';
+import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
@@ -53,8 +54,8 @@ export const useGroupAdminLogic = ({
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    return photos
-      .filter(p => p && p.groupId === activeGroupId && (isAdminMode || !p.isHidden))
+    const groupPhotos = photos.filter(p => p && p.groupId === activeGroupId);
+    return filterPhotosByMode(groupPhotos, isAdminMode)
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
         if (b.isGroupCover) return 1;

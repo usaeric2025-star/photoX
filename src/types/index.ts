@@ -6,6 +6,10 @@
 export * from './photo';
 export * from './api';
 
+import { translations } from '../lib/translations';
+
+export type TranslationType = typeof translations['en'];
+
 export interface Task {
   id: string;
   name: string;
@@ -58,6 +62,7 @@ export interface DialogData {
   secondaryAction?: {
     label: string;
     onClick: () => void;
+    type?: 'info' | 'warning' | 'danger' | 'success';
   };
 }
 

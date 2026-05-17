@@ -29,24 +29,24 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
-    loadingType, withLoading, cloudCount, setCloudCount,
-    setAlertDialog, setPromptDialog, setAiDebugInfo, aiDebugInfo, abortAnalysis, batchProgress
-  } = uiValue;
+    loadingType="idle", withLoading = async (t: string, f: () => Promise<any>) => await f(), cloudCount = 0, setCloudCount = () => {},
+    setAlertDialog = () => {}, setPromptDialog = () => {}, setAiDebugInfo = () => {}, aiDebugInfo = null, abortAnalysis = () => {}, batchProgress = 0
+  } = uiValue || {};
 
   const {
-    settings, setSettings, viewMode, setViewMode, setIsSyncing,
-    performPushSync, saveSettings
-  } = sessionValue;
+    settings = {}, setSettings = () => {}, viewMode = 'private', setViewMode = () => {}, setIsSyncing = () => {},
+    performPushSync = async () => {}, saveSettings = async () => ({})
+  } = sessionValue || {};
 
   const {
-    photos, categories, tags, manufacturers,
-    handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, handlePhotoImport,
-    deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
-    updateTag, deleteTag, updateCategory, deleteCategory, addCategory,
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, quickAddTag, quickAddManufacturer,
-    updatePhoto, updatePhotosBulk
-  } = photoValue;
+    photos = [], categories = [], tags = [], manufacturers = [],
+    handleSingleAiAnalyze = async () => {}, handleTranslate = async () => {}, handleBatchAiIdentify = async () => {}, handleGroupAiIdentify = async () => {}, handlePhotoImport = async () => {},
+    deletePhoto = async () => {}, handleGroupPhotos = async () => {}, handleUngroup = async () => {}, saveNewPhoto = async () => {}, saveBatchEdit = async () => {},
+    updateTag = async () => {}, deleteTag = async () => {}, updateCategory = async () => {}, deleteCategory = async () => {}, addCategory = async () => {},
+    addManufacturer = async () => {}, updateManufacturer = async () => {}, deleteManufacturer = async () => {},
+    addTag = async () => {}, quickAddTag = () => {}, quickAddManufacturer = () => {},
+    updatePhoto = async () => {}, updatePhotosBulk = async () => {}
+  } = photoValue || {};
 
   const { handleError } = useErrorHandler();
   const { isAdmin } = usePermission();

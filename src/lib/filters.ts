@@ -1,5 +1,6 @@
 import { Photo, Category, Tag } from '../types';
 import { isValidPhoto } from './typeGuard';
+import { filterPhotosByMode } from '../utils/photoVisibility';
 
 export const cleanPhotos = (photos: unknown[]): Photo[] => {
   if (!Array.isArray(photos)) return [];
@@ -56,15 +57,13 @@ export function filterPhotos(
     isStaffMode = false,
   } = options;
 
-  let result = photos.map(p => ({
+  // 1. Basic Visibility Filter
+  const filteredPhotos = filterPhotosByMode(photos, isAdminMode || isStaffMode);
+
+  let result = filteredPhotos.map(p => ({
     ...p,
     _time: p.createdAtTimestamp || new Date(p.createdAt || (p as any).created_at || 0).getTime()
   }));
-
-  // 1. Basic Visibility Filter
-  if (!isAdminMode && !isStaffMode) {
-    result = result.filter(p => !p.isHidden || p.isGroupCover);
-  }
 
   // 2. Search Filter
   if (searchQuery) {

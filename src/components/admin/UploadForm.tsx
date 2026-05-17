@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
-import { Category, Tag, ProductFormData, Manufacturer, Dimension } from '../../types';
+import { Category, Tag, ProductFormData, Manufacturer, Dimension, TranslationType } from '../../types';
 import { useGalleryStore } from '../../store';
 import { useUpdateTagMutation, useDeleteTagMutation, useAddTagMutation } from '../../hooks';
 import { translations, LanguageCode } from '../../lib/translations';

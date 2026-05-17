@@ -23,6 +23,7 @@ interface Props {
   handleSingleAiAnalyze: (imageData: string | null, catId?: string, editId?: string) => Promise<any>;
   handleTranslate: (text: string, currentLang: string, targetLang: string) => Promise<string>;
   photos: Photo[];
+  t: any;
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
@@ -129,6 +130,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                 showAiButton={!!props.handleSingleAiAnalyze}
                 isAnalyzing={logic.isAnalyzing}
                 onAiAnalyze={logic.triggerAiAnalyze}
+                t={props.t}
               />
             </TabsContent>
           </div>
