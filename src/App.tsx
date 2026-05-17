@@ -9,6 +9,7 @@ import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster } from 'sonner';
 import { SimpleLogger } from './components/SimpleLogger';
+import { QueryDebugOverlay } from './components/QueryDebugOverlay';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -89,6 +90,7 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <SimpleLogger />
+      <QueryDebugOverlay />
       <AnimatedRoutes />
     </BrowserRouter>
   );
