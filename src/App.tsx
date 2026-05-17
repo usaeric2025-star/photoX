@@ -8,6 +8,7 @@ import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster } from 'sonner';
+import { SimpleLogger } from './components/SimpleLogger';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -87,6 +88,7 @@ export default function AppRoutes() {
 
   return (
     <BrowserRouter>
+      <SimpleLogger />
       <AnimatedRoutes />
     </BrowserRouter>
   );
