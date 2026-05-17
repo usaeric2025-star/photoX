@@ -7,7 +7,7 @@ import { useGalleryStore } from './store';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -57,6 +57,17 @@ export default function AppRoutes() {
 
     window.addEventListener('error', handleGlobalError);
     window.addEventListener('unhandledrejection', handlePromiseRejection);
+    
+    // Detect OAuth error in URL hash
+    const hash = window.location.hash;
+    if (hash && hash.includes('error=')) {
+        const params = new URLSearchParams(hash.substring(1));
+        const errorDescription = params.get('error_description') || 'Unknown error';
+        const errorCode = params.get('error_code') || 'OAuth Error';
+        toast.error(`${errorCode}: ${errorDescription.replace(/\+/g, ' ')}`);
+        // Clear hash to prevent error showing up on refresh
+        window.history.replaceState(null, '', window.location.pathname);
+    }
 
     // 2. Background cache cleanup
     clearExpiredCaches(7).catch(err => console.error('IndexedDB Cleanup: ', String(err)));
@@ -87,6 +98,7 @@ export default function AppRoutes() {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-center" richColors />
       <AnimatedRoutes />
     </BrowserRouter>
   );

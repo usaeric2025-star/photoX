@@ -122,6 +122,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     });
   };
 
+  const handleAddManufacturer = () => {
+    setPromptDialog({
+      title: '新增生产商 / Add Manufacturer',
+      message: '输入生产商名称 / Enter manufacturer name:',
+      onSubmit: async (name: string) => {
+        if (!name.trim()) return;
+        const normalized = normalizeManufacturerName(name);
+        if (normalized) {
+            await addManufacturer(normalized);
+        }
+      }
+    });
+  };
+
   const handleUpdateTagName = (tag: Tag) => {
     setPromptDialog({
       title: '编辑标签名 / Edit Tag Name',
@@ -212,7 +226,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         <SyncSection 
           user={user}
           loginWithGoogle={loginWithGoogle}
-          logout={logout}
+          logout={async () => logout()}
           performPushSync={performPushSync}
           performPullSync={performPullSync}
           refreshCloudData={refreshCloudData}
