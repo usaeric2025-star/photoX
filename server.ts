@@ -114,14 +114,13 @@ async function startServer() {
     app.use(express.static(distPath));
     
     // SPA Fallback: serve index.html for all non-API GET requests
-    app.use((req, res, next) => {
-      if (req.method === 'GET' && !req.path.startsWith('/api/')) {
-        const indexPath = path.join(distPath, 'index.html');
-        console.log(`Serving index.html for request: ${req.url}`);
-        res.sendFile(indexPath);
-      } else {
-        next();
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api/')) {
+        return next();
       }
+      const indexPath = path.join(distPath, 'index.html');
+      console.log(`Serving index.html for request: ${req.url}`);
+      res.sendFile(indexPath);
     });
   }
 

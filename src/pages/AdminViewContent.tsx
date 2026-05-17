@@ -46,7 +46,6 @@ import { PhotoEditDrawer } from '../components/admin/PhotoEditDrawer';
 import { usePermission } from '../hooks/usePermission';
 import { Photo, Category, Tag, Manufacturer, User } from '../types';
 import { LanguageCode } from '../lib/translations';
-import { PAGINATION } from '../constants/config';
 import { useGalleryStore } from '../store';
 
 

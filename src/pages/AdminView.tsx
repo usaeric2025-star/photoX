@@ -11,11 +11,6 @@ import { translations, LanguageCode } from '../lib/translations';
 import { AdminViewContent } from './AdminViewContent';
 import { Photo, Category, Tag, Manufacturer } from '../types';
 
-const errorGuard = (name: string) => () => {
-  console.error(`Blocked call to ${name}`);
-  throw new Error(`[Architecture Error] Illegal call to "${name}".`);
-};
-
 import { 
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
   useAddCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,
@@ -29,6 +24,11 @@ import {
 import { useGalleryStore } from '../store';
 import { PAGINATION } from '../constants/config';
 import { ProductFormData } from '../types';
+
+const errorGuard = (name: string) => () => {
+  console.error(`Blocked call to ${name}`);
+  throw new Error(`[Architecture Error] Illegal call to "${name}".`);
+};
 
 export default function AdminView() {
   const { user, authChecked, logout } = useAuth();
