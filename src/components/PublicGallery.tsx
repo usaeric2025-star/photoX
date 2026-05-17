@@ -215,17 +215,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
           />
         )}
       </div>
-      
-      {/* ⚠️ DEBUG START */}
-      <div className="fixed top-20 left-4 z-[9999] bg-white border border-red-500 p-4">
-        <p>Debug: Photos count {props.photos?.length}</p>
-        {props.photos?.slice(0, 5).map(photo => (
-          <div key={photo.id} style={{padding: 20, border: '1px solid red'}}>
-            {photo.name}
-          </div>
-        ))}
-      </div>
-      {/* ⚠️ DEBUG END */}
 
       {lightboxIndex === null && !props.isAdminMode && (
         <GalleryFloatButtons scrollToTop={scrollToTop} setShowWhatsAppChoice={setShowWhatsAppChoice} />

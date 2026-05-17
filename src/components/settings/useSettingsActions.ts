@@ -11,7 +11,7 @@ export const useSettingsActions = (
     updateTag: (id: string, name: string) => Promise<any>
 ) => {
 
-    const handleAddManufacturer = () => {
+    const handleAddManufacturer = (handleAdd: () => void) => {
         setPromptDialog({
             title: '新增生产商',
             message: '输入生产商名称:',

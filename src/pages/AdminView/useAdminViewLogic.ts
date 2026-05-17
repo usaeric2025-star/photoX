@@ -18,18 +18,15 @@ interface AdminViewLogicProps {
 export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const { user, sessionValue, photoValue, uiValue, onRefresh, performPullSync } = props;
   const { 
-    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
+    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode, tagIdToNameMap
   } = useGalleryStore();
   
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
     loadingType, withLoading, cloudCount, setCloudCount,
-    setAlertDialog, setPromptDialog, setAiDebugInfo, abortAnalysis, batchProgress,
-    aiDebugInfo: rawAiDebugInfo
+    setAlertDialog, setPromptDialog, setAiDebugInfo, abortAnalysis, batchProgress
   } = uiValue;
-  
-  const aiDebugInfo = rawAiDebugInfo || null;
 
   const {
     settings, setSettings, viewMode, setViewMode, setIsSyncing,

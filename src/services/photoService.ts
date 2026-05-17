@@ -6,7 +6,6 @@ import { createKeyedCache } from './cacheUtils';
 import { normalizeSearchQuery } from '../utils/stringHelper';
 
 export const photoCache = createKeyedCache<Photo[]>();
-photoCache.clear();
 
 export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     if (!item) return {} as Photo;
@@ -67,7 +66,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       createdAt: item.created_at as string | undefined,
       groupId: item.group_id ? String(item.group_id) : undefined,
       isGroupCover: !!item.is_group_cover,
-      isHidden: !!item.is_hidden,
+      isHidden: !!item.isHidden,
       userId: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
@@ -79,8 +78,8 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
 
 export const loadAllPhotosFromCloud = async (
   since?: string, 
-  page: number = 1, 
-  limit: number = 20,
+  page: number = 0, 
+  limit: number = 1000,
   categoryId?: string | null,
   tagId?: string | null,
   searchQuery?: string | null,
@@ -88,7 +87,7 @@ export const loadAllPhotosFromCloud = async (
 ): Promise<Photo[]> => {
   const cacheKey = JSON.stringify({ since, page, limit, categoryId, tagId, searchQuery });
   const cached = photoCache.get(cacheKey);
-  if (cached && cached.length > 0) return cached;
+  if (cached) return cached;
 
   const selectQuery = tagId 
     ? `
@@ -103,6 +102,10 @@ export const loadAllPhotosFromCloud = async (
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select(selectQuery);
+  
+  if (!isAdminMode) {
+    query = query.not('isHidden', 'is', true);
+  }
   
   if (since) {
     query = query.gt('updated_at', since);
@@ -156,7 +159,7 @@ export const loadAllPhotosFromCloud = async (
     query = query.or(orSegments.join(','));
   }
 
-  const from = (page - 1) * limit;
+  const from = page * limit;
   const to = from + limit - 1;
 
   const { data, error } = await query
@@ -173,7 +176,7 @@ export const loadAllPhotosFromCloud = async (
   return result;
 };
 
-export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {
+export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => {
   if (!groupId) return [];
   
   const cacheKey = `group_photos_${groupId}`;
@@ -184,13 +187,11 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
   }
 
   console.log(`[DB Fetch] Loading group photos for: ${groupId}`);
-  let query = supabase
+  const { data, error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('*, photo_tags(*)')
     .eq('group_id', groupId);
-  
-  const { data, error } = await query;
-  
+
   if (error) {
     console.error("[ERROR] loadPhotosByGroupId:", error);
     return [];
@@ -218,6 +219,10 @@ export const getPhotoCount = async (
     .from(DB_CONFIG.TABLE_NAME)
     .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
+  if (!isAdminMode) {
+    query = query.not('isHidden', 'is', true);
+  }
+
   if (categoryId) {
     query = query.eq('category_id', categoryId);
   }

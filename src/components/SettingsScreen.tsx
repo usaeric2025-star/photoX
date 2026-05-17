@@ -78,22 +78,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       updateTag, deleteTag, updateCategory, addCategory, 
       addManufacturer, updateManufacturer, deleteManufacturer, addTag
   } = useAdminCategory({ setAlertDialog });
-  
-  const {
-      handleAddManufacturer,
-      handleUpdateTagName,
-      handleUpdateMfrName,
-      handleUpdateCatName,
-      handleAddTag
-  } = useSettingsActions(
-      setPromptDialog,
-      addCategory,
-      updateCategory,
-      addManufacturer,
-      updateManufacturer,
-      addTag,
-      updateTag
-  );
 
   const {
     testResult,
@@ -115,10 +99,68 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
   const [newCategoryName, setNewCategoryName] = useState('');
 
-  const handleAddCategoryClick = async () => {
+
+  const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
     await addCategory(newCategoryName.trim());
     setNewCategoryName('');
+  };
+
+  const handleAddTag = () => {
+    setPromptDialog({
+      title: '新增标签',
+      message: '输入标签名称:',
+      onSubmit: async (name: string) => {
+        if (!name.trim()) return;
+        const normalized = name.trim().toUpperCase();
+        try {
+          await addTag(normalized);
+        } catch (error: any) {
+          console.error('添加标签失败', error);
+        }
+      }
+    });
+  };
+
+  const handleUpdateTagName = (tag: Tag) => {
+    setPromptDialog({
+      title: '编辑标签名 / Edit Tag Name',
+      message: '输入新的标签名称 / Enter new tag name:',
+      placeholder: tag.name,
+      onSubmit: async (newName) => {
+        const normalized = normalizeTagName(newName);
+        if (normalized && normalized !== tag.name) {
+          await updateTag(tag.id, normalized);
+        }
+      }
+    });
+  };
+
+  const handleUpdateMfrName = async (mfr: Manufacturer) => {
+    setPromptDialog({
+      title: '编辑生产商 / Edit Manufacturer',
+      message: '输入新名称 / Enter new name:',
+      placeholder: mfr.name,
+      onSubmit: async (newName) => {
+        const normalized = normalizeManufacturerName(newName);
+        if (normalized && normalized !== mfr.name) {
+          await updateManufacturer(String(mfr.id), normalized);
+        }
+      }
+    });
+  };
+
+  const handleUpdateCatName = async (cat: Category) => {
+    setPromptDialog({
+      title: '编辑分类 / Edit Category',
+      message: '输入新名称 / Enter new name:',
+      placeholder: cat.name,
+      onSubmit: async (newName) => {
+        if (newName && newName.trim() !== cat.name) {
+          await updateCategory({ id: cat.id, updates: { name: newName.trim() } });
+        }
+      }
+    });
   };
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";

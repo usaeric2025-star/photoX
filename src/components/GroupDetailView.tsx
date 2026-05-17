@@ -87,7 +87,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           .from(DB_CONFIG.TABLE_NAME)
           .select('*, photo_tags(*)')
           .eq('group_id', activeGroupId)
-          .or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true')
           .then(({ data, error }) => {
             if (error) {
               console.error(`[GroupDetailView] Error:`, error);

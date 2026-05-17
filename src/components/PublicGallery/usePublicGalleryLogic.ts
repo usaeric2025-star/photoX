@@ -85,9 +85,6 @@ export const usePublicGalleryLogic = (props: {
 
   const { displayPhotos, gridPhotos } = useMemo(() => {
     const validPhotos = (incomingPhotos && incomingPhotos.length > 0 ? incomingPhotos : localPhotos).filter(isValidPhoto);
-    console.log('[Logic] incomingPhotos:', incomingPhotos?.length)
-    console.log('[Logic] validPhotos:', validPhotos?.length)
-    console.log('[Logic] sample:', incomingPhotos?.[0])
     
     const tagMap = new Map<string, string[]>();
     contextTags.forEach(t => {
