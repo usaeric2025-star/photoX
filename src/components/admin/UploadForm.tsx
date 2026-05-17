@@ -4,6 +4,7 @@ import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save 
 import { Category, Tag, ProductFormData, Manufacturer, Dimension } from '../../types';
 import { useGalleryStore } from '../../store';
 import { useUpdateTagMutation, useDeleteTagMutation, useAddTagMutation } from '../../hooks';
+import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminPhotos } from '../../hooks/useAdminPhotos';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { DimensionEditor } from './edit/DimensionEditor';

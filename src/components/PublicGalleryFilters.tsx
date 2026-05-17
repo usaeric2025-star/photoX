@@ -46,15 +46,11 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
     if (set.size < count && sortedTags.length > 0) {
       const candidates = sortedTags.filter(t => !set.has(String(t.id)));
       
-      // Use stable picking based on ID sum to avoid flicker on every render/fetch
-      const sortedCandidates = [...candidates].sort((a, b) => {
-        const aNum = String(a.id).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-        const bNum = String(b.id).split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-        return aNum - bNum;
-      });
+      // Use stable sorting based on name to avoid random flicker
+      const sortedCandidates = [...candidates].sort((a, b) => a.name.localeCompare(b.name));
       const needed = count - set.size;
       for (let i = 0; i < needed && i < sortedCandidates.length; i++) {
-        set.add(String(sortedCandidates[i].id));
+         set.add(String(sortedCandidates[i].id));
       }
     }
     return set;

@@ -49,7 +49,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = (props) => {
       lang={props.lang}
       t={props.t}
       onScrollToTop={props.onScrollToTop}
-      showHotEffects={!props.isAdminMode}
+      showHotEffects={true}
     />
   );
 };

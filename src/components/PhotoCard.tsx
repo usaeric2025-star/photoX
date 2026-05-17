@@ -151,12 +151,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         </div>
       )}
 
-      {/* Top Left Indicators (Group only) */}
-        <div className="absolute top-1 left-1 z-10 flex gap-0.5">
+      {/* Top Left Indicators (Group and Pinned status) */}
+      <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col">
         {photo.groupId && (
           <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
             <Layers size={8} />
             {photo.groupId.slice(-4)}
+          </div>
+        )}
+        {photo.isPinned && (
+          <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm">
+            <span>置頂</span>
           </div>
         )}
       </div>

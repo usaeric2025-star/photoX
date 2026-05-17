@@ -52,10 +52,10 @@ export const TagEditor: React.FC<TagEditorProps> = ({
     
     if (set.size < count && tags.length > 0) {
       const candidates = tags.filter(t => !set.has(String(t.id)));
-      const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+      const sorted = [...candidates].sort((a, b) => a.name.localeCompare(b.name));
       const needed = count - set.size;
-      for (let i = 0; i < needed && i < shuffled.length; i++) {
-         set.add(String(shuffled[i].id));
+      for (let i = 0; i < needed && i < sorted.length; i++) {
+         set.add(String(sorted[i].id));
       }
     }
     return set;
