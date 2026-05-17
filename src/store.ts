@@ -12,7 +12,6 @@ interface GalleryState {
   selectedIds: string[];
   isMultiSelect: boolean;
   showGroupsCollapsed: boolean;
-  visibleCount: number;
   isInfiniteMode: boolean;
   isStaffMode: boolean;
   user: any;
@@ -67,8 +66,7 @@ interface GalleryState {
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   togglePhotoSelection: (id: string) => void;
   clearSelection: () => void;
-  setShowGroupsCollapsed: (collapsed: boolean) => void;
-  setVisibleCount: (count: number | ((prev: number) => number)) => void;
+  setShowGroupsCollapsed: (showGroupsCollapsed: boolean) => void;
   setIsInfiniteMode: (isInfinite: boolean) => void;
   setIsStaffMode: (isStaff: boolean) => void;
   setUser: (user: any) => void;
@@ -118,7 +116,6 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   selectedIds: [],
   isMultiSelect: false,
   showGroupsCollapsed: true,
-  visibleCount: 20,
   isInfiniteMode: false,
   isStaffMode: false,
   user: null,
@@ -187,9 +184,6 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   })),
   clearSelection: () => set({ selectedIds: [], isMultiSelect: false }),
   setShowGroupsCollapsed: (showGroupsCollapsed) => set({ showGroupsCollapsed }),
-  setVisibleCount: (visibleCount) => set((state) => ({
-    visibleCount: typeof visibleCount === 'function' ? visibleCount(state.visibleCount) : visibleCount
-  })),
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
   setIsStaffMode: (isStaffMode) => set({ isStaffMode }),
   setUser: (user) => set({ user }),

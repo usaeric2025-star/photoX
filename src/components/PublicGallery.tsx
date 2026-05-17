@@ -4,7 +4,7 @@ import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types'
 import { X, ImageIcon, Share2, Layers, ArrowUpToLine, MessageCircle, RefreshCcw } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { usePhotosQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../hooks';
+import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../hooks';
 import { useGalleryStore } from '../store';
 import { PAGINATION } from '../constants/config';
 import { PhotoCard } from './PhotoCard';
@@ -217,8 +217,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     filterTagIds: selectedTagIds, setFilterTagIds: setSelectedTagIds,
     sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed,
-    visibleCount, setVisibleCount,
-    isInfiniteMode, isStaffMode, setIsStaffMode,
+    isStaffMode, setIsStaffMode,
     selectedIds: storeSelectedIds,
     isMultiSelect: storeIsMultiSelect,
     togglePhotoSelection,
@@ -235,18 +234,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const { data: qCategories = [] } = useCategoriesQuery();
   const { data: qManufacturers = [] } = useManufacturersQuery();
   const { data: qTags = [] } = useTagsQuery();
-  const { data: qPhotos = [] } = usePhotosQuery({ userId: user?.id ?? '' }, 0, 1000);
 
   const categories = propCategories || qCategories || [];
   const manufacturers = qManufacturers;
   const contextTags = qTags;
-  const contextPhotos = qPhotos;
 
   // Derive final lists
   const localPhotos = useMemo(() => {
-    if (incomingPhotos && incomingPhotos.length > 0) return incomingPhotos;
-    return contextPhotos || [];
-  }, [incomingPhotos, contextPhotos]);
+    return incomingPhotos || [];
+  }, [incomingPhotos]);
   // Use passed in selection state if provided (for AdminGalleryShell), otherwise use store
   const activeSelectedIds = selectedIds.length > 0 || isMultiSelect ? selectedIds : storeSelectedIds;
   const activeIsMultiSelect = isMultiSelect || storeIsMultiSelect;
@@ -278,12 +274,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       });
     }
 
-    // Always run through filterPhotos to apply current search/filters
+    // The server already filters by category, tag, and search query.
+    // Applying them here immediately against keepPreviousData causes UI flashing.
     const dp = filterPhotos(validPhotos, {
-      searchQuery,
-      filterCatId: selectedCatCode,
-      filterSubId: selectedSubId,
-      filterTagIds: selectedTagIds,
+      searchQuery: '',
+      filterCatId: null,
+      filterSubId: null,
+      filterTagIds: [],
       sortOrder,
       isAdminMode,
       isStaffMode
@@ -301,16 +298,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     console.error(d.message || d.title);
     toast.error(d.message || d.title);
   });
-
-  // Handle infinite mode
-  useEffect(() => {
-    if ((isAdminMode || isStaffMode) && isInfiniteMode) {
-      setVisibleCount(PAGINATION.INFINITE_MODE_COUNT);
-    } else if (isAdminMode || isStaffMode) {
-      // In admin/staff mode but not infinite, ensure we have a reasonable starting point
-      setVisibleCount(prev => prev < PAGINATION.LAZY_LOAD_COUNT ? PAGINATION.LAZY_LOAD_COUNT : prev);
-    }
-  }, [isAdminMode, isStaffMode, isInfiniteMode, setVisibleCount]);
 
   const allTagIds = useMemo(() => {
     const ids = new Set<string>();
@@ -514,11 +501,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     }
   }, [gridPhotos]);
 
-  const photosToShow = gridPhotos;
-
   const showSkeleton = isSyncing && gridPhotos.length === 0;
 
-  const safePhotosToShow = photosToShow;
+  const safePhotosToShow = gridPhotos;
 
   const handleLoadMoreRef = useRef(handleLoadMore);
   useEffect(() => {
@@ -616,9 +601,9 @@ const virtuosoContext = useMemo(() => ({
           <VirtuosoGrid
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
-            totalCount={safePhotosToShow.length}
-            computeItemKey={(index) => {
-              const p = safePhotosToShow[index];
+            data={safePhotosToShow}
+            computeItemKey={(index, item, context) => {
+              const p = item;
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
             }}
             components={virtuosoComponents}
@@ -626,17 +611,15 @@ const virtuosoContext = useMemo(() => ({
             endReached={stableLoadMore}
             overscan={PAGINATION.VIRTUAL_SCROLL_OVERSCAN}
             listClassName={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
-            itemContent={(index) => {
-              const photo = safePhotosToShow[index];
+            itemContent={(index, photo) => {
               return (
                 <MemoizedPhotoCard
-                  key={photo ? (photo.type === 'group' ? `group-${photo.groupId}` : photo.id) : index}
                   index={index}
                   photo={photo}
                 isAdminMode={!!isAdminMode}
                 isMultiSelect={activeIsMultiSelect}
                 isStaffMode={isStaffMode}
-                isSelected={safePhotosToShow[index] ? !!activeSelectedIds.includes(safePhotosToShow[index].id) : false}
+                isSelected={photo ? !!activeSelectedIds.includes(photo.id) : false}
                 showGroupsCollapsed={showGroupsCollapsed}
                 lang={lang}
                 t={t}
@@ -647,8 +630,8 @@ const virtuosoContext = useMemo(() => ({
                 onEditPhoto={onEditPhoto}
                 onGroupClick={(gid) => {
                   setActiveGroupId(gid);
-                  if (safePhotosToShow[index]) {
-                    setActivePhotoId(safePhotosToShow[index].id);
+                  if (photo) {
+                    setActivePhotoId(photo.id);
                   }
                 }}
                 onLightboxOpen={setLightboxIndex}

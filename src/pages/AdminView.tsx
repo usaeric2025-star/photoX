@@ -73,7 +73,7 @@ export default function AdminView() {
     categoryId: filterCatId,
     tagId: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery
-  }, 50);
+  }, PAGINATION.ADMIN_BATCH_SIZE);
 
   const { data: cloudCountData = 0 } = usePhotoCountQuery({
     categoryId: filterCatId,

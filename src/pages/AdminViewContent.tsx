@@ -66,7 +66,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
   const { 
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     setUser, setIsAdminMode,
-    visibleCount, setVisibleCount, tagIdToNameMap, clearSelection, totalGridCount
+    tagIdToNameMap, clearSelection
   } = useGalleryStore();
   
   const { 
@@ -142,10 +142,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
   };
   
   const handleLoadMoreCallback = useCallback(() => {
-    if (hasNextPage) {
+    if (hasNextPage && !isFetchingNextPage) {
        performPullSync(true); // Pass true to fetch next page
     }
-  }, [hasNextPage, performPullSync]);
+  }, [hasNextPage, isFetchingNextPage, performPullSync]);
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   

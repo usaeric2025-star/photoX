@@ -24,10 +24,7 @@ export default function PublicView() {
     debouncedSearchQuery,
     setIsAdminMode,
     setIsMultiSelect,
-    setSelectedIds,
-    visibleCount,
-    setVisibleCount,
-    totalGridCount
+    setSelectedIds
   } = useGalleryStore();
 
   const { data: categoriesData = [] } = useCategoriesQuery();
