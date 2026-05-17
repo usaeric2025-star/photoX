@@ -83,7 +83,7 @@ export default function AdminView() {
   });
 
   const photos = React.useMemo(() => {
-    return infinitePhotosQuery.data?.pages.flat() || [];
+    return infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
   }, [infinitePhotosQuery.data]);
 
   useEffect(() => {

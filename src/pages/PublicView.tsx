@@ -52,7 +52,7 @@ export default function PublicView() {
   } = infiniteQuery;
 
   const photos = useMemo(() => {
-    return paginatedPhotos?.pages.flat() || [];
+    return paginatedPhotos?.pages.flatMap(p => p.photos) || [];
   }, [paginatedPhotos]);
 
   useEffect(() => {

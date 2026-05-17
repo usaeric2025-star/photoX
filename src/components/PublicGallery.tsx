@@ -135,35 +135,30 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
   const {
     hasMore,
     isSyncing,
-    onLoadMore,
     safePhotosLength,
-    textLoadMore,
     textEndOfList
   } = context || {};
 
-  return (
-    <div className="py-8 pb-10 flex flex-col items-center justify-center w-full min-h-[60px] clear-both border-t border-brand-navy/5">
-      {hasMore ? (
-        <button 
-          onClick={onLoadMore}
-          disabled={isSyncing}
-          className="px-6 py-2.5 bg-white border border-brand-navy/10 text-brand-navy text-[10px] font-black uppercase tracking-widest rounded-full shadow-sm active:scale-95 transition-all flex items-center gap-2"
-        >
-          {isSyncing ? (
-            <div className="w-3 h-3 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
-          ) : (
-            <RefreshCcw size={12} />
-          )}
-          {textLoadMore || '加载更多 / Load More'}
-        </button>
-      ) : safePhotosLength > 0 ? (
+  if (!hasMore && safePhotosLength > 0) {
+    return (
+      <div className="py-8 pb-10 flex flex-col items-center justify-center w-full clear-both border-t border-brand-navy/5">
         <div className="flex flex-col items-center gap-2 opacity-20">
           <div className="h-[1px] w-12 bg-brand-navy" />
           <p className="text-[8px] font-black uppercase tracking-[0.2em]">{textEndOfList || '已经到底了 / End'}</p>
         </div>
-      ) : null}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  if (isSyncing) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center w-full min-h-[60px]">
+        <div className="w-6 h-6 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return <div className="h-20" />; // Spacer for better scroll detection
 });
 VirtuosoGridFooter.displayName = 'VirtuosoGridFooter';
 
@@ -599,17 +594,21 @@ const virtuosoContext = useMemo(() => ({
           </div>
         ) : (
           <VirtuosoGrid
+            key={JSON.stringify({ selectedCatCode, selectedSubId, selectedTagIds, searchQuery })}
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
             data={safePhotosToShow}
-            computeItemKey={(index, item, context) => {
+            computeItemKey={(index, item) => {
               const p = item;
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
             }}
             components={virtuosoComponents}
             context={virtuosoContext}
-            endReached={stableLoadMore}
-            overscan={PAGINATION.VIRTUAL_SCROLL_OVERSCAN}
+            endReached={() => {
+              console.log('[Virtuoso] endReached - triggering handleLoadMore');
+              stableLoadMore();
+            }}
+            overscan={400}
             listClassName={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index, photo) => {
               return (

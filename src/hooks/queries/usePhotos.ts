@@ -21,18 +21,22 @@ export const usePhotosQuery = (filters: any, page: number, limit: number) => {
 export const useInfinitePhotosQuery = (filters: any, limit: number = 20) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
-    queryFn: ({ pageParam = 0 }) => loadAllPhotosFromCloud(
-      undefined,
-      pageParam as number,
-      limit,
-      filters.categoryId,
-      filters.tagId,
-      filters.searchQuery
-    ),
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === limit ? allPages.length : undefined;
+    queryFn: async ({ pageParam = 1 }) => {
+      const photos = await loadAllPhotosFromCloud(
+        undefined,
+        (pageParam as number) - 1, // Service is 0-indexed
+        limit,
+        filters.categoryId,
+        filters.tagId,
+        filters.searchQuery
+      );
+      return {
+        photos,
+        nextPage: photos.length === limit ? (pageParam as number) + 1 : undefined
+      };
     },
-    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 1,
     placeholderData: keepPreviousData,
   });
 };
