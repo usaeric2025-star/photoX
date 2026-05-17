@@ -62,9 +62,18 @@ export default function AppRoutes() {
     const hash = window.location.hash;
     if (hash && hash.includes('error=')) {
         const params = new URLSearchParams(hash.substring(1));
-        const errorDescription = params.get('error_description') || 'Unknown error';
-        const errorCode = params.get('error_code') || 'OAuth Error';
-        toast.error(`${errorCode}: ${errorDescription.replace(/\+/g, ' ')}`);
+        
+        // Build a detailed message from all parameters
+        const details: string[] = [];
+        params.forEach((value, key) => {
+            details.push(`${key}: ${decodeURIComponent(value.replace(/\+/g, ' '))}`);
+        });
+        
+        toast.error(`登录发生错误 (OAuth Error)`, {
+            description: details.join('\n'),
+            duration: 15000, // Longer duration for users to read
+        });
+        
         // Clear hash to prevent error showing up on refresh
         window.history.replaceState(null, '', window.location.pathname);
     }
