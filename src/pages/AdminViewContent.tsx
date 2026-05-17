@@ -50,7 +50,7 @@ import { PAGINATION } from '../constants/config';
 import { useGalleryStore } from '../store';
 
 
-export function AdminViewContent({ user, logout, errorContent, t, lang, sessionValue, photoValue, uiValue }: { 
+export function AdminViewContent({ user, logout, errorContent, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage }: { 
   user: User | null, 
   authChecked: boolean, 
   logout: () => void, 
@@ -59,7 +59,9 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
   lang: LanguageCode,
   sessionValue: any,
   photoValue: any,
-  uiValue: any
+  uiValue: any,
+  hasNextPage?: boolean,
+  isFetchingNextPage?: boolean
 }) {
   const { 
     gridPhotos, displayPhotos, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
@@ -140,12 +142,10 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
   };
   
   const handleLoadMoreCallback = useCallback(() => {
-    if (visibleCount < totalGridCount) {
-      setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
-    } else if (cloudCount !== null && photos.length < cloudCount) {
+    if (hasNextPage) {
         performPullSync(true); // Pass true to fetch next page
     }
-  }, [photos.length, visibleCount, totalGridCount, cloudCount, setVisibleCount, performPullSync]);
+  }, [hasNextPage, performPullSync]);
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   
@@ -345,16 +345,16 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
                                });
                              }}
                              settings={settings}
-                             isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
+                             isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push' || isFetchingNextPage}
                              hideHeader={true}
                              columns={columns}
                              setColumns={setColumns}
-                             cloudCount={cloudCount}
+                             totalCount={cloudCount}
                              user={user}
                              loginWithGoogle={loginWithGoogle}
                              onEditPhoto={(id) => setEditPhotoId(id as string)}
                              onLoadMore={handleLoadMoreCallback}
-                             hasMore={cloudCount !== null && photos.length < cloudCount}
+                             hasMore={hasNextPage}
                           />
                           <FloatingActionButton 
                             onClick={() => {
@@ -400,7 +400,7 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
                            });
                          }}
                          settings={settings}
-                         isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
+                         isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push' || isFetchingNextPage}
                          onExit={() => setViewMode('private')}
                          showExit={true}
                          onRefresh={() => {
@@ -410,11 +410,11 @@ export function AdminViewContent({ user, logout, errorContent, t, lang, sessionV
                          hideHeader={false}
                          columns={columns}
                          setColumns={setColumns}
-                         cloudCount={cloudCount}
+                         totalCount={cloudCount}
                          user={user}
                          loginWithGoogle={loginWithGoogle}
                          onLoadMore={handleLoadMoreCallback}
-                         hasMore={cloudCount !== null && photos.length < cloudCount}
+                         hasMore={hasNextPage}
                       />
                  </div>
               </div>

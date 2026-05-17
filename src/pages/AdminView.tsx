@@ -375,6 +375,8 @@ export default function AdminView() {
           sessionValue={sessionValue}
           photoValue={photoValue}
           uiValue={uiValue}
+          hasNextPage={infinitePhotosQuery.hasNextPage}
+          isFetchingNextPage={infinitePhotosQuery.isFetchingNextPage}
         />
   );
 }

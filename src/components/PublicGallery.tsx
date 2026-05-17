@@ -618,7 +618,7 @@ const virtuosoContext = useMemo(() => ({
           <VirtuosoGrid
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
-            totalCount={totalCount || safePhotosToShow.length}
+            totalCount={safePhotosToShow.length}
             computeItemKey={(index) => {
               const p = safePhotosToShow[index];
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
@@ -627,7 +627,7 @@ const virtuosoContext = useMemo(() => ({
             context={virtuosoContext}
             endReached={stableLoadMore}
             overscan={PAGINATION.VIRTUAL_SCROLL_OVERSCAN}
-            listClassName={`grid gap-3 p-2 pb-24 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
+            listClassName={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index) => (
               <MemoizedPhotoCard
                 key={index}
