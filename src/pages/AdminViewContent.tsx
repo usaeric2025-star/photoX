@@ -28,7 +28,6 @@ import {
   useSettingsMutation,
   useBatchEditMutation,
   useSyncMutation,
-  usePhotosQuery,
   useCategoriesQuery,
   useTagsQuery,
   useManufacturersQuery,
@@ -47,6 +46,7 @@ import { usePermission } from '../hooks/usePermission';
 import { Photo, Category, Tag, Manufacturer, User } from '../types';
 import { LanguageCode } from '../lib/translations';
 import { useGalleryStore } from '../store';
+import { PAGINATION } from '../constants/config';
 
 
 export function AdminViewContent({ user, logout, errorContent, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage }: { 

@@ -139,9 +139,20 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
     textEndOfList
   } = context || {};
 
+  if (isSyncing) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center w-full min-h-[100px]">
+        <div className="flex items-center gap-3 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm border border-brand-navy/10">
+          <div className="w-4 h-4 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-brand-navy/60">加载中 / Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   if (!hasMore && safePhotosLength > 0) {
     return (
-      <div className="py-8 pb-10 flex flex-col items-center justify-center w-full clear-both border-t border-brand-navy/5">
+      <div className="py-12 pb-16 flex flex-col items-center justify-center w-full clear-both border-t border-brand-navy/5 bg-brand-navy/[0.02]">
         <div className="flex flex-col items-center gap-2 opacity-20">
           <div className="h-[1px] w-12 bg-brand-navy" />
           <p className="text-[8px] font-black uppercase tracking-[0.2em]">{textEndOfList || '已经到底了 / End'}</p>
@@ -150,15 +161,7 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
     );
   }
 
-  if (isSyncing) {
-    return (
-      <div className="py-8 flex flex-col items-center justify-center w-full min-h-[60px]">
-        <div className="w-6 h-6 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  return <div className="h-20" />; // Spacer for better scroll detection
+  return <div className="h-40" />; // Large spacer for better scroll detection
 });
 VirtuosoGridFooter.displayName = 'VirtuosoGridFooter';
 
@@ -483,42 +486,20 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [t, activeGroupId, lang]);
 
   const handleLoadMore = useCallback(() => {
-    if (onLoadMore) {
+    if (onLoadMore && hasMore && !isSyncing) {
       onLoadMore();
     }
-  }, [onLoadMore]);
-
-  const prevPhotosRef = useRef<any[]>([]);
-  useEffect(() => {
-    // Only update ref if new photos are not empty to preserve last valid state
-    if (gridPhotos && gridPhotos.length > 0) {
-      prevPhotosRef.current = gridPhotos;
-    }
-  }, [gridPhotos]);
+  }, [onLoadMore, hasMore, isSyncing]);
 
   const showSkeleton = isSyncing && gridPhotos.length === 0;
 
-  const safePhotosToShow = gridPhotos;
-
-  const handleLoadMoreRef = useRef(handleLoadMore);
-  useEffect(() => {
-    handleLoadMoreRef.current = handleLoadMore;
-  }, [handleLoadMore]);
-
-  const stableLoadMore = useCallback(() => {
-    if (handleLoadMoreRef.current) {
-        handleLoadMoreRef.current();
-    }
-  }, []);
-
-const virtuosoContext = useMemo(() => ({
+  const virtuosoContext = useMemo(() => ({
     hasMore: hasMore,
     isSyncing,
-    onLoadMore: stableLoadMore,
-    safePhotosLength: safePhotosToShow.length,
+    safePhotosLength: gridPhotos.length,
     textLoadMore: t.loadMore,
     textEndOfList: t.endOfList
-  }), [hasMore, isSyncing, stableLoadMore, safePhotosToShow.length, t.loadMore, t.endOfList]);
+  }), [hasMore, isSyncing, gridPhotos.length, t.loadMore, t.endOfList]);
 
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
@@ -585,7 +566,7 @@ const virtuosoContext = useMemo(() => ({
               <PhotoCardSkeleton key={i} />
             ))}
           </div>
-        ) : safePhotosToShow.length === 0 ? (
+        ) : gridPhotos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-brand-navy/20">
             <div className="w-16 h-16 bg-white/40 rounded-full flex items-center justify-center mb-4 border border-white shadow-sm">
                 <ImageIcon size={32} className="opacity-20" />
@@ -597,7 +578,7 @@ const virtuosoContext = useMemo(() => ({
             key={JSON.stringify({ selectedCatCode, selectedSubId, selectedTagIds, searchQuery })}
             ref={virtuosoRef}
             style={{ height: '100%', width: '100%' }}
-            data={safePhotosToShow}
+            data={gridPhotos}
             computeItemKey={(index, item) => {
               const p = item;
               return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
@@ -605,10 +586,11 @@ const virtuosoContext = useMemo(() => ({
             components={virtuosoComponents}
             context={virtuosoContext}
             endReached={() => {
-              console.log('[Virtuoso] endReached - triggering handleLoadMore');
-              stableLoadMore();
+              console.log('[Virtuoso] endReached TRIGGERED');
+              handleLoadMore();
             }}
-            overscan={400}
+            overscan={800}
+            increaseViewportBy={300}
             listClassName={`grid gap-3 p-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
             itemContent={(index, photo) => {
               return (
@@ -639,7 +621,7 @@ const virtuosoContext = useMemo(() => ({
                 shareSinglePhoto={shareSinglePhoto}
                 onTogglePinned={onTogglePinned}
                 displayPhotos={displayPhotos}
-                gridPhotos={safePhotosToShow}
+                gridPhotos={gridPhotos}
                 />
               );
             }}

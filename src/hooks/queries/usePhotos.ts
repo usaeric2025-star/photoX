@@ -2,22 +2,6 @@ import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-qu
 import { loadAllPhotosFromCloud, loadPhotosByGroupId, getPhotoCount } from '../../services/photoService';
 import { QUERY_KEYS } from './keys';
 
-export const usePhotosQuery = (filters: any, page: number, limit: number) => {
-  const result = useQuery({
-    queryKey: QUERY_KEYS.photos({ ...filters, page, limit }),
-    queryFn: () => loadAllPhotosFromCloud(
-      undefined, 
-      page, 
-      limit, 
-      filters.categoryId, 
-      filters.tagId, 
-      filters.searchQuery
-    ),
-    placeholderData: keepPreviousData,
-  });
-  return { ...result, data: result.data ?? [] };
-};
-
 export const useInfinitePhotosQuery = (filters: any, limit: number = 20) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
@@ -38,6 +22,7 @@ export const useInfinitePhotosQuery = (filters: any, limit: number = 20) => {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     placeholderData: keepPreviousData,
+    staleTime: 1000 * 30, // 30 seconds
   });
 };
 

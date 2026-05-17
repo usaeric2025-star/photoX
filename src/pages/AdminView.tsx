@@ -17,7 +17,7 @@ import {
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
   useUpdatePhotoMutation, useBatchEditMutation, useDeletePhotoMutation, useGroupPhotosMutation, useUngroupMutation,
   useGroupsQuery, useSettingsMutation, useSyncMutation,
-  useAdminDialogs, useLoading, usePhotosQuery, useInfinitePhotosQuery, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
+  useAdminDialogs, useLoading, useInfinitePhotosQuery, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
   useSyncEngine, usePhotoManagement, useAdminPhotos, useAdminCategory
 } from '../hooks';
 

@@ -3,14 +3,14 @@ import path from "path";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.NODE_ENV === "production" ? (Number(process.env.PORT) || 3000) : 3000;
 
   // Basic middleware
   app.use(express.json({ limit: '50mb' }));
 
   // Health check
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", uptime: process.uptime() });
+    res.json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
   });
 
   // AI Proxy Endpoint
@@ -108,19 +108,35 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
+    
+    // In dev mode, Vite middleware handles most SPA routes, but let's be explicit
+    // if Vite passes through.
+    app.get('*all', (req, res, next) => {
+      if (req.path.startsWith('/api/') || req.path.includes('.')) {
+        return next();
+      }
+      // Vite handles this usually, but a fallback helps
+      next();
+    });
   } else {
     console.log("Starting server in PRODUCTION mode...");
     const distPath = path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
     
     // SPA Fallback: serve index.html for all non-API GET requests
-    app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api/')) {
+    app.get('*all', (req, res, next) => {
+      // Avoid serving index.html for specific files or api
+      if (req.path.startsWith('/api/') || req.path.includes('.')) {
         return next();
       }
+      
       const indexPath = path.join(distPath, 'index.html');
-      console.log(`Serving index.html for request: ${req.url}`);
-      res.sendFile(indexPath);
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error("Error sending index.html:", err);
+          res.status(500).send("Server Error: index.html not found");
+        }
+      });
     });
   }
 
