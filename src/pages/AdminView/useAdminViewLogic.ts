@@ -25,7 +25,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
     loadingType, withLoading, cloudCount, setCloudCount,
-    setAlertDialog, setPromptDialog, setAiDebugInfo, abortAnalysis, batchProgress
+    setAlertDialog, setPromptDialog, setAiDebugInfo, abortAnalysis, batchProgress, aiDebugInfo
   } = uiValue;
 
   const {
