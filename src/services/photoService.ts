@@ -66,7 +66,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       createdAt: item.created_at as string | undefined,
       groupId: item.group_id ? String(item.group_id) : undefined,
       isGroupCover: !!item.is_group_cover,
-      isHidden: !!item.isHidden,
+      isHidden: !!item.is_hidden,
       userId: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
@@ -78,8 +78,8 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
 
 export const loadAllPhotosFromCloud = async (
   since?: string, 
-  page: number = 0, 
-  limit: number = 1000,
+  page: number = 1, 
+  limit: number = 20,
   categoryId?: string | null,
   tagId?: string | null,
   searchQuery?: string | null,
@@ -104,7 +104,7 @@ export const loadAllPhotosFromCloud = async (
     .select(selectQuery);
   
   if (!isAdminMode) {
-    // query = query.or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true');
+    query = query.or('is_hidden.eq.false,is_hidden.is.null,is_group_cover.eq.true');
   }
   
   if (since) {
@@ -159,7 +159,7 @@ export const loadAllPhotosFromCloud = async (
     query = query.or(orSegments.join(','));
   }
 
-  const from = page * limit;
+  const from = (page - 1) * limit;
   const to = from + limit - 1;
 
   const { data, error } = await query
@@ -193,7 +193,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     .eq('group_id', groupId);
   
   if (!isAdminMode) {
-    query = query.or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true');
+    query = query.or('is_hidden.eq.false,is_hidden.is.null,is_group_cover.eq.true');
   }
   
   const { data, error } = await query;
@@ -226,7 +226,7 @@ export const getPhotoCount = async (
     .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
   if (!isAdminMode) {
-    query = query.or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true');
+    query = query.or('is_hidden.eq.false,is_hidden.is.null,is_group_cover.eq.true');
   }
 
   if (categoryId) {

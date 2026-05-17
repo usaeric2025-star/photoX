@@ -95,6 +95,7 @@ export const useAdminDataPrep = () => {
     return infinitePhotosQuery.refetch();
   }, [handleLoadMoreAdmin, infinitePhotosQuery]);
 
+  const { mutateAsync: handleGroupPhotos } = useGroupPhotosMutation();
   const { mutateAsync: handleUngroup } = useUngroupMutation();
   const { mutateAsync: saveSettings } = useSettingsMutation();
 
