@@ -35,6 +35,12 @@ export default function PublicView() {
     isAdminMode: false
   }, PAGINATION.PUBLIC_PAGE_SIZE);
 
+  console.log('[DEBUG] PublicView 数据:', {
+    有数据: !!infiniteQuery.data,
+    pages数量: infiniteQuery.data?.pages?.length,
+    第一页照片数: infiniteQuery.data?.pages?.[0]?.photos?.length
+  });
+
   const { data: countData } = usePhotoCountQuery({
     categoryId: filterCatId,
     tagId: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,

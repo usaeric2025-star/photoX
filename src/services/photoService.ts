@@ -104,7 +104,7 @@ export const loadAllPhotosFromCloud = async (
     .select(selectQuery);
   
   if (!isAdminMode) {
-    query = query.or('is_hidden.eq.false,is_hidden.is.null,is_group_cover.eq.true');
+    query = query.or('isHidden.eq.false,isHidden.is.null,isGroupCover.eq.true');
   }
   
   if (since) {
@@ -162,9 +162,24 @@ export const loadAllPhotosFromCloud = async (
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
+  console.log('[DEBUG] photoService 查询:', {
+    from,
+    to,
+    limit,
+    page,
+    hasCategoryId: !!categoryId,
+    hasTagId: !!tagId,
+    hasSearch: !!searchQuery
+  });
+
   const { data, error } = await query
     .order('created_at', { ascending: false })
     .range(from, to);
+  
+  console.log('[DEBUG] photoService 返回:', {
+    数据条数: data?.length,
+    错误: error?.message
+  });
   
   if (error) {
     console.error("[ERROR] Supabase Fetch Error (loadAllPhotosFromCloud):", error);
@@ -193,7 +208,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     .eq('group_id', groupId);
   
   if (!isAdminMode) {
-    query = query.or('is_hidden.eq.false,is_hidden.is.null,is_group_cover.eq.true');
+    query = query.or('isHidden.eq.false,isHidden.is.null,isGroupCover.eq.true');
   }
   
   const { data, error } = await query;
@@ -226,7 +241,7 @@ export const getPhotoCount = async (
     .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
   if (!isAdminMode) {
-    query = query.or('is_hidden.eq.false,is_hidden.is.null,is_group_cover.eq.true');
+    query = query.or('isHidden.eq.false,isHidden.is.null,isGroupCover.eq.true');
   }
 
   if (categoryId) {
