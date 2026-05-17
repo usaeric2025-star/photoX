@@ -15,11 +15,11 @@
     *   `image_url`, `thumb_url`, `image_hash`
     *   `created_at`, `updated_at` (追踪时间)
     *   `group_id`, `is_group_cover`, `group_order` (群组相关)
-    *   `isHidden`, `is_pinned` (状态标记)
+    *   `is_hidden`, `is_pinned` (状态标记)
 *   **命名规则**：
     *   Database：主要使用下划线 (`snake_case`)，如 `image_url`, `created_at`。
     *   型别转换：前端 `Photo` 型别使用驼峰 (`camelCase`)，由 `mapSupabasePhoto` 处理。
-    *   注意事项：数据库对 `isHidden` 等栏位可能因数据库型别差异导致大小写不敏感，前端需统一处理。
+    *   注意事项：数据库对 `is_hidden` 等栏位可能因数据库型别差异导致大小写不敏感，前端需统一处理。
 *   **常见坑点**：曾发生过查询时使用 `group_order` 栏位但数据库未定义的错误，现已改为备援使用 `created_at`。
 
 ## 第二部分：数据流程

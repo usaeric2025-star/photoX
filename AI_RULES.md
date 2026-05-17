@@ -161,9 +161,9 @@ const uiValueForLogin = React.useMemo(() => ({
 2.  所有对 `furniture_items` 表的写操作必须通过 `src/services/photoMutationService.ts` 中的统一函数进行。
 3.  严禁在调用处自行组装数据库字段，字段映射和过滤逻辑由服务层统一处理。
 4.  写入操作时，数据对象的字段名必须使用驼峰（如 groupId、isHidden）。
-    - **NEVER** use `is_hidden` (snake_case).
-    - **ALWAYS** use `isHidden` (camelCase) for both UI state and database persistence fields.
-    - Our database uses `isHidden` as the column name.
+    - **ALWAYS** use `is_hidden` (snake_case).
+    - **ALWAYS** use `is_hidden` (snake_case) for both UI state and database persistence fields.
+    - Our database uses `is_hidden` as the column name.
 5.  任何组件、Hook、页面不得直接调用 `supabase.from('groups').update` 或 `insert`。
 6.  所有对 `groups` 表的写操作必须通过 `src/services/groupMutationService.ts` 中的统一函数进行。
 

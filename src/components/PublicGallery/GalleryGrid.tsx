@@ -110,7 +110,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
       data={props.gridPhotos}
       computeItemKey={(index, item) => {
         const p = item as Photo;
-        return p ? (p.type === 'group' ? `group-${p.groupId}` : `photo-${p.id}`) : `loading-${index}`;
+        return p ? (p.type === 'group' ? `group-${p.groupId}-${index}` : `photo-${p.id}-${index}`) : `loading-${index}`;
       }}
       components={props.virtuosoComponents}
       context={props.virtuosoContext}

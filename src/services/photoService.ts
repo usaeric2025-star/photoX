@@ -50,7 +50,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     }
 
     return {
-      id: item.id as string,
+      id: String(item.id),
       storageId: storageId,
       item_code: item.item_code as string | undefined,
       manual_code: item.manual_code as string | undefined,
@@ -66,7 +66,8 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       createdAt: item.created_at as string | undefined,
       groupId: item.group_id ? String(item.group_id) : undefined,
       isGroupCover: !!item.is_group_cover,
-      isHidden: !!item.isHidden,
+      isHidden: !!item.is_hidden,
+      isPinned: !!item.is_pinned || !!(item as any).isPinned,
       userId: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
@@ -104,7 +105,7 @@ export const loadAllPhotosFromCloud = async (
     .select(selectQuery);
   
   if (!isAdminMode) {
-    query = query.not('isHidden', 'is', true);
+    query = query.or('is_hidden.is.null,is_hidden.eq.false');
   }
   
   if (since) {
@@ -163,6 +164,7 @@ export const loadAllPhotosFromCloud = async (
   const to = from + limit - 1;
 
   const { data, error } = await query
+    .order('is_pinned', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .range(from, to);
   
@@ -220,7 +222,7 @@ export const getPhotoCount = async (
     .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
   if (!isAdminMode) {
-    query = query.not('isHidden', 'is', true);
+    query = query.or('is_hidden.is.null,is_hidden.eq.false');
   }
 
   if (categoryId) {

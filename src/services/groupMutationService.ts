@@ -12,7 +12,7 @@ const ALLOWED_FIELDS = [
 const FIELD_MAP: Record<string, string> = {
     coverPhotoId: 'cover_photo_id',
     userId: 'user_id',
-    isHidden: 'isHidden',
+    isHidden: 'is_hidden',
     createdAt: 'created_at',
     updatedAt: 'updated_at',
 };
