@@ -6,7 +6,7 @@ export function isValidPhoto(photo: unknown): photo is Photo {
     p &&
     typeof p.id === 'string' &&
     (typeof p.name === 'string' || p.name === null || p.name === undefined) &&
-    Array.isArray(p.tagIds) &&
-    Array.isArray(p.dimensions)
+    (Array.isArray(p.tagIds) || p.tagIds == null) &&
+    (Array.isArray(p.dimensions) || p.dimensions == null)
   );
 }

@@ -62,6 +62,9 @@ export function filterPhotos(
   }));
 
   // 1. Basic Visibility Filter
+  console.log('[Filter] sample isHidden:', 
+    result.slice(0,3).map(p => ({ name: p.name, isHidden: p.isHidden, isGroupCover: p.isGroupCover }))
+  )
   if (!isAdminMode && !isStaffMode) {
     result = result.filter(p => !p.isHidden || p.isGroupCover);
   }

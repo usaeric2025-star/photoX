@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Global log storage
 (window as any).appLogs = [];
@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 export const SimpleLogger: React.FC = () => {
   const [logs, setLogs] = useState<string[]>([]);
   const [visible, setVisible] = useState(false);
+  const logsRef = useRef<string[]>((window as any).appLogs);
 
   useEffect(() => {
     const originalLog = console.log;
@@ -15,19 +16,25 @@ export const SimpleLogger: React.FC = () => {
       originalLog(...args);
       const log = args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
       (window as any).appLogs.push(log);
-      setLogs([...(window as any).appLogs]);
+      logsRef.current = [...(window as any).appLogs];
     };
 
     console.error = (...args) => {
       originalError(...args);
       const log = 'ERROR: ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
       (window as any).appLogs.push(log);
-      setLogs([...(window as any).appLogs]);
+      logsRef.current = [...(window as any).appLogs];
     };
+
+    // Update state periodically to show logs
+    const interval = setInterval(() => {
+      setLogs(logsRef.current);
+    }, 1000);
 
     return () => {
       console.log = originalLog;
       console.error = originalError;
+      clearInterval(interval);
     };
   }, []);
 
