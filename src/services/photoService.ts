@@ -6,6 +6,7 @@ import { createKeyedCache } from './cacheUtils';
 import { normalizeSearchQuery } from '../utils/stringHelper';
 
 export const photoCache = createKeyedCache<Photo[]>();
+photoCache.clear();
 
 export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     if (!item) return {} as Photo;
@@ -87,7 +88,7 @@ export const loadAllPhotosFromCloud = async (
 ): Promise<Photo[]> => {
   const cacheKey = JSON.stringify({ since, page, limit, categoryId, tagId, searchQuery });
   const cached = photoCache.get(cacheKey);
-  if (cached) return cached;
+  if (cached && cached.length > 0) return cached;
 
   const selectQuery = tagId 
     ? `
@@ -102,10 +103,6 @@ export const loadAllPhotosFromCloud = async (
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select(selectQuery);
-  
-  if (!isAdminMode) {
-    query = query.or('"isHidden".eq.false,"isHidden".is.null,is_group_cover.eq.true');
-  }
   
   if (since) {
     query = query.gt('updated_at', since);
@@ -192,10 +189,6 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     .select('*, photo_tags(*)')
     .eq('group_id', groupId);
   
-  if (!isAdminMode) {
-    query = query.or('"isHidden".eq.false,"isHidden".is.null,is_group_cover.eq.true');
-  }
-  
   const { data, error } = await query;
   
   if (error) {
@@ -225,10 +218,6 @@ export const getPhotoCount = async (
     .from(DB_CONFIG.TABLE_NAME)
     .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
-  if (!isAdminMode) {
-    query = query.or('"isHidden".eq.false,"isHidden".is.null,is_group_cover.eq.true');
-  }
-
   if (categoryId) {
     query = query.eq('category_id', categoryId);
   }
