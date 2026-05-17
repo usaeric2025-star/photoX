@@ -18,7 +18,7 @@ interface AdminViewLogicProps {
 export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const { user, sessionValue, photoValue, uiValue, onRefresh, performPullSync } = props;
   const { 
-    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
+    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
     setUser, setIsAdminMode, tagIdToNameMap
   } = useGalleryStore();
   
