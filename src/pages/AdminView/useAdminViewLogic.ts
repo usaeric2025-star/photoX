@@ -22,10 +22,15 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     setUser, setIsAdminMode, tagIdToNameMap
   } = useGalleryStore();
   
+  const clearSelection = useCallback(() => {
+    setIsMultiSelect(false);
+    setSelectedIds([]);
+  }, [setIsMultiSelect, setSelectedIds]);
+  
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
     loadingType, withLoading, cloudCount, setCloudCount,
-    setAlertDialog, setPromptDialog, setAiDebugInfo, abortAnalysis, batchProgress
+    setAlertDialog, setPromptDialog, setAiDebugInfo, aiDebugInfo, abortAnalysis, batchProgress
   } = uiValue;
 
   const {
