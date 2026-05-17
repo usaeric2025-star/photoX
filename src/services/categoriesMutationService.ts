@@ -11,8 +11,8 @@ const FIELD_MAP: Record<string, string> = {
     sortOrder: 'sort_order',
 };
 
-const mapToDb = (updates: Partial<Category> & Record<string, any>, isCreate = false): Record<string, any> => {
-    const dbUpdates: any = {};
+const mapToDb = (updates: Partial<Category> & Record<string, unknown>, isCreate = false): Record<string, unknown> => {
+    const dbUpdates: Record<string, unknown> = {};
 
     // Filter
     for (const key of ALLOWED_FIELDS) {

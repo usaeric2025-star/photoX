@@ -54,11 +54,11 @@ export const uploadImages = async (
     // Generate versions with compression
     onStatus?.('compressing');
     const originalBase64 = await compressImage(base64Data, 1200, 0.8);
-    let thumbBase64;
+    let thumbBase64: string;
     try {
         thumbBase64 = await compressImage(base64Data, 300, 0.5);
-    } catch (e: any) {
-        if (e.name === 'QuotaExceededError') {
+    } catch (e: unknown) {
+        if ((e as Error).name === 'QuotaExceededError') {
              thumbBase64 = originalBase64;
         } else {
              throw e;
@@ -103,8 +103,9 @@ export const uploadImages = async (
     const thumbUrl = await uploadFile(thumbBase64, `public/thumb_${photoId}.webp`);
 
     return { imageUrl, thumbUrl };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Image processing or upload failed:", err);
-    throw new Error(`图片处理异常: ${err.message || '请检查网络'}`);
+    const error = err as Error;
+    throw new Error(`图片处理异常: ${error.message || '请检查网络'}`);
   }
 };

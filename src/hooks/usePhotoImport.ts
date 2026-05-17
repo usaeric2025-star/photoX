@@ -47,8 +47,8 @@ const cleanAiName = (name: string | null | undefined): string | null => {
 
 export const usePhotoImport = (
   user: User | null,
-  adminUI: any,
-  adminSession: any,
+  adminUI: { setActiveScreen: (s: 'home' | 'manage' | 'login') => void } | null,
+  adminSession: { setIsSyncing: (v: boolean) => void } | null,
   geminiApiKey: string | undefined,
   aiProvider: string,
   customModel: string,
@@ -57,13 +57,13 @@ export const usePhotoImport = (
   manufacturers: Manufacturer[],
   setCloudCount: (c: number | null) => void,
   addManufacturer: (name: string) => Promise<Manufacturer>,
-  runWithLoading: <T>(state: any, fn: () => Promise<T>) => Promise<T>,
-  addTask: (task: any) => string,
-  updateTask: (id: string, updates: any) => void,
+  runWithLoading: <T>(state: string, fn: () => Promise<T>) => Promise<T>,
+  addTask: (task: Omit<import('../types').Task, 'id'>) => string,
+  updateTask: (id: string, updates: Partial<import('../types').Task>) => void,
   abortAnalysis: () => void,
   tagNameToIdMap: Map<string, string>,
   photosRef: React.MutableRefObject<Photo[]>,
-  handleError: (error: any, context?: string) => void
+  handleError: (error: unknown, context?: string) => void
 ) => {
   const queryClient = useQueryClient();
   const [importProgress, setImportProgress] = useState(0);
@@ -104,6 +104,7 @@ export const usePhotoImport = (
       if (useAi && sFileArray.length > 0) {
         aiTaskId = addTask({
           name: `导入照片 AI 识别 (${sFileArray.length} 张)`,
+          status: 'running',
           onCancel: () => abortAnalysis()
         });
       }
@@ -170,7 +171,7 @@ export const usePhotoImport = (
           if (useAi) {
             (async (targetId: string, targetUri: string, initialPhoto: Photo) => {
                try {
-                 const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
+                 const apiKey = geminiApiKey;
                  const resRaw = await analyzeProductPhoto(targetUri, categories, tags, manufacturers, apiKey, aiProvider, customModel);
                  const result = cleanObject(resRaw);
                  const aiName = cleanAiName(result.name);
@@ -226,7 +227,6 @@ export const usePhotoImport = (
       } 
       
       saveData('product_photos', photosRef.current);
-      setCloudCount(photosRef.current.length);
       setIsSyncing(false);
       
       if (successCount > 0 || duplicateCount > 0 || failCount > 0) {

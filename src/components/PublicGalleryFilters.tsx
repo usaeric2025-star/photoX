@@ -171,7 +171,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="relative overflow-hidden">
           <div className="flex flex-wrap gap-1.5 items-start max-h-[80px] overflow-y-auto pb-4 content-start scrollbar-hide">
-              {React.useMemo(() => {
+            {React.useMemo(() => {
                 return [...sortedTags].sort((a, b) => {
                   const aPinned = (settings?.pinnedTags || []).includes(String(a.id));
                   const bPinned = (settings?.pinnedTags || []).includes(String(b.id));
@@ -187,7 +187,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 });
               }, [sortedTags, settings?.pinnedTags, hotTagsSet]).map(tag => {
                 const strTagId = String(tag.id);
-                const isSelected = selectedTagIds.includes(strTagId);
+                const isSelected = (selectedTagIds || []).includes(strTagId);
                 const isHot = hotTagsSet.has(strTagId);
                 const isPinned = (settings?.pinnedTags || []).includes(strTagId);
                 
@@ -195,7 +195,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   <button 
                     key={strTagId}
                     onClick={() => { 
-                      setSelectedTagIds(prev => prev.includes(strTagId) ? [] : [strTagId]);
+                      setSelectedTagIds(prev => (prev || []).includes(strTagId) ? [] : [strTagId]);
                       setSelectedCatCode(null);
                       setSelectedSubId(null);
                     }}

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
-import { Photo, User, Manufacturer } from '../types';
+import { Photo, User, Manufacturer, Category, Tag } from '../types';
 import { translateDescription } from '../services/geminiService';
 import { saveData } from '../utils/indexedDB';
 import { useGalleryStore } from '../store';
@@ -19,27 +19,33 @@ export const useAdminPhotos = (
   geminiApiKey: string | undefined, 
   aiProvider: string, 
   customModel: string,
+  data: {
+    photos: Photo[];
+    categories: Category[];
+    tags: Tag[];
+    manufacturers: Manufacturer[];
+  },
   adminUI?: {
     cloudCount: number | null;
     setCloudCount: (c: number | null) => void;
-    loadingState?: any;
-    setLoadingState?: (s: any) => void;
-    setAlertDialog: (d: any | null) => void;
+    loadingState?: string;
+    setLoadingState?: (s: string) => void;
+    setAlertDialog: (d: import('../types').DialogData | null) => void;
     setActiveScreen: (s: 'home' | 'manage' | 'login') => void;
     abortAnalysis: () => void;
-    withLoading?: <T>(state: any, fn: () => Promise<T>) => Promise<T>;
+    withLoading?: <T>(state: string, fn: () => Promise<T>) => Promise<T>;
   },
   adminSession?: {
     setIsSyncing: (v: boolean) => void;
   },
   addManufacturer?: (name: string) => Promise<Manufacturer>
 ) => {
-  const {
-    photos,
-    categories,
-    tags, tagIdToNameMap,
-    manufacturers
-  } = useGalleryStore();
+  const { photos, categories, tags, manufacturers } = data;
+
+  const tagIdToNameMap = tags.reduce((acc, tag) => {
+    acc[tag.id] = tag.name;
+    return acc;
+  }, {} as Record<string, string>);
 
   const tagNameToIdMap = tags.reduce((acc, tag) => {
     acc.set(tag.name.toLowerCase(), tag.id);
@@ -60,7 +66,7 @@ export const useAdminPhotos = (
   const currentLoadingState = adminUI?.loadingState !== undefined ? adminUI.loadingState : internalLoadingState;
   const setLoadingState = uiSetLoadingState || setInternalLoadingState;
 
-  const runWithLoading = async <T,>(state: any, fn: () => Promise<T>): Promise<T> => {
+  const runWithLoading = async <T,>(state: string, fn: () => Promise<T>): Promise<T> => {
       if (adminUI?.withLoading) {
           return adminUI.withLoading(state, fn);
       }
@@ -136,7 +142,7 @@ export const useAdminPhotos = (
     batchProgress: aiHook.batchProgress,
     abortAnalysis: aiHook.abortAnalysis,
     handleTranslate: async (zhText: string) => {
-      const apiKey = geminiApiKey || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
+      const apiKey = geminiApiKey;
       if (!apiKey) throw new Error('请先在设置中设定 AI 密钥');
       return await translateDescription(zhText, apiKey, customModel);
     },

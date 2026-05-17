@@ -2,7 +2,7 @@ import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-qu
 import { loadAllPhotosFromCloud, loadPhotosByGroupId, getPhotoCount } from '../../services/photoService';
 import { QUERY_KEYS } from './keys';
 
-export const useInfinitePhotosQuery = (filters: any, limit: number = 20) => {
+export const useInfinitePhotosQuery = (filters: { categoryId?: string | null; tagId?: string | null; searchQuery?: string | null; isAdminMode?: boolean }, limit: number = 20) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
     queryFn: async ({ pageParam = 1 }) => {
@@ -12,7 +12,8 @@ export const useInfinitePhotosQuery = (filters: any, limit: number = 20) => {
         limit,
         filters.categoryId,
         filters.tagId,
-        filters.searchQuery
+        filters.searchQuery,
+        filters.isAdminMode || false
       );
       return {
         photos,
@@ -26,18 +27,18 @@ export const useInfinitePhotosQuery = (filters: any, limit: number = 20) => {
   });
 };
 
-export const usePhotoCountQuery = (filters: any) => {
+export const usePhotoCountQuery = (filters: { categoryId?: string | null; tagId?: string | null; searchQuery?: string | null }, isAdminMode: boolean = false) => {
   return useQuery({
-    queryKey: QUERY_KEYS.photoCount(filters),
-    queryFn: () => getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery),
+    queryKey: QUERY_KEYS.photoCount({ ...filters, isAdminMode }),
+    queryFn: () => getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdminMode),
     placeholderData: keepPreviousData,
   });
 };
 
-export const useGroupPhotosQuery = (groupId: string) => {
+export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = false) => {
   return useQuery({
     queryKey: QUERY_KEYS.groupPhotos(groupId),
-    queryFn: () => loadPhotosByGroupId(groupId),
+    queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
     placeholderData: keepPreviousData,
   });

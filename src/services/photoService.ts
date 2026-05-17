@@ -27,12 +27,12 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     let tagIds: string[] = [];
     if (Array.isArray(item.photo_tags)) {
       tagIds = item.photo_tags
-        .map((pt: any) => {
+        .map((pt: { tag_id?: string | number; tags?: { id: string | number }; id?: string | number }) => {
           if (pt == null) return null;
           if (typeof pt === 'object') {
-            const typedPt = pt as Record<string, any>;
+            const typedPt = pt;
             if (typedPt.tag_id != null) return String(typedPt.tag_id);
-            if (typedPt.tags && (typedPt.tags as Record<string, any>).id != null) return String((typedPt.tags as Record<string, any>).id);
+            if (typedPt.tags && typedPt.tags.id != null) return String(typedPt.tags.id);
             if (typedPt.id != null) return String(typedPt.id);
           }
           return String(pt);
@@ -40,10 +40,10 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
         .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
     } else if (Array.isArray(item.tags)) {
       // Fallback in case tags are returned directly
-      tagIds = (item.tags as any[])
-        .map((t: any) => {
+      tagIds = (item.tags as { id: string | number }[])
+        .map((t: { id?: string | number } | string | number) => {
           if (t == null) return null;
-          if (typeof t === 'object' && (t as Record<string, any>).id != null) return String((t as Record<string, any>).id);
+          if (typeof t === 'object' && t.id != null) return String(t.id);
           return String(t);
         })
         .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
@@ -82,7 +82,8 @@ export const loadAllPhotosFromCloud = async (
   limit: number = 1000,
   categoryId?: string | null,
   tagId?: string | null,
-  searchQuery?: string | null
+  searchQuery?: string | null,
+  isAdminMode: boolean = false
 ): Promise<Photo[]> => {
   const cacheKey = JSON.stringify({ since, page, limit, categoryId, tagId, searchQuery });
   const cached = photoCache.get(cacheKey);
@@ -102,6 +103,10 @@ export const loadAllPhotosFromCloud = async (
     .from(DB_CONFIG.TABLE_NAME)
     .select(selectQuery);
   
+  if (!isAdminMode) {
+    // query = query.or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true');
+  }
+  
   if (since) {
     query = query.gt('updated_at', since);
   }
@@ -116,7 +121,8 @@ export const loadAllPhotosFromCloud = async (
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');
   if (normSearchQuery) {
-    const q = normSearchQuery;
+    // Escape special characters for ILIKE: %, _, \
+    const q = normSearchQuery.replace(/[\\%_]/g, '\\$&');
     
     // Resolve matching tags & categories to improve Supabase OR filtering
     const [tagsRes, catsRes] = await Promise.all([
@@ -138,7 +144,8 @@ export const loadAllPhotosFromCloud = async (
       `manual_code.ilike.%${q}%`,
       `model_number.ilike.%${q}%`,
       `description.ilike.%${q}%`,
-      `item_code.ilike.%${q}%`
+      `item_code.ilike.%${q}%`,
+      `price.ilike.%${q}%`
     ];
 
     if (catIds.length > 0) {
@@ -169,7 +176,7 @@ export const loadAllPhotosFromCloud = async (
   return result;
 };
 
-export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => {
+export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {
   if (!groupId) return [];
   
   const cacheKey = `group_photos_${groupId}`;
@@ -180,11 +187,17 @@ export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => 
   }
 
   console.log(`[DB Fetch] Loading group photos for: ${groupId}`);
-  const { data, error } = await supabase
+  let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('*, photo_tags(*)')
     .eq('group_id', groupId);
-
+  
+  if (!isAdminMode) {
+    query = query.or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true');
+  }
+  
+  const { data, error } = await query;
+  
   if (error) {
     console.error("[ERROR] loadPhotosByGroupId:", error);
     return [];
@@ -205,23 +218,29 @@ export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => 
 export const getPhotoCount = async (
   categoryId?: string | null,
   tagId?: string | null,
-  searchQuery?: string | null
+  searchQuery?: string | null,
+  isAdminMode: boolean = false
 ): Promise<number> => {
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .select('id', { count: 'exact', head: true });
+    .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
+  if (!isAdminMode) {
+    query = query.or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true');
+  }
+
   if (categoryId) {
     query = query.eq('category_id', categoryId);
   }
 
   if (tagId) {
-    query = query.filter('photo_tags.tag_id', 'eq', tagId);
+    query = query.eq('photo_tags.tag_id', tagId);
   }
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');
   if (normSearchQuery) {
-    const q = normSearchQuery;
+    // Escape special characters for ILIKE: %, _, \
+    const q = normSearchQuery.replace(/[\\%_]/g, '\\$&');
     
     // Resolve matching tags & categories to improve Supabase OR filtering
     const [tagsRes, catsRes] = await Promise.all([
@@ -243,7 +262,8 @@ export const getPhotoCount = async (
       `manual_code.ilike.%${q}%`,
       `model_number.ilike.%${q}%`,
       `description.ilike.%${q}%`,
-      `item_code.ilike.%${q}%`
+      `item_code.ilike.%${q}%`,
+      `price.ilike.%${q}%`
     ];
 
     if (catIds.length > 0) {

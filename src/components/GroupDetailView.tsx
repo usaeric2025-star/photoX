@@ -32,7 +32,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const virtuosoRef = useRef<any>(null);
+  const virtuosoRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
 
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
@@ -87,6 +87,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           .from(DB_CONFIG.TABLE_NAME)
           .select('*, photo_tags(*)')
           .eq('group_id', activeGroupId)
+          .or('isHidden.is.false,isHidden.is.null,isGroupCover.is.true')
           .then(({ data, error }) => {
             if (error) {
               console.error(`[GroupDetailView] Error:`, error);
@@ -111,7 +112,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
 
     const groupPhotos = sourcePhotos
       .filter(p => {
-        const pGid = p.groupId || (p as any).group_id;
+        const pGid = p.groupId;
         return String(pGid) === String(activeGroupId);
       })
       .filter(p => isAdminMode || !p.isHidden || p.isGroupCover);

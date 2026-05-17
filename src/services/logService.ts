@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-export async function logErrorToSupabase(error: Error, errorInfo: any, extras: any = {}) {
+export async function logErrorToSupabase(error: Error, errorInfo: any, extras: Record<string, unknown> = {}) {
   try {
     const { error: logError } = await supabase
       .from('system_logs')

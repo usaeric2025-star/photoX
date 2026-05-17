@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
 
+import { AppSettings } from '../types';
+
 export const fetchSettings = async () => {
     const { data, error } = await supabase
         .from('settings')
@@ -32,7 +34,7 @@ export const fetchSettings = async () => {
     return data;
 };
 
-export const saveSettings = async (settings: any) => {
+export const saveSettings = async (settings: Partial<AppSettings> & Record<string, unknown>) => {
     try {
         const payload = { ...settings };
         
@@ -76,7 +78,7 @@ export const saveSettings = async (settings: any) => {
         }
         
         return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error("Error in saveSettings:", err);
         throw err;
     }
@@ -114,7 +116,7 @@ export const uploadLogo = async (file: File) => {
         }
 
         return publicUrl;
-    } catch (err: any) {
+    } catch (err: unknown) {
         console.error("Logo upload process error:", err);
         throw err;
     }

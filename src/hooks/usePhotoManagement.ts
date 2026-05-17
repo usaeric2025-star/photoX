@@ -11,12 +11,19 @@ export const usePhotoManagement = (user: User | null, ui: any, session: any) => 
     model_number: '',
     manual_code: '',
     description: '',
-    isHidden: false
-  } as any);
+    isHidden: false,
+    description_translations: { en: '', ms: '' },
+    dimensions: [],
+    price: '',
+    isGroupCover: false
+  });
   const [showOtherFields, setShowOtherFields] = useState(false);
 
-  const updateForm = useCallback((update: any) => {
-    setFormState(prev => typeof update === 'function' ? update(prev) : { ...prev, ...update });
+  const updateForm = useCallback((update: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
+    setFormState(prev => {
+      const next = typeof update === 'function' ? update(prev) : { ...prev, ...update };
+      return next;
+    });
   }, []);
 
   const resetAddState = useCallback(() => {

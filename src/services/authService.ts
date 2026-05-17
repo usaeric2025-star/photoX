@@ -25,7 +25,7 @@ export const loginWithGoogle = async () => {
 
     if (error) throw error;
     return data;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Login Exception:", err);
     throw err;
   }

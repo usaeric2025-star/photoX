@@ -3,6 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export * from './photo';
+export * from './api';
+
 export interface Task {
   id: string;
   name: string;
@@ -12,89 +15,6 @@ export interface Task {
   onCancel?: () => void;
 }
 
-export interface SubCategory {
-  id: string;
-  name: string;
-  aliases: string[]; // For multilingual search
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  zh?: string;
-  en?: string;
-  ms?: string;
-  aliases: string[];
-  subcategories: SubCategory[];
-  userId?: string;
-  code?: string;
-}
-
-export interface Tag {
-  id: string;
-  name: string;
-  aliases: string[];
-  userId?: string;
-}
-
-export interface Manufacturer {
-  id: string;
-  name: string;
-  aliases: string[];
-}
-
-export interface Dimension {
-  label: string;
-  unit: 'cm' | 'inch' | 'mm';
-  length: number;
-  width: number;
-  height: number;
-  part?: string;
-  isAI?: boolean;
-  isAIEstimated?: boolean;
-}
-
-export interface Photo {
-  id: string; // Database UUID
-  storageId?: string; // Filename for Supabase Storage
-  item_code: string; // System auto-code (FUR-YYYYMMDD-RAND)
-  manual_code?: string; // Hidden price code
-  model_number?: string; // Manufacturer model number
-  image_hash: string; // MD5 fingerprint
-  name: string; // AI generated name
-  description?: string; // AI generated description
-  image_url: string; // Public URL in Storage
-  thumb_url?: string; // Thumbnail URL in Storage
-  dimensions?: Dimension[] | null;
-  exif_data?: Record<string, unknown> | null;
-  createdAt: string;
-  updatedAt?: string;
-  description_translations?: {
-    zh?: string;
-    en?: string;
-    ms?: string;
-  };
-  groupId?: string | null;
-  isGroupCover?: boolean; // New field
-  isPinned?: boolean; // Pinned to top
-  isAnalyzing?: boolean;
-  isHidden?: boolean;
-  groupOrder?: number;
-  userId?: string;
-  type?: string;
-  // UI legacy fields mapping if needed
-  uri?: string; // For local preview
-  categoryId: string | null; // For local filter
-  manufacturerId: string | null;
-  tagIds: string[]; // For local filter
-  price?: string;
-  note?: string;
-  category_id?: string | null;
-  sub_category?: string | null;
-  _time?: number; // Temporary UI field
-  createdAtTimestamp?: number; // Pre-computed timestamp for sorting
-}
-
 export interface User {
   id: string;
   email: string | null;
@@ -102,44 +22,6 @@ export interface User {
   photoURL: string | null;
   avatarUrl?: string | null;
   emailVerified: boolean;
-}
-
-export interface ProductGroup {
-  id: string;
-  name: string;
-  description: string | null;
-  description_translations?: {
-    zh?: string;
-    en?: string;
-    ms?: string;
-  };
-  colors: string[];
-  materials: string[];
-  dimensions?: Dimension[] | null;
-  cover_photo_id?: string | null;
-  isHidden?: boolean;
-  user_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ProductFormData {
-  name: string;
-  categoryId: string | null;
-  manufacturerId: string | null;
-  tagIds: string[];
-  description: string;
-  description_translations: {
-    zh?: string;
-    en?: string;
-    ms?: string;
-  };
-  manual_code: string;
-  model_number: string;
-  dimensions: Dimension[];
-  isHidden: boolean;
-  price: string;
-  isGroupCover: boolean;
 }
 
 export interface AppSettings {
@@ -156,14 +38,31 @@ export interface AppSettings {
   access_passcode?: string;
 }
 
-export interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  error?: unknown;
+export interface AppError {
+  message: string;
+  context?: string;
+  timestamp: number;
+  type?: string;
+}
+
+export interface DialogData {
+  title: string;
+  message?: string;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  type?: 'info' | 'warning' | 'danger' | 'success';
+  onSubmit?: (val: string) => void;
+  placeholder?: string;
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export interface AppState {
-  photos: Photo[];
-  categories: Category[];
-  tags: Tag[];
+  photos: import('./photo').Photo[];
+  categories: import('./photo').Category[];
+  tags: import('./photo').Tag[];
 }

@@ -72,6 +72,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     : 'hover:scale-[1.02] active:scale-[0.95]';
 
   const [isImageLoaded, setIsImageLoaded] = React.useState(false);
+  const [isImageError, setIsImageError] = React.useState(false);
 
   return (
     <div 
@@ -99,12 +100,30 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           onLightboxOpen(index);
         }
       }}
-      className={`aspect-square bg-slate-50 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
+      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
-      {!isImageLoaded && (
-        <Skeleton className="absolute inset-0 bg-slate-100 flex items-center justify-center rounded-xl">
-          <ImageIcon className="text-slate-300 w-8 h-8" />
-        </Skeleton>
+      {!isImageLoaded && !isImageError && (
+        <div className="absolute inset-0 animate-shimmer flex items-center justify-center">
+          <ImageIcon className="text-slate-300 w-8 h-8 opacity-20" />
+        </div>
+      )}
+
+      {isImageError && (
+        <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
+          <ImageIcon className="text-slate-300 w-8 h-8 opacity-50" />
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{t.imageLoadFailed}</span>
+        </div>
+      )}
+
+      {/* Low-res placeholder using thumb_url if main image is still loading */}
+      {photo.thumb_url && !isImageError && (
+        <img 
+          draggable={false}
+          src={photo.thumb_url} 
+          alt=""
+          loading="lazy"
+          className={`absolute inset-0 w-full h-full object-cover blur-sm transition-opacity duration-700 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
+        />
       )}
 
       <img 
@@ -113,9 +132,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover transition-all duration-700 ${isImageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.isHidden ? 'opacity-70' : ''}`}
+        className={`w-full h-full object-cover transition-all duration-700 ${isImageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.isHidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
           setIsImageLoaded(true);
+        }}
+        onError={() => {
+          setIsImageLoaded(true);
+          setIsImageError(true);
         }}
       />
 

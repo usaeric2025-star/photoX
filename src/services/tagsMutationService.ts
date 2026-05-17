@@ -10,8 +10,8 @@ const FIELD_MAP: Record<string, string> = {
     userId: 'user_id',
 };
 
-const mapToDb = (updates: Partial<Tag> & Record<string, any>, isCreate = false): Record<string, any> => {
-    const dbUpdates: any = {};
+const mapToDb = (updates: Partial<Tag> & Record<string, unknown>, isCreate = false): Record<string, unknown> => {
+    const dbUpdates: Record<string, unknown> = {};
 
     // Filter
     for (const key of ALLOWED_FIELDS) {

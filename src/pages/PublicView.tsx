@@ -3,10 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
-  useCategoriesQuery, useInfinitePhotosQuery, usePhotoCountQuery 
+  useCategoriesQuery, useInfinitePhotosQuery, usePhotoCountQuery, useUpdatePhoto
 } from '../hooks';
 import { fetchSettings, loginWithGoogle } from '../services/supabaseService';
-import { updatePhoto } from '../services/photoMutationService';
 import { PublicGallery } from '../components/PublicGallery';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { saveData } from '../utils/indexedDB';
@@ -32,10 +31,11 @@ export default function PublicView() {
   const infiniteQuery = useInfinitePhotosQuery({
     categoryId: filterCatId,
     tagId: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
-    searchQuery: debouncedSearchQuery
+    searchQuery: debouncedSearchQuery,
+    isAdminMode: false
   }, PAGINATION.PUBLIC_PAGE_SIZE);
 
-  const { data: countData = 0 } = usePhotoCountQuery({
+  const { data: countData } = usePhotoCountQuery({
     categoryId: filterCatId,
     tagId: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery
@@ -50,6 +50,8 @@ export default function PublicView() {
     isLoading: isPhotosLoading,
     isFetching: isPhotosFetching
   } = infiniteQuery;
+
+  const { mutateAsync: updatePhotoMutation } = useUpdatePhoto();
 
   const photos = useMemo(() => {
     return paginatedPhotos?.pages.flatMap(p => p.photos) || [];
@@ -97,32 +99,51 @@ export default function PublicView() {
           user={user}
           internalPassword={settings?.access_passcode || ""}
           settings={settings}
-          isRefreshing={isPhotosFetching || isPhotosLoading}
+          isRefreshing={isPhotosLoading}
           onRefresh={handleRefresh}
           onLoadMore={handleLoadMore}
           hasMore={hasNextPage}
           totalCount={countData}
           initialHash={hash}
           initialGroupId={groupId}
-          onTogglePinned={async (photo: any) => {
+          onTogglePinned={async (photo: import('../types').Photo) => {
             const newStatus = !photo.isPinned;
             
             // Identify affected photos (the photo itself + any other photos in the same group)
             const sPhotos = safeArray(photos);
             const affectedPhotos = photo.groupId 
-              ? sPhotos.filter((p: any) => p.groupId === photo.groupId)
+              ? sPhotos.filter(p => p.groupId === photo.groupId)
               : [photo];
               
             const sAffected = safeArray(affectedPhotos);
             
             try {
               await Promise.all(
-                sAffected.map((p: any) => 
-                  updatePhoto(p.id, { isPinned: newStatus })
+                sAffected.map(p => 
+                  updatePhotoMutation({ id: p.id, updates: { isPinned: newStatus } })
                 )
               );
-            } catch (e: any) {
+            } catch (e: unknown) {
               console.error("togglePinned", e);
+            }
+          }}
+          onToggleHidden={async (photo: import('../types').Photo) => {
+            try {
+              await updatePhotoMutation({ id: photo.id, updates: { isHidden: !photo.isHidden } });
+            } catch (e: unknown) {
+              console.error("toggleHidden", e);
+            }
+          }}
+          onSetGroupCover={async (id: string, groupId: string) => {
+            const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
+            try {
+              await Promise.all(
+                groupPhotos.map(p => 
+                  updatePhotoMutation({ id: p.id, updates: { isGroupCover: p.id === id } })
+                )
+              );
+            } catch (e: unknown) {
+              console.error("setGroupCover", e);
             }
           }}
         />

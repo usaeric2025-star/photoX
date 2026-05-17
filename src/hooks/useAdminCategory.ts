@@ -10,12 +10,15 @@ import { useGalleryStore } from '../store';
 import { safeArray } from '../lib/utils';
 import { toast } from 'sonner';
 import { Category, Photo, Tag } from '../types';
+import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from './';
 
 export const useAdminCategory = (adminUI: {
   setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
 }) => {
   const queryClient = useQueryClient();
-  const { photos, tags, categories, manufacturers } = useGalleryStore();
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: tags = [] } = useTagsQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
 
   const addTagMutation = useAddTagMutation();
   const updateTagMutation = useUpdateTagMutation();

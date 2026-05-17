@@ -17,8 +17,8 @@ const FIELD_MAP: Record<string, string> = {
     updatedAt: 'updated_at',
 };
 
-const mapToDb = (updates: Partial<ProductGroup> & Record<string, any>, isCreate = false, userId?: string): Record<string, any> => {
-    const dbUpdates: any = {};
+const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, isCreate = false, userId?: string): Record<string, unknown> => {
+    const dbUpdates: Record<string, unknown> = {};
 
     // Filter
     for (const key of ALLOWED_FIELDS) {

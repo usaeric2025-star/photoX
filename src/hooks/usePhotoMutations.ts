@@ -70,7 +70,7 @@ export const usePhotoMutations = (
           updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
           queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
           setTimeout(() => removeTask(taskId), 5000);
-        } catch (e: any) {
+        } catch (e: unknown) {
           if (!controller.signal.aborted) {
              updateTask(taskId, { status: 'error', message: '部分更新失败' });
              handleError(e, "批量云端同步失败");

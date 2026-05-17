@@ -8,9 +8,9 @@ interface PhotoTagSelectorProps {
   tags: Tag[];
   selectedTagIds: string[];
   onChange: (newIds: string[]) => void;
-  addTag: (name: string) => Promise<Tag | null>;
-  updateTag: (id: string, name: string) => Promise<boolean>;
-  deleteTag: (id: string) => Promise<boolean>;
+  addTag: (name: string) => Promise<any>;
+  updateTag: (id: string, name: string) => Promise<any>;
+  deleteTag: (id: string) => Promise<any>;
 }
 
 export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({

@@ -1,7 +1,12 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Photo } from '../../types';
+import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { Photo, ApiResponse } from '../../types';
 import { deletePhotoFromCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
+
+interface InfinitePhotosData {
+  photos: Photo[];
+  nextCursor?: string;
+}
 
 export const useDeletePhotoMutation = () => {
   const queryClient = useQueryClient();
@@ -11,8 +16,49 @@ export const useDeletePhotoMutation = () => {
         await deletePhotoFromCloud(userId, photo);
       }
     },
+    onMutate: async ({ photos }) => {
+      const photoIds = photos.map(p => p.id);
+      
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['photos'] });
+
+      // Snapshot
+      const previousInfinite = queryClient.getQueryData<InfiniteData<InfinitePhotosData>>(['photos', 'infinite']);
+      const previousGroups = queryClient.getQueriesData<Photo[]>({ queryKey: ['photos', 'group'] });
+
+      // Optimistically remove from cache
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            photos: page.photos.filter((photo: Photo) => !photoIds.includes(photo.id)),
+          })),
+        };
+      });
+
+      // Update group queries too
+      queryClient.setQueriesData<Photo[]>({ queryKey: ['photos', 'group'] }, (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.filter((photo: Photo) => !photoIds.includes(photo.id));
+      });
+
+      return { previousInfinite, previousGroups };
+    },
     onSuccess: () => {
       // Invalidate all photo related queries
+      queryClient.invalidateQueries({ queryKey: ['photos'] });
+    },
+    onError: (_err, _variables, context) => {
+      if (context?.previousInfinite) {
+        queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
+      }
+      if (context?.previousGroups) {
+        context.previousGroups.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ['photos'] });
     },
   });

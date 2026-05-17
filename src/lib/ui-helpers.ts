@@ -47,8 +47,7 @@ export const getPhotoDisplayName = (
   const catName = getTranslatedCategoryName(photo.categoryId, categories, lang, t);
   if (catName && catName !== t.uncategorized) return catName;
 
-  if (lang === 'ms') return (translations as any)['ms']?.furniture || 'Perabot';
-  return lang === 'en' ? 'Furniture' : '家具';
+  return t.furniture;
 };
 
 /**

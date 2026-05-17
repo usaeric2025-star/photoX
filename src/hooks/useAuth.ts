@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { onAuthChange, loginWithGoogle, logout } from '../services/supabaseService';
 
+import { User } from '../types';
+
 export const useAuth = () => {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [authChecked, setAuthChecked] = useState(false);
     const [authError, setAuthError] = useState<string | null>(null);
     

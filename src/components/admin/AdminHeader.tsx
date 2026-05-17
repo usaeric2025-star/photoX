@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, CheckSquare, Settings2, Eye, Globe, RefreshCcw, ChevronDown, FileText, CheckCircle2, Menu, LogIn } from 'lucide-react';
+import { Sparkles, CheckSquare, Eye, Globe, RefreshCcw, ChevronDown, Menu, LogIn } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
 
 import { translations, LanguageCode } from '../../lib/translations';
 import { useGalleryStore } from '../../store';
-import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
 import { Photo, AppSettings } from '../../types';
+import { RefreshMenu } from './AdminHeader/RefreshMenu';
+import { ToolsMenu } from './AdminHeader/ToolsMenu';
 
 interface Props {
   isMultiSelect: boolean;
@@ -44,7 +45,6 @@ export const AdminHeader: React.FC<Props> = ({
   } = useGalleryStore();
   
   const settings = propSettings || storeSettings;
-
   
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -77,12 +77,46 @@ export const AdminHeader: React.FC<Props> = ({
     }
   };
 
+  const handleLogin = async () => {
+    try {
+      await loginWithGoogle();
+    } catch(e) {
+      const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
+      toast.error(`Log in failed: ${errMsg}`);
+    }
+  };
+
+  const toggleRefreshMenu = () => setShowRefreshMenu(prev => !prev);
+  const toggleToolsMenu = () => setShowToolsMenu(prev => !prev);
+  
+  const handleToggleMultiSelect = () => {
+    if (isMultiSelect) {
+      setIsMultiSelect(false);
+      setSelectedIds([]);
+    } else {
+      setIsMultiSelect(true);
+    }
+  };
+
+  const handleToggleViewMode = () => {
+    setViewMode(viewMode === 'public' ? 'private' : 'public');
+  };
+
+  const handleOpenSettings = () => {
+    setActiveScreen?.('manage');
+    setShowToolsMenu(false);
+  };
+
+  const handleExitStaffMode = () => {
+    sessionStorage.removeItem('isStaffMode');
+    window.location.reload();
+  };
+
   return (
-    <>
-      <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
+    <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-8 sm:h-10 max-w-[100px] sm:max-w-[160px] object-contain rounded border border-brand-navy/10 p-0.5 bg-white shadow-sm shrink-0" />
+            <img src={settings.logo_url} alt="Logo" className="h-8 sm:h-10 max-w-[100px] sm:max-w-[160px] object-contain rounded border border-brand-navy/10 p-0.5 bg-white shadow-sm shrink-0" loading="lazy" />
           ) : (
             <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">Admin</h1>
           )}
@@ -102,8 +136,12 @@ export const AdminHeader: React.FC<Props> = ({
                     {photosCount}
                   </span>
                   <span className="text-xs font-medium text-brand-navy/20">/</span>
-                  <span className="text-xs font-medium text-blue-600/60">
-                    {Math.max(cloudCount || 0, photosCount || 0)}
+                  <span className="text-xs font-medium text-blue-600/60 transition-all">
+                    {cloudCount === undefined || cloudCount === null ? (
+                      <div className="inline-block w-4 h-2 bg-blue-600/10 rounded animate-pulse" />
+                    ) : (
+                      cloudCount
+                    )}
                   </span>
                 </div>
               )}
@@ -120,14 +158,7 @@ export const AdminHeader: React.FC<Props> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
             <button 
-              onClick={async () => {
-                try {
-                  await loginWithGoogle();
-                } catch(e) {
-                  const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
-                  toast.error(`Log in failed: ${errMsg}`);
-                }
-              }}
+              onClick={handleLogin}
               className="px-4 py-2 rounded-2xl text-xs font-medium uppercase tracking-wide bg-brand-navy text-brand-bg shadow-sm active:scale-95 transition-all flex items-center gap-2"
             >
               <LogIn size={14} />
@@ -137,7 +168,7 @@ export const AdminHeader: React.FC<Props> = ({
             <div className="flex items-center gap-2">
               <div className="hidden lg:flex items-center gap-2 bg-brand-navy/5 py-1 px-3 rounded-2xl border border-brand-navy/10 mr-1">
                 {user && user.avatarUrl ? (
-                  <img src={user.avatarUrl} className="w-5 h-5 rounded-full" alt="Avatar" />
+                  <img src={user.avatarUrl} className="w-5 h-5 rounded-full" alt="Avatar" loading="lazy" />
                 ) : (
                   <div className="w-5 h-5 rounded-full bg-brand-navy text-brand-bg flex items-center justify-center text-xs font-medium">
                     {!user ? 'S' : (user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
@@ -159,39 +190,13 @@ export const AdminHeader: React.FC<Props> = ({
                     <RefreshCcw size={18} className="group-active:animate-spin" />
                   </button>
                   <button 
-                    onClick={() => setShowRefreshMenu(!showRefreshMenu)}
+                    onClick={toggleRefreshMenu}
                     className={`absolute -right-1 bottom-0 w-4 h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-brand-bg transition-transform ${showRefreshMenu ? 'rotate-180' : ''}`}
                   >
                     <ChevronDown size={10} />
                   </button>
                   
-                  <AnimatePresence>
-                    {showRefreshMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-brand-navy/10 overflow-hidden z-[120]"
-                      >
-                        <button 
-                          onClick={toggleInfinite}
-                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-brand-navy/5 transition-colors text-left"
-                        >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isInfiniteMode ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
-                            {isInfiniteMode ? <CheckCircle2 size={16} /> : <FileText size={16} />}
-                          </div>
-                          <div>
-                            <div className="text-[11px] font-black text-brand-navy uppercase tracking-wide">
-                              {isInfiniteMode ? '已开启无限加载' : '开启无限加载'}
-                            </div>
-                            <div className="text-[9px] text-brand-navy/40 font-medium leading-none mt-1">
-                              {isInfiniteMode ? '一键显示所有照片' : '分批次逐步加载'}
-                            </div>
-                          </div>
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <RefreshMenu show={showRefreshMenu} isInfiniteMode={isInfiniteMode} t={t} toggleInfinite={toggleInfinite} />
                 </div>
                 
                 <button 
@@ -213,14 +218,7 @@ export const AdminHeader: React.FC<Props> = ({
                 
                 {viewMode !== 'public' && (
                   <button 
-                    onClick={() => {
-                      if (isMultiSelect) {
-                        setIsMultiSelect(false);
-                        setSelectedIds([]);
-                      } else {
-                        setIsMultiSelect(true);
-                      }
-                    }}
+                    onClick={handleToggleMultiSelect}
                     className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg scale-105 ring-4 ring-blue-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
                     title={isMultiSelect ? t.cancelSelect : t.selectMode}
                   >
@@ -229,11 +227,9 @@ export const AdminHeader: React.FC<Props> = ({
                 )}
 
                 <button 
-                  onClick={() => {
-                    setViewMode(viewMode === 'public' ? 'private' : 'public')
-                  }}
+                  onClick={handleToggleViewMode}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
-                  title={viewMode === 'public' ? "退出访客视图" : "访客视图预览"}
+                  title={viewMode === 'public' ? t.exitGuestView : "访客视图预览"}
                 >
                   {viewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
                 </button>
@@ -241,46 +237,23 @@ export const AdminHeader: React.FC<Props> = ({
                 {/* More Menu Dropdown */}
                 <div className="relative" ref={toolsRef}>
                   <button 
-                    onClick={() => setShowToolsMenu(!showToolsMenu)}
+                    onClick={toggleToolsMenu}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all relative ${activeScreen === 'manage' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
                   >
                     <Menu size={18} />
                   </button>
-                  <AnimatePresence>
-                    {showToolsMenu && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-[120]"
-                      >
-                        <button 
-                          onClick={() => { setActiveScreen?.('manage'); setShowToolsMenu(false); }}
-                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
-                        >
-                          <Settings2 size={16} /> <span className="text-xs font-bold uppercase">系统设置</span>
-                        </button>
-                        {sessionStorage.getItem('isStaffMode') === 'true' && (
-                          <button 
-                            onClick={() => {
-                              sessionStorage.removeItem('isStaffMode');
-                              window.location.reload();
-                            }}
-                            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-left text-red-600"
-                          >
-                            <LogIn size={16} /> <span className="text-xs font-bold uppercase">退出员工模式</span>
-                          </button>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <ToolsMenu 
+                    show={showToolsMenu} 
+                    t={t} 
+                    handleOpenSettings={handleOpenSettings}
+                    isStaff={sessionStorage.getItem('isStaffMode') === 'true'}
+                    handleExitStaffMode={handleExitStaffMode}
+                  />
                 </div>
               </div>
             </div>
           )}
         </div>
-      </header>
-
-    </>
+    </header>
   );
 };

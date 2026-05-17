@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AppSettings, Photo, Tag, Category, Manufacturer } from './types';
+import { AppSettings, Photo, Tag, Category, Manufacturer, User, AppError, DialogData } from './types';
 
 interface GalleryState {
   // UI State
@@ -14,31 +14,28 @@ interface GalleryState {
   showGroupsCollapsed: boolean;
   isInfiniteMode: boolean;
   isStaffMode: boolean;
-  user: any;
+  user: User | null;
   isAdminMode: boolean;
   settings: AppSettings | null;
-  errors: any[];
+  errors: AppError[];
   isAnalyzing: boolean;
   batchProgress: number;
   activeScreen: string;
-  alertDialog: any | null;
-  promptDialog: any | null;
+  alertDialog: DialogData | null;
+  promptDialog: DialogData | null;
   appLang: string;
   viewMode: 'public' | 'private';
   isSyncing: boolean;
   loadingType: 'none' | 'global' | 'local';
   withLoading: <T>(type: string, fn: () => Promise<T>) => Promise<T>;
-  gridPhotos: Photo[];
-  displayPhotos: Photo[];
   tagIdToNameMap: Record<string, string>;
-  totalGridCount: number;
 
   // AI/Settings State
   geminiApiKey: string;
   customModel: string;
   accessPasscode: string;
-  aiDebugInfo: any;
-  setAiDebugInfo: (info: any) => void;
+  aiDebugInfo: { step: string; message: string; error?: string } | null;
+  setAiDebugInfo: (info: { step: string; message: string; error?: string } | null) => void;
   setLoadingType: (type: 'none' | 'global' | 'local' | 'analyzing' | 'sync-pull' | 'sync-push') => void;
   editPhotoId: string | null;
   setEditPhotoId: (id: string | null) => void;
@@ -49,18 +46,12 @@ interface GalleryState {
   abortAnalysis: () => void;
   onRefresh: () => void;
 
-  // Data
-  photos: Photo[];
-  categories: Category[];
-  tags: Tag[];
-  manufacturers: Manufacturer[];
-
   // Actions
   setSearchQuery: (query: string) => void;
   setDebouncedSearchQuery: (query: string) => void;
   setFilterCatId: (id: string | null) => void;
   setFilterSubId: (id: string | null) => void;
-  setFilterTagIds: (ids: string[]) => void;
+  setFilterTagIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   setSortOrder: (order: 'asc' | 'desc') => void;
   setIsMultiSelect: (isMulti: boolean) => void;
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
@@ -69,39 +60,22 @@ interface GalleryState {
   setShowGroupsCollapsed: (showGroupsCollapsed: boolean) => void;
   setIsInfiniteMode: (isInfinite: boolean) => void;
   setIsStaffMode: (isStaff: boolean) => void;
-  setUser: (user: any) => void;
+  setUser: (user: User | null) => void;
   setIsAdminMode: (isAdmin: boolean) => void;
   setSettings: (settings: AppSettings | null) => void;
-  setErrors: (errors: any[]) => void;
+  setErrors: (errors: AppError[]) => void;
   clearErrors: () => void;
   setIsAnalyzing: (isAnalyzing: boolean) => void;
   setBatchProgress: (progress: number) => void;
   setActiveScreen: (screen: string) => void;
-  setAlertDialog: (dialog: any | null) => void;
-  setPromptDialog: (dialog: any | null) => void;
+  setAlertDialog: (dialog: DialogData | null) => void;
+  setPromptDialog: (dialog: DialogData | null) => void;
   setAppLang: (lang: string) => void;
   setViewMode: (mode: 'public' | 'private') => void;
   setIsSyncing: (isSyncing: boolean) => void;
   setGeminiApiKey: (key: string) => void;
   setCustomModel: (model: string) => void;
   setAccessPasscode: (passcode: string) => void;
-  
-  // Data Actions
-  addTag: (name: string) => Promise<any>;
-  updateTag: (id: string, name: string) => Promise<void>;
-  deleteTag: (id: string) => Promise<void>;
-  addCategory: (name: string) => Promise<any>;
-  updateCategory: (id: string, name: string) => Promise<void>;
-  deleteCategory: (id: string) => Promise<void>;
-  addManufacturer: (name: string) => Promise<any>;
-  updateManufacturer: (id: string, name: string) => Promise<void>;
-  deleteManufacturer: (id: string) => Promise<void>;
-  removeTagFromPhoto: (photoId: string, tagId: string) => Promise<void>;
-  quickAddManufacturer: (name: string) => Promise<void>;
-  quickAddTag: (name: string) => Promise<void>;
-  handleSingleAiAnalyze: (photoId: string) => Promise<void>;
-  handleTranslate: (photoId: string, targetLang: string) => Promise<void>;
-  handleSingleAiAnalyzeCallback: (photoId: string, data: any) => void;
   logout: () => void;
   loginWithGoogle: () => Promise<void>;
 }
@@ -131,25 +105,16 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   viewMode: 'private',
   isSyncing: false,
   
-  // Data State
-  photos: [],
-  categories: [],
-  tags: [],
-  manufacturers: [],
   loadingType: 'none',
   withLoading: async (type, fn) => {
-    // Basic implementation
-    set({ loadingType: type as any });
+    set({ loadingType: type as 'local' });
     try {
         return await fn();
     } finally {
-        set({ loadingType: 'none' as any });
+        set({ loadingType: 'none' });
     }
   },
-  gridPhotos: [],
-  displayPhotos: [],
   tagIdToNameMap: {},
-  totalGridCount: 0,
   
   // AI/Settings
   geminiApiKey: '',
@@ -157,7 +122,7 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   accessPasscode: '',
   aiDebugInfo: null,
   setAiDebugInfo: (aiDebugInfo) => set({ aiDebugInfo }),
-  setLoadingType: (loadingType) => set({ loadingType: loadingType as any }),
+  setLoadingType: (loadingType) => set({ loadingType: loadingType as 'local' }),
   editPhotoId: null,
   setEditPhotoId: (editPhotoId) => set({ editPhotoId }),
   batchEditIds: null,
@@ -171,7 +136,9 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
   setFilterCatId: (filterCatId) => set({ filterCatId }),
   setFilterSubId: (filterSubId) => set({ filterSubId }),
-  setFilterTagIds: (filterTagIds) => set({ filterTagIds }),
+  setFilterTagIds: (ids: string[] | ((prev: string[]) => string[])) => set((state) => ({
+    filterTagIds: typeof ids === 'function' ? ids(state.filterTagIds) : ids
+  })),
   setSortOrder: (sortOrder) => set({ sortOrder }),
   setIsMultiSelect: (isMultiSelect) => set({ isMultiSelect }),
   setSelectedIds: (ids) => set((state) => ({
@@ -202,23 +169,6 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setGeminiApiKey: (geminiApiKey) => set({ geminiApiKey }),
   setCustomModel: (customModel) => set({ customModel }),
   setAccessPasscode: (accessPasscode) => set({ accessPasscode }),
-  
-  // Data actions stubs
-  addTag: async () => ({}),
-  updateTag: async () => {},
-  deleteTag: async () => {},
-  addCategory: async () => ({}),
-  updateCategory: async () => {},
-  deleteCategory: async () => {},
-  addManufacturer: async () => ({}),
-  updateManufacturer: async () => {},
-  deleteManufacturer: async () => {},
-  removeTagFromPhoto: async () => {},
-  quickAddManufacturer: async () => {},
-  quickAddTag: async () => {},
-  handleSingleAiAnalyze: async () => {},
-  handleTranslate: async () => {},
-  handleSingleAiAnalyzeCallback: () => {},
-  logout: () => {},
-  loginWithGoogle: async () => {},
+  logout: () => set({ user: null, isAdminMode: false }),
+  loginWithGoogle: async () => {}, // Keep only essential placeholder for auth if needed elsewhere
 }));

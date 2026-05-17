@@ -41,8 +41,15 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
         )}
         
         <div className="flex items-center gap-1 bg-brand-navy/5 px-2 py-0.5 rounded-full border border-brand-navy/10 shrink-0 cursor-pointer" onClick={onRefresh}>
-          <span className="text-[8px] sm:text-[9px] font-black text-brand-navy/60 italic">
-            {t.gallerySub(totalCount !== undefined ? totalCount : photos.filter(p => !p.isHidden).length)}
+          <span className="text-[8px] sm:text-[9px] font-black text-brand-navy/60 italic flex items-center gap-1 lowercase">
+            {totalCount !== undefined && totalCount !== null ? (
+               t.gallerySub(totalCount)
+            ) : (
+              <>
+                <div className="w-2 h-2 border border-brand-navy/20 border-t-brand-navy rounded-full animate-spin shrink-0" />
+                {t.gallerySub(photos.filter(p => !p.isHidden).length)}
+              </>
+            )}
           </span>
         </div>
       </div>

@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
+import { DialogData } from '../../types';
+
 interface PromptDialogProps {
-  dialog: { title: string, message?: string, placeholder?: string, onSubmit: (val: string) => void } | null;
+  dialog: DialogData | null;
   onClose: () => void;
 }
 
@@ -47,7 +49,7 @@ export const PromptDialog: React.FC<PromptDialogProps> = ({ dialog, onClose }) =
           </AlertDialogCancel>
           <AlertDialogAction 
             onClick={() => {
-              if (dialog) dialog.onSubmit(value);
+              if (dialog?.onSubmit) dialog.onSubmit(value);
               onClose();
             }}
           >

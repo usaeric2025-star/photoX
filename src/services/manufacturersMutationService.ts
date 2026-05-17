@@ -9,8 +9,8 @@ const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'isHidden', 'tempId', 'isSele
 const FIELD_MAP: Record<string, string> = {
 };
 
-const mapToDb = (updates: Partial<Manufacturer> & Record<string, any>, isCreate = false): Record<string, any> => {
-    const dbUpdates: any = {};
+const mapToDb = (updates: Partial<Manufacturer> & Record<string, unknown>, isCreate = false): Record<string, unknown> => {
+    const dbUpdates: Record<string, unknown> = {};
 
     // Filter
     for (const key of ALLOWED_FIELDS) {

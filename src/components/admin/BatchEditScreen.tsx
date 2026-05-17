@@ -2,11 +2,12 @@ import React from 'react';
 import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-import { ProductFormData } from '../../types';
+import { ProductFormData, Tag, ApiResponse } from '../../types';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { useGalleryStore } from '../../store';
 import { safeArray } from '../../lib/utils';
+import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../../hooks';
 
 export const BatchEditScreen = ({
   resetAddState,
@@ -21,6 +22,7 @@ export const BatchEditScreen = ({
   onDelete,
   quickAddManufacturer: quickAddMfr,
   quickAddTag: quickAddT,
+  addTag,
   updateTag,
   deleteTag
 }: {
@@ -36,18 +38,20 @@ export const BatchEditScreen = ({
   onDelete?: (ids: string[]) => void;
   quickAddManufacturer: () => void;
   quickAddTag: () => void;
-  updateTag: (id: string, name: string) => Promise<boolean | void>;
-  deleteTag: (id: string) => Promise<boolean | void>;
+  addTag: (name: string) => Promise<any>;
+  updateTag: (id: string, name: string) => Promise<any>;
+  deleteTag: (id: string) => Promise<any>;
 }) => {
   const { 
-    categories,
-    manufacturers,
-    tags,
     setPromptDialog, 
     setAlertDialog,
     isSyncing,
     appLang
   } = useGalleryStore();
+
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
+  const { data: tags = [] } = useTagsQuery();
 
   const handleDelete = () => {
     if (!batchEditIds || !onDelete) return;
@@ -214,9 +218,9 @@ export const BatchEditScreen = ({
             tags={tags}
             selectedTagIds={safeArray<string>(formState.tagIds)}
             onChange={(newIds) => updateForm({ tagIds: newIds })}
-            addTag={async (name) => { return await useGalleryStore.getState().addTag(name); }}
-            updateTag={async (id, name) => { await useGalleryStore.getState().updateTag(id, name); return true; }}
-            deleteTag={async (id) => { await useGalleryStore.getState().deleteTag(id); return true; }}
+            addTag={addTag}
+            updateTag={updateTag}
+            deleteTag={deleteTag}
           />
         </section>
       </div>
