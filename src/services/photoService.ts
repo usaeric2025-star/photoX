@@ -162,24 +162,9 @@ export const loadAllPhotosFromCloud = async (
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  console.log('[DEBUG] photoService 查询:', {
-    from,
-    to,
-    limit,
-    page,
-    hasCategoryId: !!categoryId,
-    hasTagId: !!tagId,
-    hasSearch: !!searchQuery
-  });
-
   const { data, error } = await query
     .order('created_at', { ascending: false })
     .range(from, to);
-  
-  console.log('[DEBUG] photoService 返回:', {
-    数据条数: data?.length,
-    错误: error?.message
-  });
   
   if (error) {
     console.error("[ERROR] Supabase Fetch Error (loadAllPhotosFromCloud):", error);
