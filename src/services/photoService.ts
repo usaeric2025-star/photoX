@@ -104,7 +104,7 @@ export const loadAllPhotosFromCloud = async (
     .select(selectQuery);
   
   if (!isAdminMode) {
-    query = query.or('isHidden.eq.false,isHidden.is.null,isGroupCover.eq.true');
+    query = query.or('isHidden.eq.false,isHidden.is.null,is_group_cover.eq.true');
   }
   
   if (since) {
@@ -193,7 +193,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     .eq('group_id', groupId);
   
   if (!isAdminMode) {
-    query = query.or('isHidden.eq.false,isHidden.is.null,isGroupCover.eq.true');
+    query = query.or('isHidden.eq.false,isHidden.is.null,is_group_cover.eq.true');
   }
   
   const { data, error } = await query;
@@ -226,7 +226,7 @@ export const getPhotoCount = async (
     .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
   if (!isAdminMode) {
-    query = query.or('isHidden.eq.false,isHidden.is.null,isGroupCover.eq.true');
+    query = query.or('isHidden.eq.false,isHidden.is.null,is_group_cover.eq.true');
   }
 
   if (categoryId) {
