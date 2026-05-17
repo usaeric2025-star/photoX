@@ -230,3 +230,14 @@ const uiValueForLogin = React.useMemo(() => ({
 ### 违规示例
 ❌ categories.filter(cat => cat.name === '全部')
 ✅ categories.filter(cat => cat.id === selectedId)
+
+## 二十二、虚拟列表规范（强制执行）
+
+- 使用 Virtuoso 时，禁止手动 `visibleCount` + `.slice()` 切片
+- Virtuoso 自己管理渲染，只需传入完整 `data` 数组
+- 滚动加载用 `endReached` 触发 `fetchNextPage`
+
+## 二十三、数据闪烁规范
+
+- 禁止用 `useRef` + `useEffect` 手动缓存数据
+- 必须用 `placeholderData: keepPreviousData`

@@ -27,6 +27,7 @@ import {
 } from '../hooks';
 
 import { useGalleryStore } from '../store';
+import { PAGINATION } from '../constants/config';
 import { ProductFormData } from '../types';
 
 export default function AdminView() {
