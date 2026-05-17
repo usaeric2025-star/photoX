@@ -12,6 +12,7 @@ import { useTasks } from './useTasks';
 import { usePhotoImport } from './usePhotoImport';
 import { usePhotoAI } from './usePhotoAI';
 import { usePhotoMutations } from './usePhotoMutations';
+import { useGroupPhotosMutation } from './mutations/useGroupOperations';
 import { safeArray } from '../lib/utils';
 
 export const useAdminPhotos = (
@@ -122,6 +123,8 @@ export const useAdminPhotos = (
     addTask, updateTask, removeTask
   );
 
+  const { mutateAsync: groupPhotosMutation } = useGroupPhotosMutation();
+
   return {
     // Photos & Basic State
     photos,
@@ -148,6 +151,7 @@ export const useAdminPhotos = (
     },
 
     // Mutation Hook
+    handleGroupPhotos: groupPhotosMutation,
     deletePhoto: mutationHook.deletePhoto,
     updatePhoto: mutationHook.updatePhoto,
     updatePhotosBulk: mutationHook.updatePhotosBulk

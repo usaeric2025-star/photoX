@@ -101,7 +101,7 @@ export const useAdminDataPrep = () => {
   const { 
     batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis, 
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk
+    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos
   } = useAdminPhotos(
     user, settings?.gemini_api_key, settings?.provider || 'openrouter', settings?.custom_model || '', 
     { photos, categories, tags, manufacturers }, uiBasicValue, sessionBasicValue, addManufacturer
