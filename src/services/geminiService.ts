@@ -283,6 +283,11 @@ export const analyzeProductPhoto = async (
         errorMsg = `API 请求发送失败 (status: ${status}, url: ${url})。详细错误: ${errorDetail.slice(0, 500)}`;
     }
     
+    // Check if Vercel serverless 404
+    if (status === 404 && url.startsWith('/api/')) {
+        errorMsg = "AI API 代理未启动或不支持此部署环境 (如 Vercel Static)。请在「设置」中手动填写您的 API Key 以绕过服务器代理。";
+    }
+
     // Check if body is plain text or json
     if (error.response?.data && typeof error.response.data === 'string' && error.response.data.includes('does not have permission')) {
         errorMsg = "API Key 没有权限、遭停权，或是此地区被封锁: " + error.response.data;
@@ -470,7 +475,12 @@ export const translateDescription = async (
       signal
     });
 
-    if (!response.ok) throw new Error(`翻译失败: ${response.statusText}`);
+    if (!response.ok) {
+       if (response.status === 404 && fetchUrl.startsWith('/api/')) {
+          throw new Error("部署环境不支持代理，请在设置中配置 API Key");
+       }
+       throw new Error(`翻译失败: ${response.statusText}`);
+    }
     
     const result = await response.json();
     const content = result.choices?.[0]?.message?.content;

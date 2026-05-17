@@ -210,6 +210,14 @@ export default function AdminView() {
       }
     });
   }, [user]);
+
+  useEffect(() => {
+    import('../services/supabaseService').then(({ fetchSettings }) => {
+      fetchSettings().then(s => {
+        if (s) setSettings(s as any);
+      }).catch(e => console.error("AdminView fetchSettings Error:", e));
+    });
+  }, [setSettings]);
   
   useEffect(() => {
     if (authChecked) {

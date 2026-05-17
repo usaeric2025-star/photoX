@@ -24,9 +24,11 @@ export default function PublicView() {
     debouncedSearchQuery,
     setIsAdminMode,
     setIsMultiSelect,
-    setSelectedIds
+    setSelectedIds,
+    visibleCount,
+    setVisibleCount,
+    totalGridCount
   } = useGalleryStore();
-
 
   const { data: categoriesData = [] } = useCategoriesQuery();
 
@@ -78,13 +80,10 @@ export default function PublicView() {
   };
 
   const handleLoadMore = () => {
-    console.log("handleLoadMore called. hasNextPage:", hasNextPage, "isFetchingNextPage:", isFetchingNextPage);
-    if (hasNextPage && !isFetchingNextPage) {
+    if (visibleCount < totalGridCount) {
+       setVisibleCount(prev => prev + PAGINATION.LAZY_LOAD_COUNT);
+    } else if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
-    } else if (!hasNextPage) {
-      console.log("handleLoadMore: No more pages to load.");
-    } else if (isFetchingNextPage) {
-      console.log("handleLoadMore: Already fetching next page.");
     }
   };
 

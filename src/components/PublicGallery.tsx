@@ -142,7 +142,7 @@ const VirtuosoGridFooter = React.memo(({ context }: any) => {
   } = context || {};
 
   return (
-    <div className="py-10 pb-32 flex flex-col items-center justify-center w-full min-h-[100px] clear-both">
+    <div className="py-8 pb-10 flex flex-col items-center justify-center w-full min-h-[60px] clear-both border-t border-brand-navy/5">
       {hasMore ? (
         <button 
           onClick={onLoadMore}

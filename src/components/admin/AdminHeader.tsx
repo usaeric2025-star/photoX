@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, CheckSquare, Settings2, Eye, EyeOff, LogIn, Plus, Globe, RefreshCcw, ChevronDown, FileText, CheckCircle2, Menu, LayoutTemplate, AlertCircle } from 'lucide-react';
+import { Sparkles, CheckSquare, Settings2, Eye, Globe, RefreshCcw, ChevronDown, FileText, CheckCircle2, Menu, LogIn } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
+
 import { translations, LanguageCode } from '../../lib/translations';
 import { useGalleryStore } from '../../store';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
-import { Photo } from '../../types';
+import { Photo, AppSettings } from '../../types';
 
 interface Props {
   isMultiSelect: boolean;
@@ -25,6 +26,7 @@ interface Props {
   appLang?: string;
   isAnalyzing: boolean;
   batchProgress: { current: number; total: number };
+  settings?: AppSettings | null;
 }
 
 export const AdminHeader: React.FC<Props> = ({ 
@@ -33,13 +35,16 @@ export const AdminHeader: React.FC<Props> = ({
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
   appLang = 'zh',
-  isAnalyzing, batchProgress
+  isAnalyzing, batchProgress, settings: propSettings
 }) => {
   const { 
-    settings, user, viewMode, setViewMode, isSyncing, 
+    settings: storeSettings, user, viewMode, setViewMode, isSyncing, 
     activeScreen, setActiveScreen,
     isInfiniteMode, setIsInfiniteMode 
   } = useGalleryStore();
+  
+  const settings = propSettings || storeSettings;
+
   
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -75,24 +80,24 @@ export const AdminHeader: React.FC<Props> = ({
   return (
     <>
       <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-12 max-w-[120px] sm:max-w-[180px] object-contain rounded-lg border border-brand-navy/10 p-0.5 bg-white shadow-sm" />
+            <img src={settings.logo_url} alt="Logo" className="h-8 sm:h-10 max-w-[100px] sm:max-w-[160px] object-contain rounded border border-brand-navy/10 p-0.5 bg-white shadow-sm shrink-0" />
           ) : (
-            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none shrink-0">Admin</h1>
+            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">Admin</h1>
           )}
           
           {photosCount !== undefined && (
-            <div className="flex items-center gap-1.5 bg-brand-navy/5 px-2 py-1 rounded-full border border-brand-navy/10 shrink-0">
+            <div className="flex items-center gap-1.5 bg-brand-navy/5 px-2 py-1 rounded-full border border-brand-navy/10 shrink-0 overflow-hidden">
               {isSyncing ? (
-                <div className="flex items-center gap-1.5 px-1 w-20 justify-center">
-                  <RefreshCcw size={10} className="text-brand-navy/60 animate-spin" />
-                  <span className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest">
+                <div className="flex items-center gap-1.5 px-1 justify-center shrink-0">
+                  <RefreshCcw size={10} className="text-brand-navy/60 animate-spin shrink-0" />
+                  <span className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest whitespace-nowrap">
                     {photosCount !== undefined && cloudCount ? `${photosCount}/${cloudCount}` : t.loading}
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0 whitespace-nowrap">
                   <span className="text-xs font-medium text-brand-navy/60">
                     {photosCount}
                   </span>
