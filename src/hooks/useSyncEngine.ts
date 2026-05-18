@@ -36,7 +36,8 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags }),
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers }),
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos }),
-          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings }),
+          queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }) // Invalidate all group photo queries
         ]);
       } catch (err) {
         handleError(err, '同步失败');

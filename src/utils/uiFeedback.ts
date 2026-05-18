@@ -1,15 +1,18 @@
 import { toast } from 'sonner';
+import { useErrorHandler } from './errorHandler';
 
 export const withFeedback = async <T>(
   action: () => Promise<T>,
-  successMsg: string
+  successMsg: string,
+  errorContext: string
 ): Promise<T | undefined> => {
+  const { handleError } = useErrorHandler();
   try {
     const result = await action();
     toast.success(successMsg);
     return result;
   } catch (error) {
-    // Re-throw so that handleError in logic calls can catch it
+    handleError(error, errorContext);
     throw error;
   }
 };

@@ -78,7 +78,7 @@ export const AdminViewContent: React.FC<Props> = ({
             resetAddState={logic.resetAddState}
             saveBatchEdit={async (batchIsHiddenApplied) => {
               if (logic.checkSyncLock()) return;
-              await withFeedback(() => logic.saveBatchEdit(batchIsHiddenApplied), '批量更新成功');
+              await withFeedback(() => logic.saveBatchEdit(batchIsHiddenApplied), '批量更新成功', '批量编辑照片失败');
             }}
             batchEditIds={logic.batchEditIds}
             formState={logic.formState}
@@ -139,7 +139,7 @@ export const AdminViewContent: React.FC<Props> = ({
                 toast.warning('系统正在同步，请稍后再操作');
                 return;
               }
-              await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态');
+              await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态', '切换照片隐藏状态失败');
             }}
             updatePhoto={async (id, updates) => {
               if (logic.checkSyncLock()) return;
@@ -201,7 +201,7 @@ export const AdminViewContent: React.FC<Props> = ({
                 resetAddState={logic.resetAddState} 
                 saveNewPhoto={async () => {
                   if (logic.checkSyncLock()) return;
-                  await withFeedback(() => logic.saveNewPhoto(), '照片已保存');
+                  await withFeedback(() => logic.saveNewPhoto(), '照片已保存', '保存照片失败');
                 }}
                 formState={logic.formState}
                 updateForm={logic.updateForm}

@@ -8,6 +8,7 @@ import {
 import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
 import { useErrorHandler } from '../../../utils/errorHandler';
 import { useFormValidation } from '../../../hooks/useFormValidation';
+import { withFeedback } from '../../../utils/uiFeedback';
 
 interface Props {
   editPhotoId: string | null;
@@ -103,11 +104,10 @@ export const usePhotoEditLogic = (props: Props) => {
             await withFeedback(async () => {
                 const m = await import('../../../services/photoMutationService');
                 await m.updatePhotoHidden(editPhotoId, nextValue);
-            }, `照片已${nextValue ? '隐藏' : '显示'}`);
+            }, `照片已${nextValue ? '隐藏' : '显示'}`, '自动保存可见性失败');
         } catch (e) {
             // Rollback on failure
             updateForm({ is_hidden: !nextValue });
-            handleError(e, '自动保存可见性失败');
         }
     }
   };
