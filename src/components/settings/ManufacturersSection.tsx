@@ -25,13 +25,13 @@ export const ManufacturersSection: React.FC<ManufacturersSectionProps> = ({
       <div className="flex items-center justify-between">
         <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
           <div className="w-1.5 h-3.5 bg-brand-navy rounded-full"></div>
-          生产商
+          生产商设定 / Manufacturers
         </h3>
-        <span className="text-[10px] text-brand-navy/40 font-black uppercase">{(manufacturers || []).length} 个项目</span>
+        <span className="text-[10px] text-brand-navy/40 font-black uppercase">{(manufacturers || []).length} Items</span>
       </div>
       <div className="flex gap-2">
         <button onClick={handleAddManufacturer} className={buttonStyles.accent}>
-          <Plus size={16} /> 新增生产商
+          <Plus size={16} /> 新增生产商 / Add New
         </button>
       </div>
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">

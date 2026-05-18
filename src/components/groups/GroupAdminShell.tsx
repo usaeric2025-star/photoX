@@ -75,7 +75,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     isStaffMode = false,
     contactWhatsApp = () => {},
     onToggleHidden = () => {},
-    lang = 'zh',
+    lang = 'en',
     t, categories, tagMap, allTags = [],
     setAlertDialog: propsSetAlertDialog,
     updatePhoto: hookUpdatePhoto

@@ -178,7 +178,6 @@ export const AdminViewContent: React.FC<Props> = ({
               await logic.onRefresh();
             }}
             cloudCount={logic.cloudCount}
-            photosCount={logic.photos.length}
             lastSyncTime={lastSyncTime}
             isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
           />
@@ -246,7 +245,7 @@ export const AdminViewContent: React.FC<Props> = ({
              logic.setBatchEditIds(ids);
           }}
           onAiAnalyze={logic.handleSingleAiAnalyze}
-          onBatchAiAnalyze={logic.handleBatchAiIdentify}
+          onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger}
           onCancelAnalyze={logic.abortAnalysis}
           isAnalyzing={logic.loadingType === 'analyzing'}
           onImport={() => {

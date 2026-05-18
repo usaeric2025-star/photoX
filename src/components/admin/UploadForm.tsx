@@ -41,7 +41,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   aiDebugInfo, abortAnalysis
 }) => {
   const { appLang, setPromptDialog, setAlertDialog, withLoading } = useGalleryStore();
-  const t = translations[appLang as LanguageCode] || translations['zh'];
+  const t = translations[appLang as LanguageCode] || translations['en'];
   const { mutateAsync: addTagMut } = useAddTagMutation();
   const { mutateAsync: updateTagMut } = useUpdateTagMutation();
   const { mutateAsync: deleteTagMut } = useDeleteTagMutation();

@@ -38,12 +38,12 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
       <div className="flex items-center justify-between">
         <h4 className="font-black text-white text-[10px] uppercase tracking-widest flex items-center gap-2">
           <Cloud size={18} className={user ? 'text-brand-gold' : 'text-white/30'} />
-          云端存储管理
+          云端存储管理 / Cloud Storage
         </h4>
         {user && (
           <div className="flex items-center gap-1.5 px-3 py-1 bg-brand-gold/20 rounded-full border border-brand-gold/30">
             <Skeleton className="w-1.5 h-1.5 bg-brand-gold rounded-full" />
-            <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider">已连接</span>
+            <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider">已连接 / Connected</span>
           </div>
         )}
       </div>
@@ -54,7 +54,7 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
           className="w-full py-4 bg-white hover:bg-brand-bg text-brand-navy rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
         >
           <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-          使用 Google 登录
+          使用 Google 登录 / Login with Google
         </button>
       ) : (
         <div className="space-y-4 pt-1">
@@ -85,21 +85,21 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
               disabled={isSyncing}
               className="bg-brand-gold hover:bg-brand-gold/90 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
             >
-              <CloudUpload size={16} /> 备份至云端
+              <CloudUpload size={16} /> 备份至云端 / Backup
             </button>
             <button 
               onClick={() => performPullSync().catch(()=>{})}
               disabled={isSyncing}
               className="bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
             >
-              <CloudDownload size={16} /> 从云端恢复
+              <CloudDownload size={16} /> 从云端恢复 / Restore
             </button>
           </div>
 
           <div className="text-center p-2 bg-black/20 rounded-xl border border-white/5">
             <p className="text-[10px] text-white/40 uppercase tracking-widest leading-loose">
-              云端: <span className="text-white font-black">{cloudCount !== null ? cloudCount : '---'} 张</span> | 
-              最近同步: <span className="text-white font-black">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-CN', { hour12: false }) : '无'}</span>
+              云端 / Cloud: <span className="text-white font-black">{cloudCount !== null ? cloudCount : '---'} Pcs</span> | 
+              最近 / Last Sync: <span className="text-white font-black">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-CN', { hour12: false }) : 'N/A'}</span>
             </p>
           </div>
 
@@ -112,13 +112,13 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
             <button 
               onClick={async () => {
                 setAlertDialog({
-                  title: '确认清空',
-                  message: '确定要清空本地数据缓存并强制从云端完整拉取吗？',
+                  title: '确认清空 / Reset Cache',
+                  message: '确定要清空本地数据缓存并从云端完整拉取吗？ / Reset local cache and re-sync from cloud?',
                   onConfirm: async () => {
                     localStorage.removeItem('lastSyncTime');
                     localStorage.removeItem('uuid_v2_cleanup_done');
                     await refreshCloudData(user, true);
-                    toast.success('本地缓存已重置，正在全量同步');
+                    toast.success('本地缓存已重置 / Cache reset');
                   },
                   type: 'danger'
                 });

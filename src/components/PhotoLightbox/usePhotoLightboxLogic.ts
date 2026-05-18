@@ -25,17 +25,17 @@ export const usePhotoLightboxLogic = ({
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const [activeLang, setActiveLang] = useState<string>(lang || 'zh');
+  const [activeLang, setActiveLang] = useState<string>(lang || 'en');
   const [isCopied, setIsCopied] = useState(false);
   const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
-
+  
   // Swipe support
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const minSwipeDistance = 50;
 
   useEffect(() => {
-    setActiveLang(lang || 'zh');
+    setActiveLang(lang || 'en');
   }, [lang]);
 
   useEffect(() => {

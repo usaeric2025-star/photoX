@@ -32,11 +32,10 @@ export const useAdminDataPrep = () => {
   const { loadingState: loadingType, setLoadingState: setLoadingType, withLoading } = useLoading();
   const [cloudCount, setCloudCount] = useState<number | null>(null);
 
-  const [geminiApiKey, setGeminiApiKey] = useState('');
-  const [accessPasscode, setAccessPasscode] = useState('');
-  const [customModel, setCustomModel] = useState('gemini-1.5-flash');
-
-  const { filterCatId, filterTagIds, debouncedSearchQuery, appLang, activeScreen, setActiveScreen } = useGalleryStore();
+  const { 
+    filterCatId, filterTagIds, debouncedSearchQuery, appLang, activeScreen, setActiveScreen,
+    geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel
+  } = useGalleryStore();
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
@@ -156,8 +155,8 @@ export const useAdminDataPrep = () => {
 
   const onRefresh = useCallback(() => refreshCloudData(user, true, setCloudCount), [user, refreshCloudData]);
 
-  const lang = 'zh';
-  const t = translations.zh;
+  const lang = appLang as LanguageCode;
+  const t = translations[lang] || translations.en;
 
   const sessionValue = useMemo(() => ({
     user, isAdminMode: true, settings, setSettings, geminiApiKey, setGeminiApiKey,

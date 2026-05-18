@@ -255,7 +255,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                         setFocusedGroupPhotoId(activeGroupPhotos[next].id);
                       }}
                       t={props.t}
-                      lang={props.lang || 'zh'}
+                      lang={props.lang || 'en'}
                       categories={props.categories || []}
                       manufacturers={props.manufacturers || []}
                       tagMap={props.tagMap || {}}

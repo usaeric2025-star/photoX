@@ -35,7 +35,7 @@ export const AdminHeader: React.FC<Props> = ({
   filteredPhotos, setSelectedIds, setIsMultiSelect, 
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
-  appLang = 'zh',
+  appLang = 'en',
   isAnalyzing, batchProgress, settings: propSettings
 }) => {
   const { 
@@ -51,7 +51,7 @@ export const AdminHeader: React.FC<Props> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const toolsRef = useRef<HTMLDivElement>(null);
   
-  const t = translations[appLang as LanguageCode] || translations['zh'];
+  const t = translations[appLang as LanguageCode] || translations['en'];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -116,6 +116,8 @@ export const AdminHeader: React.FC<Props> = ({
     window.location.reload();
   };
 
+  const currentLang = appLang || 'en';
+
   return (
     <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -127,7 +129,6 @@ export const AdminHeader: React.FC<Props> = ({
           
           {photosCount !== undefined && (
             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-brand-navy/5 rounded-full border border-brand-navy/10 shadow-inner">
-              <span className="text-[10px] font-bold text-brand-navy/60 uppercase tracking-widest">{(t as any).total || 'TOTAL'}</span>
               <div className="flex items-center gap-1 font-mono text-[11px]">
                 <span className="font-bold text-brand-navy/80">{photosCount}</span>
                 <span className="text-brand-navy/30">/</span>
@@ -141,6 +142,23 @@ export const AdminHeader: React.FC<Props> = ({
               </div>
             </div>
           )}
+
+          {/* Inline Language Switcher for Admin */}
+          <div className="hidden lg:flex items-center gap-1 bg-brand-navy/5 p-1 rounded-full border border-brand-navy/10">
+            {['en', 'zh'].map(l => (
+              <button
+                key={l}
+                onClick={() => useGalleryStore.getState().setAppLang(l)}
+                className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase transition-all ${
+                  currentLang === l 
+                    ? 'bg-brand-navy text-white shadow-sm' 
+                    : 'text-brand-navy/40 hover:text-brand-navy/60'
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">

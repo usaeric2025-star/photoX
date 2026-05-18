@@ -66,6 +66,8 @@ export const usePublicGalleryLogic = (props: {
     togglePhotoSelection,
     clearSelection,
     setIsMultiSelect: setStoreIsMultiSelect,
+    appLang: langStore,
+    setAppLang: setLang
   } = useGalleryStore();
 
   const { data: qCategories = [] } = useCategoriesQuery();
@@ -118,16 +120,8 @@ export const usePublicGalleryLogic = (props: {
     return { displayPhotos: dp, gridPhotos: gp };
   }, [incomingPhotos, localPhotos, sortOrder, isAdminMode, isStaffMode, contextTags, categories, showGroupsCollapsed]);
 
-  const [langState, setLangState] = useState<LanguageCode>(() => {
-    return (localStorage.getItem('appLang') as LanguageCode) || 'zh';
-  });
-  const lang = isAdminMode ? 'zh' : langState;
-  const setLang = setLangState;
-  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
-
-  useEffect(() => {
-    if (!isAdminMode) localStorage.setItem('appLang', langState);
-  }, [langState, isAdminMode]);
+  const lang = (langStore || 'en') as LanguageCode;
+  const t = useMemo(() => translations[lang] || translations['en'], [lang]);
 
   const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(3);
   const columns = props.columns || internalColumns;

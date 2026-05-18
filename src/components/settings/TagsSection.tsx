@@ -39,17 +39,17 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
       <div className="flex items-center justify-between">
         <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
           <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
-          常用标签
+          标签管理 / Tag Management
         </h3>
-        <span className="text-[10px] text-brand-navy/40 font-black uppercase">{(tags || []).length} 个项目</span>
+        <span className="text-[10px] text-brand-navy/40 font-black uppercase">{(tags || []).length} Items</span>
       </div>
       <div className="flex gap-2 items-center">
         <button onClick={handleAddTag} className={buttonStyles.accent}>
-          <Plus size={16} /> 新增标签
+          <Plus size={16} /> 新增标签 / Add Tag
         </button>
         <div className="flex items-center gap-2 bg-brand-navy/5 px-3 py-1.5 rounded-full border border-brand-navy/10 ml-auto h-full">
            <span className="text-[10px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
-             <Heart size={12} className="text-brand-gold fill-brand-gold" /> 推荐数量
+             <Heart size={12} className="text-brand-gold fill-brand-gold" /> Pin Limit
            </span>
            <input 
              type="number"

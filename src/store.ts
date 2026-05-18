@@ -101,7 +101,7 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   activeScreen: 'home',
   alertDialog: null,
   promptDialog: null,
-  appLang: 'zh',
+  appLang: localStorage.getItem('appLang') || 'en',
   viewMode: 'private',
   isSyncing: false,
   
@@ -117,9 +117,9 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   tagIdToNameMap: {},
   
   // AI/Settings
-  geminiApiKey: '',
-  customModel: '',
-  accessPasscode: '',
+  geminiApiKey: localStorage.getItem('gemini_api_key') || '',
+  customModel: localStorage.getItem('ai_custom_model') || 'gemini-1.5-flash',
+  accessPasscode: localStorage.getItem('access_passcode') || '',
   aiDebugInfo: null,
   setAiDebugInfo: (aiDebugInfo) => set({ aiDebugInfo }),
   setLoadingType: (loadingType) => set({ loadingType: loadingType as 'local' }),
@@ -163,12 +163,24 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setActiveScreen: (screen) => set({ activeScreen: screen }),
   setAlertDialog: (alertDialog) => set({ alertDialog }),
   setPromptDialog: (promptDialog) => set({ promptDialog }),
-  setAppLang: (appLang) => set({ appLang }),
+  setAppLang: (appLang) => {
+    localStorage.setItem('appLang', appLang);
+    set({ appLang });
+  },
   setViewMode: (viewMode) => set({ viewMode }),
   setIsSyncing: (isSyncing) => set({ isSyncing }),
-  setGeminiApiKey: (geminiApiKey) => set({ geminiApiKey }),
-  setCustomModel: (customModel) => set({ customModel }),
-  setAccessPasscode: (accessPasscode) => set({ accessPasscode }),
+  setGeminiApiKey: (geminiApiKey) => {
+    localStorage.setItem('gemini_api_key', geminiApiKey);
+    set({ geminiApiKey });
+  },
+  setCustomModel: (customModel) => {
+    localStorage.setItem('ai_custom_model', customModel);
+    set({ customModel });
+  },
+  setAccessPasscode: (accessPasscode) => {
+    localStorage.setItem('access_passcode', accessPasscode);
+    set({ accessPasscode });
+  },
   logout: () => set({ user: null, isAdminMode: false }),
   loginWithGoogle: async () => {}, // Keep only essential placeholder for auth if needed elsewhere
 }));

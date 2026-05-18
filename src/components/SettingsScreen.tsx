@@ -212,6 +212,34 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
         <div className="space-y-6">
+              {/* Language Switch Section */}
+              <div className={cardClass}>
+                <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
+                  <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
+                  语言设定 / Language Settings
+                </h4>
+                <div className="flex gap-2">
+                  {[
+                    { code: 'en', label: 'English', flag: '🇺🇸' },
+                    { code: 'zh', label: '中文', flag: '🇨🇳' },
+                    { code: 'ms', label: 'Malay', flag: '🇲🇾' }
+                  ].map(l => (
+                    <button
+                      key={l.code}
+                      onClick={() => useGalleryStore.getState().setAppLang(l.code)}
+                      className={`flex-1 p-3 rounded-2xl border transition-all flex flex-col items-center gap-1 ${
+                        appLang === l.code 
+                          ? 'bg-brand-navy text-white border-brand-navy shadow-lg' 
+                          : 'bg-white text-brand-navy border-brand-navy/10 hover:bg-brand-navy/5'
+                      }`}
+                    >
+                      <span className="text-xl">{l.flag}</span>
+                      <span className="text-[10px] font-black uppercase">{l.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Logo Section */}
               <LogoSection 
                 settings={settings}
@@ -254,6 +282,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         <CategoriesSection 
           categories={categories}
           deleteCategory={deleteCategory}
+          updateCategory={updateCategory}
+          addCategory={addCategory}
           cardClass={cardClass}
         />
 

@@ -12,7 +12,7 @@ import { saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryStore } from '../store';
 import { PAGINATION } from '../constants/config';
-import { AppSettings } from '../types';
+import { AppSettings, Photo } from '../types';
 import { safeArray } from '../lib/utils';
 
 export default function PublicView() {
