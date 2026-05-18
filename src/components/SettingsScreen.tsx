@@ -59,7 +59,7 @@ const BUTTON_STYLES = {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { 
-    settings, user, geminiApiKey, customModel, accessPasscode,
+    settings, user, geminiApiKey, customModel, accessPasscode, appLang,
     setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
     setAlertDialog, setPromptDialog, withLoading,
     logout, loginWithGoogle
@@ -145,7 +145,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       onSubmit: async (newName) => {
         const normalized = normalizeTagName(newName);
         if (normalized && normalized !== tag.name) {
-          await updateTag(tag.id, normalized);
+          await updateTag(tag.id, { name: normalized });
         }
       }
     });
@@ -159,7 +159,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       onSubmit: async (newName) => {
         const normalized = normalizeManufacturerName(newName);
         if (normalized && normalized !== mfr.name) {
-          await updateManufacturer(String(mfr.id), normalized);
+          await updateManufacturer(String(mfr.id), { name: normalized });
         }
       }
     });

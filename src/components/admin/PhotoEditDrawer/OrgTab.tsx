@@ -12,10 +12,11 @@ interface Props {
   manufacturers: Manufacturer[];
   appLang: string;
   onAddTag: (name: string) => Promise<string>;
-  onUpdateTag: (id: string, name: string) => Promise<boolean>;
+  onUpdateTag: (id: string, updates: Partial<Tag>) => Promise<boolean>;
   onDeleteTag: (id: string) => Promise<boolean>;
   onAddManufacturer: () => void;
   onEditManufacturer: (mfr: Manufacturer) => void;
+  onUpdateManufacturer: (id: string, updates: Partial<Manufacturer>) => Promise<boolean>;
   onDeleteManufacturer: (id: string) => void;
 }
 
@@ -42,7 +43,7 @@ export const OrgTab: React.FC<Props> = ({
               selectedTagIds={safeArray<string>(formState.tagIds)}
               onChange={(newIds) => updateForm({ tagIds: newIds })}
               addTag={onAddTag}
-              updateTag={onUpdateTag}
+              updateTag={(id, name) => onUpdateTag(id, { name })}
               deleteTag={onDeleteTag}
            />
         </section>

@@ -115,10 +115,11 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                     placeholder: mfr.name,
                     onSubmit: async (name) => {
                       const trimmed = name.trim();
-                      if(trimmed) await logic.updateManufacturer(mfr.id, trimmed);
+                      if(trimmed) await logic.updateManufacturer(mfr.id, { name: trimmed });
                     }
                   });
                 }}
+                onUpdateManufacturer={logic.updateManufacturer}
                 onDeleteManufacturer={logic.deleteManufacturer}
               />
             </TabsContent>

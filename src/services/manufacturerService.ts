@@ -33,8 +33,8 @@ export const addManufacturerToDB = async (name: string): Promise<Manufacturer> =
 };
 
 // 更新厂商
-export const updateManufacturerInDB = async (id: string, name: string) => {
-  await updateManufacturer(id, { name });
+export const updateManufacturerInDB = async (id: string, updates: Partial<Manufacturer>) => {
+  await updateManufacturer(id, updates);
   manufacturerCache.clear();
   return true;
 };

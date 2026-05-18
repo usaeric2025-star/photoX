@@ -6,7 +6,7 @@ import {
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation
 } from '../../../hooks';
-import { Photo, ProductFormData } from '../../../types';
+import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
 import { useErrorHandler } from '../../../utils/errorHandler';
 import { useFormValidation } from '../../../hooks/useFormValidation';
 
@@ -42,10 +42,10 @@ export const usePhotoEditLogic = (props: Props) => {
   const [isProcessingImage, setIsProcessingImage] = useState(false);
 
   const addTag = async (name: string) => { const tag = await addTagMut(name); return tag.id; };
-  const updateTag = async (id: string, name: string) => { await updateTagMut({ id, name }); return true; };
+  const updateTag = async (id: string, updates: Partial<Tag>) => { await updateTagMut({ id, updates }); return true; };
   const deleteTag = async (id: string) => { await deleteTagMut(id); return true; };
   const addManufacturer = async (name: string) => { return await addManMut(name); };
-  const updateManufacturer = async (id: string, name: string) => { await updateManMut({ id, name }); return true; };
+  const updateManufacturer = async (id: string, updates: Partial<Manufacturer>) => { await updateManMut({ id, updates }); return true; };
   const deleteManufacturer = async (id: string) => { await deleteManMut(id); return true; };
 
   const isPartOfGroup = useMemo(() => {

@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase';
 import { useGalleryStore } from '../store';
 import { safeArray } from '../lib/utils';
 import { toast } from 'sonner';
-import { Category, Photo, Tag } from '../types';
+import { Category, Photo, Tag, Manufacturer } from '../types';
 import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from './';
 
 export const useAdminCategory = (adminUI: {
@@ -36,8 +36,8 @@ export const useAdminCategory = (adminUI: {
     return addTagMutation.mutateAsync(name);
   };
 
-  const updateTag = async (tagId: string, newName: string) => {
-    return updateTagMutation.mutateAsync({ id: tagId, name: newName });
+  const updateTag = async (tagId: string, updates: Partial<Tag>) => {
+    return updateTagMutation.mutateAsync({ id: tagId, updates });
   };
 
   const deleteTag = async (id: string | number) => {
@@ -60,8 +60,8 @@ export const useAdminCategory = (adminUI: {
     return addManufacturerMutation.mutateAsync(name);
   };
 
-  const updateManufacturer = async (id: string | number, name: string) => {
-    return updateManufacturerMutation.mutateAsync({ id: String(id), name });
+  const updateManufacturer = async (id: string | number, updates: Partial<Manufacturer>) => {
+    return updateManufacturerMutation.mutateAsync({ id: String(id), updates });
   };
 
   const deleteManufacturer = async (id: string | number) => {

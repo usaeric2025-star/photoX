@@ -18,7 +18,7 @@ export const useAddTagMutation = () => {
 export const useUpdateTagMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) => updateTagInDB(id, name),
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Tag> }) => updateTagInDB(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
       queryClient.invalidateQueries({ queryKey: ['photos'] });
@@ -82,7 +82,7 @@ export const useAddManufacturerMutation = () => {
 export const useUpdateManufacturerMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) => updateManufacturerInDB(id, name),
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => updateManufacturerInDB(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
       queryClient.invalidateQueries({ queryKey: ['photos'] });

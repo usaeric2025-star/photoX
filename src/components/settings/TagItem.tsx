@@ -17,7 +17,7 @@ interface TagItemProps {
 export const TagItem: React.FC<TagItemProps> = ({ 
   tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin 
 }) => {
-  const { setAlertDialog } = useGalleryStore();
+  const { setAlertDialog, setPromptDialog } = useGalleryStore();
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -85,10 +85,15 @@ export const TagItem: React.FC<TagItemProps> = ({
       onMouseLeave={handleEnd}
       onContextMenu={handleContextMenu}
     >
-      <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none flex items-center gap-1">
-        {isPinned && <Heart size={10} className="text-brand-gold fill-brand-gold shrink-0" />}
-        {tag.name}
-      </span>
+      <div className="flex flex-col">
+        <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none flex items-center gap-1">
+          {isPinned && <Heart size={10} className="text-brand-gold fill-brand-gold shrink-0" />}
+          {tag.zh || tag.name}
+        </span>
+        <span className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-tighter select-none">
+          {tag.en || 'No English'}
+        </span>
+      </div>
       
       <button 
         onClick={handleDeleteClick}
@@ -112,10 +117,25 @@ export const TagItem: React.FC<TagItemProps> = ({
               <Heart size={12} className={isPinned ? "fill-white" : ""} /> {isPinned ? '取消推荐' : '设为推荐'}
             </button>
             <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setPromptDialog({
+                  title: '编辑名称 (EN) / Edit Tag (EN)',
+                  message: '输入新的英文名称 / Enter new English name:',
+                  placeholder: tag.en || '',
+                  onSubmit: (name) => name !== undefined && handleUpdateTagName({ ...tag, en: name.trim() })
+                });
+                setActiveTagMenuId(null);
+              }}
+              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+            >
+              <Pencil size={12} /> 编辑 (EN)
+            </button>
+            <button 
               onClick={handleEditClick}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Pencil size={12} /> 编辑
+              <Pencil size={12} /> 编辑 (ZH)
             </button>
             <button 
               onClick={handleMenuDeleteClick}

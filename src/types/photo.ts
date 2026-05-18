@@ -70,6 +70,9 @@ export interface Category {
 export interface Tag {
   id: string;
   name: string;
+  zh?: string;
+  en?: string;
+  ms?: string;
   aliases: string[];
   userId?: string;
   isPinned?: boolean;
@@ -78,6 +81,9 @@ export interface Tag {
 export interface Manufacturer {
   id: string;
   name: string;
+  zh?: string;
+  en?: string;
+  ms?: string;
   aliases: string[];
 }
 

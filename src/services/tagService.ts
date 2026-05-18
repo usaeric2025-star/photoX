@@ -44,9 +44,12 @@ export const batchCreateTags = async (names: string[]): Promise<Map<string, stri
     return map;
 };
 
-export const updateTagInDB = async (tagId: string, name: string): Promise<boolean> => {
-    const normalizedName = name.toUpperCase().trim();
-    await updateTag(tagId, { name: normalizedName });
+export const updateTagInDB = async (tagId: string, updates: Partial<Tag>): Promise<boolean> => {
+    const finalUpdates = { ...updates };
+    if (finalUpdates.name) {
+      finalUpdates.name = finalUpdates.name.toUpperCase().trim();
+    }
+    await updateTag(tagId, finalUpdates);
     tagCache.clear();
     return true;
 };

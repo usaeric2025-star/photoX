@@ -53,20 +53,36 @@ export const CategoriesSection: React.FC<CategoriesSectionProps> = ({
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
         {categories.map(cat => (
           <div key={cat.id} className="bg-white border border-brand-navy/10 pl-4 py-1.5 pr-1.5 rounded-full flex items-center gap-2 shadow-sm group">
-            <span 
-              className="text-[11px] font-black text-brand-navy uppercase tracking-tight cursor-pointer hover:text-brand-gold transition-colors"
-              onClick={() => {
-                if (!updateCategory) return;
-                setPromptDialog({
-                  title: '编辑分类 / Edit Category',
-                  message: '输入新名称 / Enter new name:',
-                  placeholder: cat.name,
-                  onSubmit: (name) => name && updateCategory(cat.id, { name: name.trim() })
-                });
-              }}
-            >
-               {cat.name}
-            </span>
+            <div className="flex flex-col">
+              <span 
+                className="text-[11px] font-black text-brand-navy uppercase tracking-tight cursor-pointer hover:text-brand-gold transition-colors"
+                onClick={() => {
+                  if (!updateCategory) return;
+                  setPromptDialog({
+                    title: '编辑名称 (ZH) / Edit Name (ZH)',
+                    message: '输入新的中文名称 / Enter new Chinese name:',
+                    placeholder: cat.zh || cat.name,
+                    onSubmit: (name) => name && updateCategory(cat.id, { zh: name.trim(), name: name.trim() })
+                  });
+                }}
+              >
+                 {cat.zh || cat.name}
+              </span>
+              <span 
+                className="text-[9px] font-bold text-brand-navy/30 uppercase tracking-tighter cursor-pointer hover:text-brand-gold transition-colors"
+                onClick={() => {
+                  if (!updateCategory) return;
+                  setPromptDialog({
+                    title: '编辑名称 (EN) / Edit Name (EN)',
+                    message: '输入新的英文名称 / Enter new English name:',
+                    placeholder: cat.en || '',
+                    onSubmit: (name) => name !== undefined && updateCategory(cat.id, { en: name.trim() })
+                  });
+                }}
+              >
+                 {cat.en || 'No English Name'}
+              </span>
+            </div>
             {deleteCategory && (
                <button 
                   onClick={() => {

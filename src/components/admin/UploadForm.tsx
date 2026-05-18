@@ -214,7 +214,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             selectedTagIds={safeArray<string>(formState.tagIds)}
             onChange={(newIds) => updateForm({ tagIds: newIds })}
             addTag={async (name) => { return await addTagMut(name); }}
-            updateTag={async (id, name) => { await updateTagMut({ id, name }); return true; }}
+            updateTag={async (id, name) => { await updateTagMut({ id, updates: { name } }); return true; }}
             deleteTag={async (id) => { await deleteTagMut(id); return true; }}
           />
         </section>

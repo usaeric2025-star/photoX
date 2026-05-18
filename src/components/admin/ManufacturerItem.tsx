@@ -43,9 +43,14 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
         setActiveMenuId(manufacturer.id);
       }}
     >
-      <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
-        {manufacturer.name}
-      </span>
+      <div className="flex flex-col">
+        <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
+          {manufacturer.zh || manufacturer.name}
+        </span>
+        <span className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-tighter select-none">
+          {manufacturer.en || 'No English'}
+        </span>
+      </div>
 
       <AnimatePresence>
         {activeMenuId === manufacturer.id && (
@@ -58,12 +63,32 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
             <button 
               onClick={(e) => {
                 e.stopPropagation();
-                onUpdate(manufacturer);
+                useGalleryStore.getState().setPromptDialog({
+                  title: '编辑名称 (EN) / Edit (EN)',
+                  message: '输入新的英文名称 / Enter new English name:',
+                  placeholder: manufacturer.en || '',
+                  onSubmit: (name) => name !== undefined && onUpdate({ ...manufacturer, en: name.trim() })
+                });
                 setActiveMenuId(null);
               }}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Pencil size={12} /> 编辑
+              <Pencil size={12} /> 编辑 (EN)
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                useGalleryStore.getState().setPromptDialog({
+                  title: '编辑名称 (ZH) / Edit (ZH)',
+                  message: '输入新的中文名称 / Enter new Chinese name:',
+                  placeholder: manufacturer.zh || manufacturer.name,
+                  onSubmit: (name) => name && onUpdate({ ...manufacturer, zh: name.trim(), name: name.trim() })
+                });
+                setActiveMenuId(null);
+              }}
+              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
+            >
+              <Pencil size={12} /> 编辑 (ZH)
             </button>
             <button 
               onClick={(e) => {

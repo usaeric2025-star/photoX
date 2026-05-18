@@ -155,7 +155,18 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setIsStaffMode: (isStaffMode) => set({ isStaffMode }),
   setUser: (user) => set({ user }),
   setIsAdminMode: (isAdminMode) => set({ isAdminMode }),
-  setSettings: (settings) => set({ settings }),
+  setSettings: (settings) => {
+    if (settings) {
+      set({ 
+        settings,
+        geminiApiKey: settings.gemini_api_key || localStorage.getItem('gemini_api_key') || '',
+        customModel: settings.custom_model || localStorage.getItem('ai_custom_model') || 'gemini-1.5-flash',
+        accessPasscode: settings.access_passcode || localStorage.getItem('access_passcode') || ''
+      });
+    } else {
+      set({ settings: null });
+    }
+  },
   setErrors: (errors) => set({ errors }),
   clearErrors: () => set({ errors: [] }),
   setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
@@ -171,15 +182,24 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setIsSyncing: (isSyncing) => set({ isSyncing }),
   setGeminiApiKey: (geminiApiKey) => {
     localStorage.setItem('gemini_api_key', geminiApiKey);
-    set({ geminiApiKey });
+    set((state) => ({ 
+      geminiApiKey,
+      settings: state.settings ? { ...state.settings, gemini_api_key: geminiApiKey } : { gemini_api_key: geminiApiKey } as AppSettings
+    }));
   },
   setCustomModel: (customModel) => {
     localStorage.setItem('ai_custom_model', customModel);
-    set({ customModel });
+    set((state) => ({ 
+      customModel,
+      settings: state.settings ? { ...state.settings, custom_model: customModel } : { custom_model: customModel } as AppSettings
+    }));
   },
   setAccessPasscode: (accessPasscode) => {
     localStorage.setItem('access_passcode', accessPasscode);
-    set({ accessPasscode });
+    set((state) => ({ 
+      accessPasscode,
+      settings: state.settings ? { ...state.settings, access_passcode: accessPasscode } : { access_passcode: accessPasscode } as AppSettings
+    }));
   },
   logout: () => set({ user: null, isAdminMode: false }),
   loginWithGoogle: async () => {}, // Keep only essential placeholder for auth if needed elsewhere
