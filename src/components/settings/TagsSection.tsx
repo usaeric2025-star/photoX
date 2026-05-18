@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Heart } from 'lucide-react';
+import { Plus, Heart, Sparkles } from 'lucide-react';
 import { Tag, AppSettings } from '../../types';
 import { TagItem } from './TagItem';
 
@@ -47,25 +47,49 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
         <button onClick={handleAddTag} className={buttonStyles.accent}>
           <Plus size={16} /> 新增标签 / Add Tag
         </button>
-        <div className="flex items-center gap-2 bg-brand-navy/5 px-3 py-1.5 rounded-full border border-brand-navy/10 ml-auto h-full">
-           <span className="text-[10px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
-             <Heart size={12} className="text-brand-gold fill-brand-gold" /> Pin Limit
-           </span>
-           <input 
-             type="number"
-             min={1}
-             max={50}
-             className="w-12 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
-             value={settings?.hotTagsCount !== undefined ? settings.hotTagsCount : 9}
-             onChange={(e) => {
-               const val = parseInt(e.target.value);
-               const num = isNaN(val) ? 9 : val;
-               const nextSettings = { ...settings, hotTagsCount: num } as AppSettings;
-               setSettings(nextSettings);
-               setHasChanges(true);
-               debouncedSave(nextSettings);
-             }}
-           />
+        <div className="flex flex-wrap items-center gap-3 bg-brand-navy/5 px-4 py-2 rounded-2xl border border-brand-navy/10 ml-auto h-full">
+           <div className="flex flex-col gap-0.5">
+             <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
+               <Heart size={10} className="text-brand-gold fill-brand-gold" /> Hot Limit
+             </span>
+             <input 
+               type="number"
+               min={1}
+               max={50}
+               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
+               value={settings?.hotTagsCount !== undefined ? settings.hotTagsCount : 9}
+               onChange={(e) => {
+                 const val = parseInt(e.target.value);
+                 const num = isNaN(val) ? 9 : val;
+                 const nextSettings = { ...settings, hotTagsCount: num } as AppSettings;
+                 setSettings(nextSettings);
+                 setHasChanges(true);
+                 debouncedSave(nextSettings);
+               }}
+             />
+           </div>
+           
+           <div className="w-px h-8 bg-brand-navy/10 mx-1"></div>
+
+           <div className="flex flex-col gap-0.5">
+             <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
+               <Sparkles size={10} className="text-brand-gold fill-brand-gold" /> Usage Min
+             </span>
+             <input 
+               type="number"
+               min={0}
+               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
+               value={settings?.hotTagThreshold !== undefined ? settings.hotTagThreshold : 1}
+               onChange={(e) => {
+                 const val = parseInt(e.target.value);
+                 const num = isNaN(val) ? 1 : val;
+                 const nextSettings = { ...settings, hotTagThreshold: num } as AppSettings;
+                 setSettings(nextSettings);
+                 setHasChanges(true);
+                 debouncedSave(nextSettings);
+               }}
+             />
+           </div>
         </div>
       </div>
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">

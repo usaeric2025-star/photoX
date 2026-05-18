@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Tag, AppSettings } from '../types';
@@ -33,9 +33,23 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   searchQuery, setSearchQuery, sortOrder, toggleSortOrder, columns, setColumns,
   showGroupsCollapsed, setShowGroupsCollapsed, categories,
   selectedCatCode, setSelectedCatCode, selectedSubId, setSelectedSubId,
-  selectedTagIds, setSelectedTagIds, sortedTags, lang, t, onScrollToTop,
+  selectedTagIds, setSelectedTagIds, sortedTags, lang, t,  onScrollToTop,
   showHotEffects = true, settings
 }) => {
+  const hotIds = useMemo(() => {
+    const hotTagsCount = settings?.hotTagsCount ?? 9;
+    const hotTagThreshold = settings?.hotTagThreshold ?? 1;
+    const pinnedIds = (settings?.pinnedTags || []).map(id => String(id));
+
+    const candidates = sortedTags.filter(tag => 
+      !tag.isPinned && 
+      !pinnedIds.includes(String(tag.id)) && 
+      (tag.usageCount || 0) >= hotTagThreshold
+    ).slice(0, hotTagsCount);
+    
+    return new Set(candidates.map(t => String(t.id)));
+  }, [sortedTags, settings?.hotTagsCount, settings?.hotTagThreshold, settings?.pinnedTags]);
+
   return (
     <div className="shrink-0 p-3 z-40 bg-brand-bg border-b border-brand-navy/5">
       <div className="space-y-2.5 pb-2">
@@ -147,11 +161,14 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="relative overflow-hidden">
           <div className="flex flex-wrap gap-1.5 items-start max-h-[80px] overflow-y-auto pb-4 content-start scrollbar-hide">
-            {sortedTags.map(tag => {
+            {(() => {
+              const pinnedIds = (settings?.pinnedTags || []).map(id => String(id));
+
+              return sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = (selectedTagIds || []).includes(strTagId);
-                const isHot = (tag.usageCount || 0) >= 1; // Lower threshold to show hot tags if available
-                const isPinned = tag.isPinned;
+                const isPinned = tag.isPinned || pinnedIds.includes(strTagId);
+                const isHot = !isPinned && hotIds.has(strTagId);
                 
                 return (
                   <button 
@@ -165,8 +182,9 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       "px-2.5 py-1 rounded-xl text-[9px] font-black transition-colors border-2 shadow-sm flex items-center gap-1",
                       isSelected 
                         ? 'bg-brand-navy border-brand-navy text-brand-bg shadow-md z-10' 
-                        : 'bg-white border-slate-100 text-brand-navy/30 hover:text-brand-navy hover:border-brand-navy/20',
-                      (isPinned || isHot) && !isSelected && "border-brand-gold/30 bg-brand-gold/5 text-brand-gold hover:border-brand-gold/50 hover:bg-brand-gold/10"
+                        : (isPinned || isHot) 
+                          ? "border-brand-gold/30 bg-brand-gold/5 text-brand-gold hover:border-brand-gold/50 hover:bg-brand-gold/10 shadow-inner"
+                          : 'bg-white border-slate-100 text-brand-navy/30 hover:text-brand-navy hover:border-brand-navy/20'
                     )}
                   >
                     {!isPinned && !isHot && <span className={cn(
@@ -175,10 +193,11 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     )} />}
                     {tag.zh || tag.name}
                     {isPinned && !isSelected && <Heart size={8} className="fill-brand-gold text-brand-gold"/>}
-                    {isHot && !isPinned && !isSelected && <span className="text-[7px] bg-brand-gold/20 text-brand-gold px-1 rounded font-black tracking-tighter">HOT</span>}
+                    {isHot && !isSelected && <span className="text-[7px] bg-brand-gold text-brand-bg px-1 rounded font-black tracking-tighter shadow-sm">HOT</span>}
                   </button>
                 );
-              })}
+              });
+            })()}
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-brand-bg/90 to-transparent pointer-events-none" />
         </div>

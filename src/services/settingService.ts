@@ -27,6 +27,7 @@ export const fetchSettings = async () => {
                 const parsed = JSON.parse(data.tags_json);
                 if (parsed.pinnedTags) data.pinnedTags = parsed.pinnedTags;
                 if (parsed.hotTagsCount !== undefined) data.hotTagsCount = parsed.hotTagsCount;
+                if (parsed.hotTagThreshold !== undefined) data.hotTagThreshold = parsed.hotTagThreshold;
             } catch (e) {}
         }
     }
@@ -47,10 +48,11 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         }
 
         // Handle hot tags
-        if (payload.pinnedTags || payload.hotTagsCount !== undefined) {
+        if (payload.pinnedTags || payload.hotTagsCount !== undefined || payload.hotTagThreshold !== undefined) {
             payload.tags_json = JSON.stringify({
                 pinnedTags: payload.pinnedTags || [],
                 hotTagsCount: payload.hotTagsCount || 9,
+                hotTagThreshold: payload.hotTagThreshold || 1,
             });
         }
 
@@ -65,6 +67,7 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         
         delete payload.pinnedTags;
         delete payload.hotTagsCount;
+        delete payload.hotTagThreshold;
 
         console.log("Saving settings to Supabase (cleaned payload)...", payload);
 

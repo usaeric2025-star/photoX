@@ -18,11 +18,12 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
         return [];
     }
     
-    // Ensure name is uppercase and id is string
-    const result = (data || []).map((t: Tag) => ({
+    // Ensure name is uppercase and id is string, map usage_count
+    const result = (data || []).map((t: any) => ({
       ...t,
       name: (t.name || '').toUpperCase(),
-      id: String(t.id)
+      id: String(t.id),
+      usageCount: t.usage_count || 0
     }));
 
     tagCache.set(result);

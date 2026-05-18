@@ -32,6 +32,7 @@ export interface AppSettings {
   logo_url?: string;
   pinnedTags?: string[];
   hotTagsCount?: number;
+  hotTagThreshold?: number;
   gemini_api_key?: string;
   custom_model?: string;
   provider?: string;
