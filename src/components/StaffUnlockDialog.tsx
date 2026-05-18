@@ -1,7 +1,7 @@
 import React from 'react';
-import { toast } from 'sonner';
 import { motion } from 'motion/react';
 import { Lock, LogIn } from 'lucide-react';
+import { useErrorHandler } from '../utils/errorHandler';
 
 interface StaffUnlockDialogProps {
   isOpen: boolean;
@@ -19,6 +19,7 @@ export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, loginWithGoogle, t
 }) => {
   if (!isOpen) return null;
+  const { handleError } = useErrorHandler();
 
   return (
     <motion.div 
@@ -86,7 +87,7 @@ export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
                       // Don't close modal immediately to show intent
                       await loginWithGoogle?.();
                     } catch (e: any) { 
-                      toast.error(`${t.loginFailed}: ${e.message || String(e)}`);
+                      handleError(e, t.loginFailed);
                     }
                   }}
                   className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all text-sm flex items-center justify-center gap-2"

@@ -121,7 +121,6 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       }
       
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
-      toast.success('识别完成');
       setAiDebugInfo(null);
       return result;
     } catch (err: unknown) {

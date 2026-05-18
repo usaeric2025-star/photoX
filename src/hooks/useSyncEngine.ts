@@ -5,9 +5,11 @@ import { fetchSettings } from '../services/settingService';
 import { getPhotoCount } from '../services/photoService';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from './queries/keys';
+import { useErrorHandler } from '../utils/errorHandler';
 
 export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T>) => Promise<T>) => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
   const settings = useGalleryStore(state => state.settings);
   const setSettings = useGalleryStore(state => state.setSettings);
   const isSyncing = useGalleryStore(state => state.isSyncing);
@@ -37,10 +39,10 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings })
         ]);
       } catch (err) {
-        console.error('Refresh failed:', err);
+        handleError(err, '同步失败');
       }
     });
-  }, [withLoading, setSettings, queryClient]);
+  }, [withLoading, setSettings, queryClient, handleError]);
 
   return {
     viewMode,

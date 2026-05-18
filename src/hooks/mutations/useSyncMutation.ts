@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useErrorHandler } from '../../utils/errorHandler';
 import { QUERY_KEYS } from '../queries/keys';
 
 export const useSyncMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
   
   return useMutation({
     mutationFn: async (type: 'push' | 'pull') => {
@@ -18,7 +19,7 @@ export const useSyncMutation = () => {
       }
     },
     onError: (err: any) => {
-      toast.error(`同步失败: ${err.message}`);
+      handleError(err, '同步失败');
     }
   });
 };

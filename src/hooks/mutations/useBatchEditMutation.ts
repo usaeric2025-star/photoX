@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { updatePhotosBatch } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 export const useBatchEditMutation = (userId: string) => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
   return useMutation({
     mutationFn: ({ ids, updates }: { ids: string[]; updates: any }) => 
       updatePhotosBatch(userId, ids, updates),
@@ -53,7 +54,7 @@ export const useBatchEditMutation = (userId: string) => {
         });
       }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      toast.error(`批量编辑失败: ${err instanceof Error ? err.message : '未知原因'}`);
+      handleError(err, '批量编辑失败');
     },
   });
 };

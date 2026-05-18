@@ -1,11 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Photo } from '../../types';
 import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 export const useUpdatePhotoMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+  
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => updatePhotoFn(id, updates),
     onMutate: async ({ id, updates }) => {
@@ -54,13 +56,15 @@ export const useUpdatePhotoMutation = () => {
         });
       }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      toast.error(`操作失败：${err instanceof Error ? err.message : '未知错误'}`);
+      handleError(err, '更新照片失败');
     },
   });
 };
 
 export const useBatchUpdatePhotosMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+  
   return useMutation({
     mutationFn: ({ userId, ids, updates, onProgress, signal }: { 
       userId: string; 
@@ -73,7 +77,7 @@ export const useBatchUpdatePhotosMutation = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
     onError: (err, variables, context) => {
-      toast.error(`批量操作失败：${err instanceof Error ? err.message : '未知错误'}`);
+      handleError(err, '批量操作失败');
     },
   });
 };

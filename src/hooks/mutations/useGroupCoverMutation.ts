@@ -1,19 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
-import { toast } from 'sonner';
+import { useErrorHandler } from '../../utils/errorHandler';
 import { QUERY_KEYS } from '../queries/keys';
 
 export const useGroupCoverMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
 
   return useMutation({
     mutationFn: ({ photoId }: { photoId: string }) => updatePhotosGroupInCloud([photoId], { is_group_cover: true }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      toast.success('已设为封面');
     },
     onError: (error: any) => {
-      toast.error(`设为封面失败: ${error.message}`);
+      handleError(error, '设为封面失败');
     }
   });
 };

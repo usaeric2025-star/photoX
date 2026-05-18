@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Photo, ApiResponse } from '../../types';
 import { deletePhotoFromCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 interface InfinitePhotosData {
   photos: Photo[];
@@ -11,6 +11,8 @@ interface InfinitePhotosData {
 
 export const useDeletePhotoMutation = () => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
+  
   return useMutation({
     mutationFn: async ({ userId, photos }: { userId: string; photos: Photo[] }) => {
       for (const photo of photos) {
@@ -61,7 +63,7 @@ export const useDeletePhotoMutation = () => {
         });
       }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      toast.error(`删除失败：${err instanceof Error ? err.message : '未知错误'}`);
+      handleError(err, '删除照片失败');
     },
   });
 };

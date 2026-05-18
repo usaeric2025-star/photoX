@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, CheckSquare, Eye, Globe, RefreshCcw, ChevronDown, Menu, LogIn } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
+import { toast } from 'sonner';
 
 import { translations, LanguageCode } from '../../lib/translations';
 import { useGalleryStore } from '../../store';
-import { toast } from 'sonner';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 import { Photo, AppSettings } from '../../types';
 import { RefreshMenu } from './AdminHeader/RefreshMenu';
@@ -44,6 +45,8 @@ export const AdminHeader: React.FC<Props> = ({
     isInfiniteMode, setIsInfiniteMode 
   } = useGalleryStore();
   
+  const { handleError } = useErrorHandler();
+  
   const settings = propSettings || storeSettings;
   
   const [showRefreshMenu, setShowRefreshMenu] = useState(false);
@@ -81,8 +84,7 @@ export const AdminHeader: React.FC<Props> = ({
     try {
       await loginWithGoogle();
     } catch(e) {
-      const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
-      toast.error(`Log in failed: ${errMsg}`);
+      handleError(e, '登录失败');
     }
   };
 

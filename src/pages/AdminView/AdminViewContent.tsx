@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
+import { useErrorHandler } from '../../utils/errorHandler';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { AdminGlobalModals } from '../../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../../components/admin/ErrorLogViewer';
@@ -32,6 +32,7 @@ interface Props {
 export const AdminViewContent: React.FC<Props> = ({ 
   user, errorContent, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage 
 }) => {
+  const { handleError } = useErrorHandler();
   const logic = useAdminViewLogic({
     user, sessionValue, photoValue, uiValue,
     onRefresh: sessionValue.onRefresh,
@@ -165,7 +166,7 @@ export const AdminViewContent: React.FC<Props> = ({
                   }
                 } catch (err: any) {
                   console.error(err);
-                  toast.error(err.message || 'Logo 上传失败');
+                  handleError(err, 'Logo 上传失败');
                 }
               });
             }}

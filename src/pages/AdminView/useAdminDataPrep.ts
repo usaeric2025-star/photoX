@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useErrorHandler } from '../../utils/errorHandler';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { translations, LanguageCode } from '../../lib/translations';
@@ -24,6 +24,7 @@ const errorGuard = (name: string) => () => {
 
 export const useAdminDataPrep = () => {
   const { user, authChecked, logout } = useAuth();
+  const { handleError } = useErrorHandler();
   const navigate = useNavigate();
 
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminDialogs();
@@ -125,7 +126,7 @@ export const useAdminDataPrep = () => {
         const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
           updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
-          toast.error(`标签 "${normalized}" 已存在`);
+          handleError(new Error(`标签 "${normalized}" 已存在`), '新增标签');
           return;
         }
         const saved = await addTag(normalized);

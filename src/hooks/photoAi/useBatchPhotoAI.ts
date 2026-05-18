@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../../services/geminiService';
@@ -10,6 +9,8 @@ import { savePhotoToCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
 import { AI_CONFIG } from '../../constants/config';
 import { shouldUpdateName, cleanAiName } from './photoAiUtils';
+import { useErrorHandler } from '../../utils/errorHandler';
+import { toast } from 'sonner';
 
 interface BatchAiProps {
   user: User | null;
@@ -33,6 +34,7 @@ interface BatchAiProps {
 
 export const useBatchPhotoAI = (props: BatchAiProps) => {
   const queryClient = useQueryClient();
+  const { handleError } = useErrorHandler();
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
     tagNameToIdMap, addTask, updateTask, removeTask, setAiDebugInfo, aiDebugInfo, setBatchProgress,
@@ -173,9 +175,10 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
             const message = isAllSuccess ? `全数完成！共 ${completedCount} 张` : `完成，但有部分失败 (${completedCount} 成功)`;
             updateTask(taskId, { status: isAllSuccess ? 'completed' : 'warning', progress: 100, message });
             if (isAllSuccess) { toast.success(message); setAiDebugInfo(null); } 
-            else { toast.error(message); }
+            else { handleError(new Error(message), '批量 AI 识别'); }
         }
     } catch (err) {
+        handleError(err, '批量 AI 识别失败');
         updateTask(taskId, { status: 'error', message: `错误: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
         isAnalyzingRef.current = false;

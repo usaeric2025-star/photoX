@@ -1,5 +1,5 @@
 import React from 'react';
-import { Progress } from '@/components/ui/progress';
+import { Progress, ProgressTrack, ProgressIndicator } from '@/components/ui/progress';
 
 interface UploadProgressProps {
   progress: number;
@@ -15,7 +15,11 @@ export const UploadProgress = ({ progress, fileName, status }: UploadProgressPro
         <span>{status === 'uploading' ? `${Math.round(progress)}%` : 
                 status === 'success' ? '✓ 完成' : '✗ 失败'}</span>
       </div>
-      <Progress value={progress} className="h-2" />
+      <Progress className="h-2">
+        <ProgressTrack>
+          <ProgressIndicator style={{ width: `${progress}%` }} />
+        </ProgressTrack>
+      </Progress>
     </div>
   );
 };

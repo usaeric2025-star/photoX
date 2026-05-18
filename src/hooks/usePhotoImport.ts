@@ -100,6 +100,15 @@ export const usePhotoImport = (
       let failCount = 0;
       const failedFiles: string[] = [];
 
+      let uploadTaskId = '';
+      if (sFileArray.length > 0) {
+        uploadTaskId = addTask({
+          name: `上传照片 (${sFileArray.length} 张)`,
+          status: 'running',
+          progress: 0
+        });
+      }
+
       let aiTaskId = '';
       if (useAi && sFileArray.length > 0) {
         aiTaskId = addTask({
@@ -109,16 +118,29 @@ export const usePhotoImport = (
         });
       }
 
-      let aiCompletedCount = 0;
-      const updateAiProgress = () => {
+      let processedCount = 0;
+      const updateProgress = () => {
+        processedCount++;
+        const progress = (processedCount / sFileArray.length) * 100;
+        if (uploadTaskId) {
+          updateTask(uploadTaskId, {
+            progress,
+            message: `正在上传 ${processedCount}/${sFileArray.length}...`,
+            status: processedCount === sFileArray.length ? 'completed' : 'running'
+          });
+        }
         if (aiTaskId) {
-          aiCompletedCount++;
-          const progress = (aiCompletedCount / sFileArray.length) * 100;
           updateTask(aiTaskId, { 
             progress,
-            message: `正在识别 ${aiCompletedCount}/${sFileArray.length}...`,
-            status: aiCompletedCount === sFileArray.length ? 'completed' : 'running'
+            message: `正在识别 ${processedCount}/${sFileArray.length}...`,
+            status: processedCount === sFileArray.length ? 'completed' : 'running'
           });
+        }
+        if (processedCount === sFileArray.length) {
+            setTimeout(() => {
+                if (uploadTaskId) updateTask(uploadTaskId, { status: 'completed' });
+                if (aiTaskId) updateTask(aiTaskId, { status: 'completed' });
+            }, 3000);
         }
       };
 
@@ -134,7 +156,7 @@ export const usePhotoImport = (
           const duplicate = photosRef.current.find(p => p.image_hash === hash);
           if (duplicate || sessionHashes.has(hash)) {
             duplicateCount++;
-            if (useAi) updateAiProgress();
+            updateProgress();
             continue;
           }
 
@@ -142,7 +164,7 @@ export const usePhotoImport = (
              const dupInCloud = await checkImageHashExists(hash);
              if (dupInCloud) {
                 duplicateCount++;
-                if (useAi) updateAiProgress();
+                updateProgress();
                 continue;
              }
           }
@@ -223,7 +245,7 @@ export const usePhotoImport = (
                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
                  throw err;
                } finally {
-                 updateAiProgress();
+                 updateProgress();
                }
             })(photoId, dataUrl, newPhoto));
           } else if (user) {
@@ -236,6 +258,7 @@ export const usePhotoImport = (
                     photosRef.current[index].id = finalPhotoId;
                   }
                   queryClient.invalidateQueries({ queryKey: ['photos'], refetchType: 'all' });
+                  updateProgress();
                 })
                 .catch((e) => {
                   console.error(`[usePhotoImport] Error saving photo ${newPhoto.id} to cloud:`, e);
@@ -246,8 +269,8 @@ export const usePhotoImport = (
                     photosRef.current.splice(index, 1);
                   }
                   handleError(e, `上传照片失败: ${newPhoto.name}`);
-                  toast.error(`上传失败: ${newPhoto.name} - ${e instanceof Error ? e.message : '未知错误'}`);
                   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+                  updateProgress();
                   throw e; // Rethrow to ensure Promise.allSettled marks task as rejected
                 })
             );
@@ -258,6 +281,7 @@ export const usePhotoImport = (
           // Removed individual toast.error
           failCount++;
           failedFiles.push(file.name);
+          updateProgress();
         }
       } 
       
@@ -273,7 +297,6 @@ export const usePhotoImport = (
           failCount++;
           // We don't have easy access to the filename here, but we can log it
           console.error(`[usePhotoImport] Task ${idx} failed:`, res.reason);
-          // Removed individual toast.error
           failedFiles.push(`后台任务 ${idx + 1}`);
         }
       });
@@ -283,11 +306,11 @@ export const usePhotoImport = (
       });
       setIsSyncing(false);
       
-      const summary = `上传完成：成功 ${successCount} 张，跳过 ${duplicateCount} 张，失败 ${failCount} 张。`;
+      const summary = `上传完成：成功 ${successCount - failCount} 张，跳过 ${duplicateCount} 张，失败 ${failCount} 张。`;
       if (failCount > 0) {
         toast.error(`${summary} 详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`, { duration: 10000 });
       } else {
-        toast.success(summary, { duration: 5000 });
+        toast.success(summary, { duration: 3000 });
       }
 
     });
