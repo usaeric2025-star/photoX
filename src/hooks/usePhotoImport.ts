@@ -231,6 +231,7 @@ export const usePhotoImport = (
             }).catch(e => handleError(e, "云端同步失败")));
           }
         } catch (err) {
+          console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
           handleError(err, `处理文件失败: ${file.name}`);
           failCount++;
           failedFiles.push(file.name);
@@ -238,7 +239,9 @@ export const usePhotoImport = (
       } 
       
       // Await all background tasks (AI/Uploads)
-      await Promise.all(tasks);
+      console.log(`[usePhotoImport] Awaiting ${tasks.length} background tasks...`);
+      const results = await Promise.allSettled(tasks);
+      console.log(`[usePhotoImport] All background tasks finished. Results:`, results);
 
       saveData('product_photos', photosRef.current).catch(err => {
         console.error("Failed to save photos to indexedDB", err);
