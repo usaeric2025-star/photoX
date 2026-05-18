@@ -42,7 +42,13 @@ export const useGroupAdminLogic = ({
   
   const handleError = useCallback((error: any, context: string) => {
     console.error(`[Error] ${context}:`, error);
-    setErrors([{ message: error.message || String(error), context, timestamp: Date.now() }]);
+    let message = '';
+    if (typeof error === 'string') message = error;
+    else if (error instanceof Error) message = error.message;
+    else if (error?.message) message = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
+    else message = JSON.stringify(error);
+
+    setErrors([{ message, context, timestamp: Date.now() }]);
   }, [setErrors]);
 
   const { mutate: mutateSetCover } = useGroupCoverMutation();

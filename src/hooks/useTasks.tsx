@@ -234,7 +234,7 @@ const BackgroundTaskPanel: React.FC = () => {
                         task.status === 'cancelled' ? 'text-slate-400' :
                         'text-slate-400'
                       }`}>
-                        {task.message}
+                        {typeof task.message === 'string' ? task.message : JSON.stringify(task.message)}
                       </p>
                     )}
                   </motion.div>

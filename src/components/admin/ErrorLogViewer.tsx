@@ -69,7 +69,7 @@ export const ErrorLogViewer = () => {
                         </span>
                     )}
                 </div>
-                <div className="break-all">{error.message}</div>
+                <div className="break-all">{typeof error.message === 'string' ? error.message : JSON.stringify(error.message)}</div>
               </div>
             );
           })}
