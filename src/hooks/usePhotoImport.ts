@@ -165,7 +165,8 @@ export const usePhotoImport = (
             tagIds: [],
             createdAt: formatDate(new Date()),
             groupId: null,
-            isAnalyzing: !!useAi
+            isAnalyzing: !!useAi,
+            is_hidden: false
           };
           
           successCount++;
@@ -243,6 +244,15 @@ export const usePhotoImport = (
       const results = await Promise.allSettled(tasks);
       console.log(`[usePhotoImport] All background tasks finished. Results:`, results);
 
+      // Check for failures in tasks themselves
+      results.forEach((res, idx) => {
+        if (res.status === 'rejected') {
+          failCount++;
+          // We don't have easy access to the filename here, but we can log it
+          console.error(`[usePhotoImport] Task ${idx} failed:`, res.reason);
+        }
+      });
+
       saveData('product_photos', photosRef.current).catch(err => {
         console.error("Failed to save photos to indexedDB", err);
       });
@@ -250,7 +260,7 @@ export const usePhotoImport = (
       
       const summary = `上传完成：成功 ${successCount} 张，跳过 ${duplicateCount} 张，失败 ${failCount} 张。`;
       if (failCount > 0) {
-        toast.error(`${summary} 点击查看详情详见控制台`, { duration: 5000 });
+        toast.error(`${summary} 详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`, { duration: 10000 });
       } else {
         toast.success(summary, { duration: 5000 });
       }
