@@ -10,20 +10,26 @@ interface UseGroupAdminLogicProps {
   activeGroupId: string | null;
   photos: Photo[];
   isAdminMode: boolean;
+  onRefresh: () => void;
   hookUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
   propsSetAlertDialog?: (d: DialogData | null) => void;
   onBatchAiAnalyze?: (photos: Photo[]) => void;
   onBatchEdit?: (ids: string[]) => void;
+  onUngroup?: (groupId: string) => void;
+  setActiveGroupId?: (id: string | null) => void;
 }
 
 export const useGroupAdminLogic = ({
   activeGroupId,
   photos,
   isAdminMode,
+  onRefresh,
   hookUpdatePhoto,
   propsSetAlertDialog,
   onBatchAiAnalyze,
-  onBatchEdit
+  onBatchEdit,
+  onUngroup,
+  setActiveGroupId
 }: UseGroupAdminLogicProps) => {
   const { 
     setAlertDialog: contextSetAlertDialog, 
@@ -125,21 +131,40 @@ export const useGroupAdminLogic = ({
   }, [selectedPhotoIds.length, isMultiSelectMode]);
 
   const confirmBulkRemove = useCallback((ids: string[]) => {
+    const remainingCount = activeGroupPhotos.length - ids.length;
+    const isDissolving = remainingCount <= 1;
+    
     setAlertDialog({
-      title: '确认批量移出',
-      message: `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
+      title: isDissolving ? '确认解散群组' : '确认批量移出',
+      message: isDissolving 
+        ? `移出后该组将只剩 ${remainingCount} 张照片。系统会自动将剩余照片移出，解散群组。确定继续吗？` 
+        : `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
       onConfirm: async () => {
         try {
-          await updatePhotosGroupInCloud(ids, { group_id: null });
           setIsMultiSelectMode(false);
           setSelectedPhotoIds([]);
+          
+          if (isDissolving && activeGroupId && onUngroup) {
+             onUngroup(activeGroupId);
+             setActiveGroupId?.(null);
+             setAlertDialog(null);
+             return;
+          }
+
+          const targetIds = isDissolving ? activeGroupPhotos.map(p => p.id) : ids;
+          await updatePhotosGroupInCloud(targetIds, { group_id: null });
+          onRefresh();
+          
+          if (isDissolving) {
+             setActiveGroupId?.(null);
+          }
         } catch (err: any) {
-          handleError(err, '批量移出失败');
+          handleError(err, '操作失败');
         }
         setAlertDialog(null);
       }
     });
-  }, [handleError, setAlertDialog]);
+  }, [handleError, setAlertDialog, onRefresh, activeGroupPhotos, activeGroupId, onUngroup, setActiveGroupId]);
 
   const persistPhotoChange = useCallback(async (photoId: string, updates: Partial<Photo>) => {
     // Optimistic update: temporarily update local state if possible
@@ -152,11 +177,12 @@ export const useGroupAdminLogic = ({
          const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
          await serviceUpdatePhoto(photoId, updates);
       }
+      onRefresh();
     } catch (err: any) {
       handleError(err, '保存照片修改失败');
       // Potential rollback would go here if we had local state modification
     }
-  }, [handleError, hookUpdatePhoto]);
+  }, [handleError, hookUpdatePhoto, onRefresh]);
 
   const handleUpdateGroupData = useCallback(async (updates: Partial<ProductGroup>) => {
     if (!activeGroupId || !groupData) return;

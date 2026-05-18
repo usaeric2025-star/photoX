@@ -229,44 +229,44 @@ export const AdminViewContent: React.FC<Props> = ({
           lang={lang}
           t={t}
           isFetchingNextPage={isFetchingNextPage}
-          onManageClick={() => logic.setActiveScreen('manage')}
-          onRefresh={() => {
+          onManageClick={useCallback(() => logic.setActiveScreen('manage'), [logic.setActiveScreen])}
+          onRefresh={useCallback(() => {
             if (logic.checkSyncLock()) return;
             logic.performPullSync(true);
-          }}
+          }, [logic.checkSyncLock, logic.performPullSync])}
           onTogglePinned={logic.togglePinned}
-          onToggleHidden={async (photo) => {
+          onToggleHidden={useCallback(async (photo) => {
             if (logic.checkSyncLock()) {
               toast.warning('系统正在同步，请稍后再操作');
               return;
             }
             await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态');
-          }}
+          }, [logic.checkSyncLock, logic.toggleHidden])}
           onSetGroupCover={logic.setGroupCover}
-          onEditPhoto={(id) => logic.setEditPhotoId(id as string)}
+          onEditPhoto={useCallback((id) => logic.setEditPhotoId(id as string), [logic.setEditPhotoId])}
           onLoadMore={handleLoadMoreCallback}
           hasNextPage={!!hasNextPage}
-          onDeletePhotos={(ids) => {
+          onDeletePhotos={useCallback((ids) => {
              if (logic.checkSyncLock()) return;
              logic.handleDeletePhoto(ids);
              logic.setSelectedIds([]);
              logic.setIsMultiSelect(false);
-          }}
-          onGroupPhotos={async (ids) => {
+          }, [logic.checkSyncLock, logic.handleDeletePhoto, logic.setSelectedIds, logic.setIsMultiSelect])}
+          onGroupPhotos={useCallback(async (ids) => {
              if (logic.checkSyncLock()) return;
              await logic.handleGroupPhotos(ids);
              logic.setSelectedIds([]);
              logic.setIsMultiSelect(false);
-          }}
-          onBatchEdit={(ids) => {
+          }, [logic.checkSyncLock, logic.handleGroupPhotos, logic.setSelectedIds, logic.setIsMultiSelect])}
+          onBatchEdit={useCallback((ids) => {
              if (logic.checkSyncLock()) return;
              logic.setBatchEditIds(ids);
-          }}
+          }, [logic.checkSyncLock, logic.setBatchEditIds])}
           onAiAnalyze={logic.handleSingleAiAnalyze}
           onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger}
           onCancelAnalyze={logic.abortAnalysis}
           isAnalyzing={logic.loadingType === 'analyzing'}
-          onImport={() => {
+          onImport={useCallback(() => {
             if (logic.checkSyncLock()) return;
             const input = document.createElement('input');
             input.type = 'file';
@@ -274,7 +274,7 @@ export const AdminViewContent: React.FC<Props> = ({
             input.multiple = true;
             input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch(()=>{});
             input.click();
-          }}
+          }, [logic.checkSyncLock, logic.handlePhotoImport])}
         />
       )}
 

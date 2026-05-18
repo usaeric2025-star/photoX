@@ -1,6 +1,6 @@
 import React from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers } from 'lucide-react';
-import { useErrorHandler } from '../utils/errorHandler';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;

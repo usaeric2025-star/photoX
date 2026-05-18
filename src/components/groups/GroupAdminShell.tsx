@@ -44,6 +44,7 @@ export interface GroupAdminShellProps {
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
   onBatchAiAnalyze?: (photos: Photo[]) => void;
+  onRefresh?: () => void;
   manufacturers?: Manufacturer[];
   isStaffMode?: boolean;
   contactWhatsApp?: (photo: Photo) => void;
@@ -71,6 +72,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     isAdminMode, onEditPhoto,
     onBatchEdit, onUngroup, onAddPhotoToGroup,
     updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
+    onRefresh,
     manufacturers = [],
     isStaffMode = false,
     contactWhatsApp = () => {},
@@ -108,7 +110,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     hookUpdatePhoto,
     propsSetAlertDialog: propsSetAlertDialog as any,
     onBatchAiAnalyze,
-    onBatchEdit
+    onRefresh: onRefresh || (() => {}),
+    onBatchEdit,
+    onUngroup,
+    setActiveGroupId
   });
 
   return (

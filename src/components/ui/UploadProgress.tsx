@@ -15,7 +15,7 @@ export const UploadProgress = ({ progress, fileName, status }: UploadProgressPro
         <span>{status === 'uploading' ? `${Math.round(progress)}%` : 
                 status === 'success' ? '✓ 完成' : '✗ 失败'}</span>
       </div>
-      <Progress className="h-2">
+      <Progress value={progress} className="h-2">
         <ProgressTrack>
           <ProgressIndicator style={{ width: `${progress}%` }} />
         </ProgressTrack>

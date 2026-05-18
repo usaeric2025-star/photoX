@@ -87,7 +87,7 @@ export const loadAllPhotosFromCloud = async (
   searchQuery?: string | null,
   isAdminMode: boolean = false
 ): Promise<Photo[]> => {
-  const cacheKey = JSON.stringify({ since, page, limit, categoryId, tagId, searchQuery });
+  const cacheKey = JSON.stringify({ since, page, limit, categoryId, tagId, searchQuery, isAdminMode });
   const cached = photoCache.get(cacheKey);
   if (cached) return cached;
 
@@ -170,6 +170,7 @@ export const loadAllPhotosFromCloud = async (
   }
   const { data, error } = await query
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .range(from, to);
   
   if (error) {

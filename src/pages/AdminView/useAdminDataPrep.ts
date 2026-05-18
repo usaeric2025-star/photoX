@@ -4,6 +4,7 @@ import { useErrorHandler } from '../../utils/errorHandler';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { translations, LanguageCode } from '../../lib/translations';
+import { toast } from 'sonner';
 import { 
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
   useAddCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,

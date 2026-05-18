@@ -79,7 +79,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     }
   }, [editPhotoId, loadingType, setAiDebugInfo]);
 
-  const handleBatchAiIdentifyTrigger = async () => {
+  const handleBatchAiIdentifyTrigger = useCallback(async () => {
     if (checkSyncLock()) return;
     if (loadingType === 'analyzing') {
       abortAnalysis();
@@ -90,7 +90,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
         handleError(err, 'ai-analyze');
       }
     }
-  };
+  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, handleBatchAiIdentify, photos, handleError]);
 
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
      try {
@@ -129,6 +129,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     
     try {
       await updatePhoto(photo.id, { is_hidden: nextValue });
+      onRefresh();
     } catch (e: any) {
       handleError(e, 'toggle-hidden');
     }
