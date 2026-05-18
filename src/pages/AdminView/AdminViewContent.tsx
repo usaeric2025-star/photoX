@@ -15,7 +15,6 @@ import { useAdminViewLogic } from './useAdminViewLogic';
 import { User, Photo } from '../../types';
 import { TranslationType } from '../../lib/ui-helpers';
 import { LanguageCode } from '../../lib/translations';
-import { UploadProgress } from '../../components/ui/UploadProgress';
 
 interface Props {
   user: User | null;
@@ -53,15 +52,6 @@ export const AdminViewContent: React.FC<Props> = ({
   return (
     <ErrorBoundary key="admin-main">
       <AdminGlobalModals />
-      {logic.importTotal > 0 && (
-         <div className="fixed bottom-6 right-6 z-50 w-72 p-4 bg-white rounded-xl shadow-lg border">
-            <UploadProgress 
-                progress={(logic.importProgress / logic.importTotal) * 100} 
-                fileName={`上传中 (${logic.importProgress}/${logic.importTotal})`} 
-                status="uploading"
-            />
-         </div>
-      )}
       {errorContent}
       <div className="px-6 pb-6">
          <ErrorLogViewer />

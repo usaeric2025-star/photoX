@@ -22,10 +22,10 @@ export const FIELD_MAP: Record<string, string> = {
 };
 
 export const ALLOWED_FIELDS = [
-  'id', 'name', 'description', 'description_translations', 'categoryId',
-  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'isGroupCover',
-  'image_url', 'thumb_url', 'price', 'updated_at', 'created_at', 'userId',
-  'is_hidden'
+  'id', 'name', 'description', 'description_translations', 'categoryId', 'manufacturerId',
+  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'isGroupCover', 'isPinned',
+  'image_url', 'thumb_url', 'price', 'note', 'type', 'groupOrder', 'updatedAt', 'createdAt',
+  'updated_at', 'created_at', 'userId', 'is_hidden', 'image_hash', 'item_code'
 ];
 
 export function normalizeDimensionsBeforeSave(dimensions: import('../../types').Dimension[] | null | undefined) {
