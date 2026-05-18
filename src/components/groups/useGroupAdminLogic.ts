@@ -1,5 +1,4 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
@@ -134,7 +133,6 @@ export const useGroupAdminLogic = ({
           await updatePhotosGroupInCloud(ids, { group_id: null });
           setIsMultiSelectMode(false);
           setSelectedPhotoIds([]);
-          toast.success('已移出 / Removed');
         } catch (err: any) {
           handleError(err, '批量移出失败');
         }
@@ -151,7 +149,6 @@ export const useGroupAdminLogic = ({
          const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
          await serviceUpdatePhoto(photoId, updates);
       }
-      toast.success('已保存 / Saved');
     } catch (err: any) {
       handleError(err, '保存照片修改失败');
     }

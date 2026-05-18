@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { toast } from 'sonner';
 import { useGalleryStore } from '../../store';
 import { useErrorHandler, usePhotoManagement } from '../../hooks';
 import { usePermission } from '../../hooks/usePermission';
@@ -63,7 +62,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const checkSyncLock = useCallback(() => {
     if (loadingType === 'sync-pull' || loadingType === 'sync-push') {
-       toast.error('同步中，请稍后再试 / Syncing, please try later');
        return true;
     }
     return false;
@@ -97,7 +95,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
      try {
          await deletePhoto(id);
-         toast.success('照片已成功删除');
          if (typeof id === 'string') setEditPhotoId(null);
          else resetAddState();
      } catch (error) {
@@ -126,27 +123,21 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
     try {
       await updatePhoto(photo.id, { is_hidden: nextValue });
-      toast.success(`已${nextValue ? '隐藏' : '显示'}产品`);
-      onRefresh(); // Trigger refresh
     } catch (e: any) {
       handleError(e, 'toggle-hidden');
     }
-  }, [checkSyncLock, updatePhoto, handleError, onRefresh]);
+  }, [checkSyncLock, updatePhoto, handleError]);
 
   const setGroupCover = useCallback(async (id: string, groupId: string) => {
     if (checkSyncLock()) return;
     const groupPhotos = photos.filter((p: Photo) => p.groupId === groupId);
     
-    toast.loading('正在设置封面...');
     try {
       await Promise.all(
         groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
       );
-      toast.dismiss();
-      toast.success('群组封面设置成功');
       onRefresh();
     } catch (e: any) {
-      toast.dismiss();
       console.error('setGroupCover error', e);
       handleError(e, 'set-group-cover');
     }
