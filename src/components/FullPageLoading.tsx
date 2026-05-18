@@ -3,42 +3,40 @@ import { motion } from 'motion/react';
 
 export const FullPageLoading: React.FC = () => {
   return (
-    <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-brand-bg">
-      <div className="relative">
-        {/* Outer ring */}
+    <motion.div 
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-brand-bg"
+    >
+      <div className="relative mb-8">
         <motion.div 
-          className="w-16 h-16 border-4 border-brand-navy/5 rounded-full"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          className="w-20 h-20 border-[1px] border-brand-navy/10 rounded-full"
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.3, 0.6, 0.3]
+          }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         />
-        {/* Spinning accent */}
         <motion.div 
-          className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-brand-gold rounded-full"
+          className="absolute inset-x-0 -top-1 mx-auto w-2 h-2 bg-brand-gold rounded-full"
           animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          style={{ originY: "44px" }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
         />
       </div>
       
       <motion.div 
-        className="mt-6 flex flex-col items-center gap-1"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        className="flex flex-col items-center gap-3"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
       >
-        <h2 className="text-sm font-black text-brand-navy uppercase tracking-widest">
-            正在載入 / Loading
-        </h2>
-        <div className="flex gap-1">
-          {[0, 1, 2].map((i) => (
-            <motion.div 
-              key={i}
-              className="w-1.5 h-1.5 bg-brand-gold/60 rounded-full"
-              animate={{ opacity: [0.2, 1, 0.2] }}
-              transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-            />
-          ))}
-        </div>
+        <span className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-[0.3em]">
+          Initializing
+        </span>
+        <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
       </motion.div>
-    </div>
+    </motion.div>
   );
 };

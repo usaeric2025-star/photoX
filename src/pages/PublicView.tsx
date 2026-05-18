@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
@@ -121,75 +122,85 @@ export default function PublicView() {
     }
   };
 
-  if (isInitialLoading && !hasInitialLoaded) {
-    return <div className="fixed inset-0 bg-brand-bg"><FullPageLoading /></div>;
-  }
-
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
-      <ErrorBoundary key="publicGallery">
-        <PublicGallery 
-          photos={photos}
-          categories={categoriesData}
-          tags={[]} // Tags from context will be used, but interface requires it
-          onExit={() => navigate('/admin')}
-          onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
-          showExit={false}
-          onLogin={() => navigate('/admin')}
-          loginWithGoogle={loginWithGoogle}
-          user={user}
-          internalPassword={settings?.access_passcode || ""}
-          settings={settings}
-          isRefreshing={isPhotosLoading}
-          onRefresh={handleRefresh}
-          onLoadMore={handleLoadMore}
-          hasMore={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          totalCount={countData}
-          initialHash={hash}
-          initialGroupId={groupId}
-          onTogglePinned={async (photo: import('../types').Photo) => {
-            const newStatus = !photo.isPinned;
-            
-            // Identify affected photos (the photo itself + any other photos in the same group)
-            const sPhotos = safeArray(photos);
-            const affectedPhotos = photo.groupId 
-              ? sPhotos.filter(p => p.groupId === photo.groupId)
-              : [photo];
-              
-            const sAffected = safeArray(affectedPhotos);
-            
-            try {
-              await Promise.all(
-                sAffected.map(p => 
-                  updatePhotoMutation({ id: p.id, updates: { isPinned: newStatus } })
-                )
-              );
-            } catch (e: unknown) {
-              console.error("togglePinned", e);
-            }
-          }}
-          onToggleHidden={async (photo: import('../types').Photo) => {
-            try {
-              await updatePhotoMutation({ id: photo.id, updates: { is_hidden: !photo.is_hidden } });
-            } catch (e: unknown) {
-              console.error("toggleHidden", e);
-            }
-          }}
-          onSetGroupCover={async (id: string, groupId: string) => {
-            const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
-            try {
-              await Promise.all(
-                groupPhotos.map(p => 
-                  updatePhotoMutation({ id: p.id, updates: { isGroupCover: p.id === id } })
-                )
-              );
-            } catch (e: unknown) {
-              console.error("setGroupCover", e);
-            }
-          }}
-        />
-      </ErrorBoundary>
+      <AnimatePresence mode="wait">
+        {isInitialLoading && !hasInitialLoaded ? (
+          <FullPageLoading key="loader" />
+        ) : (
+          <motion.div
+            key="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="flex flex-col h-full"
+          >
+            <ErrorBoundary key="publicGallery">
+              <PublicGallery 
+                photos={photos}
+                categories={categoriesData}
+                tags={[]} // Tags from context will be used, but interface requires it
+                onExit={() => navigate('/admin')}
+                onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
+                showExit={false}
+                onLogin={() => navigate('/admin')}
+                loginWithGoogle={loginWithGoogle}
+                user={user}
+                internalPassword={settings?.access_passcode || ""}
+                settings={settings}
+                isRefreshing={isPhotosLoading}
+                onRefresh={handleRefresh}
+                onLoadMore={handleLoadMore}
+                hasMore={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                totalCount={countData}
+                initialHash={hash}
+                initialGroupId={groupId}
+                onTogglePinned={async (photo: import('../types').Photo) => {
+                  const newStatus = !photo.isPinned;
+                  
+                  // Identify affected photos (the photo itself + any other photos in the same group)
+                  const sPhotos = safeArray(photos);
+                  const affectedPhotos = photo.groupId 
+                    ? sPhotos.filter(p => p.groupId === photo.groupId)
+                    : [photo];
+                    
+                  const sAffected = safeArray(affectedPhotos);
+                  
+                  try {
+                    await Promise.all(
+                      sAffected.map(p => 
+                        updatePhotoMutation({ id: p.id, updates: { isPinned: newStatus } })
+                      )
+                    );
+                  } catch (e: unknown) {
+                    console.error("togglePinned", e);
+                  }
+                }}
+                onToggleHidden={async (photo: import('../types').Photo) => {
+                  try {
+                    await updatePhotoMutation({ id: photo.id, updates: { is_hidden: !photo.is_hidden } });
+                  } catch (e: unknown) {
+                    console.error("toggleHidden", e);
+                  }
+                }}
+                onSetGroupCover={async (id: string, groupId: string) => {
+                  const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
+                  try {
+                    await Promise.all(
+                      groupPhotos.map(p => 
+                        updatePhotoMutation({ id: p.id, updates: { isGroupCover: p.id === id } })
+                      )
+                    );
+                  } catch (e: unknown) {
+                    console.error("setGroupCover", e);
+                  }
+                }}
+              />
+            </ErrorBoundary>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

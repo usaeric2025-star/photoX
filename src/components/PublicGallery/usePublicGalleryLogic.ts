@@ -125,11 +125,10 @@ export const usePublicGalleryLogic = (props: {
   const t = useMemo(() => translations[lang] || translations['en'], [lang]);
 
   const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(() => {
-    if (typeof window === 'undefined') return 2;
+    if (typeof window === 'undefined') return 3;
     const width = window.innerWidth;
     if (width >= 1024) return 5;
-    if (width >= 768) return 3;
-    return 2;
+    return 3;
   });
   const columns = props.columns || internalColumns;
   const setColumns = props.setColumns || setInternalColumns;
@@ -221,6 +220,24 @@ export const usePublicGalleryLogic = (props: {
     if (onLoadMore && hasMore && !isSyncing) onLoadMore();
   }, [onLoadMore, hasMore, isSyncing]);
 
+  const [tagStats, setTagStats] = useState<Record<string, number>>({});
+
+  // Capture global tag counts from the widest available set (usually early on load)
+  useEffect(() => {
+    if (localPhotos.length > 0 && (!selectedCatCode && !selectedTagIds.length)) {
+      const counts: Record<string, number> = {};
+      localPhotos.forEach(p => {
+        if (p.tagIds && Array.isArray(p.tagIds)) {
+          p.tagIds.forEach(tid => {
+            const strId = String(tid);
+            counts[strId] = (counts[strId] || 0) + 1;
+          });
+        }
+      });
+      setTagStats(counts);
+    }
+  }, [localPhotos, selectedCatCode, selectedTagIds]);
+
   return {
     settings, user, isSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
     selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
@@ -237,11 +254,12 @@ export const usePublicGalleryLogic = (props: {
         const strId = String(t.id);
         return {
           ...t,
-          isPinned: t.isPinned || pinnedIds.has(strId)
+          isPinned: t.isPinned || pinnedIds.has(strId),
+          usageCount: Math.max(t.usageCount || 0, tagStats[strId] || 0)
         };
       });
       
       return sortTagsByPopularity(enrichedTags);
-    }, [contextTags, settings?.pinnedTags]) // Stabilize order
+    }, [contextTags, settings?.pinnedTags, tagStats]) 
   };
 };
