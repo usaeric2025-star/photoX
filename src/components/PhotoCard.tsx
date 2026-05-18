@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Photo, Category, Manufacturer } from '../types';
-import { X, Layers, Heart, EyeOff, Check, Image as ImageIcon } from 'lucide-react';
+import { X, Layers, Heart, EyeOff, Eye, Check, Image as ImageIcon } from 'lucide-react';
 import { Skeleton } from './ui/Skeleton';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';

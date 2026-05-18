@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-import { ProductFormData, Tag, ApiResponse } from '../../types';
+import { ProductFormData, Tag, ApiResponse, Photo } from '../../types';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
 import { useGalleryStore } from '../../store';

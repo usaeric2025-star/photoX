@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useGalleryStore } from '../../store';
 import { useErrorHandler, usePhotoManagement } from '../../hooks';
