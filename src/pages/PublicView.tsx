@@ -92,6 +92,8 @@ export default function PublicView() {
   const navigate = useNavigate();
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
 
+  const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
+
   const isInitialLoading = isPhotosLoading || isSettingsLoading;
 
   useEffect(() => {
@@ -103,6 +105,12 @@ export default function PublicView() {
       .finally(() => setIsSettingsLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (!isInitialLoading && !hasInitialLoaded) {
+      setHasInitialLoaded(true);
+    }
+  }, [isInitialLoading, hasInitialLoaded]);
+
   const handleRefresh = async () => {
     await refetch();
   };
@@ -113,7 +121,7 @@ export default function PublicView() {
     }
   };
 
-  if (isInitialLoading && photos.length === 0) {
+  if (isInitialLoading && !hasInitialLoaded) {
     return <div className="fixed inset-0 bg-brand-bg"><FullPageLoading /></div>;
   }
 

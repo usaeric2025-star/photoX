@@ -211,9 +211,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
         {(() => {
-          const skeletonCount = getSkeletonCount(gridPhotos.length > 0, false);
-          
-          if (isSyncing && gridPhotos.length === 0) {
+          if (isSyncing) {
+            const skeletonCount = getSkeletonCount(props.totalCount);
             return <GallerySkeleton columns={columns} count={skeletonCount} />;
           }
           if (gridPhotos.length === 0) {
@@ -229,6 +228,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
               virtuosoContext={virtuosoContext}
               handleLoadMore={handleLoadMore}
               isAdminMode={!!props.isAdminMode}
+              activeIsMultiSelect={activeIsMultiSelect}
               isStaffMode={isStaffMode}
               activeSelectedIds={activeSelectedIds}
               showGroupsCollapsed={showGroupsCollapsed}
