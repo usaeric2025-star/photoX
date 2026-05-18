@@ -52,6 +52,7 @@ export const useDeletePhotoMutation = () => {
     onSuccess: () => {
       // Invalidate all photo related queries
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
     },
     onError: (err, variables, context) => {
       if (context?.previousInfinite) {

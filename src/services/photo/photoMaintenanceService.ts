@@ -78,22 +78,32 @@ export const clearManufacturerFromPhotos = async (mfrId: string) => {
 };
 
 export const clearGroupIdInCloud = async (groupId: string) => {
-  const { data, error } = await supabase
+  // 1. Clear group_id for all photos in this group
+  const { error: updateError } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .update({ 
       group_id: null, 
       is_pinned: false,
       is_group_cover: false
     })
-    .eq('group_id', groupId)
-    .select('id');
+    .eq('group_id', groupId);
     
-  if (error) {
-    throw new Error(`清除照片群组关联失败: ${error.message}`);
+  if (updateError) {
+    throw new Error(`清除照片群组关联失败: ${updateError.message}`);
+  }
+  
+  // 2. Delete the group record itself to avoid empty groups
+  const { error: deleteError } = await supabase
+    .from('groups')
+    .delete()
+    .eq('id', groupId);
+
+  if (deleteError) {
+    console.warn(`[Warning] Failed to delete group record ${groupId}:`, deleteError.message);
   }
   
   photoCache.clear();
-  return data;
+  return { success: true };
 };
 
 export const ungroupPhotos = async (groupId: string) => {

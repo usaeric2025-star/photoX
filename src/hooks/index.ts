@@ -11,6 +11,7 @@ export * from './mutations/useUpdatePhoto';
 export { useDeletePhotoMutation as useDeletePhoto } from './mutations/useDeletePhoto';
 export { useUpdatePhotoMutation as useUpdatePhoto } from './mutations/useUpdatePhoto';
 export * from './mutations/useGroupOperations';
+export { useRemoveFromGroupMutation } from './mutations/useGroupOperations';
 export * from './mutations/useAdminMutations';
 export * from './mutations/useGroupCoverMutation';
 export * from './mutations/useSettingsMutation';

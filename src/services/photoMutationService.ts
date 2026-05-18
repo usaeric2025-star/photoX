@@ -69,6 +69,8 @@ export const updatePhotoHidden = async (photoId: string, is_hidden: boolean) => 
 };
 
 export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
+  const groupId = photo.groupId;
+  
   const { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .delete()
@@ -77,6 +79,20 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
   if (error) {
     throw new Error(error.message || JSON.stringify(error));
   }
+  
+  // If the deleted photo was part of a group, check if we need to dissolve it
+  if (groupId) {
+    const { data: remaining } = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .select('id')
+      .eq('group_id', groupId);
+      
+    if (remaining && remaining.length <= 1) {
+      const { ungroupPhotos } = await import('./photo/photoMaintenanceService');
+      await ungroupPhotos(groupId);
+    }
+  }
+  
   photoCache.clear();
 };
 
@@ -140,7 +156,6 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
       .from(DB_CONFIG.TABLE_NAME)
       .select('image_url, manual_code')
       .eq('image_hash', hash)
-      .not('image_url', 'is', null)
       .limit(1)
       .maybeSingle();
 
@@ -159,6 +174,34 @@ export const groupPhotos = async (photoIds: string[]) => {
     group_id: groupId,
     is_group_cover: false 
   });
+};
+
+export const removePhotosFromGroup = async (photoIds: string[], groupId: string) => {
+  if (photoIds.length === 0) return;
+
+  // 1. Remove selected photos from group
+  await updatePhotosGroupInCloud(photoIds, { 
+    group_id: null,
+    is_group_cover: false,
+    is_pinned: false
+  });
+
+  // 2. Check remaining photos in this group (including hidden ones)
+  const { data: remainingPhotos, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('id')
+    .eq('group_id', groupId);
+
+  if (error) {
+    console.error("[Error] Failed to fetch remaining photos for group check:", error);
+    return;
+  }
+
+  // 3. If 1 or 0 photos remain, dissolve the group
+  if (remainingPhotos.length <= 1) {
+    const { ungroupPhotos } = await import('./photo/photoMaintenanceService');
+    await ungroupPhotos(groupId);
+  }
 };
 
 export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {

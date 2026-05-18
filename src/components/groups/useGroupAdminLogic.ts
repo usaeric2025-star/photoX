@@ -4,6 +4,7 @@ import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
+import { useRemoveFromGroupMutation } from '../../hooks/mutations/useGroupOperations';
 import { useGalleryStore } from '../../store';
 
 interface UseGroupAdminLogicProps {
@@ -45,6 +46,8 @@ export const useGroupAdminLogic = ({
   }, [setErrors]);
 
   const { mutate: mutateSetCover } = useGroupCoverMutation();
+  const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
+  
   const setCover = useCallback(async (photoId: string) => {
       mutateSetCover({ photoId });
   }, [mutateSetCover]);
@@ -131,32 +134,28 @@ export const useGroupAdminLogic = ({
   }, [selectedPhotoIds.length, isMultiSelectMode]);
 
   const confirmBulkRemove = useCallback((ids: string[]) => {
-    const remainingCount = activeGroupPhotos.length - ids.length;
+    // Determine the true remaining count (including hidden photos)
+    const allGroupPhotos = photos.filter(p => p && p.groupId === activeGroupId);
+    const remainingCount = allGroupPhotos.length - ids.length;
     const isDissolving = remainingCount <= 1;
     
     setAlertDialog({
       title: isDissolving ? '确认解散群组' : '确认批量移出',
       message: isDissolving 
-        ? `移出后该组将只剩 ${remainingCount} 张照片。系统会自动将剩余照片移出，解散群组。确定继续吗？` 
+        ? `移出后该组将只剩 ${remainingCount} 张照片。系统会自动将剩余照片也移出并解散群组。确定继续吗？` 
         : `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
       onConfirm: async () => {
         try {
           setIsMultiSelectMode(false);
           setSelectedPhotoIds([]);
           
-          if (isDissolving && activeGroupId && onUngroup) {
-             onUngroup(activeGroupId);
-             setActiveGroupId?.(null);
-             setAlertDialog(null);
-             return;
-          }
-
-          const targetIds = isDissolving ? activeGroupPhotos.map(p => p.id) : ids;
-          await updatePhotosGroupInCloud(targetIds, { group_id: null });
-          onRefresh();
-          
-          if (isDissolving) {
-             setActiveGroupId?.(null);
+          if (activeGroupId) {
+             const targetIds = isDissolving ? allGroupPhotos.map(p => p.id) : ids;
+             await removePhotosBatch({ photoIds: targetIds, groupId: activeGroupId });
+             
+             if (isDissolving) {
+               setActiveGroupId?.(null);
+             }
           }
         } catch (err: any) {
           handleError(err, '操作失败');
@@ -164,7 +163,7 @@ export const useGroupAdminLogic = ({
         setAlertDialog(null);
       }
     });
-  }, [handleError, setAlertDialog, onRefresh, activeGroupPhotos, activeGroupId, onUngroup, setActiveGroupId]);
+  }, [handleError, setAlertDialog, photos, activeGroupId, removePhotosBatch, setActiveGroupId]);
 
   const persistPhotoChange = useCallback(async (photoId: string, updates: Partial<Photo>) => {
     // Optimistic update: temporarily update local state if possible
