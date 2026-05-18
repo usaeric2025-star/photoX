@@ -212,7 +212,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
         {(() => {
           if (isSyncing) {
-            const skeletonCount = getSkeletonCount(props.totalCount);
+            const skeletonCount = getSkeletonCount(props.totalCount, columns);
             return <GallerySkeleton columns={columns} count={skeletonCount} />;
           }
           if (gridPhotos.length === 0) {

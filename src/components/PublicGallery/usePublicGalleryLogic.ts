@@ -227,22 +227,11 @@ export const usePublicGalleryLogic = (props: {
     handleLoadMore, navigate, sortedTags: useMemo(() => {
       const pinnedIds = new Set((settings?.pinnedTags || []).map(id => String(id)));
 
-      // Enrich tags with calculated usage count from current photos set if database doesn't provide it
-      const counts: Record<string, number> = {};
-      localPhotos.forEach(p => {
-        if (p.tagIds && Array.isArray(p.tagIds)) {
-          p.tagIds.forEach(tid => {
-            counts[String(tid)] = (counts[String(tid)] || 0) + 1;
-          });
-        }
-      });
-      
       const enrichedTags = contextTags.map(t => {
         const strId = String(t.id);
         return {
           ...t,
-          isPinned: t.isPinned || pinnedIds.has(strId),
-          usageCount: Math.max(t.usageCount || 0, counts[strId] || 0)
+          isPinned: t.isPinned || pinnedIds.has(strId)
         };
       });
       
