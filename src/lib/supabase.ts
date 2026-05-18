@@ -14,5 +14,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     storage: window.localStorage
+  },
+  global: {
+    fetch: (url, options) => {
+      const signal = AbortSignal.timeout(30000);
+      return fetch(url, { ...options, signal });
+    }
   }
 });

@@ -1,12 +1,21 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
+import { toast } from 'sonner';
+
+let wasAuthenticated = false;
+
+// Initialize wasAuthenticated based on current session
+supabase.auth.getSession().then(({ data: { session } }) => {
+  wasAuthenticated = !!session;
+});
 
 export const loginWithGoogle = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       console.log("Already logged in as:", session.user.email);
+      wasAuthenticated = true;
       return { user: session.user };
     }
 
@@ -31,10 +40,22 @@ export const loginWithGoogle = async () => {
   }
 };
 
-export const logout = () => supabase.auth.signOut();
+export const logout = () => {
+  wasAuthenticated = false;
+  return supabase.auth.signOut();
+};
 
 export const onAuthChange = (callback: (user: User | null) => void) => {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') {
+      if (wasAuthenticated) {
+        toast.error('登录已过期，请重新登录');
+      }
+      wasAuthenticated = false;
+    } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      wasAuthenticated = true;
+    }
+
     const user = session?.user || null;
     
     let authUser: User | null = null;

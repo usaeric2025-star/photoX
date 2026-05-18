@@ -149,62 +149,71 @@ export const AdminHeader: React.FC<Props> = ({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <div className="flex items-center gap-1.5 bg-brand-navy/5 p-1 rounded-2xl border border-brand-navy/10 shadow-inner">
-                  {/* Refresh with Dropdown */}
-                  <div className="relative flex items-center" ref={dropdownRef}>
-                    <button 
-                      onClick={onRefresh}
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white text-brand-navy/60 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm border border-brand-navy/10 active:scale-95 group"
-                      title={t.refresh}
-                    >
-                      <RefreshCcw size={18} className={isSyncing ? "animate-spin" : "group-active:animate-spin"} />
-                    </button>
-                    <button 
-                      onClick={toggleRefreshMenu}
-                      className={`absolute -right-1.5 bottom-0 w-4 h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-brand-bg transition-transform ${showRefreshMenu ? 'rotate-180' : ''}`}
-                    >
-                      <ChevronDown size={10} />
-                    </button>
-                    
-                    <RefreshMenu show={showRefreshMenu} isInfiniteMode={isInfiniteMode} t={t} toggleInfinite={toggleInfinite} />
-                  </div>
-                  
+          {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
+            <button 
+              onClick={handleLogin}
+              className="px-4 py-2 rounded-xl text-xs font-medium uppercase tracking-wide bg-brand-navy text-brand-bg shadow-sm active:scale-95 transition-all flex items-center gap-2"
+            >
+              <LogIn size={16} />
+              {t.login}
+            </button>
+          ) : (
+            <div className="flex items-center gap-1 sm:gap-2">
+              <div className="flex items-center gap-1.5 bg-brand-navy/5 p-1 rounded-2xl border border-brand-navy/10 shadow-inner">
+                {/* Refresh with Dropdown */}
+                <div className="relative flex items-center" ref={dropdownRef}>
                   <button 
-                    onClick={handleBatchAiIdentifyTrigger}
-                    disabled={isAnalyzing}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
-                    title={t.batchAi}
+                    onClick={onRefresh}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white text-brand-navy/60 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm border border-brand-navy/10 active:scale-95 group"
+                    title={t.refresh}
                   >
-                    {isAnalyzing ? (
-                      batchProgress.current > 0 ? (
-                        <span className="text-[10px] font-bold text-white">{batchProgress.current}</span>
-                      ) : (
-                        <Sparkles size={16} className="animate-spin" />
-                      )
+                    <RefreshCcw size={18} className={isSyncing ? "animate-spin" : "group-active:animate-spin"} />
+                  </button>
+                  <button 
+                    onClick={toggleRefreshMenu}
+                    className={`absolute -right-1.5 bottom-0 w-4 h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-brand-bg transition-transform ${showRefreshMenu ? 'rotate-180' : ''}`}
+                  >
+                    <ChevronDown size={10} />
+                  </button>
+                  
+                  <RefreshMenu show={showRefreshMenu} isInfiniteMode={isInfiniteMode} t={t} toggleInfinite={toggleInfinite} />
+                </div>
+                
+                <button 
+                  onClick={handleBatchAiIdentifyTrigger}
+                  disabled={isAnalyzing}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
+                  title={t.batchAi}
+                >
+                  {isAnalyzing ? (
+                    batchProgress.current > 0 ? (
+                      <span className="text-[10px] font-bold text-white">{batchProgress.current}</span>
                     ) : (
-                      <Sparkles size={18} />
-                    )}
-                  </button>
-                  
-                  {viewMode !== 'public' && (
-                    <button 
-                      onClick={handleToggleMultiSelect}
-                      className={`h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all shadow-sm border ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-500/20' : 'text-brand-navy/60 hover:text-brand-navy bg-white border-brand-navy/10'}`}
-                      title={isMultiSelect ? t.cancelSelect : t.selectMode}
-                    >
-                      <CheckSquare size={18} />
-                      <span className="hidden sm:inline text-[10px] font-bold whitespace-nowrap">{isMultiSelect ? t.cancelSelect : t.selectMode}</span>
-                    </button>
+                      <Sparkles size={16} className="animate-spin" />
+                    )
+                  ) : (
+                    <Sparkles size={18} />
                   )}
-
+                </button>
+                
+                {viewMode !== 'public' && (
                   <button 
-                    onClick={handleToggleViewMode}
-                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
-                    title={viewMode === 'public' ? t.exitGuestView : "访客视图预览"}
+                    onClick={handleToggleMultiSelect}
+                    className={`h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all shadow-sm border ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-500/20' : 'text-brand-navy/60 hover:text-brand-navy bg-white border-brand-navy/10'}`}
+                    title={isMultiSelect ? t.cancelSelect : t.selectMode}
                   >
-                    {viewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
+                    <CheckSquare size={18} />
+                    <span className="hidden sm:inline text-[10px] font-bold whitespace-nowrap">{isMultiSelect ? t.cancelSelect : t.selectMode}</span>
                   </button>
+                )}
+
+                <button 
+                  onClick={handleToggleViewMode}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
+                  title={viewMode === 'public' ? t.exitGuestView : "访客视图预览"}
+                >
+                  {viewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
+                </button>
 
                 {/* More Menu Dropdown */}
                 <div className="relative" ref={toolsRef}>
@@ -224,8 +233,9 @@ export const AdminHeader: React.FC<Props> = ({
                     onSetLang={(l) => useGalleryStore.getState().setAppLang(l)}
                   />
                 </div>
-                </div>
               </div>
+            </div>
+          )}
         </div>
     </header>
   );
