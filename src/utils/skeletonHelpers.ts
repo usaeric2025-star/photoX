@@ -12,16 +12,18 @@ export const getSkeletonCount = (
 ): number => {
   const pageSize = PAGINATION.PUBLIC_PAGE_SIZE || 20;
   
-  // 核心邏輯：如果知道總數（如篩選標籤時），則精準顯示總數數量的骨架屏，避免佔位多於實際數據
+  // 核心逻辑：如果已知总量小于分页（如某个标签下只有 3 张），精准显示 3 个骨架屏
   if (totalCount > 0 && totalCount < pageSize) {
     return totalCount;
   }
 
-  // 核心邏輯：針對視野優化
-  // 手機端 (columns=2): 一屏約 4-5 行 -> 10 個
-  // 桌面端 (columns=5): 一屏約 2-3 行 -> 15 個
-  const minNeeded = columns * 5; 
+  // 视野填充逻辑：
+  // 手机 (columns=2): 一屏约 3-4 行 -> 8 个足以填满
+  // 平板 (columns=3): 一屏约 3 行 -> 9 个
+  // 桌面 (columns=5): 一屏约 3 行 -> 15 个
+  // 我们取 columns * 4 为基准，确保至少有一屏多一点的占位感，且不超过分页上限
+  const viewportFill = columns * 4;
 
-  // 返回「填充視野」所需，但不超過分頁大小
-  return Math.min(pageSize, Math.max(minNeeded, 10));
+  // 如果是首次加载或切换（总量未知），返回填满视野所需且不超过 20 个
+  return Math.min(pageSize, Math.max(viewportFill, 12));
 };

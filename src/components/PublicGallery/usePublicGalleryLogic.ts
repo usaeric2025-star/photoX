@@ -124,7 +124,13 @@ export const usePublicGalleryLogic = (props: {
   const lang = (langStore || 'en') as LanguageCode;
   const t = useMemo(() => translations[lang] || translations['en'], [lang]);
 
-  const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(3);
+  const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(() => {
+    if (typeof window === 'undefined') return 2;
+    const width = window.innerWidth;
+    if (width >= 1024) return 5;
+    if (width >= 768) return 3;
+    return 2;
+  });
   const columns = props.columns || internalColumns;
   const setColumns = props.setColumns || setInternalColumns;
 

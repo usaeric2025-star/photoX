@@ -210,49 +210,80 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       />
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
-        {(() => {
-          if (isSyncing) {
-            const skeletonCount = getSkeletonCount(props.totalCount, columns);
-            return <GallerySkeleton columns={columns} count={skeletonCount} />;
-          }
-          if (gridPhotos.length === 0) {
-            return <GalleryEmpty t={t} />;
-          }
-          return (
-            <GalleryGrid 
-              virtuosoRef={virtuosoRef}
-              gridPhotos={gridPhotos}
-              displayPhotos={displayPhotos}
-              columns={columns}
-              virtuosoComponents={virtuosoComponents}
-              virtuosoContext={virtuosoContext}
-              handleLoadMore={handleLoadMore}
-              isAdminMode={!!props.isAdminMode}
-              activeIsMultiSelect={activeIsMultiSelect}
-              isStaffMode={isStaffMode}
-              activeSelectedIds={activeSelectedIds}
-              showGroupsCollapsed={showGroupsCollapsed}
-              lang={lang}
-              t={t}
-              categories={categories}
-              manufacturers={manufacturers}
-              tagMap={tagMap}
-              activeToggleSelection={activeToggleSelection}
-              onEditPhoto={props.onEditPhoto}
-              setActiveGroupId={setActiveGroupId}
-              setActivePhotoId={setActivePhotoId}
-              setLightboxIndex={setLightboxIndex}
-              startLongPress={startLongPress}
-              endLongPress={endLongPress}
-              shareSinglePhoto={shareSinglePhoto}
-              onTogglePinned={props.onTogglePinned}
-              selectedCatCode={selectedCatCode}
-              selectedSubId={selectedSubId}
-              selectedTagIds={selectedTagIds}
-              searchQuery={searchQuery}
-            />
-          );
-        })()}
+        <AnimatePresence mode="wait">
+          {(() => {
+            if (isSyncing) {
+              const skeletonCount = getSkeletonCount(props.totalCount, columns);
+              return (
+                <motion.div 
+                  key="skeleton"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute inset-0 z-10 bg-brand-bg"
+                >
+                  <GallerySkeleton columns={columns} count={skeletonCount} />
+                </motion.div>
+              );
+            }
+            if (gridPhotos.length === 0) {
+              return (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="h-full"
+                >
+                  <GalleryEmpty t={t} />
+                </motion.div>
+              );
+            }
+            return (
+              <motion.div
+                key="grid"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="h-full"
+              >
+                <GalleryGrid 
+                  virtuosoRef={virtuosoRef}
+                  gridPhotos={gridPhotos}
+                  displayPhotos={displayPhotos}
+                  columns={columns}
+                  virtuosoComponents={virtuosoComponents}
+                  virtuosoContext={virtuosoContext}
+                  handleLoadMore={handleLoadMore}
+                  isAdminMode={!!props.isAdminMode}
+                  activeIsMultiSelect={activeIsMultiSelect}
+                  isStaffMode={isStaffMode}
+                  activeSelectedIds={activeSelectedIds}
+                  showGroupsCollapsed={showGroupsCollapsed}
+                  lang={lang}
+                  t={t}
+                  categories={categories}
+                  manufacturers={manufacturers}
+                  tagMap={tagMap}
+                  activeToggleSelection={activeToggleSelection}
+                  onEditPhoto={props.onEditPhoto}
+                  setActiveGroupId={setActiveGroupId}
+                  setActivePhotoId={setActivePhotoId}
+                  setLightboxIndex={setLightboxIndex}
+                  startLongPress={startLongPress}
+                  endLongPress={endLongPress}
+                  shareSinglePhoto={shareSinglePhoto}
+                  onTogglePinned={props.onTogglePinned}
+                  selectedCatCode={selectedCatCode}
+                  selectedSubId={selectedSubId}
+                  selectedTagIds={selectedTagIds}
+                  searchQuery={searchQuery}
+                />
+              </motion.div>
+            );
+          })()}
+        </AnimatePresence>
       </div>
 
       {lightboxIndex === null && !props.isAdminMode && (
