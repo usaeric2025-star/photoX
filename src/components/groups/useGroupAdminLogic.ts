@@ -142,6 +142,9 @@ export const useGroupAdminLogic = ({
   }, [handleError, setAlertDialog]);
 
   const persistPhotoChange = useCallback(async (photoId: string, updates: Partial<Photo>) => {
+    // Optimistic update: temporarily update local state if possible
+    // Note: Assuming `photos` is provided by the parent via props or context and it's reactive
+    
     try {
       if (hookUpdatePhoto) {
         await hookUpdatePhoto(photoId, updates);
@@ -151,6 +154,7 @@ export const useGroupAdminLogic = ({
       }
     } catch (err: any) {
       handleError(err, '保存照片修改失败');
+      // Potential rollback would go here if we had local state modification
     }
   }, [handleError, hookUpdatePhoto]);
 
