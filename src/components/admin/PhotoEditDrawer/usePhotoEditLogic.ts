@@ -96,15 +96,19 @@ export const usePhotoEditLogic = (props: Props) => {
 
   const toggleHidden = async () => {
     const nextValue = !formState.is_hidden;
-    updateForm({ is_hidden: nextValue });
+    updateForm({ is_hidden: nextValue }); // optimistic
     
     if (editPhotoId) {
-      try {
-        const m = await import('../../../services/photoMutationService');
-        await m.updatePhotoHidden(editPhotoId, nextValue);
-      } catch (e) {
-        handleError(e, '自动保存可见性失败');
-      }
+        try {
+            await withFeedback(async () => {
+                const m = await import('../../../services/photoMutationService');
+                await m.updatePhotoHidden(editPhotoId, nextValue);
+            }, `照片已${nextValue ? '隐藏' : '显示'}`);
+        } catch (e) {
+            // Rollback on failure
+            updateForm({ is_hidden: !nextValue });
+            handleError(e, '自动保存可见性失败');
+        }
     }
   };
 

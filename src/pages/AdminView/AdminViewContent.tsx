@@ -201,7 +201,7 @@ export const AdminViewContent: React.FC<Props> = ({
                 resetAddState={logic.resetAddState} 
                 saveNewPhoto={async () => {
                   if (logic.checkSyncLock()) return;
-                  await logic.saveNewPhoto();
+                  await withFeedback(() => logic.saveNewPhoto(), '照片已保存');
                 }}
                 formState={logic.formState}
                 updateForm={logic.updateForm}
