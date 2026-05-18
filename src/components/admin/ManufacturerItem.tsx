@@ -69,11 +69,12 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
               onClick={(e) => {
                 e.stopPropagation();
                 setAlertDialog({
-                  title: `确定要删除生产商 #${manufacturer.name} 吗？`,
-                  message: '此操作不可撤销。',
-                  onConfirm: () => onDelete(manufacturer.id),
+                  title: '确认删除',
+                  message: `确定要删除「${manufacturer.name}」吗？此操作不可恢复。`,
                   confirmLabel: '删除',
-                  type: 'danger'
+                  cancelLabel: '取消',
+                  type: 'danger',
+                  onConfirm: () => onDelete(manufacturer.id)
                 });
                 setActiveMenuId(null);
               }}

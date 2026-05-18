@@ -116,41 +116,25 @@ export const AdminHeader: React.FC<Props> = ({
     <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-8 sm:h-10 max-w-[100px] sm:max-w-[160px] object-contain rounded border border-brand-navy/10 p-0.5 bg-white shadow-sm shrink-0" loading="lazy" />
+            <img src={settings.logo_url} alt="Logo" className="h-8 sm:h-12 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-brand-navy/10 p-1 bg-white shadow-sm shrink-0" loading="lazy" />
           ) : (
             <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">Admin</h1>
           )}
           
           {photosCount !== undefined && (
-            <div className="flex items-center gap-1 bg-brand-navy/5 px-2.5 py-1.5 rounded-full border border-brand-navy/10 shrink-0 shadow-inner min-w-max">
-              {isSyncing ? (
-                <div className="flex items-center gap-1.5 px-1 justify-center">
-                  <RefreshCcw size={12} className="text-brand-navy/60 animate-spin shrink-0" />
-                  <span className="text-[10px] font-bold text-brand-navy/60 uppercase tracking-widest whitespace-nowrap">
-                    {photosCount !== undefined && cloudCount ? `${photosCount}/${cloudCount}` : t.loading}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-0.5 whitespace-nowrap px-1">
-                  <span className="text-[11px] font-bold text-brand-navy/80">
-                    {photosCount}
-                  </span>
-                  <span className="text-[9px] font-bold text-brand-navy/30 px-0.5">/</span>
-                  <span className="text-[11px] font-bold text-blue-600">
-                    {cloudCount === undefined || cloudCount === null ? (
-                      <div className="inline-block w-3 h-2 bg-blue-600/10 rounded animate-pulse" />
-                    ) : (
-                      cloudCount
-                    )}
-                  </span>
-                </div>
-              )}
-              {isInfiniteMode && (
-                <div className="flex items-center gap-1 pl-1 border-l border-brand-navy/10 ml-0.5">
-                  <Skeleton className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                  <span className="text-xs font-semibold text-green-600">INF</span>
-                </div>
-              )}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-brand-navy/5 rounded-full border border-brand-navy/10 shadow-inner">
+              <span className="text-[10px] font-bold text-brand-navy/60 uppercase tracking-widest">{(t as any).total || 'TOTAL'}</span>
+              <div className="flex items-center gap-1 font-mono text-[11px]">
+                <span className="font-bold text-brand-navy/80">{photosCount}</span>
+                <span className="text-brand-navy/30">/</span>
+                <span className="font-bold text-blue-600">
+                  {cloudCount === undefined || cloudCount === null ? (
+                    <div className="inline-block w-3 h-2 bg-blue-600/10 rounded animate-pulse" />
+                  ) : (
+                    cloudCount
+                  )}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -159,28 +143,28 @@ export const AdminHeader: React.FC<Props> = ({
               {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
             <button 
               onClick={handleLogin}
-              className="px-4 py-2 rounded-2xl text-xs font-medium uppercase tracking-wide bg-brand-navy text-brand-bg shadow-sm active:scale-95 transition-all flex items-center gap-2"
+              className="px-4 py-2 rounded-xl text-xs font-medium uppercase tracking-wide bg-brand-navy text-brand-bg shadow-sm active:scale-95 transition-all flex items-center gap-2"
             >
-              <LogIn size={14} />
+              <LogIn size={16} />
               {t.login}
             </button>
           ) : (
               <div className="flex items-center gap-1 sm:gap-2">
-                <div className="flex items-center gap-1 sm:gap-1.5 bg-brand-navy/5 p-1 rounded-full sm:rounded-2xl border border-brand-navy/10 shadow-inner">
+                <div className="flex items-center gap-1.5 bg-brand-navy/5 p-1 rounded-2xl border border-brand-navy/10 shadow-inner">
                   {/* Refresh with Dropdown */}
                   <div className="relative flex items-center" ref={dropdownRef}>
                     <button 
                       onClick={onRefresh}
-                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full sm:rounded-xl bg-white text-brand-navy/40 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm border border-brand-navy/10 active:scale-95 group"
+                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white text-brand-navy/60 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm border border-brand-navy/10 active:scale-95 group"
                       title={t.refresh}
                     >
-                      <RefreshCcw size={16} className="group-active:animate-spin" />
+                      <RefreshCcw size={18} className={isSyncing ? "animate-spin" : "group-active:animate-spin"} />
                     </button>
                     <button 
                       onClick={toggleRefreshMenu}
-                      className={`absolute -right-1 bottom-0 w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-brand-bg transition-transform ${showRefreshMenu ? 'rotate-180' : ''}`}
+                      className={`absolute -right-1.5 bottom-0 w-4 h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-brand-bg transition-transform ${showRefreshMenu ? 'rotate-180' : ''}`}
                     >
-                      <ChevronDown size={8} />
+                      <ChevronDown size={10} />
                     </button>
                     
                     <RefreshMenu show={showRefreshMenu} isInfiniteMode={isInfiniteMode} t={t} toggleInfinite={toggleInfinite} />
@@ -189,46 +173,46 @@ export const AdminHeader: React.FC<Props> = ({
                   <button 
                     onClick={handleBatchAiIdentifyTrigger}
                     disabled={isAnalyzing}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full sm:rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
                     title={t.batchAi}
                   >
                     {isAnalyzing ? (
                       batchProgress.current > 0 ? (
-                        <span className="text-[9px] font-bold text-white">{batchProgress.current}</span>
+                        <span className="text-[10px] font-bold text-white">{batchProgress.current}</span>
                       ) : (
-                        <Sparkles size={14} className="animate-spin" />
+                        <Sparkles size={16} className="animate-spin" />
                       )
                     ) : (
-                      <Sparkles size={16} />
+                      <Sparkles size={18} />
                     )}
                   </button>
                   
                   {viewMode !== 'public' && (
                     <button 
                       onClick={handleToggleMultiSelect}
-                      className={`h-8 sm:h-10 px-2 sm:px-3 flex items-center gap-1 sm:gap-2 rounded-full sm:rounded-xl transition-all shadow-sm border ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-500/20' : 'text-brand-navy/60 hover:text-brand-navy bg-white border-brand-navy/10'}`}
+                      className={`h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all shadow-sm border ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-500/20' : 'text-brand-navy/60 hover:text-brand-navy bg-white border-brand-navy/10'}`}
                       title={isMultiSelect ? t.cancelSelect : t.selectMode}
                     >
-                      <CheckSquare size={16} />
-                      <span className="hidden sm:inline text-xs font-bold whitespace-nowrap">{isMultiSelect ? t.cancelSelect : t.selectMode}</span>
+                      <CheckSquare size={18} />
+                      <span className="hidden sm:inline text-[10px] font-bold whitespace-nowrap">{isMultiSelect ? t.cancelSelect : t.selectMode}</span>
                     </button>
                   )}
 
                   <button 
                     onClick={handleToggleViewMode}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full sm:rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
                     title={viewMode === 'public' ? t.exitGuestView : "访客视图预览"}
                   >
-                    {viewMode === 'public' ? <Eye size={16} /> : <Globe size={16} />}
+                    {viewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
                   </button>
 
                 {/* More Menu Dropdown */}
                 <div className="relative" ref={toolsRef}>
                   <button 
                     onClick={toggleToolsMenu}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full sm:rounded-xl flex items-center justify-center transition-all relative ${activeScreen === 'manage' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
+                    className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all relative ${activeScreen === 'manage' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900 bg-white border border-slate-200 shadow-sm'}`}
                   >
-                    <Menu size={16} />
+                    <Menu size={18} />
                   </button>
                   <ToolsMenu 
                     show={showToolsMenu} 

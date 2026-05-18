@@ -56,8 +56,11 @@ export const BatchEditScreen = ({
   const handleDelete = () => {
     if (!batchEditIds || !onDelete) return;
     setAlertDialog({
-      title: `确定要删除选中的 ${safeArray(batchEditIds).length} 张照片吗？`,
-      message: '此操作不可撤销，所有选中照片将从云端彻底移除。',
+      title: '确认删除',
+      message: `确定要删除这 ${safeArray(batchEditIds).length} 张照片吗？此操作不可恢复。`,
+      confirmLabel: '删除',
+      cancelLabel: '取消',
+      type: 'danger',
       onConfirm: async () => {
         await onDelete(batchEditIds);
         setAlertDialog(null);

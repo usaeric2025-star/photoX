@@ -5,6 +5,8 @@ import { Skeleton } from './ui/Skeleton';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';
 
+const loadedImagesCache = new Set<string>();
+
 interface PhotoCardProps {
   photo: Photo;
   index: number;
@@ -69,9 +71,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const cardSelectedClasses = isAdminMode && isMultiSelect && isSelected 
     ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
-    : 'hover:scale-[1.02] active:scale-[0.95]';
+    : 'md:hover:scale-[1.02] active:scale-[0.95]';
 
-  const [isImageLoaded, setIsImageLoaded] = React.useState(false);
+  const [initiallyLoaded] = React.useState(() => loadedImagesCache.has(photo.id));
+  const [isImageLoaded, setIsImageLoaded] = React.useState(initiallyLoaded);
   const [isImageError, setIsImageError] = React.useState(false);
 
   return (
@@ -103,7 +106,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
       {!isImageLoaded && !isImageError && (
-        <div className="absolute inset-0 animate-shimmer flex items-center justify-center">
+        <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
           <ImageIcon className="text-slate-300 w-8 h-8 opacity-20" />
         </div>
       )}
@@ -116,13 +119,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       )}
 
       {/* Low-res placeholder using thumb_url if main image is still loading */}
-      {photo.thumb_url && !isImageError && (
+      {photo.thumb_url && !isImageError && !isImageLoaded && (
         <img 
           draggable={false}
           src={photo.thumb_url} 
           alt=""
           loading="lazy"
-          className={`absolute inset-0 w-full h-full object-cover blur-sm transition-opacity duration-700 ${isImageLoaded ? 'opacity-0' : 'opacity-100'}`}
+          className="absolute inset-0 w-full h-full object-cover filter blur-md pointer-events-none"
         />
       )}
 
@@ -132,8 +135,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover transition-all duration-700 ${isImageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
+        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
+          loadedImagesCache.add(photo.id);
           setIsImageLoaded(true);
         }}
         onError={() => {
@@ -144,23 +148,23 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
       {/* Selected Indicator (Blue Overlay + Icon) */}
       {isAdminMode && isMultiSelect && (
-        <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
-           <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 group-hover:opacity-100'}`}>
+        <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
+           <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
               {isSelected && <Check size={16} className="text-white sm:size-20" />}
            </div>
         </div>
       )}
 
       {/* Top Left Indicators (Group and Pinned status) */}
-      <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col">
+      <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
         {photo.groupId && (
-          <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase">
+          <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
             <Layers size={8} />
             {photo.groupId.slice(-4)}
           </div>
         )}
         {photo.isPinned && (
-          <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm">
+          <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
             <span>置頂</span>
           </div>
         )}
@@ -168,8 +172,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
       {/* Hidden Status Indicator (Centered overlay) */}
       {photo.is_hidden && (
-        <div className="absolute inset-0 flex items-center justify-center z-20">
-          <div className="bg-yellow-400/90 text-black p-2 rounded-full shadow-lg">
+        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+          <div className="bg-yellow-400/90 text-black p-2 rounded-full shadow-lg pointer-events-none">
             <EyeOff size={16} />
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { Photo, ProductGroup, Dimension } from '../../types';
+import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
@@ -12,7 +12,7 @@ interface UseGroupAdminLogicProps {
   photos: Photo[];
   isAdminMode: boolean;
   hookUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
-  propsSetAlertDialog?: (d: { title: string; message: string; onConfirm: () => void } | null) => void;
+  propsSetAlertDialog?: (d: DialogData | null) => void;
   onBatchAiAnalyze?: (photos: Photo[]) => void;
   onBatchEdit?: (ids: string[]) => void;
 }

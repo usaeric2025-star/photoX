@@ -1,7 +1,7 @@
 import React from 'react';
 import { Settings2, Trash2 } from 'lucide-react';
 import { SheetHeader, SheetTitle } from "../../ui/sheet";
-import { ProductGroup } from '../../../types';
+import { ProductGroup, DialogData } from '../../../types';
 import { saveGroupToCloud } from '../../../services/groupService';
 
 export const GroupSettingsHeader: React.FC<{
@@ -10,7 +10,7 @@ export const GroupSettingsHeader: React.FC<{
   onUngroup?: (groupId: string) => void;
   setActiveGroupId: (id: string | null) => void;
   setShowGroupSettings: (show: boolean) => void;
-  setAlertDialog: (d: { title: string; message: string; onConfirm: () => void } | null) => void;
+  setAlertDialog: (d: DialogData | null) => void;
   handleError: (error: any, context: string) => void;
   setIsSaving: (isSaving: boolean) => void;
   isSaving: boolean;
@@ -29,8 +29,11 @@ export const GroupSettingsHeader: React.FC<{
            onClick={() => {
              if (onUngroup && activeGroupId) {
                setAlertDialog({
-                 title: '确定要解散整个群组？',
-                 message: '解散后，群组关系、排序信息及DNA数据将被移除，照片将变回单张展示。',
+                 title: '确认删除',
+                 message: '确定要解散（删除）整个群组吗？此操作不可恢复。',
+                 confirmLabel: '删除',
+                 cancelLabel: '取消',
+                 type: 'danger',
                  onConfirm: async () => {
                    try {
                      if (onUngroup && activeGroupId) {

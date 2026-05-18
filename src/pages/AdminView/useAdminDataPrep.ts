@@ -59,6 +59,12 @@ export const useAdminDataPrep = () => {
     setCloudCount(cloudCountData);
   }, [cloudCountData]);
 
+  useEffect(() => {
+    // Ensure multi-select is off on route enter
+    useGalleryStore.getState().setIsMultiSelect(false);
+    useGalleryStore.getState().setSelectedIds([]);
+  }, []);
+
   const handleLoadMoreAdmin = useCallback(() => {
     if (infinitePhotosQuery.hasNextPage && !infinitePhotosQuery.isFetchingNextPage) {
       infinitePhotosQuery.fetchNextPage();
@@ -150,8 +156,8 @@ export const useAdminDataPrep = () => {
 
   const onRefresh = useCallback(() => refreshCloudData(user, true, setCloudCount), [user, refreshCloudData]);
 
-  const lang = (localStorage.getItem('appLang') as LanguageCode) || 'en';
-  const t = translations[lang] ?? translations.en;
+  const lang = 'zh';
+  const t = translations.zh;
 
   const sessionValue = useMemo(() => ({
     user, isAdminMode: true, settings, setSettings, geminiApiKey, setGeminiApiKey,

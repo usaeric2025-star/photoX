@@ -23,7 +23,7 @@ export const useInfinitePhotosQuery = (filters: { categoryId?: string | null; ta
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     placeholderData: keepPreviousData,
-    staleTime: 1000 * 30, // 30 seconds
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 };
 

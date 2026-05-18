@@ -6,7 +6,7 @@ import {
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
   Maximize, MessageSquare, Type, Save, Trash, AlertCircle, Tag as TagIcon, Eye, EyeOff
 } from 'lucide-react';
-import { Photo, Tag, Category, ProductGroup, Manufacturer, Dimension } from '../../types';
+import { Photo, Tag, Category, ProductGroup, Manufacturer, Dimension, DialogData } from '../../types';
 import { TranslationType } from '../../lib/ui-helpers';
 import { Skeleton } from '../ui/Skeleton';
 import {
@@ -54,7 +54,7 @@ export interface GroupAdminShellProps {
   tagMap?: Record<string, string>;
   allTags?: Tag[];
   isMultiSelect?: boolean;
-  setAlertDialog?: (d: { title: string; message: string; onConfirm: () => void } | null) => void;
+  setAlertDialog?: (d: DialogData | null) => void;
   updatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
 }
 

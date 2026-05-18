@@ -75,7 +75,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, refreshCloudData, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
 
   const {
-      updateTag, deleteTag, updateCategory, addCategory, 
+      updateTag, deleteTag, updateCategory, deleteCategory, addCategory, 
       addManufacturer, updateManufacturer, deleteManufacturer, addTag
   } = useAdminCategory({ setAlertDialog });
 
@@ -252,6 +252,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
         <CategoriesSection 
           categories={categories}
+          deleteCategory={deleteCategory}
           cardClass={cardClass}
         />
 

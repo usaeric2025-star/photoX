@@ -69,6 +69,15 @@ export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
           </div>
           {(onLogin || loginWithGoogle) && (
             <div className="pt-4 border-t border-slate-100 mt-4 flex flex-col gap-2">
+              {onLogin && (
+                <button
+                  type="button"
+                  onClick={onLogin}
+                  className="w-full py-3 px-4 rounded-2xl font-bold text-white bg-slate-800 hover:bg-slate-900 transition-all text-sm flex items-center justify-center gap-2"
+                >
+                   <LogIn size={16} /> {t.login}
+                </button>
+              )}
               {loginWithGoogle && (
                 <button
                   type="button"

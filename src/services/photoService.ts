@@ -163,8 +163,11 @@ export const loadAllPhotosFromCloud = async (
   const from = page * limit;
   const to = from + limit - 1;
 
+  query = query.order('is_pinned', { ascending: false, nullsFirst: false });
+  if (isAdminMode) {
+    query = query.order('is_hidden', { ascending: true, nullsFirst: true });
+  }
   const { data, error } = await query
-    .order('is_pinned', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
     .range(from, to);
   

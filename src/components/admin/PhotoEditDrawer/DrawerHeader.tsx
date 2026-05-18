@@ -1,6 +1,7 @@
 import React from 'react';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, Trash2 } from 'lucide-react';
 import { Skeleton } from '../../ui/Skeleton';
+import { useGalleryStore } from '../../../store';
 import { ProductFormData } from '../../../types';
 
 interface HeaderProps {
@@ -25,6 +26,7 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
   isPartOfGroup, isSyncing, onAbort, onAiAnalyze, onDelete, 
   onSave, onToggleHidden, onClose, onErrorClick
 }) => {
+  const { setAlertDialog } = useGalleryStore();
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">
       <div className="flex-none flex items-center gap-2">
@@ -88,7 +90,16 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
           
           {editPhotoId && onDelete && (
             <button 
-              onClick={onDelete}
+              onClick={() => {
+                setAlertDialog({
+                  title: '确认删除',
+                  message: '确定要删除此照片吗？此操作不可恢复。',
+                  confirmLabel: '删除',
+                  cancelLabel: '取消',
+                  type: 'danger',
+                  onConfirm: () => onDelete()
+                });
+              }}
               className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold"
             >
               <Trash2 size={18} />

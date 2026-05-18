@@ -41,11 +41,12 @@ export const TagItem: React.FC<TagItemProps> = ({
 
   const handleDeleteClick = () => {
     setAlertDialog({
-      title: `确定要删除标签 #${tag.name} 吗？`,
-      message: '无法撤销且会从所有照片中移除。',
-      onConfirm: () => deleteTag(tag.id),
+      title: '确认删除',
+      message: `确定要删除「${tag.name}」吗？此操作不可恢复。`,
       confirmLabel: '删除',
-      type: 'danger'
+      cancelLabel: '取消',
+      type: 'danger',
+      onConfirm: () => deleteTag(tag.id)
     });
   };
 
@@ -63,7 +64,14 @@ export const TagItem: React.FC<TagItemProps> = ({
 
   const handleMenuDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    deleteTag(tag.id);
+    setAlertDialog({
+      title: '确认删除',
+      message: `确定要删除「${tag.name}」吗？此操作不可恢复。`,
+      confirmLabel: '删除',
+      cancelLabel: '取消',
+      type: 'danger',
+      onConfirm: () => deleteTag(tag.id)
+    });
     setActiveTagMenuId(null);
   };
 

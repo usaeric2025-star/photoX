@@ -118,14 +118,16 @@ export const usePublicGalleryLogic = (props: {
     return { displayPhotos: dp, gridPhotos: gp };
   }, [incomingPhotos, localPhotos, sortOrder, isAdminMode, isStaffMode, contextTags, categories, showGroupsCollapsed]);
 
-  const [lang, setLang] = useState<LanguageCode>(() => {
-    return (localStorage.getItem('appLang') as LanguageCode) || 'en';
+  const [langState, setLangState] = useState<LanguageCode>(() => {
+    return (localStorage.getItem('appLang') as LanguageCode) || 'zh';
   });
-  const t = useMemo(() => translations[lang] || translations['en'], [lang]);
+  const lang = isAdminMode ? 'zh' : langState;
+  const setLang = setLangState;
+  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
 
   useEffect(() => {
-    localStorage.setItem('appLang', lang);
-  }, [lang]);
+    if (!isAdminMode) localStorage.setItem('appLang', langState);
+  }, [langState, isAdminMode]);
 
   const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(3);
   const columns = props.columns || internalColumns;

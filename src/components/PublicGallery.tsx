@@ -138,6 +138,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     }
   };
 
+  const handleContactWhatsApp = (photo: Photo) => {
+    if (settings?.whatsapp_1 && !settings?.whatsapp_2) {
+      openWhatsApp(settings.whatsapp_1, photo);
+    } else {
+      setShowWhatsAppChoice(true);
+      // Wait, we can't easily pass photo to the dialog right now without state.
+      // So let's just let it be generic for now if they have multiple options.
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
       {lightboxIndex === null && !props.hideHeader && (
@@ -286,18 +296,21 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       <AnimatePresence>
         {lightboxIndex !== null && displayPhotos[lightboxIndex] && (
           <PhotoLightbox 
-            photos={displayPhotos}
-            initialIndex={lightboxIndex}
+            photo={displayPhotos[lightboxIndex]}
+            displayPhotos={displayPhotos}
+            index={lightboxIndex}
             onClose={() => setLightboxIndex(null)}
+            onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
+            onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
             isAdminMode={!!props.isAdminMode}
             isStaffMode={isStaffMode}
-            onEditPhoto={props.onEditPhoto}
+            contactWhatsApp={handleContactWhatsApp}
+            onEditPhoto={(photo) => props.onEditPhoto?.(photo.id)}
             lang={lang}
             t={t}
             tagMap={tagMap}
             categories={categories}
             manufacturers={manufacturers || []}
-            shareSinglePhoto={shareSinglePhoto}
             onToggleHidden={props.onToggleHidden}
           />
         )}
