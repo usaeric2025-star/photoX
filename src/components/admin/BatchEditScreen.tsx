@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -42,12 +42,22 @@ export const BatchEditScreen = ({
   updateTag: (id: string, name: string) => Promise<any>;
   deleteTag: (id: string) => Promise<any>;
 }) => {
+  const [isLocalSaving, setIsLocalSaving] = useState(false);
   const { 
     setPromptDialog, 
     setAlertDialog,
     isSyncing,
     appLang
   } = useGalleryStore();
+
+  const handleSave = async () => {
+    setIsLocalSaving(true);
+    try {
+      await saveBatchEdit(batchIsHiddenApplied);
+    } finally {
+      setIsLocalSaving(false);
+    }
+  };
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
@@ -95,11 +105,11 @@ export const BatchEditScreen = ({
             </button>
           )}
 
-          <button onClick={() => saveBatchEdit(batchIsHiddenApplied)}
+          <button onClick={handleSave}
             className={`w-10 h-10 bg-blue-600 text-white 
             rounded-xl flex items-center justify-center 
-            shadow-md ${isSyncing ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
-            {isSyncing ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
+            shadow-md ${(isLocalSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
+            {(isLocalSaving || isSyncing) ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
           </button>
           <button onClick={resetAddState}
             className="w-10 h-10 bg-slate-100 text-slate-600 

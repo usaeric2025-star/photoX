@@ -167,8 +167,13 @@ export function filterPhotos(
 
   // 6. Sort
   result.sort((a, b) => {
+    // Sort hidden to the absolute end, regardless of pinned status
+    if (a.is_hidden && !b.is_hidden) return 1;
+    if (!a.is_hidden && b.is_hidden) return -1;
+
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
+    
     return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
   });
 
@@ -231,6 +236,11 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
   representatives.sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
+
+    // Sort hidden to the end
+    if (a.is_hidden && !b.is_hidden) return 1;
+    if (!a.is_hidden && b.is_hidden) return -1;
+
     return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
   });
 

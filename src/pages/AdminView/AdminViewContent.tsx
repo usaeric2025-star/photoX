@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
+import { withFeedback } from '../../utils/uiFeedback';
 import { useErrorHandler } from '../../utils/errorHandler';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { AdminGlobalModals } from '../../components/admin/AdminGlobalModals';
@@ -135,7 +136,7 @@ export const AdminViewContent: React.FC<Props> = ({
             onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch(()=>{})}
             onToggleHidden={async (photo) => {
               if (logic.checkSyncLock()) return;
-              await logic.toggleHidden(photo);
+              await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态');
             }}
             updatePhoto={async (id, updates) => {
               if (logic.checkSyncLock()) return;

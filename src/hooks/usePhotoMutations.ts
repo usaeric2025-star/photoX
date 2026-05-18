@@ -50,6 +50,18 @@ export const usePhotoMutations = (
     const updatedAt = formatDate(new Date());
     const finalUpdates = { ...updates, updatedAt };
 
+    const prevData = queryClient.getQueryData<any>(QUERY_KEYS.photos);
+    queryClient.setQueryData(QUERY_KEYS.photos, (oldData: any) => {
+      if (!oldData) return;
+      return {
+        ...oldData,
+        pages: oldData.pages.map((page: any) => ({
+          ...page,
+          photos: page.photos.map((p: Photo) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p)
+        }))
+      };
+    });
+
     if (user) {
       if (ids.length > 1 && addTask && updateTask && removeTask) {
         const controller = new AbortController();
@@ -71,6 +83,7 @@ export const usePhotoMutations = (
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
           setTimeout(() => removeTask(taskId), 5000);
         } catch (e: unknown) {
+          queryClient.setQueryData(QUERY_KEYS.photos, prevData);
           if (!controller.signal.aborted) {
              updateTask(taskId, { status: 'error', message: '部分更新失败' });
              handleError(e, "批量云端同步失败");
@@ -79,7 +92,10 @@ export const usePhotoMutations = (
       } else {
         const m = await import('../services/photoMutationService');
         for (const id of ids) {
-           await m.updatePhoto(id, finalUpdates).catch(e => handleError(e, "单张照片云端同步失败"));
+           await m.updatePhoto(id, finalUpdates).catch(e => {
+             queryClient.setQueryData(QUERY_KEYS.photos, prevData);
+             handleError(e, "单张照片云端同步失败");
+           });
         }
         queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       }
