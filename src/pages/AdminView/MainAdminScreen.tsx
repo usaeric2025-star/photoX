@@ -2,6 +2,7 @@ import React from 'react';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { PublicGallery } from '../../components/PublicGallery';
 import { FloatingActionButton } from '../../components/admin/FloatingActionButton';
+import { MultiSelectToolbar } from '../../components/admin/MultiSelectToolbar';
 import { Photo, Category, Tag, User, AppSettings } from '../../types';
 
 interface Props {
@@ -115,6 +116,24 @@ export const MainAdminScreen: React.FC<Props> = ({
             onClick={onImport}
             title={t.addPhoto}
           />
+          {isMultiSelect && selectedIds.length > 0 && (
+            <MultiSelectToolbar
+              selectedCount={selectedIds.length}
+              onClose={() => setIsMultiSelect(false)}
+              onBatchAiIdentify={() => {
+                  if (onBatchAiAnalyze) onBatchAiAnalyze(photos.filter(p => selectedIds.includes(p.id)));
+              }}
+              onBatchEdit={() => {
+                  if (onBatchEdit) onBatchEdit(selectedIds);
+              }}
+              onGroup={() => {
+                  if (onGroupPhotos) onGroupPhotos(selectedIds);
+              }}
+              onDelete={() => {
+                  if (onDeletePhotos) onDeletePhotos(selectedIds);
+              }}
+            />
+          )}
        </div>
     </div>
   );

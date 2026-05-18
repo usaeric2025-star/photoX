@@ -121,9 +121,8 @@ export const AdminHeader: React.FC<Props> = ({
   const currentLang = appLang || 'en';
 
   return (
-    <header className="shrink-0 z-[110] bg-red-500 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
-        <div className="text-white">Admin Header Test</div>
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+    <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {settings?.logo_url ? (
             <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-14 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-brand-navy/10 p-1 bg-white shadow-sm shrink-0" loading="lazy" />
           ) : (
@@ -149,10 +148,9 @@ export const AdminHeader: React.FC<Props> = ({
           {/* Header language switcher removed as it is now in the Tools Menu */}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {/* Debug: Always showing toolbar */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <div className="flex items-center gap-1 sm:gap-2">
-            <div className="flex items-center gap-1.5 bg-red-500/20 p-1 rounded-2xl border border-red-500 shadow-inner">
+            <div className="flex items-center gap-1.5 bg-brand-navy/5 p-1 rounded-2xl border border-brand-navy/10 shadow-inner">
                 {/* Refresh with Dropdown */}
                 <div className="relative flex items-center" ref={dropdownRef}>
                   <button 
