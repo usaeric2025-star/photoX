@@ -78,7 +78,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 onClick={() => {
                   if (isAnalyzing) return;
-                  withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined));
+                  withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)).catch(()=>{});
                 }}
                 disabled={isAnalyzing && !abortAnalysis}
                 className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm ${isAnalyzing ? 'bg-slate-50 border-slate-100 text-slate-400' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-100 active:bg-purple-200'}`}
@@ -246,7 +246,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   onChange={(newDims) => updateForm({ dimensions: newDims })}
                   showAiButton={!editPhotoId && !!newPhotoData}
                   isAnalyzing={isAnalyzing}
-                  onAiAnalyze={() => withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined))}
+                  onAiAnalyze={() => withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)).catch(()=>{})}
                   t={t}
                 />
 

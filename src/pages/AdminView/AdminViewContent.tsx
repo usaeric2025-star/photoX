@@ -115,7 +115,7 @@ export const AdminViewContent: React.FC<Props> = ({
               input.type = 'file';
               input.accept = 'image/*';
               input.multiple = true;
-              input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
+              input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch(()=>{});
               input.click();
             }}
             lang={lang}
@@ -124,8 +124,8 @@ export const AdminViewContent: React.FC<Props> = ({
             manufacturers={logic.manufacturers}
             allTags={logic.tags}
             tagMap={logic.tagIdToNameMap}
-            onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos))}
-            onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id))}
+            onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos)).catch(()=>{})}
+            onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch(()=>{})}
             onToggleHidden={async (photo) => {
               if (logic.checkSyncLock()) return;
               await logic.toggleHidden(photo);
@@ -215,7 +215,7 @@ export const AdminViewContent: React.FC<Props> = ({
             input.type = 'file';
             input.accept = 'image/*';
             input.multiple = true;
-            input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false);
+            input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch(()=>{});
             input.click();
           }}
         />

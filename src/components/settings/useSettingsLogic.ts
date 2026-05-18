@@ -35,7 +35,7 @@ export const useSettingsLogic = ({
   const debouncedSave = useCallback((newSettings: AppSettings) => {
     if (saveTimer) clearTimeout(saveTimer);
     const timer = setTimeout(() => {
-      saveSettings(newSettings);
+      saveSettings(newSettings).catch((err) => console.error('Save settings failed:', err));
       setHasChanges(false);
     }, 1500);
     setSaveTimer(timer);

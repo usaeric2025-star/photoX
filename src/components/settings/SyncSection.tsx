@@ -81,14 +81,14 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <button 
-              onClick={performPushSync}
+              onClick={() => performPushSync().catch(()=>{})}
               disabled={isSyncing}
               className="bg-brand-gold hover:bg-brand-gold/90 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
             >
               <CloudUpload size={16} /> 备份至云端
             </button>
             <button 
-              onClick={performPullSync}
+              onClick={() => performPullSync().catch(()=>{})}
               disabled={isSyncing}
               className="bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 active:scale-95 transition-all"
             >
