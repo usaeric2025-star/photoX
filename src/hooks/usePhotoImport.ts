@@ -217,8 +217,7 @@ export const usePhotoImport = (
 
                  if (user) {
                    await savePhotoToCloud(user.id, updated);
-                   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-                   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
+                    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
                  }
                } catch (err) {
                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
@@ -228,9 +227,25 @@ export const usePhotoImport = (
                }
             })(photoId, dataUrl, newPhoto));
           } else if (user) {
-            tasks.push(savePhotoToCloud(user.id, newPhoto).then(() => {
-              queryClient.invalidateQueries({ queryKey: ['photos'], refetchType: 'all' });
-            }));
+            tasks.push(
+              savePhotoToCloud(user.id, newPhoto)
+                .then(() => {
+                  queryClient.invalidateQueries({ queryKey: ['photos'], refetchType: 'all' });
+                })
+                .catch((e) => {
+                  console.error(`[usePhotoImport] Error saving photo ${newPhoto.id} to cloud:`, e);
+                  
+                  // Rollback: Remove failed photo from UI
+                  const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                  if (index !== -1) {
+                    photosRef.current.splice(index, 1);
+                  }
+                  handleError(e, `上传照片失败: ${newPhoto.name}`);
+                  toast.error(`上传失败: ${newPhoto.name} - ${e instanceof Error ? e.message : '未知错误'}`);
+                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+                  throw e; // Rethrow to ensure Promise.allSettled marks task as rejected
+                })
+            );
           }
         } catch (err) {
           console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
