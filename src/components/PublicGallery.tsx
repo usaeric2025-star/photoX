@@ -298,7 +298,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         </AnimatePresence>
       </div>
 
-      {lightboxIndex === null && (
+      {lightboxIndex === null && !props.isAdminMode && (
         <GalleryFloatButtons scrollToTop={scrollToTop} setShowWhatsAppChoice={setShowWhatsAppChoice} />
       )}
 
