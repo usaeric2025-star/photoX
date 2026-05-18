@@ -51,7 +51,8 @@ export const useAdminDataPrep = () => {
   const { data: cloudCountData } = usePhotoCountQuery({}, true);
 
   const photos = useMemo(() => {
-    return infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
+    const allPhotos = infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
+    return Array.from(new Map(allPhotos.map(p => [p.id, p])).values());
   }, [infinitePhotosQuery.data]);
 
   useEffect(() => {

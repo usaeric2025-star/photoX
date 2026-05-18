@@ -178,6 +178,7 @@ export const AdminViewContent: React.FC<Props> = ({
               await logic.onRefresh();
             }}
             cloudCount={logic.cloudCount}
+            photosCount={logic.photos.length}
             lastSyncTime={lastSyncTime}
             isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
           />
@@ -278,6 +279,7 @@ export const AdminViewContent: React.FC<Props> = ({
                      if (logic.checkSyncLock()) return;
                      logic.performPullSync(true);
                    }}
+                   onOpenSettings={() => logic.setActiveScreen('manage')}
                    hideHeader={false}
                    columns={logic.columns}
                    setColumns={logic.setColumns}

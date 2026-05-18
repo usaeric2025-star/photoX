@@ -54,7 +54,30 @@ export default function PublicView() {
   const { mutateAsync: updatePhotoMutation } = useUpdatePhoto();
 
   const photos = useMemo(() => {
-    return paginatedPhotos?.pages.flatMap(p => p.photos) || [];
+    const allPhotos = paginatedPhotos?.pages.flatMap(p => p.photos) || [];
+    
+    // Deduplicate by ID first
+    const uniqueById = Array.from(new Map(allPhotos.map(p => [p.id, p])).values());
+    
+    // Old logic fallback: also deduplicate by image_hash for public view to prevent 
+    // identical photos appearing twice if they were uploaded multiple times
+    const uniqueByHash = new Map<string, Photo>();
+    uniqueById.forEach(p => {
+      const key = p.image_hash || p.id;
+      // Prefer the one that is pinned or newer
+      if (uniqueByHash.has(key)) {
+        const existing = uniqueByHash.get(key)!;
+        if (p.isPinned && !existing.isPinned) {
+          uniqueByHash.set(key, p);
+        } else if (p.createdAtTimestamp > existing.createdAtTimestamp) {
+          uniqueByHash.set(key, p);
+        }
+      } else {
+        uniqueByHash.set(key, p);
+      }
+    });
+    
+    return Array.from(uniqueByHash.values());
   }, [paginatedPhotos]);
 
   useEffect(() => {

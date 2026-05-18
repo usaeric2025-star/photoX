@@ -10,18 +10,20 @@ import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster, toast } from 'sonner';
 
-function AnimatedRoutes() {
+function AnimatedRoutes({ user }: { user: any }) {
   const location = useLocation();
-  const { user } = useAuth();
-  const { hash, groupId } = location.state || {}; // Not really used this way with Routes, but for keying
+  const { hash, groupId } = location.state || {};
+
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            {user ? <Navigate to="/admin" replace /> : <PublicView />}
-          </motion.div>
+            user ? <Navigate to="/admin" replace /> : (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                <PublicView />
+              </motion.div>
+            )
         } />
         <Route path="/h/:hash" element={
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
@@ -116,7 +118,7 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Toaster position="top-center" richColors />
-      <AnimatedRoutes />
+      <AnimatedRoutes user={user} />
     </BrowserRouter>
   );
 }

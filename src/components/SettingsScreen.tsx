@@ -70,7 +70,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { data: manufacturers = [] } = useManufacturersQuery();
   
   const { data: infiniteData } = useInfinitePhotosQuery({}, 100);
-  const photos = infiniteData?.pages.flatMap(p => p.photos) || [];
+  const allPhotos = infiniteData?.pages.flatMap(p => p.photos) || [];
+  const photos = Array.from(new Map(allPhotos.map(p => [p.id, p])).values());
 
   const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, refreshCloudData, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
 
@@ -191,7 +192,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         >
           <ChevronLeft size={24} />
         </button>
-        <h2 className="font-black text-xs text-brand-navy border border-brand-navy/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">设置与管理</h2>
+        <h2 className="font-black text-xs text-brand-navy border border-brand-navy/10 px-3 py-1 rounded-xl bg-white shadow-sm inline-block italic leading-none uppercase tracking-widest flex-1 ml-1">系统设置 / System Settings</h2>
         <button 
            onClick={async () => {
              if (hasChanges) {
