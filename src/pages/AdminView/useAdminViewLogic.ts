@@ -119,14 +119,17 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     }
   };
 
-  const toggleHidden = async (photo: Photo) => {
+  const toggleHidden = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
+    const nextValue = !photo.is_hidden;
+
     try {
-      await updatePhoto(photo.id, { is_hidden: !photo.is_hidden });
+      await updatePhoto(photo.id, { is_hidden: nextValue });
+      toast.success(`已${nextValue ? '隐藏' : '显示'}产品`);
     } catch (e: any) {
       handleError(e, 'toggle-hidden');
     }
-  };
+  }, [checkSyncLock, updatePhoto, handleError]);
 
   const setGroupCover = async (id: string, groupId: string) => {
     if (checkSyncLock()) return;
