@@ -111,8 +111,12 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
             controller={{ closeOnBackdropClick: true }}
             on={{
               view: ({ index: newIndex }) => {
-                if (newIndex > (index || 0)) onNext();
-                else if (newIndex < (index || 0)) onPrev();
+                // Prevent loops: only trigger parent update if index effectively changed 
+                // and it's not the same as the current prop index
+                if (typeof newIndex === 'number' && newIndex !== index) {
+                  if (newIndex > (index || 0)) onNext();
+                  else if (newIndex < (index || 0)) onPrev();
+                }
               }
             }}
           />

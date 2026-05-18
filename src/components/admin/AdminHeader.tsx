@@ -143,22 +143,7 @@ export const AdminHeader: React.FC<Props> = ({
             </div>
           )}
 
-          {/* Inline Language Switcher for Admin */}
-          <div className="hidden lg:flex items-center gap-1 bg-brand-navy/5 p-1 rounded-full border border-brand-navy/10">
-            {['en', 'zh'].map(l => (
-              <button
-                key={l}
-                onClick={() => useGalleryStore.getState().setAppLang(l)}
-                className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase transition-all ${
-                  currentLang === l 
-                    ? 'bg-brand-navy text-white shadow-sm' 
-                    : 'text-brand-navy/40 hover:text-brand-navy/60'
-                }`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
+          {/* Header language switcher removed as it is now in the Tools Menu */}
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -242,6 +227,8 @@ export const AdminHeader: React.FC<Props> = ({
                     handleOpenSettings={handleOpenSettings}
                     isStaff={sessionStorage.getItem('isStaffMode') === 'true'}
                     handleExitStaffMode={handleExitStaffMode}
+                    currentLang={currentLang}
+                    onSetLang={(l) => useGalleryStore.getState().setAppLang(l)}
                   />
                 </div>
               </div>

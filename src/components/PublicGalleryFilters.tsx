@@ -150,7 +150,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             {sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = (selectedTagIds || []).includes(strTagId);
-                const isHot = (tag.usageCount || 0) > 5; // Simple heuristic for HOT if not pinned
+                const isHot = (tag.usageCount || 0) >= 1; // Lower threshold to show hot tags if available
                 const isPinned = tag.isPinned;
                 
                 return (

@@ -29,7 +29,7 @@ interface LightboxInfoPanelProps {
   contactWhatsApp: (photo: Photo) => void;
 }
 
-export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = ({
+export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
   isAdminMode, isStaffMode, isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
@@ -46,6 +46,12 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = ({
       .filter((tagName): tagName is string => !!tagName && tagName.trim() !== '');
   }, [photo.id, photo.tagIds, tagMap]);
 
+  // Use ref to handle scroll reset without remounting the whole container
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [photo.id]);
+
   return (
     <motion.div 
       initial={{ x: 300, opacity: 0 }}
@@ -53,11 +59,8 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = ({
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       className="w-full md:w-[450px] flex flex-col bg-white overflow-hidden shadow-2xl z-10 relative"
     >
-      <motion.div 
-        key={photo.id}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+      <div 
+        ref={scrollRef}
         className="flex-1 overflow-y-auto no-scrollbar p-4 pb-24 md:pb-6 space-y-4"
       >
         <div className="flex justify-between items-start gap-4">
@@ -261,7 +264,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = ({
             <p className="font-mono font-black text-red-600 tracking-wider uppercase">{photo.manual_code}</p>
           </div>
         )}
-      </motion.div>
+      </div>
 
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 bg-gradient-to-t from-white via-white to-transparent pointer-events-none sticky bottom-0">
          <button 
@@ -278,4 +281,4 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = ({
       </div>
     </motion.div>
   );
-};
+});

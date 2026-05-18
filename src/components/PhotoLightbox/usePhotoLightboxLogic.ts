@@ -43,7 +43,10 @@ export const usePhotoLightboxLogic = ({
     setIsImageError(false);
     
     if (photo?.groupId) {
-      setIsGroupDataLoading(true);
+      // Only set loading if it's a different group than what we currently have
+      if (!groupData || groupData.id !== photo.groupId) {
+        setIsGroupDataLoading(true);
+      }
       import('../../services/groupService').then(m => {
         m.getGroupById(photo.groupId!).then(data => {
           setGroupData(data);

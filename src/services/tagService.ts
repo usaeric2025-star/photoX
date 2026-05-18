@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { Tag } from '../types';
 import { createCache } from './cacheUtils';
-import { createTag, updateTag, deleteTag, batchCreateTags as createBatchTags, removeTagFromPhoto } from './tagsMutationService';
+import { createTag, updateTag, deleteTag, batchCreateTagsInCloud as createBatchTags, removeTagFromPhoto } from './tagsMutationService';
 
 const tagCache = createCache<Tag[]>();
 

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
 import { toast } from 'sonner';
+import { QUERY_KEYS } from '../queries/keys';
 
 export const useGroupCoverMutation = () => {
   const queryClient = useQueryClient();

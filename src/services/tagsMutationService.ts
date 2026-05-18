@@ -50,7 +50,7 @@ export const createTag = async (tagData: Omit<Tag, 'id'>) => {
     return data;
 };
 
-export const batchCreateTags = async (tags: Partial<Tag>[]) => {
+export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]) => {
     const dbUpdates = tags.map(tag => mapToDb(tag, true));
     const { error, data } = await supabase
         .from(TABLE_NAME)

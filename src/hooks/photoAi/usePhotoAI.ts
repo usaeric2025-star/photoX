@@ -4,6 +4,7 @@ import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { useSinglePhotoAI } from './useSinglePhotoAI';
 import { useBatchPhotoAI } from './useBatchPhotoAI';
 import { useGroupPhotoAI } from './useGroupPhotoAI';
+import { QUERY_KEYS } from '../queries/keys';
 
 export const usePhotoAI = (
   user: User | null,
