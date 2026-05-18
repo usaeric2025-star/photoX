@@ -43,10 +43,10 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
         ) : (
           <div 
             onClick={onToggleHidden}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer whitespace-nowrap ${formState.is_hidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
           >
-            {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-            <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.isHidden ? '屏蔽' : '显示'}</span>
+            {formState.is_hidden ? <EyeOff size={10} /> : <Eye size={10} />}
+            <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{formState.is_hidden ? '屏蔽' : '显示'}</span>
           </div>
         )}
       </div>

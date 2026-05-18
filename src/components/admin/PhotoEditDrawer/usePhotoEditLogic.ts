@@ -96,8 +96,8 @@ export const usePhotoEditLogic = (props: Props) => {
   };
 
   const toggleHidden = async () => {
-    const nextValue = !formState.isHidden;
-    updateForm({ isHidden: nextValue });
+    const nextValue = !formState.is_hidden;
+    updateForm({ is_hidden: nextValue });
     
     if (editPhotoId) {
       try {

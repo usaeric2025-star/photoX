@@ -161,9 +161,9 @@ export const BatchEditScreen = ({
                 type="button"
                 onClick={() => {
                   setBatchIsHiddenApplied(true);
-                  updateForm({ isHidden: false });
+                  updateForm({ is_hidden: false });
                 }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && !formState.isHidden ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && !formState.is_hidden ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
               >
                 <Eye size={16} />
                 <span className="text-[10px] font-black uppercase">全部显示</span>
@@ -172,9 +172,9 @@ export const BatchEditScreen = ({
                 type="button"
                 onClick={() => {
                   setBatchIsHiddenApplied(true);
-                  updateForm({ isHidden: true });
+                  updateForm({ is_hidden: true });
                 }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && formState.isHidden ? 'bg-orange-50 border-orange-500 text-orange-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && formState.is_hidden ? 'bg-orange-50 border-orange-500 text-orange-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
               >
                 <EyeOff size={16} />
                 <span className="text-[10px] font-black uppercase">全部屏蔽</span>

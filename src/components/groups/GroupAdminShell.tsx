@@ -239,8 +239,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       onSetGroupCover={(photoId, groupId) => setCover(photoId)}
                       onEditPhoto={onEditPhoto}
                       onToggleHidden={(p) => {
-                        const newStatus = !p.isHidden;
-                        persistPhotoChange(p.id, { isHidden: newStatus });
+                        const newStatus = !p.is_hidden;
+                        persistPhotoChange(p.id, { is_hidden: newStatus });
                       }}
                       onAiAnalyze={onAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}

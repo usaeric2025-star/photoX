@@ -168,14 +168,14 @@ export const useGroupAdminLogic = ({
     try {
       await saveGroupToCloud(nextGroupData);
       
-      if (updates.hasOwnProperty('isHidden')) {
-        const isHidden = updates.isHidden;
+      if (updates.hasOwnProperty('is_hidden')) {
+        const is_hidden = updates.is_hidden;
         const groupPhotos = photos.filter(p => p && p.groupId === activeGroupId);
         if (groupPhotos.length > 0 && hookUpdatePhoto) {
            await Promise.all(
-             groupPhotos.map(p => hookUpdatePhoto(p.id, { isHidden }))
+             groupPhotos.map(p => hookUpdatePhoto(p.id, { is_hidden }))
            );
-           toast.success(`群组内照片已${isHidden ? '屏蔽' : '显示'}`);
+           toast.success(`群组内照片已${is_hidden ? '屏蔽' : '显示'}`);
         }
       }
     } catch (err: any) {

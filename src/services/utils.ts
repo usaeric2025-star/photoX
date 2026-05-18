@@ -1,7 +1,7 @@
 import SparkMD5 from 'spark-md5';
 import { supabase } from '../lib/supabase';
 
-const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'isHidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
+const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
 export const cleanObject = <T extends Record<string, any>>(obj: T): T => {
     const cleaned = { ...obj };

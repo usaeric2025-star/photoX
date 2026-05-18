@@ -21,7 +21,8 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
       photo.image_url = imageUrl;
       photo.thumb_url = thumbUrl;
     } catch (e) {
-      // Ignored
+      console.error("Failed to upload image:", e);
+      throw e; // Propagate error
     }
   }
 
@@ -102,7 +103,8 @@ export const savePhotosToCloudBatch = async (
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;
       } catch (e) {
-        // Ignored
+        console.error("Failed to upload image in batch:", e);
+        throw e; // Propagate error
       }
     }
   }
@@ -130,7 +132,7 @@ export const savePhotosToCloudBatch = async (
       created_at: photo.createdAt,
       group_id: photo.groupId || null,
       is_group_cover: photo.isGroupCover || false,
-      isHidden: photo.isHidden || false,
+      is_hidden: photo.is_hidden || false,
       updated_at: photo.updatedAt || new Date().toISOString()
     };
     if (isUUID) {

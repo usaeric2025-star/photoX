@@ -94,9 +94,9 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = ({
                 </button>
                 <button 
                   onClick={() => onToggleHidden?.(photo)}
-                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${photo.isHidden ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${photo.is_hidden ? 'bg-yellow-100 text-yellow-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                 >
-                  {photo.isHidden ? <EyeOff size={16}/> : <Eye size={16}/>}
+                  {photo.is_hidden ? <EyeOff size={16}/> : <Eye size={16}/>}
                 </button>
               </>
             )}

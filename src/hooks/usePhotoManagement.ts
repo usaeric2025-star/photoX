@@ -11,7 +11,7 @@ export const usePhotoManagement = (user: User | null, ui: any, session: any) => 
     model_number: '',
     manual_code: '',
     description: '',
-    isHidden: false,
+    is_hidden: false,
     description_translations: { en: '', ms: '' },
     dimensions: [],
     price: '',

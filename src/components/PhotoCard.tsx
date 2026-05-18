@@ -100,7 +100,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           onLightboxOpen(index);
         }
       }}
-      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
+      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
       {!isImageLoaded && !isImageError && (
         <div className="absolute inset-0 animate-shimmer flex items-center justify-center">
@@ -132,7 +132,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover transition-all duration-700 ${isImageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.isHidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
+        className={`w-full h-full object-cover transition-all duration-700 ${isImageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
           setIsImageLoaded(true);
         }}
@@ -167,7 +167,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       </div>
 
       {/* Hidden Status Indicator (Centered overlay) */}
-      {photo.isHidden && (
+      {photo.is_hidden && (
         <div className="absolute inset-0 flex items-center justify-center z-20">
           <div className="bg-yellow-400/90 text-black p-2 rounded-full shadow-lg">
             <EyeOff size={16} />

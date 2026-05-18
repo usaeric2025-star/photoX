@@ -115,7 +115,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
 
     const visiblePhotos = isAdminMode 
       ? groupPhotos 
-      : groupPhotos.filter(p => !p.isHidden || p.isGroupCover);
+      : groupPhotos.filter(p => !p.is_hidden || p.isGroupCover);
 
     return sortGroupPhotos(visiblePhotos);
   }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);

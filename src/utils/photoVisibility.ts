@@ -6,5 +6,5 @@ export const filterPhotosByMode = (
 ): Photo[] => {
   if (!photos) return [];
   if (isAdminMode) return photos;
-  return photos.filter((p) => !p.isHidden || p.isGroupCover);
+  return photos.filter((p) => !p.is_hidden || p.isGroupCover);
 };

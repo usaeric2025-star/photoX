@@ -81,14 +81,19 @@ export const uploadImages = async (
         const res = await fetch(base64);
         const blob = await res.blob();
         
-        // Supabase upload doesn't natively support onUploadProgress.
-        // We will invoke onProgress at the end of upload, or if the SDK supports it.
         const { error: storageError } = await supabase.storage
           .from(DB_CONFIG.BUCKET_NAME)
           .upload(fileName, blob, {
             contentType: 'image/webp',
-            upsert: true
-          });
+            upsert: true,
+            // @ts-ignore
+            onUploadProgress: (progress: any) => {
+              if (isMain && onProgress) {
+                const percent = (progress.loaded / progress.total) * 100;
+                onProgress(percent);
+              }
+            }
+          } as any);
 
         if (storageError) throw storageError;
 
@@ -111,7 +116,16 @@ export const uploadImages = async (
     return { imageUrl, thumbUrl };
   } catch (err: unknown) {
     console.error("Image processing or upload failed:", err);
-    const error = err as Error;
-    throw new Error(`图片处理异常: ${error.message || '请检查网络'}`);
+    
+    let errorMessage = '请检查网络';
+    if (err instanceof Error) {
+        errorMessage = err.message;
+    } else if (typeof err === 'string') {
+        errorMessage = err;
+    } else if (err && typeof err === 'object' && 'message' in err) {
+        errorMessage = String((err as any).message);
+    }
+    
+    throw new Error(`图片处理异常: ${errorMessage}`);
   }
 };

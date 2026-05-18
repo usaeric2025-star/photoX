@@ -18,14 +18,14 @@ export const FIELD_MAP: Record<string, string> = {
   modelNumber: 'model_number',
   userId: 'user_id',
   descriptionTranslations: 'description_translations',
-  isHidden: 'is_hidden',
+  is_hidden: 'is_hidden',
 };
 
 export const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'categoryId',
   'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'isGroupCover',
   'image_url', 'thumb_url', 'price', 'updated_at', 'created_at', 'userId',
-  'isHidden'
+  'is_hidden'
 ];
 
 export function normalizeDimensionsBeforeSave(dimensions: import('../../types').Dimension[] | null | undefined) {

@@ -129,7 +129,7 @@ export default function PublicView() {
           }}
           onToggleHidden={async (photo: import('../types').Photo) => {
             try {
-              await updatePhotoMutation({ id: photo.id, updates: { isHidden: !photo.isHidden } });
+              await updatePhotoMutation({ id: photo.id, updates: { is_hidden: !photo.is_hidden } });
             } catch (e: unknown) {
               console.error("toggleHidden", e);
             }

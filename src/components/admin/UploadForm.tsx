@@ -55,11 +55,11 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none">
             <h2 className="font-bold text-lg text-slate-800 ml-1 tracking-tight leading-tight pointer-events-auto">{editPhotoId ? t.editProduct : t.addProduct}</h2>
             <div 
-              onClick={() => updateForm({ isHidden: !formState.isHidden })}
-              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border cursor-pointer mt-1 pointer-events-auto ${formState.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+              onClick={() => updateForm({ is_hidden: !formState.is_hidden })}
+              className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border cursor-pointer mt-1 pointer-events-auto ${formState.is_hidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
             >
-              {formState.isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-              <span className="text-[8px] font-bold uppercase tracking-widest">{formState.isHidden ? '公开屏蔽中' : '公开显示中'}</span>
+              {formState.is_hidden ? <EyeOff size={10} /> : <Eye size={10} />}
+              <span className="text-[8px] font-bold uppercase tracking-widest">{formState.is_hidden ? '公开屏蔽中' : '公开显示中'}</span>
             </div>
         </div>
 

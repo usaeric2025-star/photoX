@@ -61,9 +61,9 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   photoCache.clear();
 };
 
-export const updatePhotoHidden = async (photoId: string, isHidden: boolean) => {
+export const updatePhotoHidden = async (photoId: string, is_hidden: boolean) => {
   return updatePhotoInCloud(photoId, { 
-    isHidden: isHidden,
+    is_hidden: is_hidden,
     updated_at: new Date().toISOString()
   });
 };

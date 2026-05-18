@@ -121,7 +121,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const toggleHidden = async (photo: Photo) => {
     if (checkSyncLock()) return;
     try {
-      await updatePhoto(photo.id, { isHidden: !photo.isHidden });
+      await updatePhoto(photo.id, { is_hidden: !photo.is_hidden });
     } catch (e: any) {
       handleError(e, 'toggle-hidden');
     }

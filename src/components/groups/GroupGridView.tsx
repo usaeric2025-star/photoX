@@ -15,7 +15,7 @@ interface GroupGridViewProps {
   highlightId?: string | null;
 }
 
-const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighlighted, extraProps, onPhotoClick, onPhotoContextMenu, longPressTimers }: {
+const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighlighted, extraProps, onPhotoClick, onPhotoContextMenu }: {
   photo: Photo;
   isSelected: boolean;
   isMultiSelectMode: boolean;
@@ -23,7 +23,6 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
   extraProps: React.HTMLAttributes<HTMLDivElement>;
   onPhotoClick: (photo: Photo) => void;
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
-  longPressTimers: React.MutableRefObject<Record<string, NodeJS.Timeout>>;
 }) => {
   const [isLoaded, setIsLoaded] = React.useState(false);
   
@@ -43,17 +42,6 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
       {/* Image Container */}
       <div 
         className="aspect-square rounded-xl overflow-hidden relative bg-slate-50"
-        onTouchStart={() => {
-           longPressTimers.current[photo.id] = setTimeout(() => {
-                 onPhotoContextMenu?.({ preventDefault: () => {} } as any, photo);
-           }, 350);
-        }}
-        onTouchMove={() => {
-           if (longPressTimers.current[photo.id]) clearTimeout(longPressTimers.current[photo.id]);
-        }}
-        onTouchEnd={() => {
-           if (longPressTimers.current[photo.id]) clearTimeout(longPressTimers.current[photo.id]);
-        }}
       >
         {!isLoaded && (
           <Skeleton className="absolute inset-0 bg-slate-100 flex items-center justify-center">
@@ -99,7 +87,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
           <h4 className="text-[11px] font-black text-slate-800 truncate tracking-tight">
             {photo.name || '未命名'}
           </h4>
-          {photo.isHidden && (
+          {photo.is_hidden && (
             <span className="shrink-0 bg-orange-100 text-orange-600 px-1 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter">
               已隐藏
             </span>
@@ -131,22 +119,21 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   virtuosoRef,
   highlightId
 }) => {
-  const longPressTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   
   const header = useMemo(() => {
     if (!groupData || (!groupData.description && (!groupData.colors || groupData.colors.length === 0) && (!groupData.materials || groupData.materials.length === 0))) {
       return null;
     }
     return (
-      <div className={`mb-8 p-6 rounded-[2rem] border-2 shadow-sm relative overflow-hidden group ${groupData.isHidden ? 'bg-slate-50 border-slate-200' : 'bg-white border-indigo-50'}`}>
-        <div className={`absolute top-0 right-0 p-8 opacity-5 ${groupData.isHidden ? 'text-slate-400' : 'text-indigo-600'}`}>
+      <div className={`mb-8 p-6 rounded-[2rem] border-2 shadow-sm relative overflow-hidden group ${groupData.is_hidden ? 'bg-slate-50 border-slate-200' : 'bg-white border-indigo-50'}`}>
+        <div className={`absolute top-0 right-0 p-8 opacity-5 ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-600'}`}>
           <Quote size={80} />
         </div>
         
         <div className="relative z-10 flex flex-col md:flex-row gap-8">
           <div className="flex-1 space-y-4">
              <div>
-                <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${groupData.isHidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列故事 / Series Story</h3>
+                <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] mb-1 ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列故事 / Series Story</h3>
                 <p className="text-sm font-bold text-slate-600 leading-relaxed max-w-2xl">
                   {groupData.description || '暂无系列说明 / No description yet.'}
                 </p>
@@ -155,7 +142,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
              <div className="flex flex-wrap gap-4 pt-2">
                {groupData.materials && groupData.materials.length > 0 && (
                  <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100">
-                    <Layers size={14} className={groupData.isHidden ? 'text-slate-400' : 'text-indigo-400'} />
+                    <Layers size={14} className={groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'} />
                     <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">
                       {groupData.materials.join(' • ')}
                     </span>
@@ -166,7 +153,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
 
           {groupData.colors && groupData.colors.length > 0 && (
             <div className="md:w-48 space-y-3">
-               <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${groupData.isHidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列配比 / DNA Colors</h3>
+               <h3 className={`text-[10px] font-black uppercase tracking-[0.2em] ${groupData.is_hidden ? 'text-slate-400' : 'text-indigo-400'}`}>系列配比 / DNA Colors</h3>
                <div className="flex flex-wrap gap-2">
                   {groupData.colors.map((c, i) => (
                     <div 
@@ -185,7 +172,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   }, [groupData]);
 
   return (
-    <div className={`flex-1 min-h-0 relative ${groupData?.isHidden ? 'grayscale opacity-70' : ''}`}>
+    <div className={`flex-1 min-h-0 relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
       <VirtuosoGrid
         ref={virtuosoRef}
         style={{ height: '100%', width: '100%' }}
@@ -214,7 +201,6 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
               extraProps={extraProps}
               onPhotoClick={onPhotoClick}
               onPhotoContextMenu={onPhotoContextMenu}
-              longPressTimers={longPressTimers}
             />
           );
         }}

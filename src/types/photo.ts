@@ -33,7 +33,7 @@ export interface Photo {
   isGroupCover?: boolean;
   isPinned?: boolean; 
   isAnalyzing?: boolean;
-  isHidden?: boolean;
+  is_hidden?: boolean;
   groupOrder?: number;
   userId?: string;
   type?: string;
@@ -94,7 +94,7 @@ export interface ProductGroup {
   materials: string[];
   dimensions?: Dimension[] | null;
   cover_photo_id?: string | null;
-  isHidden?: boolean;
+  is_hidden?: boolean;
   user_id: string;
   created_at: string;
   updated_at: string;
@@ -114,7 +114,7 @@ export interface ProductFormData {
   manual_code: string;
   model_number: string;
   dimensions: Dimension[];
-  isHidden: boolean;
+  is_hidden: boolean;
   price: string;
   isGroupCover: boolean;
 }

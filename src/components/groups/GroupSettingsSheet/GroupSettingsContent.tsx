@@ -23,11 +23,11 @@ export const GroupSettingsContent: React.FC<{
           </div>
           
           <button 
-            onClick={() => handleUpdateGroupData({ isHidden: !groupData?.isHidden })}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${groupData?.isHidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
+            onClick={() => handleUpdateGroupData({ is_hidden: !groupData?.is_hidden })}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all cursor-pointer whitespace-nowrap ${groupData?.is_hidden ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-green-50 border-green-200 text-green-600'}`}
           >
-              {groupData?.isHidden ? <EyeOff size={12} /> : <Eye size={12} />}
-              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{groupData?.isHidden ? '屏蔽中' : '显示中'}</span>
+              {groupData?.is_hidden ? <EyeOff size={12} /> : <Eye size={12} />}
+              <span className="text-[9px] font-bold uppercase tracking-widest leading-none">{groupData?.is_hidden ? '屏蔽中' : '显示中'}</span>
           </button>
         </div>
         

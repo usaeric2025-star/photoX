@@ -4,7 +4,7 @@ import { Manufacturer } from '../types';
 const TABLE_NAME = 'manufacturers';
 
 const ALLOWED_FIELDS = ['id', 'name', 'aliases'];
-const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'isHidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
+const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
 const FIELD_MAP: Record<string, string> = {
 };
