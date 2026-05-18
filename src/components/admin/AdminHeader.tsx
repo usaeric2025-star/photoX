@@ -149,17 +149,8 @@ export const AdminHeader: React.FC<Props> = ({
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              {(!user && sessionStorage.getItem('isStaffMode') !== 'true') ? (
-            <button 
-              onClick={handleLogin}
-              className="px-4 py-2 rounded-xl text-xs font-medium uppercase tracking-wide bg-brand-navy text-brand-bg shadow-sm active:scale-95 transition-all flex items-center gap-2"
-            >
-              <LogIn size={16} />
-              {t.login}
-            </button>
-          ) : (
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="flex items-center gap-1.5 bg-brand-navy/5 p-1 rounded-2xl border border-brand-navy/10 shadow-inner">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1.5 bg-brand-navy/5 p-1 rounded-2xl border border-brand-navy/10 shadow-inner">
                   {/* Refresh with Dropdown */}
                   <div className="relative flex items-center" ref={dropdownRef}>
                     <button 
@@ -233,9 +224,8 @@ export const AdminHeader: React.FC<Props> = ({
                     onSetLang={(l) => useGalleryStore.getState().setAppLang(l)}
                   />
                 </div>
+                </div>
               </div>
-            </div>
-          )}
         </div>
     </header>
   );
