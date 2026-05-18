@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { groupPhotos, ungroupPhotos } from '../../services/photoMutationService';
 import { toast } from 'sonner';
+import { QUERY_KEYS } from '../queries/keys';
 
 export const useGroupPhotosMutation = () => {
   const queryClient = useQueryClient();
@@ -8,7 +9,7 @@ export const useGroupPhotosMutation = () => {
   return useMutation({
     mutationFn: (photoIds: string[]) => groupPhotos(photoIds),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       toast.success('群组创建成功');
     },
     onError: (error: any) => {
@@ -23,7 +24,7 @@ export const useUngroupMutation = () => {
   return useMutation({
     mutationFn: (groupId: string) => ungroupPhotos(groupId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       toast.success('已取消群组');
     },
     onError: (error: any) => {
@@ -38,7 +39,7 @@ export const useDeleteGroupFromCloudMutation = () => {
   return useMutation({
     mutationFn: (groupId: string) => ungroupPhotos(groupId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       toast.success('群组已成功删除');
     },
     onError: (error: any) => {

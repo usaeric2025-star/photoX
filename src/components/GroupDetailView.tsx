@@ -11,7 +11,6 @@ import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
 import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService';
-import { supabasePublic as supabase } from '../lib/supabase-public';
 import { DB_CONFIG } from '../constants/config';
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
@@ -84,19 +83,13 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
       // 2. In public mode, fetch all group photos directly to bypass pagination
       if (!isAdminMode) {
         setIsLoading(true);
-        supabase
-          .from(DB_CONFIG.TABLE_NAME)
-          .select('*, photo_tags(*)')
-          .eq('group_id', activeGroupId)
-          .then(({ data, error }) => {
-            if (error) {
-              console.error(`[GroupDetailView] Error:`, error);
-            } else if (data) {
-              const mapped = data.map(item => mapSupabasePhoto(item));
-              setLocalGroupPhotos(mapped);
-            }
-            setIsLoading(false);
-          });
+        loadPhotosByGroupId(activeGroupId).then(mapped => {
+          setLocalGroupPhotos(mapped);
+          setIsLoading(false);
+        }).catch(err => {
+          console.error(`[GroupDetailView] Error:`, err);
+          setIsLoading(false);
+        });
       }
     } else {
       setGroupData(null);
@@ -113,9 +106,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     const groupPhotos = sourcePhotos
       .filter(p => String(p.groupId) === String(activeGroupId));
 
-    const visiblePhotos = isAdminMode 
-      ? groupPhotos 
-      : groupPhotos.filter(p => !p.is_hidden || p.isGroupCover);
+    const visiblePhotos = filterPhotosByMode(groupPhotos, isAdminMode);
 
     return sortGroupPhotos(visiblePhotos);
   }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);

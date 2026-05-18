@@ -72,3 +72,14 @@ export const deleteTag = async (tagId: string) => {
         throw new Error(error.message);
     }
 };
+
+export const removeTagFromPhoto = async (photoId: string, tagId: string) => {
+    const { error } = await supabase
+        .from('photo_tags')
+        .delete()
+        .eq('photo_id', photoId)
+        .eq('tag_id', tagId);
+    if (error) {
+        throw new Error(error.message);
+    }
+};

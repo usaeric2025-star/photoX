@@ -4,6 +4,7 @@ import { User, AppSettings } from '../types';
 import { fetchSettings } from '../services/settingService';
 import { getPhotoCount } from '../services/photoService';
 import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from './queries/keys';
 
 export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T>) => Promise<T>) => {
   const queryClient = useQueryClient();
@@ -29,11 +30,11 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
         
         // Invalidate queries to refresh UI
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['categories'] }),
-          queryClient.invalidateQueries({ queryKey: ['tags'] }),
-          queryClient.invalidateQueries({ queryKey: ['manufacturers'] }),
-          queryClient.invalidateQueries({ queryKey: ['photos'] }),
-          queryClient.invalidateQueries({ queryKey: ['photo-count'] })
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories }),
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags }),
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers }),
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos }),
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings })
         ]);
       } catch (err) {
         console.error('Refresh failed:', err);

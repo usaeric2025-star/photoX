@@ -83,7 +83,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
         currentAnalysisControllers.current.set(taskId, { controller, timeoutId });
         const signal = controller.signal;
         
-        queryClient.invalidateQueries({ queryKey: ['photos'] });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
         
         try {
             const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
@@ -128,12 +128,12 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
                 updatedPhoto.id = finalId;
             }
 
-            queryClient.invalidateQueries({ queryKey: ['photos'] });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         } catch (err: unknown) {
             const error = err as Error;
             setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: error.message || String(err) });
-            queryClient.invalidateQueries({ queryKey: ['photos'] });
+            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
             if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
                 throw new Error(`FATAL_AI_ERROR: ${error.message}`);
             }

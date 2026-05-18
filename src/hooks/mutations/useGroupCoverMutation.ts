@@ -8,7 +8,7 @@ export const useGroupCoverMutation = () => {
   return useMutation({
     mutationFn: ({ photoId }: { photoId: string }) => updatePhotosGroupInCloud([photoId], { is_group_cover: true }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       toast.success('已设为封面');
     },
     onError: (error: any) => {

@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { Tag } from '../types';
 import { createCache } from './cacheUtils';
-import { createTag, updateTag, deleteTag, batchCreateTags as createBatchTags } from './tagsMutationService';
+import { createTag, updateTag, deleteTag, batchCreateTags as createBatchTags, removeTagFromPhoto } from './tagsMutationService';
 
 const tagCache = createCache<Tag[]>();
 
@@ -57,5 +57,10 @@ export const updateTagInDB = async (tagId: string, updates: Partial<Tag>): Promi
 export const deleteTagFromDB = async (tagId: string | number): Promise<boolean> => {
     await deleteTag(String(tagId));
     tagCache.clear();
+    return true;
+};
+
+export const removeTagFromPhotoFromDB = async (photoId: string, tagId: string): Promise<boolean> => {
+    await removeTagFromPhoto(photoId, tagId);
     return true;
 };

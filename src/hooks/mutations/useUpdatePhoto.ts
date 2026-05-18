@@ -9,7 +9,7 @@ export const useUpdatePhotoMutation = () => {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => updatePhotoFn(id, updates),
     onMutate: async ({ id, updates }) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['photos'] });
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.photos });
 
       // Snapshot the previous values
       const previousInfinite = queryClient.getQueryData<any>(['photos', 'infinite']);
@@ -40,7 +40,7 @@ export const useUpdatePhotoMutation = () => {
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
     onError: (err, variables, context: { previousInfinite?: any; previousGroups?: [any, Photo[]][] }) => {
       // If mutation fails, use the context returned from onMutate to roll back
@@ -52,7 +52,7 @@ export const useUpdatePhotoMutation = () => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };
@@ -68,7 +68,7 @@ export const useBatchUpdatePhotosMutation = () => {
       signal?: AbortSignal;
     }) => updatePhotosBatch(userId, ids, updates, onProgress, signal),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };

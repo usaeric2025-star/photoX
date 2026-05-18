@@ -50,7 +50,7 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
       onCancel: () => abortAnalysis(taskId)
     });
 
-    queryClient.invalidateQueries({ queryKey: ['photos'] });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     setAiDebugInfo({ step: '群组识别', message: '正在分析封面/首张照片...' });
     updateTask(taskId, { progress: 10, message: '分析产品特征中...' });
 
@@ -108,7 +108,7 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
 
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
@@ -121,7 +121,7 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
         const errorMsg = error.message || String(err);
         setAiDebugInfo({ step: '错误', message: '群组识别失败', error: errorMsg });
         updateTask(taskId, { status: 'error', message: `失败: ${errorMsg.slice(0, 80)}` });
-        queryClient.invalidateQueries({ queryKey: ['photos'] });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
         throw err;
       }
     } finally {

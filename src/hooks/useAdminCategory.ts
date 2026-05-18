@@ -5,12 +5,12 @@ import {
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
 } from './mutations/useAdminMutations';
 import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
 import { useGalleryStore } from '../store';
 import { safeArray } from '../lib/utils';
 import { toast } from 'sonner';
 import { Category, Photo, Tag, Manufacturer } from '../types';
 import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from './';
+import { QUERY_KEYS } from './queries/keys';
 
 export const useAdminCategory = (adminUI: {
   setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
@@ -70,13 +70,9 @@ export const useAdminCategory = (adminUI: {
 
   const removeTagFromPhoto = async (photoId: string, tagId: string) => {
     try {
-      const { error } = await supabase
-          .from('photo_tags')
-          .delete()
-          .eq('photo_id', photoId)
-          .eq('tag_id', tagId);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      const { removeTagFromPhotoFromDB } = await import('../services/tagService');
+      await removeTagFromPhotoFromDB(photoId, tagId);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     } catch (err) {
       toast.error('从照片移除标签失败');
       throw err;

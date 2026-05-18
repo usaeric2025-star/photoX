@@ -22,7 +22,15 @@ export * from '../utils/errorHandler';
 export * from './useLoading';
 export * from './useAdminPhotos';
 export * from './useAdminCategory';
+export * from './useAuth';
+export * from './usePhotoImport';
+export * from './useLoadingState';
+export * from './usePhotoMutations';
+export * from './useFormValidation';
+export * from './usePermission';
 
 export * from './mutations/useSettingsMutation';
 export * from './mutations/useBatchEditMutation';
 export * from './mutations/useSyncMutation';
+export * from './mutations/useDeletePhoto';
+export * from './mutations/useUpdatePhoto';

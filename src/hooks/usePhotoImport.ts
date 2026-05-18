@@ -205,18 +205,18 @@ export const usePhotoImport = (
                  
                  if (user) {
                    await savePhotoToCloud(user.id, updated);
-                   queryClient.invalidateQueries({ queryKey: ['photos'] });
+                   queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
                    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
                  }
                } catch (err) {
-                 queryClient.invalidateQueries({ queryKey: ['photos'] });
+                 queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
                } finally {
                  updateAiProgress();
                }
             })(photoId, dataUrl, newPhoto);
           } else if (user) {
             savePhotoToCloud(user.id, newPhoto).then(() => {
-              queryClient.invalidateQueries({ queryKey: ['photos'] });
+              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
             }).catch(e => handleError(e, "云端同步失败"));
           }
         } catch (err) {

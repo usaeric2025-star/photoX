@@ -21,7 +21,7 @@ export const useUpdateTagMutation = () => {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Tag> }) => updateTagInDB(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };
@@ -32,7 +32,7 @@ export const useDeleteTagMutation = () => {
     mutationFn: deleteTagFromDB,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };
@@ -53,7 +53,7 @@ export const useUpdateCategoryMutation = () => {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Category> }) => updateCategoryInDB(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };
@@ -64,7 +64,7 @@ export const useDeleteCategoryMutation = () => {
     mutationFn: deleteCategoryFromDB,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };
@@ -85,7 +85,7 @@ export const useUpdateManufacturerMutation = () => {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => updateManufacturerInDB(id, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };
@@ -96,7 +96,7 @@ export const useDeleteManufacturerMutation = () => {
     mutationFn: deleteManufacturerFromDB,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };

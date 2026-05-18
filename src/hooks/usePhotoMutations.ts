@@ -68,7 +68,7 @@ export const usePhotoMutations = (
             updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在处理 ${current} / ${total}` });
           }, controller.signal);
           updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
-          queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
           setTimeout(() => removeTask(taskId), 5000);
         } catch (e: unknown) {
           if (!controller.signal.aborted) {
@@ -81,7 +81,7 @@ export const usePhotoMutations = (
         for (const id of ids) {
            await m.updatePhoto(id, finalUpdates).catch(e => handleError(e, "单张照片云端同步失败"));
         }
-        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.photos] });
+        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       }
     }
   };

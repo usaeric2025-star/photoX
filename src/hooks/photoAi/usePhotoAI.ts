@@ -33,7 +33,7 @@ export const usePhotoAI = (
     });
     currentAnalysisControllers.current.clear();
     setBatchProgress({ current: 0, total: 0 });
-    queryClient.invalidateQueries({ queryKey: ['photos'] });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     
     if (taskId) {
         updateTask(taskId, { status: 'cancelled', message: '已取消 AI 识别任务' });

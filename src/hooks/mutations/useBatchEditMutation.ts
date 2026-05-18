@@ -9,7 +9,7 @@ export const useBatchEditMutation = (userId: string) => {
       updatePhotosBatch(userId, ids, updates),
     onMutate: async ({ ids, updates }) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['photos'] });
+      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.photos });
 
       // Snapshot
       const previousInfinite = queryClient.getQueryData(['photos', 'infinite']);
@@ -40,7 +40,7 @@ export const useBatchEditMutation = (userId: string) => {
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
     onError: (err, variables, context: any) => {
       if (context?.previousInfinite) {
@@ -51,7 +51,7 @@ export const useBatchEditMutation = (userId: string) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
   });
 };

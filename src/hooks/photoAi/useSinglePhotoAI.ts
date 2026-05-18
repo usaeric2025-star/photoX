@@ -49,7 +49,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
     });
 
     if (editPhotoId) {
-      queryClient.invalidateQueries({ queryKey: ['photos'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     }
     
     setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
@@ -115,7 +115,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
             const finalId = await savePhotoToCloud(user.id, updatedPhoto);
             updatedPhoto.id = finalId;
           }
-          queryClient.invalidateQueries({ queryKey: ['photos'] });
+          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         }
       }
@@ -132,7 +132,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       } else {
         const displayError = formatAiError(error.message || String(err));
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
-        if (editPhotoId) queryClient.invalidateQueries({ queryKey: ['photos'] });
+        if (editPhotoId) queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
         handleError(err, 'AI 单图识别失败');
         throw err;
       }
