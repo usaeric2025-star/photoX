@@ -10,7 +10,7 @@ import { QUERY_KEYS } from '../queries/keys';
 import { AI_CONFIG } from '../../constants/config';
 import { shouldUpdateName, cleanAiName } from './photoAiUtils';
 import { useErrorHandler } from '../../utils/errorHandler';
-import { toast } from 'sonner';
+// import { toast } from 'sonner';
 
 interface BatchAiProps {
   user: User | null;

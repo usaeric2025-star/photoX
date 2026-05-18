@@ -10,6 +10,7 @@ export const useErrorHandler = () => {
     // UI Toast Notification
     const message = error.message || String(error);
     if (!silent) {
+      toast.dismiss();
       toast.error(`${context}: ${message}`);
     }
     

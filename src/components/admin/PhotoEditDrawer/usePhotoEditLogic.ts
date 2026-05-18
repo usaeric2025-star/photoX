@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { toast } from 'sonner';
 import { useGalleryStore } from '../../../store';
 import { 
   useCategoriesQuery, useTagsQuery, useManufacturersQuery,
@@ -103,7 +102,6 @@ export const usePhotoEditLogic = (props: Props) => {
       try {
         const m = await import('../../../services/photoMutationService');
         await m.updatePhotoHidden(editPhotoId, nextValue);
-        toast.success(`已${nextValue ? '隐藏' : '显示'}产品`);
       } catch (e) {
         handleError(e, '自动保存可见性失败');
       }

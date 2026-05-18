@@ -1,5 +1,4 @@
 import React from 'react';
-import { toast } from 'sonner';
 import { TagEditor } from '../TagEditor';
 import { Tag } from '../../../types';
 import { useGalleryStore } from '../../../store';
@@ -30,8 +29,6 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
       onChange(selectedTagIds.filter(id => id !== strId));
     } else if (selectedTagIds.length < 3) {
       onChange([...selectedTagIds, strId]);
-    } else {
-      toast.info('最多选 3 个');
     }
   };
 
@@ -48,7 +45,6 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
           if (selectedTagIds.length < 3) {
             onChange([...new Set([...selectedTagIds, String(existing.id)])]);
           }
-          toast.success(`标签 "${trimmed}" 已存在 (自动选择)`);
           return;
         }
 
@@ -57,7 +53,6 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
           if (selectedTagIds.length < 3) {
             onChange([...new Set([...selectedTagIds, String(saved.id)])]);
           }
-          toast.success(`已新增标签 "${trimmed}"`);
         }
       }
     });
