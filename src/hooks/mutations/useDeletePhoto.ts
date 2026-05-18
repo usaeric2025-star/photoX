@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Photo, ApiResponse } from '../../types';
 import { deletePhotoFromCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
@@ -60,6 +61,7 @@ export const useDeletePhotoMutation = () => {
         });
       }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      toast.error(`删除失败：${_err instanceof Error ? _err.message : '未知错误'}`);
     },
   });
 };

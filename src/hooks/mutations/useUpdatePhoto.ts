@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Photo } from '../../types';
 import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
@@ -53,6 +54,7 @@ export const useUpdatePhotoMutation = () => {
         });
       }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      toast.error(`操作失败：${err instanceof Error ? err.message : '未知错误'}`);
     },
   });
 };
@@ -69,6 +71,9 @@ export const useBatchUpdatePhotosMutation = () => {
     }) => updatePhotosBatch(userId, ids, updates, onProgress, signal),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+    },
+    onError: (err, variables, context) => {
+      toast.error(`批量操作失败：${err instanceof Error ? err.message : '未知错误'}`);
     },
   });
 };
