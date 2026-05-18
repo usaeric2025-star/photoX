@@ -101,7 +101,8 @@ export const useAdminDataPrep = () => {
   const { 
     batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis, 
     handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
-    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos
+    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos,
+    importProgress, importTotal
   } = useAdminPhotos(
     user, settings?.gemini_api_key, settings?.provider || 'openrouter', settings?.custom_model || '', 
     { photos, categories, tags, manufacturers }, uiBasicValue, sessionBasicValue, addManufacturer
@@ -164,12 +165,12 @@ export const useAdminDataPrep = () => {
 
   const photoValue = useMemo(() => ({
     photos, categories, tags, manufacturers, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify,
-    handleGroupAiIdentify, handlePhotoImport, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
+    handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
     addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk
   }), [
     photos, categories, tags, manufacturers, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify,
-    handleGroupAiIdentify, handlePhotoImport, deletePhoto, handleUngroup, saveNewPhoto, saveBatchEdit,
+    handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal, deletePhoto, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
     addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk
   ]);

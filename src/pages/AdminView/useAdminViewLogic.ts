@@ -41,6 +41,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const {
     photos = [], categories = [], tags = [], manufacturers = [],
     handleSingleAiAnalyze = async () => {}, handleTranslate = async () => {}, handleBatchAiIdentify = async () => {}, handleGroupAiIdentify = async () => {}, handlePhotoImport = async () => {},
+    importProgress, importTotal,
     deletePhoto = async () => {}, handleGroupPhotos = async () => {}, handleUngroup = async () => {}, saveNewPhoto = async () => {}, saveBatchEdit = async () => {},
     updateTag = async () => {}, deleteTag = async () => {}, updateCategory = async () => {}, deleteCategory = async () => {}, addCategory = async () => {},
     addManufacturer = async () => {}, updateManufacturer = async () => {}, deleteManufacturer = async () => {},
