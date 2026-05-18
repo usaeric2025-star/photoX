@@ -234,6 +234,7 @@ export const usePhotoImport = (
         } catch (err) {
           console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
           handleError(err, `处理文件失败: ${file.name}`);
+          toast.error(`上传失败: ${file.name} - ${err instanceof Error ? err.message : '未知错误'}`);
           failCount++;
           failedFiles.push(file.name);
         }
@@ -250,6 +251,7 @@ export const usePhotoImport = (
           failCount++;
           // We don't have easy access to the filename here, but we can log it
           console.error(`[usePhotoImport] Task ${idx} failed:`, res.reason);
+          toast.error(`同步失败: ${res.reason instanceof Error ? res.reason.message : '未知原因'}`);
         }
       });
 

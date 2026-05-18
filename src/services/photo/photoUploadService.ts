@@ -10,7 +10,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
-    throw new Error('No active session for database');
+    throw new Error('鉴权失败: 无活跃会话');
   }
 
   // Upload image if it doesn't have an image_url yet but has a uri
@@ -22,7 +22,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
       photo.thumb_url = thumbUrl;
     } catch (e) {
       console.error("Failed to upload image:", e);
-      throw e; // Propagate error
+      throw new Error(`存储上传失败: ${e instanceof Error ? e.message : '未知原因'}`);
     }
   }
 
@@ -50,7 +50,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
 
   if (dbError) {
     console.error("Supabase Database Upsert Error:", dbError);
-    throw new Error(`數據同步失敗: ${dbError.message}`);
+    throw new Error(`数据库保存失败: ${dbError.message}`);
   }
 
   photoCache.clear();

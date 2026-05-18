@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Category, Tag, Manufacturer } from '../../types';
 import { addTagToDB, updateTagInDB, deleteTagFromDB } from '../../services/tagService';
 import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '../../services/categoryService';
@@ -12,6 +13,9 @@ export const useAddTagMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
     },
+    onError: (err: any) => {
+      toast.error(`添加标签失败: ${err.message}`);
+    },
   });
 };
 
@@ -22,6 +26,9 @@ export const useUpdateTagMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+    },
+    onError: (err: any) => {
+      toast.error(`更新标签失败: ${err.message}`);
     },
   });
 };
@@ -34,6 +41,9 @@ export const useDeleteTagMutation = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
+    onError: (err: any) => {
+      toast.error(`删除标签失败: ${err.message}`);
+    },
   });
 };
 
@@ -43,6 +53,9 @@ export const useAddCategoryMutation = () => {
     mutationFn: addCategoryToDB,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
+    },
+    onError: (err: any) => {
+      toast.error(`添加分类失败: ${err.message}`);
     },
   });
 };
@@ -55,6 +68,9 @@ export const useUpdateCategoryMutation = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
+    onError: (err: any) => {
+      toast.error(`更新分类失败: ${err.message}`);
+    },
   });
 };
 
@@ -66,6 +82,9 @@ export const useDeleteCategoryMutation = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
+    onError: (err: any) => {
+      toast.error(`删除分类失败: ${err.message}`);
+    },
   });
 };
 
@@ -75,6 +94,9 @@ export const useAddManufacturerMutation = () => {
     mutationFn: addManufacturerToDB,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
+    },
+    onError: (err: any) => {
+      toast.error(`添加厂商失败: ${err.message}`);
     },
   });
 };
@@ -87,6 +109,9 @@ export const useUpdateManufacturerMutation = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
+    onError: (err: any) => {
+      toast.error(`更新厂商失败: ${err.message}`);
+    },
   });
 };
 
@@ -97,6 +122,9 @@ export const useDeleteManufacturerMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+    },
+    onError: (err: any) => {
+      toast.error(`删除厂商失败: ${err.message}`);
     },
   });
 };

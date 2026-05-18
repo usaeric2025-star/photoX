@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { QUERY_KEYS } from '../queries/keys';
 
 export const useSyncMutation = () => {
@@ -16,5 +17,8 @@ export const useSyncMutation = () => {
         await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
       }
     },
+    onError: (err: any) => {
+      toast.error(`同步失败: ${err.message}`);
+    }
   });
 };

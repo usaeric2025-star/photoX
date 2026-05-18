@@ -51,7 +51,7 @@ export const useDeletePhotoMutation = () => {
       // Invalidate all photo related queries
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     },
-    onError: (_err, _variables, context) => {
+    onError: (err, variables, context) => {
       if (context?.previousInfinite) {
         queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
       }
@@ -61,7 +61,7 @@ export const useDeletePhotoMutation = () => {
         });
       }
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      toast.error(`删除失败：${_err instanceof Error ? _err.message : '未知错误'}`);
+      toast.error(`删除失败：${err instanceof Error ? err.message : '未知错误'}`);
     },
   });
 };
