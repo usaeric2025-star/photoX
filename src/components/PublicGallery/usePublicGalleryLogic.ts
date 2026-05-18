@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../../types';
+import { sortTagsByPopularity } from '../../utils/tagUtils';
 import { useGalleryStore } from '../../store';
 import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../../hooks';
 import { translations, LanguageCode } from '../../lib/translations';
@@ -223,6 +224,6 @@ export const usePublicGalleryLogic = (props: {
     columns, setColumns, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
-    handleLoadMore, navigate, sortedTags: useMemo(() => [...contextTags].sort((a,b) => a.name.localeCompare(b.name)), [contextTags])
+    handleLoadMore, navigate, sortedTags: useMemo(() => sortTagsByPopularity(contextTags), [contextTags])
   };
 };

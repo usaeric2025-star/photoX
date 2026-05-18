@@ -4,6 +4,7 @@ import { DB_CONFIG } from '../constants/config';
 import { Photo } from '../types';
 import { createKeyedCache } from './cacheUtils';
 import { normalizeSearchQuery } from '../utils/stringHelper';
+import { VISIBILITY_OR_QUERY } from '../constants/photoConstants';
 
 export const photoCache = createKeyedCache<Photo[]>();
 
@@ -105,7 +106,7 @@ export const loadAllPhotosFromCloud = async (
     .select(selectQuery);
   
   if (!isAdminMode) {
-    query = query.or('is_hidden.is.null,is_hidden.eq.false');
+    query = query.or(VISIBILITY_OR_QUERY);
   }
   
   if (since) {
@@ -216,7 +217,7 @@ export const getPhotoCount = async (
     .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
   
   if (!isAdminMode) {
-    query = query.or('is_hidden.is.null,is_hidden.eq.false');
+    query = query.or(VISIBILITY_OR_QUERY);
   }
 
   if (categoryId) {

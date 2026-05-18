@@ -241,3 +241,9 @@ const uiValueForLogin = React.useMemo(() => ({
 
 - 禁止用 `useRef` + `useEffect` 手动缓存数据
 - 必须用 `placeholderData: keepPreviousData`
+
+## 二十四、翻译与多语言规范（强制执行）
+
+1. **术语固定**：标签 (Tag) 和 厂商 (Manufacturer) 这两个术语及其对应的具体内容（如标签库中的名称、厂商名称）禁止自动翻译或 AI 翻译。
+2. **显示原则**：UI 显示时应优先使用数据库中的 `zh` 或 `en` 字段。若无特定多语言字段，应保持原始 `name` 不变。
+3. **禁止行为**：禁止使用 AI 助手对现有的标签名或厂商名进行批量“中翻英”或“英翻中”的改写。

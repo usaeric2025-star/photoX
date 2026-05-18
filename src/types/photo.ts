@@ -76,6 +76,8 @@ export interface Tag {
   aliases: string[];
   userId?: string;
   isPinned?: boolean;
+  usageCount?: number;
+  isGlobal?: boolean;
 }
 
 export interface Manufacturer {

@@ -1,109 +1,75 @@
-
 import { Tag } from '../types';
-import { batchCreateTags } from '../services/supabaseService';
+import { batchCreateTags } from '../services/tagService';
 
+/**
+ * 标签排序算法：
+ * 1. 推荐（Pinned）优先
+ * 2. 使用次数（usageCount）降序
+ * 3. 名称（name/zh）升序（保持同频波动下的确定性）
+ * 
+ * 稳定性设计：
+ * - 不使用随机数
+ * - 使用次数是物理指标，变化缓慢
+ * - 只有当多个标签“平手”时，名称排序确保位置固定
+ */
+export const sortTagsByPopularity = (tags: Tag[]): Tag[] => {
+  return [...tags].sort((a, b) => {
+    // 1. 推荐状态
+    if (a.isPinned && !b.isPinned) return -1;
+    if (!a.isPinned && b.isPinned) return 1;
+
+    // 2. 使用频率 (桶排序思想：如果需要更稳定，可以按每10次一个台阶归类)
+    const countA = a.usageCount || 0;
+    const countB = b.usageCount || 0;
+    if (countA !== countB) return countB - countA;
+
+    // 3. 确定性降级（字母序）
+    const nameA = a.zh || a.name || '';
+    const nameB = b.zh || b.name || '';
+    return nameA.localeCompare(nameB, 'zh-CN');
+  });
+};
+
+/**
+ * 批量解析标签名到 ID
+ * 如果标签不存在则自动创建
+ */
 export const resolveTagIdsBatch = async (
-  tagNamesOrIds: string[],
-  tags: Tag[],
+  names: string[], 
+  existingTags: Tag[], 
   tagNameToIdMap: Map<string, string>
 ): Promise<string[]> => {
-  // Helper for fuzzy matching: uppercase and remove non-alphas
-  const normalize = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const resultIds: string[] = [];
+  const namesToCreate: string[] = [];
+  
+  const uniqueNames = Array.from(new Set(names.map(n => n.toUpperCase().trim()).filter(Boolean)));
 
-  const findFuzzyMatch = (name: string): string | null => {
-    const normName = normalize(name);
-    if (!normName) return null;
-
-    // 1. Direct case-insensitive match
-    for (const t of tags) {
-      const normExisting = normalize(t.name);
-      if (normName === normExisting) return String(t.id);
-      
-      // 2. Semantic overlap
-      // Only match if the words are deeply related
-      const isSimilar = (normName.startsWith(normExisting) || normExisting.startsWith(normName)) && 
-                        Math.abs(normName.length - normExisting.length) <= 4; 
-      
-      if (isSimilar) return String(t.id);
-    }
-    return null;
-  };
-
-  // 1. Process inputs: decide what is an existing ID, what is a fuzzy match, and what is truly NEW
-  const resolvedIds: string[] = [];
-  const trulyNewNames: string[] = [];
-
-  for (const item of tagNamesOrIds) {
-    const strItem = String(item).toUpperCase().trim();
-    if (!strItem) continue;
+  for (const name of uniqueNames) {
+    // 1. 检查 map (最快)
+    let id = tagNameToIdMap.get(name);
     
-    // Check if it's already a known ID
-    if (tags.some(t => String(t.id) === strItem)) {
-      resolvedIds.push(strItem);
-      continue;
+    // 2. 检查现有数组 (以防 map 过期)
+    if (!id) {
+      const found = existingTags.find(t => (t.name || '').toUpperCase() === name);
+      if (found) id = found.id;
     }
-
-    // NEW: Security fix to prevent re-creating deleted tags
-    const isNumericId = /^\d+$/.test(strItem);
-    const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(strItem);
     
-    if (isNumericId || isUuid) {
-      console.warn(`[resolveTagIdsBatch] Skipping potential stale ID: ${strItem}`);
-      continue;
-    }
-
-    // Check if name exists exactly (case-insensitive)
-    const existingIdFromMap = Array.from(tagNameToIdMap.entries())
-      .find(([name]) => normalize(name) === normalize(strItem))?.[1];
-    
-    if (existingIdFromMap) {
-      resolvedIds.push(existingIdFromMap);
-      continue;
-    }
-
-    // NEW: Perform fuzzy match to existing tags
-    const fuzzyId = findFuzzyMatch(strItem);
-    if (fuzzyId) {
-      resolvedIds.push(fuzzyId);
-      continue;
-    }
-
-    // If we get here, it's a truly new tag name
-    trulyNewNames.push(strItem);
-  }
-
-  // 2. Handle truly new names
-  let newTagsMap = new Map<string, string>();
-  const uniqueNewNames = Array.from(new Set(trulyNewNames)).filter(Boolean);
-
-  if (uniqueNewNames.length > 0) {
-    newTagsMap = await batchCreateTags(uniqueNewNames);
-  }
-
-  // 3. Final mapping
-  const finalResults: string[] = [];
-  for (const item of tagNamesOrIds) {
-    const strItem = String(item).toUpperCase().trim();
-    if (tags.some(t => String(t.id) === strItem)) {
-      finalResults.push(strItem);
-    } else if (tagNameToIdMap.has(strItem)) {
-      finalResults.push(tagNameToIdMap.get(strItem)!);
+    if (id) {
+      resultIds.push(id);
     } else {
-      const fId = findFuzzyMatch(strItem);
-      if (fId) {
-        finalResults.push(fId);
-      } else if (newTagsMap.has(strItem)) {
-        finalResults.push(newTagsMap.get(strItem)!);
-      } else {
-        // Fallback: only push if NOT a suspected stale ID
-        const isNumericId = /^\d+$/.test(strItem);
-        const isUuid = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i.test(strItem);
-        if (!isNumericId && !isUuid) {
-           finalResults.push(strItem);
-        }
-      }
+      namesToCreate.push(name);
     }
   }
-
-  return Array.from(new Set(finalResults));
+  
+  // 3. 批量创建缺失的标签
+  if (namesToCreate.length > 0) {
+    try {
+      const newTagsMap = await batchCreateTags(namesToCreate);
+      newTagsMap.forEach(id => resultIds.push(id));
+    } catch (err) {
+      console.error('Failed to resolve tags batch:', err);
+    }
+  }
+  
+  return Array.from(new Set(resultIds));
 };

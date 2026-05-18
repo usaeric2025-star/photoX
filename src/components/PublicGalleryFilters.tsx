@@ -36,26 +36,6 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   selectedTagIds, setSelectedTagIds, sortedTags, lang, t, onScrollToTop,
   showHotEffects = true, settings
 }) => {
-  // Pick random fallback hot tags if needed
-  const hotTagsSet = React.useMemo(() => {
-    if (!showHotEffects) return new Set<string>();
-    const count = settings?.hotTagsCount || 9;
-    const pinned = settings?.pinnedTags || [];
-    const set = new Set<string>(pinned);
-    
-    if (set.size < count && sortedTags.length > 0) {
-      const candidates = sortedTags.filter(t => !set.has(String(t.id)));
-      
-      // Use stable sorting based on name to avoid random flicker
-      const sortedCandidates = [...candidates].sort((a, b) => a.name.localeCompare(b.name));
-      const needed = count - set.size;
-      for (let i = 0; i < needed && i < sortedCandidates.length; i++) {
-         set.add(String(sortedCandidates[i].id));
-      }
-    }
-    return set;
-  }, [settings?.hotTagsCount, settings?.pinnedTags, sortedTags, showHotEffects]);
-
   return (
     <div className="shrink-0 p-3 z-40 bg-brand-bg border-b border-brand-navy/5">
       <div className="space-y-2.5 pb-2">
@@ -167,25 +147,11 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="relative overflow-hidden">
           <div className="flex flex-wrap gap-1.5 items-start max-h-[80px] overflow-y-auto pb-4 content-start scrollbar-hide">
-            {React.useMemo(() => {
-                return [...sortedTags].sort((a, b) => {
-                  const aPinned = (settings?.pinnedTags || []).includes(String(a.id));
-                  const bPinned = (settings?.pinnedTags || []).includes(String(b.id));
-                  if (aPinned && !bPinned) return -1;
-                  if (!aPinned && bPinned) return 1;
-                  
-                  const aHot = hotTagsSet.has(String(a.id));
-                  const bHot = hotTagsSet.has(String(b.id));
-                  if (aHot && !bHot) return -1;
-                  if (!aHot && bHot) return 1;
-                  
-                  return a.name.localeCompare(b.name, undefined, { numeric: true });
-                });
-              }, [sortedTags, settings?.pinnedTags, hotTagsSet]).map(tag => {
+            {sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = (selectedTagIds || []).includes(strTagId);
-                const isHot = hotTagsSet.has(strTagId);
-                const isPinned = (settings?.pinnedTags || []).includes(strTagId);
+                const isHot = (tag.usageCount || 0) > 5; // Simple heuristic for HOT if not pinned
+                const isPinned = tag.isPinned;
                 
                 return (
                   <button 
@@ -199,17 +165,17 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       "px-2.5 py-1 rounded-xl text-[9px] font-black transition-colors border-2 shadow-sm flex items-center gap-1",
                       isSelected 
                         ? 'bg-brand-navy border-brand-navy text-brand-bg shadow-md z-10' 
-                        : 'bg-white border-slate-100 text-brand-navy/40 hover:text-brand-navy hover:border-brand-navy/20',
-                      isHot && !isSelected && "border-brand-gold/30 bg-brand-gold/5 text-brand-gold hover:border-brand-gold/50 hover:bg-brand-gold/10"
+                        : 'bg-white border-slate-100 text-brand-navy/30 hover:text-brand-navy hover:border-brand-navy/20',
+                      (isPinned || isHot) && !isSelected && "border-brand-gold/30 bg-brand-gold/5 text-brand-gold hover:border-brand-gold/50 hover:bg-brand-gold/10"
                     )}
                   >
-                    {!isHot && <span className={cn(
+                    {!isPinned && !isHot && <span className={cn(
                       "w-1.5 h-1.5 rounded-full",
                       isSelected ? "bg-white" : "bg-slate-200"
                     )} />}
-                    {toTitleCase(tag.name)}
-                    {isPinned && !isSelected && <span className="bg-brand-gold text-white p-0.5 rounded-full shadow-sm flex items-center justify-center"><Heart size={8} className="fill-white"/></span>}
-                    {isHot && !isPinned && !isSelected && <span className="text-[8px] bg-brand-gold/20 text-brand-gold px-1.5 py-[1px] rounded font-black tracking-tighter">HOT</span>}
+                    {tag.zh || tag.name}
+                    {isPinned && !isSelected && <Heart size={8} className="fill-brand-gold text-brand-gold"/>}
+                    {isHot && !isPinned && !isSelected && <span className="text-[7px] bg-brand-gold/20 text-brand-gold px-1 rounded font-black tracking-tighter">HOT</span>}
                   </button>
                 );
               })}
