@@ -146,7 +146,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     aiDebugInfo, abortAnalysis, batchProgress,
     settings, viewMode, setViewMode, onRefresh,
     photos, categories, tags, manufacturers, tagIdToNameMap,
-    handleSingleAiAnalyze, handleTranslate, handleGroupAiIdentify, handlePhotoImport,
+    handleSingleAiAnalyze, handleTranslate, handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal,
     handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,
     saveNewPhoto, saveBatchEdit, updateTag, deleteTag, updateCategory, deleteCategory,
     addCategory, addManufacturer, updateManufacturer, deleteManufacturer,

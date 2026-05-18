@@ -25,7 +25,14 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
 }) => {
   const [isLoaded, setIsLoaded] = React.useState(false);
-  
+  const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
+  const touchStartPos = React.useRef<{x: number, y: number} | null>(null);
+
+  const clearTimer = () => {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = null;
+  };
+
   return (
     <div 
       {...extraProps}
@@ -42,6 +49,23 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
       {/* Image Container */}
       <div 
         className="aspect-square rounded-xl overflow-hidden relative bg-slate-50"
+        onTouchStart={(e) => {
+           touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+           longPressTimer.current = setTimeout(() => {
+                 onPhotoContextMenu?.({ preventDefault: () => {} } as any, photo);
+                 clearTimer();
+           }, 700);
+        }}
+        onTouchMove={(e) => {
+           if (touchStartPos.current) {
+               const dx = Math.abs(e.touches[0].clientX - touchStartPos.current.x);
+               const dy = Math.abs(e.touches[0].clientY - touchStartPos.current.y);
+               if (dx > 10 || dy > 10) {
+                   clearTimer();
+               }
+           }
+        }}
+        onTouchEnd={clearTimer}
       >
         {!isLoaded && (
           <Skeleton className="absolute inset-0 bg-slate-100 flex items-center justify-center">
