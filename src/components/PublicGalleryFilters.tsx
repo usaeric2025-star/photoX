@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart, X } from 'lucide-react';
+import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart, X, Pin } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Tag, AppSettings } from '../types';
 import { cn } from '../lib/utils';
@@ -161,17 +161,22 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="relative overflow-hidden">
           <div className="flex flex-wrap gap-1.5 items-start max-h-[80px] overflow-y-auto pb-4 content-start scrollbar-hide">
-            {(() => {
-              const pinnedIds = (settings?.pinnedTags || []).map(id => String(id));
-
-              return sortedTags.map(tag => {
+            {sortedTags.length === 0 ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-6 w-16 bg-brand-navy/5 animate-pulse rounded-xl" />
+              ))
+            ) : (
+              sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = (selectedTagIds || []).includes(strTagId);
-                const isPinned = tag.isPinned || pinnedIds.includes(strTagId);
+                const isPinned = !!tag.isPinned;
                 const isHot = !isPinned && hotIds.has(strTagId);
                 
                 return (
-                  <button 
+                  <motion.button 
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     key={strTagId}
                     onClick={() => { 
                       setSelectedTagIds(prev => (prev || []).includes(strTagId) ? [] : [strTagId]);
@@ -179,7 +184,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       setSelectedSubId(null);
                     }}
                     className={cn(
-                      "px-2.5 py-1 rounded-xl text-[9px] font-black transition-colors border-2 shadow-sm flex items-center gap-1",
+                      "px-2.5 py-1 rounded-xl text-[9px] font-black transition-all border-2 shadow-sm flex items-center gap-1 shrink-0",
                       isSelected 
                         ? 'bg-brand-navy border-brand-navy text-brand-bg shadow-md z-10' 
                         : (isPinned || isHot) 
@@ -192,12 +197,15 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       isSelected ? "bg-white" : "bg-slate-200"
                     )} />}
                     {tag.zh || tag.name}
-                    {isPinned && !isSelected && <Heart size={8} className="fill-brand-gold text-brand-gold"/>}
-                    {isHot && !isSelected && <span className="text-[7px] bg-brand-gold text-brand-bg px-1 rounded font-black tracking-tighter shadow-sm">HOT</span>}
-                  </button>
+                    {isPinned && <Pin size={8} className={cn("fill-brand-gold text-brand-gold", isSelected ? "text-white fill-white" : "")} />}
+                    {isHot && <span className={cn(
+                      "text-[7px] px-1 rounded font-black tracking-tighter shadow-sm",
+                      isSelected ? "bg-white text-brand-navy" : "bg-brand-gold text-brand-bg"
+                    )}>HOT</span>}
+                  </motion.button>
                 );
-              });
-            })()}
+              })
+            )}
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-brand-bg/90 to-transparent pointer-events-none" />
         </div>

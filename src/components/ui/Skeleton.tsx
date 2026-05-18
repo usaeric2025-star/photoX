@@ -7,5 +7,5 @@ export const Skeleton: React.FC<{ className?: string, children?: React.ReactNode
 );
 
 export const PhotoCardSkeleton: React.FC = () => (
-  <div className="aspect-[3/4] w-full animate-pulse bg-brand-navy/10 rounded-lg" />
+  <div className="aspect-square w-full animate-pulse bg-brand-navy/10 rounded-xl" />
 );

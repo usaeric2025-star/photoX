@@ -70,26 +70,6 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
            </div>
            
            <div className="w-px h-8 bg-brand-navy/10 mx-1"></div>
-
-           <div className="flex flex-col gap-0.5">
-             <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
-               <Sparkles size={10} className="text-brand-gold fill-brand-gold" /> Usage Min
-             </span>
-             <input 
-               type="number"
-               min={0}
-               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
-               value={settings?.hotTagThreshold !== undefined ? settings.hotTagThreshold : 1}
-               onChange={(e) => {
-                 const val = parseInt(e.target.value);
-                 const num = isNaN(val) ? 1 : val;
-                 const nextSettings = { ...settings, hotTagThreshold: num } as AppSettings;
-                 setSettings(nextSettings);
-                 setHasChanges(true);
-                 debouncedSave(nextSettings);
-               }}
-             />
-           </div>
         </div>
       </div>
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">

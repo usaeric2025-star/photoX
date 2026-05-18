@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types';
 import { ArrowUpToLine, MessageCircle } from 'lucide-react';
-import { AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from './PhotoLightbox';
 import { StaffUnlockDialog } from './StaffUnlockDialog';
 import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
@@ -14,6 +14,7 @@ import { GallerySkeleton } from './PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from './PublicGallery/GalleryEmpty';
 import { GalleryDialogs } from './PublicGallery/GalleryDialogs';
 import { GalleryFloatButtons } from './PublicGallery/GalleryFloatButtons';
+import { getSkeletonCount } from '../utils/skeletonHelpers';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -27,6 +28,7 @@ interface PublicGalleryProps {
   internalPassword?: string;
   settings?: AppSettings;
   isRefreshing?: boolean;
+  isFetchingNextPage?: boolean;
   onRefresh?: () => void;
   user?: User | null;
   isAdminMode?: boolean;
@@ -63,15 +65,21 @@ interface PublicGalleryProps {
 }
 
 const VirtuosoGridFooter = React.memo(({ context }: any) => {
-  const { hasMore, isSyncing, safePhotosLength, textEndOfList, textLoading } = context || {};
-  if (isSyncing) return (
-    <div className="py-8 flex flex-col items-center justify-center w-full min-h-[100px]">
-      <div className="flex items-center gap-3 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm border border-brand-navy/10">
-        <div className="w-4 h-4 border-2 border-brand-navy/20 border-t-brand-navy rounded-full animate-spin" />
-        <span className="text-[10px] font-black uppercase tracking-widest text-brand-navy/60">{textLoading}...</span>
+  const { hasMore, isSyncing, isFetchingNextPage, safePhotosLength, textEndOfList, textLoading } = context || {};
+  
+  if (isFetchingNextPage) {
+    return (
+      <div className="py-8 px-2 w-full">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="aspect-square bg-brand-navy/5 animate-pulse rounded-xl" />
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (isSyncing && safePhotosLength === 0) return null; // Handled by main skeleton
   if (!hasMore && safePhotosLength > 0) return (
     <div className="py-12 pb-16 flex flex-col items-center justify-center w-full clear-both border-t border-brand-navy/5 bg-brand-navy/[0.02]">
       <div className="flex flex-col items-center gap-2 opacity-20">
@@ -113,11 +121,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   const virtuosoContext = useMemo(() => ({
     hasMore: props.hasMore,
     isSyncing,
+    isFetchingNextPage: props.isFetchingNextPage,
     safePhotosLength: gridPhotos.length,
     textLoadMore: t.loadMore,
     textEndOfList: t.endOfList,
     textLoading: t.loading
-  }), [props.hasMore, isSyncing, gridPhotos.length, t]);
+  }), [props.hasMore, isSyncing, props.isFetchingNextPage, gridPhotos.length, t]);
 
   const startLongPressTimer = React.useRef<NodeJS.Timeout | null>(null);
 
@@ -149,7 +158,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-bg w-full overflow-hidden text-text">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col h-full bg-bg w-full overflow-hidden text-text"
+    >
       {lightboxIndex === null && !props.hideHeader && (
         <GalleryHeader 
           totalCount={props.totalCount}
@@ -197,44 +210,49 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       />
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
-        {isSyncing && gridPhotos.length === 0 ? (
-          <GallerySkeleton columns={columns} />
-        ) : gridPhotos.length === 0 ? (
-          <GalleryEmpty t={t} />
-        ) : (
-          <GalleryGrid 
-            virtuosoRef={virtuosoRef}
-            gridPhotos={gridPhotos}
-            displayPhotos={displayPhotos}
-            columns={columns}
-            virtuosoComponents={virtuosoComponents}
-            virtuosoContext={virtuosoContext}
-            handleLoadMore={handleLoadMore}
-            isAdminMode={!!props.isAdminMode}
-            activeIsMultiSelect={activeIsMultiSelect}
-            isStaffMode={isStaffMode}
-            activeSelectedIds={activeSelectedIds}
-            showGroupsCollapsed={showGroupsCollapsed}
-            lang={lang}
-            t={t}
-            categories={categories}
-            manufacturers={manufacturers}
-            tagMap={tagMap}
-            activeToggleSelection={activeToggleSelection}
-            onEditPhoto={props.onEditPhoto}
-            setActiveGroupId={setActiveGroupId}
-            setActivePhotoId={setActivePhotoId}
-            setLightboxIndex={setLightboxIndex}
-            startLongPress={startLongPress}
-            endLongPress={endLongPress}
-            shareSinglePhoto={shareSinglePhoto}
-            onTogglePinned={props.onTogglePinned}
-            selectedCatCode={selectedCatCode}
-            selectedSubId={selectedSubId}
-            selectedTagIds={selectedTagIds}
-            searchQuery={searchQuery}
-          />
-        )}
+        {(() => {
+          const skeletonCount = getSkeletonCount(gridPhotos.length > 0, false);
+          
+          if (isSyncing && gridPhotos.length === 0) {
+            return <GallerySkeleton columns={columns} count={skeletonCount} />;
+          }
+          if (gridPhotos.length === 0) {
+            return <GalleryEmpty t={t} />;
+          }
+          return (
+            <GalleryGrid 
+              virtuosoRef={virtuosoRef}
+              gridPhotos={gridPhotos}
+              displayPhotos={displayPhotos}
+              columns={columns}
+              virtuosoComponents={virtuosoComponents}
+              virtuosoContext={virtuosoContext}
+              handleLoadMore={handleLoadMore}
+              isAdminMode={!!props.isAdminMode}
+              isStaffMode={isStaffMode}
+              activeSelectedIds={activeSelectedIds}
+              showGroupsCollapsed={showGroupsCollapsed}
+              lang={lang}
+              t={t}
+              categories={categories}
+              manufacturers={manufacturers}
+              tagMap={tagMap}
+              activeToggleSelection={activeToggleSelection}
+              onEditPhoto={props.onEditPhoto}
+              setActiveGroupId={setActiveGroupId}
+              setActivePhotoId={setActivePhotoId}
+              setLightboxIndex={setLightboxIndex}
+              startLongPress={startLongPress}
+              endLongPress={endLongPress}
+              shareSinglePhoto={shareSinglePhoto}
+              onTogglePinned={props.onTogglePinned}
+              selectedCatCode={selectedCatCode}
+              selectedSubId={selectedSubId}
+              selectedTagIds={selectedTagIds}
+              searchQuery={searchQuery}
+            />
+          );
+        })()}
       </div>
 
       {lightboxIndex === null && !props.isAdminMode && (
@@ -318,6 +336,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
           />
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 };

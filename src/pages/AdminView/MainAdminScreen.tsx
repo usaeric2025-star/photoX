@@ -39,6 +39,7 @@ interface Props {
   onBatchAiAnalyze?: (photos: Photo[]) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
+  isFetchingNextPage?: boolean;
 }
 
 export const MainAdminScreen: React.FC<Props> = ({
@@ -47,7 +48,8 @@ export const MainAdminScreen: React.FC<Props> = ({
   lang, loadingType, batchProgress, categories, tags,
   onTogglePinned, onToggleHidden, onSetGroupCover, settings,
   columns, setColumns, user, onEditPhoto, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
-  onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, isAnalyzing
+  onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, isAnalyzing,
+  isFetchingNextPage
 }) => {
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
@@ -79,7 +81,8 @@ export const MainAdminScreen: React.FC<Props> = ({
              onToggleHidden={onToggleHidden}
              onSetGroupCover={onSetGroupCover}
              settings={settings}
-             isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'} // Simple isRefreshing check
+             isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
+             isFetchingNextPage={isFetchingNextPage}
              hideHeader={true}
              columns={columns}
              setColumns={setColumns}

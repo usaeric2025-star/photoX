@@ -8,6 +8,7 @@ import {
 import { fetchSettings, loginWithGoogle } from '../services/supabaseService';
 import { PublicGallery } from '../components/PublicGallery';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { FullPageLoading } from '../components/FullPageLoading';
 import { saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryStore } from '../store';
@@ -87,14 +88,19 @@ export default function PublicView() {
   }, [setIsAdminMode, setIsMultiSelect, setSelectedIds]);
   
   const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
   const navigate = useNavigate();
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
 
+  const isInitialLoading = isPhotosLoading || isSettingsLoading;
+
   useEffect(() => {
+    setIsSettingsLoading(true);
     fetchSettings().then(s => {
       setSettings(s as AppSettings);
       saveData('product_settings', s);
-    }).catch(e => console.error("fetchSettings", e));
+    }).catch(e => console.error("fetchSettings", e))
+      .finally(() => setIsSettingsLoading(false));
   }, []);
 
   const handleRefresh = async () => {
@@ -106,6 +112,10 @@ export default function PublicView() {
       fetchNextPage();
     }
   };
+
+  if (isInitialLoading && photos.length === 0) {
+    return <div className="fixed inset-0 bg-brand-bg"><FullPageLoading /></div>;
+  }
 
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
@@ -126,6 +136,7 @@ export default function PublicView() {
           onRefresh={handleRefresh}
           onLoadMore={handleLoadMore}
           hasMore={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
           totalCount={countData}
           initialHash={hash}
           initialGroupId={groupId}

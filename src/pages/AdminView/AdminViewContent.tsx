@@ -217,6 +217,7 @@ export const AdminViewContent: React.FC<Props> = ({
           user={user}
           lang={lang}
           t={t}
+          isFetchingNextPage={isFetchingNextPage}
           onManageClick={() => logic.setActiveScreen('manage')}
           onRefresh={() => {
             if (logic.checkSyncLock()) return;
@@ -271,7 +272,8 @@ export const AdminViewContent: React.FC<Props> = ({
                    isStaffMode={true}
                    onTogglePinned={logic.togglePinned}
                    settings={logic.settings}
-                   isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push' || isFetchingNextPage}
+                   isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
+                   isFetchingNextPage={isFetchingNextPage}
                    onExit={() => logic.setViewMode('private')}
                    showExit={true}
                    onRefresh={() => {

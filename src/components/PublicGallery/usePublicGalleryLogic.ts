@@ -225,6 +225,8 @@ export const usePublicGalleryLogic = (props: {
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
     handleLoadMore, navigate, sortedTags: useMemo(() => {
+      const pinnedIds = new Set((settings?.pinnedTags || []).map(id => String(id)));
+
       // Enrich tags with calculated usage count from current photos set if database doesn't provide it
       const counts: Record<string, number> = {};
       localPhotos.forEach(p => {
@@ -235,12 +237,16 @@ export const usePublicGalleryLogic = (props: {
         }
       });
       
-      const enrichedTags = contextTags.map(t => ({
-        ...t,
-        usageCount: Math.max(t.usageCount || 0, counts[t.id] || 0)
-      }));
+      const enrichedTags = contextTags.map(t => {
+        const strId = String(t.id);
+        return {
+          ...t,
+          isPinned: t.isPinned || pinnedIds.has(strId),
+          usageCount: Math.max(t.usageCount || 0, counts[strId] || 0)
+        };
+      });
       
       return sortTagsByPopularity(enrichedTags);
-    }, [contextTags, localPhotos])
+    }, [contextTags, settings?.pinnedTags]) // Stabilize order
   };
 };
