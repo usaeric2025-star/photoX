@@ -122,6 +122,8 @@ export const usePhotoImport = (
         }
       };
 
+      const tasks: Promise<void>[] = [];
+
       for (let i = 0; i < sFileArray.length; i++) {
         const file = sFileArray[i];
         setImportProgress(i + 1);
@@ -168,8 +170,11 @@ export const usePhotoImport = (
           
           successCount++;
           
+          // Add to local ref so it shows up in UI immediately
+          photosRef.current.push(newPhoto);
+
           if (useAi) {
-            (async (targetId: string, targetUri: string, initialPhoto: Photo) => {
+            tasks.push((async (targetId: string, targetUri: string, initialPhoto: Photo) => {
                try {
                  const apiKey = geminiApiKey;
                  const resRaw = await analyzeProductPhoto(targetUri, categories, tags, manufacturers, apiKey, aiProvider, customModel);
@@ -203,6 +208,12 @@ export const usePhotoImport = (
                    dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : initialPhoto.dimensions
                  };
                  
+                 // Update the local photo in the ref
+                 const index = photosRef.current.findIndex(p => p.id === initialPhoto.id);
+                 if (index !== -1) {
+                    photosRef.current[index] = updated;
+                 }
+
                  if (user) {
                    await savePhotoToCloud(user.id, updated);
                    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
@@ -213,11 +224,11 @@ export const usePhotoImport = (
                } finally {
                  updateAiProgress();
                }
-            })(photoId, dataUrl, newPhoto);
+            })(photoId, dataUrl, newPhoto));
           } else if (user) {
-            savePhotoToCloud(user.id, newPhoto).then(() => {
+            tasks.push(savePhotoToCloud(user.id, newPhoto).then(() => {
               queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-            }).catch(e => handleError(e, "云端同步失败"));
+            }).catch(e => handleError(e, "云端同步失败")));
           }
         } catch (err) {
           handleError(err, `处理文件失败: ${file.name}`);
@@ -226,6 +237,9 @@ export const usePhotoImport = (
         }
       } 
       
+      // Await all background tasks (AI/Uploads)
+      await Promise.all(tasks);
+
       saveData('product_photos', photosRef.current).catch(err => {
         console.error("Failed to save photos to indexedDB", err);
       });
@@ -239,6 +253,7 @@ export const usePhotoImport = (
          if (successCount > 0) toast.success(msg);
          else toast.error(msg);
       }
+
     });
   };
 
