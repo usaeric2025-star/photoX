@@ -302,6 +302,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         <GalleryFloatButtons scrollToTop={scrollToTop} setShowWhatsAppChoice={setShowWhatsAppChoice} />
       )}
 
+
       <GroupDetailView 
         activeGroupId={activeGroupId}
         setActiveGroupId={(gid) => {

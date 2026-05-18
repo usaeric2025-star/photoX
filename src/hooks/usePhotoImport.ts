@@ -228,7 +228,7 @@ export const usePhotoImport = (
             })(photoId, dataUrl, newPhoto));
           } else if (user) {
             tasks.push(savePhotoToCloud(user.id, newPhoto).then(() => {
-              queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+              queryClient.invalidateQueries({ queryKey: ['photos'], refetchType: 'all' });
             }).catch(e => handleError(e, "云端同步失败")));
           }
         } catch (err) {
