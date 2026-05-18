@@ -282,6 +282,26 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         setShowWhatsAppChoice={setShowWhatsAppChoice}
         openWhatsApp={openWhatsApp}
       />
+
+      <AnimatePresence>
+        {lightboxIndex !== null && displayPhotos[lightboxIndex] && (
+          <PhotoLightbox 
+            photos={displayPhotos}
+            initialIndex={lightboxIndex}
+            onClose={() => setLightboxIndex(null)}
+            isAdminMode={!!props.isAdminMode}
+            isStaffMode={isStaffMode}
+            onEditPhoto={props.onEditPhoto}
+            lang={lang}
+            t={t}
+            tagMap={tagMap}
+            categories={categories}
+            manufacturers={manufacturers || []}
+            shareSinglePhoto={shareSinglePhoto}
+            onToggleHidden={props.onToggleHidden}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -131,14 +131,14 @@ export const AdminHeader: React.FC<Props> = ({
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1 whitespace-nowrap px-0.5">
-                  <span className="text-sm font-bold text-brand-navy/80">
+                <div className="flex items-center gap-0.5 whitespace-nowrap px-1">
+                  <span className="text-[11px] font-bold text-brand-navy/80">
                     {photosCount}
                   </span>
-                  <span className="text-xs font-bold text-brand-navy/20">/</span>
-                  <span className="text-sm font-bold text-blue-600">
+                  <span className="text-[9px] font-bold text-brand-navy/30 px-0.5">/</span>
+                  <span className="text-[11px] font-bold text-blue-600">
                     {cloudCount === undefined || cloudCount === null ? (
-                      <div className="inline-block w-4 h-2 bg-blue-600/10 rounded animate-pulse" />
+                      <div className="inline-block w-3 h-2 bg-blue-600/10 rounded animate-pulse" />
                     ) : (
                       cloudCount
                     )}
@@ -166,19 +166,6 @@ export const AdminHeader: React.FC<Props> = ({
             </button>
           ) : (
               <div className="flex items-center gap-1 sm:gap-2">
-                <div className="flex items-center gap-1.5 sm:gap-2 bg-brand-navy/5 py-1 px-1.5 sm:px-3 rounded-full sm:rounded-2xl border border-brand-navy/10 mr-0 sm:mr-1">
-                  {user && user.avatarUrl ? (
-                    <img src={user.avatarUrl} className="w-5 h-5 sm:w-5 sm:h-5 rounded-full" alt="Avatar" loading="lazy" />
-                  ) : (
-                    <div className="w-5 h-5 sm:w-5 sm:h-5 rounded-full bg-brand-navy text-brand-bg flex items-center justify-center text-xs font-medium">
-                      {!user ? 'S' : (user?.displayName || user?.email || 'U').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="hidden sm:inline text-xs font-normal text-brand-navy truncate max-w-[60px]">
-                    {!user ? 'Staff' : (user?.displayName || user?.email?.split('@')[0])}
-                  </span>
-                </div>
-                
                 <div className="flex items-center gap-1 sm:gap-1.5 bg-brand-navy/5 p-1 rounded-full sm:rounded-2xl border border-brand-navy/10 shadow-inner">
                   {/* Refresh with Dropdown */}
                   <div className="relative flex items-center" ref={dropdownRef}>

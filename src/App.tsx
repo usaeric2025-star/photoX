@@ -5,6 +5,7 @@ import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
 import { useGalleryStore } from './store';
 import { clearExpiredCaches } from './utils/indexedDB';
+import { fetchSettings } from './services/settingService';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster, toast } from 'sonner';
@@ -45,7 +46,14 @@ function AnimatedRoutes() {
 
 export default function AppRoutes() {
   const { user, authChecked } = useAuth();
+  const { setSettings } = useGalleryStore();
   
+  useEffect(() => {
+    fetchSettings().then(s => {
+      if (s) setSettings(s as any);
+    }).catch(e => console.error("fetchSettings in App", e));
+  }, [setSettings]);
+
   useEffect(() => {
     // 1. Global Error Handlers (console only)
     const handleGlobalError = (event: ErrorEvent) => {

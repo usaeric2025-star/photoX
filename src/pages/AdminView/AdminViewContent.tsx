@@ -144,7 +144,26 @@ export const AdminViewContent: React.FC<Props> = ({
               if (logic.checkSyncLock()) return { success: false };
               return await logic.saveSettings(s);
             }}
-            handleLogoUpload={async (e, c, t, m) => {}}
+            handleLogoUpload={async (e) => {
+              if (logic.checkSyncLock()) return;
+              const file = e.target.files?.[0];
+              if (!file) return;
+
+              await logic.withLoading('global', async () => {
+                try {
+                  const { uploadLogo } = await import('../../services/settingService');
+                  const url = await uploadLogo(file);
+                  if (url && logic.settings) {
+                    const newSettings = { ...logic.settings, logo_url: url };
+                    await logic.saveSettings(newSettings);
+                    toast.success('Logo 更新成功！');
+                  }
+                } catch (err: any) {
+                  console.error(err);
+                  toast.error(err.message || 'Logo 上传失败');
+                }
+              });
+            }}
             performPushSync={async () => { 
               await logic.withLoading('sync-push', async () => { 
                 await logic.performPushSync(true); 

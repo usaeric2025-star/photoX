@@ -49,11 +49,7 @@ export const useAdminDataPrep = () => {
     isAdminMode: true
   }, PAGINATION.ADMIN_BATCH_SIZE);
 
-  const { data: cloudCountData } = usePhotoCountQuery({
-    categoryId: filterCatId,
-    tagId: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
-    searchQuery: debouncedSearchQuery
-  }, true);
+  const { data: cloudCountData } = usePhotoCountQuery({}, true);
 
   const photos = useMemo(() => {
     return infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
