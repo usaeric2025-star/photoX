@@ -119,11 +119,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     textLoading: t.loading
   }), [props.hasMore, isSyncing, gridPhotos.length, t]);
 
+  const startLongPressTimer = React.useRef<NodeJS.Timeout | null>(null);
+
   const startLongPress = (id: string) => {
     // Basic implementation, simplified for refactor
     if (props.isAdminMode) {
-      activeSetIsMultiSelect(true);
-      activeToggleSelection(id);
+      startLongPressTimer.current = setTimeout(() => {
+        activeSetIsMultiSelect(true);
+        activeToggleSelection(id);
+      }, 400); // 400ms delay for long press
+    }
+  };
+
+  const endLongPress = () => {
+    if (startLongPressTimer.current) {
+        clearTimeout(startLongPressTimer.current);
+        startLongPressTimer.current = null;
     }
   };
 
@@ -205,7 +216,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
             setActivePhotoId={setActivePhotoId}
             setLightboxIndex={setLightboxIndex}
             startLongPress={startLongPress}
-            endLongPress={() => {}}
+            endLongPress={endLongPress}
             shareSinglePhoto={shareSinglePhoto}
             onTogglePinned={props.onTogglePinned}
             selectedCatCode={selectedCatCode}

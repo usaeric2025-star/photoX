@@ -57,7 +57,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
       </div>
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isAdminMode && (
-            <div className="flex items-center gap-2 mr-2">
+            <div className="flex items-center gap-2 mr-1">
               <button 
                 onClick={() => {
                   if (isMultiSelect) {
@@ -67,10 +67,11 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
                     setIsMultiSelect(true);
                   }
                 }}
-                className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-brand-gold border-brand-gold text-white' : 'bg-white border-slate-200 text-slate-400'}`}
-                title={t.selectMode}
+                className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center sm:gap-1.5 transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
+                title={isMultiSelect ? t.cancelSelect : t.selectMode}
               >
-                <Grid3X3 size={20} />
+                <Grid3X3 size={16} />
+                <span className="hidden sm:inline text-[10px] font-bold whitespace-nowrap">{isMultiSelect ? t.cancelSelect : t.selectMode}</span>
               </button>
               <button 
                 onClick={onAddPhoto}

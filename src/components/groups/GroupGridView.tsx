@@ -54,7 +54,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
            longPressTimer.current = setTimeout(() => {
                  onPhotoContextMenu?.({ preventDefault: () => {} } as any, photo);
                  clearTimer();
-           }, 700);
+           }, 400);
         }}
         onTouchMove={(e) => {
            if (touchStartPos.current) {
