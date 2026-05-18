@@ -248,13 +248,11 @@ export const usePhotoImport = (
       });
       setIsSyncing(false);
       
-      if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
-         let msg = `已处理 ${successCount} 张照片。`;
-         if (duplicateCount > 0) msg += ` 跳过 ${duplicateCount} 张重复。`;
-         if (failCount > 0) msg += ` ${failCount} 张失败。`;
-         
-         if (successCount > 0) toast.success(msg);
-         else toast.error(msg);
+      const summary = `上传完成：成功 ${successCount} 张，跳过 ${duplicateCount} 张，失败 ${failCount} 张。`;
+      if (failCount > 0) {
+        toast.error(`${summary} 点击查看详情详见控制台`, { duration: 5000 });
+      } else {
+        toast.success(summary, { duration: 5000 });
       }
 
     });
