@@ -8,6 +8,8 @@ let wasAuthenticated = false;
 // Initialize wasAuthenticated based on current session
 supabase.auth.getSession().then(({ data: { session } }) => {
   wasAuthenticated = !!session;
+}).catch((error) => {
+  console.error("Auth initialization check failed:", error);
 });
 
 export const loginWithGoogle = async () => {

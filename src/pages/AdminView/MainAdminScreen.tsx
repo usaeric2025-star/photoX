@@ -51,6 +51,7 @@ export const MainAdminScreen: React.FC<Props> = ({
   onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, isAnalyzing,
   isFetchingNextPage
 }) => {
+  console.log('Rendering MainAdminScreen');
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AdminHeader 
