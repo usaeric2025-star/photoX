@@ -76,9 +76,9 @@ export const AdminViewContent: React.FC<Props> = ({
         {logic.batchEditIds && (
           <BatchEditScreen 
             resetAddState={logic.resetAddState}
-            saveBatchEdit={async () => {
+            saveBatchEdit={async (batchIsHiddenApplied) => {
               if (logic.checkSyncLock()) return;
-              await logic.saveBatchEdit();
+              await withFeedback(() => logic.saveBatchEdit(batchIsHiddenApplied), '批量更新成功');
             }}
             batchEditIds={logic.batchEditIds}
             formState={logic.formState}
@@ -135,7 +135,10 @@ export const AdminViewContent: React.FC<Props> = ({
             onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos)).catch(()=>{})}
             onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch(()=>{})}
             onToggleHidden={async (photo) => {
-              if (logic.checkSyncLock()) return;
+              if (logic.checkSyncLock()) {
+                toast.warning('系统正在同步，请稍后再操作');
+                return;
+              }
               await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态');
             }}
             updatePhoto={async (id, updates) => {
@@ -232,7 +235,13 @@ export const AdminViewContent: React.FC<Props> = ({
             logic.performPullSync(true);
           }}
           onTogglePinned={logic.togglePinned}
-          onToggleHidden={logic.toggleHidden}
+          onToggleHidden={async (photo) => {
+            if (logic.checkSyncLock()) {
+              toast.warning('系统正在同步，请稍后再操作');
+              return;
+            }
+            await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态');
+          }}
           onSetGroupCover={logic.setGroupCover}
           onEditPhoto={(id) => logic.setEditPhotoId(id as string)}
           onLoadMore={handleLoadMoreCallback}

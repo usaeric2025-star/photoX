@@ -160,8 +160,6 @@ export const useGroupAdminLogic = ({
     const nextGroupData = { ...groupData, ...updates };
     setGroupData(nextGroupData);
     
-    toast.success('群组资料已更新 / Group info updated');
-
     try {
       await saveGroupToCloud(nextGroupData);
       
@@ -172,11 +170,11 @@ export const useGroupAdminLogic = ({
            await Promise.all(
              groupPhotos.map(p => hookUpdatePhoto(p.id, { is_hidden }))
            );
-           toast.success(`群组内照片已${is_hidden ? '屏蔽' : '显示'}`);
         }
       }
     } catch (err: any) {
       handleError(err, '更新群组资料失败');
+      throw err;
     }
   }, [activeGroupId, groupData, handleError, hookUpdatePhoto, photos]);
 
@@ -197,7 +195,6 @@ export const useGroupAdminLogic = ({
       message: `确定要将群组内所有 ${activeGroupPhotos.length} 张照片的尺寸更新为当前设置吗？此操作不可撤销。`,
       onConfirm: async () => {
         try {
-          const toastId = toast.loading('正在批量更新尺寸...');
           if (hookUpdatePhoto) {
             await Promise.all(
               activeGroupPhotos.map(p => hookUpdatePhoto(p.id, { dimensions: newDims }))
@@ -208,9 +205,9 @@ export const useGroupAdminLogic = ({
               activeGroupPhotos.map(p => serviceUpdatePhoto(p.id, { dimensions: newDims }))
             );
           }
-          toast.success('批量更新成功', { id: toastId });
         } catch (err: any) {
           handleError(err, '批量更新尺寸失败');
+          throw err;
         }
         setAlertDialog(null);
       }
@@ -239,9 +236,9 @@ export const useGroupAdminLogic = ({
       await Promise.all(
         updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { groupOrder: p.groupOrder }))
       );
-      toast.success('顺序已保存 / Order saved');
     } catch (err: any) {
       handleError(err, '保存排序失败');
+      throw err;
     }
   }, [activeGroupPhotos, handleError]);
 
