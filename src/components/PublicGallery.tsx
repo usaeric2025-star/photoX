@@ -45,6 +45,7 @@ interface PublicGalleryProps {
   onClearSelection?: () => void;
   isMultiSelect?: boolean;
   onToggleMultiSelect?: () => void;
+  setIsMultiSelect?: (val: boolean) => void;
   columns?: 2 | 3 | 5;
   setColumns?: (val: 2 | 3 | 5) => void;
   cloudCount?: number | null;
@@ -188,7 +189,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
           onRefresh={props.onRefresh}
           onToggleMultiSelect={() => activeSetIsMultiSelect(!activeIsMultiSelect)}
           clearSelection={activeClearSelection}
-          setIsMultiSelect={activeSetIsMultiSelect}
+          setIsMultiSelect={props.setIsMultiSelect || activeSetIsMultiSelect}
           onAddPhoto={props.onAddPhoto}
           onSetLang={setLang}
           onExit={props.onExit || handleLoginClick}

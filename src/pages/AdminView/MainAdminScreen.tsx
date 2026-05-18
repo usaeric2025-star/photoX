@@ -102,6 +102,7 @@ export const MainAdminScreen: React.FC<Props> = ({
              onCancelAnalyze={onCancelAnalyze}
              isAnalyzing={isAnalyzing}
              isMultiSelect={isMultiSelect}
+             setIsMultiSelect={setIsMultiSelect}
              selectedIds={selectedIds}
              onToggleSelection={(id) => {
                if (selectedIds.includes(id)) {
