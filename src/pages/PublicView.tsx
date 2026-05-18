@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -122,19 +122,66 @@ export default function PublicView() {
     }
   }, [isInitialLoading, hasInitialLoaded]);
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     try {
       await refetch();
     } catch (e) {
       console.error("Manual refetch failed", e);
     }
-  };
+  }, [refetch]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const handlePhotoClick = useCallback((photo: Photo) => {
+    // Implement click logic
+  }, []);
+
+  const handleTogglePinned = useCallback(async (photo: Photo) => {
+    const newStatus = !photo.isPinned;
+    
+    // Identify affected photos (the photo itself + any other photos in the same group)
+    const sPhotos = safeArray(photos);
+    const affectedPhotos = photo.groupId 
+      ? sPhotos.filter(p => p.groupId === photo.groupId)
+      : [photo];
+      
+    const sAffected = safeArray(affectedPhotos);
+    
+    try {
+      await Promise.all(
+        sAffected.map(p => 
+          updatePhotoMutation({ id: p.id, updates: { isPinned: newStatus } })
+        )
+      );
+    } catch (e: unknown) {
+      console.error("togglePinned", e);
+    }
+  }, [photos, updatePhotoMutation]);
+
+  const handleToggleHidden = useCallback(async (photo: Photo) => {
+    try {
+      await updatePhotoMutation({ id: photo.id, updates: { is_hidden: !photo.is_hidden } });
+    } catch (e: unknown) {
+      console.error("toggleHidden", e);
+    }
+  }, [updatePhotoMutation]);
+
+  const handleSetGroupCover = useCallback(async (id: string, groupId: string) => {
+    const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
+    try {
+      await Promise.all(
+        groupPhotos.map(p => 
+          updatePhotoMutation({ id: p.id, updates: { isGroupCover: p.id === id } })
+        )
+      );
+    } catch (e: unknown) {
+      console.error("setGroupCover", e);
+    }
+  }, [photos, updatePhotoMutation]);
 
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
@@ -170,46 +217,9 @@ export default function PublicView() {
                 totalCount={countData}
                 initialHash={hash}
                 initialGroupId={groupId}
-                onTogglePinned={async (photo: import('../types').Photo) => {
-                  const newStatus = !photo.isPinned;
-                  
-                  // Identify affected photos (the photo itself + any other photos in the same group)
-                  const sPhotos = safeArray(photos);
-                  const affectedPhotos = photo.groupId 
-                    ? sPhotos.filter(p => p.groupId === photo.groupId)
-                    : [photo];
-                    
-                  const sAffected = safeArray(affectedPhotos);
-                  
-                  try {
-                    await Promise.all(
-                      sAffected.map(p => 
-                        updatePhotoMutation({ id: p.id, updates: { isPinned: newStatus } })
-                      )
-                    );
-                  } catch (e: unknown) {
-                    console.error("togglePinned", e);
-                  }
-                }}
-                onToggleHidden={async (photo: import('../types').Photo) => {
-                  try {
-                    await updatePhotoMutation({ id: photo.id, updates: { is_hidden: !photo.is_hidden } });
-                  } catch (e: unknown) {
-                    console.error("toggleHidden", e);
-                  }
-                }}
-                onSetGroupCover={async (id: string, groupId: string) => {
-                  const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
-                  try {
-                    await Promise.all(
-                      groupPhotos.map(p => 
-                        updatePhotoMutation({ id: p.id, updates: { isGroupCover: p.id === id } })
-                      )
-                    );
-                  } catch (e: unknown) {
-                    console.error("setGroupCover", e);
-                  }
-                }}
+                onTogglePinned={handleTogglePinned}
+                onToggleHidden={handleToggleHidden}
+                onSetGroupCover={handleSetGroupCover}
               />
             </ErrorBoundary>
           </motion.div>

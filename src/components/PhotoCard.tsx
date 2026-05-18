@@ -28,12 +28,13 @@ interface PhotoCardProps {
   onLongPressEnd: () => void;
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
+  onToggleHidden?: (photo: Photo) => void;
 }
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   photo, index, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
-  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned
+  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden
 }) => {
   if (!photo) return null;
 
@@ -188,6 +189,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
            className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''} z-10`}
          >
            <Heart size={12} className={photo.isPinned ? 'fill-current' : ''} />
+         </button>
+      )}
+
+      {isAdminMode && onToggleHidden && (
+         <button 
+           onClick={(e) => {
+             e.stopPropagation();
+             onToggleHidden(photo);
+           }}
+           className={`absolute top-9 right-2 bg-black/50 p-1 rounded-full text-white z-10`}
+         >
+           {photo.is_hidden ? <Eye size={12} /> : <EyeOff size={12} />}
          </button>
       )}
       

@@ -106,7 +106,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
      }
   }, [deletePhoto, setEditPhotoId, resetAddState, handleError]);
 
-  const togglePinned = async (photo: Photo) => {
+  const togglePinned = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
     const newStatus = !photo.isPinned;
     const affectedIds = photo.groupId 
@@ -114,10 +114,11 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       : [photo.id];
     try {
       await updatePhotosBulk(affectedIds, { isPinned: newStatus });
+      onRefresh();
     } catch (e: any) {
       handleError(e, 'toggle-pinned');
     }
-  };
+  }, [checkSyncLock, photos, updatePhotosBulk, handleError, onRefresh]);
 
   const toggleHidden = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
@@ -126,24 +127,32 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     try {
       await updatePhoto(photo.id, { is_hidden: nextValue });
       toast.success(`已${nextValue ? '隐藏' : '显示'}产品`);
+      onRefresh(); // Trigger refresh
     } catch (e: any) {
       handleError(e, 'toggle-hidden');
     }
-  }, [checkSyncLock, updatePhoto, handleError]);
+  }, [checkSyncLock, updatePhoto, handleError, onRefresh]);
 
-  const setGroupCover = async (id: string, groupId: string) => {
+  const setGroupCover = useCallback(async (id: string, groupId: string) => {
     if (checkSyncLock()) return;
     const groupPhotos = photos.filter((p: Photo) => p.groupId === groupId);
+    
+    toast.loading('正在设置封面...');
     try {
       await Promise.all(
         groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
       );
+      toast.dismiss();
+      toast.success('群组封面设置成功');
+      onRefresh();
     } catch (e: any) {
+      toast.dismiss();
+      console.error('setGroupCover error', e);
       handleError(e, 'set-group-cover');
     }
-  };
+  }, [checkSyncLock, photos, updatePhoto, handleError, onRefresh]);
 
-  return {
+  return useMemo(() => ({
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     loadingType, withLoading, cloudCount,
@@ -159,5 +168,21 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
     performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, handleError
-  };
+  }), [
+    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
+    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
+    loadingType, withLoading, cloudCount,
+    aiDebugInfo, abortAnalysis, batchProgress,
+    settings, viewMode, setViewMode, onRefresh,
+    photos, categories, tags, manufacturers, tagIdToNameMap,
+    handleSingleAiAnalyze, handleTranslate, handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal,
+    handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,
+    saveNewPhoto, saveBatchEdit, updateTag, deleteTag, updateCategory, deleteCategory,
+    addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
+    addTag, quickAddTag, quickAddManufacturer, updatePhoto,
+    formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
+    activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
+    checkSyncLock, togglePinned, toggleHidden, setGroupCover,
+    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, handleError
+  ]);
 };

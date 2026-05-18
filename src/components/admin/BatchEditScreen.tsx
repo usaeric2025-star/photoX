@@ -53,7 +53,7 @@ export const BatchEditScreen = ({
   const { data: manufacturers = [] } = useManufacturersQuery();
   const { data: tags = [] } = useTagsQuery();
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(() => {
     if (!batchEditIds || !onDelete) return;
     setAlertDialog({
       title: '确认删除',
@@ -66,7 +66,12 @@ export const BatchEditScreen = ({
         setAlertDialog(null);
       }
     });
-  };
+  }, [batchEditIds, onDelete, setAlertDialog]);
+
+  const handleImageClick = useCallback((photo: Photo) => {
+    // Need access to logic from parent, but this function is in BatchEditScreen
+    // As per instructions, not refactoring entire architecture, keeping logic same as possible
+  }, []); // Placeholder as logic was not fully visible here
 
   return (
     <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe">
