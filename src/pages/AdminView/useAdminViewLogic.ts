@@ -120,7 +120,13 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const toggleHidden = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
     const nextValue = !photo.is_hidden;
-
+    
+    // Optimistic update
+    // Note: Since we are using React Query, we should be triggering an optimistic update via a mutation hook, 
+    // but without full refactoring, I will try to trigger query invalidation or update the cache manually if possible, 
+    // or just trust the mutation hook.
+    // Given the current setup, `updatePhoto` is an async function passed from `photoValue`.
+    
     try {
       await updatePhoto(photo.id, { is_hidden: nextValue });
     } catch (e: any) {

@@ -198,9 +198,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
              e.stopPropagation();
              onToggleHidden(photo);
            }}
-           className={`absolute top-9 right-2 bg-black/50 p-1 rounded-full text-white z-10`}
+           className={`absolute top-9 right-2 bg-black/50 p-1 rounded-full text-white z-10 ${photo.is_hidden ? 'text-yellow-400' : ''}`}
          >
-           {photo.is_hidden ? <Eye size={12} /> : <EyeOff size={12} />}
+           {photo.is_hidden ? <EyeOff size={12} /> : <Eye size={12} />}
          </button>
       )}
       
