@@ -312,6 +312,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
             categories={categories}
             manufacturers={manufacturers || []}
             onToggleHidden={props.onToggleHidden}
+            onAiAnalyze={props.onAiAnalyze}
+            onCancelAnalyze={props.onCancelAnalyze}
+            isAnalyzing={props.isAnalyzing}
           />
         )}
       </AnimatePresence>

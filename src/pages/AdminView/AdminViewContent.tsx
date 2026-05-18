@@ -228,6 +228,26 @@ export const AdminViewContent: React.FC<Props> = ({
           onEditPhoto={(id) => logic.setEditPhotoId(id as string)}
           onLoadMore={handleLoadMoreCallback}
           hasNextPage={!!hasNextPage}
+          onDeletePhotos={(ids) => {
+             if (logic.checkSyncLock()) return;
+             logic.handleDeletePhoto(ids);
+             logic.setSelectedIds([]);
+             logic.setIsMultiSelect(false);
+          }}
+          onGroupPhotos={async (ids) => {
+             if (logic.checkSyncLock()) return;
+             await logic.handleGroupPhotos(ids);
+             logic.setSelectedIds([]);
+             logic.setIsMultiSelect(false);
+          }}
+          onBatchEdit={(ids) => {
+             if (logic.checkSyncLock()) return;
+             logic.setBatchEditIds(ids);
+          }}
+          onAiAnalyze={logic.handleSingleAiAnalyze}
+          onBatchAiAnalyze={logic.handleBatchAiIdentify}
+          onCancelAnalyze={logic.abortAnalysis}
+          isAnalyzing={logic.loadingType === 'analyzing'}
           onImport={() => {
             if (logic.checkSyncLock()) return;
             const input = document.createElement('input');

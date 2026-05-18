@@ -32,6 +32,13 @@ interface Props {
   onImport: () => void;
   t: any;
   loginWithGoogle: () => Promise<any>;
+  onDeletePhotos?: (ids: string[]) => void;
+  onGroupPhotos?: (ids: string[]) => void;
+  onBatchEdit?: (ids: string[]) => void;
+  onAiAnalyze?: (photo: Photo) => Promise<any>;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
+  onCancelAnalyze?: () => void;
+  isAnalyzing?: boolean;
 }
 
 export const MainAdminScreen: React.FC<Props> = ({
@@ -39,7 +46,8 @@ export const MainAdminScreen: React.FC<Props> = ({
   handleBatchAiIdentifyTrigger, onManageClick, onRefresh, cloudCount,
   lang, loadingType, batchProgress, categories, tags,
   onTogglePinned, onToggleHidden, onSetGroupCover, settings,
-  columns, setColumns, user, onEditPhoto, onLoadMore, hasNextPage, onImport, t, loginWithGoogle
+  columns, setColumns, user, onEditPhoto, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
+  onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, isAnalyzing
 }) => {
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
@@ -81,6 +89,23 @@ export const MainAdminScreen: React.FC<Props> = ({
              onEditPhoto={onEditPhoto}
              onLoadMore={onLoadMore}
              hasMore={hasNextPage}
+             onDeletePhotos={onDeletePhotos}
+             onGroupPhotos={onGroupPhotos}
+             onBatchEdit={onBatchEdit}
+             onAiAnalyze={onAiAnalyze}
+             onBatchAiAnalyze={onBatchAiAnalyze}
+             onCancelAnalyze={onCancelAnalyze}
+             isAnalyzing={isAnalyzing}
+             isMultiSelect={isMultiSelect}
+             selectedIds={selectedIds}
+             onToggleSelection={(id) => {
+               if (selectedIds.includes(id)) {
+                 setSelectedIds(selectedIds.filter(pid => pid !== id));
+               } else {
+                 setSelectedIds([...selectedIds, id]);
+               }
+             }}
+             onClearSelection={() => setSelectedIds([])}
           />
           <FloatingActionButton 
             onClick={onImport}
