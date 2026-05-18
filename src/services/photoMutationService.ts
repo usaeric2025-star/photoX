@@ -107,12 +107,14 @@ export const deletePhotosBatch = async (
   
   const total = sPhotos.length;
   const BATCH_SIZE = PAGINATION.BATCH_SIZE;
+  const affectedGroupIds = new Set<string>();
   
   for (let i = 0; i < sPhotos.length; i += BATCH_SIZE) {
     if (signal?.aborted) throw new Error('Operation aborted');
     
     const chunk = sPhotos.slice(i, i + BATCH_SIZE);
     const ids = chunk.map(p => p.id);
+    chunk.forEach(p => { if (p.groupId) affectedGroupIds.add(p.groupId); });
     
     const { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
@@ -147,6 +149,21 @@ export const deletePhotosBatch = async (
     if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
   }
   
+  // Check affected groups and dissolve if only <=1 photo remains
+  if (affectedGroupIds.size > 0) {
+    const { ungroupPhotos } = await import('./photo/photoMaintenanceService');
+    for (const groupId of affectedGroupIds) {
+      const { data: remaining } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select('id')
+        .eq('group_id', groupId);
+        
+      if (remaining && remaining.length <= 1) {
+        await ungroupPhotos(groupId);
+      }
+    }
+  }
+  
   photoCache.clear();
 };
 
@@ -168,7 +185,9 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
 };
 
 export const groupPhotos = async (photoIds: string[]) => {
-  if (photoIds.length === 0) return;
+  if (photoIds.length <= 1) {
+    throw new Error('至少需要选择两张照片才能成组');
+  }
   const groupId = crypto.randomUUID();
   return updatePhotosGroupInCloud(photoIds, { 
     group_id: groupId,

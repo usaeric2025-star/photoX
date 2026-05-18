@@ -226,14 +226,23 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
     } else if (!groupsSeen.has(p.groupId)) {
       groupsSeen.add(p.groupId);
       const groupList = groups.get(p.groupId) || [];
-      const sorted = sortGroupPhotos(groupList);
-      const cover = { ...sorted[0] };
-      cover._time = groupMaxTime.get(p.groupId)!;
-      representatives.push(cover);
+      if (groupList.length <= 1) {
+        if (groupList[0]) {
+          representatives.push({ ...groupList[0], groupId: undefined, isGroupCover: false } as Photo);
+        }
+      } else {
+        const sorted = sortGroupPhotos(groupList);
+        const cover = { ...sorted[0] };
+        cover._time = groupMaxTime.get(p.groupId)!;
+        representatives.push(cover);
+      }
     }
   });
   
   representatives.sort((a, b) => {
+    if (a.is_hidden && !b.is_hidden) return 1;
+    if (!a.is_hidden && b.is_hidden) return -1;
+
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
 
