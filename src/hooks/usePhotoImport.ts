@@ -222,6 +222,7 @@ export const usePhotoImport = (
                  }
                } catch (err) {
                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+                 throw err;
                } finally {
                  updateAiProgress();
                }
@@ -229,12 +230,12 @@ export const usePhotoImport = (
           } else if (user) {
             tasks.push(savePhotoToCloud(user.id, newPhoto).then(() => {
               queryClient.invalidateQueries({ queryKey: ['photos'], refetchType: 'all' });
-            }).catch(e => handleError(e, "云端同步失败")));
+            }));
           }
         } catch (err) {
           console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
           handleError(err, `处理文件失败: ${file.name}`);
-          toast.error(`上传失败: ${file.name} - ${err instanceof Error ? err.message : '未知错误'}`);
+          // Removed individual toast.error
           failCount++;
           failedFiles.push(file.name);
         }
@@ -243,6 +244,7 @@ export const usePhotoImport = (
       // Await all background tasks (AI/Uploads)
       console.log(`[usePhotoImport] Awaiting ${tasks.length} background tasks...`);
       const results = await Promise.allSettled(tasks);
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
       console.log(`[usePhotoImport] All background tasks finished. Results:`, results);
 
       // Check for failures in tasks themselves
@@ -251,7 +253,8 @@ export const usePhotoImport = (
           failCount++;
           // We don't have easy access to the filename here, but we can log it
           console.error(`[usePhotoImport] Task ${idx} failed:`, res.reason);
-          toast.error(`同步失败: ${res.reason instanceof Error ? res.reason.message : '未知原因'}`);
+          // Removed individual toast.error
+          failedFiles.push(`后台任务 ${idx + 1}`);
         }
       });
 
