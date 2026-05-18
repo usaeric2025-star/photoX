@@ -229,7 +229,12 @@ export const usePhotoImport = (
           } else if (user) {
             tasks.push(
               savePhotoToCloud(user.id, newPhoto)
-                .then(() => {
+                .then((finalPhotoId) => {
+                  // Update UI with real ID
+                  const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                  if (index !== -1) {
+                    photosRef.current[index].id = finalPhotoId;
+                  }
                   queryClient.invalidateQueries({ queryKey: ['photos'], refetchType: 'all' });
                 })
                 .catch((e) => {

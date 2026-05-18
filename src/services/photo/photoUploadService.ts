@@ -26,25 +26,21 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     }
   }
 
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
+  // const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(photo.id);
   
   normalizeDimensionsBeforeSave(photo.dimensions);
 
   const payload: Record<string, unknown> = mapToDb({
     ...photo,
     userId: session.user.id,
-  }, !isUUID);
+  }, true); // Always map to DB as if new
 
-  if (isUUID) {
-    payload.id = photo.id;
-  }
+  // Explicitly remove id from payload to let DB generate UUID
+  delete payload.id;
 
   let { data: savedPhoto, error: dbError } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .upsert(payload, { 
-      onConflict: 'id',
-      ignoreDuplicates: false 
-    })
+    .insert(payload) // Use insert instead of upsert for new records
     .select('id')
     .maybeSingle();
 
