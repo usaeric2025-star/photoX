@@ -166,7 +166,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
           setIsMultiSelect={activeSetIsMultiSelect}
           onAddPhoto={props.onAddPhoto}
           onSetLang={setLang}
-          onExit={handleLoginClick}
+          onExit={props.onExit || handleLoginClick}
           onLogin={props.onLogin}
           onOpenSettings={props.onOpenSettings}
         />

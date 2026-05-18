@@ -27,7 +27,6 @@ export const useAdminDataPrep = () => {
   const navigate = useNavigate();
 
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminDialogs();
-  const [activeScreen, setActiveScreen] = useState<'home' | 'manage' | 'login'>('home');
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);
   const [batchEditIds, setBatchEditIds] = useState<string[] | null>(null);
   const { loadingState: loadingType, setLoadingState: setLoadingType, withLoading } = useLoading();
@@ -37,7 +36,7 @@ export const useAdminDataPrep = () => {
   const [accessPasscode, setAccessPasscode] = useState('');
   const [customModel, setCustomModel] = useState('gemini-1.5-flash');
 
-  const { filterCatId, filterTagIds, debouncedSearchQuery, appLang } = useGalleryStore();
+  const { filterCatId, filterTagIds, debouncedSearchQuery, appLang, activeScreen, setActiveScreen } = useGalleryStore();
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
