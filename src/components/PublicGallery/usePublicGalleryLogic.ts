@@ -9,6 +9,7 @@ import { filterPhotos, groupPhotos } from '../../lib/filters';
 import { isValidPhoto } from '../../lib/typeGuard';
 import { toast } from 'sonner';
 import { getPhotoDisplayName } from '../../lib/ui-helpers';
+import { saveData, loadData } from '../../utils/indexedDB';
 
 export const usePublicGalleryLogic = (props: {
   photos: Photo[];
@@ -221,22 +222,47 @@ export const usePublicGalleryLogic = (props: {
   }, [onLoadMore, hasMore, isSyncing]);
 
   const [tagStats, setTagStats] = useState<Record<string, number>>({});
+  const hasLoadedStats = useRef(false);
 
-  // Capture global tag counts from the widest available set (usually early on load)
+  // Daily Stability: Load or Calculate tag stats only once per day
   useEffect(() => {
-    if (localPhotos.length > 0 && (!selectedCatCode && !selectedTagIds.length)) {
-      const counts: Record<string, number> = {};
-      localPhotos.forEach(p => {
-        if (p.tagIds && Array.isArray(p.tagIds)) {
-          p.tagIds.forEach(tid => {
-            const strId = String(tid);
-            counts[strId] = (counts[strId] || 0) + 1;
-          });
+    if (hasLoadedStats.current) return;
+
+    const syncStats = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      try {
+        const cached = await loadData('daily_tag_stats');
+        
+        // If we have a valid cache for today, use it and stop
+        if (cached && cached.date === today) {
+          setTagStats(cached.stats);
+          hasLoadedStats.current = true;
+          return;
         }
-      });
-      setTagStats(counts);
-    }
-  }, [localPhotos, selectedCatCode, selectedTagIds]);
+
+        // If no cache or cache is old, and we have enough photos to make a meaningful calculation
+        if (localPhotos.length > 20) {
+          const counts: Record<string, number> = {};
+          localPhotos.forEach(p => {
+            if (p.tagIds && Array.isArray(p.tagIds)) {
+              p.tagIds.forEach(tid => {
+                const strId = String(tid);
+                counts[strId] = (counts[strId] || 0) + 1;
+              });
+            }
+          });
+          
+          setTagStats(counts);
+          await saveData('daily_tag_stats', { date: today, stats: counts });
+          hasLoadedStats.current = true;
+        }
+      } catch (err) {
+        console.error("Daily stats sync failed", err);
+      }
+    };
+
+    syncStats();
+  }, [localPhotos.length]); // Only retry calculation if photo count changes significantly early on
 
   return {
     settings, user, isSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,

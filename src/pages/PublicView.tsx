@@ -94,14 +94,24 @@ export default function PublicView() {
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
 
   const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
-  const isInitialLoading = isPhotosLoading || isSettingsLoading;
+  const isInitialLoading = isPhotosLoading || isSettingsLoading || !minTimeElapsed;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeElapsed(true), 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     setIsSettingsLoading(true);
-    fetchSettings().then(s => {
+    fetchSettings().then(async (s) => {
       setSettings(s as AppSettings);
-      saveData('product_settings', s);
+      try {
+        await saveData('product_settings', s);
+      } catch (err) {
+        console.error("saveData to indexedDB failed", err);
+      }
     }).catch(e => console.error("fetchSettings", e))
       .finally(() => setIsSettingsLoading(false));
   }, []);
@@ -113,7 +123,11 @@ export default function PublicView() {
   }, [isInitialLoading, hasInitialLoaded]);
 
   const handleRefresh = async () => {
-    await refetch();
+    try {
+      await refetch();
+    } catch (e) {
+      console.error("Manual refetch failed", e);
+    }
   };
 
   const handleLoadMore = () => {

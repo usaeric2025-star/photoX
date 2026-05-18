@@ -97,7 +97,7 @@ const virtuosoComponents = { Footer: VirtuosoGridFooter };
 export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   const logic = usePublicGalleryLogic(props);
   const {
-    settings, user, isSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
+    settings, user, isSyncing: rawIsSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
     selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, isStaffMode, setIsStaffMode, activeSelectedIds,
     activeIsMultiSelect, activeToggleSelection, activeClearSelection, activeSetIsMultiSelect,
@@ -107,6 +107,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
     handleLoadMore, navigate, sortedTags
   } = logic;
+
+  // Only show syncing state if it lasts longer than 150ms to prevent skeleton flash
+  const [isSyncing, setIsSyncing] = useState(false);
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (rawIsSyncing) {
+      timer = setTimeout(() => setIsSyncing(true), rawIsSyncing === true && gridPhotos.length === 0 ? 0 : 800);
+    } else {
+      setIsSyncing(false);
+    }
+    return () => clearTimeout(timer);
+  }, [rawIsSyncing, gridPhotos.length]);
 
   const [showPassPrompt, setShowPassPrompt] = useState(false);
   const [passInput, setPassInput] = useState('');

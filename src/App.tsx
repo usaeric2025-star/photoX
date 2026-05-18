@@ -96,7 +96,7 @@ export default function AppRoutes() {
       if (!session && user) {
         console.warn('Session 丢失，建议重新登录');
       }
-    });
+    }).catch(e => console.error("getSession error", e));
 
     return () => {
         window.removeEventListener('error', handleGlobalError);

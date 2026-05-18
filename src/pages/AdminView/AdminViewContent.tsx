@@ -64,7 +64,12 @@ export const AdminViewContent: React.FC<Props> = ({
          <ErrorLogViewer />
       </div>
 
-      <React.Suspense fallback={<div className="flex items-center justify-center h-screen bg-brand-bg"><div className="w-12 h-12 border-4 border-brand-gold/20 border-t-brand-gold rounded-full animate-spin" /></div>}>
+      <React.Suspense fallback={
+        <div className="flex flex-col items-center justify-center h-screen bg-brand-bg gap-4">
+          <div className="w-8 h-8 border-[1px] border-brand-navy/10 border-t-brand-gold rounded-full animate-spin" />
+          <span className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-widest">Loading Component</span>
+        </div>
+      }>
         {logic.batchEditIds && (
           <BatchEditScreen 
             resetAddState={logic.resetAddState}

@@ -78,6 +78,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
       getGroupById(activeGroupId).then(data => {
         if (data) setGroupData(data);
         setIsGroupDataLoading(false);
+      }).catch(err => {
+        console.error("getGroupById failed in GroupDetailView", err);
+        setIsGroupDataLoading(false);
       });
 
       // 2. In public mode, fetch all group photos directly to bypass pagination

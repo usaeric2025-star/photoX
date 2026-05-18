@@ -51,7 +51,13 @@ export const usePhotoLightboxLogic = ({
         m.getGroupById(photo.groupId!).then(data => {
           setGroupData(data);
           setIsGroupDataLoading(false);
-        }).catch(() => setIsGroupDataLoading(false));
+        }).catch(err => {
+          console.error("fetch group by id failed", err);
+          setIsGroupDataLoading(false);
+        });
+      }).catch(err => {
+        console.error("lazy load groupService failed", err);
+        setIsGroupDataLoading(false);
       });
     } else {
       setGroupData(null);

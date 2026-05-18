@@ -226,7 +226,9 @@ export const usePhotoImport = (
         }
       } 
       
-      saveData('product_photos', photosRef.current);
+      saveData('product_photos', photosRef.current).catch(err => {
+        console.error("Failed to save photos to indexedDB", err);
+      });
       setIsSyncing(false);
       
       if (successCount > 0 || duplicateCount > 0 || failCount > 0) {
