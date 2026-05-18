@@ -154,7 +154,7 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
 
 export const groupPhotos = async (photoIds: string[]) => {
   if (photoIds.length === 0) return;
-  const groupId = `group_${Date.now()}`;
+  const groupId = crypto.randomUUID();
   return updatePhotosGroupInCloud(photoIds, { 
     group_id: groupId,
     is_group_cover: false 
