@@ -35,7 +35,7 @@ export const analyzeProductPhoto = async (
   try {
      processedBase64Image = await convertToJpegAndResize(base64Image, 1000);
   } catch (e) {
-     console.warn('Image conversion failed, falling back to original image', e);
+     console.debug('Image conversion failed, falling back to original image');
   }
 
   const categoriesJson = (categories || []).map(c => ({

@@ -37,9 +37,9 @@ export const convertToJpegAndResize = async (imageBase: string, maxWidth: number
         resolve(imageBase);
       }
     };
-    img.onerror = () => {
-        console.error('Image load failed for conversion.');
-        reject(new Error('Image conversion failed'));
+    img.onerror = (e) => {
+        // Fallback is handled in calling code, don't spam console
+        reject(new Error(`Image conversion failed`));
     };
     img.src = imageBase;
   });
