@@ -6,7 +6,7 @@ import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAdminMode } from '../../hooks/useAdminMode';
+import { usePermission } from '../../hooks/usePermission';
 
 export interface PhotoLightboxProps {
   photo: Photo | null;
@@ -21,7 +21,6 @@ export interface PhotoLightboxProps {
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
   isStaffMode: boolean;
-  isAdminMode?: boolean;
   contactWhatsApp: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
@@ -35,12 +34,11 @@ export interface PhotoLightboxProps {
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
     photo, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-    isStaffMode, isAdminMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
+    isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
     onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos
   } = props;
 
-  // Use isAdminMode from props, not the hook
-  const effectiveIsAdminMode = isAdminMode !== undefined ? isAdminMode : useAdminMode();
+  const { isAdmin } = usePermission();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -107,7 +105,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        onEditPhoto={effectiveIsAdminMode ? onEditPhoto : undefined}
+        onEditPhoto={isAdmin ? onEditPhoto : undefined}
         handleDownload={handleDownload}
         t={t}
         retryImageLoad={retryImageLoad}
@@ -128,12 +126,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
           manufacturers={manufacturers}
           tagMap={tagMap}
           handleShare={handleShare}
-          onAiAnalyze={effectiveIsAdminMode ? onAiAnalyze : undefined}
+          onAiAnalyze={isAdmin ? onAiAnalyze : undefined}
           onCancelAnalyze={onCancelAnalyze}
-          onEditPhoto={effectiveIsAdminMode ? onEditPhoto : undefined}
-          onToggleHidden={effectiveIsAdminMode ? onToggleHidden : undefined}
-          onUngroup={effectiveIsAdminMode ? onUngroup : undefined}
-          onSetGroupCover={effectiveIsAdminMode ? onSetGroupCover : undefined}
+          onEditPhoto={isAdmin ? onEditPhoto : undefined}
+          onToggleHidden={isAdmin ? onToggleHidden : undefined}
+          onUngroup={isAdmin ? onUngroup : undefined}
+          onSetGroupCover={isAdmin ? onSetGroupCover : undefined}
           contactWhatsApp={contactWhatsApp}
         />
       )}

@@ -355,27 +355,26 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
 
       <AnimatePresence>
         {lightboxIndex !== null && displayPhotos[lightboxIndex] && (
-          <PhotoLightbox 
-            photo={displayPhotos[lightboxIndex]}
-            displayPhotos={displayPhotos}
-            index={lightboxIndex}
-            onClose={() => setLightboxIndex(null)}
-            onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
-            onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
-            isStaffMode={isStaffMode}
-            isAdminMode={props.isAdminMode}
-            contactWhatsApp={handleContactWhatsApp}
-            onEditPhoto={(photo) => props.onEditPhoto?.(photo.id)}
-            lang={lang}
-            t={t}
-            tagMap={tagMap}
-            categories={categories}
-            manufacturers={manufacturers || []}
-            onToggleHidden={props.onToggleHidden}
-            onAiAnalyze={props.onAiAnalyze}
-            onCancelAnalyze={props.onCancelAnalyze}
-            isAnalyzing={props.isAnalyzing}
-          />
+            <PhotoLightbox 
+              photo={displayPhotos[lightboxIndex]}
+              displayPhotos={displayPhotos}
+              index={lightboxIndex}
+              onClose={() => setLightboxIndex(null)}
+              onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
+              onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
+              isStaffMode={isStaffMode}
+              contactWhatsApp={handleContactWhatsApp}
+              onEditPhoto={(photo) => props.onEditPhoto?.(photo.id)}
+              lang={lang}
+              t={t}
+              tagMap={tagMap}
+              categories={categories}
+              manufacturers={manufacturers || []}
+              onToggleHidden={props.onToggleHidden}
+              onAiAnalyze={props.onAiAnalyze}
+              onCancelAnalyze={props.onCancelAnalyze}
+              isAnalyzing={props.isAnalyzing}
+            />
         )}
       </AnimatePresence>
     </motion.div>

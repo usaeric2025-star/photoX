@@ -4,7 +4,7 @@ import { X, Layers, Heart, EyeOff, Eye, Check, Image as ImageIcon } from 'lucide
 import { Skeleton } from './ui/Skeleton';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';
-import { useAdminMode } from '../hooks/useAdminMode';
+import { usePermission } from '../hooks/usePermission';
 
 const loadedImagesCache = new Set<string>();
 
@@ -36,7 +36,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden
 }) => {
-  const isAdminMode = useAdminMode();
+  const { isAdmin } = usePermission();
+  const isAdminMode = isAdmin;
   if (!photo) return null;
 
   const mfrName = useMemo(() => {
@@ -71,7 +72,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     return getCacheBustedImageUrl(photo, 'thumb');
   }, [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]);
 
-  const cardSelectedClasses = isAdminMode && isMultiSelect && isSelected 
+  const cardSelectedClasses = isAdmin && isMultiSelect && isSelected 
     ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
     : 'md:hover:scale-[1.02] active:scale-[0.95]';
 
@@ -83,19 +84,19 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     <div 
       onContextMenu={(e) => {
         e.preventDefault();
-        if (isAdminMode) return;
+        if (isAdmin) return;
         shareSinglePhoto(photo);
         if ('vibrate' in navigator) navigator.vibrate(50);
       }}
-      onMouseDown={() => isAdminMode && onLongPressStart(photo.id)}
+      onMouseDown={() => isAdmin && onLongPressStart(photo.id)}
       onMouseUp={onLongPressEnd}
       onMouseLeave={onLongPressEnd}
-      onTouchStart={() => isAdminMode && onLongPressStart(photo.id)}
+      onTouchStart={() => isAdmin && onLongPressStart(photo.id)}
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onTouchCancel={onLongPressEnd}
       onClick={() => {
-        if (isAdminMode && isMultiSelect && onToggleSelection) {
+        if (isAdmin && isMultiSelect && onToggleSelection) {
           onToggleSelection(photo.id);
           return;
         }
@@ -137,7 +138,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
+        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isAdmin && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
           loadedImagesCache.add(photo.id);
           setIsImageLoaded(true);
@@ -149,7 +150,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       />
 
       {/* Selected Indicator (Blue Overlay + Icon) */}
-      {isAdminMode && isMultiSelect && (
+      {isAdmin && isMultiSelect && (
         <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
            <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
               {isSelected && <Check size={16} className="text-white sm:size-20" />}
@@ -181,7 +182,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         </div>
       )}
 
-      {isAdminMode && onTogglePinned && (
+      {isAdmin && onTogglePinned && (
          <button 
            onClick={(e) => {
              e.stopPropagation();
@@ -193,7 +194,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
          </button>
       )}
 
-      {isAdminMode && onToggleHidden && (
+      {isAdmin && onToggleHidden && (
          <button 
            onClick={(e) => {
              e.stopPropagation();
