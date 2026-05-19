@@ -47,9 +47,11 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
           {manufacturer.zh || manufacturer.name}
         </span>
-        <span className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-tighter select-none">
-          {manufacturer.en || 'No English'}
-        </span>
+        {manufacturer.en && (
+          <span className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-tighter select-none">
+            {manufacturer.en}
+          </span>
+        )}
       </div>
 
       <AnimatePresence>

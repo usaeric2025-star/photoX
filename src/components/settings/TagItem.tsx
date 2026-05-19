@@ -90,9 +90,11 @@ export const TagItem: React.FC<TagItemProps> = ({
           {isPinned && <Heart size={10} className="text-brand-gold fill-brand-gold shrink-0" />}
           {tag.zh || tag.name}
         </span>
-        <span className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-tighter select-none">
-          {tag.en || 'No English'}
-        </span>
+        {tag.en && (
+          <span className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-tighter select-none">
+            {tag.en}
+          </span>
+        )}
       </div>
       
       <button 

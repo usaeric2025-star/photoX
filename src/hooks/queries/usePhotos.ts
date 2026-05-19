@@ -23,6 +23,7 @@ export const useInfinitePhotos = (filters: { categoryId?: string | null; tagId?:
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     staleTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });
 };
@@ -31,6 +32,7 @@ export const usePhotoCountQuery = (filters: { categoryId?: string | null; tagId?
   return useQuery({
     queryKey: QUERY_KEYS.photoCount({ ...filters, isAdminMode }),
     queryFn: () => getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdminMode),
+    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });
 };
