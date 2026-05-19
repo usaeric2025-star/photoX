@@ -193,6 +193,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
             <div className="p-4 flex justify-center">
               <button 
                 onClick={async () => {
+                   console.log('DEBUG: Add photo clicked');
                    if (onAddPhotoToGroup) {
                      await onAddPhotoToGroup();
                    } else {

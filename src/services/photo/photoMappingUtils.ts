@@ -60,7 +60,11 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
         if (['isAnalyzing'].includes(key)) continue;
         
         if (FIELD_MAP[key]) {
-            dbUpdates[FIELD_MAP[key]] = value;
+            let valueToSave = value;
+            if ((key === 'groupId' || key === 'categoryId' || key === 'manufacturerId') && value === '') {
+                valueToSave = null;
+            }
+            dbUpdates[FIELD_MAP[key]] = valueToSave;
         } else {
             dbUpdates[key] = value;
         }

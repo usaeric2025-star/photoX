@@ -271,7 +271,7 @@ export const usePhotoImport = (
                }
             })(photoId, dataUrl, newPhoto));
           } else if (user) {
-            if (!newPhoto.id || newPhoto.id.startsWith('temp-')) {
+            if (!newPhoto.id) {
                 console.error('[usePhotoImport] Invalid photoId before upload:', newPhoto.id);
                 // We should probably not even attempt to upload if id is invalid
                 tasks.push(Promise.reject(new Error('Invalid photo ID')));
