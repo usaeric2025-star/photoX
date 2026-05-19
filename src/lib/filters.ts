@@ -228,7 +228,7 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
       const groupList = groups.get(p.groupId) || [];
       if (groupList.length <= 1) {
         if (groupList[0]) {
-          representatives.push({ ...groupList[0], groupId: undefined, isGroupCover: false } as Photo);
+          representatives.push({ ...groupList[0], groupId: undefined, isGroupCover: false, _time: groupMaxTime.get(p.groupId) || new Date(groupList[0].created_at).getTime() } as any);
         }
       } else {
         const sorted = sortGroupPhotos(groupList);
