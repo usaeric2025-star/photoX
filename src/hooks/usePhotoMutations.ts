@@ -95,7 +95,7 @@ export const usePhotoMutations = (
         try {
           await updatePhotoMut({ id, updates: finalUpdates });
         } catch (e: any) {
-          showError(e, "更新照片失败");
+          // Handled in mutation hook onError
         }
       }
     }

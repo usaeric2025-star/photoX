@@ -15,6 +15,9 @@ export const updatePhoto = async (
   updates: Partial<Photo>,
   setPhotos?: React.Dispatch<React.SetStateAction<Photo[]>>
 ): Promise<void> => {
+  if (!photoId || photoId.startsWith('temp-')) {
+    throw new Error('无效的照片ID，操作被终止');
+  }
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('NO_ACTIVE_SESSION');
 
