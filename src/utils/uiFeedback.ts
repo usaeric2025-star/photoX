@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { useErrorHandler } from './errorHandler';
+import { useErrorHandler, globalHandleError } from './errorHandler';
 
 export const withFeedback = async <T>(
   action: () => Promise<T>,
@@ -15,8 +15,7 @@ export const withFeedback = async <T>(
     if (handleError && errorContext) {
       handleError(error, errorContext);
     } else {
-      console.error(errorContext || 'Error in withFeedback:', error);
-      toast.error(errorContext ? `操作失败: ${errorContext}` : '操作失败');
+      globalHandleError(error, errorContext || '操作失败');
     }
     throw error;
   }

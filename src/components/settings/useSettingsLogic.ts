@@ -5,6 +5,7 @@ import { useGalleryStore } from '../../store';
 import { testAiConnection } from '../../services/geminiService';
 import { deduplicatePhotos } from '../../services/photoMutationService';
 import { normalizeTagName, normalizeManufacturerName } from '../../utils/stringHelper';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -26,6 +27,7 @@ export const useSettingsLogic = ({
   const { 
     setSettings, setPromptDialog, setAlertDialog, withLoading 
   } = useGalleryStore();
+  const { handleError } = useErrorHandler();
 
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -41,20 +43,9 @@ export const useSettingsLogic = ({
     setSaveTimer(timer);
   }, [saveSettings, saveTimer]);
 
-  const testConnection = async () => {
-    setTestResult({ loading: true });
-    const result = await testAiConnection(geminiApiKey, settings.provider || 'auto', customModel);
-    setTestResult(result);
-  };
-
-  const handleError = useCallback((error: any, context: string) => {
-    console.error(`[Error] ${context}:`, error);
-    toast.error(`${context}: ${error.message || String(error)}`);
-  }, []);
-
   const handleDeduplicate = useCallback(async () => {
     if (!user) {
-      toast.error('请先登录云端');
+      handleError(new Error('请先登录云端'), '操作失败');
       return;
     }
 

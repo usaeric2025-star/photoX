@@ -9,6 +9,7 @@ import { fetchSettings } from './services/settingService';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster, toast } from 'sonner';
+import { globalHandleError } from './utils/errorHandler';
 
 function AnimatedRoutes({ user }: { user: any }) {
   const location = useLocation();
@@ -79,10 +80,7 @@ export default function AppRoutes() {
             details.push(`${key}: ${decodeURIComponent(value.replace(/\+/g, ' '))}`);
         });
         
-        toast.error(`登录发生错误 (OAuth Error)`, {
-            description: details.join('\n'),
-            duration: 15000, // Longer duration for users to read
-        });
+        globalHandleError(new Error(details.join('\n')), '登录发生错误 (OAuth Error)');
         
         // Clear hash to prevent error showing up on refresh
         window.history.replaceState(null, '', window.location.pathname);

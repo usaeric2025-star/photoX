@@ -75,8 +75,9 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
 
     const CONCURRENCY = AI_CONFIG.CONCURRENCY;
     let completedCount = 0;
+    let duplicateCount = 0;
     
-    const processPhoto = async (photo: Photo): Promise<void> => {
+    const processPhoto = async (photo: Photo): Promise<boolean> => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
             controller.abort();
@@ -84,9 +85,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
         }, 60000);
         currentAnalysisControllers.current.set(taskId, { controller, timeoutId });
         const signal = controller.signal;
-        
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-        
+                
         try {
             const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
             const result = cleanObject(resRaw);
@@ -130,15 +129,29 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
                 updatedPhoto.id = finalId;
             }
 
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
+            // Optimistically update the UI smoothly
+            queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+              if (!old) return old;
+              return {
+                ...old,
+                pages: old.pages.map((page: any) => ({
+                  ...page,
+                  photos: page.photos.map((p: Photo) => p.id === photo.id ? updatedPhoto : p),
+                })),
+              };
+            });
+            queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+              if (!Array.isArray(old)) return old;
+              return old.map((p: Photo) => p.id === photo.id ? updatedPhoto : p);
+            });
+            
+            return false;
         } catch (err: unknown) {
             const error = err as Error;
             
             if (error.name === 'DuplicatePhotoError') {
                console.log(`[useBatchPhotoAI] Skipped duplicate photo`);
-               queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-               return; // Simply return with the next photo in batch
+               return true; // Return true indicating skip
             }
 
             setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: error.message || String(err) });
@@ -163,7 +176,11 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
               const photo = batch[idx];
               const isAborted = currentAnalysisControllers.current.get(taskId)?.controller.signal.aborted;
               if (result.status === 'fulfilled' && !isAborted) {
-                completedCount++;
+                if (result.value) {
+                    duplicateCount++;
+                } else {
+                    completedCount++;
+                }
               } else if (result.status === 'rejected' && (!result.reason || result.reason.name !== 'AbortError')) {
                 batchFailures.push(photo.name || photo.id.slice(0, 8));
                 throw result.reason;
@@ -178,8 +195,11 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
             });
         }
         if (completedCount > 0 || unProcessed.length > 0) {
-            const isAllSuccess = completedCount === unProcessed.length;
-            const message = isAllSuccess ? `全数完成！共 ${completedCount} 张` : `完成，但有部分失败 (${completedCount} 成功)`;
+            const isAllSuccess = completedCount + duplicateCount === unProcessed.length;
+            let message = isAllSuccess ? `全数完成！成功 ${completedCount} 张` : `完成，但有部分失败 (${completedCount} 成功)`;
+            if (duplicateCount > 0) {
+                message += `（已跳过 ${duplicateCount} 张，已存在相同照片）`;
+            }
             updateTask(taskId, { status: isAllSuccess ? 'completed' : 'warning', progress: 100, message });
             if (isAllSuccess) { toast.success(message); setAiDebugInfo(null); } 
             else { handleError(new Error(message), '批量 AI 识别'); }

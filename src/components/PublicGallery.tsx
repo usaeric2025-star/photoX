@@ -225,7 +225,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
         <AnimatePresence mode="wait">
           {(() => {
-            if (isSyncing) {
+            const isInitialLoad = isSyncing && gridPhotos.length === 0;
+            if (isInitialLoad) {
               const skeletonCount = getSkeletonCount(props.totalCount, columns);
               return (
                 <motion.div 
@@ -240,7 +241,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                 </motion.div>
               );
             }
-            if (gridPhotos.length === 0) {
+            if (gridPhotos.length === 0 && !props.isFetchingNextPage) {
               return (
                 <motion.div
                   key="empty"

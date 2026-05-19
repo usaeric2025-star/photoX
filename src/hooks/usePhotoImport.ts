@@ -334,14 +334,15 @@ export const usePhotoImport = (
       });
       setIsSyncing(false);
       
-      const summary = `上传完成：成功 ${successCount - failCount} 张，跳过 ${duplicateCount} 张，失败 ${failCount} 张。`;
+      let notificationMsg = `上传完成：成功 ${successCount - failCount} 张，跳过 ${duplicateCount} 张`;
       if (duplicateCount > 0) {
-        toast.info('已存在相同照片');
+        notificationMsg += '（已存在相同照片）';
       }
       if (failCount > 0) {
-        toast.error(`${summary} 详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`, { duration: 10000 });
+        notificationMsg += `，失败 ${failCount} 张。`;
+        handleError(new Error(`详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`), notificationMsg);
       } else {
-        toast.success(summary, { duration: 3000 });
+        toast.success(notificationMsg, { duration: 3000 });
       }
 
     });

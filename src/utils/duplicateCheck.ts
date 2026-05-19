@@ -20,24 +20,26 @@ export const checkDuplicate = async (
   imageHash: string,
   fileSize?: number,
   fileName?: string,
-  lastModified?: number
+  lastModified?: number,
+  photoId?: string // <-- Added parameter for update case
 ): Promise<boolean> => {
   // 1. Check Memory Cache (fast pseudo hash)
   if (fileName && fileSize && lastModified) {
     const pseudoHash = `${fileName}_${fileSize}_${lastModified}`;
-    if (memoryPseudoHashes.has(pseudoHash)) {
+    // If not matching my own ID (skip for now since memory hash doesn't store ID)
+    if (memoryPseudoHashes.has(pseudoHash) && !photoId) {
       return true;
     }
   }
 
   // Check Memory Cache (MD5 hash)
-  if (memoryImageHashes.has(imageHash)) {
+  if (memoryImageHashes.has(imageHash) && !photoId) {
     return true;
   }
 
   // 2. Check Database for MD5 (strongest guarantee)
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .select('id')
       .eq('image_hash', imageHash)
@@ -46,6 +48,11 @@ export const checkDuplicate = async (
       .maybeSingle();
 
     if (data && data.id) {
+      // If we are updating an existing photo, and the mathing ID is the same, it's NOT a duplicate upload
+      if (photoId && data.id === photoId) {
+        return false;
+      }
+      
       if (fileName && fileSize && lastModified) {
         memoryPseudoHashes.add(`${fileName}_${fileSize}_${lastModified}`);
       }

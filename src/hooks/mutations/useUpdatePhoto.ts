@@ -43,7 +43,7 @@ export const useUpdatePhotoMutation = () => {
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      // Intentionally avoid full invalidate, rely on optimistic updates
     },
     onError: (err, variables, context: { previousInfinite?: any; previousGroups?: [any, Photo[]][] }) => {
       // If mutation fails, use the context returned from onMutate to roll back
@@ -73,8 +73,25 @@ export const useBatchUpdatePhotosMutation = () => {
       onProgress?: (current: number, total: number) => void;
       signal?: AbortSignal;
     }) => updatePhotosBatch(userId, ids, updates, onProgress, signal),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+    onSuccess: (data, { ids, updates }) => {
+      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            photos: page.photos.map((photo: Photo) =>
+              ids.includes(photo.id) ? { ...photo, ...updates } : photo
+            ),
+          })),
+        };
+      });
+      queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((photo: Photo) => 
+          ids.includes(photo.id) ? { ...photo, ...updates } : photo
+        );
+      });
     },
     onError: (err, variables, context) => {
       handleError(err, '批量操作失败');

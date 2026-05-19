@@ -16,7 +16,14 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
 
   // Pre-insert duplicate check
   if (photo.image_hash) {
-     const isDuplicate = await checkDuplicate(session.user.id, photo.image_hash, (photo as any)._fileSize, (photo as any)._fileName, (photo as any)._lastModified);
+     const isDuplicate = await checkDuplicate(
+       session.user.id, 
+       photo.image_hash, 
+       (photo as any)._fileSize, 
+       (photo as any)._fileName, 
+       (photo as any)._lastModified,
+       photo.id
+     );
      if (isDuplicate) {
         throw new DuplicatePhotoError();
      }
@@ -109,7 +116,8 @@ export const savePhotosToCloudBatch = async (
         photo.image_hash, 
         (photo as any)._fileSize, 
         (photo as any)._fileName, 
-        (photo as any)._lastModified
+        (photo as any)._lastModified,
+        photo.id
       );
       if (isDuplicate) {
         console.log(`[savePhotosToCloudBatch] Skipped duplicate: ${photo.name}`);

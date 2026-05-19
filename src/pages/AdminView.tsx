@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { globalHandleError } from '../utils/errorHandler';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { AdminViewContent } from './AdminView/index';
 import { useAdminDataPrep } from './AdminView/useAdminDataPrep';
@@ -80,7 +81,7 @@ export default function AdminView() {
                        await loginWithGoogle();
                      } catch(e) {
                        const error = e instanceof Error ? e : new Error(String(e));
-                       toast.error(`${t.loginFailedAlert} ${error.message || JSON.stringify(e)}`);
+                       globalHandleError(error, t.loginFailedAlert);
                      }
                  }}
                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"

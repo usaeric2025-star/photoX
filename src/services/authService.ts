@@ -2,6 +2,7 @@ import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
 import { toast } from 'sonner';
+import { globalHandleError } from '../utils/errorHandler';
 
 let wasAuthenticated = false;
 
@@ -51,7 +52,7 @@ export const onAuthChange = (callback: (user: User | null) => void) => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
       if (wasAuthenticated) {
-        toast.error('登录已过期，请重新登录');
+        globalHandleError(new Error('请重新登录'), '登录已过期');
       }
       wasAuthenticated = false;
     } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {

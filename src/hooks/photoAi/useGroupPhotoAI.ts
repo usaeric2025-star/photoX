@@ -50,7 +50,6 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
       onCancel: () => abortAnalysis(taskId)
     });
 
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
     setAiDebugInfo({ step: '群组识别', message: '正在分析封面/首张照片...' });
     updateTask(taskId, { progress: 10, message: '分析产品特征中...' });
 
@@ -99,20 +98,31 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
       }));
       
       if (user) {
-        try {
-          const { savePhotosToCloudBatch } = await import('../../services/photoMutationService');
-          await savePhotosToCloudBatch(user.id, updatedPhotosList);
-        } catch (e) {
-          handleError(e, "群组同步到云端失败");
-          for (const up of updatedPhotosList) { await savePhotoToCloud(user.id, up).catch(() => {}); }
+        let hasDuplicate = false;
+        const finalValidPhotos: Photo[] = [];
+        
+        for (const up of updatedPhotosList) {
+          try {
+            await savePhotoToCloud(user.id, up);
+            finalValidPhotos.push(up);
+          } catch (e: any) {
+            if (e.name === 'DuplicatePhotoError') {
+              hasDuplicate = true;
+            } else {
+              console.error("Single save failed in group", e);
+              handleError(e, "群组部分照片保存失败");
+            }
+          }
+        }
+        
+        if (hasDuplicate) {
+          toast.info('已存在相同照片，多图识别完成');
+        } else {
+          toast.success('多图识别完成');
         }
       }
 
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
-
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
-      toast.success('多图识别完成');
       setAiDebugInfo(null);
       return result;
     } catch (err: unknown) {

@@ -47,10 +47,6 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       progress: 0,
       onCancel: () => abortAnalysis(taskId)
     });
-
-    if (editPhotoId) {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-    }
     
     setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
     updateTask(taskId, { progress: 10, message: '分析图片中...' });
@@ -128,7 +124,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       if (error.name === 'DuplicatePhotoError') {
          updateTask(taskId, { status: 'completed', progress: 100, message: '已跳过 (重复照片)' });
          setAiDebugInfo(null);
-         handleError(error, '识别重复'); // Or just use handleError directly as it prints the message
+         toast.info('已存在相同照片'); 
          return null as any;
       }
       if (error.name === 'AbortError') {
