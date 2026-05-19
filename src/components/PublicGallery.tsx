@@ -181,7 +181,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
           totalCount={props.totalCount}
           settings={settings}
           photos={props.photos}
-          isAdminMode={!!props.isAdminMode}
           isRefreshing={!!isSyncing}
           isMultiSelect={!!activeIsMultiSelect}
           lang={lang}
@@ -219,7 +218,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         lang={lang}
         t={t}
         onScrollToTop={scrollToTop}
-        isAdminMode={!!props.isAdminMode}
       />
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
@@ -270,7 +268,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                   virtuosoComponents={virtuosoComponents}
                   virtuosoContext={virtuosoContext}
                   handleLoadMore={handleLoadMore}
-                  isAdminMode={!!props.isAdminMode}
                   activeIsMultiSelect={activeIsMultiSelect}
                   isStaffMode={isStaffMode}
                   activeSelectedIds={activeSelectedIds}
@@ -315,7 +312,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         photos={props.photos}
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
-        isAdminMode={!!props.isAdminMode}
         isStaffMode={isStaffMode}
         onEditPhoto={props.onEditPhoto ? (photo) => props.onEditPhoto!(photo.id) : undefined}
         onLongPressStart={props.isAdminMode ? (p) => startLongPress(p.id) : undefined}
@@ -366,7 +362,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
             onClose={() => setLightboxIndex(null)}
             onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
             onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
-            isAdminMode={!!props.isAdminMode}
             isStaffMode={isStaffMode}
             contactWhatsApp={handleContactWhatsApp}
             onEditPhoto={(photo) => props.onEditPhoto?.(photo.id)}

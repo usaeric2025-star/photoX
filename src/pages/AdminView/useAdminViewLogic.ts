@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useGalleryStore } from '../../store';
-import { useErrorHandler, usePhotoManagement } from '../../hooks';
+import { useFeedback, usePhotoManagement } from '../../hooks';
 import { usePermission } from '../../hooks/usePermission';
 import { User, Photo } from '../../types';
 import { loginWithGoogle } from '../../services/supabaseService';
@@ -49,7 +49,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData
   } = photoValue || {};
 
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
   const { isAdmin } = usePermission();
 
   useEffect(() => {
@@ -82,10 +82,10 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       try {
         await withLoading('analyzing', () => handleBatchAiIdentify(photos));
       } catch (err) {
-        handleError(err, 'ai-analyze');
+        showError(err, 'ai-analyze');
       }
     }
-  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, handleBatchAiIdentify, photos, handleError]);
+  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, handleBatchAiIdentify, photos, showError]);
 
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
      try {
@@ -93,10 +93,9 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
          if (typeof id === 'string') setEditPhotoId(null);
          else resetAddState();
      } catch (error) {
-         console.error('删除照片失败', error);
-         handleError(error, 'delete-photo');
+         showError(error, 'delete-photo');
      }
-  }, [deletePhoto, setEditPhotoId, resetAddState, handleError]);
+  }, [deletePhoto, setEditPhotoId, resetAddState, showError]);
 
   const togglePinned = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
@@ -108,27 +107,21 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       await updatePhotosBulk(affectedIds, { isPinned: newStatus });
       onRefresh();
     } catch (e: any) {
-      handleError(e, 'toggle-pinned');
+      showError(e, 'toggle-pinned');
     }
-  }, [checkSyncLock, photos, updatePhotosBulk, handleError, onRefresh]);
+  }, [checkSyncLock, photos, updatePhotosBulk, showError, onRefresh]);
 
   const toggleHidden = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
     const nextValue = !photo.is_hidden;
     
-    // Optimistic update
-    // Note: Since we are using React Query, we should be triggering an optimistic update via a mutation hook, 
-    // but without full refactoring, I will try to trigger query invalidation or update the cache manually if possible, 
-    // or just trust the mutation hook.
-    // Given the current setup, `updatePhoto` is an async function passed from `photoValue`.
-    
     try {
       await updatePhoto(photo.id, { is_hidden: nextValue });
       onRefresh();
     } catch (e: any) {
-      handleError(e, 'toggle-hidden');
+      showError(e, 'toggle-hidden');
     }
-  }, [checkSyncLock, updatePhoto, handleError]);
+  }, [checkSyncLock, updatePhoto, showError]);
 
   const setGroupCover = useCallback(async (id: string, groupId: string) => {
     if (checkSyncLock()) return;
@@ -140,10 +133,9 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       );
       onRefresh();
     } catch (e: any) {
-      console.error('setGroupCover error', e);
-      handleError(e, 'set-group-cover');
+      showError(e, 'set-group-cover');
     }
-  }, [checkSyncLock, photos, updatePhoto, handleError, onRefresh]);
+  }, [checkSyncLock, photos, updatePhoto, showError, onRefresh]);
 
   return useMemo(() => ({
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
@@ -160,7 +152,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
-    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, handleError
+    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError
   }), [
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
@@ -176,6 +168,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
-    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, handleError
+    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError
   ]);
 };

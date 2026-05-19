@@ -1,13 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Photo } from '../../types';
 import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '../../services/photoMutationService';
-import { QUERY_KEYS } from '../queries/keys';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback, useInvalidatePhotos } from '../../hooks';
 
 export const useUpdatePhotoMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
+  const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => updatePhotoFn(id, updates),
@@ -41,7 +40,6 @@ export const useUpdatePhotoMutation = () => {
         );
       });
 
-      // toast.success('已更新'); // REMOVED DUE TO DUPLICATION
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
@@ -57,15 +55,15 @@ export const useUpdatePhotoMutation = () => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
-      handleError(err, '更新照片失败');
+      invalidatePhotos();
+      showError(err, '更新照片失败');
     },
   });
 };
 
 export const useBatchUpdatePhotosMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
   
   return useMutation({
     mutationFn: ({ userId, ids, updates, onProgress, signal }: { 
@@ -96,7 +94,7 @@ export const useBatchUpdatePhotosMutation = () => {
       });
     },
     onError: (err, variables, context) => {
-      handleError(err, '批量操作失败');
+      showError(err, '批量操作失败');
     },
   });
 };

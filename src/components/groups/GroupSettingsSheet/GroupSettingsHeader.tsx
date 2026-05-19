@@ -3,6 +3,7 @@ import { Settings2, Trash2 } from 'lucide-react';
 import { SheetHeader, SheetTitle } from "../../ui/sheet";
 import { ProductGroup, DialogData } from '../../../types';
 import { saveGroupToCloud } from '../../../services/groupService';
+import { useFeedback } from '../../../hooks';
 
 export const GroupSettingsHeader: React.FC<{
   groupData: ProductGroup | null;
@@ -11,13 +12,13 @@ export const GroupSettingsHeader: React.FC<{
   setActiveGroupId: (id: string | null) => void;
   setShowGroupSettings: (show: boolean) => void;
   setAlertDialog: (d: DialogData | null) => void;
-  handleError: (error: any, context: string) => void;
   setIsSaving: (isSaving: boolean) => void;
   isSaving: boolean;
 }> = ({
   groupData, activeGroupId, onUngroup, setActiveGroupId, setShowGroupSettings,
-  setAlertDialog, handleError, setIsSaving, isSaving
+  setAlertDialog, setIsSaving, isSaving
 }) => {
+  const { showError: handleError } = useFeedback();
   return (
     <SheetHeader className="p-6 border-b border-slate-50 bg-indigo-600 text-white space-y-0 flex-row items-center justify-between">
       <div className="flex items-center gap-3">

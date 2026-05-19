@@ -7,9 +7,10 @@ import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../../h
 import { translations, LanguageCode } from '../../lib/translations';
 import { filterPhotos, groupPhotos } from '../../lib/filters';
 import { isValidPhoto } from '../../lib/typeGuard';
-import { toast } from 'sonner';
 import { getPhotoDisplayName } from '../../lib/ui-helpers';
 import { saveData, loadData } from '../../utils/indexedDB';
+
+import { useAdminMode, usePhotoFilters, useFeedback } from '../../hooks';
 
 export const usePublicGalleryLogic = (props: {
   photos: Photo[];
@@ -36,7 +37,7 @@ export const usePublicGalleryLogic = (props: {
     categories: propCategories,
     settings: propsSettings,
     user: propsUser,
-    isAdminMode,
+    isAdminMode: propIsAdminMode,
     isRefreshing: propsIsRefreshing,
     onLoadMore,
     hasMore,
@@ -49,6 +50,9 @@ export const usePublicGalleryLogic = (props: {
     initialGroupId,
     onRefresh
   } = props;
+
+  const hookIsAdminMode = useAdminMode();
+  const isAdminMode = propIsAdminMode !== undefined ? propIsAdminMode : hookIsAdminMode;
 
   const navigate = useNavigate();
   const settings = propsSettings;
@@ -87,40 +91,17 @@ export const usePublicGalleryLogic = (props: {
   const activeClearSelection = onClearSelection || clearSelection;
   const activeSetIsMultiSelect = onToggleMultiSelect || setStoreIsMultiSelect;
 
-  const { displayPhotos, gridPhotos } = useMemo(() => {
-    const validPhotos = (incomingPhotos && incomingPhotos.length > 0 ? incomingPhotos : localPhotos).filter(isValidPhoto);
-    
-    const tagMap = new Map<string, string[]>();
-    contextTags.forEach(t => {
-      const terms = [t.name.toLowerCase()];
-      if (Array.isArray(t.aliases)) {
-        t.aliases.forEach(a => terms.push(a.toLowerCase()));
-      }
-      tagMap.set(String(t.id), terms);
-    });
-    
-    const catMap = new Map<string, string[]>();
-    categories.forEach(c => {
-      const terms = [(c.zh || c.name || '').toLowerCase()];
-      if (Array.isArray(c.aliases)) {
-        c.aliases.forEach(a => terms.push(a.toLowerCase()));
-      }
-      catMap.set(String(c.id), terms);
-    });
+  const { showSuccess, showError } = useFeedback();
 
-    const dp = filterPhotos(validPhotos, {
-      searchQuery,
-      filterCatId: selectedCatCode,
-      filterSubId: selectedSubId,
-      filterTagIds: selectedTagIds,
-      sortOrder,
-      isAdminMode,
-      isStaffMode
-    }, contextTags, categories, tagMap, catMap);
-
-    const gp = groupPhotos(dp, showGroupsCollapsed, sortOrder);
-    return { displayPhotos: dp, gridPhotos: gp };
-  }, [incomingPhotos, localPhotos, sortOrder, isAdminMode, isStaffMode, contextTags, categories, showGroupsCollapsed]);
+  const { displayPhotos, gridPhotos } = usePhotoFilters(
+    incomingPhotos && incomingPhotos.length > 0 ? incomingPhotos : localPhotos,
+    categories,
+    contextTags,
+    {
+      showGroupsCollapsed,
+      isAdminModeOverride: propIsAdminMode
+    }
+  );
 
   const lang = (langStore || 'en') as LanguageCode;
   const t = useMemo(() => translations[lang] || translations['en'], [lang]);
@@ -193,7 +174,7 @@ export const usePublicGalleryLogic = (props: {
       if (navigator.share) await navigator.share({ title: t.shareTitle, text: msg });
       else {
         await navigator.clipboard.writeText(msg);
-        toast.success("分享信息已复制到剪贴板！/ Share info copied to clipboard!");
+        showSuccess("分享信息已复制到剪贴板！/ Share info copied to clipboard!");
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') console.error(e);
@@ -210,7 +191,7 @@ export const usePublicGalleryLogic = (props: {
       if (navigator.share) await navigator.share({ title: t.shareTitle, text: shareText });
       else {
         await navigator.clipboard.writeText(shareText);
-        toast.success("群组分享链接已复制！/ Group share link copied!");
+        showSuccess("群组分享链接已复制！/ Group share link copied!");
       }
     } catch (e: any) {
       if (e.name !== 'AbortError') console.error("Group share failed:", e);

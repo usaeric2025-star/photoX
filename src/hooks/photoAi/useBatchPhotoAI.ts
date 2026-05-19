@@ -9,8 +9,7 @@ import { savePhotoToCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
 import { AI_CONFIG } from '../../constants/config';
 import { shouldUpdateName, cleanAiName } from './photoAiUtils';
-import { useErrorHandler } from '../../utils/errorHandler';
-import { toast } from 'sonner';
+import { useFeedback } from '../uiFeedback';
 
 interface BatchAiProps {
   user: User | null;
@@ -28,17 +27,18 @@ interface BatchAiProps {
   aiDebugInfo: { step: string; message: string; error?: string } | null;
   setBatchProgress: (progress: { current: 0, total: 0 } | any) => void;
   isAnalyzingRef: React.MutableRefObject<boolean>;
+  invalidatePhotos: () => void;
   currentAnalysisControllers: React.MutableRefObject<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>;
   abortAnalysis: (taskId?: string) => void;
 }
 
 export const useBatchPhotoAI = (props: BatchAiProps) => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError, showSuccess } = useFeedback();
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
     tagNameToIdMap, addTask, updateTask, removeTask, setAiDebugInfo, aiDebugInfo, setBatchProgress,
-    isAnalyzingRef, currentAnalysisControllers, abortAnalysis
+    isAnalyzingRef, invalidatePhotos, currentAnalysisControllers, abortAnalysis
   } = props;
 
   const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
@@ -59,7 +59,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
-        toast.success("所有照片均已是最新，无需重新识别");
+        showSuccess("所有照片均已是最新，无需重新识别");
       }
       return;
     }
@@ -155,7 +155,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
             }
 
             setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: error.message || String(err) });
-            (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+            invalidatePhotos();
             if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
                 throw new Error(`FATAL_AI_ERROR: ${error.message}`);
             }
@@ -201,11 +201,11 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
                 message += `（已跳过 ${duplicateCount} 张，已存在相同照片）`;
             }
             updateTask(taskId, { status: isAllSuccess ? 'completed' : 'warning', progress: 100, message });
-            if (isAllSuccess) { toast.success(message); setAiDebugInfo(null); } 
-            else { handleError(new Error(message), '批量 AI 识别'); }
+            if (isAllSuccess) { showSuccess(message); setAiDebugInfo(null); } 
+            else { showError(new Error(message), '批量 AI 识别'); }
         }
     } catch (err) {
-        handleError(err, '批量 AI 识别失败');
+        showError(err, '批量 AI 识别失败');
         updateTask(taskId, { status: 'error', message: `错误: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
         isAnalyzingRef.current = false;

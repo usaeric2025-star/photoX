@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../../services/geminiService';
@@ -9,6 +8,7 @@ import { formatDate } from '../../utils/dateFormat';
 import { savePhotoToCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
 import { shouldUpdateName, cleanAiName, isMeasurementOnly } from './photoAiUtils';
+import { useFeedback } from '../uiFeedback';
 
 interface GroupAiProps {
   user: User | null;
@@ -22,7 +22,8 @@ interface GroupAiProps {
   addTask: (task: Omit<Task, 'id'>) => string;
   updateTask: (id: string, updates: Partial<Task>) => void;
   removeTask: (id: string) => void;
-  handleError: (error: unknown, context?: string) => void;
+  showError: (error: unknown, context?: string) => void;
+  invalidatePhotos: () => void;
   setAiDebugInfo: (info: { step: string; message: string; error?: string } | null) => void;
   currentAnalysisControllers: React.MutableRefObject<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>;
   abortAnalysis: (taskId?: string) => void;
@@ -30,9 +31,10 @@ interface GroupAiProps {
 
 export const useGroupPhotoAI = (props: GroupAiProps) => {
   const queryClient = useQueryClient();
+  const { showSuccess } = useFeedback();
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
-    tagNameToIdMap, addTask, updateTask, removeTask, handleError, setAiDebugInfo,
+    tagNameToIdMap, addTask, updateTask, removeTask, showError, invalidatePhotos, setAiDebugInfo,
     currentAnalysisControllers, abortAnalysis
   } = props;
 
@@ -110,15 +112,15 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
               hasDuplicate = true;
             } else {
               console.error("Single save failed in group", e);
-              handleError(e, "群组部分照片保存失败");
+              showError(e, "群组部分照片保存失败");
             }
           }
         }
         
         if (hasDuplicate) {
-          toast.info('已存在相同照片，多图识别完成');
+          showSuccess('已存在相同照片，多图识别完成');
         } else {
-          toast.success('多图识别完成');
+          showSuccess('多图识别完成');
         }
       }
 
@@ -131,7 +133,7 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
         const errorMsg = error.message || String(err);
         setAiDebugInfo({ step: '错误', message: '群组识别失败', error: errorMsg });
         updateTask(taskId, { status: 'error', message: `失败: ${errorMsg.slice(0, 80)}` });
-        (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+        invalidatePhotos();
         throw err;
       }
     } finally {

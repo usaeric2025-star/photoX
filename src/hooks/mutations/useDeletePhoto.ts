@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Photo, ApiResponse } from '../../types';
+import { Photo } from '../../types';
 import { deletePhotoFromCloud } from '../../services/photoMutationService';
-import { QUERY_KEYS } from '../queries/keys';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback, useInvalidatePhotos } from '../../hooks';
 
 interface InfinitePhotosData {
   photos: Photo[];
@@ -12,7 +10,8 @@ interface InfinitePhotosData {
 
 export const useDeletePhotoMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
+  const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
     mutationFn: async ({ userId, photos }: { userId: string; photos: Photo[] }) => {
@@ -53,7 +52,6 @@ export const useDeletePhotoMutation = () => {
         return old.filter((photo: Photo) => !photoIds.includes(photo.id));
       });
 
-      // toast.success('已删除');
       return { previousInfinite, previousGroups };
     },
     onSuccess: (data) => {
@@ -87,8 +85,8 @@ export const useDeletePhotoMutation = () => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
-      handleError(err, '删除照片失败');
+      invalidatePhotos();
+      showError(err, '删除照片失败');
     },
   });
 };

@@ -7,7 +7,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useGalleryStore } from '../store';
 import { safeArray } from '../lib/utils';
-import { useErrorHandler } from '../utils/errorHandler';
+import { useFeedback, useInvalidatePhotos } from './';
 import { Category, Photo, Tag, Manufacturer } from '../types';
 import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from './';
 import { QUERY_KEYS } from './queries/keys';
@@ -16,7 +16,8 @@ export const useAdminCategory = (adminUI: {
   setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
 }) => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError: handleError, showSuccess } = useFeedback();
+  const invalidatePhotos = useInvalidatePhotos();
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
@@ -73,7 +74,7 @@ export const useAdminCategory = (adminUI: {
     try {
       const { removeTagFromPhotoFromDB } = await import('../services/tagService');
       await removeTagFromPhotoFromDB(photoId, tagId);
-      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+      invalidatePhotos();
     } catch (err) {
       handleError(err, '从照片移除标签失败');
       throw err;

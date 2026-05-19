@@ -65,7 +65,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         onClose={props.resetAddState}
         onErrorClick={(err) => {
           const readableError = err.includes('|') ? err.split('|').slice(1).join(': ') : err;
-          logic.handleError(new Error(readableError), 'AI识别错误');
+          logic.showError(new Error(readableError), 'AI识别错误');
         }}
       />
 

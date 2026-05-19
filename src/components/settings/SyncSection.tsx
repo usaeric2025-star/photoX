@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import { User, ApiResponse, DialogData } from '../../types';
 import { Skeleton } from '../ui/Skeleton';
-import { toast } from 'sonner';
+import { useFeedback } from '../../hooks';
 
 interface SyncSectionProps {
   user: User | null;
@@ -31,6 +31,8 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
   isSyncing,
   setAlertDialog
 }) => {
+  const { showSuccess } = useFeedback();
+  
   return (
     <div className="bg-brand-navy rounded-[32px] p-6 shadow-xl border border-white/5 space-y-4 relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 blur-3xl -mr-10 -mt-10 group-hover:bg-brand-gold/20 transition-all duration-700"></div>
@@ -118,7 +120,7 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
                     localStorage.removeItem('lastSyncTime');
                     localStorage.removeItem('uuid_v2_cleanup_done');
                     await refreshCloudData(user, true);
-                    toast.success('本地缓存已重置 / Cache reset');
+                    showSuccess('本地缓存已重置 / Cache reset');
                   },
                   type: 'danger'
                 });

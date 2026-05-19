@@ -247,3 +247,27 @@ const uiValueForLogin = React.useMemo(() => ({
 1. **术语固定**：标签 (Tag) 和 厂商 (Manufacturer) 这两个术语及其对应的具体内容（如标签库中的名称、厂商名称）禁止自动翻译或 AI 翻译。
 2. **显示原则**：UI 显示时应优先使用数据库中的 `zh` 或 `en` 字段。若无特定多语言字段，应保持原始 `name` 不变。
 3. **禁止行为**：禁止使用 AI 助手对现有的标签名或厂商名进行批量“中翻英”或“英翻中”的改写。
+
+## 二十五、前端状态与反馈规范 (Frontend State & Feedback Standards)
+
+### 25.1 TanStack Query 规范 (强制执行)
+1. **精准查询键 (Query Keys)**: 
+   - 禁止使用全量 Key 如 `['photos']` 进行失效。
+   - 必须使用精准 Key：`['photos', 'infinite', filters]` 或 `['photos', 'group']`。
+   - 统一使用 `useInvalidatePhotos()` Hook 来触发照片列表刷新。
+2. **状态区分**: 
+   - 首次加载 (`isLoading && !data`) → 使用骨架屏。
+   - 切换筛选 (`isFetching && data`) → 使用 `placeholderData: keepPreviousData` 保留旧数据，防止闪烁。
+3. **乐观更新 (Optimistic Updates)**:
+   - 必须包含 `onMutate` (更新 UI) 和 `onError` (回滚 + `showError`)。
+
+### 25.2 Zustand 规范 (强制执行)
+- **UI 状态专用**: Zustand 只允许存储 UI 状态（弹窗、侧边栏、多选模式、当前筛选配置）。
+- **禁止存储业务数据**: 禁止在 Zustand 中同步 Photos、Categories、Tags 或 Manufacturers 数据。这些数据由 TanStack Query 闭环管理。
+
+### 25.3 Sonner 反馈规范 (强制执行)
+1. **全局 single-source**: 统一通过 `src/hooks/uiFeedback.ts` (及导出的 `useFeedback`) 进行反馈。
+2. **禁止直调**: 禁止在组件或 Hook 中直接调用 `toast.success` 或 `toast.error`。
+3. **统一接口**:
+   - 成功反馈：`showSuccess(msg)`
+   - 错误处理：`handleError(error, context)` (组件内可用 `showError`)

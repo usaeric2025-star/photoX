@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
 import { AppSettings, Tag, Manufacturer, Category, User } from '../../types';
 import { useGalleryStore } from '../../store';
 import { testAiConnection } from '../../services/geminiService';
 import { deduplicatePhotos } from '../../services/photoMutationService';
 import { normalizeTagName, normalizeManufacturerName } from '../../utils/stringHelper';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback } from '../../hooks';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -27,7 +26,7 @@ export const useSettingsLogic = ({
   const { 
     setSettings, setPromptDialog, setAlertDialog, withLoading 
   } = useGalleryStore();
-  const { handleError } = useErrorHandler();
+  const { showError, showSuccess } = useFeedback();
 
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -45,7 +44,7 @@ export const useSettingsLogic = ({
 
   const handleDeduplicate = useCallback(async () => {
     if (!user) {
-      handleError(new Error('请先登录云端'), '操作失败');
+      showError(new Error('请先登录云端'), '操作失败');
       return;
     }
 
@@ -58,18 +57,19 @@ export const useSettingsLogic = ({
           await withLoading('sync-push', async () => {
             const { removed } = await deduplicatePhotos(user.id);
             if (removed > 0) {
-              toast.success(`排重完成！共清理了 ${removed} 张重复记录。`);
+              showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
               await performPullSync();
             } else {
-              toast.info('未发现重复记录。');
+              // We could use toast.info but standardizing on showSuccess for positive feedback
+              showSuccess('未发现重复记录。');
             }
           });
         } catch (e: any) {
-          handleError(e, '排重失败');
+          showError(e, '排重失败');
         }
       }
     });
-  }, [user, setAlertDialog, withLoading, performPullSync, handleError]);
+  }, [user, setAlertDialog, withLoading, performPullSync, showError, showSuccess]);
 
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinnedTags || [];

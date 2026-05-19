@@ -23,7 +23,6 @@ interface GalleryFiltersProps {
   lang: string;
   t: any;
   onScrollToTop: () => void;
-  isAdminMode: boolean;
 }
 
 export const GalleryFilters: React.FC<GalleryFiltersProps> = (props) => {

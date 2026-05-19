@@ -5,6 +5,7 @@ import "yet-another-react-lightbox/styles.css";
 import { X, Maximize, ChevronLeft, ChevronRight, Download, Edit3, Image as ImageIcon } from 'lucide-react';
 import { Photo, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
+import { useAdminMode } from '../../hooks/useAdminMode';
 
 interface LightboxImageSectionProps {
   photo: Photo;
@@ -22,7 +23,6 @@ interface LightboxImageSectionProps {
   onTouchStart: (e: React.TouchEvent) => void;
   onTouchMove: (e: React.TouchEvent) => void;
   onTouchEnd: () => void;
-  isAdminMode: boolean;
   onEditPhoto?: (photo: Photo) => void;
   handleDownload: () => void;
   t: TranslationType;
@@ -32,9 +32,10 @@ interface LightboxImageSectionProps {
 export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
   photo, index, isZoomed, setIsZoomed, isImageLoading, setIsImageLoading,
   isImageError, setIsImageError, slides, onPrev, onNext, onClose,
-  onTouchStart, onTouchMove, onTouchEnd, isAdminMode, onEditPhoto,
+  onTouchStart, onTouchMove, onTouchEnd, onEditPhoto,
   handleDownload, t, retryImageLoad
 }) => {
+  const isAdminMode = useAdminMode();
   return (
     <div 
       className={`relative ${isZoomed ? 'flex-1' : 'flex-none md:flex-1'} bg-black flex items-center justify-center h-[42vh] md:h-full`}

@@ -1,11 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, CheckSquare, Eye, Globe, RefreshCcw, ChevronDown, Menu, LogIn } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
-import { toast } from 'sonner';
 
 import { translations, LanguageCode } from '../../lib/translations';
 import { useGalleryStore } from '../../store';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback } from '../../hooks';
 
 import { Photo, AppSettings } from '../../types';
 import { RefreshMenu } from './AdminHeader/RefreshMenu';
@@ -45,7 +44,7 @@ export const AdminHeader: React.FC<Props> = ({
     isInfiniteMode, setIsInfiniteMode 
   } = useGalleryStore();
   
-  const { handleError } = useErrorHandler();
+  const { showError, showSuccess } = useFeedback();
   
   const settings = propSettings || storeSettings;
   
@@ -74,9 +73,9 @@ export const AdminHeader: React.FC<Props> = ({
     setIsInfiniteMode(nextValue);
     setShowRefreshMenu(false);
     if (nextValue) {
-      toast.success('无限加载模式已开启 / Infinite mode ON');
+      showSuccess('无限加载模式已开启 / Infinite mode ON');
     } else {
-      toast.success('懒加载模式已恢复 / Lazy loading ON');
+      showSuccess('懒加载模式已恢复 / Lazy loading ON');
     }
   };
 
@@ -84,7 +83,7 @@ export const AdminHeader: React.FC<Props> = ({
     try {
       await loginWithGoogle();
     } catch(e) {
-      handleError(e, '登录失败');
+      showError(e, '登录失败');
     }
   };
 

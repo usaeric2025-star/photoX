@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import { toast } from 'sonner';
 import { User, Photo, Category, Tag, Manufacturer } from '../types';
 import { processImageFile } from '../utils/imageProcess';
 import { 
@@ -14,6 +13,7 @@ import { resolveTagIdsBatch } from '../utils/tagUtils';
 import { safeArray } from '../lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from './queries/keys';
+import { useInvalidatePhotos, useFeedback } from './';
 
 // Helper functions 
 const shouldUpdateName = (name: string | null | undefined): boolean => {
@@ -63,9 +63,11 @@ export const usePhotoImport = (
   abortAnalysis: () => void,
   tagNameToIdMap: Map<string, string>,
   photosRef: React.MutableRefObject<Photo[]>,
-  handleError: (error: unknown, context?: string) => void
+  showError: (error: unknown, context?: string) => void
 ) => {
   const queryClient = useQueryClient();
+  const invalidatePhotos = useInvalidatePhotos();
+  const { showSuccess } = useFeedback();
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
 
@@ -85,7 +87,7 @@ export const usePhotoImport = (
     // HEIC Detection Alert
     const hasHeic = sFileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
     if (hasHeic) {
-      toast.info('检测到 HEIC 格式照片，建议转换为 JPG 后上传 / HEIC detected, conversion recommended');
+      showSuccess('检测到 HEIC 格式照片，建议转换为 JPG 后上传 / HEIC detected, conversion recommended');
     }
     
     return runWithLoading('importing', async () => {
@@ -258,7 +260,7 @@ export const usePhotoImport = (
                    }
                  }
                } catch (err) {
-                 (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+                 invalidatePhotos();
                  throw err;
                } finally {
                  updateProgress();
@@ -273,7 +275,7 @@ export const usePhotoImport = (
                   if (index !== -1) {
                     photosRef.current[index].id = finalPhotoId;
                   }
-                  queryClient.invalidateQueries({ queryKey: ['photos'], refetchType: 'all' });
+                  invalidatePhotos();
                   updateProgress();
                 })
                 .catch((e) => {
@@ -296,8 +298,8 @@ export const usePhotoImport = (
                   if (index !== -1) {
                     photosRef.current.splice(index, 1);
                   }
-                  handleError(e, `上传照片失败: ${newPhoto.name}`);
-                  (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+                  showError(e, `上传照片失败: ${newPhoto.name}`);
+                  invalidatePhotos();
                   updateProgress();
                   throw e; // Rethrow to ensure Promise.allSettled marks task as rejected
                 })
@@ -305,8 +307,7 @@ export const usePhotoImport = (
           }
         } catch (err) {
           console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
-          handleError(err, `处理文件失败: ${file.name}`);
-          // Removed individual toast.error
+          showError(err, `处理文件失败: ${file.name}`);
           failCount++;
           failedFiles.push(file.name);
           updateProgress();
@@ -316,7 +317,7 @@ export const usePhotoImport = (
       // Await all background tasks (AI/Uploads)
       console.log(`[usePhotoImport] Awaiting ${tasks.length} background tasks...`);
       const results = await Promise.allSettled(tasks);
-      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+      invalidatePhotos();
       console.log(`[usePhotoImport] All background tasks finished. Results:`, results);
 
       // Check for failures in tasks themselves
@@ -340,9 +341,9 @@ export const usePhotoImport = (
       }
       if (failCount > 0) {
         notificationMsg += `，失败 ${failCount} 张。`;
-        handleError(new Error(`详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`), notificationMsg);
+        showError(new Error(`详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`), notificationMsg);
       } else {
-        toast.success(notificationMsg, { duration: 3000 });
+        showSuccess(notificationMsg);
       }
 
     });

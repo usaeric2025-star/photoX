@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X } from 'lucide-react';
-import { Photo, Category, ProductGroup, Manufacturer, Dimension, TranslationType } from '../../types';
+import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer } from '../../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
 import { Skeleton } from '../ui/Skeleton';
+import { useAdminMode } from '../../hooks/useAdminMode';
 
 interface LightboxInfoPanelProps {
   photo: Photo;
@@ -11,7 +12,6 @@ interface LightboxInfoPanelProps {
   isGroupDataLoading: boolean;
   activeLang: string;
   setActiveLang: (v: string) => void;
-  isAdminMode: boolean;
   isStaffMode: boolean;
   isCopied: boolean;
   isAnalyzing?: boolean;
@@ -31,10 +31,11 @@ interface LightboxInfoPanelProps {
 
 export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
-  isAdminMode, isStaffMode, isCopied, isAnalyzing, t, categories,
+  isStaffMode, isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
   onEditPhoto, onToggleHidden, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
+  const isAdminMode = useAdminMode();
   const catName = getTranslatedCategoryName(photo.categoryId, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);

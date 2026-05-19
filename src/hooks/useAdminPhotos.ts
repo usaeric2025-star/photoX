@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { toast } from 'sonner';
 import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
 import { Photo, User, Manufacturer, Category, Tag } from '../types';
@@ -13,6 +12,7 @@ import { usePhotoImport } from './usePhotoImport';
 import { usePhotoAI } from './usePhotoAI';
 import { usePhotoMutations } from './usePhotoMutations';
 import { useGroupPhotosMutation } from './mutations/useGroupOperations';
+import { useFeedback, useInvalidatePhotos } from './';
 import { safeArray } from '../lib/utils';
 
 export const useAdminPhotos = (
@@ -54,7 +54,7 @@ export const useAdminPhotos = (
     if ((tag as any).aliases) (tag as any).aliases.forEach((a: string) => acc.set(a.toLowerCase(), tag.id));
     return acc;
   }, new Map<string, string>());
-  const { handleError } = useErrorHandler();
+  const { showError: handleError } = useFeedback();
   const { deletePhotos } = useDelete();
   const { tasks, addTask, updateTask, removeTask } = useTasks();
   const { setLoadingState: uiSetLoadingState } = adminUI || {};

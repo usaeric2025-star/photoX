@@ -1,5 +1,5 @@
 import React from 'react';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback } from '../../hooks';
 import { Trash2 } from 'lucide-react';
 import { Category, Tag, Photo, Manufacturer, User } from '../../types';
 
@@ -18,7 +18,7 @@ interface ExportDataSectionProps {
 export const ExportDataSection: React.FC<ExportDataSectionProps> = ({
   photos, categories, tags, manufacturers, isSyncing, user, cardClass, buttonStyles, handleDeduplicate
 }) => {
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
   return (
     <div className={cardClass}>
         <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
@@ -62,7 +62,7 @@ export const ExportDataSection: React.FC<ExportDataSectionProps> = ({
                 reader.onload = (event) => {
                   try {
                     JSON.parse(event.target?.result as string);
-                    handleError(new Error('JSON 导入目前仅支持手动查看，不支持批量写入云端。'), 'JSON 导入');
+                    showError(new Error('JSON 导入目前仅支持手动查看，不支持批量写入云端。'), 'JSON 导入');
                   } catch (err) {
                     console.error('导入JSON失败', err);
                   }

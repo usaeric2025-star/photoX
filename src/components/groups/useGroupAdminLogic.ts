@@ -6,11 +6,12 @@ import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
 import { useRemoveFromGroupMutation } from '../../hooks/mutations/useGroupOperations';
 import { useGalleryStore } from '../../store';
+import { useAdminMode } from '../../hooks/useAdminMode';
+import { useFeedback } from '../../hooks/uiFeedback';
 
 interface UseGroupAdminLogicProps {
   activeGroupId: string | null;
   photos: Photo[];
-  isAdminMode: boolean;
   onRefresh: () => void;
   hookUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
   propsSetAlertDialog?: (d: DialogData | null) => void;
@@ -23,7 +24,6 @@ interface UseGroupAdminLogicProps {
 export const useGroupAdminLogic = ({
   activeGroupId,
   photos,
-  isAdminMode,
   onRefresh,
   hookUpdatePhoto,
   propsSetAlertDialog,
@@ -32,24 +32,14 @@ export const useGroupAdminLogic = ({
   onUngroup,
   setActiveGroupId
 }: UseGroupAdminLogicProps) => {
+  const isAdminMode = useAdminMode();
   const { 
     setAlertDialog: contextSetAlertDialog, 
     setPromptDialog,
-    setErrors
   } = useGalleryStore();
   
   const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
-  
-  const handleError = useCallback((error: any, context: string) => {
-    console.error(`[Error] ${context}:`, error);
-    let message = '';
-    if (typeof error === 'string') message = error;
-    else if (error instanceof Error) message = error.message;
-    else if (error?.message) message = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
-    else message = JSON.stringify(error);
-
-    setErrors([{ message, context, timestamp: Date.now() }]);
-  }, [setErrors]);
+  const { showError, showSuccess } = useFeedback();
 
   const { mutate: mutateSetCover } = useGroupCoverMutation();
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
@@ -164,12 +154,12 @@ export const useGroupAdminLogic = ({
              }
           }
         } catch (err: any) {
-          handleError(err, '操作失败');
+          showError(err, '操作失败');
         }
         setAlertDialog(null);
       }
     });
-  }, [handleError, setAlertDialog, photos, activeGroupId, removePhotosBatch, setActiveGroupId]);
+  }, [showError, setAlertDialog, photos, activeGroupId, removePhotosBatch, setActiveGroupId]);
 
   const persistPhotoChange = useCallback(async (photoId: string, updates: Partial<Photo>) => {
     // Optimistic update: temporarily update local state if possible
@@ -184,10 +174,10 @@ export const useGroupAdminLogic = ({
       }
       onRefresh();
     } catch (err: any) {
-      handleError(err, '保存照片修改失败');
+      showError(err, '保存照片修改失败');
       // Potential rollback would go here if we had local state modification
     }
-  }, [handleError, hookUpdatePhoto, onRefresh]);
+  }, [showError, hookUpdatePhoto, onRefresh]);
 
   const handleUpdateGroupData = useCallback(async (updates: Partial<ProductGroup>) => {
     if (!activeGroupId || !groupData) return;
@@ -208,10 +198,10 @@ export const useGroupAdminLogic = ({
         }
       }
     } catch (err: any) {
-      handleError(err, '更新群组资料失败');
+      showError(err, '更新群组资料失败');
       throw err;
     }
-  }, [activeGroupId, groupData, handleError, hookUpdatePhoto, photos]);
+  }, [activeGroupId, groupData, showError, hookUpdatePhoto, photos]);
 
   const handleToggleTag = useCallback((photo: Photo, tagId: string) => {
     const currentTags = Array.isArray(photo.tagIds) ? photo.tagIds : [];
@@ -241,13 +231,13 @@ export const useGroupAdminLogic = ({
             );
           }
         } catch (err: any) {
-          handleError(err, '批量更新尺寸失败');
+          showError(err, '批量更新尺寸失败');
           throw err;
         }
         setAlertDialog(null);
       }
     });
-  }, [activeGroupId, activeGroupPhotos, handleError, hookUpdatePhoto, setAlertDialog]);
+  }, [activeGroupId, activeGroupPhotos, showError, hookUpdatePhoto, setAlertDialog]);
 
   const handleReorder = useCallback(async (draggedId: string, targetId: string) => {
     if (draggedId === targetId) return;
@@ -272,10 +262,10 @@ export const useGroupAdminLogic = ({
         updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { groupOrder: p.groupOrder }))
       );
     } catch (err: any) {
-      handleError(err, '保存排序失败');
+      showError(err, '保存排序失败');
       throw err;
     }
-  }, [activeGroupPhotos, handleError]);
+  }, [activeGroupPhotos, showError]);
 
   const handleBulkAction = useCallback(async (action: 'ai' | 'remove' | 'batch') => {
     if (selectedPhotoIds.length === 0) return;
@@ -315,6 +305,6 @@ export const useGroupAdminLogic = ({
     setCover,
     setPromptDialog,
     setAlertDialog,
-    handleError
+    showError
   };
 };

@@ -4,12 +4,12 @@ import { User, AppSettings } from '../types';
 import { fetchSettings } from '../services/settingService';
 import { getPhotoCount } from '../services/photoService';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from './queries/keys';
-import { useErrorHandler } from '../utils/errorHandler';
+import { useFeedback, useInvalidatePhotos } from './';
 
 export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T>) => Promise<T>) => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError: handleError } = useFeedback();
+  const invalidatePhotos = useInvalidatePhotos();
   const settings = useGalleryStore(state => state.settings);
   const setSettings = useGalleryStore(state => state.setSettings);
   const isSyncing = useGalleryStore(state => state.isSyncing);
@@ -31,19 +31,18 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
         setCloudCount(count);
         
         // Invalidate queries to refresh UI
+        invalidatePhotos();
         await Promise.all([
-          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories }),
-          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags }),
-          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers }),
-          (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })(),
-          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings }),
-          queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }) // Invalidate all group photo queries
+          queryClient.invalidateQueries({ queryKey: ['categories'] }),
+          queryClient.invalidateQueries({ queryKey: ['tags'] }),
+          queryClient.invalidateQueries({ queryKey: ['manufacturers'] }),
+          queryClient.invalidateQueries({ queryKey: ['settings'] }),
         ]);
       } catch (err) {
         handleError(err, '同步失败');
       }
     });
-  }, [withLoading, setSettings, queryClient, handleError]);
+  }, [withLoading, setSettings, queryClient, handleError, invalidatePhotos]);
 
   return {
     viewMode,

@@ -4,14 +4,12 @@ export * from './queries/useCategories';
 export * from './queries/useTags';
 export * from './queries/useManufacturers';
 export * from './queries/useGroups';
+export * from './queries/useInvalidatePhotos';
 
 // Mutations
 export * from './mutations/useDeletePhoto';
 export * from './mutations/useUpdatePhoto';
-export { useDeletePhotoMutation as useDeletePhoto } from './mutations/useDeletePhoto';
-export { useUpdatePhotoMutation as useUpdatePhoto } from './mutations/useUpdatePhoto';
 export * from './mutations/useGroupOperations';
-export { useRemoveFromGroupMutation } from './mutations/useGroupOperations';
 export * from './mutations/useAdminMutations';
 export * from './mutations/useGroupCoverMutation';
 export * from './mutations/useSettingsMutation';
@@ -33,3 +31,6 @@ export * from './usePhotoImport';
 export * from './usePhotoMutations';
 export * from './useFormValidation';
 export * from './usePermission';
+export * from './useAdminMode';
+export * from './uiFeedback';
+export * from './usePhotoFilters';

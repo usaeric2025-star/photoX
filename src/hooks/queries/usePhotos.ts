@@ -2,7 +2,7 @@ import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-qu
 import { loadAllPhotosFromCloud, loadPhotosByGroupId, getPhotoCount } from '../../services/photoService';
 import { QUERY_KEYS } from './keys';
 
-export const useInfinitePhotosQuery = (filters: { categoryId?: string | null; tagId?: string | null; searchQuery?: string | null; isAdminMode?: boolean }, limit: number = 20) => {
+export const useInfinitePhotos = (filters: { categoryId?: string | null; tagId?: string | null; searchQuery?: string | null; isAdminMode?: boolean }, limit: number = 20) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
     queryFn: async ({ pageParam = 1 }) => {

@@ -1,18 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback } from '../uiFeedback';
 import { saveSettings } from '../../services/settingService';
 import { QUERY_KEYS } from '../queries/keys';
 
 export const useSettingsMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
   return useMutation({
     mutationFn: saveSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings });
     },
     onError: (err: any) => {
-      handleError(err, '保存设置失败');
+      showError(err, '保存设置失败');
     }
   });
 };

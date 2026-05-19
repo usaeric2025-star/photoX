@@ -77,7 +77,6 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
              photos={photos}
              categories={categories}
              tags={tags}
-             isAdminMode={true}
              isStaffMode={true}
              onTogglePinned={onTogglePinned}
              onToggleHidden={onToggleHidden}

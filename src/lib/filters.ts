@@ -4,27 +4,52 @@ import { filterPhotosByMode } from '../utils/photoVisibility';
 
 export const cleanPhotos = (photos: unknown[]): Photo[] => {
   if (!Array.isArray(photos)) return [];
-  return photos
+  
+  const mapped = photos
     .filter((p): p is Record<string, unknown> => {
       if (p == null || typeof p !== 'object') return false;
       if (!isValidPhoto(p)) {
-        console.warn('Invalid photo data:', p);
         return false;
       }
       return true;
     })
-    .map(p => ({
-      ...p,
-      id: String(p.id),
-      name: String(p.name || ''),
-      item_code: String(p.item_code || ''),
-      image_hash: String(p.image_hash || ''),
-      image_url: String(p.image_url || ''),
-      createdAt: String(p.createdAt || new Date().toISOString()),
-      tagIds: Array.isArray(p.tagIds) ? p.tagIds.map(String) : [],
-      dimensions: Array.isArray(p.dimensions) ? p.dimensions as any[] : [], // Still need to handle Dimension type properly later
-      createdAtTimestamp: new Date((p.createdAt as string) || (p.created_at as string) || 0).getTime(),
-    }) as unknown as Photo);
+    .map(p => {
+      const createdAt = String(p.createdAt || p.created_at || new Date().toISOString());
+      return {
+        ...p,
+        id: String(p.id),
+        name: String(p.name || ''),
+        item_code: String(p.item_code || ''),
+        image_hash: String(p.image_hash || ''),
+        image_url: String(p.image_url || ''),
+        createdAt,
+        tagIds: Array.isArray(p.tagIds) ? p.tagIds.map(String) : [],
+        dimensions: Array.isArray(p.dimensions) ? p.dimensions as any[] : [],
+        createdAtTimestamp: new Date(createdAt).getTime(),
+        isPinned: !!p.isPinned || !!p.is_pinned
+      } as Photo;
+    });
+
+  // Deduplicate by ID first
+  const idMap = new Map<string, Photo>();
+  mapped.forEach(p => {
+    const existing = idMap.get(p.id);
+    if (!existing || (p.isPinned && !existing.isPinned) || (p.createdAtTimestamp > existing.createdAtTimestamp)) {
+      idMap.set(p.id, p);
+    }
+  });
+
+  // Then by Hash (for Public View consistency, though usually IDs are unique enough)
+  const hashMap = new Map<string, Photo>();
+  Array.from(idMap.values()).forEach(p => {
+    const key = p.image_hash || p.id;
+    const existing = hashMap.get(key);
+    if (!existing || (p.isPinned && !existing.isPinned) || (p.createdAtTimestamp > existing.createdAtTimestamp)) {
+      hashMap.set(key, p);
+    }
+  });
+
+  return Array.from(hashMap.values());
 };
 
 export interface FilterOptions {

@@ -1,25 +1,23 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useErrorHandler } from '../../utils/errorHandler';
-import { QUERY_KEYS } from '../queries/keys';
+import { useFeedback, useInvalidatePhotos } from '../';
 
 export const useSyncMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
+  const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
     mutationFn: async (type: 'push' | 'pull') => {
-      // Logic from useSyncEngine.refreshCloudData
-      // Need to handle implementation here
       if (type === 'pull') {
-        await (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
-        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
-        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
-        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
-        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
+        invalidatePhotos();
+        await queryClient.invalidateQueries({ queryKey: ['tags'] });
+        await queryClient.invalidateQueries({ queryKey: ['categories'] });
+        await queryClient.invalidateQueries({ queryKey: ['manufacturers'] });
+        await queryClient.invalidateQueries({ queryKey: ['groups'] });
       }
     },
     onError: (err: any) => {
-      handleError(err, '同步失败');
+      showError(err, '同步失败');
     }
   });
 };

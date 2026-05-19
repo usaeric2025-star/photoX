@@ -1,4 +1,3 @@
-import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../../services/geminiService';
@@ -9,6 +8,7 @@ import { formatDate } from '../../utils/dateFormat';
 import { savePhotoToCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
 import { shouldUpdateName, cleanAiName, formatAiError } from './photoAiUtils';
+import { useFeedback } from '../uiFeedback';
 
 interface SingleAiProps {
   user: User | null;
@@ -23,7 +23,8 @@ interface SingleAiProps {
   updateTask: (id: string, updates: Partial<Task>) => void;
   removeTask: (id: string) => void;
   photosRef: React.MutableRefObject<Photo[]>;
-  handleError: (error: unknown, context?: string) => void;
+  showError: (error: unknown, context?: string) => void;
+  invalidatePhotos: () => void;
   setAiDebugInfo: (info: { step: string; message: string; error?: string } | null) => void;
   currentAnalysisControllers: React.MutableRefObject<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>;
   abortAnalysis: (taskId?: string) => void;
@@ -31,10 +32,11 @@ interface SingleAiProps {
 
 export const useSinglePhotoAI = (props: SingleAiProps) => {
   const queryClient = useQueryClient();
+  const { showSuccess } = useFeedback();
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags,
     manufacturers, tagNameToIdMap, addTask, updateTask, removeTask,
-    photosRef, handleError, setAiDebugInfo, currentAnalysisControllers, abortAnalysis
+    photosRef, showError, invalidatePhotos, setAiDebugInfo, currentAnalysisControllers, abortAnalysis
   } = props;
 
   const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
@@ -111,7 +113,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
             const finalId = await savePhotoToCloud(user.id, updatedPhoto);
             updatedPhoto.id = finalId;
           }
-          (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+          invalidatePhotos();
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         }
       }
@@ -124,7 +126,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       if (error.name === 'DuplicatePhotoError') {
          updateTask(taskId, { status: 'completed', progress: 100, message: '已跳过 (重复照片)' });
          setAiDebugInfo(null);
-         toast.info('已存在相同照片'); 
+         showSuccess('已存在相同照片'); 
          return null as any;
       }
       if (error.name === 'AbortError') {
@@ -133,8 +135,8 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       } else {
         const displayError = formatAiError(error.message || String(err));
         updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
-        if (editPhotoId) (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
-        handleError(err, 'AI 单图识别失败');
+        if (editPhotoId) invalidatePhotos();
+        showError(err, 'AI 单图识别失败');
         throw err;
       }
     } finally {

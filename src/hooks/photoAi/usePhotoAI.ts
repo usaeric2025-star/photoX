@@ -4,7 +4,7 @@ import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { useSinglePhotoAI } from './useSinglePhotoAI';
 import { useBatchPhotoAI } from './useBatchPhotoAI';
 import { useGroupPhotoAI } from './useGroupPhotoAI';
-import { QUERY_KEYS } from '../queries/keys';
+import { useInvalidatePhotos } from '../queries/useInvalidatePhotos';
 
 export const usePhotoAI = (
   user: User | null,
@@ -19,9 +19,10 @@ export const usePhotoAI = (
   updateTask: (id: string, updates: Partial<Task>) => void,
   removeTask: (id: string) => void,
   photosRef: React.MutableRefObject<Photo[]>,
-  handleError: (error: unknown, context?: string) => void
+  showError: (error: unknown, context?: string) => void
 ) => {
   const queryClient = useQueryClient();
+  const invalidatePhotos = useInvalidatePhotos();
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const isAnalyzingRef = useRef(false);
@@ -34,7 +35,7 @@ export const usePhotoAI = (
     });
     currentAnalysisControllers.current.clear();
     setBatchProgress({ current: 0, total: 0 });
-    (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+    invalidatePhotos();
     
     if (taskId) {
         updateTask(taskId, { status: 'cancelled', message: '已取消 AI 识别任务' });
@@ -46,7 +47,7 @@ export const usePhotoAI = (
 
   const commonProps = {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
-    tagNameToIdMap, addTask, updateTask, removeTask, handleError,
+    tagNameToIdMap, addTask, updateTask, removeTask, showError, invalidatePhotos,
     setAiDebugInfo, aiDebugInfo, currentAnalysisControllers, abortAnalysis,
     photosRef, setBatchProgress, isAnalyzingRef
   };

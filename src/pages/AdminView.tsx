@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { globalHandleError } from '../utils/errorHandler';
+import { useFeedback } from '../hooks';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { AdminViewContent } from './AdminView/index';
 import { useAdminDataPrep } from './AdminView/useAdminDataPrep';
@@ -11,6 +10,7 @@ import { FullPageLoading } from '../components/FullPageLoading';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function AdminView() {
+  const { showError } = useFeedback();
   const prep = useAdminDataPrep();
   const { user, authChecked, logout, navigate, t, lang, sessionValue, photoValue, uiValue, infinitePhotosQuery } = prep;
 
@@ -80,8 +80,7 @@ export default function AdminView() {
                      try {
                        await loginWithGoogle();
                      } catch(e) {
-                       const error = e instanceof Error ? e : new Error(String(e));
-                       globalHandleError(error, t.loginFailedAlert);
+                       showError(e, t.loginFailedAlert);
                      }
                  }}
                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg shadow-blue-500/20 active:scale-[0.98] hover:bg-blue-700 transition-all mb-4"

@@ -1,22 +1,21 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useErrorHandler } from '../../utils/errorHandler';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../hooks/useAuth';
 import { translations, LanguageCode } from '../../lib/translations';
-import { toast } from 'sonner';
 import { 
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
   useAddCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
   useUpdatePhotoMutation, useBatchEditMutation, useDeletePhotoMutation, useGroupPhotosMutation, useUngroupMutation,
   useSettingsMutation, useSyncMutation,
-  useAdminDialogs, useLoading, useInfinitePhotosQuery, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
-  useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos
+  useAdminDialogs, useLoading, useInfinitePhotos, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
+  useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback
 } from '../../hooks';
 import { useGalleryStore } from '../../store';
 import { PAGINATION } from '../../constants/config';
 import { ProductFormData, Photo } from '../../types';
+import { cleanPhotos } from '../../lib/filters';
 
 const errorGuard = (name: string) => () => {
   console.error(`Blocked call to ${name}`);
@@ -25,7 +24,7 @@ const errorGuard = (name: string) => () => {
 
 export const useAdminDataPrep = () => {
   const { user, authChecked, logout } = useAuth();
-  const { handleError } = useErrorHandler();
+  const { showError, showSuccess } = useFeedback();
   const navigate = useNavigate();
 
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminDialogs();
@@ -42,7 +41,7 @@ export const useAdminDataPrep = () => {
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
 
-  const infinitePhotosQuery = useInfinitePhotosQuery({
+  const infinitePhotosQuery = useInfinitePhotos({
     categoryId: filterCatId,
     tagId: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
@@ -53,7 +52,7 @@ export const useAdminDataPrep = () => {
 
   const photos = useMemo(() => {
     const allPhotos = infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
-    return Array.from(new Map(allPhotos.map(p => [p.id, p])).values());
+    return cleanPhotos(allPhotos);
   }, [infinitePhotosQuery.data]);
 
   useEffect(() => {
@@ -133,18 +132,18 @@ export const useAdminDataPrep = () => {
         const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
           updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
-          handleError(new Error(`标签 "${normalized}" 已存在`), '新增标签');
+          showError(new Error(`标签 "${normalized}" 已存在`), '新增标签');
           return;
         }
         const saved = await addTag(normalized);
         if (saved) {
            updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] }));
-           // Success feedback handled by withFeedback or caller if needed, 
+           // Success feedback handled by caller if needed, 
            // but here we keep it silent to avoid double toasts if used in BatchEdit
         }
       }
     });
-  }, [setPromptDialog, tags, addTag, updateForm, handleError]);
+  }, [setPromptDialog, tags, addTag, updateForm, showError]);
 
   const quickAddManufacturer = useCallback(() => {
     setPromptDialog({

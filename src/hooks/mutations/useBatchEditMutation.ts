@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { updatePhotosBatch } from '../../services/photoMutationService';
-import { QUERY_KEYS } from '../queries/keys';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback, useInvalidatePhotos } from '../../hooks';
 
 export const useBatchEditMutation = (userId: string) => {
   const queryClient = useQueryClient();
-  const { handleError } = useErrorHandler();
+  const { showError } = useFeedback();
+  const invalidatePhotos = useInvalidatePhotos();
+
   return useMutation({
     mutationFn: ({ ids, updates }: { ids: string[]; updates: any }) => 
       updatePhotosBatch(userId, ids, updates),
@@ -40,12 +40,11 @@ export const useBatchEditMutation = (userId: string) => {
         );
       });
 
-      // toast.success('批量更新成功');
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
+      invalidatePhotos();
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
     onError: (err, variables, context: any) => {
       if (context?.previousInfinite) {
@@ -56,8 +55,8 @@ export const useBatchEditMutation = (userId: string) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
-      handleError(err, '批量编辑失败');
+      invalidatePhotos();
+      showError(err, '批量编辑失败');
     },
   });
 };

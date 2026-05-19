@@ -3,6 +3,7 @@ import { VirtuosoGrid, VirtuosoGridHandle, VirtuosoGridProps as BaseVirtuosoGrid
 import { Photo, Category, Manufacturer } from '../../types';
 import { PhotoCard } from '../PhotoCard';
 import { TranslationType } from '../../lib/ui-helpers';
+import { useAdminMode } from '../../hooks/useAdminMode';
 
 interface GalleryGridProps {
   virtuosoRef: React.RefObject<VirtuosoGridHandle | null>;
@@ -12,7 +13,6 @@ interface GalleryGridProps {
   virtuosoComponents?: BaseVirtuosoGridProps<Photo, any>['components'];
   virtuosoContext?: any;
   handleLoadMore: () => void;
-  isAdminMode: boolean;
   activeIsMultiSelect: boolean;
   isStaffMode: boolean;
   activeSelectedIds: string[];
@@ -40,7 +40,6 @@ interface GalleryGridProps {
 interface MemoizedPhotoCardProps {
   index: number;
   photo: Photo;
-  isAdminMode: boolean;
   isMultiSelect: boolean;
   isStaffMode: boolean;
   isSelected: boolean;
@@ -63,11 +62,12 @@ interface MemoizedPhotoCardProps {
 }
 
 const MemoizedPhotoCard = React.memo(({ 
-  index, photo, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, 
+  index, photo, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, 
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, 
   gridPhotos, onTogglePinned 
 }: MemoizedPhotoCardProps) => {
+  const isAdminMode = useAdminMode();
   const handleOpenLightbox = useCallback(() => {
     const target = gridPhotos[index];
     if (!target) return;
@@ -79,7 +79,6 @@ const MemoizedPhotoCard = React.memo(({
     <PhotoCard 
       photo={photo}
       index={index}
-      isAdminMode={isAdminMode}
       isMultiSelect={isMultiSelect}
       isStaffMode={isStaffMode}
       isSelected={isSelected}
@@ -126,7 +125,6 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
           <MemoizedPhotoCard
             index={index}
             photo={photo}
-            isAdminMode={props.isAdminMode}
             isMultiSelect={props.activeIsMultiSelect}
             isStaffMode={props.isStaffMode}
             isSelected={photo ? !!props.activeSelectedIds.includes(photo.id) : false}

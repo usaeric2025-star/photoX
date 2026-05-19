@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { toast } from 'sonner';
 import { 
   X, Edit3, Settings2, Plus, ChevronLeft, ChevronRight, ChevronDown, Layers, Pencil, Sparkles, 
   Star, ArrowLeft, ArrowRight, MoreVertical, Trash2, Check, 
@@ -30,11 +29,12 @@ import { GroupMultiSelectBar } from './GroupMultiSelectBar';
 import { useGroupAdminLogic } from './useGroupAdminLogic';
 import { GroupGridView } from './GroupGridView';
 
+import { useAdminMode } from '../../hooks/useAdminMode';
+
 export interface GroupAdminShellProps {
   activeGroupId: string | null;
   setActiveGroupId: (id: string | null) => void;
   photos: Photo[];
-  isAdminMode: boolean;
   onEditPhoto?: (photo: Photo) => void;
   onBatchEdit?: (ids: string[]) => void;
   onUngroup?: (groupId: string) => void;
@@ -61,15 +61,16 @@ export interface GroupAdminShellProps {
 
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
 import { useGalleryStore } from '../../store';
-import { useErrorHandler } from '../../hooks';
+import { useFeedback } from '../../hooks';
 
 import { DimensionEditor } from '../admin/edit/DimensionEditor';
 
 export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
-  const { handleError } = useErrorHandler();
+  const { showError: handleError } = useFeedback();
+  const isAdminMode = useAdminMode();
   const {
     activeGroupId, setActiveGroupId, photos,
-    isAdminMode, onEditPhoto,
+    onEditPhoto,
     onBatchEdit, onUngroup, onAddPhotoToGroup,
     updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
     onRefresh,
@@ -106,7 +107,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   } = useGroupAdminLogic({
     activeGroupId,
     photos,
-    isAdminMode,
     hookUpdatePhoto,
     propsSetAlertDialog: propsSetAlertDialog as any,
     onBatchAiAnalyze,
@@ -197,14 +197,12 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
               activeGroupId={activeGroupId}
               groupData={groupData}
               setGroupData={setGroupData}
-              isAdminMode={isAdminMode}
               onUngroup={onUngroup}
               setActiveGroupId={setActiveGroupId}
               handleUpdateGroupData={handleUpdateGroupData}
               handleBatchUpdateDimensions={handleBatchUpdateDimensions}
               setAlertDialog={setAlertDialog}
               setPromptDialog={setPromptDialog}
-              handleError={handleError}
               t={t}
             />
 
@@ -234,7 +232,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       categories={categories || []}
                       manufacturers={manufacturers}
                       tagMap={tagMap || {}}
-                      isAdminMode={isAdminMode}
                       isStaffMode={isStaffMode}
                       contactWhatsApp={contactWhatsApp}
                       onUngroup={(photoId) => {

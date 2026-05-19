@@ -5,6 +5,8 @@ import { usePhotoLightboxLogic } from './usePhotoLightboxLogic';
 import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 
+import { useAdminMode } from '../../hooks/useAdminMode';
+
 export interface PhotoLightboxProps {
   photo: Photo | null;
   displayPhotos: Photo[];
@@ -17,7 +19,6 @@ export interface PhotoLightboxProps {
   categories: Category[];
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
-  isAdminMode: boolean;
   isStaffMode: boolean;
   contactWhatsApp: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
@@ -32,9 +33,11 @@ export interface PhotoLightboxProps {
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
     photo, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-    isAdminMode, isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
+    isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
     onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos
   } = props;
+
+  const isAdminMode = useAdminMode();
 
   const {
     isZoomed, setIsZoomed,
@@ -80,7 +83,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        isAdminMode={isAdminMode}
         onEditPhoto={onEditPhoto}
         handleDownload={handleDownload}
         t={t}
@@ -94,7 +96,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
           isGroupDataLoading={isGroupDataLoading}
           activeLang={activeLang}
           setActiveLang={setActiveLang}
-          isAdminMode={isAdminMode}
           isStaffMode={isStaffMode}
           isCopied={isCopied}
           isAnalyzing={isAnalyzing}

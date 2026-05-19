@@ -1,14 +1,13 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useGalleryStore } from '../../../store';
 import { 
   useCategoriesQuery, useTagsQuery, useManufacturersQuery,
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
-  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation
+  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
+  useFeedback
 } from '../../../hooks';
 import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
-import { useErrorHandler } from '../../../utils/errorHandler';
 import { useFormValidation } from '../../../hooks/useFormValidation';
-import { withFeedback } from '../../../utils/uiFeedback';
 
 interface Props {
   editPhotoId: string | null;
@@ -25,7 +24,7 @@ interface Props {
 export const usePhotoEditLogic = (props: Props) => {
   const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, handleSingleAiAnalyze, saveNewPhoto } = props;
   const { isAnalyzing, aiDebugInfo, setPromptDialog, setAlertDialog, withLoading, appLang, isSyncing: sessionSyncing } = useGalleryStore();
-  const { handleError } = useErrorHandler();
+  const { showError, showSuccess } = useFeedback();
   const { validatePhotoForm } = useFormValidation();
 
   const { data: categories = [] } = useCategoriesQuery();
@@ -80,7 +79,7 @@ export const usePhotoEditLogic = (props: Props) => {
         setNewPhotoData(newData);
       }
     } catch (err) {
-      handleError(err, '图像旋转处理失败');
+      showError(err, '图像旋转处理失败');
     } finally {
       setIsProcessingImage(false);
     }
@@ -89,7 +88,7 @@ export const usePhotoEditLogic = (props: Props) => {
   const handleSave = async () => {
     const { valid, errors } = validatePhotoForm(formState);
     if (!valid) {
-      handleError(new Error(errors[0]), '表單驗證失敗');
+      showError(new Error(errors[0]), '表單驗證失敗');
       return;
     }
     await saveNewPhoto();
@@ -101,11 +100,11 @@ export const usePhotoEditLogic = (props: Props) => {
     
     if (editPhotoId) {
         try {
-            await withFeedback(async () => {
-                const m = await import('../../../services/photoMutationService');
-                await m.updatePhotoHidden(editPhotoId, nextValue);
-            }, `照片已${nextValue ? '隐藏' : '显示'}`, '自动保存可见性失败');
+            const m = await import('../../../services/photoMutationService');
+            await m.updatePhotoHidden(editPhotoId, nextValue);
+            showSuccess(`照片已${nextValue ? '隐藏' : '显示'}`);
         } catch (e) {
+            showError(e, '自动保存可见性失败');
             // Rollback on failure
             updateForm({ is_hidden: !nextValue });
         }
@@ -120,7 +119,7 @@ export const usePhotoEditLogic = (props: Props) => {
     if (handleSingleAiAnalyze) {
       withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined, editPhotoId || undefined)).catch(()=>{});
     } else {
-      handleError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
+      showError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
     }
   };
 
@@ -131,6 +130,6 @@ export const usePhotoEditLogic = (props: Props) => {
     isProcessingImage, rotatePhoto,
     handleSave, toggleHidden, triggerAiAnalyze,
     isAnalyzing, aiDebugInfo, isPartOfGroup, sessionSyncing,
-    setPromptDialog, setAlertDialog, withLoading, appLang, handleError
+    setPromptDialog, setAlertDialog, withLoading, appLang, showError
   };
 };

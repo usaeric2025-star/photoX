@@ -13,6 +13,8 @@ import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell'
 import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService';
 import { DB_CONFIG } from '../constants/config';
 
+import { useAdminMode } from '../hooks/useAdminMode';
+
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
 export interface GroupDetailViewProps extends GroupAdminShellProps {
   displayPhotos?: Photo[];
@@ -25,7 +27,8 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
-  const { activeGroupId, setActiveGroupId, photos, isAdminMode, shareGroup, initialPhotoId } = props;
+  const { activeGroupId, setActiveGroupId, photos, shareGroup, initialPhotoId } = props;
+  const isAdminMode = useAdminMode();
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
@@ -253,7 +256,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                       categories={props.categories || []}
                       manufacturers={props.manufacturers || []}
                       tagMap={props.tagMap || {}}
-                      isAdminMode={isAdminMode}
                       isStaffMode={props.isStaffMode || false}
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
                       onEditPhoto={props.onEditPhoto}

@@ -1,5 +1,3 @@
-import { withFeedback } from '../utils/uiFeedback';
-import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { 
   ChevronLeft, X, Cloud, LogOut,
@@ -7,6 +5,7 @@ import {
   Plus, Settings2, Image as ImageIcon, Sparkles, Lock, CloudUpload, CloudDownload,
   User as UserIcon, Heart, CheckCircle2, AlertCircle, Save, Pencil
 } from 'lucide-react';
+import { useFeedback } from '../hooks';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { Skeleton } from './ui/Skeleton';
 import { deduplicatePhotos } from '../services/photoMutationService';
@@ -20,7 +19,7 @@ import {
   useGalleryStore 
 } from '../store';
 import { 
-  useCategoriesQuery, useTagsQuery, useManufacturersQuery, useInfinitePhotosQuery,
+  useCategoriesQuery, useTagsQuery, useManufacturersQuery, useInfinitePhotos,
   useAdminCategory
 } from '../hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
@@ -59,6 +58,7 @@ const BUTTON_STYLES = {
 };
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
+  const { showSuccess, showError } = useFeedback();
   const { 
     settings, user, geminiApiKey, customModel, accessPasscode, appLang,
     setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
@@ -70,7 +70,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
   
-  const { data: infiniteData } = useInfinitePhotosQuery({}, 100);
+  const { data: infiniteData } = useInfinitePhotos({}, 100);
   const allPhotos = infiniteData?.pages.flatMap(p => p.photos) || [];
   const photos = Array.from(new Map(allPhotos.map(p => [p.id, p])).values());
 
@@ -160,11 +160,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       onSubmit: async (newName) => {
         const normalized = normalizeManufacturerName(newName);
         if (normalized && normalized !== mfr.name) {
-          await withFeedback(
-             () => updateManufacturer(String(mfr.id), { name: normalized }),
-             '厂商更新成功',
-             '更新厂商失败'
-          );
+          try {
+            await updateManufacturer(String(mfr.id), { name: normalized });
+            showSuccess('厂商更新成功');
+          } catch (e) {
+            showError(e, '更新厂商失败');
+          }
         }
       }
     });
@@ -203,9 +204,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
              if (hasChanges) {
                await saveSettings({ ...settings });
                setHasChanges(false);
-               toast.success("保存成功 / Saved successfully");
+               showSuccess("保存成功 / Saved successfully");
              } else {
-               toast.success("没有更改需要保存 / No changes to save");
+               showSuccess("没有更改需要保存 / No changes to save");
              }
            }}
            className={`p-2 rounded-lg shadow-md active:scale-95 transition-all flex items-center justify-center ${hasChanges ? 'bg-brand-gold hover:bg-brand-gold/90 text-white' : 'bg-brand-navy hover:bg-brand-navy/90 text-white'}`}

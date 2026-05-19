@@ -1,21 +1,30 @@
 import { Photo, User, Task } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from './queries/keys';
+import { 
+  useDeletePhotoMutation, 
+  useUpdatePhotoMutation, 
+  useBatchUpdatePhotosMutation 
+} from './';
 
 export const usePhotoMutations = (
   user: User | null,
-  handleError: (error: unknown, context?: string) => void,
-  deletePhotos: (ids: string | string[], photos: Photo[], onProgress?: (current: number, total: number) => void, signal?: AbortSignal) => Promise<{ success: boolean; error?: Error }>,
+  showError: (error: unknown, context?: string) => void,
+  _deprecated_deletePhotos: unknown, // No longer used as we use hooks
   photosRef: React.MutableRefObject<Photo[]>,
   addTask?: (t: Omit<Task, 'id'>) => string,
   updateTask?: (id: string, updates: Partial<Task>) => void,
   removeTask?: (id: string) => void
 ) => {
   const queryClient = useQueryClient();
+  const { mutateAsync: deletePhotoMut } = useDeletePhotoMutation();
+  const { mutateAsync: updatePhotoMut } = useUpdatePhotoMutation();
+  const { mutateAsync: batchUpdateMut } = useBatchUpdatePhotosMutation();
 
   const deletePhoto = async (idOrIds: string | string[]) => {
+    if (!user) return;
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+    const targetPhotos = photosRef.current.filter(p => ids.includes(p.id));
     
     if (ids.length > 1 && addTask && updateTask && removeTask) {
       const controller = new AbortController();
@@ -29,121 +38,57 @@ export const usePhotoMutations = (
         }
       });
       
-      const result = await deletePhotos(ids, photosRef.current, (current: number, total: number) => {
-        updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在删除 ${current} / ${total}` });
-      }, controller.signal);
-      
-      if (!result.success) {
-        updateTask(taskId, { status: 'error', message: `删除失败: ${result.error?.message || '未知错误'}` });
-      } else {
+      try {
+        await deletePhotoMut({ userId: user.id, photos: targetPhotos });
         updateTask(taskId, { status: 'completed', progress: 100, message: '删除成功' });
         setTimeout(() => removeTask(taskId), 5000);
+      } catch (e: any) {
+        updateTask(taskId, { status: 'error', message: `删除失败: ${e.message || '未知错误'}` });
       }
     } else {
-      await deletePhotos(idOrIds, photosRef.current);
+      await deletePhotoMut({ userId: user.id, photos: targetPhotos });
     }
   };
 
   const updatePhotosBulk = async (ids: string[], updates: Partial<Photo>, taskName?: string) => {
-    if (ids.length === 0) return;
+    if (ids.length === 0 || !user) return;
     
     const updatedAt = formatDate(new Date());
     const finalUpdates = { ...updates, updatedAt };
 
-    const queryKey = QUERY_KEYS.photos;
-    const previousPhotos = queryClient.getQueryData(queryKey);
-
-    // Optimistic Update for all photo queries
-    queryClient.setQueriesData({ queryKey: ['photos'] }, (oldData: any) => {
-      if (!oldData) return;
+    if (ids.length > 1 && addTask && updateTask && removeTask) {
+      const controller = new AbortController();
+      const taskId = addTask({
+        name: taskName || `批量更新 (${ids.length} 张)`,
+        status: 'running',
+        onCancel: () => {
+           controller.abort();
+           updateTask(taskId, { status: 'cancelled', message: '已取消操作' });
+        }
+      });
       
-      // Handle infinite query structure
-      if (oldData.pages) {
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
-            ...page,
-            photos: page.photos.map((p: Photo) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p)
-          }))
-        };
-      }
-      
-      // Handle simple array structure (like group queries)
-      if (Array.isArray(oldData)) {
-        return oldData.map((p: Photo) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p);
-      }
-      
-      return oldData;
-    });
-
-    if (user) {
-      if (ids.length > 1 && addTask && updateTask && removeTask) {
-        const controller = new AbortController();
-        const taskId = addTask({
-          name: taskName || `批量更新 (${ids.length} 张)`,
-          status: 'running',
-          onCancel: () => {
-             controller.abort();
-             updateTask(taskId, { status: 'cancelled', message: '已取消操作' });
-          }
-        });
-        
-        try {
-          const { updatePhotosBatch } = await import('../services/photoMutationService');
-          await updatePhotosBatch(user.id, ids, finalUpdates, (current, total) => {
+      try {
+        await batchUpdateMut({ 
+          userId: user.id, 
+          ids, 
+          updates: finalUpdates, 
+          onProgress: (current, total) => {
             updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在处理 ${current} / ${total}` });
-          }, controller.signal);
-          updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
-          queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
-            if (!old) return old;
-            return {
-              ...old,
-              pages: old.pages.map((page: any) => ({
-                ...page,
-                photos: page.photos.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p),
-              })),
-            };
-          });
-          queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
-            if (!Array.isArray(old)) return old;
-            return old.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p);
-          });
-          setTimeout(() => removeTask(taskId), 5000);
-        } catch (e: unknown) {
-          if (previousPhotos) {
-             queryClient.setQueriesData({ queryKey: ['photos'] }, previousPhotos);
-          }
-          if (!controller.signal.aborted) {
-             updateTask(taskId, { status: 'error', message: '部分更新失败' });
-             handleError(e, "批量云端同步失败");
-          }
-        }
-      } else {
-        const m = await import('../services/photoMutationService');
-        try {
-          for (const id of ids) {
-             await m.updatePhoto(id, finalUpdates);
-          }
-        } catch (e: unknown) {
-          if (previousPhotos) {
-             queryClient.setQueriesData({ queryKey: ['photos'] }, previousPhotos);
-          }
-          handleError(e, "照片云端同步失败");
-        }
-        queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
-          if (!old) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page: any) => ({
-              ...page,
-              photos: page.photos.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p),
-            })),
-          };
+          },
+          signal: controller.signal
         });
-        queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
-          if (!Array.isArray(old)) return old;
-          return old.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p);
-        });
+        updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
+        setTimeout(() => removeTask(taskId), 5000);
+      } catch (e: unknown) {
+        if (!controller.signal.aborted) {
+           updateTask(taskId, { status: 'error', message: '部分更新失败' });
+           showError(e, "批量云端同步失败");
+        }
+      }
+    } else {
+      // Single or small update
+      for (const id of ids) {
+        await updatePhotoMut({ id, updates: finalUpdates });
       }
     }
   };

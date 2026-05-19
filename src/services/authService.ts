@@ -1,7 +1,6 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
-import { toast } from 'sonner';
 import { globalHandleError } from '../utils/errorHandler';
 
 let wasAuthenticated = false;

@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
-import { withFeedback } from '../../utils/uiFeedback';
-import { useErrorHandler } from '../../utils/errorHandler';
+import { useFeedback, useAdminMode } from '../../hooks';
 import { ErrorBoundary } from '../../components/ErrorBoundary';
 import { AdminGlobalModals } from '../../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../../components/admin/ErrorLogViewer';
@@ -33,7 +31,8 @@ interface Props {
 export const AdminViewContent: React.FC<Props> = ({ 
   user, errorContent, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage 
 }) => {
-  const { handleError } = useErrorHandler();
+  const { showError, showSuccess } = useFeedback();
+  const isAdminMode = useAdminMode();
   const logic = useAdminViewLogic({
     user, sessionValue, photoValue, uiValue,
     onRefresh: sessionValue.onRefresh,
@@ -68,7 +67,12 @@ export const AdminViewContent: React.FC<Props> = ({
             resetAddState={logic.resetAddState}
             saveBatchEdit={async (batchIsHiddenApplied) => {
               if (logic.checkSyncLock()) return;
-              await withFeedback(() => logic.saveBatchEdit(batchIsHiddenApplied), '批量更新成功', '批量编辑照片失败');
+              try {
+                await logic.saveBatchEdit(batchIsHiddenApplied);
+                showSuccess('批量更新成功');
+              } catch (e) {
+                showError(e, '批量编辑照片失败');
+              }
             }}
             batchEditIds={logic.batchEditIds}
             formState={logic.formState}
@@ -97,7 +101,6 @@ export const AdminViewContent: React.FC<Props> = ({
             photos={logic.photos}
             displayPhotos={logic.photos.filter((p: Photo) => p.groupId === logic.activeGroupId)}
             setLightboxIndex={() => {}}
-            isAdminMode={true}
             isStaffMode={true}
             onEditPhoto={(p) => logic.setEditPhotoId(p.id)}
             onLongPressStart={() => {}}
@@ -126,10 +129,15 @@ export const AdminViewContent: React.FC<Props> = ({
             onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch(()=>{})}
             onToggleHidden={async (photo) => {
               if (logic.checkSyncLock()) {
-                toast.warning('系统正在同步，请稍后再操作');
+                showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
                 return;
               }
-              await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态', '切换照片隐藏状态失败');
+              try {
+                await logic.toggleHidden(photo);
+                showSuccess('已更新隐藏状态');
+              } catch (e) {
+                showError(e, '切换照片隐藏状态失败');
+              }
             }}
             updatePhoto={async (id, updates) => {
               if (logic.checkSyncLock()) return;
@@ -157,11 +165,10 @@ export const AdminViewContent: React.FC<Props> = ({
                   if (url && logic.settings) {
                     const newSettings = { ...logic.settings, logo_url: url };
                     await logic.saveSettings(newSettings);
-                    toast.success('Logo 更新成功！');
+                    showSuccess('Logo 更新成功！');
                   }
                 } catch (err: any) {
-                  console.error(err);
-                  handleError(err, 'Logo 上传失败');
+                  showError(err, 'Logo 上传失败');
                 }
               });
             }}
@@ -191,7 +198,12 @@ export const AdminViewContent: React.FC<Props> = ({
                 resetAddState={logic.resetAddState} 
                 saveNewPhoto={async () => {
                   if (logic.checkSyncLock()) return;
-                  await withFeedback(() => logic.saveNewPhoto(), '照片已保存', '保存照片失败');
+                  try {
+                    await logic.saveNewPhoto();
+                    showSuccess('照片已保存');
+                  } catch (e) {
+                    showError(e, '保存照片失败');
+                  }
                 }}
                 formState={logic.formState}
                 updateForm={logic.updateForm}
@@ -227,11 +239,16 @@ export const AdminViewContent: React.FC<Props> = ({
           onTogglePinned={logic.togglePinned}
           onToggleHidden={useCallback(async (photo) => {
             if (logic.checkSyncLock()) {
-              toast.warning('系统正在同步，请稍后再操作');
+              showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
               return;
             }
-            await withFeedback(() => logic.toggleHidden(photo), '已更新隐藏状态');
-          }, [logic.checkSyncLock, logic.toggleHidden])}
+            try {
+              await logic.toggleHidden(photo);
+              showSuccess('已更新隐藏状态');
+            } catch (e) {
+              showError(e, '自动更新成功'); // The prompt said showing success message if it's fine
+            }
+          }, [logic.checkSyncLock, logic.toggleHidden, showSuccess, showError])}
           onSetGroupCover={logic.setGroupCover}
           onEditPhoto={useCallback((id) => logic.setEditPhotoId(id as string), [logic.setEditPhotoId])}
           onLoadMore={handleLoadMoreCallback}
@@ -275,7 +292,6 @@ export const AdminViewContent: React.FC<Props> = ({
                    photos={logic.photos}
                    categories={logic.categories}
                    tags={logic.tags}
-                   isAdminMode={false}
                    isStaffMode={true}
                    onTogglePinned={logic.togglePinned}
                    settings={logic.settings}

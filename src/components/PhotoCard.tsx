@@ -4,13 +4,13 @@ import { X, Layers, Heart, EyeOff, Eye, Check, Image as ImageIcon } from 'lucide
 import { Skeleton } from './ui/Skeleton';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';
+import { useAdminMode } from '../hooks/useAdminMode';
 
 const loadedImagesCache = new Set<string>();
 
 interface PhotoCardProps {
   photo: Photo;
   index: number;
-  isAdminMode: boolean;
   isMultiSelect: boolean;
   isStaffMode: boolean;
   isSelected: boolean;
@@ -32,10 +32,11 @@ interface PhotoCardProps {
 }
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
-  photo, index, isAdminMode, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
+  photo, index, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden
 }) => {
+  const isAdminMode = useAdminMode();
   if (!photo) return null;
 
   const mfrName = useMemo(() => {
