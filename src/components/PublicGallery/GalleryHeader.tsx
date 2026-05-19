@@ -36,11 +36,11 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = (props) => {
       lang={props.lang}
       t={props.t}
       onHeaderClick={() => {}}
-      onRefresh={props.onRefresh!}
+      onRefresh={props.onRefresh || (() => {})}
       onToggleMultiSelect={props.onToggleMultiSelect}
       clearSelection={props.clearSelection}
       setIsMultiSelect={props.setIsMultiSelect}
-      onAddPhoto={props.onAddPhoto!}
+      onAddPhoto={props.onAddPhoto || (() => {})}
       onSetLang={props.onSetLang}
       onExit={props.onExit}
       onLogin={props.onLogin}

@@ -299,13 +299,13 @@ export const AdminViewContent: React.FC<Props> = ({
                    settings={logic.settings}
                    isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
                    isFetchingNextPage={isFetchingNextPage}
-                   onExit={() => logic.setViewMode('private')}
+                   onExit={useCallback(() => logic.setViewMode('private'), [logic.setViewMode])}
                    showExit={true}
-                   onRefresh={() => {
+                   onRefresh={useCallback(() => {
                      if (logic.checkSyncLock()) return;
                      logic.performPullSync(true);
-                   }}
-                   onOpenSettings={() => logic.setActiveScreen('manage')}
+                   }, [logic.checkSyncLock, logic.performPullSync])}
+                   onOpenSettings={useCallback(() => logic.setActiveScreen('manage'), [logic.setActiveScreen])}
                    hideHeader={false}
                    columns={logic.columns}
                    setColumns={logic.setColumns}

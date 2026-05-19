@@ -105,10 +105,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           {isAdminMode ? (
             onExit && (
               <button 
-                onClick={() => {
-                  console.log('Globe button (admin) clicked, calling onExit');
-                  onExit();
-                }}
+                onClick={onExit}
                 className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1"
                 title="Globe"
               >
@@ -117,10 +114,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
             )
           ) : (
             <button
-               onClick={() => {
-                 console.log('Globe button (login) clicked, calling onExit');
-                 onExit?.();
-               }}
+               onClick={onExit}
                className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
                title={t.login}
             >
