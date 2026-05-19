@@ -16,7 +16,7 @@ export const MultiSelectToolbar: React.FC<Props> = ({
   onBatchAiIdentify, onBatchEdit, onGroup, onDelete
 }) => {
   return (
-    <FloatingActionBar position="bottom-right" className="!bottom-6 !left-1/2 !-translate-x-1/2 !fixed !z-[200] !p-2 !rounded-2xl !bg-white !border-slate-100">
+    <FloatingActionBar position="bottom-right" className="!bottom-6 !left-1/2 !-translate-x-1/2 !z-[200] !p-2 !rounded-2xl !bg-white !border-slate-100 min-w-max">
       <button onClick={onClose} className="p-2 text-slate-500 hover:bg-slate-100 rounded-xl"><X size={20} /></button>
       <div className="px-2 font-bold text-blue-600 text-sm flex items-center">{selectedCount}</div>
       <div className="h-6 w-px bg-slate-200 mx-1" />
