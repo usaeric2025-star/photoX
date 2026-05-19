@@ -45,6 +45,57 @@ export const AdminViewContent: React.FC<Props> = ({
     }
   }, [hasNextPage, isFetchingNextPage, logic.performPullSync]);
 
+  const handleManageClick = useCallback(() => logic.setActiveScreen('manage'), [logic.setActiveScreen]);
+  const handleRefresh = useCallback(() => {
+    if (logic.checkSyncLock()) return;
+    logic.performPullSync(true);
+  }, [logic.checkSyncLock, logic.performPullSync]);
+  const handleToggleHidden = useCallback(async (photo) => {
+    if (logic.checkSyncLock()) {
+      showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
+      return;
+    }
+    try {
+      await logic.toggleHidden(photo);
+      showSuccess('已更新隐藏状态');
+    } catch (e) {
+      showError(e, '自动更新成功');
+    }
+  }, [logic.checkSyncLock, logic.toggleHidden, showSuccess, showError]);
+  const handleEditPhoto = useCallback((id) => logic.setEditPhotoId(id as string), [logic.setEditPhotoId]);
+  const handleDeletePhotos = useCallback((ids) => {
+      if (logic.checkSyncLock()) return;
+      logic.handleDeletePhoto(ids);
+      logic.setSelectedIds([]);
+      logic.setIsMultiSelect(false);
+  }, [logic.checkSyncLock, logic.handleDeletePhoto, logic.setSelectedIds, logic.setIsMultiSelect]);
+  const handleGroupPhotos = useCallback(async (ids) => {
+      if (logic.checkSyncLock()) return;
+      await logic.handleGroupPhotos(ids);
+      logic.setSelectedIds([]);
+      logic.setIsMultiSelect(false);
+  }, [logic.checkSyncLock, logic.handleGroupPhotos, logic.setSelectedIds, logic.setIsMultiSelect]);
+  const handleBatchEdit = useCallback((ids) => {
+      if (logic.checkSyncLock()) return;
+      logic.setBatchEditIds(ids);
+  }, [logic.checkSyncLock, logic.setBatchEditIds]);
+  const handleImport = useCallback(() => {
+    if (logic.checkSyncLock()) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch(()=>{});
+    input.click();
+  }, [logic.checkSyncLock, logic.handlePhotoImport]);
+
+  const handleExitPublic = useCallback(() => logic.setViewMode('private'), [logic.setViewMode]);
+  const handleRefreshPublic = useCallback(() => {
+      if (logic.checkSyncLock()) return;
+      logic.performPullSync(true);
+    }, [logic.checkSyncLock, logic.performPullSync]);
+  const handleOpenSettingsPublic = useCallback(() => logic.setActiveScreen('manage'), [logic.setActiveScreen]);
+
   const lastSyncTimeStr = localStorage.getItem('lastSyncTime');
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
 
@@ -233,57 +284,22 @@ export const AdminViewContent: React.FC<Props> = ({
           lang={lang}
           t={t}
           isFetchingNextPage={isFetchingNextPage}
-          onManageClick={useCallback(() => logic.setActiveScreen('manage'), [logic.setActiveScreen])}
-          onRefresh={useCallback(() => {
-            if (logic.checkSyncLock()) return;
-            logic.performPullSync(true);
-          }, [logic.checkSyncLock, logic.performPullSync])}
+          onManageClick={handleManageClick}
+          onRefresh={handleRefresh}
           onTogglePinned={logic.togglePinned}
-          onToggleHidden={useCallback(async (photo) => {
-            if (logic.checkSyncLock()) {
-              showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
-              return;
-            }
-            try {
-              await logic.toggleHidden(photo);
-              showSuccess('已更新隐藏状态');
-            } catch (e) {
-              showError(e, '自动更新成功'); // The prompt said showing success message if it's fine
-            }
-          }, [logic.checkSyncLock, logic.toggleHidden, showSuccess, showError])}
+          onToggleHidden={handleToggleHidden}
           onSetGroupCover={logic.setGroupCover}
-          onEditPhoto={useCallback((id) => logic.setEditPhotoId(id as string), [logic.setEditPhotoId])}
+          onEditPhoto={handleEditPhoto}
           onLoadMore={handleLoadMoreCallback}
           hasNextPage={!!hasNextPage}
-          onDeletePhotos={useCallback((ids) => {
-             if (logic.checkSyncLock()) return;
-             logic.handleDeletePhoto(ids);
-             logic.setSelectedIds([]);
-             logic.setIsMultiSelect(false);
-          }, [logic.checkSyncLock, logic.handleDeletePhoto, logic.setSelectedIds, logic.setIsMultiSelect])}
-          onGroupPhotos={useCallback(async (ids) => {
-             if (logic.checkSyncLock()) return;
-             await logic.handleGroupPhotos(ids);
-             logic.setSelectedIds([]);
-             logic.setIsMultiSelect(false);
-          }, [logic.checkSyncLock, logic.handleGroupPhotos, logic.setSelectedIds, logic.setIsMultiSelect])}
-          onBatchEdit={useCallback((ids) => {
-             if (logic.checkSyncLock()) return;
-             logic.setBatchEditIds(ids);
-          }, [logic.checkSyncLock, logic.setBatchEditIds])}
+          onDeletePhotos={handleDeletePhotos}
+          onGroupPhotos={handleGroupPhotos}
+          onBatchEdit={handleBatchEdit}
           onAiAnalyze={logic.handleSingleAiAnalyze}
           onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger}
           onCancelAnalyze={logic.abortAnalysis}
           isAnalyzing={logic.loadingType === 'analyzing'}
-          onImport={useCallback(() => {
-            if (logic.checkSyncLock()) return;
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.multiple = true;
-            input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch(()=>{});
-            input.click();
-          }, [logic.checkSyncLock, logic.handlePhotoImport])}
+          onImport={handleImport}
         />
       )}
 
@@ -299,13 +315,10 @@ export const AdminViewContent: React.FC<Props> = ({
                    settings={logic.settings}
                    isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
                    isFetchingNextPage={isFetchingNextPage}
-                   onExit={useCallback(() => logic.setViewMode('private'), [logic.setViewMode])}
+                   onExit={handleExitPublic}
                    showExit={true}
-                   onRefresh={useCallback(() => {
-                     if (logic.checkSyncLock()) return;
-                     logic.performPullSync(true);
-                   }, [logic.checkSyncLock, logic.performPullSync])}
-                   onOpenSettings={useCallback(() => logic.setActiveScreen('manage'), [logic.setActiveScreen])}
+                   onRefresh={handleRefreshPublic}
+                   onOpenSettings={handleOpenSettingsPublic}
                    hideHeader={false}
                    columns={logic.columns}
                    setColumns={logic.setColumns}

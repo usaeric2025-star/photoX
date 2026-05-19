@@ -171,7 +171,7 @@ export const usePublicGalleryLogic = (props: {
   const shareSinglePhoto = useCallback(async (photo: Photo) => {
     const msg = getShareMessage(photo);
     try {
-      if (navigator.share) await navigator.share({ title: t.shareTitle, text: msg });
+      if (navigator.share) navigator.share({ title: t.shareTitle, text: msg }).catch(e => { if (e.name !== 'AbortError') console.error(e); });
       else {
         await navigator.clipboard.writeText(msg);
         showSuccess("分享信息已复制到剪贴板！/ Share info copied to clipboard!");
@@ -188,7 +188,7 @@ export const usePublicGalleryLogic = (props: {
     const msg = validPhotos.map(p => p.name || 'Furniture').slice(0, 3).join(', ') + (validPhotos.length > 3 ? '...' : '');
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView full collection: ${shareUrl}`;
     try {
-      if (navigator.share) await navigator.share({ title: t.shareTitle, text: shareText });
+      if (navigator.share) navigator.share({ title: t.shareTitle, text: shareText }).catch(e => { if (e.name !== 'AbortError') console.error("Group share failed:", e); });
       else {
         await navigator.clipboard.writeText(shareText);
         showSuccess("群组分享链接已复制！/ Group share link copied!");
