@@ -111,6 +111,7 @@ export const AdminViewContent: React.FC<Props> = ({
               await logic.handleUngroup(groupId); 
             }}
             onAddPhotoToGroup={() => {
+              console.log("Add photo button clicked");
               if (logic.checkSyncLock()) return;
               const input = document.createElement('input');
               input.type = 'file';

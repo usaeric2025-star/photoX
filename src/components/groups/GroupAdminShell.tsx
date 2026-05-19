@@ -190,6 +190,22 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
              setIsMultiSelectMode={setIsMultiSelectMode}
            />
 
+            <div className="p-4 flex justify-center">
+              <button 
+                onClick={async () => {
+                   if (onAddPhotoToGroup) {
+                     await onAddPhotoToGroup();
+                   } else {
+                     console.warn('onAddPhotoToGroup is not defined');
+                   }
+                }} 
+                className="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+              >
+                <Plus size={18} />
+                添加照片
+              </button>
+            </div>
+
             {/* Group Settings Sheet */}
             <GroupSettingsSheet 
               showGroupSettings={showGroupSettings}

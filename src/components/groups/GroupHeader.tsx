@@ -137,9 +137,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <button onClick={onAddPhotoToGroup} className="w-10 h-10 flex-shrink-0 flex items-center justify-center bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all">
-                <Plus size={18} />
-              </button>
+
             </div>
          )}
          {!isAdminMode && (

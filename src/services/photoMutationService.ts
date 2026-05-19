@@ -49,6 +49,7 @@ export const batchUpdatePhotos = async (updates: { id: string; updates: Partial<
 };
 
 export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo> & Record<string, any>) => {
+  delete updates.id;
   if (!photoId || photoId.startsWith('temp-')) {
     throw new Error('无效的照片ID，操作被终止');
   }
