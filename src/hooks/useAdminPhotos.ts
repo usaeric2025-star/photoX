@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
@@ -125,7 +125,7 @@ export const useAdminPhotos = (
 
   const { mutateAsync: groupPhotosMutation } = useGroupPhotosMutation();
 
-  return {
+  return useMemo(() => ({
     // Photos & Basic State
     photos,
     isImporting: currentLoadingState === 'importing',
@@ -155,5 +155,12 @@ export const useAdminPhotos = (
     deletePhoto: mutationHook.deletePhoto,
     updatePhoto: mutationHook.updatePhoto,
     updatePhotosBulk: mutationHook.updatePhotosBulk
-  };
+  }), [
+    photos, currentLoadingState, cloudCount, setCloudCount,
+    importHook.handlePhotoImport, importHook.importProgress, importHook.importTotal,
+    aiHook.handleSingleAiAnalyze, aiHook.handleBatchAiIdentify, aiHook.handleGroupAiIdentify,
+    aiHook.aiDebugInfo, aiHook.setAiDebugInfo, aiHook.batchProgress, aiHook.abortAnalysis,
+    geminiApiKey, customModel, groupPhotosMutation, mutationHook.deletePhoto, 
+    mutationHook.updatePhoto, mutationHook.updatePhotosBulk
+  ]);
 };

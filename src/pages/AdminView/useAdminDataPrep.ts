@@ -111,11 +111,17 @@ export const useAdminDataPrep = () => {
     { photos, categories, tags, manufacturers }, uiBasicValue, sessionBasicValue, addManufacturer
   );
 
-  const { 
-    newPhotoData, setNewPhotoData, formState, updateForm, 
-    showOtherFields, setShowOtherFields, resetAddState, 
-    saveNewPhoto, saveBatchEdit 
-  } = usePhotoManagement(user, uiBasicValue, sessionBasicValue, photos, updatePhoto);
+  const photoManagement = usePhotoManagement(
+    user, uiBasicValue, sessionBasicValue, photos, 
+    (params: { id: string; updates: Partial<Photo> }) => updatePhoto(params.id, params.updates),
+    (params: { userId: string; ids: string[]; updates: Partial<Photo> }) => updatePhotosBulk(params.ids, params.updates)
+  );
+
+  const {
+    newPhotoData, setNewPhotoData, formState, updateForm,
+    showOtherFields, setShowOtherFields, resetAddState,
+    saveNewPhoto, saveBatchEdit
+  } = photoManagement;
 
   const quickAddTag = useCallback(() => {
     setPromptDialog({
@@ -133,11 +139,12 @@ export const useAdminDataPrep = () => {
         const saved = await addTag(normalized);
         if (saved) {
            updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] }));
-           toast.success(`已新增标签 "${normalized}"`);
+           // Success feedback handled by withFeedback or caller if needed, 
+           // but here we keep it silent to avoid double toasts if used in BatchEdit
         }
       }
     });
-  }, [setPromptDialog, tags, addTag, updateForm]);
+  }, [setPromptDialog, tags, addTag, updateForm, handleError]);
 
   const quickAddManufacturer = useCallback(() => {
     setPromptDialog({
@@ -149,7 +156,6 @@ export const useAdminDataPrep = () => {
         const saved = await addManufacturer(trimmed);
         if (saved) {
            updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
-           toast.success(`已新增厂商 "${trimmed}"`);
         }
       }
     });
@@ -170,12 +176,14 @@ export const useAdminDataPrep = () => {
     photos, categories, tags, manufacturers, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify,
     handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal, deletePhoto, handleGroupPhotos, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk
+    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk,
+    formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData
   }), [
     photos, categories, tags, manufacturers, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify,
     handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal, deletePhoto, handleUngroup, saveNewPhoto, saveBatchEdit,
     updateTag, deleteTag, updateCategory, deleteCategory, addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk
+    addTag, removeTagFromPhoto, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk,
+    formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData
   ]);
 
   const uiValue = useMemo(() => ({

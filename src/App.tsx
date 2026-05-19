@@ -115,7 +115,6 @@ export default function AppRoutes() {
 
   return (
     <BrowserRouter>
-      <Toaster position="top-center" richColors />
       <AnimatedRoutes user={user} />
     </BrowserRouter>
   );

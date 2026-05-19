@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 export type LoadingState = 'idle' | 'syncing' | 'sync-pull' | 'sync-push' | 'analyzing' | 'importing' | 'compressing' | 'uploading' | 'saving' | 'deleting';
 
 export function useLoading(initialState: LoadingState = 'idle') {
   const [loadingState, setLoadingState] = useState<LoadingState>(initialState);
 
-  const startLoading = (state: LoadingState) => setLoadingState(state);
-  const stopLoading = () => setLoadingState('idle');
+  const startLoading = useCallback((state: LoadingState) => setLoadingState(state), []);
+  const stopLoading = useCallback(() => setLoadingState('idle'), []);
 
-  const withLoading = async <T,>(state: LoadingState, fn: () => Promise<T>): Promise<T> => {
+  const withLoading = useCallback(async <T,>(state: LoadingState, fn: () => Promise<T>): Promise<T> => {
     startLoading(state);
     // Yield to browser so the loading spinner actually renders
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -17,7 +17,7 @@ export function useLoading(initialState: LoadingState = 'idle') {
     } finally {
       stopLoading();
     }
-  };
+  }, [startLoading, stopLoading]);
 
   return { loadingState, setLoadingState, startLoading, stopLoading, withLoading };
 }

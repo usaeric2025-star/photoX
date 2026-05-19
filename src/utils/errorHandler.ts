@@ -1,5 +1,6 @@
 import { useGalleryStore } from '../store';
 import { toast } from 'sonner';
+import { logErrorToSupabase } from '../services/logService';
 
 export const globalHandleError = (error: any, context: string, silent: boolean = false) => {
   console.error(`[Error] ${context}:`, error);
@@ -21,7 +22,11 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
     toast.error(`${context}: ${message}`);
   }
   
-  // Store Error for Audit
+  // Log to Supabase for Audit
+  const errorObj = error instanceof Error ? error : new Error(message);
+  logErrorToSupabase(errorObj, {}, { context, silent, timestamp: new Date().toISOString() });
+
+  // Store Error for Local Audit
   useGalleryStore.getState().setErrors([{ 
     message, 
     context, 

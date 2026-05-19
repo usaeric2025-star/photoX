@@ -32,7 +32,7 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <Toaster position="top-right" richColors closeButton />
+      <Toaster position="bottom-center" richColors closeButton expand={true} />
       <ErrorBoundary>
           <TaskProvider>
               <App />

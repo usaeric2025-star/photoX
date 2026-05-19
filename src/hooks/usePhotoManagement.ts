@@ -6,7 +6,8 @@ export const usePhotoManagement = (
   ui: any, 
   session: any, 
   photos: Photo[],
-  updatePhotoFn: (id: string, updates: Partial<Photo>) => Promise<any>
+  updatePhotoFn: (params: { id: string; updates: Partial<Photo> }) => Promise<any>,
+  updateBatchFn: (params: { userId: string; ids: string[]; updates: Partial<Photo> }) => Promise<any>
 ) => {
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
   const [formState, setFormState] = useState<ProductFormData>({
@@ -78,10 +79,21 @@ export const usePhotoManagement = (
 
   const saveNewPhoto = async () => {
     if (ui.editPhotoId) {
-      await updatePhotoFn(ui.editPhotoId, formState);
+      await updatePhotoFn({ id: ui.editPhotoId, updates: formState });
+      ui.setEditPhotoId(null);
     }
   };
-  const saveBatchEdit = async () => {};
+
+  const saveBatchEdit = async () => {
+    if (ui.batchEditIds && ui.batchEditIds.length > 0) {
+      await updateBatchFn({
+        userId: user?.id || '',
+        ids: ui.batchEditIds,
+        updates: formState
+      });
+      ui.setBatchEditIds(null);
+    }
+  };
 
   return {
     newPhotoData,

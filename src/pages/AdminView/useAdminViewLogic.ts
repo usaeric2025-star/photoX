@@ -45,7 +45,8 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     updateTag = async () => {}, deleteTag = async () => {}, updateCategory = async () => {}, deleteCategory = async () => {}, addCategory = async () => {},
     addManufacturer = async () => {}, updateManufacturer = async () => {}, deleteManufacturer = async () => {},
     addTag = async () => {}, quickAddTag = () => {}, quickAddManufacturer = () => {},
-    updatePhoto = async () => {}, updatePhotosBulk = async () => {}
+    updatePhoto = async () => {}, updatePhotosBulk = async () => {},
+    formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData
   } = photoValue || {};
 
   const { handleError } = useErrorHandler();
@@ -66,13 +67,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     }
     return false;
   }, [loadingType]);
-
-  const { formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData } = usePhotoManagement(
-    user, 
-    { setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType: () => {}, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, abortAnalysis: () => {} }, 
-    { settings, setSettings, setIsSyncing },
-    photos
-  );
 
   useEffect(() => {
     if (editPhotoId && loadingType !== 'analyzing') {
