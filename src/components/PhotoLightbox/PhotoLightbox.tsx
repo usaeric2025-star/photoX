@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Photo, Category, Manufacturer, TranslationType } from '../../types';
 import { usePhotoLightboxLogic } from './usePhotoLightboxLogic';
 import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useAdminMode } from '../../hooks/useAdminMode';
 
@@ -38,6 +39,27 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   } = props;
 
   const isAdminMode = useAdminMode();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (index !== null) {
+      const preloadNeighbors = (index: number, range: number) => {
+        const start = Math.max(0, index - range);
+        const end = Math.min(displayPhotos.length - 1, index + range);
+        
+        for (let i = start; i <= end; i++) {
+          const photo = displayPhotos[i];
+          if (photo?.image_url) {
+            queryClient.prefetchQuery({
+              queryKey: ['photo', photo.id],
+              queryFn: () => fetch(photo.image_url!),
+            });
+          }
+        }
+      };
+      preloadNeighbors(index, 5);
+    }
+  }, [index, displayPhotos, queryClient]);
 
   const {
     isZoomed, setIsZoomed,

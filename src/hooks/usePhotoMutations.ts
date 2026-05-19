@@ -46,7 +46,11 @@ export const usePhotoMutations = (
         updateTask(taskId, { status: 'error', message: `删除失败: ${e.message || '未知错误'}` });
       }
     } else {
-      await deletePhotoMut({ userId: user.id, photos: targetPhotos });
+      try {
+        await deletePhotoMut({ userId: user.id, photos: targetPhotos });
+      } catch (e: any) {
+        showError(e, "删除照片失败");
+      }
     }
   };
 
@@ -88,7 +92,11 @@ export const usePhotoMutations = (
     } else {
       // Single or small update
       for (const id of ids) {
-        await updatePhotoMut({ id, updates: finalUpdates });
+        try {
+          await updatePhotoMut({ id, updates: finalUpdates });
+        } catch (e: any) {
+          showError(e, "更新照片失败");
+        }
       }
     }
   };
