@@ -9,7 +9,12 @@ export const useUpdatePhotoMutation = () => {
   const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => updatePhotoFn(id, updates),
+    mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => {
+      if (!id || id.startsWith('temp-')) {
+        throw new Error('无效的照片ID，请刷新页面');
+      }
+      return updatePhotoFn(id, updates);
+    },
     onMutate: async ({ id, updates }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['photos'] });

@@ -243,7 +243,11 @@ export const usePhotoImport = (
 
                  if (user) {
                    try {
-                     await savePhotoToCloud(user.id, updated);
+                      const finalPhotoId = await savePhotoToCloud(user.id, updated);
+                      const index = photosRef.current.findIndex(p => p.id === initialPhoto.id);
+                      if (index !== -1) {
+                        photosRef.current[index].id = finalPhotoId;
+                      }
                      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
                    } catch (saveErr: any) {
                      if (saveErr.name === 'DuplicatePhotoError') {

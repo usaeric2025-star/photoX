@@ -88,10 +88,22 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         shareSinglePhoto(photo);
         if ('vibrate' in navigator) navigator.vibrate(50);
       }}
-      onMouseDown={() => isAdmin && onLongPressStart(photo.id)}
+      onMouseDown={() => {
+        if (isAdmin) {
+          onLongPressStart(photo.id);
+        } else {
+          shareSinglePhoto(photo);
+        }
+      }}
       onMouseUp={onLongPressEnd}
       onMouseLeave={onLongPressEnd}
-      onTouchStart={() => isAdmin && onLongPressStart(photo.id)}
+      onTouchStart={() => {
+        if (isAdmin) {
+          onLongPressStart(photo.id);
+        } else {
+          shareSinglePhoto(photo);
+        }
+      }}
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onTouchCancel={onLongPressEnd}

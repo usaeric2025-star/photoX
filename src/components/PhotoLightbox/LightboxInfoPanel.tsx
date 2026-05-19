@@ -4,7 +4,7 @@ import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X } fr
 import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer } from '../../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
 import { Skeleton } from '../ui/Skeleton';
-import { useAdminMode } from '../../hooks/useAdminMode';
+import { usePermission } from '../../hooks/usePermission';
 
 interface LightboxInfoPanelProps {
   photo: Photo;
@@ -35,7 +35,8 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
   onEditPhoto, onToggleHidden, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
-  const isAdminMode = useAdminMode();
+  const { isAdmin } = usePermission();
+  const isAdminMode = isAdmin;
   const catName = getTranslatedCategoryName(photo.categoryId, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
