@@ -10,6 +10,12 @@ export const useUpdatePhotoMutation = () => {
   
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Photo> }) => {
+      console.log('🔍 更新照片 DEBUG:', {
+        id: id,
+        idType: typeof id,
+        idLength: id?.length,
+        isTempId: id?.startsWith?.('temp-')
+      });
       if (!id || id.startsWith('temp-')) {
         return Promise.reject(new Error('无效的照片ID，请刷新页面'));
       }

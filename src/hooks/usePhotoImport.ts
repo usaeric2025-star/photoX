@@ -271,43 +271,49 @@ export const usePhotoImport = (
                }
             })(photoId, dataUrl, newPhoto));
           } else if (user) {
-            tasks.push(
-              savePhotoToCloud(user.id, newPhoto)
-                .then((finalPhotoId) => {
-                  // Update UI with real ID
-                  const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
-                  if (index !== -1) {
-                    photosRef.current[index].id = finalPhotoId;
-                  }
-                  invalidatePhotos();
-                  updateProgress();
-                })
-                .catch((e) => {
-                  if (e.name === 'DuplicatePhotoError') {
-                    console.log(`[usePhotoImport] Skipped duplicate photo: ${newPhoto.name}`);
-                    const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
-                    if (index !== -1) {
-                      photosRef.current.splice(index, 1);
-                    }
-                    duplicateCount++;
-                    successCount--;
-                    updateProgress();
-                    return; // Accept this as a handled case
-                  }
+            if (!newPhoto.id || newPhoto.id.startsWith('temp-')) {
+                console.error('[usePhotoImport] Invalid photoId before upload:', newPhoto.id);
+                // We should probably not even attempt to upload if id is invalid
+                tasks.push(Promise.reject(new Error('Invalid photo ID')));
+            } else {
+                tasks.push(
+                  savePhotoToCloud(user.id, newPhoto)
+                    .then((finalPhotoId) => {
+                      // Update UI with real ID
+                      const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                      if (index !== -1) {
+                        photosRef.current[index].id = finalPhotoId;
+                      }
+                      invalidatePhotos();
+                      updateProgress();
+                    })
+                    .catch((e) => {
+                      if (e.name === 'DuplicatePhotoError') {
+                        console.log(`[usePhotoImport] Skipped duplicate photo: ${newPhoto.name}`);
+                        const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                        if (index !== -1) {
+                          photosRef.current.splice(index, 1);
+                        }
+                        duplicateCount++;
+                        successCount--;
+                        updateProgress();
+                        return; // Accept this as a handled case
+                      }
 
-                  console.error(`[usePhotoImport] Error saving photo ${newPhoto.id} to cloud:`, e);
-                  
-                  // Rollback: Remove failed photo from UI
-                  const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
-                  if (index !== -1) {
-                    photosRef.current.splice(index, 1);
-                  }
-                  showError(e, `上传照片失败: ${newPhoto.name}`);
-                  invalidatePhotos();
-                  updateProgress();
-                  throw e; // Rethrow to ensure Promise.allSettled marks task as rejected
-                })
-            );
+                      console.error(`[usePhotoImport] Error saving photo ${newPhoto.id} to cloud:`, e);
+                      
+                      // Rollback: Remove failed photo from UI
+                      const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                      if (index !== -1) {
+                        photosRef.current.splice(index, 1);
+                      }
+                      showError(e, `上传照片失败: ${newPhoto.name}`);
+                      invalidatePhotos();
+                      updateProgress();
+                      throw e; // Rethrow to ensure Promise.allSettled marks task as rejected
+                    })
+                );
+            }
           }
         } catch (err) {
           console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
