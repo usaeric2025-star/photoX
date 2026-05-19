@@ -53,7 +53,7 @@ export const useDeletePhotoMutation = () => {
         return old.filter((photo: Photo) => !photoIds.includes(photo.id));
       });
 
-      toast.success('已删除');
+      // toast.success('已删除');
       return { previousInfinite, previousGroups };
     },
     onSuccess: (data) => {

@@ -40,11 +40,12 @@ export const useBatchEditMutation = (userId: string) => {
         );
       });
 
-      toast.success('批量更新成功');
+      // toast.success('批量更新成功');
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
-      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
     },
     onError: (err, variables, context: any) => {
       if (context?.previousInfinite) {

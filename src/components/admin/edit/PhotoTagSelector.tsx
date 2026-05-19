@@ -21,7 +21,15 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
   deleteTag
 }) => {
   const { setPromptDialog } = useGalleryStore();
-  const sortedTags = [...tags].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  const sortedTags = [...tags].sort((a, b) => {
+    const isASelected = selectedTagIds.includes(String(a.id));
+    const isBSelected = selectedTagIds.includes(String(b.id));
+
+    if (isASelected && !isBSelected) return -1;
+    if (!isASelected && isBSelected) return 1;
+    
+    return a.name.localeCompare(b.name, undefined, { numeric: true });
+  });
 
   const handleToggleTag = (tag: Tag) => {
     const strId = String(tag.id);

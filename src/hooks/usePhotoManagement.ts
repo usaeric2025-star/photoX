@@ -1,7 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
 import { User, ProductFormData, Photo } from '../types';
 
-export const usePhotoManagement = (user: User | null, ui: any, session: any, photos: Photo[]) => {
+export const usePhotoManagement = (
+  user: User | null, 
+  ui: any, 
+  session: any, 
+  photos: Photo[],
+  updatePhotoFn: (id: string, updates: Partial<Photo>) => Promise<any>
+) => {
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
   const [formState, setFormState] = useState<ProductFormData>({
     name: '',
@@ -70,7 +76,11 @@ export const usePhotoManagement = (user: User | null, ui: any, session: any, pho
     ui.setBatchEditIds(null);
   }, [ui]);
 
-  const saveNewPhoto = async () => {};
+  const saveNewPhoto = async () => {
+    if (ui.editPhotoId) {
+      await updatePhotoFn(ui.editPhotoId, formState);
+    }
+  };
   const saveBatchEdit = async () => {};
 
   return {

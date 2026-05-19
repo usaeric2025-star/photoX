@@ -1,3 +1,4 @@
+import { withFeedback } from '../utils/uiFeedback';
 import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { 
@@ -159,7 +160,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
       onSubmit: async (newName) => {
         const normalized = normalizeManufacturerName(newName);
         if (normalized && normalized !== mfr.name) {
-          await updateManufacturer(String(mfr.id), { name: normalized });
+          await withFeedback(
+             () => updateManufacturer(String(mfr.id), { name: normalized }),
+             '厂商更新成功',
+             '更新厂商失败'
+          );
         }
       }
     });

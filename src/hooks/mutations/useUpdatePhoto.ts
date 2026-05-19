@@ -41,7 +41,7 @@ export const useUpdatePhotoMutation = () => {
         );
       });
 
-      toast.success('已更新');
+      // toast.success('已更新'); // REMOVED DUE TO DUPLICATION
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
