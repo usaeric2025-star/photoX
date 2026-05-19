@@ -5,8 +5,6 @@ import { useAuth } from './useAuth';
  */
 export function usePermission() {
   const { user } = useAuth();
-  console.log('DEBUG: user', user);
-
   // Authenticated users are admins.
   const isAdmin = !!user;
   const isStaff = !!user; // Assuming logged in users can view private gallery/photos
