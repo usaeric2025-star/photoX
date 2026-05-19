@@ -5,14 +5,13 @@ const TABLE_NAME = 'groups';
 
 const ALLOWED_FIELDS = [
     'id', 'name', 'description', 'description_translations', 'colors', 'materials',
-    'coverPhotoId', 'userId', 'is_hidden', 'createdAt', 'updatedAt',
-    'cover_photo_id', 'user_id', 'is_hidden', 'created_at', 'updated_at'
+    'coverPhotoId', 'userId', 'createdAt', 'updatedAt',
+    'cover_photo_id', 'user_id', 'created_at', 'updated_at'
 ];
 
 const FIELD_MAP: Record<string, string> = {
     coverPhotoId: 'cover_photo_id',
     userId: 'user_id',
-    is_hidden: 'is_hidden',
     createdAt: 'created_at',
     updatedAt: 'updated_at',
 };
