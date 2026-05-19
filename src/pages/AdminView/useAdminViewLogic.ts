@@ -18,7 +18,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const { user, sessionValue, photoValue, uiValue, onRefresh, performPullSync } = props;
   const { 
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
-    setUser, setIsAdminMode, tagIdToNameMap
+    setUser, setIsAdminMode, tagIdToNameMap, isAdminMode
   } = useGalleryStore();
   
   const clearSelection = useCallback(() => {
@@ -54,8 +54,10 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   useEffect(() => {
     setUser(user);
-    setIsAdminMode(isAdmin);
-  }, [user, setUser, setIsAdminMode, isAdmin]);
+    if (isAdminMode !== isAdmin) {
+      setIsAdminMode(isAdmin);
+    }
+  }, [user, setUser, setIsAdminMode, isAdmin, isAdminMode]);
 
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
