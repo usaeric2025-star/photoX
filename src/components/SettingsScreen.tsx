@@ -33,6 +33,7 @@ import { TagsSection } from './settings/TagsSection';
 import { CategoriesSection } from './settings/CategoriesSection';
 import { ManufacturersSection } from './settings/ManufacturersSection';
 import { ExportDataSection } from './settings/ExportDataSection';
+import { MaintenanceSection } from './settings/MaintenanceSection';
 
 interface SettingsScreenProps {
   setActiveScreen: (screen: 'home' | 'manage' | 'login') => void;
@@ -88,6 +89,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     debouncedSave,
     testConnection,
     handleDeduplicate,
+    handleHealthCheck,
     togglePin,
     setSettingField
   } = useSettingsLogic({
@@ -302,6 +304,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
            cardClass={cardClass}
            buttonStyles={BUTTON_STYLES}
            handleDeduplicate={handleDeduplicate}
+        />
+
+        <MaintenanceSection 
+           photos={photos}
+           onHealthCheck={() => handleHealthCheck(allPhotos)}
+           isChecking={false}
+           cardClass={cardClass}
+           buttonStyles={BUTTON_STYLES}
         />
 
           {/* WhatsApp 联系人设定 (Original Location) */}

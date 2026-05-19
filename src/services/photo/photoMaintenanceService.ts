@@ -176,10 +176,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
   }
 };
 
-export const scanAndRepairPhotoIds = async (photos: Photo[]): Promise<boolean> => {
-  const hasBroken = photos.some(p => !p.id || p.id.startsWith('temp-'));
-  if (hasBroken) {
-     return true;
-  }
-  return false;
+export const scanAndRepairPhotoIds = async (photos: Photo[]): Promise<Photo[]> => {
+  const brokenPhotos = photos.filter(p => !p.id || p.id.startsWith('temp-'));
+  return brokenPhotos;
 };

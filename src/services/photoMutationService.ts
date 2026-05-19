@@ -123,7 +123,9 @@ export const deletePhotosBatch = async (
     if (signal?.aborted) throw new Error('Operation aborted');
     
     const chunk = sPhotos.slice(i, i + BATCH_SIZE);
-    const ids = chunk.map(p => p.id);
+    const ids = chunk.map(p => p.id).filter(id => id && !id.startsWith('temp-'));
+    if (ids.length === 0) continue;
+
     chunk.forEach(p => { if (p.groupId) affectedGroupIds.add(p.groupId); });
     
     const { error } = await supabase
@@ -234,10 +236,13 @@ export const removePhotosFromGroup = async (photoIds: string[], groupId: string)
 };
 
 export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Record<string, any>) => {
+  const validIds = photoIds.filter(id => id && !id.startsWith('temp-'));
+  if (validIds.length === 0) return;
+
   const { data, error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .update(updates)
-    .in('id', photoIds)
+    .in('id', validIds)
     .select('id');
     
   if (error) {

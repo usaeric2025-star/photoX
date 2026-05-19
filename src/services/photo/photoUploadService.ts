@@ -51,12 +51,16 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     userId: session.user.id,
   }, true); // Always map to DB as if new
 
-  // Explicitly remove id from payload to let DB generate UUID
-  delete payload.id;
+  // Explicitly remove id from payload to let DB generate UUID IF it is temporary or missing
+  if (!photo.id || photo.id.startsWith('temp-')) {
+      delete payload.id;
+  } else {
+      payload.id = photo.id;
+  }
 
   let { data: savedPhoto, error: dbError } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .insert(payload) // Use insert instead of upsert for new records
+    .upsert(payload, { onConflict: 'id' }) // Use upsert to handle both insert and ID-provided update
     .select('id')
     .maybeSingle();
 

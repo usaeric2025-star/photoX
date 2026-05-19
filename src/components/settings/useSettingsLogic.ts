@@ -71,6 +71,22 @@ export const useSettingsLogic = ({
     });
   }, [user, setAlertDialog, withLoading, performPullSync, showError, showSuccess]);
 
+  const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
+    try {
+        await withLoading('global', async () => {
+            const { scanAndRepairPhotoIds } = await import('../../services/photo/photoMaintenanceService');
+            const broken = await scanAndRepairPhotoIds(allPhotos);
+            if (broken.length > 0) {
+                showError(new Error(`发现 ${broken.length} 个异常ID，建议刷新`), '系统检测异常');
+            } else {
+                showSuccess('系统健康，数据正常。');
+            }
+        });
+    } catch (e: any) {
+        showError(e, '诊断失败');
+    }
+  }, [withLoading, showError, showSuccess]);
+
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinnedTags || [];
     let nextPinned;
@@ -112,6 +128,7 @@ export const useSettingsLogic = ({
     debouncedSave,
     testConnection,
     handleDeduplicate,
+    handleHealthCheck,
     togglePin,
     setSettingField
   };
