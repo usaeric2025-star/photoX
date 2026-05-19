@@ -5,10 +5,12 @@ import { useAuth } from './useAuth';
  */
 export function usePermission() {
   const { user } = useAuth();
+  console.log('DEBUG: user', user);
 
   // Define admin emails. This is a simple, effective way to define admin role without store coupling.
   const ADMIN_EMAILS = ['leehuanrui@gmail.com']; 
-  const isAdmin = !!user && ADMIN_EMAILS.includes(user.email || '');
+  const email = (user as any)?.email || (user as any)?.user_metadata?.email;
+  const isAdmin = !!user && ADMIN_EMAILS.includes(email || '');
   const isStaff = !!user; // Assuming logged in users can view private gallery/photos
   
   // Basic policies
