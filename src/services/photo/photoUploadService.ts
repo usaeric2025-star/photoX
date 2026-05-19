@@ -5,12 +5,21 @@ import { uploadImages } from '../storageService';
 import { photoCache } from '../photoService';
 import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
+import { checkDuplicate, DuplicatePhotoError } from '../../utils/duplicateCheck';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
     throw new Error('鉴权失败: 无活跃会话');
+  }
+
+  // Pre-insert duplicate check
+  if (photo.image_hash) {
+     const isDuplicate = await checkDuplicate(session.user.id, photo.image_hash, (photo as any)._fileSize, (photo as any)._fileName, (photo as any)._lastModified);
+     if (isDuplicate) {
+        throw new DuplicatePhotoError();
+     }
   }
 
   // Upload image if it doesn't have an image_url yet but has a uri
@@ -83,7 +92,7 @@ export const savePhotosToCloudBatch = async (
   photos: Photo[],
   onProgress?: (count: number) => void
 ): Promise<Photo[]> => {
-  const sPhotos = safeArray(photos);
+  let sPhotos = safeArray(photos);
   if (sPhotos.length === 0) return [];
 
   const { data: { session } } = await supabase.auth.getSession();
@@ -91,7 +100,29 @@ export const savePhotosToCloudBatch = async (
     throw new Error('No active session for database');
   }
 
-  for (const photo of photos) {
+  // Pre-filter duplicates
+  const uniquePhotos: Photo[] = [];
+  for (const photo of sPhotos) {
+    if (photo.image_hash) {
+      const isDuplicate = await checkDuplicate(
+        session.user.id, 
+        photo.image_hash, 
+        (photo as any)._fileSize, 
+        (photo as any)._fileName, 
+        (photo as any)._lastModified
+      );
+      if (isDuplicate) {
+        console.log(`[savePhotosToCloudBatch] Skipped duplicate: ${photo.name}`);
+        continue;
+      }
+    }
+    uniquePhotos.push(photo);
+  }
+
+  sPhotos = uniquePhotos;
+  if (sPhotos.length === 0) return [];
+
+  for (const photo of sPhotos) {
     if (!photo.image_url && photo.uri) {
       try {
         const filename = photo.storageId || photo.id;

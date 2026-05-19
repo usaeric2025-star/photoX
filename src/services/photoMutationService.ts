@@ -68,8 +68,8 @@ export const updatePhotoHidden = async (photoId: string, is_hidden: boolean) => 
   });
 };
 
-export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
-  const groupId = photo.groupId;
+export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promise<{ dissolvedGroupId?: string }> => {
+  const groupId = photo.groupId || (photo as any).group_id;
   
   const { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
@@ -80,6 +80,8 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
     throw new Error(error.message || JSON.stringify(error));
   }
   
+  let dissolvedGroupId: string | undefined;
+
   // If the deleted photo was part of a group, check if we need to dissolve it
   if (groupId) {
     const { data: remaining } = await supabase
@@ -90,10 +92,12 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo) => {
     if (remaining && remaining.length <= 1) {
       const { ungroupPhotos } = await import('./photo/photoMaintenanceService');
       await ungroupPhotos(groupId);
+      dissolvedGroupId = groupId;
     }
   }
   
   photoCache.clear();
+  return { dissolvedGroupId };
 };
 
 export const deletePhotosBatch = async (

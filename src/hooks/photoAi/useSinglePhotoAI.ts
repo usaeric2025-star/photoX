@@ -123,8 +123,14 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });
       setAiDebugInfo(null);
       return result;
-    } catch (err: unknown) {
+      } catch (err: unknown) {
       const error = err as Error;
+      if (error.name === 'DuplicatePhotoError') {
+         updateTask(taskId, { status: 'completed', progress: 100, message: '已跳过 (重复照片)' });
+         setAiDebugInfo(null);
+         handleError(error, '识别重复'); // Or just use handleError directly as it prints the message
+         return null as any;
+      }
       if (error.name === 'AbortError') {
         removeTask(taskId);
         setAiDebugInfo({ step: '已取消', message: '识别任务已由用户中断' });

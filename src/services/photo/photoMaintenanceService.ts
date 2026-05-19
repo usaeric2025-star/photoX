@@ -114,7 +114,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
   try {
     let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
-      .select('id, image_hash, created_at, storageId, image_url, user_id')
+      .select('id, image_hash, created_at, storageId, image_url, user_id, group_id')
       .order('created_at', { ascending: true });
 
     if (userId) {
@@ -150,6 +150,17 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
                     const filename = duplicate.storageId || duplicate.id;
                     await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove([`public/${filename}.webp`]);
                 }
+            }
+            // Check if the deleted duplicate was in a group and handle dissolving
+            if (duplicate.group_id) {
+               const { data: remaining } = await supabase
+                 .from(DB_CONFIG.TABLE_NAME)
+                 .select('id')
+                 .eq('group_id', duplicate.group_id);
+                 
+               if (remaining && remaining.length <= 1) {
+                 await clearGroupIdInCloud(duplicate.group_id);
+               }
             }
             removedCount++;
           } catch (e) {

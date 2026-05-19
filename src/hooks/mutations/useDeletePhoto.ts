@@ -15,9 +15,14 @@ export const useDeletePhotoMutation = () => {
   
   return useMutation({
     mutationFn: async ({ userId, photos }: { userId: string; photos: Photo[] }) => {
+      let dissolvedGroupIds: string[] = [];
       for (const photo of photos) {
-        await deletePhotoFromCloud(userId, photo);
+        const { dissolvedGroupId } = await deletePhotoFromCloud(userId, photo);
+        if (dissolvedGroupId) {
+          dissolvedGroupIds.push(dissolvedGroupId);
+        }
       }
+      return { dissolvedGroupIds };
     },
     onMutate: async ({ photos }) => {
       const photoIds = photos.map(p => p.id);
@@ -49,10 +54,27 @@ export const useDeletePhotoMutation = () => {
 
       return { previousInfinite, previousGroups };
     },
-    onSuccess: () => {
-      // Invalidate all photo related queries
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
+    onSuccess: (data) => {
+      const { dissolvedGroupIds } = data;
+      // Also optimistically clear groupIds for dissolved groups
+      if (dissolvedGroupIds && dissolvedGroupIds.length > 0) {
+        queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              photos: page.photos.map(p => {
+                const pGroupId = p.groupId || (p as any).group_id;
+                if (pGroupId && dissolvedGroupIds.includes(pGroupId)) {
+                   return { ...p, groupId: null, group_id: null, isGroupCover: false, is_group_cover: false, groupOrder: undefined, isPinned: false };
+                }
+                return p;
+              })
+            })),
+          };
+        });
+      }
     },
     onError: (err, variables, context) => {
       if (context?.previousInfinite) {

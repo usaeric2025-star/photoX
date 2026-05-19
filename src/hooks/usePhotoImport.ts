@@ -188,8 +188,10 @@ export const usePhotoImport = (
             createdAt: formatDate(new Date()),
             groupId: null,
             isAnalyzing: !!useAi,
-            is_hidden: false
-          };
+            is_hidden: false,
+            // Include file metadata for duplicate pseudo-hash check
+            ...(file ? { _fileName: file.name, _fileSize: file.size, _lastModified: file.lastModified } : {})
+          } as any;
           
           successCount++;
           
@@ -238,8 +240,22 @@ export const usePhotoImport = (
                  }
 
                  if (user) {
-                   await savePhotoToCloud(user.id, updated);
-                    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
+                   try {
+                     await savePhotoToCloud(user.id, updated);
+                     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
+                   } catch (saveErr: any) {
+                     if (saveErr.name === 'DuplicatePhotoError') {
+                       console.log(`[usePhotoImport:AI] Skipped duplicate photo: ${updated.name}`);
+                       const index = photosRef.current.findIndex(p => p.id === initialPhoto.id);
+                       if (index !== -1) {
+                         photosRef.current.splice(index, 1);
+                       }
+                       duplicateCount++;
+                       successCount--;
+                       return;
+                     }
+                     throw saveErr;
+                   }
                  }
                } catch (err) {
                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
@@ -261,6 +277,18 @@ export const usePhotoImport = (
                   updateProgress();
                 })
                 .catch((e) => {
+                  if (e.name === 'DuplicatePhotoError') {
+                    console.log(`[usePhotoImport] Skipped duplicate photo: ${newPhoto.name}`);
+                    const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                    if (index !== -1) {
+                      photosRef.current.splice(index, 1);
+                    }
+                    duplicateCount++;
+                    successCount--;
+                    updateProgress();
+                    return; // Accept this as a handled case
+                  }
+
                   console.error(`[usePhotoImport] Error saving photo ${newPhoto.id} to cloud:`, e);
                   
                   // Rollback: Remove failed photo from UI
@@ -307,6 +335,9 @@ export const usePhotoImport = (
       setIsSyncing(false);
       
       const summary = `上传完成：成功 ${successCount - failCount} 张，跳过 ${duplicateCount} 张，失败 ${failCount} 张。`;
+      if (duplicateCount > 0) {
+        toast.info('已存在相同照片');
+      }
       if (failCount > 0) {
         toast.error(`${summary} 详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`, { duration: 10000 });
       } else {

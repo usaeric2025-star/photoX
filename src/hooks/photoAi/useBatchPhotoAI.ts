@@ -134,6 +134,13 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         } catch (err: unknown) {
             const error = err as Error;
+            
+            if (error.name === 'DuplicatePhotoError') {
+               console.log(`[useBatchPhotoAI] Skipped duplicate photo`);
+               queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+               return; // Simply return with the next photo in batch
+            }
+
             setAiDebugInfo({ step: '图片识别', message: '识别发生错误', error: error.message || String(err) });
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
             if (error.message && (error.message.includes('401') || error.message.includes('403'))) {
