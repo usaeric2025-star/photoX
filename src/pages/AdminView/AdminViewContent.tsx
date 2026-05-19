@@ -228,6 +228,7 @@ export const AdminViewContent: React.FC<Props> = ({
         <MainAdminScreen 
           {...logic}
           user={user}
+          isAdmin={isAdminMode}
           lang={lang}
           t={t}
           isFetchingNextPage={isFetchingNextPage}

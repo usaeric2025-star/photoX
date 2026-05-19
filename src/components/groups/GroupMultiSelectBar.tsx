@@ -27,14 +27,14 @@ export const GroupMultiSelectBar: React.FC<GroupMultiSelectBarProps> = ({
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] bg-brand-navy px-5 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 min-w-[320px]"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] bg-brand-navy px-5 py-3 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-4 min-w-[320px]"
         >
            <div className="bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5">
              <Check size={14} className="text-white" />
              <span className="text-sm font-black text-white">{selectedPhotoIds.length}</span>
            </div>
            
-           <div className="flex items-center gap-3 flex-1 overflow-x-auto no-scrollbar scroll-smooth">
+           <div className="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth">
               <button onClick={() => handleBulkAction('ai')} className="flex flex-col items-center gap-1 shrink-0" title="AI 分析">
                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center border border-purple-500/20 active:scale-95 transition-all">
                     <Sparkles size={18} />

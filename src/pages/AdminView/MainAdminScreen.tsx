@@ -41,6 +41,7 @@ interface Props {
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
   isFetchingNextPage?: boolean;
+  isAdmin?: boolean;
 }
 
 export const MainAdminScreen: React.FC<Props> = React.memo(({
@@ -50,7 +51,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
   onTogglePinned, onToggleHidden, onSetGroupCover, settings,
   columns, setColumns, user, onEditPhoto, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
   onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, isAnalyzing,
-  isFetchingNextPage
+  isFetchingNextPage, isAdmin
 }) => {
   console.log('Rendering MainAdminScreen');
   return (
@@ -78,6 +79,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
              categories={categories}
              tags={tags}
              isStaffMode={true}
+             isAdminMode={true}
              onTogglePinned={onTogglePinned}
              onToggleHidden={onToggleHidden}
              onSetGroupCover={onSetGroupCover}
