@@ -66,7 +66,7 @@ import { useFeedback } from '../../hooks';
 import { DimensionEditor } from '../admin/edit/DimensionEditor';
 
 export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
-  const { showError: handleError } = useFeedback();
+  const { showError } = useFeedback();
   const isAdminMode = useAdminMode();
   const {
     activeGroupId, setActiveGroupId, photos,

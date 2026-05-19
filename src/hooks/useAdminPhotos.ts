@@ -54,7 +54,7 @@ export const useAdminPhotos = (
     if ((tag as any).aliases) (tag as any).aliases.forEach((a: string) => acc.set(a.toLowerCase(), tag.id));
     return acc;
   }, new Map<string, string>());
-  const { showError: handleError } = useFeedback();
+  const { showError } = useFeedback();
   const { deletePhotos } = useDelete();
   const { tasks, addTask, updateTask, removeTask } = useTasks();
   const { setLoadingState: uiSetLoadingState } = adminUI || {};
@@ -104,7 +104,7 @@ export const useAdminPhotos = (
     tagNameToIdMap, 
     addTask, updateTask, removeTask,
     photosRef,
-    handleError
+    showError
   );
 
   // 2. Initialize Photo Import Hook
@@ -114,12 +114,12 @@ export const useAdminPhotos = (
     setCloudCount, addManufacturer!,
     runWithLoading, addTask, updateTask, aiHook.abortAnalysis,
     tagNameToIdMap, photosRef,
-    handleError
+    showError
   );
 
   // 3. Initialize Photo Mutations Hook
   const mutationHook = usePhotoMutations(
-    user, handleError, deletePhotos, photosRef,
+    user, showError, deletePhotos, photosRef,
     addTask, updateTask, removeTask
   );
 
