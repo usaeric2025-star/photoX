@@ -198,7 +198,10 @@ export const AdminHeader: React.FC<Props> = ({
                 )}
 
                 <button 
-                  onClick={handleToggleViewMode}
+                  onClick={() => {
+                    console.log('Globe button clicked, viewMode:', viewMode);
+                    handleToggleViewMode();
+                  }}
                   className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
                   title={viewMode === 'public' ? t.exitGuestView : "访客视图预览"}
                 >
