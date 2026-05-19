@@ -98,7 +98,7 @@ export const usePhotoEditLogic = (props: Props) => {
     const nextValue = !formState.is_hidden;
     updateForm({ is_hidden: nextValue }); // optimistic
     
-    if (editPhotoId) {
+    if (editPhotoId && !editPhotoId.startsWith('temp-')) {
         try {
             const m = await import('../../../services/photoMutationService');
             await m.updatePhotoHidden(editPhotoId, nextValue);
@@ -108,6 +108,8 @@ export const usePhotoEditLogic = (props: Props) => {
             // Rollback on failure
             updateForm({ is_hidden: !nextValue });
         }
+    } else {
+        console.warn('Cannot toggle hidden: invalid photoId', editPhotoId);
     }
   };
 

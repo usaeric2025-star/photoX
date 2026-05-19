@@ -46,6 +46,9 @@ export const batchUpdatePhotos = async (updates: { id: string; updates: Partial<
 };
 
 export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo> & Record<string, any>) => {
+  if (!photoId || photoId.startsWith('temp-')) {
+    throw new Error('无效的照片ID，操作被终止');
+  }
   if (updates.dimensions !== undefined) {
     normalizeDimensionsBeforeSave(updates.dimensions);
   }
@@ -62,6 +65,9 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
 };
 
 export const updatePhotoHidden = async (photoId: string, is_hidden: boolean) => {
+  if (!photoId || photoId.startsWith('temp-')) {
+      throw new Error('无效的照片ID，操作被终止');
+  }
   return updatePhotoInCloud(photoId, { 
     is_hidden: is_hidden,
     updated_at: new Date().toISOString()
