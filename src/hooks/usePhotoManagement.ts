@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { User, ProductFormData, Photo } from '../types';
 
-export const usePhotoManagement = (user: User | null, ui: any, session: any) => {
+export const usePhotoManagement = (user: User | null, ui: any, session: any, photos: Photo[]) => {
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
   const [formState, setFormState] = useState<ProductFormData>({
     name: '',
@@ -18,6 +18,44 @@ export const usePhotoManagement = (user: User | null, ui: any, session: any) => 
     isGroupCover: false
   });
   const [showOtherFields, setShowOtherFields] = useState(false);
+
+  useEffect(() => {
+    if (ui.editPhotoId) {
+      const photo = photos.find(p => p.id === ui.editPhotoId);
+      if (photo) {
+        setFormState({
+          name: photo.name || '',
+          categoryId: photo.categoryId || '',
+          tagIds: photo.tagIds || [],
+          manufacturerId: photo.manufacturerId || '',
+          model_number: photo.model_number || '',
+          manual_code: photo.manual_code || '',
+          description: photo.description || '',
+          is_hidden: !!photo.is_hidden,
+          description_translations: photo.description_translations || { en: '', ms: '' },
+          dimensions: photo.dimensions || [],
+          price: photo.price || '',
+          isGroupCover: !!photo.isGroupCover
+        });
+      }
+    } else {
+        // Reset if not editing
+        setFormState({
+            name: '',
+            categoryId: '',
+            tagIds: [],
+            manufacturerId: '',
+            model_number: '',
+            manual_code: '',
+            description: '',
+            is_hidden: false,
+            description_translations: { en: '', ms: '' },
+            dimensions: [],
+            price: '',
+            isGroupCover: false
+        });
+    }
+  }, [ui.editPhotoId, photos]);
 
   const updateForm = useCallback((update: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
     setFormState(prev => {

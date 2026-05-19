@@ -70,7 +70,8 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const { formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData } = usePhotoManagement(
     user, 
     { setAlertDialog, setPromptDialog, setActiveScreen, setLoadingType: () => {}, loadingType, withLoading, setCloudCount, cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, abortAnalysis: () => {} }, 
-    { settings, setSettings, setIsSyncing }
+    { settings, setSettings, setIsSyncing },
+    photos
   );
 
   useEffect(() => {

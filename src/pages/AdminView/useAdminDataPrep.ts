@@ -115,7 +115,7 @@ export const useAdminDataPrep = () => {
     newPhotoData, setNewPhotoData, formState, updateForm, 
     showOtherFields, setShowOtherFields, resetAddState, 
     saveNewPhoto, saveBatchEdit 
-  } = usePhotoManagement(user, uiBasicValue, sessionBasicValue);
+  } = usePhotoManagement(user, uiBasicValue, sessionBasicValue, photos);
 
   const quickAddTag = useCallback(() => {
     setPromptDialog({
