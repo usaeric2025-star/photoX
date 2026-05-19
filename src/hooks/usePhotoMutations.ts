@@ -80,7 +80,20 @@ export const usePhotoMutations = (
             updateTask(taskId, { progress: Math.floor((current / total) * 100), message: `正在处理 ${current} / ${total}` });
           }, controller.signal);
           updateTask(taskId, { status: 'completed', progress: 100, message: '完成' });
-          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+          queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                photos: page.photos.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p),
+              })),
+            };
+          });
+          queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+            if (!Array.isArray(old)) return old;
+            return old.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p);
+          });
           setTimeout(() => removeTask(taskId), 5000);
         } catch (e: unknown) {
           queryClient.setQueryData(QUERY_KEYS.photos, prevData);
@@ -97,7 +110,20 @@ export const usePhotoMutations = (
              handleError(e, "单张照片云端同步失败");
            });
         }
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+        queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              photos: page.photos.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p),
+            })),
+          };
+        });
+        queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((p: any) => ids.includes(p.id) ? { ...p, ...finalUpdates } : p);
+        });
       }
     }
   };

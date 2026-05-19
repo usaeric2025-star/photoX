@@ -258,7 +258,7 @@ export const usePhotoImport = (
                    }
                  }
                } catch (err) {
-                 queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+                 (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
                  throw err;
                } finally {
                  updateProgress();
@@ -297,7 +297,7 @@ export const usePhotoImport = (
                     photosRef.current.splice(index, 1);
                   }
                   handleError(e, `上传照片失败: ${newPhoto.name}`);
-                  queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+                  (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
                   updateProgress();
                   throw e; // Rethrow to ensure Promise.allSettled marks task as rejected
                 })
@@ -316,7 +316,7 @@ export const usePhotoImport = (
       // Await all background tasks (AI/Uploads)
       console.log(`[usePhotoImport] Awaiting ${tasks.length} background tasks...`);
       const results = await Promise.allSettled(tasks);
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       console.log(`[usePhotoImport] All background tasks finished. Results:`, results);
 
       // Check for failures in tasks themselves

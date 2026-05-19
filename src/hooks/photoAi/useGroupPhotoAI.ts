@@ -131,7 +131,7 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
         const errorMsg = error.message || String(err);
         setAiDebugInfo({ step: '错误', message: '群组识别失败', error: errorMsg });
         updateTask(taskId, { status: 'error', message: `失败: ${errorMsg.slice(0, 80)}` });
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+        (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
         throw err;
       }
     } finally {

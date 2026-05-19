@@ -11,7 +11,7 @@ export const useSyncMutation = () => {
       // Logic from useSyncEngine.refreshCloudData
       // Need to handle implementation here
       if (type === 'pull') {
-        await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+        await (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
         await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
         await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });

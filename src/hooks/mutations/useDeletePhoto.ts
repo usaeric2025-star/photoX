@@ -28,7 +28,7 @@ export const useDeletePhotoMutation = () => {
       const photoIds = photos.map(p => p.id);
       
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.photos });
+      await queryClient.cancelQueries({ queryKey: ['photos'] });
 
       // Snapshot
       const previousInfinite = queryClient.getQueryData<InfiniteData<InfinitePhotosData>>(['photos', 'infinite']);
@@ -85,7 +85,7 @@ export const useDeletePhotoMutation = () => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       handleError(err, '删除照片失败');
     },
   });

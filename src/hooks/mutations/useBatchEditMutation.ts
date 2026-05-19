@@ -11,7 +11,7 @@ export const useBatchEditMutation = (userId: string) => {
       updatePhotosBatch(userId, ids, updates),
     onMutate: async ({ ids, updates }) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.photos });
+      await queryClient.cancelQueries({ queryKey: ['photos'] });
 
       // Snapshot
       const previousInfinite = queryClient.getQueryData(['photos', 'infinite']);
@@ -42,7 +42,7 @@ export const useBatchEditMutation = (userId: string) => {
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
     },
     onError: (err, variables, context: any) => {
       if (context?.previousInfinite) {
@@ -53,7 +53,7 @@ export const useBatchEditMutation = (userId: string) => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       handleError(err, '批量编辑失败');
     },
   });

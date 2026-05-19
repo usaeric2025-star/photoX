@@ -34,7 +34,7 @@ export const usePhotoAI = (
     });
     currentAnalysisControllers.current.clear();
     setBatchProgress({ current: 0, total: 0 });
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+    (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
     
     if (taskId) {
         updateTask(taskId, { status: 'cancelled', message: '已取消 AI 识别任务' });

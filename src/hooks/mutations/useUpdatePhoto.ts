@@ -12,7 +12,7 @@ export const useUpdatePhotoMutation = () => {
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Photo> }) => updatePhotoFn(id, updates),
     onMutate: async ({ id, updates }) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: QUERY_KEYS.photos });
+      await queryClient.cancelQueries({ queryKey: ['photos'] });
 
       // Snapshot the previous values
       const previousInfinite = queryClient.getQueryData<any>(['photos', 'infinite']);
@@ -55,7 +55,7 @@ export const useUpdatePhotoMutation = () => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       handleError(err, '更新照片失败');
     },
   });

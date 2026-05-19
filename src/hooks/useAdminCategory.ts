@@ -73,7 +73,7 @@ export const useAdminCategory = (adminUI: {
     try {
       const { removeTagFromPhotoFromDB } = await import('../services/tagService');
       await removeTagFromPhotoFromDB(photoId, tagId);
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
     } catch (err) {
       handleError(err, '从照片移除标签失败');
       throw err;

@@ -35,7 +35,7 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories }),
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags }),
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers }),
-          queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos }),
+          (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })(),
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings }),
           queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }) // Invalidate all group photo queries
         ]);

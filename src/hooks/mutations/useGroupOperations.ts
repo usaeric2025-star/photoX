@@ -10,7 +10,7 @@ export const useGroupPhotosMutation = () => {
   return useMutation({
     mutationFn: (photoIds: string[]) => groupPhotos(photoIds),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
     },
     onError: (error: any) => {
@@ -28,7 +28,7 @@ export const useRemoveFromGroupMutation = () => {
       removePhotosFromGroup(photoIds, groupId),
     onSuccess: () => {
       // Smallest invalidation scope
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
     },
     onError: (error: any) => {
@@ -44,7 +44,7 @@ export const useUngroupMutation = () => {
   return useMutation({
     mutationFn: (groupId: string) => ungroupPhotos(groupId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
     },
     onError: (error: any) => {
@@ -60,7 +60,7 @@ export const useDeleteGroupFromCloudMutation = () => {
   return useMutation({
     mutationFn: (groupId: string) => ungroupPhotos(groupId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.photos });
+      (() => { const currentFilters = 'infinite' as any; queryClient.invalidateQueries({ queryKey: ['photos', currentFilters] }); queryClient.invalidateQueries({ queryKey: ['photos', 'group'] }); })();
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups });
     },
     onError: (error: any) => {

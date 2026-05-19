@@ -92,6 +92,19 @@ export const useSettingsLogic = ({
     setHasChanges(true);
   }, [settings, setSettings]);
 
+  const testConnection = useCallback(async () => {
+    if (!settings?.gemini_api_key) return;
+    setTestResult({ loading: true });
+    try {
+      const provider = (settings as any).ai_provider || 'google';
+      const model = settings.custom_model || 'gemini-1.5-flash';
+      const ok = await testAiConnection(settings.gemini_api_key, provider, model);
+      setTestResult(ok ? { success: true } : { success: false, error: '连接失败' });
+    } catch (e: any) {
+      setTestResult({ success: false, error: e.message });
+    }
+  }, [settings]);
+
   return {
     testResult, setTestResult,
     hasChanges, setHasChanges,
