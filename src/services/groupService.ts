@@ -8,7 +8,8 @@ export const TABLE_NAME = 'groups';
 export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[]> => {
   const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('*');
+    .select('*')
+    .or('is_hidden.eq.false,is_hidden.is.null');
     // .eq('user_id', userId);
 
   if (error) {
