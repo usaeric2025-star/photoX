@@ -86,7 +86,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
       // 2. In public mode, fetch all group photos directly to bypass pagination
       if (!isAdminMode) {
         setIsLoading(true);
-        loadPhotosByGroupId(activeGroupId).then(mapped => {
+        loadPhotosByGroupId(activeGroupId, isAdminMode).then(mapped => {
           setLocalGroupPhotos(mapped);
           setIsLoading(false);
         }).catch(err => {

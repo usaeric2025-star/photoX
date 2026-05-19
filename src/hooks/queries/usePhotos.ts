@@ -35,10 +35,10 @@ export const usePhotoCountQuery = (filters: { categoryId?: string | null; tagId?
   });
 };
 
-export const useGroupPhotosQuery = (groupId: string) => {
+export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = false) => {
   return useQuery({
-    queryKey: QUERY_KEYS.groupPhotos(groupId),
-    queryFn: () => loadPhotosByGroupId(groupId),
+    queryKey: ['photos', 'group', groupId, isAdminMode],
+    queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
     placeholderData: keepPreviousData,
   });

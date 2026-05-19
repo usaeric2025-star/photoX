@@ -183,18 +183,24 @@ export const loadAllPhotosFromCloud = async (
   return result;
 };
 
-export const loadPhotosByGroupId = async (groupId: string): Promise<Photo[]> => {
+export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {
   if (!groupId) return [];
   
-  const cacheKey = `group_photos_${groupId}`;
+  const cacheKey = `group_photos_${groupId}_${isAdminMode}`;
   const cached = photoCache.get(cacheKey);
   if (cached) {
     return cached;
   }
-  const { data, error } = await supabase
+  let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('*, photo_tags(*)')
     .eq('group_id', groupId);
+
+  if (!isAdminMode) {
+    query = query.or(VISIBILITY_OR_QUERY);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("[ERROR] loadPhotosByGroupId:", error);

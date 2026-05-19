@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Photo } from '../../types';
 import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
@@ -40,6 +41,7 @@ export const useUpdatePhotoMutation = () => {
         );
       });
 
+      toast.success('已更新');
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {

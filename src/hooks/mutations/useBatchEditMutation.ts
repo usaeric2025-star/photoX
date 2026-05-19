@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { updatePhotosBatch } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
 import { useErrorHandler } from '../../utils/errorHandler';
@@ -39,6 +40,7 @@ export const useBatchEditMutation = (userId: string) => {
         );
       });
 
+      toast.success('批量更新成功');
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {

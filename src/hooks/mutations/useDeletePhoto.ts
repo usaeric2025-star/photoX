@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Photo, ApiResponse } from '../../types';
 import { deletePhotoFromCloud } from '../../services/photoMutationService';
 import { QUERY_KEYS } from '../queries/keys';
@@ -52,6 +53,7 @@ export const useDeletePhotoMutation = () => {
         return old.filter((photo: Photo) => !photoIds.includes(photo.id));
       });
 
+      toast.success('已删除');
       return { previousInfinite, previousGroups };
     },
     onSuccess: (data) => {
