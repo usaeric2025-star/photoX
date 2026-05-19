@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Trash2, Layers, X, Edit3 } from 'lucide-react';
+import { FloatingActionBar } from '../ui/FloatingActionBar';
 
 interface Props {
   selectedCount: number;

@@ -23,7 +23,6 @@ export default function PublicView() {
     filterCatId,
     filterTagIds,
     debouncedSearchQuery,
-    setIsAdminMode,
     setIsMultiSelect,
     setSelectedIds
   } = useGalleryStore();
@@ -61,10 +60,9 @@ export default function PublicView() {
   }, [paginatedPhotos]);
 
   useEffect(() => {
-    setIsAdminMode(false);
     setIsMultiSelect(false);
     setSelectedIds([]);
-  }, [setIsAdminMode, setIsMultiSelect, setSelectedIds]);
+  }, [setIsMultiSelect, setSelectedIds]);
   
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isSettingsLoading, setIsSettingsLoading] = useState(true);

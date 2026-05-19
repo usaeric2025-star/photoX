@@ -15,7 +15,6 @@ interface GalleryState {
   isInfiniteMode: boolean;
   isStaffMode: boolean;
   user: User | null;
-  isAdminMode: boolean;
   settings: AppSettings | null;
   errors: AppError[];
   isAnalyzing: boolean;
@@ -61,7 +60,6 @@ interface GalleryState {
   setIsInfiniteMode: (isInfinite: boolean) => void;
   setIsStaffMode: (isStaff: boolean) => void;
   setUser: (user: User | null) => void;
-  setIsAdminMode: (isAdmin: boolean) => void;
   setSettings: (settings: AppSettings | null) => void;
   setErrors: (errors: AppError[]) => void;
   clearErrors: () => void;
@@ -93,7 +91,6 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   isInfiniteMode: false,
   isStaffMode: false,
   user: null,
-  isAdminMode: false,
   settings: null,
   errors: [],
   isAnalyzing: false,
@@ -154,7 +151,6 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
   setIsStaffMode: (isStaffMode) => set({ isStaffMode }),
   setUser: (user) => set({ user }),
-  setIsAdminMode: (isAdminMode) => set({ isAdminMode }),
   setSettings: (settings) => {
     if (settings) {
       set({ 
@@ -201,6 +197,6 @@ export const useGalleryStore = create<GalleryState>((set) => ({
       settings: state.settings ? { ...state.settings, access_passcode: accessPasscode } : { access_passcode: accessPasscode } as AppSettings
     }));
   },
-  logout: () => set({ user: null, isAdminMode: false }),
+  logout: () => set({ user: null }),
   loginWithGoogle: async () => {}, // Keep only essential placeholder for auth if needed elsewhere
 }));

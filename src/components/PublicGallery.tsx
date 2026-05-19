@@ -363,6 +363,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
             onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
             onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
             isStaffMode={isStaffMode}
+            isAdminMode={props.isAdminMode}
             contactWhatsApp={handleContactWhatsApp}
             onEditPhoto={(photo) => props.onEditPhoto?.(photo.id)}
             lang={lang}

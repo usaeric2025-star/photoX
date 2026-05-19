@@ -1,5 +1,3 @@
-
-import { useGalleryStore } from '../store';
 import { useAuth } from './useAuth';
 
 /**
@@ -7,10 +5,11 @@ import { useAuth } from './useAuth';
  */
 export function usePermission() {
   const { user } = useAuth();
-  const { isAdminMode, isStaffMode } = useGalleryStore();
 
-  const isAdmin = !!user && isAdminMode;
-  const isStaff = !!user && (isAdminMode || isStaffMode);
+  // Define admin emails. This is a simple, effective way to define admin role without store coupling.
+  const ADMIN_EMAILS = ['leehuanrui@gmail.com']; 
+  const isAdmin = !!user && ADMIN_EMAILS.includes(user.email || '');
+  const isStaff = !!user; // Assuming logged in users can view private gallery/photos
   
   // Basic policies
   const canEdit = isAdmin;
