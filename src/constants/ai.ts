@@ -3,7 +3,7 @@ export const AI_PROMPTS = {
 
 【CRITICAL - FIELD SEPARATION】
 - "name": Product identification name or code (e.g., "IMCOCO" or "M123"). 
-- "modelNumber": SKU/Model code found on labels (e.g., "B728"). If clear, use this.
+- "modelNumber": SKU/Model code found on labels (e.g., "B728"). If NOT DETECTED with absolute certainty, return an empty string "".
 - "price": ONLY numeric part (e.g., "1200").
 - "dimensions": Array of objects with length/width/height. 
   - STRICTLY NUMERIC VALUES ONLY for length, width, height.
@@ -16,8 +16,8 @@ export const AI_PROMPTS = {
 
 【CATEGORY & TAGS】
 - "categoryId": ${categoryContext}
-- "tagIds": Select 2-3 most relevant existing tags (return IDs): ${tagsJson}
-- "newTags": If no existing tag fits, create NEW ones (UPPERCASE English).
+- "tagIds": Select 2-3 most relevant existing tags (return IDs). DO NOT return tag IDs as numeric indices, use the provided string format IDs: ${tagsJson}
+- "newTags": If no existing tag fits, create NEW ones (UPPERCASE English). DO NOT return tag IDs or numeric values.
 
 DO NOT output markdown. Return ONLY valid JSON.`,
 

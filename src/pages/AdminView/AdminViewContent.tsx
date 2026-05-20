@@ -327,6 +327,9 @@ export const AdminViewContent: React.FC<Props> = ({
                    loginWithGoogle={logic.loginWithGoogle}
                    onLoadMore={handleLoadMoreCallback}
                    hasMore={hasNextPage}
+                   onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch(()=>{})}
+                   onCancelAnalyze={logic.abortAnalysis}
+                   isAnalyzing={logic.loadingType === 'analyzing'}
                 />
            </div>
         </div>

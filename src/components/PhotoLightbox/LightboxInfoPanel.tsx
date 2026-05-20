@@ -84,6 +84,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
               <>
                 <button 
                   onClick={() => {
+                    console.log('AI Analyze button clicked for photo', photo.id);
                     if (isAnalyzing && onCancelAnalyze) onCancelAnalyze();
                     else if (!isAnalyzing) onAiAnalyze?.(photo);
                   }}
