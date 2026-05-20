@@ -3,6 +3,7 @@ import { TagEditor } from '../TagEditor';
 import { Tag } from '../../../types';
 import { useGalleryStore } from '../../../store';
 import { safeArray } from '../../../lib/utils';
+import { useFeedback } from '../../../hooks';
 
 interface PhotoTagSelectorProps {
   tags: Tag[];
@@ -22,6 +23,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
   deleteTag
 }) => {
   const { setPromptDialog } = useGalleryStore();
+  const { showError } = useFeedback();
 
   const cleanSelectedIds = React.useMemo(() => {
     return Array.from(new Set(
@@ -66,11 +68,15 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
           return;
         }
 
-        const saved = await addTag(trimmed);
-        if (saved) {
-          if (cleanSelectedIds.length < 3) {
-            onChange([...new Set([...cleanSelectedIds, String(saved)])]);
+        try {
+          const saved = await addTag(trimmed);
+          if (saved) {
+            if (cleanSelectedIds.length < 3) {
+              onChange([...new Set([...cleanSelectedIds, String(saved)])]);
+            }
           }
+        } catch (err: any) {
+          showError(err, '新增标签失败');
         }
       }
     });
@@ -81,9 +87,13 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
       title: '编辑标签 / Edit Tag',
       message: "输入标签名称 / Enter Tag Name:",
       placeholder: tag.name,
-      onSubmit: (n: string) => {
+      onSubmit: async (n: string) => {
         if(n && n.trim()) { 
-          updateTag(String(tag.id), n.trim()); 
+          try {
+            await updateTag(String(tag.id), n.trim()); 
+          } catch (err: any) {
+            showError(err, '编辑标签失败');
+          }
         }
       }
     });

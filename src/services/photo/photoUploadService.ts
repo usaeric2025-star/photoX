@@ -68,6 +68,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   if (dbError && dbError.message.includes('furniture_items_item_code_key')) {
      console.warn("Item code constraint violation detected in savePhotoToCloud, regenerating code and retrying save...");
      payload.item_code = generateItemCode();
+     photo.item_code = payload.item_code as string; // Sync regenerated item_code back to reference
      const retryResult = await supabase
         .from(DB_CONFIG.TABLE_NAME)
         .upsert(payload, { onConflict: 'id' })
@@ -217,6 +218,12 @@ export const savePhotosToCloudBatch = async (
        // Update our reference chunk in case it falls through to the column mismatch retry
        chunk.forEach((p, idx) => {
          p.item_code = recycledChunk[idx].item_code;
+         
+         // Update results with the newly generated item_codes so they correctly sync back to caller
+         const indexInResults = i + idx;
+         if (results[indexInResults]) {
+           results[indexInResults].item_code = recycledChunk[idx].item_code as string;
+         }
        });
     }
 

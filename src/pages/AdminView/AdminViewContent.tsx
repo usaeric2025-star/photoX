@@ -71,10 +71,14 @@ export const AdminViewContent: React.FC<Props> = ({
   }, [logic.checkSyncLock, logic.handleDeletePhoto, logic.setSelectedIds, logic.setIsMultiSelect]);
   const handleGroupPhotos = useCallback(async (ids) => {
       if (logic.checkSyncLock()) return;
-      await logic.handleGroupPhotos(ids);
-      logic.setSelectedIds([]);
-      logic.setIsMultiSelect(false);
-  }, [logic.checkSyncLock, logic.handleGroupPhotos, logic.setSelectedIds, logic.setIsMultiSelect]);
+      try {
+        await logic.handleGroupPhotos(ids);
+        logic.setSelectedIds([]);
+        logic.setIsMultiSelect(false);
+      } catch (e: any) {
+        showError(e, '合组失败');
+      }
+  }, [logic.checkSyncLock, logic.handleGroupPhotos, logic.setSelectedIds, logic.setIsMultiSelect, showError]);
   const handleBatchEdit = useCallback((ids) => {
       if (logic.checkSyncLock()) return;
       logic.setBatchEditIds(ids);
@@ -159,7 +163,11 @@ export const AdminViewContent: React.FC<Props> = ({
             onBatchEdit={(ids) => { logic.setBatchEditIds(ids); }}
             onUngroup={async (groupId) => { 
               if (logic.checkSyncLock()) return;
-              await logic.handleUngroup(groupId); 
+              try {
+                await logic.handleUngroup(groupId); 
+              } catch (e: any) {
+                showError(e, '拆组失败');
+              }
             }}
             onAddPhotoToGroup={() => {
               console.log("Add photo button clicked");
@@ -196,7 +204,11 @@ export const AdminViewContent: React.FC<Props> = ({
             }}
             updatePhoto={async (id, updates) => {
               if (logic.checkSyncLock()) return;
-              await logic.updatePhoto(id, updates);
+              try {
+                await logic.updatePhoto(id, updates);
+              } catch (e: any) {
+                showError(e, '更新照片属性失败');
+              }
             }}
           />
         )}
@@ -228,14 +240,26 @@ export const AdminViewContent: React.FC<Props> = ({
               });
             }}
             performPushSync={async () => { 
-              await logic.withLoading('sync-push', async () => { 
-                await logic.performPushSync(true); 
-              }); 
-              return { success: true } as any; 
+              try {
+                await logic.withLoading('sync-push', async () => { 
+                  await logic.performPushSync(true); 
+                }); 
+                showSuccess('成功备份至云端！');
+                return { success: true } as any; 
+              } catch (err: any) {
+                showError(err, '同步备份失败');
+                throw err;
+              }
             }}
             performPullSync={async () => { 
-              await logic.performPullSync(true); 
-              return { success: true } as any; 
+              try {
+                await logic.performPullSync(true); 
+                showSuccess('成功自云端恢复！');
+                return { success: true } as any; 
+              } catch (err: any) {
+                showError(err, '云端恢复失败');
+                throw err;
+              }
             }}
             refreshCloudData={async (user, force) => {
               await logic.onRefresh();

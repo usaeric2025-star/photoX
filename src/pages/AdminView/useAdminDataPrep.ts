@@ -135,11 +135,13 @@ export const useAdminDataPrep = () => {
           showError(new Error(`标签 "${normalized}" 已存在`), '新增标签');
           return;
         }
-        const saved = await addTag(normalized);
-        if (saved) {
-           updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] }));
-           // Success feedback handled by caller if needed, 
-           // but here we keep it silent to avoid double toasts if used in BatchEdit
+        try {
+          const saved = await addTag(normalized);
+          if (saved) {
+             updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] }));
+          }
+        } catch (e: any) {
+          showError(e, '新增标签失败');
         }
       }
     });
@@ -152,13 +154,17 @@ export const useAdminDataPrep = () => {
       onSubmit: async (val: string) => {
         const trimmed = val.trim();
         if (!trimmed) return;
-        const saved = await addManufacturer(trimmed);
-        if (saved) {
-           updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
+        try {
+          const saved = await addManufacturer(trimmed);
+          if (saved) {
+             updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
+          }
+        } catch (e: any) {
+          showError(e, '新增厂商失败');
         }
       }
     });
-  }, [setPromptDialog, addManufacturer, updateForm]);
+  }, [setPromptDialog, addManufacturer, updateForm, showError]);
 
   const onRefresh = useCallback(() => refreshCloudData(user, true, setCloudCount), [user, refreshCloudData]);
 
