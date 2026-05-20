@@ -168,35 +168,32 @@ export const usePublicGalleryLogic = (props: {
     setShowWhatsAppChoice(false);
   };
 
-  const shareSinglePhoto = useCallback(async (photo: Photo) => {
+  const shareSinglePhoto = useCallback((photo: Photo) => {
     const msg = getShareMessage(photo);
-    try {
-      if (navigator.share) navigator.share({ title: t.shareTitle, text: msg }).catch(e => { if (e.name !== 'AbortError') console.error(e); });
-      else {
-        await navigator.clipboard.writeText(msg);
-        showSuccess("分享信息已复制到剪贴板！/ Share info copied to clipboard!");
-      }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') console.error(e);
+    if (navigator.share) {
+      navigator.share({ title: t.shareTitle, text: msg }).catch(e => { if (e.name !== 'AbortError') console.error(e); });
+    } else {
+      navigator.clipboard.writeText(msg)
+        .then(() => showSuccess("分享信息已复制到剪贴板！/ Share info copied to clipboard!"))
+        .catch(e => console.error("Clipboard copy failed:", e));
     }
-  }, [t.shareTitle, getShareMessage]);
+  }, [t.shareTitle, getShareMessage, showSuccess]);
 
-  const shareGroup = useCallback(async (photos: Photo[]) => {
+  const shareGroup = useCallback((photos: Photo[]) => {
     const validPhotos = photos.filter(p => !!p);
     const gId = validPhotos[0]?.groupId || activeGroupId;
     const shareUrl = `${window.location.origin}/g/${gId}`;
     const msg = validPhotos.map(p => p.name || 'Furniture').slice(0, 3).join(', ') + (validPhotos.length > 3 ? '...' : '');
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView full collection: ${shareUrl}`;
-    try {
-      if (navigator.share) navigator.share({ title: t.shareTitle, text: shareText }).catch(e => { if (e.name !== 'AbortError') console.error("Group share failed:", e); });
-      else {
-        await navigator.clipboard.writeText(shareText);
-        showSuccess("群组分享链接已复制！/ Group share link copied!");
-      }
-    } catch (e: any) {
-      if (e.name !== 'AbortError') console.error("Group share failed:", e);
+
+    if (navigator.share) {
+      navigator.share({ title: t.shareTitle, text: shareText }).catch(e => { if (e.name !== 'AbortError') console.error("Group share failed:", e); });
+    } else {
+      navigator.clipboard.writeText(shareText)
+        .then(() => showSuccess("群组分享链接已复制！/ Group share link copied!"))
+        .catch(e => console.error("Group copy failed:", e));
     }
-  }, [t, activeGroupId]);
+  }, [t, activeGroupId, showSuccess]);
 
   const handleLoadMore = useCallback(() => {
     if (onLoadMore && hasMore && !isSyncing) onLoadMore();
