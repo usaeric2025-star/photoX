@@ -35,17 +35,18 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
     photo, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
     isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
-    onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos
+    onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos: rawDisplayPhotos
   } = props;
+  const displayPhotos = rawDisplayPhotos ?? [];
 
   const { isAdmin } = usePermission();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (index !== null) {
-      const preloadNeighbors = (index: number, range: number) => {
-        const start = Math.max(0, index - range);
-        const end = Math.min(displayPhotos.length - 1, index + range);
+      const preloadNeighbors = (idx: number, range: number) => {
+        const start = Math.max(0, idx - range);
+        const end = Math.min(displayPhotos.length - 1, idx + range);
         
         for (let i = start; i <= end; i++) {
           const photo = displayPhotos[i];
@@ -57,7 +58,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
       };
       preloadNeighbors(index, 5);
     }
-  }, [index, displayPhotos, queryClient]);
+  }, [index]); // Removed displayPhotos and queryClient from dependencies to prevent infinite re-renders
 
   const {
     isZoomed, setIsZoomed,

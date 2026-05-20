@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer } from '../types';
 import { X, Layers, Heart, EyeOff, Eye, Check, Image as ImageIcon } from 'lucide-react';
 import { Skeleton } from './ui/Skeleton';
@@ -44,7 +44,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   
   // ... rest of the code ...
   
-  const handleOpenLightbox = () => {
+  const handleOpenLightbox = useCallback(() => {
     console.log('handleOpenLightbox', { photoId: photo.id, index, displayPhotosLength: displayPhotos.length });
     const realIndex = displayPhotos.findIndex((p) => p?.id === photo.id);
     console.log('realIndex', realIndex);
@@ -53,7 +53,15 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     } else {
       onLightboxOpen(index, displayPhotos);
     }
-  };
+  }, [photo.id, index, displayPhotos, onLightboxOpen]);
+    
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (isMultiSelect && onToggleSelection && !e.shiftKey) {
+      onToggleSelection(photo.id);
+    } else {
+      handleOpenLightbox();
+    }
+  }, [isMultiSelect, onToggleSelection, photo.id, handleOpenLightbox]);
     
   // ... inside onClick handler:
   // onLightboxOpen(index); -> handleOpenLightbox();
@@ -123,13 +131,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onTouchCancel={onLongPressEnd}
-      onClick={(e) => {
-        if (isMultiSelect && onToggleSelection && !e.shiftKey) {
-          onToggleSelection(photo.id);
-        } else {
-          handleOpenLightbox();
-        }
-      }}
+      onClick={handleClick}
       className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
       {!isImageLoaded && !isImageError && (

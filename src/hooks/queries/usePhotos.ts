@@ -17,7 +17,7 @@ export const useInfinitePhotos = (filters: { categoryId?: string | null; tagId?:
       );
       return {
         photos,
-        nextPage: photos.length === limit ? (pageParam as number) + 1 : undefined
+        nextPage: (photos || []).length === limit ? (pageParam as number) + 1 : undefined
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
@@ -43,5 +43,6 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
     queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
     placeholderData: keepPreviousData,
+    select: (data) => data ?? [],
   });
 };

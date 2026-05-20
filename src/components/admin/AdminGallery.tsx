@@ -43,8 +43,9 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
     selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
-    handleLoadMore, sortedTags, gridPhotos, displayPhotos, t, lang, categories, manufacturers, contextTags
+    handleLoadMore, sortedTags, gridPhotos, t, lang, categories, manufacturers, contextTags
   } = logic;
+  const displayPhotos = useMemo(() => logic.displayPhotos || [], [logic.displayPhotos]);
 
   const virtuosoComponents = {};
   const isSyncing = !!props.isRefreshing;
@@ -172,8 +173,8 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
               displayPhotos={displayPhotos}
               index={lightboxIndex}
               onClose={() => setLightboxIndex(null)}
-              onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
-              onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
+              onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : (displayPhotos?.length || 0) - 1)}
+              onNext={() => setLightboxIndex(lightboxIndex < (displayPhotos?.length || 0) - 1 ? lightboxIndex + 1 : 0)}
               isStaffMode={!!props.isStaffMode}
               contactWhatsApp={() => {}}
               lang={lang}

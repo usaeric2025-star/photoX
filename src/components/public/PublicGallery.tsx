@@ -52,8 +52,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     showGroupsCollapsed, setShowGroupsCollapsed, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
-    handleLoadMore, navigate, sortedTags, gridPhotos, displayPhotos, t, lang, categories, manufacturers, contextTags
+    handleLoadMore, navigate, sortedTags, gridPhotos, t, lang, categories, manufacturers, contextTags
   } = logic;
+  const displayPhotos = useMemo(() => logic.displayPhotos || [], [logic.displayPhotos]);
 
   const virtuosoComponents = {};
   const isSyncing = !!props.isRefreshing;
@@ -248,8 +249,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
               displayPhotos={displayPhotos}
               index={lightboxIndex}
               onClose={() => setLightboxIndex(null)}
-              onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
-              onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
+              onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : (displayPhotos?.length || 0) - 1)}
+              onNext={() => setLightboxIndex(lightboxIndex < (displayPhotos?.length || 0) - 1 ? lightboxIndex + 1 : 0)}
               isStaffMode={false}
               contactWhatsApp={handleContactWhatsApp}
               lang={lang}

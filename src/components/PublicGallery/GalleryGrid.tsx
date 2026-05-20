@@ -117,6 +117,38 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
     props.handleLoadMore();
   }, [props.handleLoadMore]);
 
+  const handleToggleSelection = useCallback((id: string) => {
+    props.activeToggleSelection(id);
+  }, [props.activeToggleSelection]);
+
+  const handleEditPhoto = useCallback((id: string) => {
+    props.onEditPhoto?.(id);
+  }, [props.onEditPhoto]);
+
+  const handleLightboxOpen = useCallback((index: number, photos: Photo[]) => {
+    props.setLightboxIndex(index);
+  }, [props.setLightboxIndex]);
+
+  const handleLongPressStart = useCallback((id: string) => {
+    props.startLongPress(id);
+  }, [props.startLongPress]);
+
+  const handleLongPressEnd = useCallback(() => {
+    props.endLongPress();
+  }, [props.endLongPress]);
+
+  const handleShareSinglePhoto = useCallback((photo: Photo) => {
+    props.shareSinglePhoto(photo);
+  }, [props.shareSinglePhoto]);
+
+  const handleTogglePinned = useCallback((photo: Photo) => {
+    props.onTogglePinned?.(photo);
+  }, [props.onTogglePinned]);
+
+  const handleToggleHidden = useCallback((photo: Photo) => {
+    props.onToggleHidden?.(photo);
+  }, [props.onToggleHidden]);
+
   return (
     <VirtuosoGrid
       ref={props.virtuosoRef}
@@ -146,15 +178,15 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
             categories={props.categories}
             manufacturers={props.manufacturers}
             tagMap={props.tagMap}
-            onToggleSelection={props.activeToggleSelection}
-            onEditPhoto={props.onEditPhoto}
+            onToggleSelection={handleToggleSelection}
+            onEditPhoto={handleEditPhoto}
             onGroupClick={handleGroupClick}
-            onLightboxOpen={props.setLightboxIndex}
-            onLongPressStart={props.startLongPress}
-            onLongPressEnd={props.endLongPress}
-            shareSinglePhoto={props.shareSinglePhoto}
-            onTogglePinned={props.onTogglePinned}
-            onToggleHidden={props.onToggleHidden}
+            onLightboxOpen={handleLightboxOpen}
+            onLongPressStart={handleLongPressStart}
+            onLongPressEnd={handleLongPressEnd}
+            shareSinglePhoto={handleShareSinglePhoto}
+            onTogglePinned={handleTogglePinned}
+            onToggleHidden={handleToggleHidden}
             displayPhotos={props.displayPhotos}
           />
         );
