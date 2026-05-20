@@ -43,7 +43,6 @@ export const useBatchEditMutation = (userId: string) => {
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
-      invalidatePhotos();
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
     onError: (err, variables, context: any) => {

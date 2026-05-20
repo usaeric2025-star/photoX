@@ -133,7 +133,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
       </div>
       
       <div className="pt-1.5 border-t border-brand-navy/5 space-y-1.5">
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {selectedCatCode && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }} 

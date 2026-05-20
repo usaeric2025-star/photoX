@@ -31,6 +31,12 @@ interface AdminGalleryProps {
   activeSetIsMultiSelect: (val: boolean) => void;
   activeClearSelection: () => void;
   isStaffMode?: boolean;
+  onEditPhoto?: (id: string) => void;
+  onToggleHidden?: (p: Photo) => Promise<void>;
+  onAiAnalyze?: (photo: Photo) => Promise<any>;
+  onSetGroupCover?: (id: string, gid: string) => Promise<void>;
+  onCancelAnalyze?: () => void;
+  isAnalyzing?: boolean;
 }
 
 export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
@@ -67,6 +73,13 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
   }, [setLightboxIndex]);
 
   const handleToggleSelection = props.activeToggleSelection;
+
+  const startLongPress = useCallback((id: string) => {
+    props.activeSetIsMultiSelect(true);
+    if (!props.activeSelectedIds.includes(id)) {
+      props.activeToggleSelection(id);
+    }
+  }, [props.activeSetIsMultiSelect, props.activeSelectedIds, props.activeToggleSelection]);
 
   // Stable empty handlers to prevent unnecessary re-renders of all PhotoCards
   const noop = useCallback(() => {}, []);
@@ -150,7 +163,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
                     activeIsMultiSelect={props.activeIsMultiSelect}
-                    isStaffMode={!!props.isStaffMode}
+                    isAdminMode={true}
                     activeSelectedIds={props.activeSelectedIds}
                     showGroupsCollapsed={showGroupsCollapsed}
                     lang={lang}
@@ -162,13 +175,15 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     setActiveGroupId={setActiveGroupId}
                     setActivePhotoId={setActivePhotoId}
                     setLightboxIndex={handleSetLightboxIndex}
-                    startLongPress={noop}
+                    startLongPress={startLongPress}
                     endLongPress={noop}
                     shareSinglePhoto={noop}
                     selectedCatCode={selectedCatCode}
                     selectedSubId={selectedSubId}
                     selectedTagIds={selectedTagIds}
                     searchQuery={searchQuery}
+                    onToggleHidden={props.onToggleHidden}
+                    onEditPhoto={(id) => props.onEditPhoto && props.onEditPhoto(id)}
                   />
                 </ErrorBoundary>
               </motion.div>
@@ -177,7 +192,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
         </AnimatePresence>
       </div>
 
-      <AnimatePresence>
+          <AnimatePresence>
         {lightboxIndex !== null && displayPhotos[lightboxIndex] && (
             <PhotoLightbox 
               photo={displayPhotos[lightboxIndex]}
@@ -193,6 +208,12 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
               tagMap={tagMap}
               categories={categories}
               manufacturers={manufacturers || []}
+              onEditPhoto={(p) => props.onEditPhoto && props.onEditPhoto(p.id)}
+              onToggleHidden={props.onToggleHidden as any}
+              onAiAnalyze={props.onAiAnalyze as any}
+              onSetGroupCover={props.onSetGroupCover as any}
+              onCancelAnalyze={props.onCancelAnalyze}
+              isAnalyzing={props.isAnalyzing}
             />
         )}
       </AnimatePresence>

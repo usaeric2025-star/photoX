@@ -73,8 +73,25 @@ export const useAdminCategory = (adminUI: {
   const removeTagFromPhoto = async (photoId: string, tagId: string) => {
     try {
       const { removeTagFromPhotoFromDB } = await import('../services/tagService');
+      
+      // Optimistic update
+      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+        if (!old || !old.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            photos: page.photos.map((p: Photo) => {
+              if (p.id === photoId && p.tagIds) {
+                return { ...p, tagIds: p.tagIds.filter(tId => String(tId) !== String(tagId)) };
+              }
+              return p;
+            })
+          }))
+        };
+      });
+      
       await removeTagFromPhotoFromDB(photoId, tagId);
-      invalidatePhotos();
     } catch (err) {
       handleError(err, '从照片移除标签失败');
       throw err;

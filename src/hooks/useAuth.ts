@@ -10,7 +10,13 @@ export const useAuth = () => {
     
     useEffect(() => {
         const unsubscribe = onAuthChange((u) => {
-            setUser(u);
+            setUser((prevUser) => {
+                // If it's the same user identity, don't trigger a re-render
+                if (prevUser?.id === u?.id) {
+                    return prevUser;
+                }
+                return u;
+            });
             setAuthChecked(true);
         });
         

@@ -14,7 +14,7 @@ interface GalleryGridProps {
   virtuosoContext?: any;
   handleLoadMore: () => void;
   activeIsMultiSelect: boolean;
-  isStaffMode: boolean;
+  isAdminMode: boolean;
   activeSelectedIds: string[];
   showGroupsCollapsed: boolean;
   lang: string;
@@ -42,7 +42,7 @@ interface MemoizedPhotoCardProps {
   index: number;
   photo: Photo;
   isMultiSelect: boolean;
-  isStaffMode: boolean;
+  isAdminMode: boolean;
   isSelected: boolean;
   showGroupsCollapsed: boolean;
   lang: string;
@@ -63,7 +63,7 @@ interface MemoizedPhotoCardProps {
 }
 
 const MemoizedPhotoCard = React.memo(({ 
-  index, photo, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, 
+  index, photo, isMultiSelect, isAdminMode, isSelected, showGroupsCollapsed, 
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, 
   onTogglePinned, onToggleHidden, displayPhotos
@@ -81,7 +81,7 @@ const MemoizedPhotoCard = React.memo(({
       photo={photo}
       index={index}
       isMultiSelect={isMultiSelect}
-      isStaffMode={isStaffMode}
+      isAdminMode={isAdminMode}
       isSelected={isSelected}
       showGroupsCollapsed={showGroupsCollapsed}
       lang={lang}
@@ -169,7 +169,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
             index={index}
             photo={photo}
             isMultiSelect={props.activeIsMultiSelect}
-            isStaffMode={props.isStaffMode}
+            isAdminMode={props.isAdminMode}
             isSelected={photo ? !!props.activeSelectedIds.includes(photo.id) : false}
             showGroupsCollapsed={props.showGroupsCollapsed}
             lang={props.lang}

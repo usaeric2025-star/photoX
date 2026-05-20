@@ -66,8 +66,6 @@ export const useGroupPhotosMutation = () => {
           }))
         };
       });
-
-      invalidatePhotos();
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
     onError: (error: any, photoIds, context) => {
@@ -149,7 +147,6 @@ export const useRemoveFromGroupMutation = () => {
       return { previousInfinite };
     },
     onSuccess: () => {
-      invalidatePhotos();
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
     onError: (error: any, variables, context) => {
@@ -203,7 +200,6 @@ export const useUngroupMutation = () => {
       return { previousInfinite };
     },
     onSuccess: () => {
-      invalidatePhotos();
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
     onError: (error: any, variables, context) => {
@@ -257,7 +253,6 @@ export const useDeleteGroupFromCloudMutation = () => {
       return { previousInfinite };
     },
     onSuccess: () => {
-      invalidatePhotos();
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
     onError: (error: any, variables, context) => {

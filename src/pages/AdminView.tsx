@@ -19,14 +19,8 @@ export default function AdminView() {
   const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
 
   useEffect(() => {
-    if (hasLoadedOnce) {
-      setMinTimeElapsed(true);
-      return;
-    }
-    // First time load gets a small branding delay
-    const timer = setTimeout(() => setMinTimeElapsed(true), 300);
-    return () => clearTimeout(timer);
-  }, [hasLoadedOnce]);
+    setMinTimeElapsed(true);
+  }, []);
 
   const isInitialLoading = !authChecked || !minTimeElapsed;
 

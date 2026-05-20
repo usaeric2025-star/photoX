@@ -13,7 +13,7 @@ interface PhotoCardProps {
   photo: Photo;
   index: number;
   isMultiSelect: boolean;
-  isStaffMode: boolean;
+  isAdminMode: boolean; // Renamed from isStaffMode
   isSelected: boolean;
   showGroupsCollapsed: boolean;
   lang: string;
@@ -88,14 +88,11 @@ const toTitleCase = (str: string) => {
 };
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
-  photo, index, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
+  photo, index, isMultiSelect, isAdminMode, isSelected, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden,
   displayPhotos
 }) => {
-  // Use isStaffMode as a hint for admin rather than calling separate hook in every cell
-  const isAdminMode = isStaffMode;
-  
   const handleOpenLightbox = useCallback(() => {
     const realIndex = displayPhotos.findIndex((p) => p?.id === photo.id);
     if (realIndex !== -1) {

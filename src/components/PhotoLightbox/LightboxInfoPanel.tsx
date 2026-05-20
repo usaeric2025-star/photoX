@@ -35,8 +35,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
   onEditPhoto, onToggleHidden, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
-  const { isAdmin } = usePermission();
-  const isAdminMode = isAdmin;
+  const isAdminMode = isStaffMode;
   const catName = getTranslatedCategoryName(photo.categoryId, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);

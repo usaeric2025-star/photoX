@@ -93,6 +93,5 @@ export const processSinglePhoto = async (
     throw err;
   } finally {
     onProgressUpdate();
-    invalidatePhotos();
   }
 };

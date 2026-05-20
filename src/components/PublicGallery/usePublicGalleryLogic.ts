@@ -74,7 +74,9 @@ export const usePublicGalleryLogic = (props: {
     clearSelection,
     setIsMultiSelect: setStoreIsMultiSelect,
     appLang: langStore,
-    setAppLang: setLang
+    setAppLang: setLang,
+    tagStats,
+    setTagStats
   } = useGalleryStore();
 
   const { data: qCategories = [] } = useCategoriesQuery();
@@ -147,10 +149,6 @@ export const usePublicGalleryLogic = (props: {
   const virtuosoRef = useRef<any>(null);
   const scrollToTop = () => virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
 
-  useEffect(() => {
-    scrollToTop();
-  }, [selectedCatCode, selectedSubId, selectedTagIds]);
-
   const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);
   const getShareMessage = useCallback((p: Photo) => {
     const displayName = getPhotoDisplayName(p, categories, lang, t);
@@ -200,8 +198,7 @@ export const usePublicGalleryLogic = (props: {
     if (onLoadMore && hasMore && !isSyncing) onLoadMore();
   }, [onLoadMore, hasMore, isSyncing]);
 
-  const [tagStats, setTagStats] = useState<Record<string, number>>({});
-  const hasLoadedStats = useRef(false);
+  const hasLoadedStats = useRef(Object.keys(tagStats).length > 0);
 
   // Daily Stability: Load or Calculate tag stats only once per day
   useEffect(() => {

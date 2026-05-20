@@ -178,7 +178,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
                     activeIsMultiSelect={false}
-                    isStaffMode={false}
+                    isAdminMode={false}
                     activeSelectedIds={[]}
                     showGroupsCollapsed={showGroupsCollapsed}
                     lang={lang}

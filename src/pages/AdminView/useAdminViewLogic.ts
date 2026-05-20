@@ -109,11 +109,11 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       : [photo.id];
     try {
       await updatePhotosBulk(affectedIds, { isPinned: newStatus });
-      onRefresh();
     } catch (e: any) {
       showError(e, 'toggle-pinned');
+      throw e;
     }
-  }, [checkSyncLock, photos, updatePhotosBulk, showError, onRefresh]);
+  }, [checkSyncLock, photos, updatePhotosBulk, showError]);
 
   const toggleHidden = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
@@ -121,9 +121,9 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     
     try {
       await updatePhoto(photo.id, { is_hidden: nextValue });
-      onRefresh();
     } catch (e: any) {
       showError(e, 'toggle-hidden');
+      throw e;
     }
   }, [checkSyncLock, updatePhoto, showError]);
 
@@ -134,11 +134,11 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       await Promise.all(
          groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
       );
-      onRefresh();
     } catch (e: any) {
       showError(e, 'set-group-cover');
+      throw e;
     }
-  }, [checkSyncLock, photos, updatePhoto, showError, onRefresh]);
+  }, [checkSyncLock, photos, updatePhoto, showError]);
 
   const saveBatchEditWithSuccess = useCallback(async (batchIsHiddenApplied: boolean) => {
     if (checkSyncLock()) return;
@@ -147,6 +147,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       showSuccess('批量更新成功');
     } catch (e) {
       showError(e, 'save-batch-edit');
+      throw e;
     }
   }, [checkSyncLock, saveBatchEdit, showError, showSuccess]);
 

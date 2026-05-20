@@ -126,6 +126,27 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
         } else {
           showSuccess('多图识别完成');
         }
+        
+        queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              photos: page.photos.map((p: any) => {
+                const up = finalValidPhotos.find(fp => fp.id === p.id);
+                return up ? up : p;
+              }),
+            })),
+          };
+        });
+        queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+          if (!Array.isArray(old)) return old;
+          return old.map((p: any) => {
+            const up = finalValidPhotos.find(fp => fp.id === p.id);
+            return up ? up : p;
+          });
+        });
       }
 
       updateTask(taskId, { status: 'completed', progress: 100, message: '识别成功' });

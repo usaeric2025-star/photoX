@@ -52,7 +52,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
     lang, loadingType, batchProgress, categories, tags,
     settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
     onDeletePhotos, onGroupPhotos, onBatchEdit, onBatchAiAnalyze, onBatchToggleHidden,
-    isFetchingNextPage
+    isFetchingNextPage, onEditPhoto, onToggleHidden, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
   } = props;
 
   return (
@@ -92,6 +92,12 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
             selectedIds={selectedIds}
             isMultiSelect={isMultiSelect}
             setIsMultiSelect={setIsMultiSelect}
+            onEditPhoto={onEditPhoto}
+            onToggleHidden={onToggleHidden}
+            onAiAnalyze={onAiAnalyze}
+            onSetGroupCover={onSetGroupCover}
+            onCancelAnalyze={onCancelAnalyze}
+            isAnalyzing={isAnalyzing}
           />
         )}
         <AdminFloatingButtons 

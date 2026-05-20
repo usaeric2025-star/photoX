@@ -125,12 +125,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
           manufacturers={manufacturers}
           tagMap={tagMap}
           handleShare={handleShare}
-          onAiAnalyze={isAdmin ? onAiAnalyze : undefined}
+          onAiAnalyze={isStaffMode ? onAiAnalyze : undefined}
           onCancelAnalyze={onCancelAnalyze}
-          onEditPhoto={isAdmin ? onEditPhoto : undefined}
-          onToggleHidden={isAdmin ? onToggleHidden : undefined}
-          onUngroup={isAdmin ? onUngroup : undefined}
-          onSetGroupCover={isAdmin ? onSetGroupCover : undefined}
+          onEditPhoto={isStaffMode ? onEditPhoto : undefined}
+          onToggleHidden={isStaffMode ? onToggleHidden : undefined}
+          onUngroup={isStaffMode ? onUngroup : undefined}
+          onSetGroupCover={isStaffMode ? onSetGroupCover : undefined}
           contactWhatsApp={contactWhatsApp}
         />
       )}

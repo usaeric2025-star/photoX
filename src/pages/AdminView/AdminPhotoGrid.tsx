@@ -19,6 +19,12 @@ interface AdminPhotoGridProps {
   selectedIds: string[];
   isMultiSelect: boolean;
   setIsMultiSelect: (m: boolean) => void;
+  onEditPhoto?: (id: string) => void;
+  onToggleHidden?: (p: Photo) => Promise<void>;
+  onAiAnalyze?: (photo: Photo) => Promise<any>;
+  onSetGroupCover?: (id: string, gid: string) => Promise<void>;
+  onCancelAnalyze?: () => void;
+  isAnalyzing?: boolean;
 }
 
 export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
@@ -44,6 +50,12 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
       activeSetIsMultiSelect={props.setIsMultiSelect}
       activeClearSelection={clearSelection}
       isStaffMode={true}
+      onEditPhoto={props.onEditPhoto}
+      onToggleHidden={props.onToggleHidden}
+      onAiAnalyze={props.onAiAnalyze}
+      onSetGroupCover={props.onSetGroupCover}
+      onCancelAnalyze={props.onCancelAnalyze}
+      isAnalyzing={props.isAnalyzing}
     />
   );
 };

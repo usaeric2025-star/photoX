@@ -131,7 +131,22 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
             const finalId = await savePhotoToCloud(user.id, updatedPhoto);
             updatedPhoto.id = finalId;
           }
-          invalidatePhotos();
+          
+          queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page: any) => ({
+                ...page,
+                photos: page.photos.map((p: any) => p.id === effectiveEditId ? { ...p, ...updatedPhoto } : p),
+              })),
+            };
+          });
+          queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+            if (!Array.isArray(old)) return old;
+            return old.map((p: any) => p.id === effectiveEditId ? { ...p, ...updatedPhoto } : p);
+          });
+          
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
         }
       }
