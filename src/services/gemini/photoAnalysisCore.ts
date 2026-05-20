@@ -33,7 +33,7 @@ export const analyzeProductPhoto = async (
   
   let processedBase64Image = base64Image;
   try {
-     processedBase64Image = await convertToJpegAndResize(base64Image, 1000);
+     processedBase64Image = await convertToJpegAndResize(base64Image, 1000, signal);
   } catch (e) {
      console.debug('Image conversion failed, falling back to original image');
   }

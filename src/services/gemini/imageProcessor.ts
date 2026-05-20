@@ -1,9 +1,19 @@
-export const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000): Promise<string> => {
+export const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000, signal?: AbortSignal): Promise<string> => {
   return new Promise((resolve, reject) => {
     if (!imageBase.startsWith('data:') && !imageBase.startsWith('blob:') && !imageBase.startsWith('http')) {
       resolve(imageBase);
       return;
     }
+
+    if (signal?.aborted) {
+      reject(new Error('Image conversion aborted'));
+      return;
+    }
+
+    const abortHandler = () => {
+        reject(new Error('Image conversion aborted'));
+    };
+    signal?.addEventListener('abort', abortHandler);
 
     const img = new Image();
     if (imageBase.startsWith('http')) {
@@ -11,6 +21,7 @@ export const convertToJpegAndResize = async (imageBase: string, maxWidth: number
     }
     
     img.onload = () => {
+      signal?.removeEventListener('abort', abortHandler);
       let width = img.width;
       let height = img.height;
       if (width > maxWidth) {
@@ -38,7 +49,7 @@ export const convertToJpegAndResize = async (imageBase: string, maxWidth: number
       }
     };
     img.onerror = (e) => {
-        // Fallback is handled in calling code, don't spam console
+        signal?.removeEventListener('abort', abortHandler);
         reject(new Error(`Image conversion failed`));
     };
     img.src = imageBase;
