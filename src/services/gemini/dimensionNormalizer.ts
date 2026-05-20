@@ -1,5 +1,20 @@
 import { Dimension } from '../../types';
 
+export function isPlaceholderDimension(dim: any): boolean {
+  if (!dim) return true;
+  const label = String(dim.label || '').trim();
+  if (label === '' || label === '-') return true;
+  const lengthVal = Number(dim.length) || 0;
+  const widthVal = Number(dim.width) || 0;
+  const heightVal = Number(dim.height) || 0;
+  if (lengthVal === 0 && widthVal === 0 && heightVal === 0) {
+    if (!/[A-Za-z0-9]/.test(label) || label === '-') {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * AI Recognition Dimensions Automatic Cleaning Function
  * Ensures length/width/height fields are preserved and data is clean.
@@ -129,5 +144,5 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
   }
   if (current) merged.push(current);
   
-  return merged;
+  return merged.filter(d => !isPlaceholderDimension(d));
 };

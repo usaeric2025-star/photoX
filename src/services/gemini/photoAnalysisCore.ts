@@ -142,6 +142,25 @@ export const analyzeProductPhoto = async (
     parsedData.dimensions = normalizeDimensions(safeDims);
     parsedData.tagIds = normalizeTagIds(parsedData.tagIds, tags || []);
 
+    let resolvedCategoryId: string | null = null;
+    if (parsedData.categoryId) {
+      const match = (categories || []).find(c => 
+        String(c.id) === String(parsedData.categoryId) || 
+        String(c.name || '').toLowerCase() === String(parsedData.categoryId).toLowerCase() ||
+        String(c.zh || '').toLowerCase() === String(parsedData.categoryId).toLowerCase()
+      );
+      if (match) {
+        resolvedCategoryId = match.id;
+      }
+    }
+    if (!resolvedCategoryId && targetCategoryId) {
+      const match = (categories || []).find(c => String(c.id) === String(targetCategoryId));
+      if (match) {
+        resolvedCategoryId = match.id;
+      }
+    }
+    parsedData.categoryId = resolvedCategoryId;
+
     let newTagList: string[] = [];
     if (Array.isArray(parsedData.newTags)) {
       newTagList = parsedData.newTags.map(s => String(s).trim()).filter(Boolean);

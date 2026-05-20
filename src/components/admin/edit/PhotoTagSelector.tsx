@@ -2,6 +2,7 @@ import React from 'react';
 import { TagEditor } from '../TagEditor';
 import { Tag } from '../../../types';
 import { useGalleryStore } from '../../../store';
+import { safeArray } from '../../../lib/utils';
 
 interface PhotoTagSelectorProps {
   tags: Tag[];
@@ -21,9 +22,18 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
   deleteTag
 }) => {
   const { setPromptDialog } = useGalleryStore();
+
+  const cleanSelectedIds = React.useMemo(() => {
+    return Array.from(new Set(
+      safeArray(selectedTagIds)
+        .map(id => String(id).trim())
+        .filter(Boolean)
+    ));
+  }, [selectedTagIds]);
+
   const sortedTags = [...tags].sort((a, b) => {
-    const isASelected = selectedTagIds.includes(String(a.id));
-    const isBSelected = selectedTagIds.includes(String(b.id));
+    const isASelected = cleanSelectedIds.includes(String(a.id));
+    const isBSelected = cleanSelectedIds.includes(String(b.id));
 
     if (isASelected && !isBSelected) return -1;
     if (!isASelected && isBSelected) return 1;
@@ -33,10 +43,10 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
 
   const handleToggleTag = (tag: Tag) => {
     const strId = String(tag.id);
-    if (selectedTagIds.includes(strId)) {
-      onChange(selectedTagIds.filter(id => id !== strId));
-    } else if (selectedTagIds.length < 3) {
-      onChange([...selectedTagIds, strId]);
+    if (cleanSelectedIds.includes(strId)) {
+      onChange(cleanSelectedIds.filter(id => id !== strId));
+    } else if (cleanSelectedIds.length < 3) {
+      onChange([...cleanSelectedIds, strId]);
     }
   };
 
@@ -50,16 +60,16 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
         
         const existing = tags.find(t => t.name.toUpperCase() === trimmed.toUpperCase());
         if (existing) {
-          if (selectedTagIds.length < 3) {
-            onChange([...new Set([...selectedTagIds, String(existing.id)])]);
+          if (cleanSelectedIds.length < 3) {
+            onChange([...new Set([...cleanSelectedIds, String(existing.id)])]);
           }
           return;
         }
 
         const saved = await addTag(trimmed);
         if (saved) {
-          if (selectedTagIds.length < 3) {
-            onChange([...new Set([...selectedTagIds, String(saved.id)])]);
+          if (cleanSelectedIds.length < 3) {
+            onChange([...new Set([...cleanSelectedIds, String(saved.id)])]);
           }
         }
       }
@@ -82,7 +92,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
   return (
     <TagEditor 
       tags={sortedTags} 
-      selectedTagIds={selectedTagIds} 
+      selectedTagIds={cleanSelectedIds} 
       onToggleTag={handleToggleTag}
       onUpdateTag={updateTag}
       onDeleteTag={deleteTag}

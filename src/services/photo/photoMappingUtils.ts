@@ -29,15 +29,33 @@ export const ALLOWED_FIELDS = [
 ];
 
 export function normalizeDimensionsBeforeSave(dimensions: import('../../types').Dimension[] | null | undefined) {
-  const sDims = safeArray(dimensions);
-  sDims.forEach((dim) => {
+  if (!Array.isArray(dimensions)) return;
+  const sDims = [...dimensions];
+  const validDims = sDims.filter(dim => {
+    if (!dim) return false;
+    const label = String(dim.label || '').trim();
+    if (label === '' || label === '-') return false;
+    const lengthVal = Number(dim.length) || 0;
+    const widthVal = Number(dim.width) || 0;
+    const heightVal = Number(dim.height) || 0;
+    if (lengthVal === 0 && widthVal === 0 && heightVal === 0) {
+      if (!/[A-Za-z0-9]/.test(label) || label === '-') {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  dimensions.length = 0;
+  validDims.forEach((dim) => {
     if (dim && typeof dim === 'object') {
         const maxVal = Math.max(Number(dim.length) || 0, Number(dim.width) || 0, Number(dim.height) || 0);
         const validated = validateDimension({ ...dim, value: maxVal });
         if (validated?.unit) {
           dim.unit = validated.unit as any;
         }
-      }
+        dimensions.push(dim);
+    }
   });
 }
 
@@ -61,8 +79,10 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
         
         if (FIELD_MAP[key]) {
             let valueToSave = value;
-            if ((key === 'groupId' || key === 'categoryId' || key === 'manufacturerId') && value === '') {
-                valueToSave = null;
+            if (key === 'groupId' || key === 'categoryId' || key === 'manufacturerId') {
+                if (value === '' || value === 'uncategorized' || value === 'null' || value === undefined || value === null) {
+                    valueToSave = null;
+                }
             }
             dbUpdates[FIELD_MAP[key]] = valueToSave;
         } else {
