@@ -23,22 +23,42 @@ interface PhotoCardProps {
   onToggleSelection?: (id: string) => void;
   onEditPhoto?: (id: string) => void;
   onGroupClick?: (groupId: string) => void;
-  onLightboxOpen: (index: number) => void;
+  onLightboxOpen: (index: number, photos: Photo[]) => void;
   onLongPressStart: (id: string) => void;
   onLongPressEnd: () => void;
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
+  displayPhotos: Photo[]; // Add displayPhotos to props
 }
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   photo, index, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
-  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden
+  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden,
+  displayPhotos // Add displayPhotos in destructuring
 }) => {
   const { isAdmin } = usePermission();
   const isAdminMode = isAdmin;
   if (!photo) return null;
+  
+  // ... rest of the code ...
+  
+  const handleOpenLightbox = () => {
+    console.log('handleOpenLightbox', { photoId: photo.id, index, displayPhotosLength: displayPhotos.length });
+    const realIndex = displayPhotos.findIndex((p) => p?.id === photo.id);
+    console.log('realIndex', realIndex);
+    if (realIndex !== -1) {
+      onLightboxOpen(realIndex, displayPhotos);
+    } else {
+      onLightboxOpen(index, displayPhotos);
+    }
+  };
+    
+  // ... inside onClick handler:
+  // onLightboxOpen(index); -> handleOpenLightbox();
+  
+  // ... rest of the file ...
 
   const mfrName = useMemo(() => {
     return getManufacturerName(photo?.manufacturerId || photo?.sub_category, manufacturers);
@@ -103,15 +123,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onTouchCancel={onLongPressEnd}
-      onClick={() => {
-        if (isAdmin && isMultiSelect && onToggleSelection) {
+      onClick={(e) => {
+        if (isMultiSelect && onToggleSelection && !e.shiftKey) {
           onToggleSelection(photo.id);
-          return;
-        }
-        if (photo.groupId && showGroupsCollapsed) {
-          onGroupClick?.(photo.groupId);
         } else {
-          onLightboxOpen(index);
+          handleOpenLightbox();
         }
       }}
       className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}

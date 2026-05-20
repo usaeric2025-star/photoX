@@ -182,7 +182,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     activeToggleSelection={() => {}}
                     setActiveGroupId={setActiveGroupId}
                     setActivePhotoId={setActivePhotoId}
-                    setLightboxIndex={setLightboxIndex}
+                    setLightboxIndex={(index: number, photos: Photo[]) => setLightboxIndex(index)}
                     startLongPress={() => {}}
                     endLongPress={() => {}}
                     shareSinglePhoto={shareSinglePhoto}

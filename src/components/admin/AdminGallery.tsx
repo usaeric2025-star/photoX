@@ -149,7 +149,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     activeToggleSelection={props.activeToggleSelection}
                     setActiveGroupId={setActiveGroupId}
                     setActivePhotoId={setActivePhotoId}
-                    setLightboxIndex={setLightboxIndex}
+                    setLightboxIndex={(index: number, photos: Photo[]) => setLightboxIndex(index)}
                     startLongPress={() => {}}
                     endLongPress={() => {}}
                     shareSinglePhoto={() => {}}

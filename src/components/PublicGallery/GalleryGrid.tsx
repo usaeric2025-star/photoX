@@ -53,30 +53,26 @@ interface MemoizedPhotoCardProps {
   onToggleSelection: (id: string) => void;
   onEditPhoto?: (id: string) => void;
   onGroupClick: (groupId: string, photoId?: string) => void;
-  onLightboxOpen: (index: number) => void;
+  onLightboxOpen: (index: number, photos: Photo[]) => void;
   onLongPressStart: (id: string) => void;
   onLongPressEnd: () => void;
   shareSinglePhoto: (photo: Photo) => void;
-  displayPhotos: Photo[];
-  gridPhotos: Photo[];
   onTogglePinned?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
+  displayPhotos: Photo[];
 }
 
 const MemoizedPhotoCard = React.memo(({ 
   index, photo, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, 
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
-  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, 
-  gridPhotos, onTogglePinned, onToggleHidden 
+  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, 
+  onTogglePinned, onToggleHidden, displayPhotos
 }: MemoizedPhotoCardProps) => {
   const isAdminMode = useAdminMode();
   
   const handleOpenLightbox = useCallback(() => {
-    const target = gridPhotos[index];
-    if (!target) return;
-    const realIndex = displayPhotos.findIndex((p) => p?.id === target.id);
-    if (realIndex !== -1) onLightboxOpen(realIndex);
-  }, [index, displayPhotos, gridPhotos, onLightboxOpen]);
+    onLightboxOpen(index, displayPhotos);
+  }, [index, onLightboxOpen, displayPhotos]);
 
   const handleGroupClickInternal = useCallback((gid: string) => {
     onGroupClick(gid, photo.id);
@@ -160,7 +156,6 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
             onTogglePinned={props.onTogglePinned}
             onToggleHidden={props.onToggleHidden}
             displayPhotos={props.displayPhotos}
-            gridPhotos={props.gridPhotos}
           />
         );
       }}
