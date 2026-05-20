@@ -1,6 +1,7 @@
 import { Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { validateDimension } from '../../utils/dimensionValidator';
+import { generateItemCode } from '../utils';
 
 export const FIELD_MAP: Record<string, string> = {
   groupId: 'group_id',
@@ -105,6 +106,11 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
     // Ensure Price unit
     if (dbUpdates.price && typeof dbUpdates.price === 'string' && !dbUpdates.price.includes('RM')) {
         dbUpdates.price = `RM ${dbUpdates.price.replace(/RM/gi, '').trim()}`;
+    }
+
+    // Guarantee unique, non-empty, and valid item_code to prevent database constraint violations
+    if (!dbUpdates.item_code || String(dbUpdates.item_code).trim() === '') {
+        dbUpdates.item_code = generateItemCode();
     }
     
     return dbUpdates;

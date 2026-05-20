@@ -44,7 +44,11 @@ export const calculateMD5FromArrayBuffer = (buffer: ArrayBuffer): string => {
 
 export const generateItemCode = (): string => {
   const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let random = '';
+  for (let i = 0; i < 6; i++) {
+    random += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
   return `FUR-${date}-${random}`;
 };
 

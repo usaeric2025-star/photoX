@@ -6,6 +6,7 @@ import { photoCache } from '../photoService';
 import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
 import { checkDuplicate, DuplicatePhotoError } from '../../utils/duplicateCheck';
+import { generateItemCode } from '../utils';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -156,7 +157,7 @@ export const savePhotosToCloudBatch = async (
 
     const payload: Record<string, unknown> = {
       user_id: session.user.id,
-      item_code: photo.item_code,
+      item_code: photo.item_code || generateItemCode(),
       manual_code: photo.manual_code || '',
       image_hash: photo.image_hash,
       name: photo.name,
