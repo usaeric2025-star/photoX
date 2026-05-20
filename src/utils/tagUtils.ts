@@ -42,26 +42,54 @@ export const resolveTagIdsBatch = async (
   const resultIds: string[] = [];
   const namesToCreate: string[] = [];
   
-  const uniqueNames = Array.from(new Set(names.map(n => n.toUpperCase().trim()).filter(Boolean)));
+  const uniqueNames = Array.from(new Set(names.map(n => String(n || '').trim()).filter(Boolean)));
 
   for (const name of uniqueNames) {
-    // 1. 检查 map (最快)
-    let id = tagNameToIdMap.get(name);
+    const uppercaseName = name.toUpperCase();
     
-    // 2. 检查现有数组 (以防 map 过期)
+    // 1. Direct ID match: If the item is already a valid tag ID in existingTags
+    const directIdMatch = existingTags.find(t => String(t.id) === name);
+    if (directIdMatch) {
+      resultIds.push(directIdMatch.id);
+      continue;
+    }
+
+    // 2. Index ID fallback: If AI provides the numeric array index (e.g. 0, 1) rather than Name/ID
+    const isNum = /^\d+$/.test(name);
+    if (isNum) {
+      const idx = parseInt(name, 10);
+      if (idx >= 0 && idx < existingTags.length) {
+        const matchedTagByIndex = existingTags[idx];
+        if (matchedTagByIndex) {
+          resultIds.push(matchedTagByIndex.id);
+          continue;
+        }
+      }
+    }
+
+    // 3. Lookup via cache / map
+    let id = tagNameToIdMap.get(uppercaseName);
+    
+    // 4. Lookup via existing list by Name / zh
     if (!id) {
-      const found = existingTags.find(t => (t.name || '').toUpperCase() === name);
+      const found = existingTags.find(t => 
+        (t.name || '').toUpperCase() === uppercaseName || 
+        (t.zh || '').toUpperCase() === uppercaseName
+      );
       if (found) id = found.id;
     }
     
     if (id) {
       resultIds.push(id);
     } else {
-      namesToCreate.push(name);
+      // Avoid creating dummy or numeric tags like "0", "1", "2"
+      if (!isNum && name.length > 1) {
+        namesToCreate.push(name);
+      }
     }
   }
   
-  // 3. 批量创建缺失的标签
+  // 3. Batch create missing tags
   if (namesToCreate.length > 0) {
     try {
       const newTagsMap = await batchCreateTags(namesToCreate);

@@ -140,7 +140,7 @@ export const analyzeProductPhoto = async (
     }
     
     parsedData.dimensions = normalizeDimensions(safeDims);
-    parsedData.tagIds = normalizeTagIds(parsedData.tagIds);
+    parsedData.tagIds = normalizeTagIds(parsedData.tagIds, tags || []);
 
     let newTagList: string[] = [];
     if (Array.isArray(parsedData.newTags)) {

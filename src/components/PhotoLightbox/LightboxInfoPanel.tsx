@@ -183,20 +183,20 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                           {dim.unit || 'cm'}
                         </span>
                       </div>
-                      <p className="font-black text-brand-navy text-base md:text-lg leading-snug tracking-tight">{dimStr || '-'}</p>
-                      {(!/\d/.test(dimStr) && (dim.length || dim.width || dim.height)) && (
+                      <p className="font-black text-brand-navy text-base md:text-lg leading-snug tracking-tight">{(dimStr && dimStr !== '-') ? dimStr : ''}</p>
+                      {(!/\d/.test(dimStr || '') && (dim.length || dim.width || dim.height)) && (
                         <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100">
                           <div>
                              <span className="text-[8px] font-bold text-slate-400 uppercase block mb-0.5">L</span>
-                             <p className="font-bold text-slate-700 text-sm">{dim.length || '-'}</p>
+                             <p className="font-bold text-slate-700 text-sm">{dim.length || ''}</p>
                           </div>
                           <div>
                              <span className="text-[8px] font-bold text-slate-400 uppercase block mb-0.5">W</span>
-                             <p className="font-bold text-slate-700 text-sm">{dim.width || '-'}</p>
+                             <p className="font-bold text-slate-700 text-sm">{dim.width || ''}</p>
                           </div>
                           <div>
                              <span className="text-[8px] font-bold text-slate-400 uppercase block mb-0.5">H</span>
-                             <p className="font-bold text-slate-700 text-sm">{dim.height || '-'}</p>
+                             <p className="font-bold text-slate-700 text-sm">{dim.height || ''}</p>
                           </div>
                         </div>
                       )}

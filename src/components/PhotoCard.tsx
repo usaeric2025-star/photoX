@@ -91,8 +91,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onMouseDown={() => {
         if (isAdmin) {
           onLongPressStart(photo.id);
-        } else {
-          shareSinglePhoto(photo);
         }
       }}
       onMouseUp={onLongPressEnd}
@@ -100,8 +98,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onTouchStart={() => {
         if (isAdmin) {
           onLongPressStart(photo.id);
-        } else {
-          shareSinglePhoto(photo);
         }
       }}
       onTouchEnd={onLongPressEnd}
