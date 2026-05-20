@@ -278,6 +278,7 @@ export const usePhotoImport = (
                    name: shouldUpdateName(initialPhoto.name) ? (aiName || initialPhoto.name) : initialPhoto.name,
                    categoryId: result.categoryId || initialPhoto.categoryId,
                    tagIds: finalTagIds.slice(0, 3),
+                   description: (result.description && (!initialPhoto.description || !initialPhoto.description.trim())) ? result.description : initialPhoto.description,
                    description_translations: result.description_translations || initialPhoto.description_translations,
                    model_number: initialPhoto.model_number || result.modelNumber || '',
                    dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : initialPhoto.dimensions

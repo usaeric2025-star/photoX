@@ -69,17 +69,22 @@ export default function AppRoutes() {
         const reason = event.reason;
         const message = reason?.message || String(reason || '');
         
-        // Skip user-cancelled or aborted requests
+        // Clean or check for cancellable triggers
         const isCancellation = 
           reason?.name === 'AbortError' || 
-          /cancel|abort/i.test(message) ||
-          message.includes('DOMException');
+          /cancel|abort|precondition|offline/i.test(message) ||
+          message.includes('DOMException') ||
+          message.includes('user_cancel') ||
+          message.includes('Failed to fetch') ||
+          message.includes('NetworkError');
           
         if (isCancellation) {
-          console.log('[App] Handled benign cancellation rejection:', message);
+          console.warn('[App] 捕获良性后台任务取消或网络中断 Rejection:', message);
           return;
         }
 
+        // Output as minor warning instead of red-alert logs if the rejection was silent/internal
+        console.warn('[App] 捕获未处理的后台 Promise 拒绝 (已过滤并自动捕获):', reason);
         globalHandleError(reason || new Error('Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
     };
 

@@ -59,9 +59,17 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
         if (nums.length >= 3) width = parseFloat(nums[2]);
       }
       
-      const cleanedLabel = originalLabel.replace(/[\u4e00-\u9fa5]+/g, '')
+      const isAIEstimated = !!(d && (d.isAIEstimated === true || /AI/i.test(originalLabel)));
+      
+      let cleanedLabel = originalLabel.replace(/[\u4e00-\u9fa5]+/g, '')
                                        .replace(/(cm|mm|inch|in|寸|["'”])/gi, '')
                                        .trim();
+
+      // For Option 2 (Visual Estimation): Append " (AI)" cleanly to the label if it's visually estimated
+      if (isAIEstimated) {
+        const baseLabel = cleanedLabel.replace(/\s*\(\s*AI\s*\)/i, '').trim();
+        cleanedLabel = `${baseLabel} (AI)`.trim();
+      }
 
       return { 
         ...d, 
@@ -70,7 +78,8 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
         length,
         width,
         height,
-        isAI: true
+        isAI: true,
+        isAIEstimated
       };
     })
     .filter(Boolean) as Dimension[];

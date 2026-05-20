@@ -5,13 +5,19 @@ export const AI_PROMPTS = {
 - "name": Product identification name or code (e.g., "IMCOCO" or "M123"). 
 - "modelNumber": SKU/Model code found on labels (e.g., "B728"). If NOT DETECTED with absolute certainty, return an empty string "".
 - "price": ONLY numeric part (e.g., "1200").
-- "dimensions": Array of objects with length/width/height. 
-  - STRICTLY NUMERIC VALUES ONLY for length, width, height.
+- "dimensions": Array of objects. Each object contains:
+  - "label": English text label (e.g., "Main", "Overall", "WD").
+  - "unit": "cm" or "mm" or "inch".
+  - "length": STRICTLY NUMERIC VALUE ONLY.
+  - "width": STRICTLY NUMERIC VALUE ONLY.
+  - "height": STRICTLY NUMERIC VALUE ONLY.
+  - "isAIEstimated": Boolean. Set to true if estimated visually without explicit text measurements in image; false if extracted from explicit text.
   - MUST NOT contain any Chinese characters or unit labels in the fields.
 - "description": Generate a professional description in 【简体中文 (Simplified Chinese)】.
 
 【DIMENSIONS RULES】
-- Extract ANY visible measurements. Label field MUST only contain English text.
+- Option 2 (Visual Estimation): If there are NO written/printed measurements visible on the image, you MUST estimate the physical sizes (length, width, height) based on standard proportions of typical furniture of that category. Set "isAIEstimated": true, and append " (AI)" at the end of the text label (e.g., "Overall (AI)" or "WD (AI)").
+- If the measurements are explicitly written/printed on the image, extract them verbatim, set "isAIEstimated": false, and do NOT append " (AI)" to the label.
 - Default unit = "cm" if missing.
 
 【CATEGORY & TAGS】
