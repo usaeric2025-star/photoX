@@ -211,11 +211,11 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
   }
 };
 
-export const groupPhotos = async (photoIds: string[]) => {
+export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string) => {
   if (photoIds.length <= 1) {
     throw new Error('至少需要选择两张照片才能成组');
   }
-  const groupId = crypto.randomUUID();
+  const groupId = predefinedGroupId || crypto.randomUUID();
   return updatePhotosGroupInCloud(photoIds, { 
     group_id: groupId,
     is_group_cover: false 

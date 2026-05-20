@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Trash2, Layers, X, Edit3 } from 'lucide-react';
+import { Sparkles, Trash2, Layers, X, Edit3, EyeOff } from 'lucide-react';
 import { FloatingActionBar } from '../ui/FloatingActionBar';
 
 interface Props {
@@ -9,11 +9,12 @@ interface Props {
   onBatchEdit: () => void;
   onGroup: () => void;
   onDelete: () => void;
+  onToggleVisibility?: () => void;
 }
 
 export const MultiSelectToolbar: React.FC<Props> = ({
   selectedCount, onClose,
-  onBatchAiIdentify, onBatchEdit, onGroup, onDelete
+  onBatchAiIdentify, onBatchEdit, onGroup, onDelete, onToggleVisibility
 }) => {
   return (
     <FloatingActionBar position="bottom-right" className="!bottom-6 !left-1/2 !-translate-x-1/2 !z-[200] !p-2 !rounded-2xl !bg-white !border-slate-100 min-w-max">
@@ -23,6 +24,7 @@ export const MultiSelectToolbar: React.FC<Props> = ({
       <button onClick={onBatchAiIdentify} className="p-2 text-purple-600 hover:bg-purple-50 rounded-xl" title="AI Identify"><Sparkles size={20} /></button>
       <button onClick={onBatchEdit} className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl" title="Edit"><Edit3 size={20} /></button>
       <button onClick={onGroup} className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl" title="Group"><Layers size={20} /></button>
+      <button onClick={onToggleVisibility} className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-xl" title="Toggle Visibility"><EyeOff size={20} /></button>
       <button onClick={onDelete} className="p-2 text-red-600 hover:bg-red-50 rounded-xl" title="Delete"><Trash2 size={20} /></button>
     </FloatingActionBar>
   );

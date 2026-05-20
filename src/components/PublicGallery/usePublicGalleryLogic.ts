@@ -175,7 +175,7 @@ export const usePublicGalleryLogic = (props: {
     } else {
       navigator.clipboard.writeText(msg)
         .then(() => showSuccess("分享信息已复制到剪贴板！/ Share info copied to clipboard!"))
-        .catch(e => console.error("Clipboard copy failed:", e));
+        .catch(e => showError(e, '复制分享信息失败'));
     }
   }, [t.shareTitle, getShareMessage, showSuccess]);
 
@@ -191,7 +191,7 @@ export const usePublicGalleryLogic = (props: {
     } else {
       navigator.clipboard.writeText(shareText)
         .then(() => showSuccess("群组分享链接已复制！/ Group share link copied!"))
-        .catch(e => console.error("Group copy failed:", e));
+        .catch(e => showError(e, '复制群组链接失败'));
     }
   }, [t, activeGroupId, showSuccess]);
 
@@ -205,6 +205,7 @@ export const usePublicGalleryLogic = (props: {
   // Daily Stability: Load or Calculate tag stats only once per day
   useEffect(() => {
     if (hasLoadedStats.current) return;
+    let active = true;
 
     const syncStats = async () => {
       const today = new Date().toISOString().split('T')[0];
@@ -212,6 +213,7 @@ export const usePublicGalleryLogic = (props: {
         const cached = await loadData('daily_tag_stats');
         
         // If we have a valid cache for today, use it and stop
+        if (!active) return;
         if (cached && cached.date === today) {
           setTagStats(cached.stats);
           hasLoadedStats.current = true;
@@ -230,6 +232,7 @@ export const usePublicGalleryLogic = (props: {
             }
           });
           
+          if (!active) return;
           setTagStats(counts);
           await saveData('daily_tag_stats', { date: today, stats: counts });
           hasLoadedStats.current = true;
@@ -240,6 +243,7 @@ export const usePublicGalleryLogic = (props: {
     };
 
     syncStats();
+    return () => { active = false; };
   }, [localPhotos.length]); // Only retry calculation if photo count changes significantly early on
 
   return {

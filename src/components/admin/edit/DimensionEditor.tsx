@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { Sparkles, X as CloseIcon } from 'lucide-react';
 import { Dimension } from '../../../types';
 import { safeArray } from '../../../lib/utils';
@@ -20,9 +20,11 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
   onAiAnalyze,
   t
 }) => {
-  const displayDims = dimensions.length > 0 ? dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' } as Dimension];
+  const displayDims = useMemo(() => 
+    dimensions.length > 0 ? dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' } as Dimension]
+  , [dimensions]);
 
-  const handleUpdateLabel = (idx: number, newPrefix: string, newDimPart: string) => {
+  const handleUpdateLabel = useCallback((idx: number, newPrefix: string, newDimPart: string) => {
     const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
     const newDims = [...displayDims];
     newDims[idx] = { ...newDims[idx], label: finalLabel, isAI: false };
@@ -39,15 +41,22 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
     else if (dMatch) newDims[idx].length = parseFloat(dMatch[1]);
 
     onChange(newDims);
-  };
+  }, [displayDims, onChange]);
 
-  const onAddDimension = () => {
+  const onAddDimension = useCallback(() => {
     onChange([...dimensions, { label: '', length: 0, width: 0, height: 0, unit: 'cm' }]);
-  };
+  }, [dimensions, onChange]);
 
-  const onRemoveDimension = (idx: number) => {
+  const onRemoveDimension = useCallback((idx: number) => {
     onChange(dimensions.filter((_, i) => i !== idx));
-  };
+  }, [dimensions, onChange]);
+
+  const handleUnitChange = useCallback((idx: number, u: string) => {
+    const newDims = [...displayDims];
+    newDims[idx].unit = u as any;
+    newDims[idx].isAI = false;
+    onChange(newDims);
+  }, [displayDims, onChange]);
 
   return (
     <div className="space-y-3 pt-2">
@@ -120,12 +129,7 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
                     {['cm', 'mm', 'inch'].map(u => (
                       <button 
                         key={u}
-                        onClick={() => {
-                          const newDims = [...displayDims];
-                          newDims[idx].unit = u as any;
-                          newDims[idx].isAI = false;
-                          onChange(newDims);
-                        }}
+                        onClick={() => handleUnitChange(idx, u)}
                         className={`flex-1 py-2 rounded-xl text-[9px] sm:text-[10px] font-bold transition-all border ${dim.unit === u ? 'bg-slate-800 text-white border-slate-800 shadow-md translate-z-1' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}
                       >
                         {u === 'inch' ? 'in' : u}

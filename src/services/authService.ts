@@ -9,7 +9,7 @@ let wasAuthenticated = false;
 supabase.auth.getSession().then(({ data: { session } }) => {
   wasAuthenticated = !!session;
 }).catch((error) => {
-  console.error("Auth initialization check failed:", error);
+  globalHandleError(error, "Auth initialization check failed");
 });
 
 export const loginWithGoogle = async () => {
@@ -37,7 +37,7 @@ export const loginWithGoogle = async () => {
     if (error) throw error;
     return data;
   } catch (err: unknown) {
-    console.error("Login Exception:", err);
+    globalHandleError(err, "Login Exception");
     throw err;
   }
 };

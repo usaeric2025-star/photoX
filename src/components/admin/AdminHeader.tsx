@@ -56,7 +56,9 @@ export const AdminHeader: React.FC<Props> = ({
   const t = translations[appLang as LanguageCode] || translations['en'];
 
   useEffect(() => {
+    let active = true;
     const handleClickOutside = (event: MouseEvent) => {
+      if (!active) return;
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowRefreshMenu(false);
       }
@@ -65,7 +67,10 @@ export const AdminHeader: React.FC<Props> = ({
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => { 
+      active = false;
+      document.removeEventListener('mousedown', handleClickOutside); 
+    };
   }, []);
 
   const toggleInfinite = () => {

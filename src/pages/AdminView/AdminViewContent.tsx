@@ -18,7 +18,6 @@ interface Props {
   user: User | null;
   authChecked: boolean;
   logout: () => void;
-  errorContent: React.ReactNode;
   t: TranslationType;
   lang: LanguageCode;
   sessionValue: any;
@@ -29,7 +28,7 @@ interface Props {
 }
 
 export const AdminViewContent: React.FC<Props> = ({ 
-  user, errorContent, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage 
+  user, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage 
 }) => {
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
@@ -62,6 +61,15 @@ export const AdminViewContent: React.FC<Props> = ({
       showError(e, '自动更新成功');
     }
   }, [logic.checkSyncLock, logic.toggleHidden, showSuccess, showError]);
+  const handleBatchToggleHidden = useCallback(async (ids: string[]) => {
+    if (logic.checkSyncLock()) return;
+    const targetPhotos = logic.photos.filter(p => ids.includes(p.id));
+    const allHidden = targetPhotos.every(p => p.is_hidden);
+    await logic.updatePhotosBulk(ids, { is_hidden: !allHidden }, '批量更新隐藏状态');
+    logic.setSelectedIds([]);
+    logic.setIsMultiSelect(false);
+  }, [logic.checkSyncLock, logic.photos, logic.updatePhotosBulk, logic.setSelectedIds, logic.setIsMultiSelect]);
+
   const handleEditPhoto = useCallback((id) => logic.setEditPhotoId(id as string), [logic.setEditPhotoId]);
   const handleDeletePhotos = useCallback((ids) => {
       if (logic.checkSyncLock()) return;
@@ -83,6 +91,106 @@ export const AdminViewContent: React.FC<Props> = ({
       if (logic.checkSyncLock()) return;
       logic.setBatchEditIds(ids);
   }, [logic.checkSyncLock, logic.setBatchEditIds]);
+
+  const handleUngroup = useCallback(async (groupId) => { 
+    if (logic.checkSyncLock()) return;
+    try {
+      await logic.handleUngroup(groupId); 
+    } catch (e: any) {
+      showError(e, '拆组失败');
+    }
+  }, [logic.checkSyncLock, logic.handleUngroup, showError]);
+
+  const handleBatchAiAnalyze = useCallback((photos) => {
+    logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos))
+      .catch((e: Error) => { 
+        console.error('Batch AI Analyze failed', e); 
+        showError(e, '识别失败'); 
+      });
+  }, [logic.withLoading, logic.handleGroupAiIdentify, showError]);
+
+  const handleAiAnalyze = useCallback((p) => {
+    console.log('AI Analyze called. Photo:', p.id);
+    return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)
+      .catch((e: Error) => showError(e, '识别失败'));
+  }, [logic.handleSingleAiAnalyze, showError]);
+
+  const handleUpdatePhoto = useCallback(async (id, updates) => {
+    if (logic.checkSyncLock()) return;
+    try {
+      await logic.updatePhoto(id, updates);
+    } catch (e: any) {
+      showError(e, '更新照片属性失败');
+    }
+  }, [logic.checkSyncLock, logic.updatePhoto, showError]);
+
+  const handleSaveSettings = useCallback(async (s) => {
+    if (logic.checkSyncLock()) return { success: false };
+    return await logic.saveSettings(s);
+  }, [logic.checkSyncLock, logic.saveSettings]);
+
+  const handleLogoUpload = useCallback(async (e) => {
+    if (logic.checkSyncLock()) return;
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    await logic.withLoading('global', async () => {
+      try {
+        const { uploadLogo } = await import('../../services/settingService');
+        const url = await uploadLogo(file);
+        if (url && logic.settings) {
+          const newSettings = { ...logic.settings, logo_url: url };
+          await logic.saveSettings(newSettings);
+          showSuccess('Logo 更新成功！');
+        }
+      } catch (err: any) {
+        showError(err, 'Logo 上传失败');
+      }
+    });
+  }, [logic.checkSyncLock, logic.withLoading, logic.settings, logic.saveSettings, showSuccess, showError]);
+
+  const handlePerformPushSync = useCallback(async () => { 
+    try {
+      await logic.withLoading('sync-push', async () => { 
+        await logic.performPushSync(true); 
+      }); 
+      showSuccess('成功备份至云端！');
+      return { success: true } as any; 
+    } catch (err: any) {
+      showError(err, '同步备份失败');
+      throw err;
+    }
+  }, [logic.withLoading, logic.performPushSync, showSuccess, showError]);
+
+  const handlePerformPullSync = useCallback(async () => { 
+    try {
+      await logic.performPullSync(true); 
+      showSuccess('成功自云端恢复！');
+      return { success: true } as any; 
+    } catch (err: any) {
+      showError(err, '云端恢复失败');
+      throw err;
+    }
+  }, [logic.performPullSync, showSuccess, showError]);
+
+  const handleRefreshCloudData = useCallback(async (user, force) => {
+    await logic.onRefresh();
+  }, [logic.onRefresh]);
+
+  const handleSaveNewPhoto = useCallback(async () => {
+    if (logic.checkSyncLock()) return;
+    try {
+      await logic.saveNewPhoto();
+      showSuccess('照片已保存');
+    } catch (e) {
+      showError(e, '保存照片失败');
+    }
+  }, [logic.checkSyncLock, logic.saveNewPhoto, showSuccess, showError]);
+
+  const handleDeletePhotoSingle = useCallback(async (photo: Photo) => {
+    if (logic.checkSyncLock()) return;
+    await logic.handleDeletePhoto(photo.id);
+  }, [logic.checkSyncLock, logic.handleDeletePhoto]);
   const handleImport = useCallback(() => {
     if (logic.checkSyncLock()) return;
     const input = document.createElement('input');
@@ -106,7 +214,6 @@ export const AdminViewContent: React.FC<Props> = ({
   return (
     <ErrorBoundary key="admin-main">
       <AdminGlobalModals />
-      {errorContent}
       <div className="px-6 pb-6">
          <ErrorLogViewer />
       </div>
@@ -120,15 +227,7 @@ export const AdminViewContent: React.FC<Props> = ({
         {logic.batchEditIds && (
           <BatchEditScreen 
             resetAddState={logic.resetAddState}
-            saveBatchEdit={async (batchIsHiddenApplied) => {
-              if (logic.checkSyncLock()) return;
-              try {
-                await logic.saveBatchEdit(batchIsHiddenApplied);
-                showSuccess('批量更新成功');
-              } catch (e) {
-                showError(e, '批量编辑照片失败');
-              }
-            }}
+            saveBatchEdit={logic.saveBatchEditWithSuccess}
             batchEditIds={logic.batchEditIds}
             formState={logic.formState}
             updateForm={logic.updateForm}
@@ -141,10 +240,7 @@ export const AdminViewContent: React.FC<Props> = ({
             updateTag={logic.updateTag}
             deleteTag={logic.deleteTag}
             addTag={logic.addTag}
-            onDelete={async (ids) => {
-              if (logic.checkSyncLock()) return;
-              await logic.handleDeletePhoto(ids);
-            }}
+            onDelete={logic.handleDeletePhoto}
           />
         )}
         
@@ -155,115 +251,35 @@ export const AdminViewContent: React.FC<Props> = ({
             setAlertDialog={logic.setAlertDialog}
             photos={logic.photos}
             displayPhotos={logic.photos.filter((p: Photo) => p.groupId === logic.activeGroupId)}
-            setLightboxIndex={() => {}}
+            setLightboxIndex={logic.setLightboxIndex}
             isStaffMode={true}
-            onEditPhoto={(p) => logic.setEditPhotoId(p.id)}
-            onLongPressStart={() => {}}
-            onLongPressEnd={() => {}}
-            onBatchEdit={(ids) => { logic.setBatchEditIds(ids); }}
-            onUngroup={async (groupId) => { 
-              if (logic.checkSyncLock()) return;
-              try {
-                await logic.handleUngroup(groupId); 
-              } catch (e: any) {
-                showError(e, '拆组失败');
-              }
-            }}
-            onAddPhotoToGroup={() => {
-              console.log("Add photo button clicked");
-              // if (logic.checkSyncLock()) return;
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/*';
-              input.multiple = true;
-              input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch((err: Error) => showError(err, '导入图片失败'));
-              input.click();
-            }}
+            onEditPhoto={handleEditPhoto}
+            onLongPressStart={useCallback((p: Photo) => logic.onLongPressStart(p.id), [logic.onLongPressStart])}
+            onLongPressEnd={logic.onLongPressEnd}
+            onBatchEdit={handleBatchEdit}
+            onUngroup={handleUngroup}
+            onAddPhotoToGroup={handleImport}
             lang={lang}
             t={t}
             categories={logic.categories}
             manufacturers={logic.manufacturers}
             allTags={logic.tags}
             tagMap={logic.tagIdToNameMap}
-            onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos)).catch((e: Error) => { console.error('Batch AI Analyze failed', e); showError(e, '识别失败'); })}
-            onAiAnalyze={(p) => {
-                console.log('AI Analyze called in AdminViewContent. Photo:', p.id, 'URI:', p.uri, 'ImageURL:', p.image_url);
-                return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id).catch((e: Error) => showError(e, '识别失败'));
-            }}
-            onToggleHidden={async (photo) => {
-              if (logic.checkSyncLock()) {
-                showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
-                return;
-              }
-              try {
-                await logic.toggleHidden(photo);
-                showSuccess('已更新隐藏状态');
-              } catch (e) {
-                showError(e, '切换照片隐藏状态失败');
-              }
-            }}
-            updatePhoto={async (id, updates) => {
-              if (logic.checkSyncLock()) return;
-              try {
-                await logic.updatePhoto(id, updates);
-              } catch (e: any) {
-                showError(e, '更新照片属性失败');
-              }
-            }}
+            onBatchAiAnalyze={handleBatchAiAnalyze}
+            onAiAnalyze={handleAiAnalyze}
+            onToggleHidden={handleToggleHidden}
+            updatePhoto={handleUpdatePhoto}
           />
         )}
   
         {logic.activeScreen === 'manage' && (
           <SettingsScreen 
             setActiveScreen={logic.setActiveScreen}
-            saveSettings={async (s) => {
-              if (logic.checkSyncLock()) return { success: false };
-              return await logic.saveSettings(s);
-            }}
-            handleLogoUpload={async (e) => {
-              if (logic.checkSyncLock()) return;
-              const file = e.target.files?.[0];
-              if (!file) return;
-
-              await logic.withLoading('global', async () => {
-                try {
-                  const { uploadLogo } = await import('../../services/settingService');
-                  const url = await uploadLogo(file);
-                  if (url && logic.settings) {
-                    const newSettings = { ...logic.settings, logo_url: url };
-                    await logic.saveSettings(newSettings);
-                    showSuccess('Logo 更新成功！');
-                  }
-                } catch (err: any) {
-                  showError(err, 'Logo 上传失败');
-                }
-              });
-            }}
-            performPushSync={async () => { 
-              try {
-                await logic.withLoading('sync-push', async () => { 
-                  await logic.performPushSync(true); 
-                }); 
-                showSuccess('成功备份至云端！');
-                return { success: true } as any; 
-              } catch (err: any) {
-                showError(err, '同步备份失败');
-                throw err;
-              }
-            }}
-            performPullSync={async () => { 
-              try {
-                await logic.performPullSync(true); 
-                showSuccess('成功自云端恢复！');
-                return { success: true } as any; 
-              } catch (err: any) {
-                showError(err, '云端恢复失败');
-                throw err;
-              }
-            }}
-            refreshCloudData={async (user, force) => {
-              await logic.onRefresh();
-            }}
+            saveSettings={handleSaveSettings}
+            handleLogoUpload={handleLogoUpload}
+            performPushSync={handlePerformPushSync}
+            performPullSync={handlePerformPullSync}
+            refreshCloudData={handleRefreshCloudData}
             cloudCount={logic.cloudCount}
             lastSyncTime={lastSyncTime}
             isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
@@ -275,25 +291,14 @@ export const AdminViewContent: React.FC<Props> = ({
                 photos={logic.photos}
                 editPhotoId={logic.editPhotoId} 
                 resetAddState={logic.resetAddState} 
-                saveNewPhoto={async () => {
-                  if (logic.checkSyncLock()) return;
-                  try {
-                    await logic.saveNewPhoto();
-                    showSuccess('照片已保存');
-                  } catch (e) {
-                    showError(e, '保存照片失败');
-                  }
-                }}
+                saveNewPhoto={handleSaveNewPhoto}
                 formState={logic.formState}
                 updateForm={logic.updateForm}
                 showOtherFields={logic.showOtherFields} 
                 setShowOtherFields={logic.setShowOtherFields}
                 newPhotoData={logic.newPhotoData} 
                 setNewPhotoData={logic.setNewPhotoData}
-                onDelete={async (id) => {
-                  if (logic.checkSyncLock()) return;
-                  await logic.handleDeletePhoto(id);
-                }}
+                onDelete={useCallback((id: string) => logic.handleDeletePhoto(id), [logic.handleDeletePhoto])}
                 editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
                 abortAnalysis={logic.abortAnalysis}
                 handleSingleAiAnalyze={logic.handleSingleAiAnalyze}
@@ -322,10 +327,8 @@ export const AdminViewContent: React.FC<Props> = ({
           onDeletePhotos={handleDeletePhotos}
           onGroupPhotos={handleGroupPhotos}
           onBatchEdit={handleBatchEdit}
-          onAiAnalyze={(p) => {
-              console.log('AI Analyze called in MainAdminScreen. Photo:', p.id, 'URI:', p.uri, 'ImageURL:', p.image_url);
-              return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id).catch((e: Error) => showError(e, '识别失败'));
-          }}
+          onBatchToggleHidden={handleBatchToggleHidden}
+          onAiAnalyze={handleAiAnalyze}
           onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger}
           onCancelAnalyze={logic.abortAnalysis}
           isAnalyzing={logic.loadingType === 'analyzing'}

@@ -78,7 +78,11 @@ export const useBatchUpdatePhotosMutation = () => {
       onProgress?: (current: number, total: number) => void;
       signal?: AbortSignal;
     }) => updatePhotosBatch(userId, ids, updates, onProgress, signal),
-    onSuccess: (data, { ids, updates }) => {
+    onMutate: async ({ ids, updates }) => {
+      await queryClient.cancelQueries({ queryKey: ['photos'] });
+      const previousInfinite = queryClient.getQueryData(['photos', 'infinite']);
+      const previousGroups = queryClient.getQueriesData({ queryKey: ['photos', 'group'] });
+
       queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
         if (!old) return old;
         return {
@@ -91,14 +95,25 @@ export const useBatchUpdatePhotosMutation = () => {
           })),
         };
       });
+
       queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
         return old.map((photo: Photo) => 
           ids.includes(photo.id) ? { ...photo, ...updates } : photo
         );
       });
+
+      return { previousInfinite, previousGroups };
     },
-    onError: (err, variables, context) => {
+    onError: (err, variables, context: any) => {
+      if (context?.previousInfinite) {
+        queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
+      }
+      if (context?.previousGroups) {
+        context.previousGroups.forEach(([queryKey, data]: [any, any]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
       showError(err, '批量操作失败');
     },
   });

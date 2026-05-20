@@ -18,7 +18,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const { user, sessionValue, photoValue, uiValue, onRefresh, performPullSync } = props;
   const { 
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
-    setUser, tagIdToNameMap
+    tagIdToNameMap
   } = useGalleryStore();
   
   const clearSelection = useCallback(() => {
@@ -51,10 +51,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const { showError } = useFeedback();
   const { isAdmin } = usePermission();
-
-  useEffect(() => {
-    setUser(user);
-  }, [user, setUser]);
 
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
@@ -125,7 +121,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const setGroupCover = useCallback(async (id: string, groupId: string) => {
     if (checkSyncLock()) return;
     const groupPhotos = photos.filter((p: Photo) => p.groupId === groupId);
-    
     try {
       await Promise.all(
         groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
@@ -135,6 +130,29 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       showError(e, 'set-group-cover');
     }
   }, [checkSyncLock, photos, updatePhoto, showError, onRefresh]);
+
+  const saveBatchEditWithSuccess = useCallback(async (batchIsHiddenApplied: boolean) => {
+    if (checkSyncLock()) return;
+    try {
+      const { showSuccess } = useFeedback();
+      await saveBatchEdit(batchIsHiddenApplied);
+      showSuccess('批量更新成功');
+    } catch (e) {
+      showError(e, 'save-batch-edit');
+    }
+  }, [checkSyncLock, saveBatchEdit, showError]);
+
+  const setLightboxIndex = useCallback((index: number) => {
+    console.log('[useAdminViewLogic] setLightboxIndex', index);
+  }, []);
+
+  const onLongPressStart = useCallback((id: string) => {
+    console.log('[useAdminViewLogic] LongPress Start on:', id);
+  }, []);
+
+  const onLongPressEnd = useCallback(() => {
+    console.log('[useAdminViewLogic] LongPress End');
+  }, []);
 
   return useMemo(() => ({
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
@@ -147,7 +165,8 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,
     saveNewPhoto, saveBatchEdit, updateTag, deleteTag, updateCategory, deleteCategory,
     addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, quickAddTag, quickAddManufacturer, updatePhoto,
+    addTag, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk,
+    saveBatchEditWithSuccess, setLightboxIndex, onLongPressStart, onLongPressEnd,
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
@@ -163,7 +182,8 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,
     saveNewPhoto, saveBatchEdit, updateTag, deleteTag, updateCategory, deleteCategory,
     addCategory, addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, quickAddTag, quickAddManufacturer, updatePhoto,
+    addTag, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk,
+    saveBatchEditWithSuccess, setLightboxIndex, onLongPressStart, onLongPressEnd,
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,

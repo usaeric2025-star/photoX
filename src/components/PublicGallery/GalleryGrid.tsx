@@ -52,7 +52,7 @@ interface MemoizedPhotoCardProps {
   tagMap: Record<string, string>;
   onToggleSelection: (id: string) => void;
   onEditPhoto?: (id: string) => void;
-  onGroupClick: (groupId: string) => void;
+  onGroupClick: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (index: number) => void;
   onLongPressStart: (id: string) => void;
   onLongPressEnd: () => void;
@@ -70,12 +70,17 @@ const MemoizedPhotoCard = React.memo(({
   gridPhotos, onTogglePinned, onToggleHidden 
 }: MemoizedPhotoCardProps) => {
   const isAdminMode = useAdminMode();
+  
   const handleOpenLightbox = useCallback(() => {
     const target = gridPhotos[index];
     if (!target) return;
     const realIndex = displayPhotos.findIndex((p) => p?.id === target.id);
     if (realIndex !== -1) onLightboxOpen(realIndex);
   }, [index, displayPhotos, gridPhotos, onLightboxOpen]);
+
+  const handleGroupClickInternal = useCallback((gid: string) => {
+    onGroupClick(gid, photo.id);
+  }, [onGroupClick, photo.id]);
 
   return (
     <PhotoCard 
@@ -92,7 +97,7 @@ const MemoizedPhotoCard = React.memo(({
       tagMap={tagMap}
       onToggleSelection={onToggleSelection}
       onEditPhoto={onEditPhoto}
-      onGroupClick={onGroupClick}
+      onGroupClick={handleGroupClickInternal}
       onLightboxOpen={handleOpenLightbox}
       onLongPressStart={onLongPressStart}
       onLongPressEnd={onLongPressEnd}
@@ -105,6 +110,17 @@ const MemoizedPhotoCard = React.memo(({
 MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
+  const handleGroupClick = useCallback((gid: string, photoId?: string) => {
+     props.setActiveGroupId(gid);
+     if (photoId) {
+       props.setActivePhotoId(photoId);
+     }
+  }, [props.setActiveGroupId, props.setActivePhotoId]);
+
+  const handleLoadMore = useCallback(() => {
+    props.handleLoadMore();
+  }, [props.handleLoadMore]);
+
   return (
     <VirtuosoGrid
       ref={props.virtuosoRef}
@@ -116,10 +132,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
       }}
       components={props.virtuosoComponents}
       context={props.virtuosoContext}
-      endReached={() => {
-        console.log('[Virtuoso] endReached TRIGGERED');
-        props.handleLoadMore();
-      }}
+      endReached={handleLoadMore}
       overscan={800}
       increaseViewportBy={300}
       listClassName={`grid gap-3 p-2 ${props.columns === 2 ? 'grid-cols-2' : props.columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
@@ -139,12 +152,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
             tagMap={props.tagMap}
             onToggleSelection={props.activeToggleSelection}
             onEditPhoto={props.onEditPhoto}
-            onGroupClick={(gid: string) => {
-              props.setActiveGroupId(gid);
-              if (photo) {
-                props.setActivePhotoId(photo.id);
-              }
-            }}
+            onGroupClick={handleGroupClick}
             onLightboxOpen={props.setLightboxIndex}
             onLongPressStart={props.startLongPress}
             onLongPressEnd={props.endLongPress}

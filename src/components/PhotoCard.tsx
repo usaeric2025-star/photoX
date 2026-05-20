@@ -181,14 +181,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         )}
       </div>
 
-      {/* Hidden Status Indicator (Centered overlay) */}
-      {photo.is_hidden && (
-        <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-          <div className="bg-yellow-400/90 text-black p-2 rounded-full shadow-lg pointer-events-none">
-            <EyeOff size={16} />
-          </div>
-        </div>
-      )}
 
       {isAdmin && onTogglePinned && (
          <button 

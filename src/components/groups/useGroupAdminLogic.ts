@@ -96,34 +96,40 @@ export const useGroupAdminLogic = ({
   };
   
   useEffect(() => {
+    let active = true;
     if (activeGroupId) {
       setGroupData(null);
       setIsGroupDataLoading(true);
       getGroupById(activeGroupId).then(data => {
-        if (data) {
-          setGroupData(data);
-        } else {
-          setGroupData({
-            id: activeGroupId,
-            name: '',
-            description: '',
-            colors: [],
-            materials: [],
-            cover_photo_id: groupCover?.id || null,
-            user_id: groupCover?.userId || 'default',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+        if (active) {
+          if (data) {
+            setGroupData(data);
+          } else {
+            setGroupData({
+              id: activeGroupId,
+              name: '',
+              description: '',
+              colors: [],
+              materials: [],
+              cover_photo_id: groupCover?.id || null,
+              user_id: groupCover?.userId || 'default',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          }
+          setIsGroupDataLoading(false);
         }
-        setIsGroupDataLoading(false);
       }).catch(err => {
-        setIsGroupDataLoading(false);
-        showError(err, '获取产品组详情失败');
+        if (active) {
+          setIsGroupDataLoading(false);
+          showError(err, '获取产品组详情失败');
+        }
       });
     } else {
       setGroupData(null);
       setIsGroupDataLoading(false);
     }
+    return () => { active = false; };
   }, [activeGroupId, groupCover?.id, groupCover?.userId]);
 
   useEffect(() => {

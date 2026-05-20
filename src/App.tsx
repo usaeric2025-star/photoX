@@ -49,12 +49,23 @@ function AnimatedRoutes({ user }: { user: any }) {
 
 export default function AppRoutes() {
   const { user, authChecked } = useAuth();
-  const { setSettings } = useGalleryStore();
+  const { setSettings, setUser } = useGalleryStore();
   
   useEffect(() => {
-    fetchSettings().then(s => {
-      if (s) setSettings(s as any);
-    }).catch(e => globalHandleError(e, '加载系统配置失败'));
+    setUser(user);
+  }, [user, setUser]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const s = await fetchSettings();
+        if (active && s) setSettings(s as any);
+      } catch (e) {
+        if (active) globalHandleError(e, '加载系统配置失败');
+      }
+    })();
+    return () => { active = false; };
   }, [setSettings]);
 
   useEffect(() => {
@@ -112,13 +123,19 @@ export default function AppRoutes() {
     clearExpiredCaches(7).catch(err => globalHandleError(err, '本地缓存自动清理失败', true));
     
     // 3. Supabase Session Health Check
+    let active = true;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session && user) {
-        console.warn('Session 丢失，建议重新登录');
+      if (active) {
+        if (!session && user) {
+          console.warn('Session 丢失，建议重新登录');
+        }
       }
-    }).catch(e => globalHandleError(e, '验证用户会话会话失败', true));
+    }).catch((e: any) => {
+      if (active) globalHandleError(e, '验证用户会话会话失败', true);
+    });
 
     return () => {
+        active = false;
         window.removeEventListener('error', handleGlobalError);
         window.removeEventListener('unhandledrejection', handlePromiseRejection);
     };

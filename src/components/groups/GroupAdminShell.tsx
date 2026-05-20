@@ -116,6 +116,58 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     setActiveGroupId
   });
 
+  const handlePhotoClick = useCallback((photo: Photo) => {
+    if (isMultiSelectMode) {
+      setSelectedPhotoIds(prev => 
+        prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
+      );
+    } else {
+      setFocusedGroupPhotoId(photo.id);
+    }
+  }, [isMultiSelectMode, setSelectedPhotoIds, setFocusedGroupPhotoId]);
+
+  const handlePhotoContextMenu = useCallback((e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (isAdminMode) {
+      setIsMultiSelectMode(true);
+      setSelectedPhotoIds([photo.id]);
+      if ('vibrate' in navigator) navigator.vibrate(50);
+    }
+  }, [isAdminMode, setIsMultiSelectMode, setSelectedPhotoIds]);
+
+  const handleAddPhotoToGroupClick = useCallback(async () => {
+    console.log('DEBUG: Add photo clicked');
+    if (onAddPhotoToGroup) {
+      await onAddPhotoToGroup();
+    } else {
+      console.warn('onAddPhotoToGroup is not defined');
+    }
+  }, [onAddPhotoToGroup]);
+
+  const handleCloseLightbox = useCallback(() => setFocusedGroupPhotoId(null), [setFocusedGroupPhotoId]);
+
+  const handlePrevLightbox = useCallback((idx: number) => {
+    const prev = idx > 0 ? idx - 1 : activeGroupPhotos.length - 1;
+    if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[prev].id);
+  }, [activeGroupPhotos, setFocusedGroupPhotoId]);
+
+  const handleNextLightbox = useCallback((idx: number) => {
+    const next = idx < activeGroupPhotos.length - 1 ? idx + 1 : 0;
+    if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[next].id);
+  }, [activeGroupPhotos, setFocusedGroupPhotoId]);
+
+  const handleUngroupLightbox = useCallback((photoId: string) => {
+    confirmBulkRemove([photoId]);
+    setFocusedGroupPhotoId(null);
+  }, [confirmBulkRemove, setFocusedGroupPhotoId]);
+
+  const handleSetGroupCoverLightbox = useCallback((photoId: string) => setCover(photoId), [setCover]);
+
+  const handleToggleHiddenLightbox = useCallback((p: Photo) => {
+    const newStatus = !p.is_hidden;
+    persistPhotoChange(p.id, { is_hidden: newStatus });
+  }, [persistPhotoChange]);
+
   return (
     <>
       <AnimatePresence mode="wait">
@@ -149,23 +201,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
              photos={activeGroupPhotos}
              isMultiSelectMode={isMultiSelectMode}
              selectedPhotoIds={selectedPhotoIds}
-             onPhotoClick={(photo) => {
-               if (isMultiSelectMode) {
-                 setSelectedPhotoIds(prev => 
-                   prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
-                 );
-               } else {
-                 setFocusedGroupPhotoId(photo.id);
-               }
-             }}
-             onPhotoContextMenu={(e, photo) => {
-               if (e && typeof e.preventDefault === 'function') e.preventDefault();
-               if (isAdminMode) {
-                 setIsMultiSelectMode(true);
-                 setSelectedPhotoIds([photo.id]);
-                 if ('vibrate' in navigator) navigator.vibrate(50);
-               }
-             }}
+             onPhotoClick={handlePhotoClick}
+             onPhotoContextMenu={handlePhotoContextMenu}
              getPhotoProps={useCallback((photo) => ({
                draggable: isAdminMode && !isMultiSelectMode,
                onDragStart: () => setDraggedPhotoId(photo.id),
@@ -192,14 +229,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
             <div className="p-4 flex justify-center">
               <button 
-                onClick={async () => {
-                   console.log('DEBUG: Add photo clicked');
-                   if (onAddPhotoToGroup) {
-                     await onAddPhotoToGroup();
-                   } else {
-                     console.warn('onAddPhotoToGroup is not defined');
-                   }
-                }} 
+                onClick={handleAddPhotoToGroupClick} 
                 className="px-6 py-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
               >
                 <Plus size={18} />
@@ -235,15 +265,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       photo={photo}
                       displayPhotos={activeGroupPhotos}
                       index={currentIndex}
-                      onClose={() => setFocusedGroupPhotoId(null)}
-                      onPrev={() => {
-                        const prev = currentIndex > 0 ? currentIndex - 1 : activeGroupPhotos.length - 1;
-                        if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[prev].id);
-                      }}
-                      onNext={() => {
-                        const next = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
-                        if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[next].id);
-                      }}
+                      onClose={handleCloseLightbox}
+                      onPrev={() => handlePrevLightbox(currentIndex)}
+                      onNext={() => handleNextLightbox(currentIndex)}
                       t={t}
                       lang={lang}
                       categories={categories || []}
@@ -251,16 +275,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       tagMap={tagMap || {}}
                       isStaffMode={isStaffMode}
                       contactWhatsApp={contactWhatsApp}
-                      onUngroup={(photoId) => {
-                        confirmBulkRemove([photoId]);
-                        setFocusedGroupPhotoId(null);
-                      }}
-                      onSetGroupCover={(photoId, groupId) => setCover(photoId)}
+                      onUngroup={handleUngroupLightbox}
+                      onSetGroupCover={handleSetGroupCoverLightbox}
                       onEditPhoto={onEditPhoto}
-                      onToggleHidden={(p) => {
-                        const newStatus = !p.is_hidden;
-                        persistPhotoChange(p.id, { is_hidden: newStatus });
-                      }}
+                      onToggleHidden={handleToggleHiddenLightbox}
                       onAiAnalyze={onAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}
                       isAnalyzing={isAnalyzing}

@@ -39,6 +39,7 @@ interface Props {
   onAiAnalyze?: (photo: Photo) => Promise<any>;
   onBatchAiAnalyze?: (photos: Photo[]) => void;
   onCancelAnalyze?: () => void;
+  onBatchToggleHidden?: (ids: string[]) => void;
   isAnalyzing?: boolean;
   isFetchingNextPage?: boolean;
   isAdmin?: boolean;
@@ -50,7 +51,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
   lang, loadingType, batchProgress, categories, tags,
   onTogglePinned, onToggleHidden, onSetGroupCover, settings,
   columns, setColumns, user, onEditPhoto, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
-  onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, isAnalyzing,
+  onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, onBatchToggleHidden, isAnalyzing,
   isFetchingNextPage, isAdmin
 }) => {
   console.log('Rendering MainAdminScreen');
@@ -133,6 +134,9 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
               }}
               onDelete={() => {
                   if (onDeletePhotos) onDeletePhotos(selectedIds);
+              }}
+              onToggleVisibility={() => {
+                  if (onBatchToggleHidden) onBatchToggleHidden(selectedIds);
               }}
             />
           )}
