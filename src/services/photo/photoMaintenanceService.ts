@@ -23,11 +23,29 @@ export const updatePhotosBatch = async (
     
     const chunkIds = ids.slice(i, i + BATCH_SIZE);
     
-    const { error } = await supabase
+    let { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .update(dbUpdates)
       .in('id', chunkIds)
       .eq('user_id', userId);
+      
+    if (error && error.message.includes('furniture_items_item_code_key')) {
+      console.warn("Item code collision in updatePhotosBatch, processing chunk one-by-one with regenerated item_codes...");
+      const { generateItemCode } = await import('../utils');
+      for (const singleId of chunkIds) {
+        const singleUpdates = { ...dbUpdates };
+        singleUpdates.item_code = generateItemCode();
+        const singleResult = await supabase
+          .from(DB_CONFIG.TABLE_NAME)
+          .update(singleUpdates)
+          .eq('id', singleId)
+          .eq('user_id', userId);
+        if (singleResult.error) {
+          throw singleResult.error;
+        }
+      }
+      error = null;
+    }
       
     if (error) throw error;
     

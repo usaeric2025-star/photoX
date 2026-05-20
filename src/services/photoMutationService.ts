@@ -57,10 +57,21 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
     normalizeDimensionsBeforeSave(updates.dimensions);
   }
   
-  const { error } = await supabase
+  let { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .update(updates)
     .eq('id', photoId);
+    
+  if (error && error.message.includes('furniture_items_item_code_key')) {
+    console.warn("Item code collision during updatePhotoInCloud, regenerating item_code and retrying...");
+    const { generateItemCode } = await import('./utils');
+    const retryUpdates = { ...updates, item_code: generateItemCode() };
+    const retryResult = await supabase
+      .from(DB_CONFIG.TABLE_NAME)
+      .update(retryUpdates)
+      .eq('id', photoId);
+    error = retryResult.error;
+  }
     
   if (error) {
     throw new Error(error.message || JSON.stringify(error));
