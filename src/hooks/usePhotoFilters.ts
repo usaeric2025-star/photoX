@@ -33,7 +33,9 @@ export function usePhotoFilters(
     ? options.isAdminModeOverride 
     : hookIsAdminMode;
 
-  const showGroups = true; // 强制保持分组开启，确保一致性
+  const showGroups = options.showGroupsCollapsed !== undefined
+    ? options.showGroupsCollapsed
+    : storeShowGroupsCollapsed;
 
   const searchMaps = useMemo(() => {
     const tMap = new Map<string, string[]>();

@@ -37,21 +37,12 @@ export default function PublicView() {
   useEffect(() => {
     (async () => {
       try {
-        const cachedPhotos = await syncCache.getPhotos();
-        if (cachedPhotos && cachedPhotos.length > 0) {
-          queryClient.setQueryData(QUERY_KEYS.infinitePhotos({ 
-            isAdminMode: false, 
-            limit: PAGINATION.PUBLIC_PAGE_SIZE,
-            categoryId: null,
-            tagId: null,
-            searchQuery: null
-          }), {
-            pages: [{ photos: cachedPhotos, nextPage: undefined }],
-            pageParams: [1]
-          });
+        const cachedCats = await syncCache.getCategories();
+        if (cachedCats && cachedCats.length > 0) {
+          queryClient.setQueryData(QUERY_KEYS.categories, cachedCats);
         }
       } catch (e) {
-        console.warn('Failed to load local photo cache', e);
+        console.warn('Failed to load local metadata cache', e);
       }
     })();
   }, [queryClient]);

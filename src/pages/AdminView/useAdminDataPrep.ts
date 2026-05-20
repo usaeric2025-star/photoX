@@ -35,19 +35,12 @@ export const useAdminDataPrep = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [cachedPhotos, cachedCats, cachedTags, cachedMfrs] = await Promise.all([
-          syncCache.getPhotos(),
+        const [cachedCats, cachedTags, cachedMfrs] = await Promise.all([
           syncCache.getCategories(),
           syncCache.getTags(),
           syncCache.getManufacturers()
         ]);
 
-        if (cachedPhotos && cachedPhotos.length > 0) {
-          queryClient.setQueryData(QUERY_KEYS.infinitePhotos({ isAdminMode: true, limit: PAGINATION.ADMIN_BATCH_SIZE }), {
-            pages: [{ photos: cachedPhotos, nextPage: undefined }],
-            pageParams: [1]
-          });
-        }
         if (cachedCats && cachedCats.length > 0) queryClient.setQueryData(QUERY_KEYS.categories, cachedCats);
         if (cachedTags && cachedTags.length > 0) queryClient.setQueryData(QUERY_KEYS.tags, cachedTags);
         if (cachedMfrs && cachedMfrs.length > 0) queryClient.setQueryData(QUERY_KEYS.manufacturers, cachedMfrs);

@@ -51,7 +51,8 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
     handleBatchAiIdentifyTrigger, onManageClick, onRefresh, cloudCount,
     lang, loadingType, batchProgress, categories, tags,
     settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
-    onDeletePhotos, onGroupPhotos, onBatchEdit, onBatchAiAnalyze, onBatchToggleHidden
+    onDeletePhotos, onGroupPhotos, onBatchEdit, onBatchAiAnalyze, onBatchToggleHidden,
+    isFetchingNextPage
   } = props;
 
   return (
@@ -87,6 +88,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
             cloudCount={cloudCount}
             onLoadMore={onLoadMore}
             hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
             selectedIds={selectedIds}
             isMultiSelect={isMultiSelect}
             setIsMultiSelect={setIsMultiSelect}

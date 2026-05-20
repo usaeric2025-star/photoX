@@ -23,6 +23,7 @@ interface AdminGalleryProps {
   totalCount?: number;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  isFetchingNextPage?: boolean;
   activeSelectedIds: string[];
   activeIsMultiSelect: boolean;
   activeToggleSelection: (id: string) => void;
@@ -53,12 +54,12 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
   const virtuosoContext = useMemo(() => ({
     hasMore: props.hasMore,
     isSyncing,
-    isFetchingNextPage: false,
+    isFetchingNextPage: props.isFetchingNextPage,
     safePhotosLength: gridPhotos.length,
     textLoadMore: t.loadMore,
     textEndOfList: t.endOfList,
     textLoading: t.loading
-  }), [props.hasMore, isSyncing, gridPhotos.length, t]);
+  }), [props.hasMore, isSyncing, props.isFetchingNextPage, gridPhotos.length, t]);
 
   const handleSetLightboxIndex = useCallback((index: number) => {
     setLightboxIndex(index);

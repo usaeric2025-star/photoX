@@ -15,6 +15,7 @@ interface AdminPhotoGridProps {
   cloudCount: number;
   onLoadMore: () => void;
   hasNextPage: boolean;
+  isFetchingNextPage?: boolean;
   selectedIds: string[];
   isMultiSelect: boolean;
   setIsMultiSelect: (m: boolean) => void;
@@ -36,6 +37,7 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
       totalCount={props.cloudCount}
       onLoadMore={props.onLoadMore}
       hasMore={props.hasNextPage}
+      isFetchingNextPage={props.isFetchingNextPage}
       activeSelectedIds={props.selectedIds}
       activeIsMultiSelect={props.isMultiSelect}
       activeToggleSelection={togglePhotoSelection}

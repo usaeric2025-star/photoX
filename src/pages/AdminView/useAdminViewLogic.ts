@@ -13,10 +13,15 @@ interface AdminViewLogicProps {
   uiValue: any;
   onRefresh: () => void;
   performPullSync: (next: boolean) => Promise<any>;
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
 }
 
 export const useAdminViewLogic = (props: AdminViewLogicProps) => {
-  const { user, sessionValue, photoValue, uiValue, onRefresh, performPullSync } = props;
+  const { 
+    user, sessionValue, photoValue, uiValue, onRefresh, performPullSync,
+    hasNextPage = false, isFetchingNextPage = false
+  } = props;
   const { 
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
     tagIdToNameMap
@@ -181,7 +186,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
     performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError,
-    onEditPhotoById
+    onEditPhotoById, hasNextPage, isFetchingNextPage
   }), [
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
@@ -199,6 +204,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
     performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError,
-    onEditPhotoById
+    onEditPhotoById, hasNextPage, isFetchingNextPage
   ]);
 };

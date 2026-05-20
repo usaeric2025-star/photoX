@@ -45,7 +45,9 @@ export const AdminViewContent: React.FC<Props> = ({
   const logic = useAdminViewLogic({
     user, sessionValue, photoValue, uiValue,
     onRefresh: sessionValue.onRefresh,
-    performPullSync: sessionValue.performPullSync
+    performPullSync: sessionValue.performPullSync,
+    hasNextPage,
+    isFetchingNextPage
   });
 
   const actions = useAdminActions(logic);
