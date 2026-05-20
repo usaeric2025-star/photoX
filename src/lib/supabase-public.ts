@@ -8,5 +8,11 @@ export const supabasePublic = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: false,
     autoRefreshToken: false,
     detectSessionInUrl: false,
+  },
+  global: {
+    fetch: (url, options) => {
+      const signal = AbortSignal.timeout(30000);
+      return fetch(url, { ...options, signal });
+    }
   }
 });
