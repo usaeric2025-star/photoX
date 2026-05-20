@@ -8,10 +8,10 @@ import { TaskProvider } from './hooks/useTasks';
 import './index.css';
 
 Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
-  sendDefaultPii: true,
+  dsn: "https://5056f30974504ff1becd3b5da98a68af@app.glitchtip.com/23689",
   environment: import.meta.env.MODE,
-  tracesSampleRate: 0.2,
+  tracesSampleRate: 0.01,
+  autoSessionTracking: false,
 });
 
 const queryClient = new QueryClient({

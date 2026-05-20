@@ -115,6 +115,10 @@ export default function AppRoutes() {
           return;
         }
 
+        // Prevention of potential recursive loop if handleError itself fails
+        if ((reason as any)?.__handledByErrorHandler) return;
+        (reason as any).__handledByErrorHandler = true;
+
         // Output as minor warning instead of red-alert logs if the rejection was silent/internal
         console.warn('[App] 捕获未处理的后台 Promise 拒绝 (已过滤并自动捕获):', reason);
         globalHandleError(reason || new Error('Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
