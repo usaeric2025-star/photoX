@@ -65,11 +65,13 @@ function AnimatedRoutes({ user }: { user: any }) {
 
 export default function AppRoutes() {
   const { user, authChecked } = useAuth();
-  const { setSettings, setUser } = useGalleryStore();
+  const { setSettings, setUser, user: galleryUser } = useGalleryStore();
   
   useEffect(() => {
-    setUser(user);
-  }, [user, setUser]);
+    if (user !== galleryUser) {
+      setUser(user);
+    }
+  }, [user, galleryUser, setUser]);
 
   useEffect(() => {
     let active = true;

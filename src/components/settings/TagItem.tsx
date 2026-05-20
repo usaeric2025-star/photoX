@@ -119,25 +119,10 @@ export const TagItem: React.FC<TagItemProps> = ({
               <Heart size={12} className={isPinned ? "fill-white" : ""} /> {isPinned ? '取消推荐' : '设为推荐'}
             </button>
             <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setPromptDialog({
-                  title: '编辑名称 (EN) / Edit Tag (EN)',
-                  message: '输入新的英文名称 / Enter new English name:',
-                  placeholder: tag.en || '',
-                  onSubmit: (name) => name !== undefined && handleUpdateTagName({ ...tag, en: name.trim() })
-                });
-                setActiveTagMenuId(null);
-              }}
-              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-            >
-              <Pencil size={12} /> 编辑 (EN)
-            </button>
-            <button 
               onClick={handleEditClick}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Pencil size={12} /> 编辑 (ZH)
+              <Pencil size={12} /> 编辑 / EDIT
             </button>
             <button 
               onClick={handleMenuDeleteClick}
