@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ErrorBoundary } from 'react-error-boundary';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
@@ -10,6 +11,20 @@ import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster, toast } from 'sonner';
 import { globalHandleError } from './utils/errorHandler';
+
+function Fallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen p-4 text-center">
+      <p className="text-red-500 mb-4">页面出错了: {error.message}</p>
+      <button 
+        onClick={resetErrorBoundary}
+        className="px-4 py-2 bg-slate-900 text-white rounded-lg"
+      >
+        重试
+      </button>
+    </div>
+  );
+}
 
 function AnimatedRoutes({ user }: { user: any }) {
   const location = useLocation();
@@ -153,8 +168,10 @@ export default function AppRoutes() {
   if (!authChecked) return null;
 
   return (
-    <BrowserRouter>
-      <AnimatedRoutes user={user} />
-    </BrowserRouter>
+    <ErrorBoundary FallbackComponent={Fallback}>
+      <BrowserRouter>
+        <AnimatedRoutes user={user} />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
