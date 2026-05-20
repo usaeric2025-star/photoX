@@ -1,5 +1,4 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../../services/geminiService';
 import { resolveTagIdsBatch } from '../../utils/tagUtils';
@@ -29,6 +28,7 @@ interface SingleAiProps {
   setAiDebugInfo: (info: { step: string; message: string; error?: string } | null) => void;
   currentAnalysisControllers: React.MutableRefObject<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>;
   abortAnalysis: (taskId?: string) => void;
+  activeAiTaskIds?: React.MutableRefObject<Set<string>>;
 }
 
 export const useSinglePhotoAI = (props: SingleAiProps) => {
@@ -37,7 +37,8 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags,
     manufacturers, tagNameToIdMap, addTask, updateTask, removeTask,
-    photosRef, showError, invalidatePhotos, setAiDebugInfo, currentAnalysisControllers, abortAnalysis
+    photosRef, showError, invalidatePhotos, setAiDebugInfo, currentAnalysisControllers, abortAnalysis,
+    activeAiTaskIds
   } = props;
 
   const handleSingleAiAnalyze = async (imageData: any, catId?: string, editPhotoId?: string | null) => {
@@ -62,6 +63,10 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       progress: 0,
       onCancel: () => abortAnalysis(taskId)
     });
+    
+    if (activeAiTaskIds) {
+      activeAiTaskIds.current.add(taskId);
+    }
     
     setAiDebugInfo({ step: '准备中', message: '正在初始化...' });
     updateTask(taskId, { progress: 10, message: '分析图片中...' });
@@ -178,19 +183,19 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
         errorContext = 'AI分析请求';
       }
 
-      // 1. Log to system
-      handleError(error, errorContext, true); // true = silent (we do toast manually below)
-      
-      // 2. User feedback
-      toast.dismiss();
-      toast.error(userMessage);
+      // 1. Log and notify via the unified feedback/error system
+      const customFeedbackError = new Error(userMessage);
+      handleError(customFeedbackError, errorContext);
 
-      // 3. UI Status update
+      // 2. UI Status update
       updateTask(taskId, { status: 'error', message: `失败: ${userMessage.slice(0, 80)}` });
       if (effectiveEditId) invalidatePhotos();
       
       throw error;
     } finally {
+      if (activeAiTaskIds) {
+        activeAiTaskIds.current.delete(taskId);
+      }
       const task = currentAnalysisControllers.current.get(taskId);
       if (task) {
           clearTimeout(task.timeoutId);

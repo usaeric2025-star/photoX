@@ -27,6 +27,7 @@ interface GroupAiProps {
   setAiDebugInfo: (info: { step: string; message: string; error?: string } | null) => void;
   currentAnalysisControllers: React.MutableRefObject<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>;
   abortAnalysis: (taskId?: string) => void;
+  activeAiTaskIds?: React.MutableRefObject<Set<string>>;
 }
 
 export const useGroupPhotoAI = (props: GroupAiProps) => {
@@ -35,7 +36,7 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
     tagNameToIdMap, addTask, updateTask, removeTask, showError, invalidatePhotos, setAiDebugInfo,
-    currentAnalysisControllers, abortAnalysis
+    currentAnalysisControllers, abortAnalysis, activeAiTaskIds
   } = props;
 
   const handleGroupAiIdentify = async (groupPhotos: Photo[]) => {
@@ -51,6 +52,9 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
       progress: 0,
       onCancel: () => abortAnalysis(taskId)
     });
+    if (activeAiTaskIds) {
+      activeAiTaskIds.current.add(taskId);
+    }
 
     setAiDebugInfo({ step: '群组识别', message: '正在分析封面/首张照片...' });
     updateTask(taskId, { progress: 10, message: '分析产品特征中...' });
@@ -137,6 +141,9 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
         throw err;
       }
     } finally {
+      if (activeAiTaskIds) {
+        activeAiTaskIds.current.delete(taskId);
+      }
       const task = currentAnalysisControllers.current.get(taskId);
       if (task) { clearTimeout(task.timeoutId); currentAnalysisControllers.current.delete(taskId); }
     }

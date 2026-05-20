@@ -30,6 +30,7 @@ interface BatchAiProps {
   invalidatePhotos: () => void;
   currentAnalysisControllers: React.MutableRefObject<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>;
   abortAnalysis: (taskId?: string) => void;
+  activeAiTaskIds?: React.MutableRefObject<Set<string>>;
 }
 
 export const useBatchPhotoAI = (props: BatchAiProps) => {
@@ -38,7 +39,8 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
     tagNameToIdMap, addTask, updateTask, removeTask, setAiDebugInfo, aiDebugInfo, setBatchProgress,
-    isAnalyzingRef, invalidatePhotos, currentAnalysisControllers, abortAnalysis
+    isAnalyzingRef, invalidatePhotos, currentAnalysisControllers, abortAnalysis,
+    activeAiTaskIds
   } = props;
 
   const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
@@ -72,6 +74,9 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
       progress: 0,
       onCancel: () => abortAnalysis(taskId)
     });
+    if (activeAiTaskIds) {
+      activeAiTaskIds.current.add(taskId);
+    }
 
     const CONCURRENCY = AI_CONFIG.CONCURRENCY;
     let completedCount = 0;
@@ -208,6 +213,9 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
         showError(err, '批量 AI 识别失败');
         updateTask(taskId, { status: 'error', message: `错误: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
+        if (activeAiTaskIds) {
+            activeAiTaskIds.current.delete(taskId);
+        }
         isAnalyzingRef.current = false;
         const task = currentAnalysisControllers.current.get(taskId);
         if (task) { clearTimeout(task.timeoutId); currentAnalysisControllers.current.delete(taskId); }

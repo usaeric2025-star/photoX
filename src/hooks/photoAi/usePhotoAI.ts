@@ -5,6 +5,7 @@ import { useSinglePhotoAI } from './useSinglePhotoAI';
 import { useBatchPhotoAI } from './useBatchPhotoAI';
 import { useGroupPhotoAI } from './useGroupPhotoAI';
 import { useInvalidatePhotos } from '../queries/useInvalidatePhotos';
+import { useTasks } from '../useTasks';
 
 export const usePhotoAI = (
   user: User | null,
@@ -27,8 +28,26 @@ export const usePhotoAI = (
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const isAnalyzingRef = useRef(false);
   const currentAnalysisControllers = useRef<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>(new Map());
+  
+  const { cancelTask } = useTasks();
+  const activeAiTaskIds = useRef<Set<string>>(new Set());
 
   const abortAnalysis = (taskId?: string) => {
+    if (!taskId) {
+      if (activeAiTaskIds.current.size > 0) {
+        const idsToCancel = Array.from(activeAiTaskIds.current);
+        activeAiTaskIds.current.clear();
+        idsToCancel.forEach(id => {
+          try {
+            cancelTask(id);
+          } catch (e) {
+            console.error('[usePhotoAI] Failed to cancel task via cancelTask:', id, e);
+          }
+        });
+        return;
+      }
+    }
+
     currentAnalysisControllers.current.forEach(({ controller, timeoutId }) => {
         clearTimeout(timeoutId);
         controller.abort();
@@ -38,6 +57,7 @@ export const usePhotoAI = (
     invalidatePhotos();
     
     if (taskId) {
+        activeAiTaskIds.current.delete(taskId);
         updateTask(taskId, { status: 'cancelled', message: '已取消 AI 识别任务' });
         removeTask(taskId);
     }
@@ -49,7 +69,7 @@ export const usePhotoAI = (
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers,
     tagNameToIdMap, addTask, updateTask, removeTask, showError, invalidatePhotos,
     setAiDebugInfo, aiDebugInfo, currentAnalysisControllers, abortAnalysis,
-    photosRef, setBatchProgress, isAnalyzingRef
+    photosRef, setBatchProgress, isAnalyzingRef, activeAiTaskIds
   };
 
   const { handleSingleAiAnalyze } = useSinglePhotoAI(commonProps as any);
