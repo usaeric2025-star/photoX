@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { ErrorBoundary } from 'react-error-boundary';
 import { usePublicGalleryLogic } from '../PublicGallery/usePublicGalleryLogic';
-import { GalleryHeader } from '../PublicGallery/GalleryHeader';
 import { GalleryFilters } from '../PublicGallery/GalleryFilters';
 import { GalleryGrid } from '../PublicGallery/GalleryGrid';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
@@ -66,22 +65,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
       animate={{ opacity: 1 }}
       className="flex flex-col h-full bg-bg w-full overflow-hidden text-text"
     >
-      <GalleryHeader 
-        totalCount={props.totalCount}
-        settings={settings}
-        photos={props.photos}
-        isRefreshing={isSyncing}
-        isMultiSelect={props.activeIsMultiSelect}
-        onToggleMultiSelect={() => props.activeSetIsMultiSelect(!props.activeIsMultiSelect)}
-        clearSelection={props.activeClearSelection}
-        setIsMultiSelect={props.activeSetIsMultiSelect}
-        lang={lang}
-        t={t}
-        onRefresh={props.onRefresh}
-        onSetLang={logic.setLang}
-        onExit={() => {}}
-      />
-
       <GalleryFilters 
         settings={settings}
         searchQuery={searchQuery}
@@ -181,6 +164,27 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
           })()}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {lightboxIndex !== null && displayPhotos[lightboxIndex] && (
+            <PhotoLightbox 
+              photo={displayPhotos[lightboxIndex]}
+              displayPhotos={displayPhotos}
+              index={lightboxIndex}
+              onClose={() => setLightboxIndex(null)}
+              onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
+              onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
+              isStaffMode={!!props.isStaffMode}
+              contactWhatsApp={() => {}}
+              lang={lang}
+              t={t}
+              tagMap={tagMap}
+              categories={categories}
+              manufacturers={manufacturers || []}
+            />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
+
