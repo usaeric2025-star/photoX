@@ -74,7 +74,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
           isAnalyzing={loadingType === 'analyzing'}
           batchProgress={batchProgress}
        />
-       <div className="flex-1 min-h-0 relative">
+        <div className="flex-1 min-h-0 relative">
           <PublicGallery 
              photos={photos}
              categories={categories}
@@ -115,6 +115,17 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
              }}
              onClearSelection={() => setSelectedIds([])}
           />
+          <button 
+            onClick={() => {
+              import('@sentry/react').then(Sentry => {
+                Sentry.captureMessage('Sentry 管理后台测试');
+              });
+            }}
+            style={{position:'fixed', bottom:20, right:20, zIndex:9999, 
+                    background:'red', color:'white', padding:'8px 16px', borderRadius: '8px'}}
+          >
+            测试Sentry
+          </button>
           <FloatingActionButton 
             onClick={onImport}
             title={t.addPhoto}
