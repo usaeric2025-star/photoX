@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
+import * as Sentry from '@sentry/react';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
@@ -95,6 +96,9 @@ export default function AppRoutes() {
         const reason = event.reason;
         const message = reason?.message || String(reason || '');
         
+        // Capture in Sentry
+        Sentry.captureException(reason || new Error(message));
+
         // Clean or check for cancellable triggers
         const isCancellation = 
           reason?.name === 'AbortError' || 
