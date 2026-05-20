@@ -49,7 +49,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData
   } = photoValue || {};
 
-  const { showError } = useFeedback();
+  const { showError, showSuccess } = useFeedback();
   const { isAdmin } = usePermission();
 
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -134,13 +134,12 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const saveBatchEditWithSuccess = useCallback(async (batchIsHiddenApplied: boolean) => {
     if (checkSyncLock()) return;
     try {
-      const { showSuccess } = useFeedback();
       await saveBatchEdit(batchIsHiddenApplied);
       showSuccess('批量更新成功');
     } catch (e) {
       showError(e, 'save-batch-edit');
     }
-  }, [checkSyncLock, saveBatchEdit, showError]);
+  }, [checkSyncLock, saveBatchEdit, showError, showSuccess]);
 
   const setLightboxIndex = useCallback((index: number) => {
     console.log('[useAdminViewLogic] setLightboxIndex', index);

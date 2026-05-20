@@ -44,9 +44,7 @@ export const ErrorLogViewer = () => {
           )}
           <button
             onClick={() => {
-              console.log('Monitoring Test button clicked');
               import('@sentry/react').then(ErrorMonitor => {
-                console.log('ErrorMonitor module:', ErrorMonitor);
                 if (typeof ErrorMonitor.captureMessage === 'function') {
                     ErrorMonitor.captureMessage('系统监控测试消息');
                 } else if (ErrorMonitor.default && typeof ErrorMonitor.default.captureMessage === 'function') {

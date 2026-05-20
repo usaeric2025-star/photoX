@@ -149,7 +149,7 @@ export default function PublicView() {
                 loginWithGoogle={loginWithGoogle}
                 user={user}
                 settings={settings}
-                isRefreshing={isPhotosLoading}
+                isRefreshing={isPhotosLoading || isPhotosFetching}
                 onRefresh={handleRefresh}
                 onLoadMore={handleLoadMore}
                 hasMore={hasNextPage}
