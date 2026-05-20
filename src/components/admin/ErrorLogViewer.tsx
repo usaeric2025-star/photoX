@@ -38,6 +38,17 @@ export const ErrorLogViewer = () => {
               >
                 <Trash2 size={16} />
               </button>
+              <button
+                onClick={() => {
+                  import('@sentry/react').then(Sentry => {
+                    Sentry.captureMessage('Sentry 管理后台测试');
+                  });
+                }}
+                className="text-blue-500 hover:text-blue-700 p-1 transition-colors"
+                title="Sentry 测试"
+              >
+                  <span className="text-[10px] uppercase font-bold">Test</span>
+              </button>
             </>
           )}
         </div>
