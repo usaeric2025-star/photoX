@@ -93,8 +93,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden,
   displayPhotos
 }) => {
-  const { isAdmin } = usePermission();
-  const isAdminMode = isAdmin;
+  // Use isStaffMode as a hint for admin rather than calling separate hook in every cell
+  const isAdminMode = isStaffMode;
   
   const handleOpenLightbox = useCallback(() => {
     const realIndex = displayPhotos.findIndex((p) => p?.id === photo.id);
@@ -144,7 +144,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]
   );
 
-  const cardSelectedClasses = isAdmin && isMultiSelect && isSelected 
+  const cardSelectedClasses = isAdminMode && isMultiSelect && isSelected 
     ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
     : 'md:hover:scale-[1.02] active:scale-[0.95]';
 
@@ -154,18 +154,21 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
 
+  // Priority loading for the first visible 10 items
+  const shouldEagerLoad = index < 10;
+
   return (
     <div 
       onContextMenu={(e) => {
         e.preventDefault();
-        if (isAdmin) return;
+        if (isAdminMode) return;
         shareSinglePhoto(photo);
         if ('vibrate' in navigator) navigator.vibrate(50);
       }}
-      onMouseDown={() => isAdmin && onLongPressStart(photo.id)}
+      onMouseDown={() => isAdminMode && onLongPressStart(photo.id)}
       onMouseUp={onLongPressEnd}
       onMouseLeave={onLongPressEnd}
-      onTouchStart={() => isAdmin && onLongPressStart(photo.id)}
+      onTouchStart={() => isAdminMode && onLongPressStart(photo.id)}
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onTouchCancel={onLongPressEnd}
@@ -191,18 +194,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
           draggable={false}
           src={placeholderDataUrl || photo.thumb_url || ''} 
           alt=""
-          loading="lazy"
+          loading={shouldEagerLoad ? "eager" : "lazy"}
           className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-filter duration-300 ${placeholderDataUrl ? '' : 'blur-md'}`}
         />
       )}
 
       <img 
         draggable={false}
-        loading="lazy"
+        loading={shouldEagerLoad ? "eager" : "lazy"}
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isAdmin && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
+        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isAdminMode && isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
           loadedImagesCache.add(photo.id);
           setIsImageLoaded(true);
@@ -213,10 +216,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         }}
       />
 
-      {isAdmin && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
+      {isAdminMode && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
       <PhotoStatusBadges photo={photo} />
 
-      {isAdmin && onTogglePinned && (
+      {isAdminMode && onTogglePinned && (
          <button 
            onClick={(e) => {
              e.stopPropagation();

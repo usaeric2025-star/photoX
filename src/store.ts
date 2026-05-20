@@ -81,12 +81,19 @@ interface GalleryState {
 }
 
 export const useGalleryStore = create<GalleryState>((set) => ({
-  searchQuery: '',
+  searchQuery: sessionStorage.getItem('searchQuery') || '',
   debouncedSearchQuery: '',
-  filterCatId: null,
-  filterSubId: null,
-  filterTagIds: [],
-  sortOrder: 'desc',
+  filterCatId: sessionStorage.getItem('filterCatId') || null,
+  filterSubId: sessionStorage.getItem('filterSubId') || null,
+  filterTagIds: (() => {
+    try {
+      const saved = sessionStorage.getItem('filterTagIds');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  })(),
+  sortOrder: (sessionStorage.getItem('sortOrder') as any) || 'desc',
   selectedIds: [],
   isMultiSelect: false,
   showGroupsCollapsed: true,
@@ -101,7 +108,7 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   alertDialog: null,
   promptDialog: null,
   appLang: localStorage.getItem('appLang') || 'en',
-  viewMode: 'private',
+  viewMode: (sessionStorage.getItem('viewMode') as any) || 'private',
   isSyncing: false,
   
   loadingType: 'none',
@@ -133,14 +140,28 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   hasLoadedOnce: false,
   setHasLoadedOnce: (hasLoadedOnce) => set({ hasLoadedOnce }),
 
-  setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setSearchQuery: (searchQuery) => {
+    sessionStorage.setItem('searchQuery', searchQuery);
+    set({ searchQuery });
+  },
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
-  setFilterCatId: (filterCatId) => set({ filterCatId }),
-  setFilterSubId: (filterSubId) => set({ filterSubId }),
-  setFilterTagIds: (ids: string[] | ((prev: string[]) => string[])) => set((state) => ({
-    filterTagIds: typeof ids === 'function' ? ids(state.filterTagIds) : ids
-  })),
-  setSortOrder: (sortOrder) => set({ sortOrder }),
+  setFilterCatId: (filterCatId) => {
+    sessionStorage.setItem('filterCatId', filterCatId || '');
+    set({ filterCatId });
+  },
+  setFilterSubId: (filterSubId) => {
+    sessionStorage.setItem('filterSubId', filterSubId || '');
+    set({ filterSubId });
+  },
+  setFilterTagIds: (ids: string[] | ((prev: string[]) => string[])) => set((state) => {
+    const nextIds = typeof ids === 'function' ? ids(state.filterTagIds) : ids;
+    sessionStorage.setItem('filterTagIds', JSON.stringify(nextIds));
+    return { filterTagIds: nextIds };
+  }),
+  setSortOrder: (sortOrder) => {
+    sessionStorage.setItem('sortOrder', sortOrder);
+    set({ sortOrder });
+  },
   setIsMultiSelect: (isMultiSelect) => set({ isMultiSelect }),
   setSelectedIds: (ids) => set((state) => ({
     selectedIds: typeof ids === 'function' ? ids(state.selectedIds) : ids
@@ -178,7 +199,10 @@ export const useGalleryStore = create<GalleryState>((set) => ({
     localStorage.setItem('appLang', appLang);
     set({ appLang });
   },
-  setViewMode: (viewMode) => set({ viewMode }),
+  setViewMode: (viewMode) => {
+    sessionStorage.setItem('viewMode', viewMode);
+    set({ viewMode });
+  },
   setIsSyncing: (isSyncing) => set({ isSyncing }),
   setGeminiApiKey: (geminiApiKey) => {
     localStorage.setItem('gemini_api_key', geminiApiKey);

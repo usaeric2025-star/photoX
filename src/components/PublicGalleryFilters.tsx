@@ -173,15 +173,13 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 const isHot = !isPinned && hotIds.has(strTagId);
                 
                 return (
-                  <motion.button 
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                  <button 
                     key={strTagId}
                     onClick={() => { 
                       setSelectedTagIds(prev => (prev || []).includes(strTagId) ? [] : [strTagId]);
-                      setSelectedCatCode(null);
-                      setSelectedSubId(null);
+                      // Note: We don't clear categories here unless they conflict, 
+                      // but typically users want to filter tags within category.
+                      // If they want "All Cats", they click the specific button.
                     }}
                     className={cn(
                       "px-2.5 py-1 rounded-xl text-[9px] font-black transition-all border-2 shadow-sm flex items-center gap-1 shrink-0",
@@ -202,7 +200,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       "text-[7px] px-1 rounded font-black tracking-tighter shadow-sm",
                       isSelected ? "bg-white text-brand-navy" : "bg-brand-gold text-brand-bg"
                     )}>HOT</span>}
-                  </motion.button>
+                  </button>
                 );
               })
             )}

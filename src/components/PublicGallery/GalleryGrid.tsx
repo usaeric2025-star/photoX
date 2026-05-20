@@ -68,8 +68,6 @@ const MemoizedPhotoCard = React.memo(({
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, 
   onTogglePinned, onToggleHidden, displayPhotos
 }: MemoizedPhotoCardProps) => {
-  const isAdminMode = useAdminMode();
-  
   const handleOpenLightbox = useCallback(() => {
     onLightboxOpen(index, displayPhotos);
   }, [index, onLightboxOpen, displayPhotos]);
@@ -94,7 +92,7 @@ const MemoizedPhotoCard = React.memo(({
       onToggleSelection={onToggleSelection}
       onEditPhoto={onEditPhoto}
       onGroupClick={handleGroupClickInternal}
-      onLightboxOpen={onLightboxOpen}
+      onLightboxOpen={handleOpenLightbox}
       onLongPressStart={onLongPressStart}
       onLongPressEnd={onLongPressEnd}
       shareSinglePhoto={shareSinglePhoto}
