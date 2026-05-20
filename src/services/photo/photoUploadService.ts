@@ -65,6 +65,18 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     .select('id')
     .maybeSingle();
 
+  if (dbError && dbError.message.includes('furniture_items_item_code_key')) {
+     console.warn("Item code constraint violation detected in savePhotoToCloud, regenerating code and retrying save...");
+     payload.item_code = generateItemCode();
+     const retryResult = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .upsert(payload, { onConflict: 'id' })
+        .select('id')
+        .maybeSingle();
+     savedPhoto = retryResult.data;
+     dbError = retryResult.error;
+  }
+
   if (dbError) {
     console.error("Supabase Database Upsert Error:", dbError);
     throw new Error(`数据库保存失败: ${dbError.message}`);
@@ -188,6 +200,25 @@ export const savePhotosToCloudBatch = async (
       .from(DB_CONFIG.TABLE_NAME)
       .upsert(chunk, { onConflict: 'id', ignoreDuplicates: false })
       .select('id, image_hash');
+
+    if (dbError && dbError.message.includes('furniture_items_item_code_key')) {
+       console.warn("Batch saving encountered item_code collision, regenerating item_codes and retrying...");
+       const recycledChunk = chunk.map(p => ({
+         ...p,
+         item_code: generateItemCode()
+       }));
+       const retry = await supabase
+         .from(DB_CONFIG.TABLE_NAME)
+         .upsert(recycledChunk, { onConflict: 'id', ignoreDuplicates: false })
+         .select('id, image_hash');
+       savedRows = retry.data;
+       dbError = retry.error;
+       
+       // Update our reference chunk in case it falls through to the column mismatch retry
+       chunk.forEach((p, idx) => {
+         p.item_code = recycledChunk[idx].item_code;
+       });
+    }
 
     if (dbError && dbError.message.includes('column')) {
        console.warn("DB Schema mismatch, retrying chunk without group columns...");
