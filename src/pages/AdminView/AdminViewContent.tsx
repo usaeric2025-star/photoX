@@ -177,8 +177,11 @@ export const AdminViewContent: React.FC<Props> = ({
             manufacturers={logic.manufacturers}
             allTags={logic.tags}
             tagMap={logic.tagIdToNameMap}
-            onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos)).catch(()=>{})}
-            onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch(()=>{})}
+            onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos)).catch((e: Error) => { console.error('Batch AI Analyze failed', e); showError(e, '识别失败'); })}
+            onAiAnalyze={(p) => {
+                console.log('AI Analyze called for photo:', p.id, p);
+                return logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch((e: Error) => { console.error('AI Analyze failed', e); showError(e, '识别失败'); })
+            }}
             onToggleHidden={async (photo) => {
               if (logic.checkSyncLock()) {
                 showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
