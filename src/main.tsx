@@ -8,7 +8,7 @@ import { TaskProvider } from './hooks/useTasks';
 import './index.css';
 
 Sentry.init({
-  dsn: "https://49371df75e33c477f7c16b7bf1c25b9c@o4511421206953984.ingest.us.sentry.io/4511421218357248",
+  dsn: import.meta.env.VITE_SENTRY_DSN,
   sendDefaultPii: true,
   environment: import.meta.env.MODE,
   tracesSampleRate: 0.2,
