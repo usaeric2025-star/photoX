@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
@@ -76,6 +76,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       setShowWhatsAppChoice(true);
     }
   };
+
+  const handleSetLightboxIndex = useCallback((index: number) => {
+    setLightboxIndex(index);
+  }, [setLightboxIndex]);
+
+  const noop = useCallback(() => {}, []);
 
   return (
     <motion.div 
@@ -180,12 +186,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     categories={categories}
                     manufacturers={manufacturers}
                     tagMap={tagMap}
-                    activeToggleSelection={() => {}}
+                    activeToggleSelection={noop}
                     setActiveGroupId={setActiveGroupId}
                     setActivePhotoId={setActivePhotoId}
-                    setLightboxIndex={(index: number, photos: Photo[]) => setLightboxIndex(index)}
-                    startLongPress={() => {}}
-                    endLongPress={() => {}}
+                    setLightboxIndex={handleSetLightboxIndex}
+                    startLongPress={noop}
+                    endLongPress={noop}
                     shareSinglePhoto={shareSinglePhoto}
                     selectedCatCode={selectedCatCode}
                     selectedSubId={selectedSubId}

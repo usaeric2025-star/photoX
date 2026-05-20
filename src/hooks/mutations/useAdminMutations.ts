@@ -1,14 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Category, Tag, Manufacturer } from '../../types';
-import { addTagToDB, updateTagInDB, deleteTagFromDB } from '../../services/tagService';
-import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '../../services/categoryService';
-import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '../../services/manufacturerService';
-import { QUERY_KEYS } from '../queries/keys';
-import { useFeedback } from '../uiFeedback';
+import { Category, Tag, Manufacturer } from '@/types';
+import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tagService';
+import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/categoryService';
+import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturerService';
+import { QUERY_KEYS } from '@/hooks/queries/keys';
+import { useFeedback } from '@/hooks/uiFeedback';
 
 export const useAddTagMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: addTagToDB,
     onMutate: async (newTag) => {
@@ -28,7 +28,7 @@ export const useAddTagMutation = () => {
       if (context?.previousTags) {
         queryClient.setQueryData(QUERY_KEYS.tags, context.previousTags);
       }
-      showError(err, '添加标签失败');
+      handleError(err, '添加标签失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
@@ -38,7 +38,7 @@ export const useAddTagMutation = () => {
 
 export const useUpdateTagMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Tag> }) => updateTagInDB(id, updates),
     onMutate: async ({ id, updates }) => {
@@ -56,7 +56,7 @@ export const useUpdateTagMutation = () => {
       if (context?.previousTags) {
         queryClient.setQueryData(QUERY_KEYS.tags, context.previousTags);
       }
-      showError(err, '更新标签失败');
+      handleError(err, '更新标签失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
@@ -66,7 +66,7 @@ export const useUpdateTagMutation = () => {
 
 export const useDeleteTagMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: deleteTagFromDB,
     onMutate: async (id) => {
@@ -84,7 +84,7 @@ export const useDeleteTagMutation = () => {
       if (context?.previousTags) {
         queryClient.setQueryData(QUERY_KEYS.tags, context.previousTags);
       }
-      showError(err, '删除标签失败');
+      handleError(err, '删除标签失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
@@ -94,7 +94,7 @@ export const useDeleteTagMutation = () => {
 
 export const useAddCategoryMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: addCategoryToDB,
     onMutate: async (newCat) => {
@@ -113,7 +113,7 @@ export const useAddCategoryMutation = () => {
       if (context?.previousCats) {
         queryClient.setQueryData(QUERY_KEYS.categories, context.previousCats);
       }
-      showError(err, '添加分类失败');
+      handleError(err, '添加分类失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
@@ -123,7 +123,7 @@ export const useAddCategoryMutation = () => {
 
 export const useUpdateCategoryMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Category> }) => updateCategoryInDB(id, updates),
     onMutate: async ({ id, updates }) => {
@@ -141,7 +141,7 @@ export const useUpdateCategoryMutation = () => {
       if (context?.previousCats) {
         queryClient.setQueryData(QUERY_KEYS.categories, context.previousCats);
       }
-      showError(err, '更新分类失败');
+      handleError(err, '更新分类失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
@@ -151,7 +151,7 @@ export const useUpdateCategoryMutation = () => {
 
 export const useDeleteCategoryMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: deleteCategoryFromDB,
     onMutate: async (id) => {
@@ -169,7 +169,7 @@ export const useDeleteCategoryMutation = () => {
       if (context?.previousCats) {
         queryClient.setQueryData(QUERY_KEYS.categories, context.previousCats);
       }
-      showError(err, '删除分类失败');
+      handleError(err, '删除分类失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.categories });
@@ -179,7 +179,7 @@ export const useDeleteCategoryMutation = () => {
 
 export const useAddManufacturerMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: addManufacturerToDB,
     onMutate: async (name) => {
@@ -198,7 +198,7 @@ export const useAddManufacturerMutation = () => {
       if (context?.previousData) {
         queryClient.setQueryData(QUERY_KEYS.manufacturers, context.previousData);
       }
-      showError(err, '添加厂商失败');
+      handleError(err, '添加厂商失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
@@ -208,7 +208,7 @@ export const useAddManufacturerMutation = () => {
 
 export const useUpdateManufacturerMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: Partial<Manufacturer> }) => updateManufacturerInDB(id, updates),
     onMutate: async ({ id, updates }) => {
@@ -226,7 +226,7 @@ export const useUpdateManufacturerMutation = () => {
       if (context?.previousData) {
         queryClient.setQueryData(QUERY_KEYS.manufacturers, context.previousData);
       }
-      showError(err, '更新厂商失败');
+      handleError(err, '更新厂商失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });
@@ -236,7 +236,7 @@ export const useUpdateManufacturerMutation = () => {
 
 export const useDeleteManufacturerMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   return useMutation({
     mutationFn: deleteManufacturerFromDB,
     onMutate: async (id) => {
@@ -254,7 +254,7 @@ export const useDeleteManufacturerMutation = () => {
       if (context?.previousData) {
         queryClient.setQueryData(QUERY_KEYS.manufacturers, context.previousData);
       }
-      showError(err, '删除厂商失败');
+      handleError(err, '删除厂商失败');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.manufacturers });

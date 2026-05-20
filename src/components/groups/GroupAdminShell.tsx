@@ -136,7 +136,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   }, [isAdminMode, setIsMultiSelectMode, setSelectedPhotoIds]);
 
   const handleAddPhotoToGroupClick = useCallback(async () => {
-    console.log('DEBUG: Add photo clicked');
     if (onAddPhotoToGroup) {
       await onAddPhotoToGroup();
     } else {

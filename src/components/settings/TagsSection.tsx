@@ -1,15 +1,18 @@
 import React from 'react';
-import { Plus, Heart, Sparkles } from 'lucide-react';
+import { Plus, Heart } from 'lucide-react';
 import { Tag, AppSettings } from '../../types';
 import { TagItem } from './TagItem';
+import { useGalleryStore } from '../../store';
+import { useFeedback } from '../../hooks';
+import { normalizeTagName } from '../../utils/stringHelper';
 
 interface TagsSectionProps {
   tags: Tag[];
   settings: AppSettings | null;
-  handleAddTag: () => void;
+  addTag: (name: string) => Promise<Tag>;
+  updateTag: (id: string, data: Partial<Tag>) => Promise<boolean>;
   activeTagMenuId: string | null;
   setActiveTagMenuId: (id: string | null) => void;
-  handleUpdateTagName: (tag: Tag) => void;
   deleteTag: (id: string) => void;
   togglePin: (tagId: string) => void;
   setSettings: (s: AppSettings) => void;
@@ -22,10 +25,10 @@ interface TagsSectionProps {
 export const TagsSection: React.FC<TagsSectionProps> = ({
   tags,
   settings,
-  handleAddTag,
+  addTag,
+  updateTag,
   activeTagMenuId,
   setActiveTagMenuId,
-  handleUpdateTagName,
   deleteTag,
   togglePin,
   setSettings,
@@ -34,6 +37,39 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
   cardClass,
   buttonStyles
 }) => {
+  const { setPromptDialog } = useGalleryStore();
+  const { showSuccess, showError } = useFeedback();
+
+  const handleAddTag = () => {
+    setPromptDialog({
+      title: '新增标签',
+      message: '输入标签名称:',
+      onSubmit: async (name: string) => {
+        if (!name.trim()) return;
+        const normalized = name.trim().toUpperCase();
+        try {
+          await addTag(normalized);
+        } catch (error: any) {
+          showError(error, '添加标签失败');
+        }
+      }
+    });
+  };
+
+  const handleUpdateTagName = (tag: Tag) => {
+    setPromptDialog({
+      title: '编辑标签名 / Edit Tag Name',
+      message: '输入新的标签名称 / Enter new tag name:',
+      placeholder: tag.name,
+      onSubmit: async (newName) => {
+        const normalized = normalizeTagName(newName);
+        if (normalized && normalized !== tag.name) {
+          await updateTag(tag.id, { name: normalized });
+        }
+      }
+    });
+  };
+
   return (
     <section className={cardClass} id="section-tags">
       <div className="flex items-center justify-between">

@@ -1,7 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG, PAGINATION } from '../../constants/config';
 import { Photo } from '../../types';
-import { photoCache } from '../photoService';
 import { safeArray } from '../../lib/utils';
 import { mapToDb } from './photoMappingUtils';
 
@@ -67,8 +66,6 @@ export const updatePhotosBatch = async (
     
     if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);
   }
-  
-  photoCache.clear();
 };
 
 export const clearCategoryFromPhotos = async (categoryId: string) => {
@@ -79,7 +76,6 @@ export const clearCategoryFromPhotos = async (categoryId: string) => {
     .select('id');
     
   if (error) throw error;
-  photoCache.clear();
   return data;
 };
 
@@ -91,7 +87,6 @@ export const clearManufacturerFromPhotos = async (mfrId: string) => {
     .select('id');
     
   if (error) throw error;
-  photoCache.clear();
   return data;
 };
 
@@ -120,7 +115,6 @@ export const clearGroupIdInCloud = async (groupId: string) => {
     console.warn(`[Warning] Failed to delete group record ${groupId}:`, deleteError.message);
   }
   
-  photoCache.clear();
   return { success: true };
 };
 

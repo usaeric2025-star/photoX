@@ -1,9 +1,9 @@
 import React from 'react';
-import { AdminHeader } from '../../components/admin/AdminHeader';
-import { useGalleryStore } from '../../store';
-import { AdminGallery } from '../../components/admin/AdminGallery';
-import { AdminFloatingButtons } from '../../components/admin/AdminFloatingButtons';
-import { Photo, Category, Tag, User, AppSettings } from '../../types';
+import { AdminFloatingButtons } from '@/components/admin/AdminFloatingButtons';
+import { Photo, Category, Tag, User, AppSettings } from '@/types';
+import { AdminToolbar } from './AdminToolbar';
+import { AdminPhotoGrid } from './AdminPhotoGrid';
+import { AdminEmptyState } from './AdminEmptyState';
 
 interface Props {
   isMultiSelect: boolean;
@@ -45,95 +45,91 @@ interface Props {
   isAdmin?: boolean;
 }
 
-export const MainAdminScreen: React.FC<Props> = React.memo(({
-  isMultiSelect, selectedIds, photos, setSelectedIds, setIsMultiSelect,
-  handleBatchAiIdentifyTrigger, onManageClick, onRefresh, cloudCount,
-  lang, loadingType, batchProgress, categories, tags,
-  onTogglePinned, onToggleHidden, onSetGroupCover, settings,
-  columns, setColumns, user, onEditPhoto, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
-  onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, onBatchToggleHidden, isAnalyzing,
-  isFetchingNextPage, isAdmin
-}) => {
-  const { togglePhotoSelection, clearSelection } = useGalleryStore();
-  // console.log('Rendering MainAdminScreen');
+export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
+  const {
+    isMultiSelect, selectedIds, photos, setSelectedIds, setIsMultiSelect,
+    handleBatchAiIdentifyTrigger, onManageClick, onRefresh, cloudCount,
+    lang, loadingType, batchProgress, categories, tags,
+    settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
+    onDeletePhotos, onGroupPhotos, onBatchEdit, onBatchAiAnalyze, onBatchToggleHidden
+  } = props;
+
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
-      <AdminHeader 
+      <AdminToolbar 
+        isMultiSelect={isMultiSelect}
+        selectedIds={selectedIds}
+        photos={photos}
+        setSelectedIds={setSelectedIds}
+        setIsMultiSelect={setIsMultiSelect}
+        handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
+        onManageClick={onManageClick}
+        loginWithGoogle={loginWithGoogle}
+        onRefresh={onRefresh}
+        cloudCount={cloudCount}
+        lang={lang}
+        loadingType={loadingType}
+        batchProgress={batchProgress}
+      />
+      <div className="flex-1 min-h-0 relative">
+        {photos.length === 0 && loadingType !== 'sync-pull' ? (
+          <AdminEmptyState t={t} />
+        ) : (
+          <AdminPhotoGrid 
+            photos={photos}
+            categories={categories}
+            tags={tags}
+            settings={settings}
+            loadingType={loadingType}
+            onRefresh={onRefresh}
+            columns={columns}
+            setColumns={setColumns}
+            cloudCount={cloudCount}
+            onLoadMore={onLoadMore}
+            hasNextPage={hasNextPage}
+            selectedIds={selectedIds}
+            isMultiSelect={isMultiSelect}
+            setIsMultiSelect={setIsMultiSelect}
+          />
+        )}
+        <AdminFloatingButtons 
+          onAdd={onImport}
           isMultiSelect={isMultiSelect}
           selectedIds={selectedIds}
-          filteredPhotos={photos}
-          setSelectedIds={setSelectedIds}
           setIsMultiSelect={setIsMultiSelect}
-          handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
-          handleManageClick={onManageClick}
-          loginWithGoogle={loginWithGoogle}
-          onRefresh={onRefresh}
-          photosCount={photos.length}
-          totalPhotosCount={photos.length}
-          cloudCount={cloudCount}
-          appLang={lang as any}
-          isAnalyzing={loadingType === 'analyzing'}
-          batchProgress={batchProgress}
-       />
-        <div className="flex-1 min-h-0 relative">
-          <AdminGallery 
-             photos={photos}
-             categories={categories}
-             tags={tags}
-             settings={settings}
-             isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
-             onRefresh={onRefresh}
-             columns={columns}
-             setColumns={setColumns}
-             totalCount={cloudCount}
-             onLoadMore={onLoadMore}
-             hasMore={hasNextPage}
-             activeSelectedIds={selectedIds}
-             activeIsMultiSelect={isMultiSelect}
-             activeToggleSelection={togglePhotoSelection}
-             activeSetIsMultiSelect={setIsMultiSelect}
-             activeClearSelection={clearSelection}
-             isStaffMode={true}
-          />
-          <AdminFloatingButtons 
-            onAdd={onImport}
-            isMultiSelect={isMultiSelect}
-            selectedIds={selectedIds}
-            setIsMultiSelect={setIsMultiSelect}
-            onBatchAiIdentify={() => {
-                if (onBatchAiAnalyze) onBatchAiAnalyze(photos.filter(p => selectedIds.includes(p.id)));
-            }}
-            onBatchEdit={() => {
-                if (onBatchEdit) onBatchEdit(selectedIds);
-            }}
-            onGroup={() => {
-                if (onGroupPhotos) onGroupPhotos(selectedIds);
-            }}
-            onDelete={() => {
-                if (onDeletePhotos) onDeletePhotos(selectedIds);
-            }}
-            onToggleVisibility={() => {
-                if (onBatchToggleHidden) onBatchToggleHidden(selectedIds);
-            }}
-          />
-       </div>
+          onBatchAiIdentify={() => {
+              if (onBatchAiAnalyze) onBatchAiAnalyze(photos.filter(p => selectedIds.includes(p.id)));
+          }}
+          onBatchEdit={() => {
+              if (onBatchEdit) onBatchEdit(selectedIds);
+          }}
+          onGroup={() => {
+              if (onGroupPhotos) onGroupPhotos(selectedIds);
+          }}
+          onDelete={() => {
+              if (onDeletePhotos) onDeletePhotos(selectedIds);
+          }}
+          onToggleVisibility={() => {
+              if (onBatchToggleHidden) onBatchToggleHidden(selectedIds);
+          }}
+        />
+      </div>
     </div>
   );
 }, (prevProps, nextProps) => {
-  if (prevProps.photos !== nextProps.photos) return false;
-  if (prevProps.isMultiSelect !== nextProps.isMultiSelect) return false;
-  if (prevProps.selectedIds !== nextProps.selectedIds) return false;
-  if (prevProps.cloudCount !== nextProps.cloudCount) return false;
-  if (prevProps.lang !== nextProps.lang) return false;
-  if (prevProps.loadingType !== nextProps.loadingType) return false;
-  if (prevProps.batchProgress !== nextProps.batchProgress) return false;
-  if (prevProps.categories !== nextProps.categories) return false;
-  if (prevProps.tags !== nextProps.tags) return false;
-  if (prevProps.settings !== nextProps.settings) return false;
-  if (prevProps.columns !== nextProps.columns) return false;
-  if (prevProps.user !== nextProps.user) return false;
-  if (prevProps.hasNextPage !== nextProps.hasNextPage) return false;
-  if (prevProps.isAnalyzing !== nextProps.isAnalyzing) return false;
-  if (prevProps.isFetchingNextPage !== nextProps.isFetchingNextPage) return false;
-  return true;
+  return prevProps.photos === nextProps.photos &&
+         prevProps.isMultiSelect === nextProps.isMultiSelect &&
+         prevProps.selectedIds === nextProps.selectedIds &&
+         prevProps.cloudCount === nextProps.cloudCount &&
+         prevProps.lang === nextProps.lang &&
+         prevProps.loadingType === nextProps.loadingType &&
+         prevProps.batchProgress === nextProps.batchProgress &&
+         prevProps.categories === nextProps.categories &&
+         prevProps.tags === nextProps.tags &&
+         prevProps.settings === nextProps.settings &&
+         prevProps.columns === nextProps.columns &&
+         prevProps.user === nextProps.user &&
+         prevProps.hasNextPage === nextProps.hasNextPage &&
+         prevProps.isAnalyzing === nextProps.isAnalyzing &&
+         prevProps.isFetchingNextPage === nextProps.isFetchingNextPage;
 });

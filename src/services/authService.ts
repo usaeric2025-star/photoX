@@ -16,13 +16,11 @@ export const loginWithGoogle = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      console.log("Already logged in as:", session.user.email);
       wasAuthenticated = true;
       return { user: session.user };
     }
 
     const redirectUrl = window.location.origin;
-    console.log("Initiating Google login with redirect to:", redirectUrl);
     
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

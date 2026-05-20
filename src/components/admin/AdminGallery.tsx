@@ -60,6 +60,15 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
     textLoading: t.loading
   }), [props.hasMore, isSyncing, gridPhotos.length, t]);
 
+  const handleSetLightboxIndex = useCallback((index: number) => {
+    setLightboxIndex(index);
+  }, [setLightboxIndex]);
+
+  const handleToggleSelection = props.activeToggleSelection;
+
+  // Stable empty handlers to prevent unnecessary re-renders of all PhotoCards
+  const noop = useCallback(() => {}, []);
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -111,7 +120,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
             if (gridPhotos.length === 0) {
               return (
                 <motion.div
-                  key="empty"
+                   key="empty"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -147,13 +156,13 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     categories={categories}
                     manufacturers={manufacturers}
                     tagMap={tagMap}
-                    activeToggleSelection={props.activeToggleSelection}
+                    activeToggleSelection={handleToggleSelection}
                     setActiveGroupId={setActiveGroupId}
                     setActivePhotoId={setActivePhotoId}
-                    setLightboxIndex={(index: number, photos: Photo[]) => setLightboxIndex(index)}
-                    startLongPress={() => {}}
-                    endLongPress={() => {}}
-                    shareSinglePhoto={() => {}}
+                    setLightboxIndex={handleSetLightboxIndex}
+                    startLongPress={noop}
+                    endLongPress={noop}
+                    shareSinglePhoto={noop}
                     selectedCatCode={selectedCatCode}
                     selectedSubId={selectedSubId}
                     selectedTagIds={selectedTagIds}

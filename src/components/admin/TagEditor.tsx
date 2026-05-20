@@ -5,6 +5,7 @@ import { useLongPress } from '../../hooks/useLongPress';
 import { saveSettings } from '../../services/settingService';
 import { useGalleryStore } from '../../store';
 import { Tag } from '../../types';
+import { useFeedback } from '../../hooks';
 
 interface TagEditorProps {
   tags: Tag[];
@@ -24,6 +25,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
   const { setAlertDialog } = useGalleryStore();
   const [searchTerm, setSearchTerm] = useState('');
   const { settings, setSettings } = useGalleryStore();
+  const { showError } = useFeedback();
   
   const { startPress, endPress, cancelPress, handleTouchMove, hasLongPressed, activeItem: activeActionTag, setActiveItem: setActiveActionTag } = useLongPress(
       (tag) => setActiveActionTag(tag)
@@ -40,7 +42,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       setSettings(nextSettings);
       await saveSettings(nextSettings);
     } catch (err) {
-      console.error('切换置顶状态失败:', err);
+      showError(err, '切换置顶状态');
     }
   };
 

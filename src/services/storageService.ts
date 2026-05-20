@@ -99,7 +99,6 @@ export const uploadImages = async (
 
         if (isMain && onProgress) onProgress(100);
       } else {
-        console.log(`[Storage] File ${fileName} already exists, skipping upload.`);
         if (isMain && onProgress) onProgress(100);
       }
 

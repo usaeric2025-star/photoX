@@ -11,6 +11,7 @@ import { getPhotoDisplayName } from '../../lib/ui-helpers';
 import { saveData, loadData } from '../../utils/indexedDB';
 
 import { useAdminMode, usePhotoFilters, useFeedback } from '../../hooks';
+import { globalHandleError } from '../../utils/errorHandler';
 
 export const usePublicGalleryLogic = (props: {
   photos: Photo[];
@@ -171,7 +172,7 @@ export const usePublicGalleryLogic = (props: {
   const shareSinglePhoto = useCallback((photo: Photo) => {
     const msg = getShareMessage(photo);
     if (navigator.share) {
-      navigator.share({ title: t.shareTitle, text: msg }).catch(e => { if (e.name !== 'AbortError') console.error(e); });
+      navigator.share({ title: t.shareTitle, text: msg }).catch(e => { if (e.name !== 'AbortError') globalHandleError(e, "Single Share", true); });
     } else {
       navigator.clipboard.writeText(msg)
         .then(() => showSuccess("分享信息已复制到剪贴板！/ Share info copied to clipboard!"))
@@ -187,7 +188,7 @@ export const usePublicGalleryLogic = (props: {
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView full collection: ${shareUrl}`;
 
     if (navigator.share) {
-      navigator.share({ title: t.shareTitle, text: shareText }).catch(e => { if (e.name !== 'AbortError') console.error("Group share failed:", e); });
+      navigator.share({ title: t.shareTitle, text: shareText }).catch(e => { if (e.name !== 'AbortError') globalHandleError(e, "Group share", true); });
     } else {
       navigator.clipboard.writeText(shareText)
         .then(() => showSuccess("群组分享链接已复制！/ Group share link copied!"))
@@ -238,7 +239,7 @@ export const usePublicGalleryLogic = (props: {
           hasLoadedStats.current = true;
         }
       } catch (err) {
-        console.error("Daily stats sync failed", err);
+        globalHandleError(err, "Daily stats sync", true);
       }
     };
 
@@ -246,7 +247,7 @@ export const usePublicGalleryLogic = (props: {
     return () => { active = false; };
   }, [localPhotos.length]); // Only retry calculation if photo count changes significantly early on
 
-  return {
+  return useMemo(() => ({
     settings, user, isSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
     selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, isStaffMode, setIsStaffMode, activeSelectedIds,
@@ -255,7 +256,7 @@ export const usePublicGalleryLogic = (props: {
     columns, setColumns, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
-    handleLoadMore, navigate, sortedTags: useMemo(() => {
+    handleLoadMore, navigate, sortedTags: (() => {
       const pinnedIds = new Set((settings?.pinnedTags || []).map(id => String(id)));
 
       const enrichedTags = contextTags.map(t => {
@@ -268,6 +269,16 @@ export const usePublicGalleryLogic = (props: {
       });
       
       return sortTagsByPopularity(enrichedTags);
-    }, [contextTags, settings?.pinnedTags, tagStats]) 
-  };
+    })()
+  }), [
+    settings, user, isSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
+    selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
+    showGroupsCollapsed, setShowGroupsCollapsed, isStaffMode, setIsStaffMode, activeSelectedIds,
+    activeIsMultiSelect, activeToggleSelection, activeClearSelection, activeSetIsMultiSelect,
+    displayPhotos, gridPhotos, categories, manufacturers, contextTags, lang, setLang, t,
+    columns, setColumns, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
+    lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
+    showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
+    handleLoadMore, navigate, tagStats
+  ]);
 };

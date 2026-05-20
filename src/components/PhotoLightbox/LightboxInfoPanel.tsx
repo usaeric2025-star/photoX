@@ -37,7 +37,6 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
 }) => {
   const { isAdmin } = usePermission();
   const isAdminMode = isAdmin;
-  console.log('LightboxInfoPanel: isAdminMode:', isAdminMode, 'onAiAnalyze defined:', !!onAiAnalyze);
   const catName = getTranslatedCategoryName(photo.categoryId, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
@@ -85,7 +84,6 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
               <>
                 <button 
                   onClick={() => {
-                    console.log('AI Analyze button clicked for photo', photo.id, 'onAiAnalyze defined:', !!onAiAnalyze, 'isAdminMode:', isAdminMode);
                     if (isAnalyzing && onCancelAnalyze) onCancelAnalyze();
                     else if (!isAnalyzing) onAiAnalyze?.(photo);
                   }}
@@ -184,7 +182,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                         </span>
                       </div>
                       <p className="font-black text-brand-navy text-base md:text-lg leading-snug tracking-tight">{(dimStr && dimStr !== '-') ? dimStr : ''}</p>
-                      {(!/\d/.test(dimStr || '') && (dim.length || dim.width || dim.height)) && (
+                      {(dim.length || dim.width || dim.height) && (
                         <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100">
                           <div>
                              <span className="text-[8px] font-bold text-slate-400 uppercase block mb-0.5">L</span>

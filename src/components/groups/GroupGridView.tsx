@@ -68,9 +68,10 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
         onTouchEnd={clearTimer}
       >
         {!isLoaded && (
-          <Skeleton className="absolute inset-0 bg-slate-100 flex items-center justify-center">
+          <div className="absolute inset-0 animate-pulse bg-slate-100 flex items-center justify-center">
             <Quote className="text-slate-200/50 w-8 h-8 rotate-180" />
-          </Skeleton>
+            <div className="absolute inset-0 bg-brand-navy/5" />
+          </div>
         )}
         <img 
           src={photo.thumb_url || photo.image_url || photo.uri} 

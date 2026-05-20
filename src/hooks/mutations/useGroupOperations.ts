@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { groupPhotos, ungroupPhotos, removePhotosFromGroup } from '../../services/photoMutationService';
-import { useFeedback, useInvalidatePhotos } from '../';
+import { groupPhotos, ungroupPhotos, removePhotosFromGroup } from '@/services/photoMutationService';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
 
 export const useGroupPhotosMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
 
   return useMutation({
@@ -76,14 +76,14 @@ export const useGroupPhotosMutation = () => {
           queryClient.setQueryData(queryKey, value);
         });
       }
-      showError(error, '群组创建失败');
+      handleError(error, '群组创建失败');
     }
   });
 };
 
 export const useRemoveFromGroupMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
 
   return useMutation({
@@ -158,14 +158,14 @@ export const useRemoveFromGroupMutation = () => {
           queryClient.setQueryData(queryKey, value);
         });
       }
-      showError(error, '移出群组失败');
+      handleError(error, '移出群组失败');
     }
   });
 };
 
 export const useUngroupMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
 
   return useMutation({
@@ -212,14 +212,14 @@ export const useUngroupMutation = () => {
           queryClient.setQueryData(queryKey, value);
         });
       }
-      showError(error, '取消群组失败');
+      handleError(error, '取消群组失败');
     }
   });
 };
 
 export const useDeleteGroupFromCloudMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
 
   return useMutation({
@@ -266,7 +266,7 @@ export const useDeleteGroupFromCloudMutation = () => {
           queryClient.setQueryData(queryKey, value);
         });
       }
-      showError(error, '删除群组失败');
+      handleError(error, '删除群组失败');
     }
   });
 };

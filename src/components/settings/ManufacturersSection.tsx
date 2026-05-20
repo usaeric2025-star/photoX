@@ -2,11 +2,14 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { Manufacturer } from '../../types';
 import { ManufacturerItem } from '../admin/ManufacturerItem';
+import { useGalleryStore } from '../../store';
+import { useFeedback } from '../../hooks';
+import { normalizeManufacturerName } from '../../utils/stringHelper';
 
 interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];
-  handleAddManufacturer: () => void;
-  handleUpdateMfrName: (mfr: Manufacturer) => void;
+  addManufacturer: (name: string) => Promise<Manufacturer>;
+  updateManufacturer: (id: string, data: Partial<Manufacturer>) => Promise<boolean>;
   deleteManufacturer: (id: string) => void;
   cardClass: string;
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
@@ -14,12 +17,48 @@ interface ManufacturersSectionProps {
 
 export const ManufacturersSection: React.FC<ManufacturersSectionProps> = ({
   manufacturers,
-  handleAddManufacturer,
-  handleUpdateMfrName,
+  addManufacturer,
+  updateManufacturer,
   deleteManufacturer,
   cardClass,
   buttonStyles
 }) => {
+  const { setPromptDialog } = useGalleryStore();
+  const { showSuccess, showError } = useFeedback();
+
+  const handleAddManufacturer = () => {
+    setPromptDialog({
+      title: '新增生产商 / Add Manufacturer',
+      message: '输入生产商名称 / Enter manufacturer name:',
+      onSubmit: async (name: string) => {
+        if (!name.trim()) return;
+        const normalized = normalizeManufacturerName(name);
+        if (normalized) {
+            await addManufacturer(normalized);
+        }
+      }
+    });
+  };
+
+  const handleUpdateMfrName = async (mfr: Manufacturer) => {
+    setPromptDialog({
+      title: '编辑生产商 / Edit Manufacturer',
+      message: '输入新名称 / Enter new name:',
+      placeholder: mfr.name,
+      onSubmit: async (newName) => {
+        const normalized = normalizeManufacturerName(newName);
+        if (normalized && normalized !== mfr.name) {
+          try {
+            await updateManufacturer(String(mfr.id), { name: normalized });
+            showSuccess('厂商更新成功');
+          } catch (e) {
+            showError(e, '更新厂商失败');
+          }
+        }
+      }
+    });
+  };
+
   return (
     <section className={cardClass} id="section-manufacturers">
       <div className="flex items-center justify-between">

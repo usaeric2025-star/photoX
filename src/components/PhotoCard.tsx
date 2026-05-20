@@ -32,22 +32,71 @@ interface PhotoCardProps {
   displayPhotos: Photo[]; // Add displayPhotos to props
 }
 
+const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => (
+  <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
+    {photo.groupId && (
+      <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
+        <Layers size={8} />
+        {photo.groupId.slice(-4)}
+      </div>
+    )}
+    {photo.isPinned && (
+      <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
+        <span>置頂</span>
+      </div>
+    )}
+  </div>
+);
+
+const SelectionOverlay: React.FC<{ isSelected: boolean }> = ({ isSelected }) => (
+  <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
+     <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
+        {isSelected && <Check size={16} className="text-white sm:size-20" />}
+     </div>
+  </div>
+);
+
+const PhotoInfoFooter: React.FC<{ 
+  displayCatName: string; 
+  isUncategorized: boolean; 
+  photoTags: string[] 
+}> = ({ displayCatName, isUncategorized, photoTags }) => (
+  <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+     {!isUncategorized && displayCatName && (
+      <p className="text-[11px] font-bold tracking-tight text-white drop-shadow-lg mb-0.5 truncate">
+        {displayCatName}
+      </p>
+    )}
+    
+    {photoTags.length > 0 && (
+      <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        {photoTags.slice(0, 3).map((tagName, idx) => (
+          <span key={idx} className="bg-black/30 text-white text-[9px] px-1.5 rounded font-medium whitespace-nowrap">
+            {tagName}
+          </span>
+        ))}
+        {photoTags.length > 3 && <span className="text-[9px] text-white/70 px-1">...</span>}
+      </div>
+    )}
+  </div>
+);
+
+const toTitleCase = (str: string) => {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+};
+
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   photo, index, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, onTogglePinned, onToggleHidden,
-  displayPhotos // Add displayPhotos in destructuring
+  displayPhotos
 }) => {
   const { isAdmin } = usePermission();
   const isAdminMode = isAdmin;
-  if (!photo) return null;
-  
-  // ... rest of the code ...
   
   const handleOpenLightbox = useCallback(() => {
-    console.log('handleOpenLightbox', { photoId: photo.id, index, displayPhotosLength: displayPhotos.length });
     const realIndex = displayPhotos.findIndex((p) => p?.id === photo.id);
-    console.log('realIndex', realIndex);
     if (realIndex !== -1) {
       onLightboxOpen(realIndex, displayPhotos);
     } else {
@@ -62,43 +111,35 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       handleOpenLightbox();
     }
   }, [isMultiSelect, onToggleSelection, photo.id, handleOpenLightbox]);
-    
-  // ... inside onClick handler:
-  // onLightboxOpen(index); -> handleOpenLightbox();
-  
-  // ... rest of the file ...
 
-  const mfrName = useMemo(() => {
-    return getManufacturerName(photo?.manufacturerId || photo?.sub_category, manufacturers);
-  }, [photo?.manufacturerId, photo?.sub_category, manufacturers]);
+  const mfrName = useMemo(() => 
+    getManufacturerName(photo?.manufacturerId || photo?.sub_category, manufacturers),
+    [photo?.manufacturerId, photo?.sub_category, manufacturers]
+  );
 
-  const displayCatName = useMemo(() => {
-    return getTranslatedCategoryName(photo.categoryId || photo.category_id, categories, lang, t);
-  }, [photo.categoryId, photo.category_id, categories, lang, t]);
+  const displayCatName = useMemo(() => 
+    getTranslatedCategoryName(photo.categoryId || photo.category_id, categories, lang, t),
+    [photo.categoryId, photo.category_id, categories, lang, t]
+  );
 
   const isUncategorized = useMemo(() => {
     const catId = photo.categoryId || photo.category_id;
     return isUncategorizedName(displayCatName, t, catId);
   }, [displayCatName, t, photo.categoryId, photo.category_id]);
   
-  const toTitleCase = (str: string) => {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-  };
-
   const photoTags = useMemo(() => {
     const rawTagIds = safeArray<string | number>(photo.tagIds);
     if (!rawTagIds || rawTagIds.length === 0) return [];
-    // Only show tags present in the tagMap
     return rawTagIds
       .map(tid => tagMap[String(tid)])
       .filter(Boolean)
       .map(toTitleCase);
   }, [photo.tagIds, tagMap]);
 
-  const thumbSrc = useMemo(() => {
-    return getCacheBustedImageUrl(photo, 'thumb');
-  }, [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]);
+  const thumbSrc = useMemo(() => 
+    getCacheBustedImageUrl(photo, 'thumb'),
+    [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]
+  );
 
   const cardSelectedClasses = isAdmin && isMultiSelect && isSelected 
     ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
@@ -116,18 +157,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         shareSinglePhoto(photo);
         if ('vibrate' in navigator) navigator.vibrate(50);
       }}
-      onMouseDown={() => {
-        if (isAdmin) {
-          onLongPressStart(photo.id);
-        }
-      }}
+      onMouseDown={() => isAdmin && onLongPressStart(photo.id)}
       onMouseUp={onLongPressEnd}
       onMouseLeave={onLongPressEnd}
-      onTouchStart={() => {
-        if (isAdmin) {
-          onLongPressStart(photo.id);
-        }
-      }}
+      onTouchStart={() => isAdmin && onLongPressStart(photo.id)}
       onTouchEnd={onLongPressEnd}
       onTouchMove={onLongPressEnd}
       onTouchCancel={onLongPressEnd}
@@ -175,30 +208,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         }}
       />
 
-      {/* Selected Indicator (Blue Overlay + Icon) */}
-      {isAdmin && isMultiSelect && (
-        <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
-           <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
-              {isSelected && <Check size={16} className="text-white sm:size-20" />}
-           </div>
-        </div>
-      )}
-
-      {/* Top Left Indicators (Group and Pinned status) */}
-      <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
-        {photo.groupId && (
-          <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
-            <Layers size={8} />
-            {photo.groupId.slice(-4)}
-          </div>
-        )}
-        {photo.isPinned && (
-          <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
-            <span>置頂</span>
-          </div>
-        )}
-      </div>
-
+      {isAdmin && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
+      <PhotoStatusBadges photo={photo} />
 
       {isAdmin && onTogglePinned && (
          <button 
@@ -212,26 +223,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
          </button>
       )}
 
-
-      
-      <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-         {!isUncategorized && displayCatName && (
-          <p className="text-[11px] font-bold tracking-tight text-white drop-shadow-lg mb-0.5 truncate">
-            {displayCatName}
-          </p>
-        )}
-        
-        {photoTags.length > 0 && (
-          <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            {photoTags.slice(0, 3).map((tagName, idx) => (
-              <span key={idx} className="bg-black/30 text-white text-[9px] px-1.5 rounded font-medium whitespace-nowrap">
-                {tagName}
-              </span>
-            ))}
-            {photoTags.length > 3 && <span className="text-[9px] text-white/70 px-1">...</span>}
-          </div>
-        )}
-      </div>
+      <PhotoInfoFooter 
+        displayCatName={displayCatName} 
+        isUncategorized={isUncategorized} 
+        photoTags={photoTags} 
+      />
     </div>
   );
 });

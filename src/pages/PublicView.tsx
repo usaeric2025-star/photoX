@@ -13,7 +13,7 @@ import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
     <div className="flex flex-col items-center justify-center p-4">
-      <p className="text-red-500">页面出错了: {error.message}</p>
+      <p className="text-red-500">页面出错了: {error instanceof Error ? error.message : String(error)}</p>
       <button onClick={resetErrorBoundary} className="mt-4 px-4 py-2 bg-slate-900 text-white rounded">重试</button>
     </div>
   );

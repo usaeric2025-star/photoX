@@ -14,4 +14,3 @@ export * from './tagsMutationService';
 export * from './manufacturersMutationService';
 export * from './categoriesMutationService';
 export * from './groupMutationService';
-export { createKeyedCache } from './cacheUtils';

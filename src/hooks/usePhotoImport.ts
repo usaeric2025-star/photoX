@@ -1,49 +1,17 @@
-import { useState, useRef } from 'react';
-import { User, Photo, Category, Tag, Manufacturer } from '../types';
-import { processImageFile } from '../utils/imageProcess';
+import { useState, useRef, useMemo } from 'react';
+import { User, Photo, Category, Tag, Manufacturer } from '@/types';
 import { 
-  checkImageHashExists, 
   savePhotoToCloud
-} from '../services/photoMutationService';
-import { generateItemCode, cleanObject } from '../services/utils';
-import { formatDate } from '../utils/dateFormat';
-import { saveData } from '../utils/indexedDB';
-import { analyzeProductPhoto, translateDescription } from '../services/geminiService';
-import { resolveTagIdsBatch } from '../utils/tagUtils';
-import { safeArray } from '../lib/utils';
+} from '@/services/photoMutationService';
+import { generateItemCode } from '@/services/utils';
+import { formatDate } from '@/utils/dateFormat';
+import { saveData } from '@/utils/indexedDB';
+import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from './queries/keys';
-import { useInvalidatePhotos, useFeedback } from './';
-
-// Helper functions 
-const shouldUpdateName = (name: string | null | undefined): boolean => {
-  if (!name || name.trim() === '') return true;
-  const trimmed = name.trim();
-  const lower = trimmed.toLowerCase();
-  
-  if (/^[\d\s\-_]+$/.test(trimmed)) return true;
-  if (
-    lower === 'furniture' ||
-    lower === '未命名产品' ||
-    lower === 'furniture record' ||
-    /\.(jpg|jpeg|png|heic|webp)$/i.test(trimmed) ||
-    /^(img|image|photo|dsc|pic)[\s_-]?\d+/i.test(lower)
-  ) return true;
-  if (trimmed.length < 3) return true;
-  return false;
-};
-
-const cleanAiName = (name: string | null | undefined): string | null => {
-  if (!name) return null;
-  const trimmed = name.trim();
-  const measurementPattern = /([hwdlt]\d+)|(\d+["”']|cm|inch|mm)|(\d+\s*x\s*\d+)/i;
-  
-  if (measurementPattern.test(trimmed)) {
-    console.warn('[AI] Rejecting name due to measurement detected:', trimmed);
-    return null;
-  }
-  return trimmed;
-};
+import { useInvalidatePhotos, useFeedback } from '@/hooks';
+import { useImageHash } from '@/hooks/useImageHash';
+import { useDuplicateCheck } from '@/hooks/useDuplicateCheck';
+import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/useAIAnalysisHandler';
 
 export const usePhotoImport = (
   user: User | null,
@@ -73,6 +41,10 @@ export const usePhotoImport = (
 
   const importCancelledRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  const sessionHashes = useMemo(() => new Set<string>(), []);
+  const { getHashAndDataUrl } = useImageHash();
+  const { isDuplicate } = useDuplicateCheck(photosRef, sessionHashes, user);
 
   const { setIsSyncing = () => {} } = adminSession || {};
   const { setActiveScreen = () => {} } = adminUI || {};
@@ -84,13 +56,10 @@ export const usePhotoImport = (
     const files = e.target.files;
     if (!files || files.length === 0) return;
     
-    const fileArray = Array.from(files) as File[];
-    const sFileArray = safeArray(fileArray);
+    const sFileArray = safeArray(Array.from(files));
     
-    // HEIC Detection Alert
-    const hasHeic = sFileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic');
-    if (hasHeic) {
-      showSuccess('检测到 HEIC 格式照片，建议转换为 JPG 后上传 / HEIC detected, conversion recommended');
+    if (sFileArray.some(f => f.name.toLowerCase().endsWith('.heic') || f.type === 'image/heic')) {
+      showSuccess('检测到 HEIC 照片，建议转换后再上传');
     }
 
     importCancelledRef.current = false;
@@ -103,122 +72,67 @@ export const usePhotoImport = (
       setImportProgress(0);
       setActiveScreen('home');
 
-      const sessionHashes = new Set<string>();
       let successCount = 0;
       let duplicateCount = 0;
       let failCount = 0;
       const failedFiles: string[] = [];
 
-      let uploadTaskId = '';
-      if (sFileArray.length > 0) {
-        uploadTaskId = addTask({
-          name: `上传照片 (${sFileArray.length} 张)`,
-          status: 'running',
-          progress: 0,
-          onCancel: () => handleCancelImport()
-        });
-      }
-
-      let aiTaskId = '';
-      if (useAi && sFileArray.length > 0) {
-        aiTaskId = addTask({
-          name: `导入照片 AI 识别 (${sFileArray.length} 张)`,
-          status: 'running',
-          onCancel: () => handleCancelImport()
-        });
-      }
-
       const handleCancelImport = () => {
         importCancelledRef.current = true;
-        if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-        }
+        abortControllerRef.current?.abort();
         abortAnalysis();
-        if (uploadTaskId) {
-          updateTask(uploadTaskId, {
-            status: 'cancelled',
-            message: '用户已手动取消上传任务',
-            finishedAt: Date.now()
-          });
-        }
-        if (aiTaskId) {
-          updateTask(aiTaskId, {
-            status: 'cancelled',
-            message: '用户已手动取消识别任务',
-            finishedAt: Date.now()
-          });
-        }
+        [uploadTaskId, aiTaskId].filter(Boolean).forEach(id => {
+          updateTask(id, { status: 'cancelled', message: '用户已取消', finishedAt: Date.now() });
+        });
       };
 
+      const uploadTaskId = addTask({
+        name: `上传照片 (${sFileArray.length} 张)`,
+        status: 'running',
+        progress: 0,
+        onCancel: handleCancelImport
+      });
+
+      const aiTaskId = useAi ? addTask({
+        name: `AI 识别 (${sFileArray.length} 张)`,
+        status: 'running',
+        onCancel: handleCancelImport
+      }) : '';
+
       let processedCount = 0;
-      const updateProgress = () => {
+      const onProgressUpdate = () => {
         if (importCancelledRef.current) return;
         processedCount++;
         const progress = (processedCount / sFileArray.length) * 100;
-        if (uploadTaskId) {
-          updateTask(uploadTaskId, {
-            progress,
-            message: `正在上传 ${processedCount}/${sFileArray.length}...`,
-            status: processedCount === sFileArray.length ? 'completed' : 'running'
-          });
-        }
-        if (aiTaskId) {
-          updateTask(aiTaskId, { 
-            progress,
-            message: `正在识别 ${processedCount}/${sFileArray.length}...`,
-            status: processedCount === sFileArray.length ? 'completed' : 'running'
-          });
-        }
-        if (processedCount === sFileArray.length) {
-            setTimeout(() => {
-                if (importCancelledRef.current) return;
-                if (uploadTaskId) updateTask(uploadTaskId, { status: 'completed' });
-                if (aiTaskId) updateTask(aiTaskId, { status: 'completed' });
-            }, 3000);
-        }
+        const msg = `${processedCount}/${sFileArray.length}...`;
+        
+        if (uploadTaskId) updateTask(uploadTaskId, { progress, message: `正在上传 ${msg}`, status: processedCount === sFileArray.length ? 'completed' : 'running' });
+        if (aiTaskId) updateTask(aiTaskId, { progress, message: `正在识别 ${msg}`, status: processedCount === sFileArray.length ? 'completed' : 'running' });
+      };
+
+      const workflowProps = {
+        user, geminiApiKey, aiProvider, customModel, categories, 
+        tags, manufacturers, tagNameToIdMap, photosRef, queryClient
       };
 
       const tasks: Promise<void>[] = [];
 
-      for (let i = 0; i < sFileArray.length; i++) {
-        if (importCancelledRef.current || signal.aborted) {
-          break;
-        }
-        const file = sFileArray[i];
-        setImportProgress(i + 1);
+      for (const file of sFileArray) {
+        if (importCancelledRef.current || signal.aborted) break;
         
         try {
-          const { hash, dataUrl } = await processImageFile(file);
+          const { hash, dataUrl } = await getHashAndDataUrl(file);
+          if (importCancelledRef.current || signal.aborted) break;
 
-          if (importCancelledRef.current || signal.aborted) {
-            break;
-          }
-
-          const duplicate = photosRef.current.find(p => p.image_hash === hash);
-          if (duplicate || sessionHashes.has(hash)) {
+          if (await isDuplicate(hash)) {
             duplicateCount++;
-            updateProgress();
+            onProgressUpdate();
             continue;
           }
 
-          if (user) {
-             const dupInCloud = await checkImageHashExists(hash);
-             if (dupInCloud) {
-                duplicateCount++;
-                updateProgress();
-                continue;
-             }
-          }
-          
-          if (importCancelledRef.current || signal.aborted) {
-            break;
-          }
-
           sessionHashes.add(hash);
-          const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          
-          const newPhoto: Photo = {
-            id: photoId,
+          const newPhoto = {
+            id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             storageId: hash, 
             item_code: generateItemCode(),
             manual_code: '',
@@ -232,183 +146,57 @@ export const usePhotoImport = (
             tagIds: [],
             createdAt: formatDate(new Date()),
             groupId: null,
-            isAnalyzing: !!useAi,
+            isAnalyzing: useAi,
             is_hidden: false,
-            // Include file metadata for duplicate pseudo-hash check
-            ...(file ? { _fileName: file.name, _fileSize: file.size, _lastModified: file.lastModified } : {})
+            _fileName: file.name,
+            _fileSize: file.size,
+            _lastModified: file.lastModified
           } as any;
           
           successCount++;
-          
-          // Add to local ref so it shows up in UI immediately
           photosRef.current.push(newPhoto);
 
-          if (useAi) {
-            tasks.push((async (targetId: string, targetUri: string, initialPhoto: Photo) => {
-               try {
-                 if (importCancelledRef.current || signal.aborted) return;
-                 const apiKey = geminiApiKey;
-                 const resRaw = await analyzeProductPhoto(targetUri, categories, tags, manufacturers, apiKey, aiProvider, customModel, null, null, signal);
-                 if (importCancelledRef.current || signal.aborted) return;
-                 const result = cleanObject(resRaw);
-                 const aiName = cleanAiName(result.name);
-                 
-                 if (result.description && apiKey) {
-                   try {
-                     if (importCancelledRef.current || signal.aborted) return;
-                     const translations = await translateDescription(result.description, apiKey, customModel, signal);
-                     if (importCancelledRef.current || signal.aborted) return;
-                     result.description_translations = {
-                       zh: result.description,
-                       en: translations.en,
-                       ms: translations.ms
-                     };
-                   } catch (e) {}
-                 }
-
-                 if (importCancelledRef.current || signal.aborted) return;
-                 const finalTagIds = await resolveTagIdsBatch(
-                   Array.from(new Set([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)])),
-                   tags, tagNameToIdMap
-                 );
-
-                 const updated = {
-                   ...initialPhoto,
-                   isAnalyzing: false,
-                   name: shouldUpdateName(initialPhoto.name) ? (aiName || initialPhoto.name) : initialPhoto.name,
-                   categoryId: result.categoryId || initialPhoto.categoryId,
-                   tagIds: finalTagIds.slice(0, 3),
-                   description: (result.description && (!initialPhoto.description || !initialPhoto.description.trim())) ? result.description : initialPhoto.description,
-                   description_translations: result.description_translations || initialPhoto.description_translations,
-                   model_number: initialPhoto.model_number || result.modelNumber || '',
-                   dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : initialPhoto.dimensions
-                 };
-                 
-                 // Update the local photo in the ref
-                 const index = photosRef.current.findIndex(p => p.id === initialPhoto.id);
-                 if (index !== -1) {
-                    photosRef.current[index] = updated;
-                 }
-
-                 if (user && !importCancelledRef.current && !signal.aborted) {
-                   try {
-                      const finalPhotoId = await savePhotoToCloud(user.id, updated);
-                      const index = photosRef.current.findIndex(p => p.id === initialPhoto.id);
-                      if (index !== -1) {
-                        photosRef.current[index].id = finalPhotoId;
-                      }
-                     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
-                   } catch (saveErr: any) {
-                     if (saveErr.name === 'DuplicatePhotoError') {
-                       console.log(`[usePhotoImport:AI] Skipped duplicate photo: ${updated.name}`);
-                       const index = photosRef.current.findIndex(p => p.id === initialPhoto.id);
-                       if (index !== -1) {
-                         photosRef.current.splice(index, 1);
-                       }
-                       duplicateCount++;
-                       successCount--;
-                       return;
-                     }
-                     throw saveErr;
-                   }
-                 }
-               } catch (err) {
-                 invalidatePhotos();
-                 if (err instanceof Error && err.name === 'AbortError') return;
-                 throw err;
-               } finally {
-                 updateProgress();
-               }
-            })(photoId, dataUrl, newPhoto));
-          } else if (user) {
-            if (!newPhoto.id) {
-                console.error('[usePhotoImport] Invalid photoId before upload:', newPhoto.id);
-                // We should probably not even attempt to upload if id is invalid
-                tasks.push(Promise.reject(new Error('Invalid photo ID')));
-            } else {
-                tasks.push(
-                  savePhotoToCloud(user.id, newPhoto)
-                    .then((finalPhotoId) => {
-                      if (importCancelledRef.current || signal.aborted) return;
-                      // Update UI with real ID
-                      const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
-                      if (index !== -1) {
-                        photosRef.current[index].id = finalPhotoId;
-                      }
-                      invalidatePhotos();
-                      updateProgress();
-                    })
-                    .catch((e) => {
-                      if (importCancelledRef.current || signal.aborted) return;
-                      if (e.name === 'DuplicatePhotoError') {
-                        console.log(`[usePhotoImport] Skipped duplicate photo: ${newPhoto.name}`);
-                        const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
-                        if (index !== -1) {
-                          photosRef.current.splice(index, 1);
-                        }
-                        duplicateCount++;
-                        successCount--;
-                        updateProgress();
-                        return; // Accept this as a handled case
-                      }
-
-                      console.error(`[usePhotoImport] Error saving photo ${newPhoto.id} to cloud:`, e);
-                      
-                      // Rollback: Remove failed photo from UI
-                      const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
-                      if (index !== -1) {
-                        photosRef.current.splice(index, 1);
-                      }
-                      showError(e, `上传照片失败: ${newPhoto.name}`);
-                      invalidatePhotos();
-                      updateProgress();
-                      throw e; // Rethrow to ensure Promise.allSettled marks task as rejected
-                    })
-                );
-            }
-          }
+          tasks.push(processAiAnalysis(newPhoto, workflowProps, signal, useAi, onProgressUpdate, invalidatePhotos)
+            .catch(err => {
+              if (err.name === 'DuplicatePhotoError') {
+                const idx = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                if (idx !== -1) photosRef.current.splice(idx, 1);
+                duplicateCount++;
+                successCount--;
+                return;
+              }
+              throw err;
+            })
+          );
         } catch (err) {
           if (importCancelledRef.current || signal.aborted) break;
-          console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
-          showError(err, `处理文件失败: ${file.name}`);
+          showError(err, `处理失败: ${file.name}`);
           failCount++;
           failedFiles.push(file.name);
-          updateProgress();
+          onProgressUpdate();
         }
       } 
       
-      // Await all background tasks (AI/Uploads)
-      console.log(`[usePhotoImport] Awaiting ${tasks.length} background tasks...`);
       const results = await Promise.allSettled(tasks);
       invalidatePhotos();
-      console.log(`[usePhotoImport] All background tasks finished. Results:`, results);
 
-      // Check for failures in tasks themselves
       results.forEach((res, idx) => {
         if (res.status === 'rejected') {
           failCount++;
-          // We don't have easy access to the filename here, but we can log it
           showError(res.reason, `后台任务 ${idx + 1} 执行失败`);
           failedFiles.push(`后台任务 ${idx + 1}`);
         }
       });
 
-      saveData('product_photos', photosRef.current).catch(err => {
-        showError(err, '同步本地 IndexedDB 存储失败');
-      });
+      saveData('product_photos', photosRef.current).catch(e => showError(e, '存入本地失败'));
       setIsSyncing(false);
       
-      let notificationMsg = `上传完成：成功 ${successCount - failCount} 张，跳过 ${duplicateCount} 张`;
-      if (duplicateCount > 0) {
-        notificationMsg += '（已存在相同照片）';
-      }
+      const msg = `上传完成：成功 ${successCount - failCount}，跳过 ${duplicateCount}`;
       if (failCount > 0) {
-        notificationMsg += `，失败 ${failCount} 张。`;
-        showError(new Error(`详情: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''} 请查看控制台`), notificationMsg);
+        showError(new Error(`失败详情: ${failedFiles.slice(0, 3).join(', ')}`), msg);
       } else {
-        showSuccess(notificationMsg);
+        showSuccess(msg);
       }
-
     });
   };
 

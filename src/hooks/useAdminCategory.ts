@@ -3,14 +3,14 @@ import {
   useUpdateCategoryMutation, useDeleteCategoryMutation,
   useAddTagMutation, useAddCategoryMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
-} from './mutations/useAdminMutations';
+} from '@/hooks/mutations/useAdminMutations';
 import { useQueryClient } from '@tanstack/react-query';
-import { useGalleryStore } from '../store';
-import { safeArray } from '../lib/utils';
-import { useFeedback, useInvalidatePhotos } from './';
-import { Category, Photo, Tag, Manufacturer } from '../types';
-import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from './';
-import { QUERY_KEYS } from './queries/keys';
+import { useGalleryStore } from '@/store';
+import { safeArray } from '@/lib/utils';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { Category, Photo, Tag, Manufacturer } from '@/types';
+import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '@/hooks';
+import { QUERY_KEYS } from '@/hooks/queries/keys';
 
 export const useAdminCategory = (adminUI: {
   setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;

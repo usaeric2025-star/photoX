@@ -155,7 +155,6 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
             const error = err as Error;
             
             if (error.name === 'DuplicatePhotoError') {
-               console.log(`[useBatchPhotoAI] Skipped duplicate photo`);
                return true; // Return true indicating skip
             }
 

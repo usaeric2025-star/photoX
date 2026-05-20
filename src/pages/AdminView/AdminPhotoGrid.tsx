@@ -1,0 +1,47 @@
+import React from 'react';
+import { AdminGallery } from '@/components/admin/AdminGallery';
+import { Photo, Category, Tag, AppSettings } from '@/types';
+import { useGalleryStore } from '@/store';
+
+interface AdminPhotoGridProps {
+  photos: Photo[];
+  categories: Category[];
+  tags: Tag[];
+  settings: AppSettings;
+  loadingType: string;
+  onRefresh: () => void;
+  columns: 2 | 3 | 5;
+  setColumns: (c: 2 | 3 | 5) => void;
+  cloudCount: number;
+  onLoadMore: () => void;
+  hasNextPage: boolean;
+  selectedIds: string[];
+  isMultiSelect: boolean;
+  setIsMultiSelect: (m: boolean) => void;
+}
+
+export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
+  const { togglePhotoSelection, clearSelection } = useGalleryStore();
+  
+  return (
+    <AdminGallery 
+      photos={props.photos}
+      categories={props.categories}
+      tags={props.tags}
+      settings={props.settings}
+      isRefreshing={props.loadingType === 'sync-pull' || props.loadingType === 'sync-push'}
+      onRefresh={props.onRefresh}
+      columns={props.columns}
+      setColumns={props.setColumns}
+      totalCount={props.cloudCount}
+      onLoadMore={props.onLoadMore}
+      hasMore={props.hasNextPage}
+      activeSelectedIds={props.selectedIds}
+      activeIsMultiSelect={props.isMultiSelect}
+      activeToggleSelection={togglePhotoSelection}
+      activeSetIsMultiSelect={props.setIsMultiSelect}
+      activeClearSelection={clearSelection}
+      isStaffMode={true}
+    />
+  );
+};

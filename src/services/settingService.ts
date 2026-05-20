@@ -69,8 +69,6 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         delete payload.hotTagsCount;
         delete payload.hotTagThreshold;
 
-        console.log("Saving settings to Supabase (cleaned payload)...", payload);
-
         const { error: upsertError } = await supabase
             .from('settings')
             .upsert({ ...payload, id: 1 }, { onConflict: 'id' });
@@ -105,8 +103,6 @@ export const uploadLogo = async (file: File) => {
         const { data: { publicUrl } } = supabase.storage
             .from(bucketName)
             .getPublicUrl(fileName);
-
-        console.log("Logo uploaded successfully, URL:", publicUrl);
 
         // Update settings table with new logo_url
         const { error: updateError } = await supabase

@@ -88,38 +88,7 @@ export default function AppRoutes() {
   }, [setSettings]);
 
   useEffect(() => {
-    // 1. Global Error Handlers to write error metrics
-    const handleGlobalError = (event: ErrorEvent) => {
-        globalHandleError(event.error || new Error(event.message || 'Unhandled Runtime Error'), '全局运行时错误');
-    };
-    const handlePromiseRejection = (event: PromiseRejectionEvent) => {
-        // Prevent default browser output to avoid "uncaught exception" flags
-        event.preventDefault();
-        
-        const reason = event.reason;
-        const message = reason?.message || String(reason || '');
-        
-        // Check for cancellable triggers to keep logs clean
-        const isCancellation = 
-          reason?.name === 'AbortError' || 
-          /cancel|abort|precondition|offline/i.test(message) ||
-          message.includes('DOMException') ||
-          message.includes('user_cancel') ||
-          message.includes('Failed to fetch') ||
-          message.includes('NetworkError');
-          
-        if (isCancellation) {
-          console.warn('[App] 捕获良性后台任务取消或网络中断 Rejection:', message);
-          return;
-        }
-
-        globalHandleError(reason || new Error(message || 'Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
-    };
-
-    window.addEventListener('error', handleGlobalError);
-    window.addEventListener('unhandledrejection', handlePromiseRejection);
-    
-    // Detect OAuth error in URL hash
+    // 1. Detect OAuth error in URL hash
     const hash = window.location.hash;
     if (hash && hash.includes('error=')) {
         const params = new URLSearchParams(hash.substring(1));
@@ -153,8 +122,6 @@ export default function AppRoutes() {
 
     return () => {
         active = false;
-        window.removeEventListener('error', handleGlobalError);
-        window.removeEventListener('unhandledrejection', handlePromiseRejection);
     };
   }, [user]);
 

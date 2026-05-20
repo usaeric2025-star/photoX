@@ -9,9 +9,7 @@ export const useAuth = () => {
     const [authError, setAuthError] = useState<string | null>(null);
     
     useEffect(() => {
-        console.log("useAuth: Initializing auth listener...");
         const unsubscribe = onAuthChange((u) => {
-            console.log("useAuth: State changed. User:", u?.email || 'null');
             setUser(u);
             setAuthChecked(true);
         });
@@ -19,7 +17,6 @@ export const useAuth = () => {
         // Safety fallback: if no event within 5s, assume checked
         const timer = setTimeout(() => {
             if (!authChecked) {
-                console.log("useAuth: Auth check timeout reached.");
                 setAuthChecked(true);
             }
         }, 5000);

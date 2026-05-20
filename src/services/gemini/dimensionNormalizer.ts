@@ -68,10 +68,10 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
           else if (width === 0) width = depthVal;
         }
       } else if (nums.length > 0) {
-        // 2️⃣ Pattern fallback: height -> length -> width
-        height = parseFloat(nums[0]);
-        if (nums.length >= 2) length = parseFloat(nums[1]);
-        if (nums.length >= 3) width = parseFloat(nums[2]);
+        // 2️⃣ Pattern fallback: length -> width -> height (Standard LWH)
+        length = parseFloat(nums[0]);
+        if (nums.length >= 2) width = parseFloat(nums[1]);
+        if (nums.length >= 3) height = parseFloat(nums[2]);
       }
       
       const isAIEstimated = !!(d && (d.isAIEstimated === true || /AI/i.test(originalLabel)));
@@ -117,10 +117,14 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
 
       const isSimpleLabel = (s: string) => /^(H|W|D|L|Height|Width|Depth|Length)\s*[:：]?\s*\d+(\.\d+)?\s*(cm|mm|inch|in|")?$/i.test(s.trim());
 
+      const labelDiffers = current.label && d.label && 
+                          current.label.toLowerCase().trim() !== d.label.toLowerCase().trim() &&
+                          !isSimpleLabel(current.label) && !isSimpleLabel(d.label);
+
       const currentFillCount = (current.height > 0 ? 1 : 0) + (current.width > 0 ? 1 : 0) + (current.length > 0 ? 1 : 0);
       const nextFillCount = (d.height > 0 ? 1 : 0) + (d.width > 0 ? 1 : 0) + (d.length > 0 ? 1 : 0);
 
-      const shouldMerge = !hasOverlap && bothAreIncomplete && (
+      const shouldMerge = !hasOverlap && bothAreIncomplete && !labelDiffers && (
         isSimpleLabel(d.label) || 
         isSimpleLabel(current.label) || 
         (currentFillCount + nextFillCount <= 3)

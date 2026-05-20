@@ -43,3 +43,28 @@
    - 严格禁止只编写 `console.error` 或单独调用 `toast.error` 绕开统一反馈体系。
 2. **任务取消机制**：
    - 任务取消或中断必须调用并保证完全走 `useTasks` 的 `cancelTask(taskId)` 流程，严防未注册/绕行或被数据迭代覆盖等无反应行为。
+
+### 错误处理与性能优化底线 (Performance & Stability Bottom Lines - MANDATORY)
+
+1. **数据源头原则**
+   - 所有查询 Hook（useQuery / useInfiniteQuery）返回的数据 **必须初始化为空数组 `[]`**。
+   - 禁止在组件中使用 `?.` 或 `||` 作为主要防御手段掩盖 undefined 数据。
+   - 违反此规则的代码必须回退。
+
+2. **滚动性能原则**
+   - `displayPhotos` **必须**使用 `useMemo` 包裹。
+   - `PhotoCard` 等列表组件的事件处理器 **必须**使用 `useCallback`。
+   - 禁止使用内联函数作为列表项的事件处理器。
+   - 违反此规则的代码不得合入。
+
+3. **缓存管理原则**
+   - 禁止使用 `invalidateQueries({ queryKey: ['photos'] })` 全量刷新，必须精确指定 queryKey 范围。
+   - 禁止在 Service 层使用内存缓存（如 `Map`、`{}` 对象缓存），数据请求必须受控于 TanStack Query。
+
+4. **状态管理原则**
+   - Zustand **只存 UI 状态**（多选模式、侧边栏、弹窗）。
+   - 禁止在 Zustand 中存储业务数据（photos、categories、tags）。
+
+5. **架构底线**
+   - 已完成的优化（`useCallback`、`useMemo`、数据源头初始化）**不得回退**。
+   - 任何修改必须保持或提升当前性能水平。

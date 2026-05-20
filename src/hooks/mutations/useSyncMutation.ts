@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useFeedback, useInvalidatePhotos } from '../';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
 
 export const useSyncMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
@@ -17,7 +17,7 @@ export const useSyncMutation = () => {
       }
     },
     onError: (err: any) => {
-      showError(err, '同步失败');
+      handleError(err, '同步失败');
     }
   });
 };

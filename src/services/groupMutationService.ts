@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { ProductGroup } from '../types';
+import { globalHandleError } from '../utils/errorHandler';
 
 const TABLE_NAME = 'groups';
 
@@ -56,7 +57,7 @@ export const updateGroup = async (groupId: string, updates: Partial<ProductGroup
         .eq('id', groupId);
 
     if (error) {
-        console.error("Failed to update group:", error);
+        globalHandleError(error, "Update Group", true);
         throw new Error(`Update Group Fail: ${error.message}`);
     }
 };
@@ -69,7 +70,7 @@ export const upsertGroup = async (group: Partial<ProductGroup> & { id: string })
         .upsert(dbUpdates, { onConflict: 'id' });
 
     if (error) {
-        console.error("Failed to upsert group:", error);
+        globalHandleError(error, "Upsert Group", true);
         throw new Error(`Upsert Group Fail: ${error.message}`);
     }
 };
@@ -84,7 +85,7 @@ export const createGroup = async (groupData: ProductGroup) => {
         .single();
 
     if (error) {
-        console.error("Failed to create group:", error);
+        globalHandleError(error, "Create Group", true);
         throw new Error(`Create Group Fail: ${error.message}`);
     }
     return data;
@@ -97,7 +98,7 @@ export const deleteGroup = async (id: string, userId?: string) => {
     }
     const { error } = await query;
     if (error) {
-        console.error(`Failed to delete group ${id}:`, error);
+        globalHandleError(error, `Delete Group ${id}`, true);
         throw new Error(`Delete Group Fail: ${error.message}`);
     }
 };

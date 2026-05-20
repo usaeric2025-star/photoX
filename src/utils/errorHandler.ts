@@ -33,7 +33,10 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
   if (!silent) {
     try {
         toast.dismiss();
-        toast.error(`${context}: ${message}`);
+        toast.error(`${context}`, {
+          description: message,
+          duration: 4000
+        });
     } catch(e) {
         console.error('Error in toast notification:', e);
     }

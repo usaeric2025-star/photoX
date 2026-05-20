@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import { supabasePublic } from '../lib/supabase-public';
 import { ProductGroup } from '../types';
 import { upsertGroup, deleteGroup } from './groupMutationService';
+import { globalHandleError } from '../utils/errorHandler';
 
 export const TABLE_NAME = 'groups';
 
@@ -17,7 +18,7 @@ export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[
       console.warn("Table 'groups' does not exist in DB yet.");
       return [];
     }
-    console.error("Failed to fetch groups:", error);
+    globalHandleError(error, "Fetch Groups", true);
     return [];
   }
 

@@ -2,11 +2,11 @@ import { supabase } from '../../lib/supabase';
 import { DB_CONFIG, PAGINATION } from '../../constants/config';
 import { Photo } from '../../types';
 import { uploadImages } from '../storageService';
-import { photoCache } from '../photoService';
 import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
 import { checkDuplicate, DuplicatePhotoError } from '../../utils/duplicateCheck';
 import { generateItemCode } from '../utils';
+import { globalHandleError } from '../../utils/errorHandler';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
@@ -38,7 +38,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
       photo.image_url = imageUrl;
       photo.thumb_url = thumbUrl;
     } catch (e) {
-      console.error("Failed to upload image:", e);
+      globalHandleError(e, "存储上传", true);
       throw new Error(`存储上传失败: ${e instanceof Error ? e.message : '未知原因'}`);
     }
   }
@@ -79,11 +79,10 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   }
 
   if (dbError) {
-    console.error("Supabase Database Upsert Error:", dbError);
+    globalHandleError(dbError, "数据库保存 (Single)", true);
     throw new Error(`数据库保存失败: ${dbError.message}`);
   }
 
-  photoCache.clear();
   const finalPhotoId = savedPhoto?.id || photo.id;
 
   if (photo.id !== finalPhotoId) {
@@ -138,7 +137,6 @@ export const savePhotosToCloudBatch = async (
         photo.id
       );
       if (isDuplicate) {
-        console.log(`[savePhotosToCloudBatch] Skipped duplicate: ${photo.name}`);
         continue;
       }
     }
@@ -156,7 +154,7 @@ export const savePhotosToCloudBatch = async (
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;
       } catch (e) {
-        console.error("Failed to upload image in batch:", e);
+        globalHandleError(e, "批量存储上传", true);
         throw e; // Propagate error
       }
     }
@@ -246,11 +244,10 @@ export const savePhotosToCloudBatch = async (
     }
 
     if (dbError) {
-      console.error("Bulk Upsert Error:", dbError);
+      globalHandleError(dbError, "数据库批量保存", true);
       throw new Error(`批量同步失敗: ${dbError.message}`);
     }
     
-    photoCache.clear();
     if (savedRows) {
       const usedIndexes = new Set<number>();
       savedRows.forEach((row: { id: string; image_hash: string }) => {

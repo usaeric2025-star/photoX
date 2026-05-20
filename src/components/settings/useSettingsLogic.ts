@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react';
-import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '../../types';
-import { useGalleryStore } from '../../store';
-import { testAiConnection } from '../../services/geminiService';
-import { deduplicatePhotos } from '../../services/photoMutationService';
-import { normalizeTagName, normalizeManufacturerName } from '../../utils/stringHelper';
-import { useFeedback } from '../../hooks';
+import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '@/types';
+import { useGalleryStore } from '@/store';
+import { testAiConnection } from '@/services/geminiService';
+import { deduplicatePhotos } from '@/services/photoMutationService';
+import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
+import { useFeedback } from '@/hooks';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -26,7 +26,7 @@ export const useSettingsLogic = ({
   const { 
     setSettings, setPromptDialog, setAlertDialog, withLoading 
   } = useGalleryStore();
-  const { showError, showSuccess } = useFeedback();
+  const { handleError, showSuccess } = useFeedback();
 
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -36,15 +36,15 @@ export const useSettingsLogic = ({
   const debouncedSave = useCallback((newSettings: AppSettings) => {
     if (saveTimer) clearTimeout(saveTimer);
     const timer = setTimeout(() => {
-      saveSettings(newSettings).catch((err) => showError(err, '保存设置失败'));
+      saveSettings(newSettings).catch((err) => handleError(err, '保存设置失败'));
       setHasChanges(false);
     }, 1500);
     setSaveTimer(timer);
-  }, [saveSettings, saveTimer, showError]);
+  }, [saveSettings, saveTimer, handleError]);
 
   const handleDeduplicate = useCallback(async () => {
     if (!user) {
-      showError(new Error('请先登录云端'), '操作失败');
+      handleError(new Error('请先登录云端'), '操作失败');
       return;
     }
 
@@ -65,27 +65,27 @@ export const useSettingsLogic = ({
             }
           });
         } catch (e: any) {
-          showError(e, '排重失败');
+          handleError(e, '排重失败');
         }
       }
     });
-  }, [user, setAlertDialog, withLoading, performPullSync, showError, showSuccess]);
+  }, [user, setAlertDialog, withLoading, performPullSync, handleError, showSuccess]);
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
     try {
         await withLoading('global', async () => {
-            const { scanAndRepairPhotoIds } = await import('../../services/photo/photoMaintenanceService');
+            const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
             const broken = await scanAndRepairPhotoIds(allPhotos);
             if (broken.length > 0) {
-                showError(new Error(`发现 ${broken.length} 个异常ID，建议刷新`), '系统检测异常');
+                handleError(new Error(`发现 ${broken.length} 个异常ID，建议刷新`), '系统检测异常');
             } else {
                 showSuccess('系统健康，数据正常。');
             }
         });
     } catch (e: any) {
-        showError(e, '诊断失败');
+        handleError(e, '诊断失败');
     }
-  }, [withLoading, showError, showSuccess]);
+  }, [withLoading, handleError, showSuccess]);
 
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinnedTags || [];

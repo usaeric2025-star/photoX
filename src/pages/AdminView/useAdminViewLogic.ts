@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useGalleryStore } from '../../store';
-import { useFeedback, usePhotoManagement } from '../../hooks';
-import { usePermission } from '../../hooks/usePermission';
-import { User, Photo } from '../../types';
-import { loginWithGoogle } from '../../services/supabaseService';
+import { useGalleryStore } from '@/store';
+import { useFeedback, usePhotoManagement } from '@/hooks';
+import { usePermission } from '@/hooks/usePermission';
+import { User, Photo } from '@/types';
+import { loginWithGoogle } from '@/services/supabaseService';
 
 interface AdminViewLogicProps {
   user: User | null;
@@ -141,17 +141,25 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     }
   }, [checkSyncLock, saveBatchEdit, showError, showSuccess]);
 
-  const setLightboxIndex = useCallback((index: number) => {
-    console.log('[useAdminViewLogic] setLightboxIndex', index);
-  }, []);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const onLongPressStart = useCallback((id: string) => {
-    console.log('[useAdminViewLogic] LongPress Start on:', id);
+    // Implement long press if needed, or keep as noop
+    console.log('long press start', id);
   }, []);
 
   const onLongPressEnd = useCallback(() => {
-    console.log('[useAdminViewLogic] LongPress End');
+    // Implement long press end
   }, []);
+
+  const groupPhotos = useMemo(() => {
+    if (!activeGroupId) return [];
+    return photos.filter((p: Photo) => p.groupId === activeGroupId);
+  }, [photos, activeGroupId]);
+
+  const onEditPhotoById = useCallback((p: Photo) => {
+    setEditPhotoId(p.id);
+  }, [setEditPhotoId]);
 
   return useMemo(() => ({
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
@@ -159,7 +167,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     loadingType, withLoading, cloudCount,
     aiDebugInfo, abortAnalysis, batchProgress,
     settings, viewMode, setViewMode, onRefresh,
-    photos, categories, tags, manufacturers, tagIdToNameMap,
+    photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
     handleSingleAiAnalyze, handleTranslate, handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal,
     handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,
     saveNewPhoto, saveBatchEdit, updateTag, deleteTag, updateCategory, deleteCategory,
@@ -169,14 +177,15 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
-    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError
+    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError,
+    onEditPhotoById
   }), [
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     loadingType, withLoading, cloudCount,
     aiDebugInfo, abortAnalysis, batchProgress,
     settings, viewMode, setViewMode, onRefresh,
-    photos, categories, tags, manufacturers, tagIdToNameMap,
+    photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
     handleSingleAiAnalyze, handleTranslate, handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal,
     handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,
     saveNewPhoto, saveBatchEdit, updateTag, deleteTag, updateCategory, deleteCategory,
@@ -186,6 +195,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
     activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
-    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError
+    performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError,
+    onEditPhotoById
   ]);
 };

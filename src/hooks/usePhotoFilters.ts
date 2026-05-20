@@ -35,27 +35,31 @@ export function usePhotoFilters(
 
   const showGroups = true; // 强制保持分组开启，确保一致性
 
-  const { displayPhotos, gridPhotos } = useMemo(() => {
-    const validPhotos = (incomingPhotos || []).filter(isValidPhoto);
-    
-    const tagMap = new Map<string, string[]>();
+  const searchMaps = useMemo(() => {
+    const tMap = new Map<string, string[]>();
     tags.forEach(t => {
       const terms = [t.name.toLowerCase()];
       if (Array.isArray(t.aliases)) {
         t.aliases.forEach(a => terms.push(a.toLowerCase()));
       }
-      tagMap.set(String(t.id), terms);
+      tMap.set(String(t.id), terms);
     });
     
-    const catMap = new Map<string, string[]>();
+    const cMap = new Map<string, string[]>();
     categories.forEach(c => {
       const terms = [(c.zh || c.name || '').toLowerCase()];
       if (Array.isArray(c.aliases)) {
         c.aliases.forEach(a => terms.push(a.toLowerCase()));
       }
-      catMap.set(String(c.id), terms);
+      cMap.set(String(c.id), terms);
     });
 
+    return { tagMap: tMap, catMap: cMap };
+  }, [tags, categories]);
+
+  const { displayPhotos, gridPhotos } = useMemo(() => {
+    const validPhotos = (incomingPhotos || []).filter(isValidPhoto);
+    
     const dp = filterPhotos(validPhotos, {
       searchQuery,
       filterCatId,
@@ -64,7 +68,7 @@ export function usePhotoFilters(
       sortOrder,
       isAdminMode: effectiveIsAdminMode,
       isStaffMode
-    }, tags, categories, tagMap, catMap);
+    }, tags, categories, searchMaps.tagMap, searchMaps.catMap);
 
     const gp = groupPhotos(dp, showGroups, sortOrder);
     return { displayPhotos: dp, gridPhotos: gp };
@@ -79,7 +83,8 @@ export function usePhotoFilters(
     isStaffMode, 
     tags, 
     categories, 
-    showGroups
+    showGroups,
+    searchMaps
   ]);
 
   return { displayPhotos, gridPhotos };

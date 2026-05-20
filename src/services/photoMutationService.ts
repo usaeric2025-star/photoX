@@ -1,9 +1,9 @@
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG, PAGINATION } from '../constants/config';
 import { Photo } from '../types';
-import { photoCache } from './photoService';
 import { safeArray } from '../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photo/photoMappingUtils';
+import { globalHandleError } from '../utils/errorHandler';
 
 // Re-export everything from sub-services for backward compatibility
 export * from './photo/photoMappingUtils';
@@ -45,7 +45,6 @@ export const batchUpdatePhotos = async (updates: { id: string; updates: Partial<
     for (const item of updates) {
         await updatePhoto(item.id, item.updates);
     }
-    photoCache.clear();
 };
 
 export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo> & Record<string, any>) => {
@@ -76,7 +75,6 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   if (error) {
     throw new Error(error.message || JSON.stringify(error));
   }
-  photoCache.clear();
 };
 
 export const updatePhotoHidden = async (photoId: string, is_hidden: boolean) => {
@@ -117,7 +115,6 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
     }
   }
   
-  photoCache.clear();
   return { dissolvedGroupId };
 };
 
@@ -191,7 +188,6 @@ export const deletePhotosBatch = async (
     }
   }
   
-  photoCache.clear();
 };
 
 export const checkImageHashExists = async (hash: string): Promise<{image_url: string, manual_code: string} | null> => {
@@ -206,7 +202,7 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
     if (error) throw error;
     return data ? { image_url: data.image_url, manual_code: data.manual_code } : null;
   } catch (err) {
-    console.error("Hash check failed:", err);
+    globalHandleError(err, "Hash Check", true);
     return null;
   }
 };
@@ -239,7 +235,7 @@ export const removePhotosFromGroup = async (photoIds: string[], groupId: string)
     .eq('group_id', groupId);
 
   if (error) {
-    console.error("[Error] Failed to fetch remaining photos for group check:", error);
+    globalHandleError(error, "Check group consistency", true);
     return;
   }
 
@@ -264,6 +260,5 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
     throw new Error(error.message || JSON.stringify(error));
   }
   
-  photoCache.clear();
   return data;
 };

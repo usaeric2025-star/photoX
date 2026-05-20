@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Photo } from '../../types';
-import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '../../services/photoMutationService';
-import { useFeedback, useInvalidatePhotos } from '../../hooks';
+import { Photo } from '@/types';
+import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '@/services/photoMutationService';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
 
 export const useUpdatePhotoMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
@@ -61,14 +61,14 @@ export const useUpdatePhotoMutation = () => {
         });
       }
       invalidatePhotos();
-      showError(err, '更新照片失败');
+      handleError(err, '更新照片失败');
     },
   });
 };
 
 export const useBatchUpdatePhotosMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   
   return useMutation({
     mutationFn: ({ userId, ids, updates, onProgress, signal }: { 
@@ -114,7 +114,7 @@ export const useBatchUpdatePhotosMutation = () => {
           queryClient.setQueryData(queryKey, data);
         });
       }
-      showError(err, '批量操作失败');
+      handleError(err, '批量操作失败');
     },
   });
 };

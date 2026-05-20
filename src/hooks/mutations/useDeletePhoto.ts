@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
-import { Photo } from '../../types';
-import { deletePhotoFromCloud } from '../../services/photoMutationService';
-import { useFeedback, useInvalidatePhotos } from '../../hooks';
+import { Photo } from '@/types';
+import { deletePhotoFromCloud } from '@/services/photoMutationService';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
 
 interface InfinitePhotosData {
   photos: Photo[];
@@ -10,7 +10,7 @@ interface InfinitePhotosData {
 
 export const useDeletePhotoMutation = () => {
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
@@ -86,7 +86,7 @@ export const useDeletePhotoMutation = () => {
         });
       }
       invalidatePhotos();
-      showError(err, '删除照片失败');
+      handleError(err, '删除照片失败');
     },
   });
 };

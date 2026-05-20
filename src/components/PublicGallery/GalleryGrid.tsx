@@ -94,12 +94,13 @@ const MemoizedPhotoCard = React.memo(({
       onToggleSelection={onToggleSelection}
       onEditPhoto={onEditPhoto}
       onGroupClick={handleGroupClickInternal}
-      onLightboxOpen={handleOpenLightbox}
+      onLightboxOpen={onLightboxOpen}
       onLongPressStart={onLongPressStart}
       onLongPressEnd={onLongPressEnd}
       shareSinglePhoto={shareSinglePhoto}
       onTogglePinned={onTogglePinned}
       onToggleHidden={onToggleHidden}
+      displayPhotos={displayPhotos}
     />
   );
 });

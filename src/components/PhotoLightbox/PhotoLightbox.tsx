@@ -43,6 +43,16 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') onPrev();
+      if (e.key === 'ArrowRight') onNext();
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onPrev, onNext, onClose]);
+
+  useEffect(() => {
     if (index !== null) {
       const preloadNeighbors = (idx: number, range: number) => {
         const start = Math.max(0, idx - range);

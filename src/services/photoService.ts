@@ -1,12 +1,9 @@
-import React from 'react';
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
 import { Photo } from '../types';
-import { createKeyedCache } from './cacheUtils';
 import { normalizeSearchQuery } from '../utils/stringHelper';
 import { VISIBILITY_OR_QUERY } from '../constants/photoConstants';
-
-export const photoCache = createKeyedCache<Photo[]>();
+import { globalHandleError } from '../utils/errorHandler';
 
 export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     if (!item) return {} as Photo;
@@ -79,31 +76,27 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
 }
 
 export const loadAllPhotosFromCloud = async (
-  since?: string, 
-  page: number = 0, 
-  limit: number = 1000,
-  categoryId?: string | null,
-  tagId?: string | null,
-  searchQuery?: string | null,
-  isAdminMode: boolean = false
+    since?: string,
+    page: number = 0,
+    limit: number = 1000,
+    categoryId?: string | null,
+    tagId?: string | null,
+    searchQuery?: string | null,
+    isAdminMode: boolean = false
 ): Promise<Photo[]> => {
-  const cacheKey = JSON.stringify({ since, page, limit, categoryId, tagId, searchQuery, isAdminMode });
-  const cached = photoCache.get(cacheKey);
-  if (cached) return cached;
-
-  const selectQuery = tagId 
-    ? `
+    const selectQuery = tagId
+        ? `
       *,
       photo_tags!inner(*)
     `
-    : `
+        : `
       *,
       photo_tags(*)
     `;
 
-  let query = supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .select(selectQuery);
+    let query = supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select(selectQuery);
   
   if (!isAdminMode) {
     query = query.or(VISIBILITY_OR_QUERY);
@@ -168,49 +161,39 @@ export const loadAllPhotosFromCloud = async (
   if (isAdminMode) {
     query = query.order('is_hidden', { ascending: true, nullsFirst: true });
   }
-  const { data, error } = await query
-    .order('created_at', { ascending: false })
-    .order('id', { ascending: false })
-    .range(from, to);
-  
-  if (error) {
-    console.error("[ERROR] Supabase Fetch Error (loadAllPhotosFromCloud):", error);
-    return [];
-  }
+    const { data, error } = await query
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .range(from, to);
 
-  const result = (data || []).map(item => mapSupabasePhoto(item));
-  photoCache.set(cacheKey, result);
-  return result;
+    if (error) {
+        globalHandleError(error, "Supabase Fetch (loadAllPhotosFromCloud)", true);
+        return [];
+    }
+
+    return (data || []).map(item => mapSupabasePhoto(item));
 };
 
 export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {
-  if (!groupId) return [];
-  
-  const cacheKey = `group_photos_${groupId}_${isAdminMode}`;
-  const cached = photoCache.get(cacheKey);
-  if (cached) {
-    return cached;
-  }
-  let query = supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .select('*, photo_tags(*)')
-    .eq('group_id', groupId);
+    if (!groupId) return [];
 
-  if (!isAdminMode) {
-    query = query.or(VISIBILITY_OR_QUERY);
-  }
+    let query = supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select('*, photo_tags(*)')
+        .eq('group_id', groupId);
 
-  const { data, error } = await query;
+    if (!isAdminMode) {
+        query = query.or(VISIBILITY_OR_QUERY);
+    }
 
-  if (error) {
-    console.error("[ERROR] loadPhotosByGroupId:", error);
-    return [];
-  }
+    const { data, error } = await query;
 
-  const result = (data || []).map(item => mapSupabasePhoto(item));
-  
-  photoCache.set(cacheKey, result);
-  return result;
+    if (error) {
+        globalHandleError(error, "loadPhotosByGroupId", true);
+        return [];
+    }
+
+    return (data || []).map(item => mapSupabasePhoto(item));
 };
 
 export const getPhotoCount = async (
@@ -278,7 +261,7 @@ export const getPhotoCount = async (
   const { count, error } = await query;
   
   if (error) {
-    console.error("[ERROR] Supabase Count Error:", error);
+    globalHandleError(error, "getPhotoCount", true);
     return 0;
   }
 

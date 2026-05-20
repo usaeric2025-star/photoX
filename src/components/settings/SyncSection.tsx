@@ -2,14 +2,14 @@ import React from 'react';
 import { 
   Cloud, LogOut, CloudUpload, CloudDownload, Database 
 } from 'lucide-react';
-import { User, ApiResponse, DialogData } from '../../types';
-import { Skeleton } from '../ui/Skeleton';
-import { useFeedback } from '../../hooks';
+import { User, ApiResponse, DialogData } from '@/types';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useFeedback } from '@/hooks';
 
 interface SyncSectionProps {
   user: User | null;
   loginWithGoogle: () => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
   performPushSync: () => Promise<ApiResponse>;
   performPullSync: () => Promise<ApiResponse>;
   refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
