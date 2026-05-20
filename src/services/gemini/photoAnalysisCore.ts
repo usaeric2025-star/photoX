@@ -161,12 +161,59 @@ export const analyzeProductPhoto = async (
     }
     parsedData.categoryId = resolvedCategoryId;
 
+    // Get active category for checking redundancies
+    const activeCat = (categories || []).find(c => String(c.id) === String(resolvedCategoryId));
+    const catWords = new Set<string>();
+    if (activeCat) {
+      [activeCat.name, activeCat.zh, activeCat.en, activeCat.ms, activeCat.code]
+        .filter(Boolean)
+        .forEach(val => {
+          catWords.add(String(val).toLowerCase().trim());
+        });
+    }
+
+    // Check if the category is or includes "chair"
+    const isChairCategory = Array.from(catWords).some(word => 
+      word.includes('chair') || word.includes('椅') || word.includes('椅子')
+    );
+    if (isChairCategory) {
+      catWords.add('chair');
+      catWords.add('chairs');
+      catWords.add('椅子');
+      catWords.add('椅');
+    }
+
+    const isRedundantTag = (tagName: string) => {
+      const cleanTagName = tagName.toLowerCase().trim();
+      if (catWords.has(cleanTagName)) return true;
+      if (isChairCategory && (cleanTagName === 'chair' || cleanTagName === 'chairs' || cleanTagName === '椅子' || cleanTagName === '椅')) {
+        return true;
+      }
+      return false;
+    };
+
     let newTagList: string[] = [];
     if (Array.isArray(parsedData.newTags)) {
       newTagList = parsedData.newTags.map(s => String(s).trim()).filter(Boolean);
     }
 
-    let currentTagIds = parsedData.tagIds;
+    // Filter redundant tagIds (existing tags) and new tags
+    let currentTagIds = (parsedData.tagIds || []).filter((tid: string) => {
+      const tObj = (tags || []).find(t => String(t.id) === String(tid));
+      if (!tObj) return true;
+      if (isRedundantTag(tObj.name)) return false;
+      if (Array.isArray(tObj.aliases)) {
+        if (tObj.aliases.some(alias => isRedundantTag(alias))) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    newTagList = newTagList.filter((newTagName: string) => {
+      return !isRedundantTag(newTagName);
+    });
+
     if (currentTagIds.length + newTagList.length > 3) {
       if (currentTagIds.length >= 3) {
         currentTagIds = currentTagIds.slice(0, 3);

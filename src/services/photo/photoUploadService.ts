@@ -197,47 +197,52 @@ export const savePhotosToCloudBatch = async (
   const chunkSize = PAGINATION.CHUNK_SIZE;
   for (let i = 0; i < payloads.length; i += chunkSize) {
     const chunk = payloads.slice(i, i + chunkSize);
-    let { data: savedRows, error: dbError } = await supabase
-      .from(DB_CONFIG.TABLE_NAME)
-      .upsert(chunk, { onConflict: 'id', ignoreDuplicates: false })
-      .select('id, image_hash');
+    let savedRows: any = null;
+    let dbError: any = null;
 
-    if (dbError && dbError.message.includes('furniture_items_item_code_key')) {
-       console.warn("Batch saving encountered item_code collision, regenerating item_codes and retrying...");
-       const recycledChunk = chunk.map(p => ({
-         ...p,
-         item_code: generateItemCode()
-       }));
-       const retry = await supabase
-         .from(DB_CONFIG.TABLE_NAME)
-         .upsert(recycledChunk, { onConflict: 'id', ignoreDuplicates: false })
-         .select('id, image_hash');
-       savedRows = retry.data;
-       dbError = retry.error;
-       
-       // Update our reference chunk in case it falls through to the column mismatch retry
-       chunk.forEach((p, idx) => {
-         p.item_code = recycledChunk[idx].item_code;
-         
-         // Update results with the newly generated item_codes so they correctly sync back to caller
-         const indexInResults = i + idx;
-         if (results[indexInResults]) {
-           results[indexInResults].item_code = recycledChunk[idx].item_code as string;
-         }
-       });
-    }
+    let AttemptChunk = chunk.map(p => ({ ...p }));
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      const { data, error } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .upsert(AttemptChunk, { onConflict: 'id', ignoreDuplicates: false })
+        .select('id, image_hash');
 
-    if (dbError && dbError.message.includes('column')) {
-       console.warn("DB Schema mismatch, retrying chunk without group columns...");
-       const safeChunk = chunk.map(p => {
-         const cp = { ...p };
-         delete cp.group_id;
-         delete cp.is_group_cover;
-         return cp;
-       });
-       const retry = await supabase.from(DB_CONFIG.TABLE_NAME).upsert(safeChunk, { onConflict: 'id' }).select('id, image_hash');
-       savedRows = retry.data;
-       dbError = retry.error;
+      if (!error) {
+        savedRows = data;
+        dbError = null;
+        AttemptChunk.forEach((p, idx) => {
+          chunk[idx].item_code = p.item_code;
+          const indexInResults = i + idx;
+          if (results[indexInResults]) {
+            results[indexInResults].item_code = p.item_code as string;
+          }
+        });
+        break;
+      }
+
+      dbError = error;
+
+      if (error.message.includes('furniture_items_item_code_key')) {
+        console.warn(`[savePhotosToCloudBatch] Attempt ${attempt}: Encountered item_code collision, regenerating and retrying...`);
+        AttemptChunk = AttemptChunk.map(p => ({
+          ...p,
+          item_code: generateItemCode()
+        }));
+        continue;
+      }
+
+      if (error.message.includes('column')) {
+        console.warn(`[savePhotosToCloudBatch] Attempt ${attempt}: DB Schema mismatch, removing group columns and retrying...`);
+        AttemptChunk = AttemptChunk.map(p => {
+          const cp = { ...p };
+          delete cp.group_id;
+          delete cp.is_group_cover;
+          return cp;
+        });
+        continue;
+      }
+
+      break;
     }
 
     if (dbError) {
