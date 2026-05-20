@@ -180,7 +180,7 @@ export const AdminViewContent: React.FC<Props> = ({
             onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos)).catch((e: Error) => { console.error('Batch AI Analyze failed', e); showError(e, '识别失败'); })}
             onAiAnalyze={(p) => {
                 console.log('AI Analyze called in AdminViewContent. Photo:', p.id, 'URI:', p.uri, 'ImageURL:', p.image_url);
-                return logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch((e: Error) => { console.error('AI Analyze failed', e); showError(e, '识别失败'); })
+                return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id).catch((e: Error) => showError(e, '识别失败'));
             }}
             onToggleHidden={async (photo) => {
               if (logic.checkSyncLock()) {
