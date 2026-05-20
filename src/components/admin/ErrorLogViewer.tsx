@@ -44,18 +44,18 @@ export const ErrorLogViewer = () => {
           )}
           <button
             onClick={() => {
-              console.log('Sentry Test button clicked');
+              console.log('Monitoring Test button clicked');
               import('@sentry/react').then(Sentry => {
-                Sentry.captureMessage('Sentry 管理后台测试');
-                showSuccess('Sentry 测试消息已发送');
+                Sentry.captureMessage('系统监控测试消息');
+                showSuccess('监控测试消息已发送');
               }).catch(err => {
-                console.error('Sentry import failed', err);
+                console.error('Monitoring import failed', err);
               });
             }}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
-            title="Sentry 测试"
+            title="监控功能测试"
           >
-              测试 Sentry 功能
+              测试监控功能
           </button>
         </div>
       </div>

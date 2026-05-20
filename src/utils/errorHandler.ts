@@ -1,10 +1,14 @@
 import { useGalleryStore } from '../store';
 import { toast } from 'sonner';
 import { logErrorToSupabase } from '../services/logService';
+import * as Sentry from '@sentry/react';
 
 export const globalHandleError = (error: any, context: string, silent: boolean = false) => {
   console.error(`[Error] ${context}:`, error);
   
+  // Capture in GlitchTip/Sentry
+  Sentry.captureException(error);
+
   // UI Toast Notification
   let message = '';
   if (typeof error === 'string') {
@@ -24,7 +28,9 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
   
   // Log to Supabase for Audit
   const errorObj = error instanceof Error ? error : new Error(message);
-  logErrorToSupabase(errorObj, {}, { context, silent, timestamp: new Date().toISOString() });
+  logErrorToSupabase(errorObj, {}, { context, silent, timestamp: new Date().toISOString() }).catch(err => {
+    console.error('Failed to log error to Supabase:', err);
+  });
 
   // Store Error for Local Audit
   useGalleryStore.getState().setErrors([{ 

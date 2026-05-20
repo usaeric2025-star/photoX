@@ -98,10 +98,7 @@ export default function AppRoutes() {
         const reason = event.reason;
         const message = reason?.message || String(reason || '');
         
-        // Capture in Sentry
-        Sentry.captureException(reason || new Error(message));
-
-        // Clean or check for cancellable triggers
+        // Check for cancellable triggers to keep logs clean
         const isCancellation = 
           reason?.name === 'AbortError' || 
           /cancel|abort|precondition|offline/i.test(message) ||
@@ -115,13 +112,7 @@ export default function AppRoutes() {
           return;
         }
 
-        // Prevention of potential recursive loop if handleError itself fails
-        if ((reason as any)?.__handledByErrorHandler) return;
-        (reason as any).__handledByErrorHandler = true;
-
-        // Output as minor warning instead of red-alert logs if the rejection was silent/internal
-        console.warn('[App] 捕获未处理的后台 Promise 拒绝 (已过滤并自动捕获):', reason);
-        globalHandleError(reason || new Error('Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
+        globalHandleError(reason || new Error(message || 'Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
     };
 
     window.addEventListener('error', handleGlobalError);

@@ -10,7 +10,7 @@ import './index.css';
 Sentry.init({
   dsn: "https://5056f30974504ff1becd3b5da98a68af@app.glitchtip.com/23689",
   environment: import.meta.env.MODE,
-  tracesSampleRate: 0.01,
+  tracesSampleRate: 1.0,
   autoSessionTracking: false,
 });
 
