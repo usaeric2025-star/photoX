@@ -16,6 +16,9 @@ import { useGalleryStore } from '../../store';
 import { PAGINATION } from '../../constants/config';
 import { ProductFormData, Photo } from '../../types';
 import { cleanPhotos } from '../../lib/filters';
+import { syncCache } from '../../utils/indexedDB';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '../../hooks/queries/keys';
 
 const errorGuard = (name: string) => () => {
   console.error(`Blocked call to ${name}`);
@@ -26,6 +29,33 @@ export const useAdminDataPrep = () => {
   const { user, authChecked, logout } = useAuth();
   const { showError, showSuccess } = useFeedback();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Load from IndexedDB on mount for instant UI
+  useEffect(() => {
+    (async () => {
+      try {
+        const [cachedPhotos, cachedCats, cachedTags, cachedMfrs] = await Promise.all([
+          syncCache.getPhotos(),
+          syncCache.getCategories(),
+          syncCache.getTags(),
+          syncCache.getManufacturers()
+        ]);
+
+        if (cachedPhotos && cachedPhotos.length > 0) {
+          queryClient.setQueryData(QUERY_KEYS.infinitePhotos({ isAdminMode: true, limit: PAGINATION.ADMIN_BATCH_SIZE }), {
+            pages: [{ photos: cachedPhotos, nextPage: undefined }],
+            pageParams: [1]
+          });
+        }
+        if (cachedCats && cachedCats.length > 0) queryClient.setQueryData(QUERY_KEYS.categories, cachedCats);
+        if (cachedTags && cachedTags.length > 0) queryClient.setQueryData(QUERY_KEYS.tags, cachedTags);
+        if (cachedMfrs && cachedMfrs.length > 0) queryClient.setQueryData(QUERY_KEYS.manufacturers, cachedMfrs);
+      } catch (err) {
+        console.warn('[Offline] Failed to load local cache:', err);
+      }
+    })();
+  }, [queryClient]);
 
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminDialogs();
   const [editPhotoId, setEditPhotoId] = useState<string | null>(null);

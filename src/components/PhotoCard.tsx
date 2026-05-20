@@ -5,6 +5,7 @@ import { Skeleton } from './ui/Skeleton';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../lib/ui-helpers';
 import { safeArray } from '../utils/safeAccess';
 import { usePermission } from '../hooks/usePermission';
+import { thumbHashToDataURL } from '../utils/thumbHash';
 
 const loadedImagesCache = new Set<string>();
 
@@ -149,6 +150,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const [isImageLoaded, setIsImageLoaded] = React.useState(initiallyLoaded);
   const [isImageError, setIsImageError] = React.useState(false);
 
+  const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
+
   return (
     <div 
       onContextMenu={(e) => {
@@ -167,7 +170,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onClick={handleClick}
       className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
-      {!isImageLoaded && !isImageError && (
+      {!isImageLoaded && !isImageError && !placeholderDataUrl && (
         <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
           <ImageIcon className="text-slate-300 w-8 h-8 opacity-20" />
         </div>
@@ -180,14 +183,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         </div>
       )}
 
-      {/* Low-res placeholder using thumb_url if main image is still loading */}
-      {photo.thumb_url && !isImageError && !isImageLoaded && (
+      {/* ThumbHash/Placeholder logic */}
+      {!isImageError && !isImageLoaded && (
         <img 
           draggable={false}
-          src={photo.thumb_url} 
+          src={placeholderDataUrl || photo.thumb_url || ''} 
           alt=""
           loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover filter blur-md pointer-events-none"
+          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-filter duration-300 ${placeholderDataUrl ? '' : 'blur-md'}`}
         />
       )}
 

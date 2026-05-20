@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query
 import { Photo } from '@/types';
 import { deletePhotoFromCloud } from '@/services/photoMutationService';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { opsCache } from '@/utils/indexedDB';
 
 interface InfinitePhotosData {
   photos: Photo[];
@@ -10,7 +11,7 @@ interface InfinitePhotosData {
 
 export const useDeletePhotoMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useFeedback();
+  const { handleError, showSuccess } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
@@ -76,7 +77,18 @@ export const useDeletePhotoMutation = () => {
         });
       }
     },
-    onError: (err, variables, context) => {
+    onError: (err: any, variables, context) => {
+      const isNetworkError = !navigator.onLine || err.message?.includes('fetch') || err.message?.includes('Network');
+      
+      if (isNetworkError) {
+        opsCache.addPendingOp({
+          type: 'delete',
+          photoId: variables.photos.map(p => p.id)
+        });
+        showSuccess('已删除（离线模式下，稍后自动同步）');
+        return;
+      }
+
       if (context?.previousInfinite) {
         queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
       }

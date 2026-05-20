@@ -4,6 +4,7 @@ import { useFeedback, usePhotoManagement } from '@/hooks';
 import { usePermission } from '@/hooks/usePermission';
 import { User, Photo } from '@/types';
 import { loginWithGoogle } from '@/services/supabaseService';
+import { hapticFeedback } from '@/utils/haptics';
 
 interface AdminViewLogicProps {
   user: User | null;
@@ -85,9 +86,11 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
      try {
          await deletePhoto(id);
+         hapticFeedback.light();
          if (typeof id === 'string') setEditPhotoId(null);
          else resetAddState();
      } catch (error) {
+         hapticFeedback.error();
          showError(error, 'delete-photo');
      }
   }, [deletePhoto, setEditPhotoId, resetAddState, showError]);
@@ -144,7 +147,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const onLongPressStart = useCallback((id: string) => {
-    // Implement long press if needed, or keep as noop
+    hapticFeedback.medium();
     console.log('long press start', id);
   }, []);
 

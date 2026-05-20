@@ -51,6 +51,49 @@ export const loadData = async (key: string) => {
   });
 };
 
+/**
+ * Higher level helpers for specific sync keys
+ */
+export const syncCache = {
+  getPhotos: () => loadData('cached_photos'),
+  savePhotos: (photos: Photo[]) => saveData('cached_photos', photos),
+  getCategories: () => loadData('cached_categories'),
+  saveCategories: (categories: any[]) => saveData('cached_categories', categories),
+  getManufacturers: () => loadData('cached_manufacturers'),
+  saveManufacturers: (manufacturers: any[]) => saveData('cached_manufacturers', manufacturers),
+  getTags: () => loadData('cached_tags'),
+  saveTags: (tags: any[]) => saveData('cached_tags', tags),
+};
+
+/**
+ * Offline operation tracking
+ */
+export interface PendingOp {
+  id: string;
+  type: 'update' | 'delete' | 'hide' | 'unhide';
+  photoId: string | string[];
+  payload?: any;
+  timestamp: number;
+}
+
+export const opsCache = {
+  getPendingOps: async (): Promise<PendingOp[]> => {
+    return (await loadData('pending_ops')) || [];
+  },
+  addPendingOp: async (op: Omit<PendingOp, 'id' | 'timestamp'>) => {
+    const ops = await opsCache.getPendingOps();
+    const newOp: PendingOp = {
+      ...op,
+      id: Math.random().toString(36).slice(2),
+      timestamp: Date.now()
+    };
+    ops.push(newOp);
+    await saveData('pending_ops', ops);
+    return newOp;
+  },
+  clearOps: () => saveData('pending_ops', [])
+};
+
 export const clearExpiredCaches = async (expireDays = 7) => {
   const db = await initDB();
   const expireMs = expireDays * 24 * 60 * 60 * 1000;

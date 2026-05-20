@@ -19,16 +19,42 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   );
 }
 import { FullPageLoading } from '../components/FullPageLoading';
-import { saveData } from '../utils/indexedDB';
+import { saveData, syncCache } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
 import { useGalleryStore } from '../store';
 import { PAGINATION } from '../constants/config';
 import { AppSettings, Photo } from '../types';
 import { safeArray } from '../lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '../hooks/queries/keys';
 
 export default function PublicView() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { showError } = useFeedback();
+
+  // Pre-seed cache from local storage
+  useEffect(() => {
+    (async () => {
+      try {
+        const cachedPhotos = await syncCache.getPhotos();
+        if (cachedPhotos && cachedPhotos.length > 0) {
+          queryClient.setQueryData(QUERY_KEYS.infinitePhotos({ 
+            isAdminMode: false, 
+            limit: PAGINATION.PUBLIC_PAGE_SIZE,
+            categoryId: null,
+            tagId: null,
+            searchQuery: null
+          }), {
+            pages: [{ photos: cachedPhotos, nextPage: undefined }],
+            pageParams: [1]
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load local photo cache', e);
+      }
+    })();
+  }, [queryClient]);
   const { 
     filterCatId,
     filterTagIds,

@@ -67,16 +67,6 @@ export const usePhotoLightboxLogic = ({
     }
   }, [photo?.id, photo?.groupId]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') onPrev();
-      else if (e.key === 'ArrowRight') onNext();
-      else if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onPrev, onNext, onClose]);
-
   const slides = useMemo(() => {
     return (displayPhotos || [])
       .filter(p => !!p)

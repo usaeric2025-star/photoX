@@ -20,6 +20,7 @@ export interface Photo {
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
   thumb_url?: string; // Thumbnail URL in Storage
+  thumb_hash?: string; // ThumbHash placeholder
   dimensions?: Dimension[] | null;
   exif_data?: Record<string, unknown> | null;
   createdAt: string;

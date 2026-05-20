@@ -2,10 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Photo } from '@/types';
 import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '@/services/photoMutationService';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { opsCache } from '@/utils/indexedDB';
 
 export const useUpdatePhotoMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useFeedback();
+  const { handleError, showSuccess } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
   
   return useMutation({
@@ -50,8 +51,22 @@ export const useUpdatePhotoMutation = () => {
     onSuccess: () => {
       // Intentionally avoid full invalidate, rely on optimistic updates
     },
-    onError: (err, variables, context: { previousInfinite?: any; previousGroups?: [any, Photo[]][] }) => {
-      // If mutation fails, use the context returned from onMutate to roll back
+    onError: (err: any, variables, context: { previousInfinite?: any; previousGroups?: [any, Photo[]][] }) => {
+      // Check if it's a network error
+      const isNetworkError = !navigator.onLine || err.message?.includes('fetch') || err.message?.includes('Network');
+      
+      if (isNetworkError) {
+        console.log('[Offline] Network unavailable, queuing update operation');
+        opsCache.addPendingOp({
+          type: 'update',
+          photoId: variables.id,
+          payload: variables.updates
+        });
+        showSuccess('已保存（离线中，稍后自动同步）');
+        return; // Don't rollback if we queued it
+      }
+
+      // If mutation fails due to other reasons, use the context returned from onMutate to roll back
       if (context?.previousInfinite) {
         queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
       }
@@ -68,7 +83,7 @@ export const useUpdatePhotoMutation = () => {
 
 export const useBatchUpdatePhotosMutation = () => {
   const queryClient = useQueryClient();
-  const { handleError } = useFeedback();
+  const { handleError, showSuccess } = useFeedback();
   
   return useMutation({
     mutationFn: ({ userId, ids, updates, onProgress, signal }: { 
@@ -105,7 +120,19 @@ export const useBatchUpdatePhotosMutation = () => {
 
       return { previousInfinite, previousGroups };
     },
-    onError: (err, variables, context: any) => {
+    onError: (err: any, variables, context: any) => {
+      const isNetworkError = !navigator.onLine || err.message?.includes('fetch') || err.message?.includes('Network');
+      
+      if (isNetworkError) {
+        opsCache.addPendingOp({
+          type: 'update', // batch update can be treated as multiple updates or a single batch op
+          photoId: variables.ids,
+          payload: variables.updates
+        });
+        showSuccess('批量更新已加入离线队列');
+        return;
+      }
+
       if (context?.previousInfinite) {
         queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
       }

@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useGalleryStore } from '../store';
 import { User, AppSettings } from '../types';
 import { fetchSettings } from '../services/settingService';
 import { getPhotoCount } from '../services/photoService';
 import { useQueryClient } from '@tanstack/react-query';
-import { useFeedback, useInvalidatePhotos } from './';
+import { useFeedback, useInvalidatePhotos, useAuth } from './';
+import { setupOfflineSyncListener } from '../utils/offlineSync';
 
 export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T>) => Promise<T>) => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { showError: handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
@@ -16,6 +18,13 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
   const setIsSyncing = useGalleryStore(state => state.setIsSyncing);
   const viewMode = useGalleryStore(state => state.viewMode);
   const setViewMode = useGalleryStore(state => state.setViewMode);
+
+  useEffect(() => {
+    if (user?.id) {
+      const cleanup = setupOfflineSyncListener(user.id);
+      return cleanup;
+    }
+  }, [user?.id]);
 
   const refreshCloudData = useCallback(async (user: User | null, force: boolean, setCloudCount: (c: number | null) => void) => {
     if (!user) return;

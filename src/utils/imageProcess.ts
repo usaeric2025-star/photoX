@@ -1,11 +1,13 @@
 import { compressImage } from '../services/storageService';
 import { calculateMD5FromFile, calculateMD5FromArrayBuffer } from '../services/utils';
 import { IMAGE_COMPRESS } from '../constants/config';
+import { generateThumbHash } from './thumbHash';
 
 export interface ProcessedImage {
   hash: string;
   dataUrl: string;
   file: File;
+  thumbHash?: string;
 }
 
 /**
@@ -21,7 +23,10 @@ export async function processImageFile(file: File): Promise<ProcessedImage> {
     hash = calculateMD5FromArrayBuffer(arrayBuffer);
   }
 
-  // 2. Read file as DataURL for compression
+  // 2. Generate ThumbHash
+  const thumbHash = await generateThumbHash(file) || undefined;
+
+  // 3. Read file as DataURL for compression
   const rawUri = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (event) => resolve(event.target?.result as string);

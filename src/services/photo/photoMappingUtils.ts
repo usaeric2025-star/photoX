@@ -16,6 +16,7 @@ export const FIELD_MAP: Record<string, string> = {
   imageHash: 'image_hash',
   imageUrl: 'image_url',
   thumbUrl: 'thumb_url',
+  thumbHash: 'thumb_hash',
   modelNumber: 'model_number',
   userId: 'user_id',
   descriptionTranslations: 'description_translations',
@@ -25,7 +26,7 @@ export const FIELD_MAP: Record<string, string> = {
 export const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'categoryId', 'manufacturerId',
   'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'isGroupCover', 'isPinned',
-  'image_url', 'thumb_url', 'price', 'note', 'type', 'groupOrder', 'updatedAt', 'createdAt',
+  'image_url', 'thumb_url', 'thumb_hash', 'price', 'note', 'type', 'groupOrder', 'updatedAt', 'createdAt',
   'updated_at', 'created_at', 'userId', 'is_hidden', 'image_hash', 'item_code'
 ];
 

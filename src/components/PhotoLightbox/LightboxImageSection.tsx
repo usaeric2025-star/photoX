@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
@@ -6,6 +6,7 @@ import { X, Maximize, ChevronLeft, ChevronRight, Download, Edit3, Image as Image
 import { Photo, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { useAdminMode } from '../../hooks/useAdminMode';
+import { thumbHashToDataURL } from '../../utils/thumbHash';
 
 interface LightboxImageSectionProps {
   photo: Photo;
@@ -36,6 +37,8 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
   handleDownload, t, retryImageLoad
 }) => {
   const isAdminMode = useAdminMode();
+  const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
+
   return (
     <div 
       className={`relative ${isZoomed ? 'flex-1' : 'flex-none md:flex-1'} bg-black flex items-center justify-center h-[42vh] md:h-full`}
@@ -75,8 +78,8 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
 
       <div className="absolute inset-0 z-0">
         <img 
-          src={photo.thumb_url || ''} 
-          className={`w-full h-full object-contain blur-xl opacity-30 transition-opacity duration-1000 ${isImageLoading ? 'opacity-30' : 'opacity-0'}`}
+          src={placeholderDataUrl || photo.thumb_url || ''} 
+          className={`w-full h-full object-contain ${placeholderDataUrl ? '' : 'blur-xl'} opacity-30 transition-opacity duration-1000 ${isImageLoading ? 'opacity-30' : 'opacity-0'}`}
           aria-hidden="true"
           loading="lazy"
         />
