@@ -37,6 +37,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
 }) => {
   const { isAdmin } = usePermission();
   const isAdminMode = isAdmin;
+  console.log('LightboxInfoPanel: isAdminMode:', isAdminMode, 'onAiAnalyze defined:', !!onAiAnalyze);
   const catName = getTranslatedCategoryName(photo.categoryId, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
@@ -84,7 +85,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
               <>
                 <button 
                   onClick={() => {
-                    console.log('AI Analyze button clicked for photo', photo.id);
+                    console.log('AI Analyze button clicked for photo', photo.id, 'onAiAnalyze defined:', !!onAiAnalyze, 'isAdminMode:', isAdminMode);
                     if (isAnalyzing && onCancelAnalyze) onCancelAnalyze();
                     else if (!isAnalyzing) onAiAnalyze?.(photo);
                   }}

@@ -85,7 +85,7 @@ export const AdminViewContent: React.FC<Props> = ({
     input.type = 'file';
     input.accept = 'image/*';
     input.multiple = true;
-    input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch(()=>{});
+    input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch((err: Error) => showError(err, '导入图片失败'));
     input.click();
   }, [logic.checkSyncLock, logic.handlePhotoImport]);
 
@@ -168,7 +168,7 @@ export const AdminViewContent: React.FC<Props> = ({
               input.type = 'file';
               input.accept = 'image/*';
               input.multiple = true;
-              input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch(()=>{});
+              input.onchange = (e) => logic.handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch((err: Error) => showError(err, '导入图片失败'));
               input.click();
             }}
             lang={lang}
@@ -179,7 +179,7 @@ export const AdminViewContent: React.FC<Props> = ({
             tagMap={logic.tagIdToNameMap}
             onBatchAiAnalyze={(photos) => logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos)).catch((e: Error) => { console.error('Batch AI Analyze failed', e); showError(e, '识别失败'); })}
             onAiAnalyze={(p) => {
-                console.log('AI Analyze called for photo:', p.id, p);
+                console.log('AI Analyze called in AdminViewContent. Photo:', p.id, 'URI:', p.uri, 'ImageURL:', p.image_url);
                 return logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch((e: Error) => { console.error('AI Analyze failed', e); showError(e, '识别失败'); })
             }}
             onToggleHidden={async (photo) => {
@@ -330,9 +330,6 @@ export const AdminViewContent: React.FC<Props> = ({
                    loginWithGoogle={logic.loginWithGoogle}
                    onLoadMore={handleLoadMoreCallback}
                    hasMore={hasNextPage}
-                   onAiAnalyze={(p) => logic.withLoading('analyzing', () => logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)).catch(()=>{})}
-                   onCancelAnalyze={logic.abortAnalysis}
-                   isAnalyzing={logic.loadingType === 'analyzing'}
                 />
            </div>
         </div>

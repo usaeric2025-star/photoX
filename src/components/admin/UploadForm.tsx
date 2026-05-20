@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Trash2, RefreshCcw, Plus, ChevronRight, Eye, EyeOff, Save } from 'lucide-react';
 import { Category, Tag, ProductFormData, Manufacturer, Dimension, TranslationType } from '../../types';
+import { useFeedback } from '../../hooks';
 import { useGalleryStore } from '../../store';
 import { useUpdateTagMutation, useDeleteTagMutation, useAddTagMutation } from '../../hooks';
 import { translations, LanguageCode } from '../../lib/translations';
@@ -41,6 +42,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
   aiDebugInfo, abortAnalysis
 }) => {
   const { appLang, setPromptDialog, setAlertDialog, withLoading } = useGalleryStore();
+  const { showError } = useFeedback();
   const t = translations[appLang as LanguageCode] || translations['en'];
   const { mutateAsync: addTagMut } = useAddTagMutation();
   const { mutateAsync: updateTagMut } = useUpdateTagMutation();
@@ -78,7 +80,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 onClick={() => {
                   if (isAnalyzing) return;
-                  withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)).catch(()=>{});
+                  withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined))
+                    .catch((err: Error) => showError(err, 'AI 分析失败'));
                 }}
                 disabled={isAnalyzing && !abortAnalysis}
                 className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm ${isAnalyzing ? 'bg-slate-50 border-slate-100 text-slate-400' : 'bg-purple-50 border-purple-100 text-purple-600 hover:bg-purple-100 active:bg-purple-200'}`}
@@ -246,7 +249,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   onChange={(newDims) => updateForm({ dimensions: newDims })}
                   showAiButton={!editPhotoId && !!newPhotoData}
                   isAnalyzing={isAnalyzing}
-                  onAiAnalyze={() => withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)).catch(()=>{})}
+                  onAiAnalyze={() => withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)).catch((err: Error) => showError(err, 'AI 分析失败'))}
                   t={t}
                 />
 
