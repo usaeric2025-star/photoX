@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useFeedback, useAdminMode } from '../../hooks';
+import { useFeedback, useAdminMode, useTasks } from '../../hooks';
 import { ErrorBoundary } from 'react-error-boundary';
 
 function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBoundary: () => void }) {
@@ -210,7 +210,13 @@ export const AdminViewContent: React.FC<Props> = ({
     input.click();
   }, [logic.checkSyncLock, logic.handlePhotoImport]);
 
-  const handleExitPublic = useCallback(() => logic.setViewMode('private'), [logic.setViewMode]);
+  const { tasks, cancelTask } = useTasks();
+  const handleExitPublic = useCallback(() => {
+      logic.setSelectedIds([]);
+      logic.setIsMultiSelect(false);
+      tasks.filter(t => t.status === 'running').forEach(t => cancelTask(t.id));
+      logic.setViewMode('private');
+  }, [logic, tasks, cancelTask]);
   const handleRefreshPublic = useCallback(() => {
       if (logic.checkSyncLock()) return;
       logic.performPullSync(true);

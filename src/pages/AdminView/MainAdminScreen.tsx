@@ -1,8 +1,7 @@
 import React from 'react';
 import { AdminHeader } from '../../components/admin/AdminHeader';
 import { PublicGallery } from '../../components/PublicGallery';
-import { FloatingActionButton } from '../../components/admin/FloatingActionButton';
-import { MultiSelectToolbar } from '../../components/admin/MultiSelectToolbar';
+import { AdminFloatingButtons } from '../../components/admin/AdminFloatingButtons';
 import { Photo, Category, Tag, User, AppSettings } from '../../types';
 
 interface Props {
@@ -79,11 +78,6 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
              photos={photos}
              categories={categories}
              tags={tags}
-             isStaffMode={true}
-             isAdminMode={isAdmin}
-             onTogglePinned={onTogglePinned}
-             onToggleHidden={onToggleHidden}
-             onSetGroupCover={onSetGroupCover}
              settings={settings}
              isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
              isFetchingNextPage={isFetchingNextPage}
@@ -92,54 +86,30 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
              setColumns={setColumns}
              totalCount={cloudCount}
              user={user}
-             loginWithGoogle={loginWithGoogle}
-             onEditPhoto={onEditPhoto}
              onLoadMore={onLoadMore}
              hasMore={hasNextPage}
-             onDeletePhotos={onDeletePhotos}
-             onGroupPhotos={onGroupPhotos}
-             onBatchEdit={onBatchEdit}
-             onAiAnalyze={onAiAnalyze}
-             onBatchAiAnalyze={onBatchAiAnalyze}
-             onCancelAnalyze={onCancelAnalyze}
-             isAnalyzing={isAnalyzing}
-             isMultiSelect={isMultiSelect}
-             setIsMultiSelect={setIsMultiSelect}
-             selectedIds={selectedIds}
-             onToggleSelection={(id) => {
-               if (selectedIds.includes(id)) {
-                 setSelectedIds(selectedIds.filter(pid => pid !== id));
-               } else {
-                 setSelectedIds([...selectedIds, id]);
-               }
-             }}
-             onClearSelection={() => setSelectedIds([])}
           />
-          <FloatingActionButton 
-            onClick={onImport}
-            title={t.addPhoto}
+          <AdminFloatingButtons 
+            onAdd={onImport}
+            isMultiSelect={isMultiSelect}
+            selectedIds={selectedIds}
+            setIsMultiSelect={setIsMultiSelect}
+            onBatchAiIdentify={() => {
+                if (onBatchAiAnalyze) onBatchAiAnalyze(photos.filter(p => selectedIds.includes(p.id)));
+            }}
+            onBatchEdit={() => {
+                if (onBatchEdit) onBatchEdit(selectedIds);
+            }}
+            onGroup={() => {
+                if (onGroupPhotos) onGroupPhotos(selectedIds);
+            }}
+            onDelete={() => {
+                if (onDeletePhotos) onDeletePhotos(selectedIds);
+            }}
+            onToggleVisibility={() => {
+                if (onBatchToggleHidden) onBatchToggleHidden(selectedIds);
+            }}
           />
-          {isMultiSelect && selectedIds.length > 0 && (
-            <MultiSelectToolbar
-              selectedCount={selectedIds.length}
-              onClose={() => setIsMultiSelect(false)}
-              onBatchAiIdentify={() => {
-                  if (onBatchAiAnalyze) onBatchAiAnalyze(photos.filter(p => selectedIds.includes(p.id)));
-              }}
-              onBatchEdit={() => {
-                  if (onBatchEdit) onBatchEdit(selectedIds);
-              }}
-              onGroup={() => {
-                  if (onGroupPhotos) onGroupPhotos(selectedIds);
-              }}
-              onDelete={() => {
-                  if (onDeletePhotos) onDeletePhotos(selectedIds);
-              }}
-              onToggleVisibility={() => {
-                  if (onBatchToggleHidden) onBatchToggleHidden(selectedIds);
-              }}
-            />
-          )}
        </div>
     </div>
   );

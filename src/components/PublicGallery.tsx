@@ -13,7 +13,7 @@ import { GalleryGrid } from './PublicGallery/GalleryGrid';
 import { GallerySkeleton } from './PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from './PublicGallery/GalleryEmpty';
 import { GalleryDialogs } from './PublicGallery/GalleryDialogs';
-import { GalleryFloatButtons } from './PublicGallery/GalleryFloatButtons';
+import { PublicFloatingButtons } from './public/PublicFloatingButtons';
 import { getSkeletonCount } from '../utils/skeletonHelpers';
 
 interface PublicGalleryProps {
@@ -31,82 +31,27 @@ interface PublicGalleryProps {
   isFetchingNextPage?: boolean;
   onRefresh?: () => void;
   user?: User | null;
-  isAdminMode?: boolean;
-  isStaffMode?: boolean;
-  onEditPhoto?: (id: string) => void;
-  onDeletePhotos?: (ids: string[]) => void;
-  onGroupPhotos?: (ids: string[]) => void;
-  onBatchEdit?: (ids: string[]) => void;
-  onGroupClick?: (groupId: string) => void;
-  onOpenSettings?: () => void;
-  onAddPhoto?: () => void;
-  selectedIds?: string[];
-  onToggleSelection?: (id: string) => void;
-  onClearSelection?: () => void;
-  isMultiSelect?: boolean;
-  onToggleMultiSelect?: () => void;
-  setIsMultiSelect?: (val: boolean) => void;
+  tags?: Tag[];
   columns?: 2 | 3 | 5;
   setColumns?: (val: 2 | 3 | 5) => void;
   cloudCount?: number | null;
   hideHeader?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
-  onAiAnalyze?: (photo: Photo) => Promise<any>;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
-  onCancelAnalyze?: () => void;
-  isAnalyzing?: boolean;
-  onSetGroupCover?: (id: string, groupId: string) => Promise<void>;
-  setAlertDialog?: (d: { title: string, message: string }) => void;
   totalCount?: number;
-  onTogglePinned?: (photo: Photo) => void;
-  onToggleHidden?: (photo: Photo) => void;
   initialHash?: string;
   initialGroupId?: string;
 }
-
-const VirtuosoGridFooter = React.memo(({ context }: any) => {
-  const { hasMore, isSyncing, isFetchingNextPage, safePhotosLength, textEndOfList, textLoading } = context || {};
-  
-  if (isFetchingNextPage) {
-    return (
-      <div className="py-8 px-2 w-full">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="aspect-square bg-brand-navy/5 animate-pulse rounded-xl" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (isSyncing && safePhotosLength === 0) return null; // Handled by main skeleton
-  if (!hasMore && safePhotosLength > 0) return (
-    <div className="py-12 pb-16 flex flex-col items-center justify-center w-full clear-both border-t border-brand-navy/5 bg-brand-navy/[0.02]">
-      <div className="flex flex-col items-center gap-2 opacity-20">
-        <div className="h-[1px] w-12 bg-brand-navy" />
-        <p className="text-[8px] font-black uppercase tracking-[0.2em]">{textEndOfList}</p>
-      </div>
-    </div>
-  );
-  return <div className="h-40" />;
-});
-VirtuosoGridFooter.displayName = 'VirtuosoGridFooter';
-
-const virtuosoComponents = { Footer: VirtuosoGridFooter };
 
 export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   const logic = usePublicGalleryLogic(props);
   const {
     settings, user, isSyncing: rawIsSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
     selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder,
-    showGroupsCollapsed, setShowGroupsCollapsed, isStaffMode, setIsStaffMode, activeSelectedIds,
-    activeIsMultiSelect, activeToggleSelection, activeClearSelection, activeSetIsMultiSelect,
-    displayPhotos, gridPhotos, categories, manufacturers, contextTags, lang, setLang, t,
-    columns, setColumns, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
+    showGroupsCollapsed, setShowGroupsCollapsed, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
-    handleLoadMore, navigate, sortedTags
+    handleLoadMore, navigate, sortedTags, gridPhotos, displayPhotos, t, lang, categories, manufacturers, contextTags, isStaffMode
   } = logic;
 
   // Only show syncing state if it lasts longer than 150ms to prevent skeleton flash
@@ -260,46 +205,45 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                 transition={{ duration: 0.3 }}
                 className="h-full"
               >
-                <GalleryGrid 
-                  virtuosoRef={virtuosoRef}
-                  gridPhotos={gridPhotos}
-                  displayPhotos={displayPhotos}
-                  columns={columns}
-                  virtuosoComponents={virtuosoComponents}
-                  virtuosoContext={virtuosoContext}
-                  handleLoadMore={handleLoadMore}
-                  activeIsMultiSelect={activeIsMultiSelect}
-                  isStaffMode={isStaffMode}
-                  activeSelectedIds={activeSelectedIds}
-                  showGroupsCollapsed={showGroupsCollapsed}
-                  lang={lang}
-                  t={t}
-                  categories={categories}
-                  manufacturers={manufacturers}
-                  tagMap={tagMap}
-                  activeToggleSelection={activeToggleSelection}
-                  onEditPhoto={props.onEditPhoto}
-                  setActiveGroupId={setActiveGroupId}
-                  setActivePhotoId={setActivePhotoId}
-                  setLightboxIndex={setLightboxIndex}
-                  startLongPress={startLongPress}
-                  endLongPress={endLongPress}
-                  shareSinglePhoto={shareSinglePhoto}
-                  onTogglePinned={props.onTogglePinned}
-                  onToggleHidden={props.onToggleHidden}
-                  selectedCatCode={selectedCatCode}
-                  selectedSubId={selectedSubId}
-                  selectedTagIds={selectedTagIds}
-                  searchQuery={searchQuery}
-                />
+                <ErrorBoundary fallback={<div className="p-4 text-center">加载失败，请刷新页面</div>}>
+                  <GalleryGrid 
+                    virtuosoRef={virtuosoRef}
+                    gridPhotos={gridPhotos}
+                    displayPhotos={displayPhotos}
+                    columns={columns}
+                    virtuosoComponents={virtuosoComponents}
+                    virtuosoContext={virtuosoContext}
+                    handleLoadMore={handleLoadMore}
+                    activeIsMultiSelect={false}
+                    isStaffMode={false}
+                    activeSelectedIds={[]}
+                    showGroupsCollapsed={showGroupsCollapsed}
+                    lang={lang}
+                    t={t}
+                    categories={categories}
+                    manufacturers={manufacturers}
+                    tagMap={tagMap}
+                    activeToggleSelection={() => {}}
+                    setActiveGroupId={setActiveGroupId}
+                    setActivePhotoId={setActivePhotoId}
+                    setLightboxIndex={setLightboxIndex}
+                    startLongPress={() => {}}
+                    endLongPress={() => {}}
+                    shareSinglePhoto={shareSinglePhoto}
+                    selectedCatCode={selectedCatCode}
+                    selectedSubId={selectedSubId}
+                    selectedTagIds={selectedTagIds}
+                    searchQuery={searchQuery}
+                  />
+                </ErrorBoundary>
               </motion.div>
             );
           })()}
         </AnimatePresence>
       </div>
 
-      {lightboxIndex === null && !props.isAdminMode && (
-        <GalleryFloatButtons scrollToTop={scrollToTop} setShowWhatsAppChoice={setShowWhatsAppChoice} />
+      {lightboxIndex === null && (
+        <PublicFloatingButtons scrollToTop={scrollToTop} setShowWhatsAppChoice={setShowWhatsAppChoice} />
       )}
 
 
@@ -313,28 +257,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         photos={props.photos}
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
-        isStaffMode={isStaffMode}
-        onEditPhoto={props.onEditPhoto ? (photo) => props.onEditPhoto!(photo.id) : undefined}
-        onLongPressStart={props.isAdminMode ? (p) => startLongPress(p.id) : undefined}
-        onLongPressEnd={() => {}}
-        onBatchEdit={props.onBatchEdit}
-        onUngroup={props.onGroupPhotos && activeGroupId ? () => props.onGroupPhotos!([activeGroupId]) : undefined} 
-        onAddPhotoToGroup={props.onAddPhoto}
-        onAiAnalyze={props.onAiAnalyze}
-        onCancelAnalyze={props.onCancelAnalyze}
-        isAnalyzing={props.isAnalyzing}
-        onBatchAiAnalyze={props.onBatchAiAnalyze}
+        isStaffMode={false}
         lang={lang}
         t={t}
         categories={categories}
         manufacturers={manufacturers}
         tagMap={tagMap}
         allTags={contextTags}
-        isMultiSelect={activeIsMultiSelect}
-        setAlertDialog={props.setAlertDialog}
         shareGroup={shareGroup}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
-        onToggleHidden={props.onToggleHidden}
       />
 
       <GalleryDialogs 
@@ -363,18 +294,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
               onClose={() => setLightboxIndex(null)}
               onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : displayPhotos.length - 1)}
               onNext={() => setLightboxIndex(lightboxIndex < displayPhotos.length - 1 ? lightboxIndex + 1 : 0)}
-              isStaffMode={isStaffMode}
+              isStaffMode={false}
               contactWhatsApp={handleContactWhatsApp}
-              onEditPhoto={(photo) => props.onEditPhoto?.(photo.id)}
               lang={lang}
               t={t}
               tagMap={tagMap}
               categories={categories}
               manufacturers={manufacturers || []}
-              onToggleHidden={props.onToggleHidden}
-              onAiAnalyze={props.onAiAnalyze}
-              onCancelAnalyze={props.onCancelAnalyze}
-              isAnalyzing={props.isAnalyzing}
             />
         )}
       </AnimatePresence>

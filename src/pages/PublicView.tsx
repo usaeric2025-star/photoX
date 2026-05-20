@@ -126,49 +126,6 @@ export default function PublicView() {
     // Implement click logic
   }, []);
 
-  const handleTogglePinned = useCallback(async (photo: Photo) => {
-    const newStatus = !photo.isPinned;
-    
-    // Identify affected photos (the photo itself + any other photos in the same group)
-    const sPhotos = safeArray(photos);
-    const affectedPhotos = photo.groupId 
-      ? sPhotos.filter(p => p.groupId === photo.groupId)
-      : [photo];
-      
-    const sAffected = safeArray(affectedPhotos);
-    
-    try {
-      await Promise.all(
-        sAffected.map(p => 
-          updatePhotoMutation({ id: p.id, updates: { isPinned: newStatus } })
-        )
-      );
-    } catch (e: unknown) {
-      showError(e, "置顶照片失败");
-    }
-  }, [photos, updatePhotoMutation, showError]);
-
-  const handleToggleHidden = useCallback(async (photo: Photo) => {
-    try {
-      await updatePhotoMutation({ id: photo.id, updates: { is_hidden: !photo.is_hidden } });
-    } catch (e: unknown) {
-      showError(e, "隐藏照片失败");
-    }
-  }, [updatePhotoMutation, showError]);
-
-  const handleSetGroupCover = useCallback(async (id: string, groupId: string) => {
-    const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
-    try {
-      await Promise.all(
-        groupPhotos.map(p => 
-          updatePhotoMutation({ id: p.id, updates: { isGroupCover: p.id === id } })
-        )
-      );
-    } catch (e: unknown) {
-      showError(e, "设置封面照片失败");
-    }
-  }, [photos, updatePhotoMutation, showError]);
-
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AnimatePresence mode="wait">
@@ -186,27 +143,16 @@ export default function PublicView() {
               <PublicGallery 
                 photos={photos}
                 categories={categoriesData}
-                tags={[]} // Tags from context will be used, but interface requires it
-                onExit={() => navigate('/admin')}
-                onBatchEdit={() => { /* Implement batch edit logic or pass down */ }}
-                showExit={false}
-                onLogin={() => navigate('/admin')}
-                loginWithGoogle={loginWithGoogle}
-                user={user}
-                internalPassword={settings?.access_passcode || ""}
-                settings={settings}
-                isRefreshing={isPhotosLoading}
-                onRefresh={handleRefresh}
-                onLoadMore={handleLoadMore}
-                hasMore={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                totalCount={countData}
-                initialHash={hash}
-                initialGroupId={groupId}
-                onTogglePinned={handleTogglePinned}
-                onToggleHidden={handleToggleHidden}
-                onSetGroupCover={handleSetGroupCover}
-              />
+                  settings={settings}
+                  isRefreshing={isPhotosLoading}
+                  onRefresh={handleRefresh}
+                  onLoadMore={handleLoadMore}
+                  hasMore={hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  totalCount={countData}
+                  initialHash={hash}
+                  initialGroupId={groupId}
+                />
             </ErrorBoundary>
           </motion.div>
         )}

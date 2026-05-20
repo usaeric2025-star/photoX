@@ -34,3 +34,4 @@ export * from './usePermission';
 export * from './useAdminMode';
 export * from './uiFeedback';
 export * from './usePhotoFilters';
+export * from './useTasks';

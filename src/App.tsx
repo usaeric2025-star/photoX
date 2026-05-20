@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
-import * as Sentry from '@sentry/react';
+import * as ErrorMonitor from '@sentry/react';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
@@ -68,10 +68,11 @@ export default function AppRoutes() {
   const { setSettings, setUser, user: galleryUser } = useGalleryStore();
   
   useEffect(() => {
+    // Only update if we have a real change, and avoid unnecessary re-triggers
     if (user?.id !== galleryUser?.id) {
       setUser(user);
     }
-  }, [user?.id, galleryUser?.id, setUser]);
+  }, [user?.id, galleryUser?.id]); // Removed setUser from dependency as it should be stable
 
   useEffect(() => {
     let active = true;
