@@ -96,15 +96,8 @@ export const useGalleryStore = create<GalleryState>((set) => ({
     }
   })(),
   sortOrder: (sessionStorage.getItem('sortOrder') as any) || 'desc',
-  selectedIds: (() => {
-    try {
-      const saved = sessionStorage.getItem('selectedIds');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  })(),
-  isMultiSelect: sessionStorage.getItem('isMultiSelect') === 'true',
+  selectedIds: [],
+  isMultiSelect: false,
   showGroupsCollapsed: true,
   isInfiniteMode: false,
   isStaffMode: false,
@@ -172,27 +165,16 @@ export const useGalleryStore = create<GalleryState>((set) => ({
     sessionStorage.setItem('sortOrder', sortOrder);
     set({ sortOrder });
   },
-  setIsMultiSelect: (isMultiSelect) => {
-    sessionStorage.setItem('isMultiSelect', String(isMultiSelect));
-    set({ isMultiSelect });
-  },
-  setSelectedIds: (ids) => set((state) => {
-    const nextIds = typeof ids === 'function' ? ids(state.selectedIds) : ids;
-    sessionStorage.setItem('selectedIds', JSON.stringify(nextIds));
-    return { selectedIds: nextIds };
-  }),
-  togglePhotoSelection: (id) => set((state) => {
-    const nextIds = state.selectedIds.includes(id) 
+  setIsMultiSelect: (isMultiSelect) => set({ isMultiSelect }),
+  setSelectedIds: (ids) => set((state) => ({
+    selectedIds: typeof ids === 'function' ? ids(state.selectedIds) : ids
+  })),
+  togglePhotoSelection: (id) => set((state) => ({
+    selectedIds: state.selectedIds.includes(id) 
       ? state.selectedIds.filter(i => i !== id) 
-      : [...state.selectedIds, id];
-    sessionStorage.setItem('selectedIds', JSON.stringify(nextIds));
-    return { selectedIds: nextIds };
-  }),
-  clearSelection: () => {
-    sessionStorage.setItem('selectedIds', '[]');
-    sessionStorage.setItem('isMultiSelect', 'false');
-    set({ selectedIds: [], isMultiSelect: false });
-  },
+      : [...state.selectedIds, id]
+  })),
+  clearSelection: () => set({ selectedIds: [], isMultiSelect: false }),
   setShowGroupsCollapsed: (showGroupsCollapsed) => set({ showGroupsCollapsed }),
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
   setIsStaffMode: (isStaffMode) => set({ isStaffMode }),

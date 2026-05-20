@@ -16,11 +16,17 @@ export const WhatsAppSection: React.FC<WhatsAppSectionProps> = ({
   inputClass
 }) => {
   return (
-    <div className={cardClass} id="section-whatsapp">
-        <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
-          <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full"></div>
+    <details className="group [&_summary::-webkit-details-marker]:hidden bg-white rounded-[32px] shadow-sm border border-brand-navy/10" id="section-whatsapp">
+      <summary className="flex items-center gap-2 p-6 cursor-pointer select-none outline-none">
+        <div className="w-1.5 h-3.5 bg-[#25D366] rounded-full shrink-0"></div>
+        <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex-1">
           WhatsApp 联系人设定 / WhatsApp Contacts
         </h4>
+        <span className="transition-transform duration-300 group-open:rotate-180 text-brand-navy/30">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </summary>
+      <div className="px-6 pb-6 pt-2 border-t border-brand-navy/5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2 p-4 bg-slate-50 rounded-2xl border border-slate-100">
             <div className="flex items-center gap-2 pl-1 mb-2">
@@ -67,6 +73,7 @@ export const WhatsAppSection: React.FC<WhatsAppSectionProps> = ({
             </div>
           </div>
         </div>
-    </div>
+      </div>
+    </details>
   );
 };
