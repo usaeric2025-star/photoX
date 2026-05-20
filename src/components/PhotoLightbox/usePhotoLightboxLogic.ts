@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
+import { useFeedback } from '../../hooks';
 
 interface UsePhotoLightboxLogicProps {
   photo: Photo | null;
@@ -21,6 +22,7 @@ export const usePhotoLightboxLogic = ({
   onNext,
   onClose
 }: UsePhotoLightboxLogicProps) => {
+  const { showError } = useFeedback();
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
@@ -52,11 +54,11 @@ export const usePhotoLightboxLogic = ({
           setGroupData(data);
           setIsGroupDataLoading(false);
         }).catch(err => {
-          console.error("fetch group by id failed", err);
+          showError(err, '获取产品组数据失败');
           setIsGroupDataLoading(false);
         });
       }).catch(err => {
-        console.error("lazy load groupService failed", err);
+        showError(err, '动态载入产品组服务失败');
         setIsGroupDataLoading(false);
       });
     } else {
@@ -88,7 +90,7 @@ export const usePhotoLightboxLogic = ({
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     }).catch(err => {
-      console.error('Failed to copy text: ', err);
+      showError(err, '复制链接失败');
     });
   }, [photo?.image_hash]);
 
@@ -108,7 +110,7 @@ export const usePhotoLightboxLogic = ({
       a.remove();
       window.URL.revokeObjectURL(objUrl);
     } catch (err) {
-      console.error('Failed to download:', err);
+      showError(err, '下载图片失败');
     }
   }, [photo]);
 

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { AppSettings, Tag, Manufacturer, Category, User } from '../../types';
+import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '../../types';
 import { useGalleryStore } from '../../store';
 import { testAiConnection } from '../../services/geminiService';
 import { deduplicatePhotos } from '../../services/photoMutationService';
@@ -36,11 +36,11 @@ export const useSettingsLogic = ({
   const debouncedSave = useCallback((newSettings: AppSettings) => {
     if (saveTimer) clearTimeout(saveTimer);
     const timer = setTimeout(() => {
-      saveSettings(newSettings).catch((err) => console.error('Save settings failed:', err));
+      saveSettings(newSettings).catch((err) => showError(err, '保存设置失败'));
       setHasChanges(false);
     }, 1500);
     setSaveTimer(timer);
-  }, [saveSettings, saveTimer]);
+  }, [saveSettings, saveTimer, showError]);
 
   const handleDeduplicate = useCallback(async () => {
     if (!user) {

@@ -120,7 +120,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
         try {
           await addTag(normalized);
         } catch (error: any) {
-          console.error('添加标签失败', error);
+          showError(error, '添加标签失败');
         }
       }
     });

@@ -54,16 +54,16 @@ export default function AppRoutes() {
   useEffect(() => {
     fetchSettings().then(s => {
       if (s) setSettings(s as any);
-    }).catch(e => console.error("fetchSettings in App", e));
+    }).catch(e => globalHandleError(e, '加载系统配置失败'));
   }, [setSettings]);
 
   useEffect(() => {
-    // 1. Global Error Handlers (console only)
+    // 1. Global Error Handlers to write error metrics
     const handleGlobalError = (event: ErrorEvent) => {
-        console.error('Global Error: ', event.message || 'Unhandled Error');
+        globalHandleError(event.error || new Error(event.message || 'Unhandled Runtime Error'), '全局运行时错误');
     };
     const handlePromiseRejection = (event: PromiseRejectionEvent) => {
-        console.error('Unhandled Promise Rejection: ', event.reason);
+        globalHandleError(event.reason || new Error('Unhandled Promise Rejection'), '全局未处理Promise拒绝');
     };
 
     window.addEventListener('error', handleGlobalError);
@@ -87,14 +87,14 @@ export default function AppRoutes() {
     }
 
     // 2. Background cache cleanup
-    clearExpiredCaches(7).catch(err => console.error('IndexedDB Cleanup: ', String(err)));
+    clearExpiredCaches(7).catch(err => globalHandleError(err, '本地缓存自动清理失败', true));
     
     // 3. Supabase Session Health Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session && user) {
         console.warn('Session 丢失，建议重新登录');
       }
-    }).catch(e => console.error("getSession error", e));
+    }).catch(e => globalHandleError(e, '验证用户会话会话失败', true));
 
     return () => {
         window.removeEventListener('error', handleGlobalError);

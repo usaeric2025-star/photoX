@@ -14,6 +14,7 @@ import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService'
 import { DB_CONFIG } from '../constants/config';
 
 import { useAdminMode } from '../hooks/useAdminMode';
+import { useFeedback } from '../hooks';
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
 export interface GroupDetailViewProps extends GroupAdminShellProps {
@@ -29,6 +30,7 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { activeGroupId, setActiveGroupId, photos, shareGroup, initialPhotoId } = props;
   const isAdminMode = useAdminMode();
+  const { showError } = useFeedback();
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
@@ -82,7 +84,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         if (data) setGroupData(data);
         setIsGroupDataLoading(false);
       }).catch(err => {
-        console.error("getGroupById failed in GroupDetailView", err);
+        showError(err, '获取产品组数据失败');
         setIsGroupDataLoading(false);
       });
 
@@ -93,7 +95,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           setLocalGroupPhotos(mapped);
           setIsLoading(false);
         }).catch(err => {
-          console.error(`[GroupDetailView] Error:`, err);
+          showError(err, '加载产品组照片失败');
           setIsLoading(false);
         });
       }

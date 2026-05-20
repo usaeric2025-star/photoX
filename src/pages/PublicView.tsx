@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
-  useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation
+  useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback
 } from '../hooks';
 import { fetchSettings, loginWithGoogle } from '../services/supabaseService';
 import { PublicGallery } from '../components/PublicGallery';
@@ -19,6 +19,7 @@ import { safeArray } from '../lib/utils';
 
 export default function PublicView() {
   const { user } = useAuth();
+  const { showError } = useFeedback();
   const { 
     filterCatId,
     filterTagIds,
@@ -86,9 +87,9 @@ export default function PublicView() {
       try {
         await saveData('product_settings', s);
       } catch (err) {
-        console.error("saveData to indexedDB failed", err);
+        showError(err, '同步产品配置至本地失败');
       }
-    }).catch(e => console.error("fetchSettings", e))
+    }).catch(e => showError(e, '加载产品中心配置失败'))
       .finally(() => setIsSettingsLoading(false));
   }, []);
 
@@ -102,9 +103,9 @@ export default function PublicView() {
     try {
       await refetch();
     } catch (e) {
-      console.error("Manual refetch failed", e);
+      showError(e, '刷新产品照片失败');
     }
-  }, [refetch]);
+  }, [refetch, showError]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -134,17 +135,17 @@ export default function PublicView() {
         )
       );
     } catch (e: unknown) {
-      console.error("togglePinned", e);
+      showError(e, "置顶照片失败");
     }
-  }, [photos, updatePhotoMutation]);
+  }, [photos, updatePhotoMutation, showError]);
 
   const handleToggleHidden = useCallback(async (photo: Photo) => {
     try {
       await updatePhotoMutation({ id: photo.id, updates: { is_hidden: !photo.is_hidden } });
     } catch (e: unknown) {
-      console.error("toggleHidden", e);
+      showError(e, "隐藏照片失败");
     }
-  }, [updatePhotoMutation]);
+  }, [updatePhotoMutation, showError]);
 
   const handleSetGroupCover = useCallback(async (id: string, groupId: string) => {
     const groupPhotos = safeArray(photos).filter(p => p.groupId === groupId);
@@ -155,9 +156,9 @@ export default function PublicView() {
         )
       );
     } catch (e: unknown) {
-      console.error("setGroupCover", e);
+      showError(e, "设置封面照片失败");
     }
-  }, [photos, updatePhotoMutation]);
+  }, [photos, updatePhotoMutation, showError]);
 
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">

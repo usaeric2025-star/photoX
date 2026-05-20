@@ -116,7 +116,10 @@ export const useGroupAdminLogic = ({
           });
         }
         setIsGroupDataLoading(false);
-      }).catch(() => setIsGroupDataLoading(false));
+      }).catch(err => {
+        setIsGroupDataLoading(false);
+        showError(err, '获取产品组详情失败');
+      });
     } else {
       setGroupData(null);
       setIsGroupDataLoading(false);

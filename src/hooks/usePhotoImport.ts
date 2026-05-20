@@ -335,13 +335,13 @@ export const usePhotoImport = (
         if (res.status === 'rejected') {
           failCount++;
           // We don't have easy access to the filename here, but we can log it
-          console.error(`[usePhotoImport] Task ${idx} failed:`, res.reason);
+          showError(res.reason, `后台任务 ${idx + 1} 执行失败`);
           failedFiles.push(`后台任务 ${idx + 1}`);
         }
       });
 
       saveData('product_photos', photosRef.current).catch(err => {
-        console.error("Failed to save photos to indexedDB", err);
+        showError(err, '同步本地 IndexedDB 存储失败');
       });
       setIsSyncing(false);
       

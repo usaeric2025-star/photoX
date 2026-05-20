@@ -123,7 +123,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       setAiDebugInfo(null);
       return result;
       } catch (err: unknown) {
-      const error = err as Error;
+      const error = err instanceof Error ? err : new Error(typeof err === 'object' && err !== null && 'message' in err ? String((err as any).message) : String(err));
 
       // Handle specific failure scenarios for user feedback and logging
       let userMessage = 'AI 分析出现异常，请重试';
@@ -143,11 +143,22 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       }
 
       // Determine feedback based on where failure occurred
-      // Note: This logic assumes specific error patterns or locations
-      if (error.message.includes('preprocessing') || error.message.includes('image')) {
+      const isPreprocessing = error.message.includes('preprocessing') || 
+                              error.message.includes('image') || 
+                              error.message.includes('conversion') || 
+                              error.message.includes('resize');
+                              
+      const isParsingError = error.message.includes('invalid') || 
+                             error.message.includes('content') || 
+                             error.message.includes('格式错误') || 
+                             error.message.includes('找不到') || 
+                             error.message.includes('未回传') || 
+                             error.message.includes('JSON');
+
+      if (isPreprocessing) {
         userMessage = '图片处理失败，请重试或换一张图';
         errorContext = 'AI图片预处理';
-      } else if (error.message.includes('invalid') || error.message.includes('content')) {
+      } else if (isParsingError) {
         userMessage = 'AI 返回异常，请重试';
         errorContext = 'AI数据解析';
       } else {
@@ -156,7 +167,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       }
 
       // 1. Log to system
-      handleError(err, errorContext, true); // true = silent (we do toast manually below)
+      handleError(error, errorContext, true); // true = silent (we do toast manually below)
       
       // 2. User feedback
       toast.dismiss();
@@ -166,7 +177,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       updateTask(taskId, { status: 'error', message: `失败: ${userMessage.slice(0, 80)}` });
       if (editPhotoId) invalidatePhotos();
       
-      throw err;
+      throw error;
     } finally {
       const task = currentAnalysisControllers.current.get(taskId);
       if (task) {

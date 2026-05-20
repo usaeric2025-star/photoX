@@ -22,6 +22,7 @@ interface TaskContextType {
   clearCompleted: () => void;
   setAvoidingSelection: (isAvoiding: boolean) => void;
   isAvoidingSelection: boolean;
+  cancelTask: (id: string) => void;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -29,6 +30,8 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 const STORAGE_KEY = 'photox_background_tasks';
 
 export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const cancelCallbacks = useRef<Map<string, () => void>>(new Map());
+
   const [tasks, setTasks] = useState<BackgroundTask[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -49,11 +52,16 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAvoidingSelection, setAvoidingSelection] = useState(false);
 
   const saveTasks = (newTasks: BackgroundTask[]) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newTasks));
+    // Exclude functional elements prior to storage
+    const serializable = newTasks.map(({ onCancel, ...t }) => t);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
   };
 
   const addTask = useCallback((taskData: Omit<BackgroundTask, 'id' | 'status' | 'progress'>) => {
     const id = Math.random().toString(36).substring(2, 9);
+    if (taskData.onCancel) {
+      cancelCallbacks.current.set(id, taskData.onCancel);
+    }
     const newTask: BackgroundTask = { ...taskData, id, status: 'running', progress: 0 };
     setTasks(prev => {
       const updated = [...prev, newTask];
@@ -64,6 +72,9 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const updateTask = useCallback((id: string, updates: Partial<BackgroundTask>) => {
+    if (updates.status && updates.status !== 'running') {
+      cancelCallbacks.current.delete(id);
+    }
     setTasks(prev => {
       const updated = prev.map(t => {
         if (t.id === id) {
@@ -83,6 +94,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const removeTask = useCallback((id: string) => {
+    cancelCallbacks.current.delete(id);
     setTasks(prev => {
       const updated = prev.filter(t => t.id !== id);
       saveTasks(updated);
@@ -97,6 +109,23 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return updated;
     });
   }, []);
+
+  const cancelTask = useCallback((id: string) => {
+    const cb = cancelCallbacks.current.get(id);
+    if (cb) {
+      try {
+        cb();
+      } catch (e) {
+        console.error('onCancel callback execution error:', e);
+      }
+    }
+    cancelCallbacks.current.delete(id);
+    updateTask(id, {
+      status: 'cancelled',
+      message: '任务已被用户手动强行取消',
+      finishedAt: Date.now()
+    });
+  }, [updateTask]);
 
   // Auto-remove completed/cancelled tasks after 8 seconds
   React.useEffect(() => {
@@ -116,7 +145,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <TaskContext.Provider value={{ tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection }}>
+    <TaskContext.Provider value={{ tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask }}>
       {children}
       <BackgroundTaskPanel />
     </TaskContext.Provider>
@@ -130,7 +159,7 @@ export const useTasks = () => {
 };
 
 const BackgroundTaskPanel: React.FC = () => {
-  const { tasks, removeTask, clearCompleted, isAvoidingSelection } = useTasks();
+  const { tasks, removeTask, clearCompleted, isAvoidingSelection, cancelTask } = useTasks();
   const [isExpanded, setIsExpanded] = useState(false);
   
   const activeTasks = tasks.filter(t => t.status === 'running');
@@ -191,7 +220,7 @@ const BackgroundTaskPanel: React.FC = () => {
                        <div className="flex items-center gap-2">
                          {task.status === 'running' ? (
                            <button 
-                            onClick={() => task.onCancel?.()}
+                            onClick={() => cancelTask(task.id)}
                             title="取消任务"
                             className="p-1 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded-lg transition-colors scale-90"
                            >
