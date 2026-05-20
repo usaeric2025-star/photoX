@@ -35,6 +35,7 @@ interface GalleryGridProps {
   selectedSubId: string | null;
   selectedTagIds: string[];
   searchQuery: string;
+  onToggleHidden?: (photo: Photo) => void;
 }
 
 interface MemoizedPhotoCardProps {
@@ -59,13 +60,14 @@ interface MemoizedPhotoCardProps {
   displayPhotos: Photo[];
   gridPhotos: Photo[];
   onTogglePinned?: (photo: Photo) => void;
+  onToggleHidden?: (photo: Photo) => void;
 }
 
 const MemoizedPhotoCard = React.memo(({ 
   index, photo, isMultiSelect, isStaffMode, isSelected, showGroupsCollapsed, 
   lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
   onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, displayPhotos, 
-  gridPhotos, onTogglePinned 
+  gridPhotos, onTogglePinned, onToggleHidden 
 }: MemoizedPhotoCardProps) => {
   const isAdminMode = useAdminMode();
   const handleOpenLightbox = useCallback(() => {
@@ -96,6 +98,7 @@ const MemoizedPhotoCard = React.memo(({
       onLongPressEnd={onLongPressEnd}
       shareSinglePhoto={shareSinglePhoto}
       onTogglePinned={onTogglePinned}
+      onToggleHidden={onToggleHidden}
     />
   );
 });
@@ -147,6 +150,7 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
             onLongPressEnd={props.endLongPress}
             shareSinglePhoto={props.shareSinglePhoto}
             onTogglePinned={props.onTogglePinned}
+            onToggleHidden={props.onToggleHidden}
             displayPhotos={props.displayPhotos}
             gridPhotos={props.gridPhotos}
           />

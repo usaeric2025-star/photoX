@@ -286,6 +286,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                   endLongPress={endLongPress}
                   shareSinglePhoto={shareSinglePhoto}
                   onTogglePinned={props.onTogglePinned}
+                  onToggleHidden={props.onToggleHidden}
                   selectedCatCode={selectedCatCode}
                   selectedSubId={selectedSubId}
                   selectedTagIds={selectedTagIds}

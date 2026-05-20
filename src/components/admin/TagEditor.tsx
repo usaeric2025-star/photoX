@@ -67,6 +67,11 @@ export const TagEditor: React.FC<TagEditorProps> = ({
     );
 
     return list.sort((a, b) => {
+      const aSelected = selectedTagIds.map(String).includes(String(a.id));
+      const bSelected = selectedTagIds.map(String).includes(String(b.id));
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+
       const aPinned = (settings?.pinnedTags || []).includes(String(a.id));
       const bPinned = (settings?.pinnedTags || []).includes(String(b.id));
       if (aPinned && !bPinned) return -1;
@@ -79,7 +84,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [tags, searchTerm, settings?.pinnedTags, hotTagsSet]);
+  }, [tags, searchTerm, settings?.pinnedTags, hotTagsSet, selectedTagIds]);
 
   return (
     <div className="space-y-2">

@@ -195,3 +195,16 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/* Sonner Toast Custom Styling: Position close button on the right & enable clean swipe-to-dismiss */
+li[data-sonner-toast] [data-close-button] {
+  left: auto !important;
+  right: 6px !important;
+  transform: translate(25%, -25%) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+li[data-sonner-toast] {
+  touch-action: pan-x !important;
+}

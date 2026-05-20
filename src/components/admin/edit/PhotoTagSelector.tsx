@@ -69,7 +69,7 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
         const saved = await addTag(trimmed);
         if (saved) {
           if (cleanSelectedIds.length < 3) {
-            onChange([...new Set([...cleanSelectedIds, String(saved.id)])]);
+            onChange([...new Set([...cleanSelectedIds, String(saved)])]);
           }
         }
       }
