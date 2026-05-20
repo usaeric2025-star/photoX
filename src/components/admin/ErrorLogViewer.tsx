@@ -1,9 +1,11 @@
 import React from 'react';
 import { useGalleryStore } from '../../store';
 import { Trash2, Download } from 'lucide-react';
+import { useFeedback } from '../../hooks';
 
 export const ErrorLogViewer = () => {
   const { errors, clearErrors } = useGalleryStore();
+  const { showSuccess } = useFeedback();
 
   const exportLogs = () => {
     const blob = new Blob([JSON.stringify(errors, null, 2)], { type: 'application/json' });
@@ -42,6 +44,7 @@ export const ErrorLogViewer = () => {
                 onClick={() => {
                   import('@sentry/react').then(Sentry => {
                     Sentry.captureMessage('Sentry 管理后台测试');
+                    showSuccess('Sentry 测试消息已发送');
                   });
                 }}
                 className="text-blue-500 hover:text-blue-700 p-1 transition-colors"
