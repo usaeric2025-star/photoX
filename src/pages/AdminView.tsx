@@ -7,32 +7,40 @@ import { loginWithGoogle } from '../services/supabaseService';
 import { LanguageCode } from '../lib/translations';
 import { FullPageLoading } from '../components/FullPageLoading';
 import { motion, AnimatePresence } from 'motion/react';
+import { useGalleryStore } from '../store';
 
 export default function AdminView() {
   const { showError } = useFeedback();
   const prep = useAdminDataPrep();
   const { user, authChecked, logout, navigate, t, lang, sessionValue, photoValue, uiValue, infinitePhotosQuery } = prep;
+  const { hasLoadedOnce, setHasLoadedOnce, settings } = useGalleryStore();
 
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setMinTimeElapsed(true), 1200);
+    if (hasLoadedOnce) {
+      setMinTimeElapsed(true);
+      return;
+    }
+    // First time load gets a small branding delay
+    const timer = setTimeout(() => setMinTimeElapsed(true), 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [hasLoadedOnce]);
 
   const isInitialLoading = !authChecked || !minTimeElapsed;
 
   useEffect(() => {
     if (!isInitialLoading && !hasInitialLoaded) {
       setHasInitialLoaded(true);
+      setHasLoadedOnce(true);
     }
-  }, [isInitialLoading, hasInitialLoaded]);
+  }, [isInitialLoading, hasInitialLoaded, setHasLoadedOnce]);
 
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AnimatePresence mode="wait">
-        {isInitialLoading && !hasInitialLoaded ? (
+        {isInitialLoading && !hasLoadedOnce ? (
           <FullPageLoading key="admin-loader" />
         ) : !user && sessionStorage.getItem('isStaffMode') !== 'true' ? (
           <motion.div
@@ -72,7 +80,7 @@ export default function AdminView() {
             key="admin-content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="flex flex-col h-full"
           >
             <AdminViewContent 

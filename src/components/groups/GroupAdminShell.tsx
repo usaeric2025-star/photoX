@@ -33,6 +33,7 @@ import { useAdminMode } from '../../hooks/useAdminMode';
 
 export interface GroupAdminShellProps {
   activeGroupId: string | null;
+  initialPhotoId?: string | null;
   setActiveGroupId: (id: string | null) => void;
   photos: Photo[];
   onEditPhoto?: (photo: Photo) => void;
@@ -94,6 +95,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     isGroupDataLoading,
     activeGroupPhotos,
     containerRef,
+    virtuosoRef,
+    currentHighlightId,
     handleScroll,
     confirmBulkRemove,
     persistPhotoChange,
@@ -106,6 +109,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     setAlertDialog
   } = useGroupAdminLogic({
     activeGroupId,
+    initialPhotoId: props.initialPhotoId,
     photos,
     hookUpdatePhoto,
     propsSetAlertDialog: propsSetAlertDialog as any,
@@ -177,6 +181,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[200] bg-brand-bg overflow-y-auto pt-safe flex flex-col"
           >
            {/* Top Header */}
@@ -197,9 +202,11 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
            />
 
            <GroupGridView 
+             virtuosoRef={virtuosoRef}
              photos={activeGroupPhotos}
              isMultiSelectMode={isMultiSelectMode}
              selectedPhotoIds={selectedPhotoIds}
+             highlightId={currentHighlightId}
              onPhotoClick={handlePhotoClick}
              onPhotoContextMenu={handlePhotoContextMenu}
              getPhotoProps={useCallback((photo) => ({

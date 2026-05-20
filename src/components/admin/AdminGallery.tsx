@@ -8,6 +8,7 @@ import { GalleryFilters } from '../PublicGallery/GalleryFilters';
 import { GalleryGrid } from '../PublicGallery/GalleryGrid';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
+import { GroupDetailView } from '../GroupDetailView';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
 
 interface AdminGalleryProps {
@@ -195,6 +196,27 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
             />
         )}
       </AnimatePresence>
+
+      <GroupDetailView 
+        activeGroupId={activeGroupId}
+        setActiveGroupId={(gid) => {
+          setActiveGroupId(gid);
+          if (gid === null) setActivePhotoId(null);
+        }}
+        initialPhotoId={activePhotoId}
+        photos={props.photos}
+        displayPhotos={displayPhotos}
+        setLightboxIndex={setLightboxIndex}
+        isStaffMode={!!props.isStaffMode}
+        lang={lang}
+        t={t}
+        categories={categories}
+        manufacturers={manufacturers}
+        tagMap={tagMap}
+        allTags={contextTags}
+        shareGroup={noop}
+        contactWhatsApp={noop}
+      />
     </motion.div>
   );
 };

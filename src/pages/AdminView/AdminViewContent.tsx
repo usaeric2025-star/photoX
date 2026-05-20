@@ -1,4 +1,5 @@
 import React, { useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks } from '@/hooks';
 import { ErrorBoundary } from 'react-error-boundary';
 import { AdminGlobalModals } from '@/components/admin/AdminGlobalModals';
@@ -103,7 +104,7 @@ export const AdminViewContent: React.FC<Props> = ({
             {logic.activeGroupId && (
               <GroupDetailView
                 activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId} setAlertDialog={logic.setAlertDialog}
-                photos={logic.photos} displayPhotos={logic.groupPhotos}
+                photos={logic.photos} displayPhotos={logic.groupPhotos} initialPhotoId={logic.initialPhotoId}
                 setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
                 onEditPhoto={(p: Photo) => actions.handleEditPhoto(p.id)} onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
                 onBatchEdit={actions.handleBatchEdit} onUngroup={actions.handleUngroup} onAddPhotoToGroup={actions.handleImport}
@@ -114,11 +115,11 @@ export const AdminViewContent: React.FC<Props> = ({
           </React.Suspense>
 
           <main className="flex-1 relative overflow-hidden">
-            {/* We keep MainAdminScreen mounted to preserve scroll position and avoid flickering */}
+            {/* We keep MainAdminScreen and PublicGallery mounted to preserve scroll position and avoid flickering */}
             <div 
-              className={`absolute inset-0 transition-opacity duration-300 ${logic.activeScreen === 'home' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+              className={`absolute inset-0 transition-opacity duration-200 ease-out ${logic.activeScreen === 'home' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
             >
-              {logic.viewMode === 'private' ? (
+              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.viewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <MainAdminScreen 
                   {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
                   onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
@@ -128,7 +129,8 @@ export const AdminViewContent: React.FC<Props> = ({
                   onBatchToggleHidden={actions.handleBatchToggleHidden} onAiAnalyze={actions.handleAiAnalyze}
                   onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger} onCancelAnalyze={logic.abortAnalysis} isAnalyzing={logic.loadingType === 'analyzing'} onImport={actions.handleImport}
                 />
-              ) : (
+              </div>
+              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.viewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <div className="flex flex-col h-full bg-bg">
                   <PublicGallery 
                     photos={logic.photos} categories={logic.categories} tags={logic.tags} settings={logic.settings}
@@ -138,7 +140,7 @@ export const AdminViewContent: React.FC<Props> = ({
                     user={user} loginWithGoogle={logic.loginWithGoogle} onLoadMore={actions.handleLoadMoreCallback} hasMore={hasNextPage}
                   />
                 </div>
-              )}
+              </div>
             </div>
 
             {logic.activeScreen === 'manage' && (
@@ -153,17 +155,19 @@ export const AdminViewContent: React.FC<Props> = ({
             )}
           </main>
 
-          {(logic.editPhotoId || logic.newPhotoData) && (
-            <PhotoEditDrawer 
-              photos={logic.photos} editPhotoId={logic.editPhotoId} resetAddState={logic.resetAddState} 
-              saveNewPhoto={actions.handleSaveNewPhoto} formState={logic.formState} updateForm={logic.updateForm}
-              showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
-              newPhotoData={logic.newPhotoData} setNewPhotoData={logic.setNewPhotoData}
-              onDelete={(id) => logic.handleDeletePhoto(id)}
-              editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
-              abortAnalysis={logic.abortAnalysis} handleSingleAiAnalyze={logic.handleSingleAiAnalyze} handleTranslate={logic.handleTranslate} t={t}
-            />
-          )}
+          <AnimatePresence>
+            {(logic.editPhotoId || logic.newPhotoData) && (
+              <PhotoEditDrawer 
+                photos={logic.photos} editPhotoId={logic.editPhotoId} resetAddState={logic.resetAddState} 
+                saveNewPhoto={actions.handleSaveNewPhoto} formState={logic.formState} updateForm={logic.updateForm}
+                showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
+                newPhotoData={logic.newPhotoData} setNewPhotoData={logic.setNewPhotoData}
+                onDelete={(id) => logic.handleDeletePhoto(id)}
+                editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
+                abortAnalysis={logic.abortAnalysis} handleSingleAiAnalyze={logic.handleSingleAiAnalyze} handleTranslate={logic.handleTranslate} t={t}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </ErrorBoundary>

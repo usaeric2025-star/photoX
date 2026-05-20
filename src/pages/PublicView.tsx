@@ -93,39 +93,31 @@ export default function PublicView() {
     setSelectedIds([]);
   }, [setIsMultiSelect, setSelectedIds]);
   
-  const [settings, setSettings] = useState<AppSettings | null>(null);
-  const [isSettingsLoading, setIsSettingsLoading] = useState(true);
+  const { settings, hasLoadedOnce, setHasLoadedOnce } = useGalleryStore();
   const navigate = useNavigate();
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
 
   const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
-  const isInitialLoading = isPhotosLoading || isSettingsLoading || !minTimeElapsed;
-
   useEffect(() => {
-    const timer = setTimeout(() => setMinTimeElapsed(true), 2000);
+    if (hasLoadedOnce) {
+      setMinTimeElapsed(true);
+      return;
+    }
+    // First time load gets a small branding delay
+    const timer = setTimeout(() => setMinTimeElapsed(true), 800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [hasLoadedOnce]);
 
-  useEffect(() => {
-    setIsSettingsLoading(true);
-    fetchSettings().then(async (s) => {
-      setSettings(s as AppSettings);
-      try {
-        await saveData('product_settings', s);
-      } catch (err) {
-        showError(err, '同步产品配置至本地失败');
-      }
-    }).catch(e => showError(e, '加载产品中心配置失败'))
-      .finally(() => setIsSettingsLoading(false));
-  }, []);
+  const isInitialLoading = isPhotosLoading || !settings || !minTimeElapsed;
 
   useEffect(() => {
     if (!isInitialLoading && !hasInitialLoaded) {
       setHasInitialLoaded(true);
+      setHasLoadedOnce(true);
     }
-  }, [isInitialLoading, hasInitialLoaded]);
+  }, [isInitialLoading, hasInitialLoaded, setHasLoadedOnce]);
 
   const handleRefresh = useCallback(async () => {
     try {
@@ -148,14 +140,14 @@ export default function PublicView() {
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AnimatePresence mode="wait">
-        {isInitialLoading && !hasInitialLoaded ? (
+        {isInitialLoading && !hasLoadedOnce ? (
           <FullPageLoading key="loader" />
         ) : (
           <motion.div
             key="content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col h-full"
           >
             <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">

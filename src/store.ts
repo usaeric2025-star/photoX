@@ -44,6 +44,8 @@ interface GalleryState {
   setCloudCount: (count: number) => void;
   abortAnalysis: () => void;
   onRefresh: () => void;
+  hasLoadedOnce: boolean;
+  setHasLoadedOnce: (val: boolean) => void;
 
   // Actions
   setSearchQuery: (query: string) => void;
@@ -128,6 +130,8 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setCloudCount: (cloudCount) => set({ cloudCount }),
   abortAnalysis: () => {},
   onRefresh: () => {},
+  hasLoadedOnce: false,
+  setHasLoadedOnce: (hasLoadedOnce) => set({ hasLoadedOnce }),
 
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),

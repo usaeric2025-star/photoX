@@ -59,6 +59,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const { isAdmin } = usePermission();
 
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
 
@@ -131,7 +132,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     const groupPhotos = photos.filter((p: Photo) => p.groupId === groupId);
     try {
       await Promise.all(
-        groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
+         groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
       );
       onRefresh();
     } catch (e: any) {
@@ -165,9 +166,20 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     return photos.filter((p: Photo) => p.groupId === activeGroupId);
   }, [photos, activeGroupId]);
 
-  const onEditPhotoById = useCallback((p: Photo) => {
-    setEditPhotoId(p.id);
-  }, [setEditPhotoId]);
+  const onEditPhotoById = useCallback((pOrId: Photo | string) => {
+    const photo = typeof pOrId === 'string' 
+      ? photos.find((p: Photo) => p.id === pOrId) 
+      : pOrId;
+    
+    if (!photo) return;
+
+    if (photo.groupId) {
+      setInitialPhotoId(photo.id);
+      setActiveGroupId(photo.groupId);
+    } else {
+      setEditPhotoId(photo.id);
+    }
+  }, [photos, setEditPhotoId]);
 
   return useMemo(() => ({
     isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
@@ -183,7 +195,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     addTag, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk,
     saveBatchEditWithSuccess, setLightboxIndex, onLongPressStart, onLongPressEnd,
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
-    activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
+    activeGroupId, setActiveGroupId, initialPhotoId, setInitialPhotoId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
     performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError,
     onEditPhotoById, hasNextPage, isFetchingNextPage
@@ -201,7 +213,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     addTag, quickAddTag, quickAddManufacturer, updatePhoto, updatePhotosBulk,
     saveBatchEditWithSuccess, setLightboxIndex, onLongPressStart, onLongPressEnd,
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
-    activeGroupId, setActiveGroupId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
+    activeGroupId, setActiveGroupId, initialPhotoId, setInitialPhotoId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
     checkSyncLock, togglePinned, toggleHidden, setGroupCover,
     performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError,
     onEditPhotoById, hasNextPage, isFetchingNextPage

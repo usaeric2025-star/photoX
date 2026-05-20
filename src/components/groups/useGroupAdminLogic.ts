@@ -11,6 +11,7 @@ import { useFeedback } from '../../hooks/uiFeedback';
 
 interface UseGroupAdminLogicProps {
   activeGroupId: string | null;
+  initialPhotoId?: string | null;
   photos: Photo[];
   onRefresh: () => void;
   hookUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
@@ -23,6 +24,7 @@ interface UseGroupAdminLogicProps {
 
 export const useGroupAdminLogic = ({
   activeGroupId,
+  initialPhotoId,
   photos,
   onRefresh,
   hookUpdatePhoto,
@@ -55,6 +57,8 @@ export const useGroupAdminLogic = ({
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+  const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
+  const virtuosoRef = useRef<any>(null);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
@@ -77,9 +81,28 @@ export const useGroupAdminLogic = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (activeGroupId && initialPhotoId) {
+      setCurrentHighlightId(initialPhotoId);
+      const timer = setTimeout(() => setCurrentHighlightId(null), 5000);
+      
+      const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
+      if (index !== -1) {
+        setTimeout(() => {
+          virtuosoRef.current?.scrollToIndex({
+            index,
+            align: 'center',
+            behavior: 'auto'
+          });
+        }, 100);
+      }
+      return () => clearTimeout(timer);
+    }
+  }, [activeGroupId, initialPhotoId, activeGroupPhotos]);
+
+  useEffect(() => {
     if (activeGroupId && containerRef.current) {
       const saved = sessionStorage.getItem(`group_scroll_${activeGroupId}`);
-      if (saved) {
+      if (saved && !initialPhotoId) {
         setTimeout(() => {
           if (containerRef.current) {
             containerRef.current.scrollTop = parseInt(saved, 10);
@@ -87,7 +110,7 @@ export const useGroupAdminLogic = ({
         }, 50);
       }
     }
-  }, [activeGroupId]);
+  }, [activeGroupId, initialPhotoId]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (activeGroupId) {
@@ -303,6 +326,8 @@ export const useGroupAdminLogic = ({
     isGroupDataLoading,
     activeGroupPhotos,
     containerRef,
+    virtuosoRef,
+    currentHighlightId,
     handleScroll,
     confirmBulkRemove,
     persistPhotoChange,

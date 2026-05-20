@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Photo, ProductFormData } from '../../../types';
 import { usePhotoEditLogic } from './usePhotoEditLogic';
 import { DrawerHeader } from './DrawerHeader';
@@ -40,7 +41,13 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
   });
 
   return (
-    <div className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
+      className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe"
+    >
       <DrawerHeader 
         editPhotoId={props.editPhotoId}
         formState={props.formState}
@@ -138,6 +145,6 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         </Tabs>
         <div className="h-10 shrink-0"></div>
       </div>
-    </div>
+    </motion.div>
   );
 };

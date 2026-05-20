@@ -85,28 +85,22 @@ export const loadAllPhotosFromCloud = async (
     isAdminMode: boolean = false,
     signal?: AbortSignal
 ): Promise<Photo[]> => {
-    const selectQuery = tagId
-        ? `
-      *,
-      photo_tags!inner(*)
-    `
-        : `
-      *,
-      photo_tags(*)
-    `;
+    const selectQuery = searchQuery
+        ? `*, photo_tags(*)`
+        : `*, photo_tags(*)`;
 
     let query = supabase
         .from(DB_CONFIG.TABLE_NAME)
         .select(selectQuery);
-  
+
   if (signal) {
     query = query.abortSignal(signal);
   }
-  
+
   if (!isAdminMode) {
     query = query.or(VISIBILITY_OR_QUERY);
   }
-  
+
   if (since) {
     query = query.gt('updated_at', since);
   }
@@ -116,7 +110,11 @@ export const loadAllPhotosFromCloud = async (
   }
 
   if (tagId) {
-    query = query.eq('photo_tags.tag_id', tagId);
+    // Bug Fix: Pre-fetch IDs to avoid filtering the joined tags collection in the final result
+    const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
+    const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
+    if (photoIdsWithTag.length === 0) return [];
+    query = query.in('id', photoIdsWithTag);
   }
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');

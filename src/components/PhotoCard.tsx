@@ -23,7 +23,7 @@ interface PhotoCardProps {
   tagMap: Record<string, string>;
   onToggleSelection?: (id: string) => void;
   onEditPhoto?: (id: string) => void;
-  onGroupClick?: (groupId: string) => void;
+  onGroupClick?: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (index: number, photos: Photo[]) => void;
   onLongPressStart: (id: string) => void;
   onLongPressEnd: () => void;
@@ -108,10 +108,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isMultiSelect && onToggleSelection && !e.shiftKey) {
       onToggleSelection(photo.id);
+    } else if (photo.groupId && onGroupClick) {
+      onGroupClick(photo.groupId, photo.id);
     } else {
       handleOpenLightbox();
     }
-  }, [isMultiSelect, onToggleSelection, photo.id, handleOpenLightbox]);
+  }, [isMultiSelect, onToggleSelection, photo.id, photo.groupId, onGroupClick, handleOpenLightbox]);
 
   const mfrName = useMemo(() => 
     getManufacturerName(photo?.manufacturerId || photo?.sub_category, manufacturers),

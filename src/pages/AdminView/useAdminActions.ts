@@ -41,7 +41,7 @@ export const useAdminActions = (logic: any) => {
     logic.setIsMultiSelect(false);
   }, [logic]);
 
-  const handleEditPhoto = useCallback((id: string) => logic.setEditPhotoId(id), [logic]);
+  const handleEditPhoto = useCallback((id: string) => logic.onEditPhotoById(id), [logic]);
 
   const handleDeletePhotos = useCallback((ids: string[]) => {
       if (logic.checkSyncLock()) return;
