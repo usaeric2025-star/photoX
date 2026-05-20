@@ -122,7 +122,6 @@ export const AdminViewContent: React.FC<Props> = ({
   }, [logic.withLoading, logic.handleGroupAiIdentify, showError]);
 
   const handleAiAnalyze = useCallback((p) => {
-    console.log('AI Analyze called. Photo:', p.id);
     return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)
       .catch((e: Error) => showError(e, '识别失败'));
   }, [logic.handleSingleAiAnalyze, showError]);

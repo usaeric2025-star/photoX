@@ -55,7 +55,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
   isFetchingNextPage, isAdmin
 }) => {
   const { togglePhotoSelection, clearSelection } = useGalleryStore();
-  console.log('Rendering MainAdminScreen');
+  // console.log('Rendering MainAdminScreen');
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AdminHeader 
