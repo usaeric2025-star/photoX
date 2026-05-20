@@ -34,11 +34,29 @@ export default function AdminView() {
 
   useEffect(() => {
     const handleError = (e: ErrorEvent) => {
+      const msg = String(e.message || '');
+      // Skip cancellation errors
+      if (/cancel|abort/i.test(msg)) {
+        return;
+      }
       setPageError(e.message);
       console.error(`[Runtime] ${e.message}`);
     };
     const handleRejection = (e: PromiseRejectionEvent) => {
-      const msg = String(e.reason?.message || e.reason);
+      e.preventDefault();
+      const msg = String(e.reason?.message || e.reason || '');
+      
+      // Skip benign cancellation or abort errors
+      const isCancellation = 
+        e.reason?.name === 'AbortError' || 
+        /cancel|abort/i.test(msg) ||
+        msg.includes('DOMException');
+        
+      if (isCancellation) {
+        console.log('[AdminView] Handled benign cancellation rejection:', msg);
+        return;
+      }
+      
       setPageError(msg);
       console.error(`[UncaughtRejection] ${msg}`);
     };

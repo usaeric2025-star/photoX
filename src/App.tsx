@@ -63,7 +63,24 @@ export default function AppRoutes() {
         globalHandleError(event.error || new Error(event.message || 'Unhandled Runtime Error'), '全局运行时错误');
     };
     const handlePromiseRejection = (event: PromiseRejectionEvent) => {
-        globalHandleError(event.reason || new Error('Unhandled Promise Rejection'), '全局未处理Promise拒绝');
+        // Prevent default browser output to avoid "uncaught exception" flags
+        event.preventDefault();
+        
+        const reason = event.reason;
+        const message = reason?.message || String(reason || '');
+        
+        // Skip user-cancelled or aborted requests
+        const isCancellation = 
+          reason?.name === 'AbortError' || 
+          /cancel|abort/i.test(message) ||
+          message.includes('DOMException');
+          
+        if (isCancellation) {
+          console.log('[App] Handled benign cancellation rejection:', message);
+          return;
+        }
+
+        globalHandleError(reason || new Error('Unhandled Promise Rejection'), '全局未处理Promise拒绝', true);
     };
 
     window.addEventListener('error', handleGlobalError);
