@@ -8,7 +8,16 @@ import {
 } from '../hooks';
 import { fetchSettings, loginWithGoogle } from '../services/supabaseService';
 import { PublicGallery } from '../components/PublicGallery';
-import { ErrorBoundary } from '../components/ErrorBoundary';
+import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
+
+function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+  return (
+    <div className="flex flex-col items-center justify-center p-4">
+      <p className="text-red-500">页面出错了: {error.message}</p>
+      <button onClick={resetErrorBoundary} className="mt-4 px-4 py-2 bg-slate-900 text-white rounded">重试</button>
+    </div>
+  );
+}
 import { FullPageLoading } from '../components/FullPageLoading';
 import { saveData } from '../utils/indexedDB';
 import { useAuth } from '../hooks/useAuth';
@@ -173,7 +182,7 @@ export default function PublicView() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="flex flex-col h-full"
           >
-            <ErrorBoundary key="publicGallery">
+            <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
               <PublicGallery 
                 photos={photos}
                 categories={categoriesData}

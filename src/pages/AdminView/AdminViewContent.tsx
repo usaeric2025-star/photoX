@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useFeedback, useAdminMode } from '../../hooks';
-import { ErrorBoundary } from '../../components/ErrorBoundary';
+import { ErrorBoundary } from 'react-error-boundary';
+
+function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBoundary: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center p-4">
+      <p className="text-red-500">页面出错了: {error.message}</p>
+      <button onClick={resetErrorBoundary} className="mt-4 px-4 py-2 bg-slate-900 text-white rounded">重试</button>
+    </div>
+  );
+}
 import { AdminGlobalModals } from '../../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../../components/admin/ErrorLogViewer';
 import { BatchEditScreen } from '../../components/admin/BatchEditScreen';
@@ -212,7 +221,7 @@ export const AdminViewContent: React.FC<Props> = ({
   const lastSyncTime = lastSyncTimeStr ? new Date(lastSyncTimeStr).getTime() : null;
 
   return (
-    <ErrorBoundary key="admin-main">
+    <ErrorBoundary FallbackComponent={ErrorFallback} key="admin-main">
       <AdminGlobalModals />
       <div className="px-6 pb-6">
          <ErrorLogViewer />

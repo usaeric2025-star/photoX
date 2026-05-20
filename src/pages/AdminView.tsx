@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFeedback } from '../hooks';
-import { ErrorBoundary } from '../components/ErrorBoundary';
 import { AdminViewContent } from './AdminView/index';
 import { useAdminDataPrep } from './AdminView/useAdminDataPrep';
 import { loginWithGoogle } from '../services/supabaseService';
