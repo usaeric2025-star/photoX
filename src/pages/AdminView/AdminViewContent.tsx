@@ -18,6 +18,7 @@ import { AdminGallery } from '../../components/admin/AdminGallery';
 import { PhotoEditDrawer } from '../../components/admin/PhotoEditDrawer';
 import { GroupDetailView } from '../../components/GroupDetailView';
 import { MainAdminScreen } from './MainAdminScreen';
+import { PublicGallery } from '../../components/public/PublicGallery';
 import { useAdminViewLogic } from './useAdminViewLogic';
 import { User, Photo } from '../../types';
 import { TranslationType } from '../../lib/ui-helpers';

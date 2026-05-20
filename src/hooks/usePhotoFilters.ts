@@ -33,9 +33,7 @@ export function usePhotoFilters(
     ? options.isAdminModeOverride 
     : hookIsAdminMode;
 
-  const showGroups = options.showGroupsCollapsed !== undefined 
-    ? options.showGroupsCollapsed 
-    : storeShowGroupsCollapsed;
+  const showGroups = true; // 强制保持分组开启，确保一致性
 
   const { displayPhotos, gridPhotos } = useMemo(() => {
     const validPhotos = (incomingPhotos || []).filter(isValidPhoto);

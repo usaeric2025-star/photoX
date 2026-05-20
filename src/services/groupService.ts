@@ -42,7 +42,7 @@ export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: stri
 const groupCache = new Map<string, ProductGroup>();
 
 export const getGroupById = async (id: string): Promise<ProductGroup | null> => {
-  if (groupCache.has(id)) return groupCache.get(id)!;
+  // if (groupCache.has(id)) return groupCache.get(id)!; // Disable cache to fix stale group data
 
   const { data, error } = await supabasePublic
     .from(TABLE_NAME)
@@ -66,7 +66,7 @@ export const getGroupById = async (id: string): Promise<ProductGroup | null> => 
     user_id: data.user_id
   };
   
-  groupCache.set(id, result);
+  // groupCache.set(id, result); // Disable cache to fix stale group data
   return result;
 };
 
