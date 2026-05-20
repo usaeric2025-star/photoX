@@ -68,10 +68,10 @@ export default function AppRoutes() {
   const { setSettings, setUser, user: galleryUser } = useGalleryStore();
   
   useEffect(() => {
-    if (user !== galleryUser) {
+    if (user?.id !== galleryUser?.id) {
       setUser(user);
     }
-  }, [user, galleryUser, setUser]);
+  }, [user?.id, galleryUser?.id, setUser]);
 
   useEffect(() => {
     let active = true;

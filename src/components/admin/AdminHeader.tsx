@@ -231,6 +231,21 @@ export const AdminHeader: React.FC<Props> = ({
               </div>
             </div>
         </div>
+        <button 
+          onClick={() => {
+            console.log('Sentry Test button clicked in Header');
+            import('@sentry/react').then(Sentry => {
+              Sentry.captureMessage('Sentry 管理后台测试');
+              alert('Sentry 测试消息已发送'); // Add alert for clearer feedback
+            }).catch(err => {
+              console.error('Sentry import failed', err);
+            });
+          }}
+          style={{position:'fixed', bottom:20, right:20, zIndex:9999, 
+                  background:'red', color:'white', padding:'8px 16px', borderRadius: '8px'}}
+        >
+          测试 Sentry
+        </button>
     </header>
   );
 };
