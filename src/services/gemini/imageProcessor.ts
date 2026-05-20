@@ -1,5 +1,10 @@
 export const convertToJpegAndResize = async (imageBase: string, maxWidth: number = 1000, signal?: AbortSignal): Promise<string> => {
   return new Promise((resolve, reject) => {
+    if (!imageBase || typeof imageBase !== 'string') {
+      resolve(imageBase || '');
+      return;
+    }
+
     if (!imageBase.startsWith('data:') && !imageBase.startsWith('blob:') && !imageBase.startsWith('http')) {
       resolve(imageBase);
       return;

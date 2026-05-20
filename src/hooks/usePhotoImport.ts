@@ -71,6 +71,9 @@ export const usePhotoImport = (
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
 
+  const importCancelledRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const { setIsSyncing = () => {} } = adminSession || {};
   const { setActiveScreen = () => {} } = adminUI || {};
 
@@ -89,6 +92,10 @@ export const usePhotoImport = (
     if (hasHeic) {
       showSuccess('检测到 HEIC 格式照片，建议转换为 JPG 后上传 / HEIC detected, conversion recommended');
     }
+
+    importCancelledRef.current = false;
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
     
     return runWithLoading('importing', async () => {
       setIsSyncing(true);
@@ -107,7 +114,8 @@ export const usePhotoImport = (
         uploadTaskId = addTask({
           name: `上传照片 (${sFileArray.length} 张)`,
           status: 'running',
-          progress: 0
+          progress: 0,
+          onCancel: () => handleCancelImport()
         });
       }
 
@@ -116,12 +124,35 @@ export const usePhotoImport = (
         aiTaskId = addTask({
           name: `导入照片 AI 识别 (${sFileArray.length} 张)`,
           status: 'running',
-          onCancel: () => abortAnalysis()
+          onCancel: () => handleCancelImport()
         });
       }
 
+      const handleCancelImport = () => {
+        importCancelledRef.current = true;
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        abortAnalysis();
+        if (uploadTaskId) {
+          updateTask(uploadTaskId, {
+            status: 'cancelled',
+            message: '用户已手动取消上传任务',
+            finishedAt: Date.now()
+          });
+        }
+        if (aiTaskId) {
+          updateTask(aiTaskId, {
+            status: 'cancelled',
+            message: '用户已手动取消识别任务',
+            finishedAt: Date.now()
+          });
+        }
+      };
+
       let processedCount = 0;
       const updateProgress = () => {
+        if (importCancelledRef.current) return;
         processedCount++;
         const progress = (processedCount / sFileArray.length) * 100;
         if (uploadTaskId) {
@@ -140,6 +171,7 @@ export const usePhotoImport = (
         }
         if (processedCount === sFileArray.length) {
             setTimeout(() => {
+                if (importCancelledRef.current) return;
                 if (uploadTaskId) updateTask(uploadTaskId, { status: 'completed' });
                 if (aiTaskId) updateTask(aiTaskId, { status: 'completed' });
             }, 3000);
@@ -149,11 +181,18 @@ export const usePhotoImport = (
       const tasks: Promise<void>[] = [];
 
       for (let i = 0; i < sFileArray.length; i++) {
+        if (importCancelledRef.current || signal.aborted) {
+          break;
+        }
         const file = sFileArray[i];
         setImportProgress(i + 1);
         
         try {
           const { hash, dataUrl } = await processImageFile(file);
+
+          if (importCancelledRef.current || signal.aborted) {
+            break;
+          }
 
           const duplicate = photosRef.current.find(p => p.image_hash === hash);
           if (duplicate || sessionHashes.has(hash)) {
@@ -171,6 +210,10 @@ export const usePhotoImport = (
              }
           }
           
+          if (importCancelledRef.current || signal.aborted) {
+            break;
+          }
+
           sessionHashes.add(hash);
           const photoId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           
@@ -203,14 +246,18 @@ export const usePhotoImport = (
           if (useAi) {
             tasks.push((async (targetId: string, targetUri: string, initialPhoto: Photo) => {
                try {
+                 if (importCancelledRef.current || signal.aborted) return;
                  const apiKey = geminiApiKey;
-                 const resRaw = await analyzeProductPhoto(targetUri, categories, tags, manufacturers, apiKey, aiProvider, customModel);
+                 const resRaw = await analyzeProductPhoto(targetUri, categories, tags, manufacturers, apiKey, aiProvider, customModel, null, null, signal);
+                 if (importCancelledRef.current || signal.aborted) return;
                  const result = cleanObject(resRaw);
                  const aiName = cleanAiName(result.name);
                  
                  if (result.description && apiKey) {
                    try {
-                     const translations = await translateDescription(result.description, apiKey, customModel);
+                     if (importCancelledRef.current || signal.aborted) return;
+                     const translations = await translateDescription(result.description, apiKey, customModel, signal);
+                     if (importCancelledRef.current || signal.aborted) return;
                      result.description_translations = {
                        zh: result.description,
                        en: translations.en,
@@ -219,6 +266,7 @@ export const usePhotoImport = (
                    } catch (e) {}
                  }
 
+                 if (importCancelledRef.current || signal.aborted) return;
                  const finalTagIds = await resolveTagIdsBatch(
                    Array.from(new Set([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)])),
                    tags, tagNameToIdMap
@@ -241,7 +289,7 @@ export const usePhotoImport = (
                     photosRef.current[index] = updated;
                  }
 
-                 if (user) {
+                 if (user && !importCancelledRef.current && !signal.aborted) {
                    try {
                       const finalPhotoId = await savePhotoToCloud(user.id, updated);
                       const index = photosRef.current.findIndex(p => p.id === initialPhoto.id);
@@ -265,6 +313,7 @@ export const usePhotoImport = (
                  }
                } catch (err) {
                  invalidatePhotos();
+                 if (err instanceof Error && err.name === 'AbortError') return;
                  throw err;
                } finally {
                  updateProgress();
@@ -279,6 +328,7 @@ export const usePhotoImport = (
                 tasks.push(
                   savePhotoToCloud(user.id, newPhoto)
                     .then((finalPhotoId) => {
+                      if (importCancelledRef.current || signal.aborted) return;
                       // Update UI with real ID
                       const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
                       if (index !== -1) {
@@ -288,6 +338,7 @@ export const usePhotoImport = (
                       updateProgress();
                     })
                     .catch((e) => {
+                      if (importCancelledRef.current || signal.aborted) return;
                       if (e.name === 'DuplicatePhotoError') {
                         console.log(`[usePhotoImport] Skipped duplicate photo: ${newPhoto.name}`);
                         const index = photosRef.current.findIndex(p => p.id === newPhoto.id);
@@ -316,6 +367,7 @@ export const usePhotoImport = (
             }
           }
         } catch (err) {
+          if (importCancelledRef.current || signal.aborted) break;
           console.error(`[usePhotoImport] Error processing file ${file.name}:`, err);
           showError(err, `处理文件失败: ${file.name}`);
           failCount++;

@@ -87,7 +87,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
         const signal = controller.signal;
                 
         try {
-            const resRaw = await analyzeProductPhoto(photo.uri!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
+            const resRaw = await analyzeProductPhoto(photo.uri || photo.image_url!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
             const result = cleanObject(resRaw);
             
             if (result.name) {

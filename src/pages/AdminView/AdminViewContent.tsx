@@ -298,7 +298,10 @@ export const AdminViewContent: React.FC<Props> = ({
           onDeletePhotos={handleDeletePhotos}
           onGroupPhotos={handleGroupPhotos}
           onBatchEdit={handleBatchEdit}
-          onAiAnalyze={logic.handleSingleAiAnalyze}
+          onAiAnalyze={(p) => {
+              console.log('AI Analyze called in MainAdminScreen. Photo:', p.id, 'URI:', p.uri, 'ImageURL:', p.image_url);
+              return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id).catch((e: Error) => showError(e, '识别失败'));
+          }}
           onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger}
           onCancelAnalyze={logic.abortAnalysis}
           isAnalyzing={logic.loadingType === 'analyzing'}

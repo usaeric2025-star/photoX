@@ -35,3 +35,11 @@
 
 4. **AI Behavior**
    - When modifying code, ensure error handling, feedback (no stacking), and loading states are integrated strictly according to these rules.
+
+### 最终错误闭环规则 (Final Block/Cancel Integrity)
+
+1. **任何异步操作（包括 Service、AI、同步）失败时**：
+   - 必须调用 `handleError` / `showError` 挂载完整错误追踪上下文。
+   - 严格禁止只编写 `console.error` 或单独调用 `toast.error` 绕开统一反馈体系。
+2. **任务取消机制**：
+   - 任务取消或中断必须调用并保证完全走 `useTasks` 的 `cancelTask(taskId)` 流程，严防未注册/绕行或被数据迭代覆盖等无反应行为。

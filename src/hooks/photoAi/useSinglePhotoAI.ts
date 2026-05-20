@@ -40,12 +40,24 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
     photosRef, showError, invalidatePhotos, setAiDebugInfo, currentAnalysisControllers, abortAnalysis
   } = props;
 
-  const handleSingleAiAnalyze = async (imageData: string | null, catId?: string, editPhotoId?: string | null) => {
-    if (!imageData) return;
+  const handleSingleAiAnalyze = async (imageData: any, catId?: string, editPhotoId?: string | null) => {
+    let effectiveImgData: string | null = null;
+    let effectiveEditId = editPhotoId;
+    let effectiveCatId = catId;
+
+    if (typeof imageData === 'string') {
+      effectiveImgData = imageData;
+    } else if (imageData && typeof imageData === 'object') {
+      effectiveImgData = imageData.uri || imageData.image_url || null;
+      if (!effectiveEditId) effectiveEditId = imageData.id;
+      if (!effectiveCatId) effectiveCatId = imageData.categoryId || undefined;
+    }
+
+    if (!effectiveImgData) return;
     setAiDebugInfo(null);
     
     const taskId = addTask({
-      name: `AI 单图识别 ${editPhotoId ? '(编辑中)' : ''}`,
+      name: `AI 单图识别 ${effectiveEditId ? '(编辑中)' : ''}`,
       status: 'running',
       progress: 0,
       onCancel: () => abortAnalysis(taskId)
@@ -67,12 +79,12 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       if (!apiKey) throw new Error('API Key 为空');
       
       let originalName;
-      if (editPhotoId) {
-          const photo = photosRef.current.find(p => p.id === editPhotoId);
+      if (effectiveEditId) {
+          const photo = photosRef.current.find(p => p.id === effectiveEditId);
           originalName = photo?.name;
       }
       
-      const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, apiKey, aiProvider, customModel, catId, originalName, signal);
+      const resRaw = await analyzeProductPhoto(effectiveImgData, categories, tags, manufacturers, apiKey, aiProvider, customModel, effectiveCatId, originalName, signal);
       const result = cleanObject(resRaw);
       
       if (result.name) {
@@ -93,8 +105,8 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
         } catch (e) {}
       }
       
-      if (editPhotoId) {
-        const photo = photosRef.current.find(p => p.id === editPhotoId);
+      if (effectiveEditId) {
+        const photo = photosRef.current.find(p => p.id === effectiveEditId);
         if (photo) {
           updateTask(taskId, { progress: 80, message: '正在保存结果...' });
           const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
@@ -175,7 +187,7 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
 
       // 3. UI Status update
       updateTask(taskId, { status: 'error', message: `失败: ${userMessage.slice(0, 80)}` });
-      if (editPhotoId) invalidatePhotos();
+      if (effectiveEditId) invalidatePhotos();
       
       throw error;
     } finally {

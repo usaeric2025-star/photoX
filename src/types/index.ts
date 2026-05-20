@@ -17,6 +17,7 @@ export interface Task {
   progress?: number;
   message?: string;
   onCancel?: () => void;
+  finishedAt?: number;
 }
 
 export interface User {
