@@ -3,10 +3,16 @@ import { loadAllPhotosFromCloud, loadPhotosByGroupId, getPhotoCount } from '../.
 import { QUERY_KEYS } from './keys';
 import { syncCache } from '../../utils/indexedDB';
 
-export const useInfinitePhotos = (filters: { categoryId?: string | null; tagId?: string | null; searchQuery?: string | null; isAdminMode?: boolean }, limit: number = 20) => {
+export const useInfinitePhotos = (filters: { 
+  categoryId?: string | null; 
+  tagId?: string | null; 
+  searchQuery?: string | null; 
+  sortOrder?: 'asc' | 'desc' | string | null;
+  isAdminMode?: boolean 
+}, limit: number = 20) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 1, signal }) => {
       const photos = await loadAllPhotosFromCloud(
         undefined,
         (pageParam as number) - 1, // Service is 0-indexed
@@ -14,22 +20,23 @@ export const useInfinitePhotos = (filters: { categoryId?: string | null; tagId?:
         filters.categoryId,
         filters.tagId,
         filters.searchQuery,
-        filters.isAdminMode || false
+        filters.isAdminMode || false,
+        signal
       );
 
-      // Cache the first page for offline access
+      // Cache the first page for offline access safely (don't interfere with main fetch state)
       if (pageParam === 1 && !filters.searchQuery && !filters.categoryId && !filters.tagId) {
-        syncCache.savePhotos(photos).catch(e => console.error('[Offline] Failed to cache photos:', e));
+        syncCache.savePhotos(photos).catch(() => {});
       }
 
       return {
-        photos,
+        photos: photos || [],
         nextPage: (photos || []).length === limit ? (pageParam as number) + 1 : undefined
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });

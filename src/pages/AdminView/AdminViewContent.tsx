@@ -7,6 +7,7 @@ import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { SettingsScreen } from '@/components/SettingsScreen';
 import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
 import { GroupDetailView } from '@/components/GroupDetailView';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { MainAdminScreen } from './MainAdminScreen';
 import { PublicGallery } from '@/components/public/PublicGallery';
 import { useAdminViewLogic } from './useAdminViewLogic';
@@ -70,80 +71,101 @@ export const AdminViewContent: React.FC<Props> = ({
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} key="admin-main">
       <AdminGlobalModals />
-      <div className="px-6 pb-6"><ErrorLogViewer /></div>
-
-      <React.Suspense fallback={<div className="flex flex-col items-center justify-center h-screen bg-brand-bg gap-4"><div className="w-8 h-8 border-[1px] border-brand-navy/10 border-t-brand-gold rounded-full animate-spin" /><span className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-widest">Loading...</span></div>}>
-        {logic.batchEditIds && (
-          <BatchEditScreen 
-            resetAddState={logic.resetAddState} saveBatchEdit={logic.saveBatchEditWithSuccess}
-            batchEditIds={logic.batchEditIds} formState={logic.formState} updateForm={logic.updateForm}
-            batchIsHiddenApplied={logic.batchIsHiddenApplied} setBatchIsHiddenApplied={logic.setBatchIsHiddenApplied}
-            showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
-            quickAddManufacturer={logic.quickAddManufacturer} quickAddTag={logic.quickAddTag}
-            updateTag={logic.updateTag} deleteTag={logic.deleteTag} addTag={logic.addTag}
-            onDelete={logic.handleDeletePhoto}
-          />
-        )}
-        
-        {logic.activeGroupId && (
-          <GroupDetailView
-            activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId} setAlertDialog={logic.setAlertDialog}
-            photos={logic.photos} displayPhotos={logic.groupPhotos}
-            setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
-            onEditPhoto={(p: Photo) => actions.handleEditPhoto(p.id)} onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
-            onBatchEdit={actions.handleBatchEdit} onUngroup={actions.handleUngroup} onAddPhotoToGroup={actions.handleImport}
-            lang={lang} t={t} categories={logic.categories} manufacturers={logic.manufacturers} allTags={logic.tags} tagMap={logic.tagIdToNameMap}
-            onBatchAiAnalyze={actions.handleBatchAiAnalyze} onAiAnalyze={actions.handleAiAnalyze} onToggleHidden={actions.handleToggleHidden} updatePhoto={actions.handleUpdatePhoto}
-          />
-        )}
-  
-        {logic.activeScreen === 'manage' && (
-          <SettingsScreen 
-            setActiveScreen={logic.setActiveScreen} saveSettings={logic.saveSettings} handleLogoUpload={actions.handleLogoUpload}
-            performPushSync={actions.handlePerformPushSync} performPullSync={actions.handlePerformPullSync} 
-            refreshCloudData={async () => logic.onRefresh()} cloudCount={logic.cloudCount} lastSyncTime={lastSyncTime}
-            isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
-          />
-        )}
-
-        {(logic.editPhotoId || logic.newPhotoData) && (
-            <PhotoEditDrawer 
-                photos={logic.photos} editPhotoId={logic.editPhotoId} resetAddState={logic.resetAddState} 
-                saveNewPhoto={actions.handleSaveNewPhoto} formState={logic.formState} updateForm={logic.updateForm}
-                showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
-                newPhotoData={logic.newPhotoData} setNewPhotoData={logic.setNewPhotoData}
-                onDelete={(id) => logic.handleDeletePhoto(id)}
-                editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
-                abortAnalysis={logic.abortAnalysis} handleSingleAiAnalyze={logic.handleSingleAiAnalyze} handleTranslate={logic.handleTranslate} t={t}
-            />
-        )}
-      </React.Suspense>
       
-      {logic.activeScreen === 'home' && logic.viewMode === 'private' && (
-        <MainAdminScreen 
-          {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
-          onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
-          onToggleHidden={actions.handleToggleHidden} onSetGroupCover={logic.setGroupCover} onEditPhoto={actions.handleEditPhoto}
-          onLoadMore={actions.handleLoadMoreCallback} hasNextPage={!!hasNextPage}
-          onDeletePhotos={actions.handleDeletePhotos} onGroupPhotos={actions.handleGroupPhotos} onBatchEdit={actions.handleBatchEdit}
-          onBatchToggleHidden={actions.handleBatchToggleHidden} onAiAnalyze={actions.handleAiAnalyze}
-          onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger} onCancelAnalyze={logic.abortAnalysis} isAnalyzing={logic.loadingType === 'analyzing'} onImport={actions.handleImport}
-        />
-      )}
-
-      {logic.activeScreen === 'home' && logic.viewMode === 'public' && (
-        <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
-           <div className="flex-1 min-h-0 relative bg-bg">
-                <PublicGallery 
-                   photos={logic.photos} categories={logic.categories} tags={logic.tags} settings={logic.settings}
-                   isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'} isFetchingNextPage={isFetchingNextPage}
-                   onExit={handleExitPublic} showExit={true} onRefresh={handleRefreshPublic}
-                   columns={logic.columns} setColumns={logic.setColumns} totalCount={logic.cloudCount}
-                   user={user} loginWithGoogle={logic.loginWithGoogle} onLoadMore={actions.handleLoadMoreCallback} hasMore={hasNextPage}
-                />
-           </div>
+      <div className="flex h-screen overflow-hidden bg-brand-bg">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block shrink-0">
+          <AdminSidebar 
+            settings={logic.settings}
+            activeScreen={logic.activeScreen}
+            setActiveScreen={logic.setActiveScreen}
+            cloudCount={logic.cloudCount}
+            onRefresh={logic.onRefresh}
+          />
         </div>
-      )}
+
+        <div className="flex-1 flex flex-col min-w-0 relative h-full">
+          <div className="px-6 pt-4"><ErrorLogViewer /></div>
+
+          <React.Suspense fallback={<div className="flex flex-col items-center justify-center h-screen bg-brand-bg gap-4"><div className="w-8 h-8 border-[1px] border-brand-navy/10 border-t-brand-gold rounded-full animate-spin" /><span className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-widest">Loading...</span></div>}>
+            {logic.batchEditIds && (
+              <BatchEditScreen 
+                resetAddState={logic.resetAddState} saveBatchEdit={logic.saveBatchEditWithSuccess}
+                batchEditIds={logic.batchEditIds} formState={logic.formState} updateForm={logic.updateForm}
+                batchIsHiddenApplied={logic.batchIsHiddenApplied} setBatchIsHiddenApplied={logic.setBatchIsHiddenApplied}
+                showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
+                quickAddManufacturer={logic.quickAddManufacturer} quickAddTag={logic.quickAddTag}
+                updateTag={logic.updateTag} deleteTag={logic.deleteTag} addTag={logic.addTag}
+                onDelete={logic.handleDeletePhoto}
+              />
+            )}
+            
+            {logic.activeGroupId && (
+              <GroupDetailView
+                activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId} setAlertDialog={logic.setAlertDialog}
+                photos={logic.photos} displayPhotos={logic.groupPhotos}
+                setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
+                onEditPhoto={(p: Photo) => actions.handleEditPhoto(p.id)} onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
+                onBatchEdit={actions.handleBatchEdit} onUngroup={actions.handleUngroup} onAddPhotoToGroup={actions.handleImport}
+                lang={lang} t={t} categories={logic.categories} manufacturers={logic.manufacturers} allTags={logic.tags} tagMap={logic.tagIdToNameMap}
+                onBatchAiAnalyze={actions.handleBatchAiAnalyze} onAiAnalyze={actions.handleAiAnalyze} onToggleHidden={actions.handleToggleHidden} updatePhoto={actions.handleUpdatePhoto}
+              />
+            )}
+          </React.Suspense>
+
+          <main className="flex-1 relative overflow-hidden">
+            {/* We keep MainAdminScreen mounted to preserve scroll position and avoid flickering */}
+            <div 
+              className={`absolute inset-0 transition-opacity duration-300 ${logic.activeScreen === 'home' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+            >
+              {logic.viewMode === 'private' ? (
+                <MainAdminScreen 
+                  {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
+                  onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
+                  onToggleHidden={actions.handleToggleHidden} onSetGroupCover={logic.setGroupCover} onEditPhoto={actions.handleEditPhoto}
+                  onLoadMore={actions.handleLoadMoreCallback} hasNextPage={!!hasNextPage}
+                  onDeletePhotos={actions.handleDeletePhotos} onGroupPhotos={actions.handleGroupPhotos} onBatchEdit={actions.handleBatchEdit}
+                  onBatchToggleHidden={actions.handleBatchToggleHidden} onAiAnalyze={actions.handleAiAnalyze}
+                  onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger} onCancelAnalyze={logic.abortAnalysis} isAnalyzing={logic.loadingType === 'analyzing'} onImport={actions.handleImport}
+                />
+              ) : (
+                <div className="flex flex-col h-full bg-bg">
+                  <PublicGallery 
+                    photos={logic.photos} categories={logic.categories} tags={logic.tags} settings={logic.settings}
+                    isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'} isFetchingNextPage={isFetchingNextPage}
+                    onExit={handleExitPublic} showExit={true} onRefresh={handleRefreshPublic}
+                    columns={logic.columns} setColumns={logic.setColumns} totalCount={logic.cloudCount}
+                    user={user} loginWithGoogle={logic.loginWithGoogle} onLoadMore={actions.handleLoadMoreCallback} hasMore={hasNextPage}
+                  />
+                </div>
+              )}
+            </div>
+
+            {logic.activeScreen === 'manage' && (
+              <div className="absolute inset-0 z-20 bg-brand-bg">
+                <SettingsScreen 
+                  setActiveScreen={logic.setActiveScreen} saveSettings={logic.saveSettings} handleLogoUpload={actions.handleLogoUpload}
+                  performPushSync={actions.handlePerformPushSync} performPullSync={actions.handlePerformPullSync} 
+                  refreshCloudData={async () => logic.onRefresh()} cloudCount={logic.cloudCount} lastSyncTime={lastSyncTime}
+                  isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
+                />
+              </div>
+            )}
+          </main>
+
+          {(logic.editPhotoId || logic.newPhotoData) && (
+            <PhotoEditDrawer 
+              photos={logic.photos} editPhotoId={logic.editPhotoId} resetAddState={logic.resetAddState} 
+              saveNewPhoto={actions.handleSaveNewPhoto} formState={logic.formState} updateForm={logic.updateForm}
+              showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
+              newPhotoData={logic.newPhotoData} setNewPhotoData={logic.setNewPhotoData}
+              onDelete={(id) => logic.handleDeletePhoto(id)}
+              editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
+              abortAnalysis={logic.abortAnalysis} handleSingleAiAnalyze={logic.handleSingleAiAnalyze} handleTranslate={logic.handleTranslate} t={t}
+            />
+          )}
+        </div>
+      </div>
     </ErrorBoundary>
   );
 };

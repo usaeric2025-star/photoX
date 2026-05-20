@@ -82,7 +82,8 @@ export const loadAllPhotosFromCloud = async (
     categoryId?: string | null,
     tagId?: string | null,
     searchQuery?: string | null,
-    isAdminMode: boolean = false
+    isAdminMode: boolean = false,
+    signal?: AbortSignal
 ): Promise<Photo[]> => {
     const selectQuery = tagId
         ? `
@@ -97,6 +98,10 @@ export const loadAllPhotosFromCloud = async (
     let query = supabase
         .from(DB_CONFIG.TABLE_NAME)
         .select(selectQuery);
+  
+  if (signal) {
+    query = query.abortSignal(signal);
+  }
   
   if (!isAdminMode) {
     query = query.or(VISIBILITY_OR_QUERY);

@@ -113,20 +113,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
         <div className="space-y-6">
-          <GeneralSettings 
-            settings={settings}
-            handleLogoUpload={handleLogoUpload}
-            categories={categories}
-            tags={tags}
-            manufacturers={manufacturers}
-            photos={photos}
-            onHealthCheck={handleHealthCheck}
-            setSettingField={setSettingField}
-            cardClass={cardClass}
-            inputClass={inputClass}
-            buttonStyles={BUTTON_STYLES}
-          />
-
           <SyncSettings 
             user={user}
             loginWithGoogle={loginWithGoogle}
@@ -144,6 +130,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             manufacturers={manufacturers}
             handleDeduplicate={handleDeduplicate}
             cardClass={cardClass}
+            buttonStyles={BUTTON_STYLES}
+          />
+
+          <GeneralSettings 
+            settings={settings}
+            handleLogoUpload={handleLogoUpload}
+            categories={categories}
+            tags={tags}
+            manufacturers={manufacturers}
+            photos={photos}
+            onHealthCheck={handleHealthCheck}
+            setSettingField={setSettingField}
+            cardClass={cardClass}
+            inputClass={inputClass}
             buttonStyles={BUTTON_STYLES}
           />
 

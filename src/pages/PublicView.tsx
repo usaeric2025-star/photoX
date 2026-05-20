@@ -50,6 +50,7 @@ export default function PublicView() {
     filterCatId,
     filterTagIds,
     debouncedSearchQuery,
+    sortOrder,
     setIsMultiSelect,
     setSelectedIds
   } = useGalleryStore();
@@ -60,6 +61,7 @@ export default function PublicView() {
     categoryId: filterCatId,
     tagId: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
+    sortOrder: sortOrder,
     isAdminMode: false
   }, PAGINATION.PUBLIC_PAGE_SIZE);
 

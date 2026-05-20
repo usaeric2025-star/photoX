@@ -128,9 +128,9 @@ export const AdminHeader: React.FC<Props> = ({
     <header className="shrink-0 z-[110] bg-brand-bg px-4 sm:px-6 py-2.5 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {settings?.logo_url ? (
-            <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-14 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-brand-navy/10 p-1 bg-white shadow-sm shrink-0" loading="lazy" />
+            <img src={settings.logo_url} alt="Logo" className="lg:hidden h-10 sm:h-14 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-brand-navy/10 p-1 bg-white shadow-sm shrink-0" loading="lazy" />
           ) : (
-            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">Admin</h1>
+            <h1 className="lg:hidden text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">Admin</h1>
           )}
           
           {photosCount !== undefined && (

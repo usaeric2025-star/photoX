@@ -57,7 +57,7 @@ export const useAdminDataPrep = () => {
   const [cloudCount, setCloudCount] = useState<number | null>(null);
 
   const { 
-    filterCatId, filterTagIds, debouncedSearchQuery, appLang, activeScreen, setActiveScreen,
+    filterCatId, filterTagIds, debouncedSearchQuery, sortOrder, appLang, activeScreen, setActiveScreen,
     geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel
   } = useGalleryStore();
   const { data: categories = [] } = useCategoriesQuery();
@@ -68,6 +68,7 @@ export const useAdminDataPrep = () => {
     categoryId: filterCatId,
     tagId: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
+    sortOrder: sortOrder,
     isAdminMode: true
   }, PAGINATION.ADMIN_BATCH_SIZE);
 
