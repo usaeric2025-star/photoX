@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../../services/geminiService';
 import { resolveTagIdsBatch } from '../../utils/tagUtils';
@@ -32,7 +33,7 @@ interface SingleAiProps {
 
 export const useSinglePhotoAI = (props: SingleAiProps) => {
   const queryClient = useQueryClient();
-  const { showSuccess } = useFeedback();
+  const { showSuccess, handleError } = useFeedback();
   const {
     user, geminiApiKey, aiProvider, customModel, categories, tags,
     manufacturers, tagNameToIdMap, addTask, updateTask, removeTask,
@@ -123,22 +124,49 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
       return result;
       } catch (err: unknown) {
       const error = err as Error;
+
+      // Handle specific failure scenarios for user feedback and logging
+      let userMessage = 'AI 分析出现异常，请重试';
+      let errorContext = 'AI 单图分析';
+
       if (error.name === 'DuplicatePhotoError') {
          updateTask(taskId, { status: 'completed', progress: 100, message: '已跳过 (重复照片)' });
          setAiDebugInfo(null);
          showSuccess('已存在相同照片'); 
          return null as any;
       }
+
       if (error.name === 'AbortError') {
         removeTask(taskId);
         setAiDebugInfo({ step: '已取消', message: '识别任务已由用户中断' });
-      } else {
-        const displayError = formatAiError(error.message || String(err));
-        updateTask(taskId, { status: 'error', message: `失败: ${displayError.slice(0, 80)}${displayError.length > 80 ? '...' : ''}` });
-        if (editPhotoId) invalidatePhotos();
-        showError(err, 'AI 单图识别失败');
-        throw err;
+        return;
       }
+
+      // Determine feedback based on where failure occurred
+      // Note: This logic assumes specific error patterns or locations
+      if (error.message.includes('preprocessing') || error.message.includes('image')) {
+        userMessage = '图片处理失败，请重试或换一张图';
+        errorContext = 'AI图片预处理';
+      } else if (error.message.includes('invalid') || error.message.includes('content')) {
+        userMessage = 'AI 返回异常，请重试';
+        errorContext = 'AI数据解析';
+      } else {
+        userMessage = `AI 识别失败：${error.message || '未知错误'}`;
+        errorContext = 'AI分析请求';
+      }
+
+      // 1. Log to system
+      handleError(err, errorContext, true); // true = silent (we do toast manually below)
+      
+      // 2. User feedback
+      toast.dismiss();
+      toast.error(userMessage);
+
+      // 3. UI Status update
+      updateTask(taskId, { status: 'error', message: `失败: ${userMessage.slice(0, 80)}` });
+      if (editPhotoId) invalidatePhotos();
+      
+      throw err;
     } finally {
       const task = currentAnalysisControllers.current.get(taskId);
       if (task) {
