@@ -44,15 +44,18 @@ export const ErrorLogViewer = () => {
           )}
           <button
             onClick={() => {
+              console.log('Sentry Test button clicked');
               import('@sentry/react').then(Sentry => {
                 Sentry.captureMessage('Sentry 管理后台测试');
                 showSuccess('Sentry 测试消息已发送');
+              }).catch(err => {
+                console.error('Sentry import failed', err);
               });
             }}
-            className="text-blue-500 hover:text-blue-700 p-1 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
             title="Sentry 测试"
           >
-              <span className="text-[10px] uppercase font-bold">Test</span>
+              测试 Sentry 功能
           </button>
         </div>
       </div>
