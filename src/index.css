@@ -206,5 +206,5 @@ li[data-sonner-toast] [data-close-button] {
 }
 
 li[data-sonner-toast] {
-  touch-action: pan-x !important;
+  touch-action: none !important;
 }

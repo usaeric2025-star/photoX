@@ -202,17 +202,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
          </button>
       )}
 
-      {isAdmin && onToggleHidden && (
-         <button 
-           onClick={(e) => {
-             e.stopPropagation();
-             onToggleHidden(photo);
-           }}
-           className={`absolute top-9 right-2 bg-black/50 p-1 rounded-full text-white z-10 ${photo.is_hidden ? 'text-yellow-400' : ''}`}
-         >
-           {photo.is_hidden ? <EyeOff size={12} /> : <Eye size={12} />}
-         </button>
-      )}
+
       
       <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
          {!isUncategorized && displayCatName && (

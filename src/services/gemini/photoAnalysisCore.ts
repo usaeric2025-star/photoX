@@ -183,8 +183,11 @@ export const analyzeProductPhoto = async (
       catWords.add('椅');
     }
 
+    const containsChinese = (str: string) => /[\u4e00-\u9fa5]/.test(str);
+
     const isRedundantTag = (tagName: string) => {
       const cleanTagName = tagName.toLowerCase().trim();
+      if (containsChinese(cleanTagName)) return true;
       if (catWords.has(cleanTagName)) return true;
       if (isChairCategory && (cleanTagName === 'chair' || cleanTagName === 'chairs' || cleanTagName === '椅子' || cleanTagName === '椅')) {
         return true;
@@ -194,7 +197,9 @@ export const analyzeProductPhoto = async (
 
     let newTagList: string[] = [];
     if (Array.isArray(parsedData.newTags)) {
-      newTagList = parsedData.newTags.map(s => String(s).trim()).filter(Boolean);
+      newTagList = parsedData.newTags
+        .map(s => String(s).trim())
+        .filter(s => s && !containsChinese(s));
     }
 
     // Filter redundant tagIds (existing tags) and new tags
@@ -202,6 +207,10 @@ export const analyzeProductPhoto = async (
       const tObj = (tags || []).find(t => String(t.id) === String(tid));
       if (!tObj) return true;
       if (isRedundantTag(tObj.name)) return false;
+      if (tObj.zh && containsChinese(tObj.zh)) {
+        // Since tags are English or Malay only, if the tag's localized name is Chinese, let's skip or filter it out.
+        // Actually, checking tObj.name for general correctness is safer.
+      }
       if (Array.isArray(tObj.aliases)) {
         if (tObj.aliases.some(alias => isRedundantTag(alias))) {
           return false;

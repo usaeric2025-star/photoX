@@ -23,7 +23,7 @@ export const AI_PROMPTS = {
 【CATEGORY & TAGS】
 - "categoryId": ${categoryContext}
 - "tagIds": Select 2-3 most relevant existing tags (return IDs). DO NOT return tag IDs as numeric indices, use the provided string format IDs: ${tagsJson}
-- "newTags": If no existing tag fits, create NEW ones (UPPERCASE English). DO NOT return tag IDs or numeric values.
+- "newTags": If no existing tag fits, create NEW ones (English or Malay, e.g., "FABRIC", "MEJA"). STRICTLY DO NOT generate Chinese characters or Chinese tags. DO NOT return tag IDs or numeric values.
 
 DO NOT output markdown. Return ONLY valid JSON.`,
 
