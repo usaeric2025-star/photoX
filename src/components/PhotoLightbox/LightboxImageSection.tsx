@@ -122,27 +122,20 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
             }}
           />
         ) : (
-          <>
-            <img 
-              src={photo.thumb_url || ''}
-              className={`absolute inset-0 z-5 object-contain h-full w-full transition-opacity duration-700 ${isImageLoading ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
-              aria-hidden="true"
-              loading="lazy"
-            />
-            <img 
-              key={photo.id}
-              referrerPolicy="no-referrer"
-              src={getCacheBustedImageUrl(photo, 'image')}
-              alt={photo.name || 'Photo'}
-              className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-700 ${isImageLoading ? 'opacity-0 scale-105 blur-sm' : 'opacity-100 scale-100 blur-0'}`} 
-              onLoad={() => setIsImageLoading(false)}
-              onError={() => {
-                setIsImageLoading(false);
-                setIsImageError(true);
-              }}
-              onClick={() => setIsZoomed(true)} 
-            />
-          </>
+          <img 
+            key={photo.id}
+            referrerPolicy="no-referrer"
+            decoding="async"
+            src={getCacheBustedImageUrl(photo, 'image')}
+            alt={photo.name || 'Photo'}
+            className={`relative z-10 object-contain h-full w-full cursor-pointer transition-all duration-300 ${isImageLoading ? 'opacity-0 scale-105 blur-md' : 'opacity-100 scale-100 blur-0'}`} 
+            onLoad={() => setIsImageLoading(false)}
+            onError={() => {
+              setIsImageLoading(false);
+              setIsImageError(true);
+            }}
+            onClick={() => setIsZoomed(true)} 
+          />
         )}
       </div>
 

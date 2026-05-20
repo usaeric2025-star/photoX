@@ -50,10 +50,8 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
         for (let i = start; i <= end; i++) {
           const photo = displayPhotos[i];
           if (photo?.image_url) {
-            queryClient.prefetchQuery({
-              queryKey: ['photo', photo.id],
-              queryFn: () => fetch(photo.image_url!).catch(() => null),
-            });
+            const img = new Image();
+            img.src = photo.image_url;
           }
         }
       };
