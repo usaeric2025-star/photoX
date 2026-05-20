@@ -1,6 +1,7 @@
 import React from 'react';
 import { AdminHeader } from '../../components/admin/AdminHeader';
-import { PublicGallery } from '../../components/PublicGallery';
+import { useGalleryStore } from '../../store';
+import { AdminGallery } from '../../components/admin/AdminGallery';
 import { AdminFloatingButtons } from '../../components/admin/AdminFloatingButtons';
 import { Photo, Category, Tag, User, AppSettings } from '../../types';
 
@@ -53,6 +54,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
   onDeletePhotos, onGroupPhotos, onBatchEdit, onAiAnalyze, onBatchAiAnalyze, onCancelAnalyze, onBatchToggleHidden, isAnalyzing,
   isFetchingNextPage, isAdmin
 }) => {
+  const { togglePhotoSelection, clearSelection } = useGalleryStore();
   console.log('Rendering MainAdminScreen');
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
@@ -74,20 +76,24 @@ export const MainAdminScreen: React.FC<Props> = React.memo(({
           batchProgress={batchProgress}
        />
         <div className="flex-1 min-h-0 relative">
-          <PublicGallery 
+          <AdminGallery 
              photos={photos}
              categories={categories}
              tags={tags}
              settings={settings}
              isRefreshing={loadingType === 'sync-pull' || loadingType === 'sync-push'}
-             isFetchingNextPage={isFetchingNextPage}
-             hideHeader={true}
+             onRefresh={onRefresh}
              columns={columns}
              setColumns={setColumns}
              totalCount={cloudCount}
-             user={user}
              onLoadMore={onLoadMore}
              hasMore={hasNextPage}
+             activeSelectedIds={selectedIds}
+             activeIsMultiSelect={isMultiSelect}
+             activeToggleSelection={togglePhotoSelection}
+             activeSetIsMultiSelect={setIsMultiSelect}
+             activeClearSelection={clearSelection}
+             isStaffMode={true}
           />
           <AdminFloatingButtons 
             onAdd={onImport}

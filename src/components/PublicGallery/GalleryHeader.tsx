@@ -13,9 +13,6 @@ interface GalleryHeaderProps {
   lang: string;
   t: any;
   onRefresh?: () => void;
-  onToggleMultiSelect: () => void;
-  clearSelection: () => void;
-  setIsMultiSelect: (val: boolean) => void;
   onAddPhoto?: () => void;
   onSetLang: (lang: any) => void;
   onExit: () => void;
@@ -37,9 +34,6 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = (props) => {
       t={props.t}
       onHeaderClick={() => {}}
       onRefresh={props.onRefresh || (() => {})}
-      onToggleMultiSelect={props.onToggleMultiSelect}
-      clearSelection={props.clearSelection}
-      setIsMultiSelect={props.setIsMultiSelect}
       onAddPhoto={props.onAddPhoto || (() => {})}
       onSetLang={props.onSetLang}
       onExit={props.onExit}

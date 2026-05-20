@@ -14,7 +14,7 @@ import { AdminGlobalModals } from '../../components/admin/AdminGlobalModals';
 import { ErrorLogViewer } from '../../components/admin/ErrorLogViewer';
 import { BatchEditScreen } from '../../components/admin/BatchEditScreen';
 import { SettingsScreen } from '../../components/SettingsScreen';
-import { PublicGallery } from '../../components/PublicGallery';
+import { AdminGallery } from '../../components/admin/AdminGallery';
 import { PhotoEditDrawer } from '../../components/admin/PhotoEditDrawer';
 import { GroupDetailView } from '../../components/GroupDetailView';
 import { MainAdminScreen } from './MainAdminScreen';
@@ -79,7 +79,10 @@ export const AdminViewContent: React.FC<Props> = ({
     logic.setIsMultiSelect(false);
   }, [logic.checkSyncLock, logic.photos, logic.updatePhotosBulk, logic.setSelectedIds, logic.setIsMultiSelect]);
 
+  const handleLongPressStart = useCallback((p: Photo) => logic.onLongPressStart(p.id), [logic.onLongPressStart]);
+  const handleDeleteDrawer = useCallback((id: string) => logic.handleDeletePhoto(id), [logic.handleDeletePhoto]);
   const handleEditPhoto = useCallback((id) => logic.setEditPhotoId(id as string), [logic.setEditPhotoId]);
+
   const handleDeletePhotos = useCallback((ids) => {
       if (logic.checkSyncLock()) return;
       logic.handleDeletePhoto(ids);
@@ -269,7 +272,7 @@ export const AdminViewContent: React.FC<Props> = ({
             setLightboxIndex={logic.setLightboxIndex}
             isStaffMode={true}
             onEditPhoto={handleEditPhoto}
-            onLongPressStart={useCallback((p: Photo) => logic.onLongPressStart(p.id), [logic.onLongPressStart])}
+            onLongPressStart={handleLongPressStart}
             onLongPressEnd={logic.onLongPressEnd}
             onBatchEdit={handleBatchEdit}
             onUngroup={handleUngroup}
@@ -313,8 +316,7 @@ export const AdminViewContent: React.FC<Props> = ({
                 setShowOtherFields={logic.setShowOtherFields}
                 newPhotoData={logic.newPhotoData} 
                 setNewPhotoData={logic.setNewPhotoData}
-                onDelete={useCallback((id: string) => logic.handleDeletePhoto(id), [logic.handleDeletePhoto])}
-                editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
+                onDelete={handleDeleteDrawer}                editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
                 abortAnalysis={logic.abortAnalysis}
                 handleSingleAiAnalyze={logic.handleSingleAiAnalyze}
                 handleTranslate={logic.handleTranslate}
@@ -358,15 +360,12 @@ export const AdminViewContent: React.FC<Props> = ({
                    photos={logic.photos}
                    categories={logic.categories}
                    tags={logic.tags}
-                   isStaffMode={true}
-                   onTogglePinned={logic.togglePinned}
                    settings={logic.settings}
                    isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
                    isFetchingNextPage={isFetchingNextPage}
                    onExit={handleExitPublic}
                    showExit={true}
                    onRefresh={handleRefreshPublic}
-                   onOpenSettings={handleOpenSettingsPublic}
                    hideHeader={false}
                    columns={logic.columns}
                    setColumns={logic.setColumns}

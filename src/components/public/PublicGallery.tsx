@@ -1,20 +1,19 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../types';
-import { ArrowUpToLine, MessageCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { PhotoLightbox } from './PhotoLightbox';
-import { StaffUnlockDialog } from './StaffUnlockDialog';
-import { WhatsAppChoiceDialog } from './WhatsAppChoiceDialog';
-import { GroupDetailView } from './GroupDetailView';
-import { usePublicGalleryLogic } from './PublicGallery/usePublicGalleryLogic';
-import { GalleryHeader } from './PublicGallery/GalleryHeader';
-import { GalleryFilters } from './PublicGallery/GalleryFilters';
-import { GalleryGrid } from './PublicGallery/GalleryGrid';
-import { GallerySkeleton } from './PublicGallery/GallerySkeleton';
-import { GalleryEmpty } from './PublicGallery/GalleryEmpty';
-import { GalleryDialogs } from './PublicGallery/GalleryDialogs';
-import { PublicFloatingButtons } from './public/PublicFloatingButtons';
-import { getSkeletonCount } from '../utils/skeletonHelpers';
+import { PhotoLightbox } from '../PhotoLightbox';
+import { ErrorBoundary } from 'react-error-boundary';
+import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
+import { GroupDetailView } from '../GroupDetailView';
+import { usePublicGalleryLogic } from '../PublicGallery/usePublicGalleryLogic';
+import { GalleryHeader } from '../PublicGallery/GalleryHeader';
+import { GalleryFilters } from '../PublicGallery/GalleryFilters';
+import { GalleryGrid } from '../PublicGallery/GalleryGrid';
+import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
+import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
+import { GalleryDialogs } from '../PublicGallery/GalleryDialogs';
+import { PublicFloatingButtons } from './PublicFloatingButtons';
+import { getSkeletonCount } from '../../utils/skeletonHelpers';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -25,56 +24,39 @@ interface PublicGalleryProps {
   showExit?: boolean;
   onLogin?: () => void;
   loginWithGoogle?: () => Promise<any>;
-  internalPassword?: string;
   settings?: AppSettings;
   isRefreshing?: boolean;
   isFetchingNextPage?: boolean;
   onRefresh?: () => void;
   user?: User | null;
-  tags?: Tag[];
   columns?: 2 | 3 | 5;
   setColumns?: (val: 2 | 3 | 5) => void;
-  cloudCount?: number | null;
-  hideHeader?: boolean;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
   totalCount?: number;
   initialHash?: string;
   initialGroupId?: string;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
-  const logic = usePublicGalleryLogic(props);
+  const logic = usePublicGalleryLogic({
+    ...props,
+    isAdminMode: false,
+    selectedIds: [],
+    isMultiSelect: false,
+  });
+
   const {
     settings, user, isSyncing: rawIsSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
-    selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder,
+    selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
-    handleLoadMore, navigate, sortedTags, gridPhotos, displayPhotos, t, lang, categories, manufacturers, contextTags, isStaffMode
+    handleLoadMore, navigate, sortedTags, gridPhotos, displayPhotos, t, lang, categories, manufacturers, contextTags
   } = logic;
 
-  // Only show syncing state if it lasts longer than 150ms to prevent skeleton flash
-  const [isSyncing, setIsSyncing] = useState(false);
-  React.useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (rawIsSyncing) {
-      timer = setTimeout(() => setIsSyncing(true), rawIsSyncing === true && gridPhotos.length === 0 ? 0 : 800);
-    } else {
-      setIsSyncing(false);
-    }
-    return () => clearTimeout(timer);
-  }, [rawIsSyncing, gridPhotos.length]);
-
-  const [showPassPrompt, setShowPassPrompt] = useState(false);
-  const [passInput, setPassInput] = useState('');
-  const [passError, setPassError] = useState(false);
-
-  const handleLoginClick = () => {
-    if (!props.isAdminMode && !user && !isStaffMode) setShowPassPrompt(true);
-    else if (props.onExit) props.onExit();
-    else navigate('/admin');
-  };
+  const virtuosoComponents = {};
+  const isSyncing = !!props.isRefreshing;
 
   const virtuosoContext = useMemo(() => ({
     hasMore: props.hasMore,
@@ -86,32 +68,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     textLoading: t.loading
   }), [props.hasMore, isSyncing, props.isFetchingNextPage, gridPhotos.length, t]);
 
-  const startLongPressTimer = React.useRef<NodeJS.Timeout | null>(null);
-
-  const startLongPress = (id: string) => {
-    // Basic implementation, simplified for refactor
-    if (props.isAdminMode) {
-      startLongPressTimer.current = setTimeout(() => {
-        activeSetIsMultiSelect(true);
-        activeToggleSelection(id);
-      }, 400); // 400ms delay for long press
-    }
-  };
-
-  const endLongPress = () => {
-    if (startLongPressTimer.current) {
-        clearTimeout(startLongPressTimer.current);
-        startLongPressTimer.current = null;
-    }
-  };
-
   const handleContactWhatsApp = (photo: Photo) => {
     if (settings?.whatsapp_1 && !settings?.whatsapp_2) {
       openWhatsApp(settings.whatsapp_1, photo);
     } else {
       setShowWhatsAppChoice(true);
-      // Wait, we can't easily pass photo to the dialog right now without state.
-      // So let's just let it be generic for now if they have multiple options.
     }
   };
 
@@ -121,24 +82,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       animate={{ opacity: 1 }}
       className="flex flex-col h-full bg-bg w-full overflow-hidden text-text"
     >
-      {lightboxIndex === null && !props.hideHeader && (
+      {lightboxIndex === null && (
         <GalleryHeader 
           totalCount={props.totalCount}
           settings={settings}
           photos={props.photos}
-          isRefreshing={!!isSyncing}
-          isMultiSelect={!!activeIsMultiSelect}
+          isRefreshing={isSyncing}
+          isMultiSelect={false}
           lang={lang}
           t={t}
           onRefresh={props.onRefresh}
-          onToggleMultiSelect={() => activeSetIsMultiSelect(!activeIsMultiSelect)}
-          clearSelection={activeClearSelection}
-          setIsMultiSelect={props.setIsMultiSelect || activeSetIsMultiSelect}
-          onAddPhoto={props.onAddPhoto}
-          onSetLang={setLang}
-          onExit={props.onExit || handleLoginClick}
+          onSetLang={logic.setLang}
+          onExit={props.onExit}
           onLogin={props.onLogin}
-          onOpenSettings={props.onOpenSettings}
         />
       )}
 
@@ -148,8 +104,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         setSearchQuery={setSearchQuery}
         sortOrder={sortOrder}
         toggleSortOrder={toggleSortOrder}
-        columns={columns}
-        setColumns={setColumns}
+        columns={props.columns || 3}
+        setColumns={props.setColumns || (() => {})}
         showGroupsCollapsed={showGroupsCollapsed}
         setShowGroupsCollapsed={setShowGroupsCollapsed}
         categories={categories}
@@ -166,11 +122,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       />
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {(() => {
             const isInitialLoad = isSyncing && gridPhotos.length === 0;
             if (isInitialLoad) {
-              const skeletonCount = getSkeletonCount(props.totalCount, columns);
+              const skeletonCount = getSkeletonCount(props.totalCount, props.columns || 3);
               return (
                 <motion.div 
                   key="skeleton"
@@ -180,7 +136,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                   transition={{ duration: 0.2 }}
                   className="absolute inset-0 z-10 bg-brand-bg"
                 >
-                  <GallerySkeleton columns={columns} count={skeletonCount} />
+                  <GallerySkeleton columns={props.columns || 3} count={skeletonCount} />
                 </motion.div>
               );
             }
@@ -210,7 +166,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     virtuosoRef={virtuosoRef}
                     gridPhotos={gridPhotos}
                     displayPhotos={displayPhotos}
-                    columns={columns}
+                    columns={props.columns || 3}
                     virtuosoComponents={virtuosoComponents}
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
@@ -269,16 +225,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       />
 
       <GalleryDialogs 
-        showPassPrompt={showPassPrompt}
-        setShowPassPrompt={setShowPassPrompt}
-        passInput={passInput}
-        setPassInput={setPassInput}
-        passError={passError}
-        setPassError={setPassError}
+        showPassPrompt={false}
+        setShowPassPrompt={() => {}}
+        passInput={''}
+        setPassInput={() => {}}
+        passError={false}
+        setPassError={() => {}}
         t={t}
         loginWithGoogle={props.loginWithGoogle}
         settings={settings}
-        setIsStaffMode={setIsStaffMode}
+        setIsStaffMode={() => {}}
         navigate={navigate}
         showWhatsAppChoice={showWhatsAppChoice}
         setShowWhatsAppChoice={setShowWhatsAppChoice}

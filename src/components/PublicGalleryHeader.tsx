@@ -16,9 +16,6 @@ interface PublicGalleryHeaderProps {
   t: Record<string, any>;
   onHeaderClick: () => void;
   onRefresh: () => void;
-  onToggleMultiSelect: () => void;
-  clearSelection: () => void;
-  setIsMultiSelect: (val: boolean) => void;
   onAddPhoto: () => void;
   onSetLang: (lang: LanguageCode) => void;
   onExit?: () => void;
@@ -28,8 +25,8 @@ interface PublicGalleryHeaderProps {
 }
 
 export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
-  settings, photos, isAdminMode, isRefreshing, isMultiSelect, lang, t,
-  onHeaderClick, onRefresh, onToggleMultiSelect, clearSelection, setIsMultiSelect, onAddPhoto, onSetLang, onExit, onOpenSettings, totalCount
+  settings, photos, isRefreshing, lang, t,
+  onHeaderClick, onRefresh, onAddPhoto, onSetLang, onExit, onLogin, onOpenSettings, totalCount
 }) => {
   return (
     <header className="shrink-0 z-50 bg-brand-bg px-3 sm:px-4 py-1 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
@@ -49,40 +46,13 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
             ) : (
               <>
                 <div className="w-2 h-2 border border-brand-navy/20 border-t-brand-navy rounded-full animate-spin shrink-0" />
-                {t.gallerySub(filterPhotosByMode(photos, isAdminMode).length)}
+                {t.gallerySub(photos.length)}
               </>
             )}
           </span>
         </div>
       </div>
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          {isAdminMode && (
-            <div className="flex items-center gap-2 mr-1">
-              <button 
-                onClick={() => {
-                  if (isMultiSelect) {
-                    clearSelection();
-                    setIsMultiSelect(false);
-                  } else {
-                    setIsMultiSelect(true);
-                  }
-                }}
-                className={`h-9 px-2.5 sm:px-3 rounded-xl flex items-center sm:gap-1.5 transition-all shadow-sm active:scale-95 border ${isMultiSelect ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-500'}`}
-                title={isMultiSelect ? t.cancelSelect : t.selectMode}
-              >
-                <Grid3X3 size={16} />
-                <span className="hidden sm:inline text-[10px] font-bold whitespace-nowrap">{isMultiSelect ? t.cancelSelect : t.selectMode}</span>
-              </button>
-              <button 
-                onClick={onAddPhoto}
-                className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center transition-all shadow-lg hover:bg-blue-700 active:scale-95"
-                title={t.addPhoto}
-              >
-                <Plus size={20} />
-              </button>
-            </div>
-          )}
-
           <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
             {[
               { code: 'zh', label: '中文' },
@@ -101,39 +71,16 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           >
             <RefreshCcw size={18} />
           </button>
-
-          {isAdminMode ? (
-            onExit && (
-              <button 
-                onClick={onExit}
-                className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1"
-                title="Globe"
-              >
-                <Globe size={18} />
-              </button>
-            )
-          ) : (
-            <button
-               onClick={onExit}
-               className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
-               title={t.login}
-            >
-              <div className="flex items-center justify-center relative">
-                <Globe size={18} className="opacity-40" />
-                <Plus size={10} className="absolute -top-1 -right-1 text-blue-600 stroke-[3px]" />
-              </div>
-            </button>
-          )}
-
-          {isAdminMode && (
-            <button 
-              onClick={onOpenSettings}
-              className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center transition-all shadow-sm hover:ring-2 hover:ring-blue-500 active:scale-95"
-              title={t.settings}
-            >
-              <Settings2 size={18} />
-            </button>
-          )}
+          <button
+             onClick={onExit}
+             className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
+             title={t.login}
+          >
+            <div className="flex items-center justify-center relative">
+              <Globe size={18} className="opacity-40" />
+              <Plus size={10} className="absolute -top-1 -right-1 text-blue-600 stroke-[3px]" />
+            </div>
+          </button>
       </div>
     </header>
   );

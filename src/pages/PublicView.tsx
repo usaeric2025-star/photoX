@@ -7,7 +7,7 @@ import {
   useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback
 } from '../hooks';
 import { fetchSettings, loginWithGoogle } from '../services/supabaseService';
-import { PublicGallery } from '../components/PublicGallery';
+import { PublicGallery } from '../components/public/PublicGallery';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
@@ -143,16 +143,21 @@ export default function PublicView() {
               <PublicGallery 
                 photos={photos}
                 categories={categoriesData}
-                  settings={settings}
-                  isRefreshing={isPhotosLoading}
-                  onRefresh={handleRefresh}
-                  onLoadMore={handleLoadMore}
-                  hasMore={hasNextPage}
-                  isFetchingNextPage={isFetchingNextPage}
-                  totalCount={countData}
-                  initialHash={hash}
-                  initialGroupId={groupId}
-                />
+                tags={[]} // Pass empty if no tags
+                onExit={() => navigate('/admin')}
+                onLogin={() => navigate('/admin')}
+                loginWithGoogle={loginWithGoogle}
+                user={user}
+                settings={settings}
+                isRefreshing={isPhotosLoading}
+                onRefresh={handleRefresh}
+                onLoadMore={handleLoadMore}
+                hasMore={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                totalCount={countData}
+                initialHash={hash}
+                initialGroupId={groupId}
+              />
             </ErrorBoundary>
           </motion.div>
         )}
