@@ -106,8 +106,8 @@ export const usePublicGalleryLogic = (props: {
     }
   );
 
-  const lang = (langStore || 'en') as LanguageCode;
-  const t = useMemo(() => translations[lang] || translations['en'], [lang]);
+  const lang = (langStore && translations[langStore]) ? langStore : 'zh';
+  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
 
   const [internalColumns, setInternalColumns] = useState<2 | 3 | 5>(() => {
     if (typeof window === 'undefined') return 3;

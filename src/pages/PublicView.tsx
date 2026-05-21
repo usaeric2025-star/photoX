@@ -94,6 +94,11 @@ export default function PublicView() {
   const { data: categoriesData = [] } = useCategoriesQuery();
   const { settings, isLoading: isSettingsLoading } = useSettings();
   const { user } = useAuth();
+  
+  if (isSettingsLoading || !settings) {
+    return <FullPageLoading />;
+  }
+  
   const { hasLoadedOnce, setHasLoadedOnce } = useStore();
 
   const infiniteQuery = useInfinitePhotos({
