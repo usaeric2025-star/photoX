@@ -37,18 +37,18 @@ const PhotoInfoFooter: React.FC<{
   isUncategorized: boolean; 
   photoTags: string[] 
 }> = ({ displayCatName, isUncategorized, photoTags }) => (
-  <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[45%] flex flex-col justify-end items-start gap-0.5">
+  <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
      {!isUncategorized && displayCatName && (
-      <p className="text-[16px] font-extrabold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate w-full mb-0.5 tracking-tight px-0.5">
+      <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
         {displayCatName}
       </p>
     )}
     {photoTags.length > 0 && (
-      <div className="flex flex-nowrap gap-0.5 w-full overflow-hidden px-0.5 pb-0.5">
-        {photoTags.slice(0, 3).map((tag, i) => (
+      <div className="flex flex-nowrap gap-1 w-full overflow-x-auto pointer-events-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-0.5 pb-0.5 mt-auto">
+        {photoTags.map((tag, i) => (
           <span 
             key={i} 
-            className="shrink-0 text-[7.5px] text-white/95 font-bold px-1 py-[2px] bg-white/20 backdrop-blur-md rounded-[4px] border border-white/20 leading-none whitespace-nowrap shadow-sm"
+            className="shrink-0 text-[8.5px] text-white/95 font-bold px-1.5 py-0.5 bg-white/20 backdrop-blur-md rounded-[4px] border border-white/20 leading-none shadow-sm uppercase tracking-wide"
           >
             {tag}
           </span>

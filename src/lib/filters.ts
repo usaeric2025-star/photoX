@@ -223,14 +223,12 @@ export function sortGroupPhotos(photos: Photo[]): Photo[] {
 }
 
 export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'newest' | 'oldest' | 'name' = 'newest', globalPhotos?: Photo[]): Photo[] {
-  const cleanedPhotos = cleanPhotos(photos);
-  if (cleanedPhotos.length === 0 && Array.isArray(photos) && photos.length > 0) return [];
-  if (!showGroupsCollapsed) return cleanedPhotos;
+  if (photos.length === 0) return [];
 
   const groups = new Map<string, Photo[]>();
   const groupMaxTime = new Map<string, number>();
 
-  cleanedPhotos.forEach(p => {
+  photos.forEach(p => {
     if (p.group_id) {
       if (!groups.has(p.group_id)) groups.set(p.group_id, []);
       groups.get(p.group_id)!.push(p);
@@ -254,21 +252,35 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
   const representatives: Photo[] = [];
   const groupsSeen = new Set<string>();
 
-  cleanedPhotos.forEach(p => {
+  photos.forEach(p => {
     if (!p.group_id) {
-      representatives.push(p);
+      // For ungroupped items, just give them their own time
+      const time = p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime();
+      const item = { ...p, _time: time };
+      representatives.push(item);
     } else if (!groupsSeen.has(p.group_id)) {
       groupsSeen.add(p.group_id);
       const groupList = groups.get(p.group_id) || [];
       const sorted = sortGroupPhotos(groupList);
       
-      const trueMemberCount = globalGroupCounts.has(p.group_id) 
-        ? globalGroupCounts.get(p.group_id)! 
-        : groupList.length;
-        
-      const cover = { ...sorted[0], member_count: trueMemberCount };
-      cover._time = groupMaxTime.get(p.group_id)!;
-      representatives.push(cover);
+      if (showGroupsCollapsed) {
+        const trueMemberCount = globalGroupCounts.has(p.group_id) 
+          ? globalGroupCounts.get(p.group_id)! 
+          : groupList.length;
+          
+        const cover = { ...sorted[0], member_count: trueMemberCount };
+        cover._time = groupMaxTime.get(p.group_id)!;
+        representatives.push(cover);
+      } else {
+        // Flat expansion but bind them under the same time logic so they stay together
+        sorted.forEach(member => {
+           const time = groupMaxTime.get(member.group_id as string)!;
+           // Subtracting a tiny amount per index could keep them ordered internally, but their index does it
+           const idx = sorted.indexOf(member);
+           const m = { ...member, _time: time - idx }; // slight offset to keep internal order
+           representatives.push(m);
+        });
+      }
     }
   });
   
@@ -285,6 +297,6 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
 
     return sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
   });
-
+  
   return representatives;
 }

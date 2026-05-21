@@ -63,20 +63,22 @@ const PhotoInfoFooter: React.FC<{
   isUncategorized: boolean; 
   photoTags: string[] 
 }> = ({ displayCatName, isUncategorized, photoTags }) => (
-  <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+<div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
      {!isUncategorized && displayCatName && (
-      <p className="text-[11px] font-bold tracking-tight text-white drop-shadow-lg mb-0.5 truncate">
+      <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
         {displayCatName}
       </p>
     )}
     {photoTags.length > 0 && (
-      <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {photoTags.slice(0, 3).map((tagName, idx) => (
-          <span key={idx} className="bg-black/30 text-white text-[9px] px-1.5 rounded font-medium whitespace-nowrap">
-            {tagName}
+      <div className="flex flex-nowrap gap-1 w-full overflow-x-auto pointer-events-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-0.5 pb-0.5 mt-auto">
+        {photoTags.map((tag, i) => (
+          <span 
+            key={i} 
+            className="shrink-0 text-[8.5px] text-white/95 font-bold px-1.5 py-0.5 bg-white/20 backdrop-blur-md rounded-[4px] border border-white/20 leading-none shadow-sm uppercase tracking-wide"
+          >
+            {tag}
           </span>
         ))}
-        {photoTags.length > 3 && <span className="text-[9px] text-white/70 px-1">...</span>}
       </div>
     )}
   </div>

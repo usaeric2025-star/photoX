@@ -74,7 +74,7 @@ export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode:
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
-      return loaded < lastPage.total ? allPages.length + 1 : undefined;
+      return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
     },
     placeholderData: keepPreviousData,
     refetchOnWindowFocus: false,

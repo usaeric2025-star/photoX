@@ -6,6 +6,8 @@ import { Category, Tag, AppSettings } from '../types';
 import { cn } from '../lib/utils';
 import { toTitleCase } from '../lib/ui-helpers';
 
+import { useTagsDisplay } from '../hooks/useTagsDisplay';
+
 interface PublicGalleryFiltersProps {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
@@ -37,44 +39,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   selectedTagIds, setSelectedTagIds, sortedTags, lang, t,  onScrollToTop,
   showHotEffects = true, settings
 }) => {
-  const tagStats = useGalleryStore(s => s.tagStats);
-  const hotIds = useMemo(() => {
-    const hotTagsCount = settings?.hot_tags_count ?? 9;
-    const hotTagThreshold = settings?.hot_tag_threshold ?? 1;
-    const pinnedIds = (settings?.pinned_tags || []).map(id => String(id));
-
-    const enrichedTags = sortedTags.map(t => ({
-      ...t,
-      // Use DB usage_count or store calculated tagStats
-      usage_count: Math.max(t.usage_count || 0, tagStats[String(t.id)] || 0)
-    }));
-
-    const candidates = enrichedTags.filter(tag => 
-      !tag.is_pinned && 
-      !pinnedIds.includes(String(tag.id)) && 
-      (tag.usage_count || 0) >= hotTagThreshold
-    )
-    .sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))
-    .slice(0, hotTagsCount);
-    
-    return new Set(candidates.map(t => String(t.id)));
-  }, [sortedTags, tagStats, settings?.hot_tags_count, settings?.hot_tag_threshold, settings?.pinned_tags]);
-
-  const tagsToRender = useMemo(() => {
-    return [...sortedTags].sort((a, b) => {
-      const aPinned = !!a.is_pinned;
-      const bPinned = !!b.is_pinned;
-      if (aPinned && !bPinned) return -1;
-      if (!aPinned && bPinned) return 1;
-      
-      const aHot = hotIds.has(String(a.id));
-      const bHot = hotIds.has(String(b.id));
-      if (aHot && !bHot) return -1;
-      if (!aHot && bHot) return 1;
-      
-      return 0; 
-    });
-  }, [sortedTags, hotIds]);
+  const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(sortedTags, settings);
 
   return (
     <div className="shrink-0 px-2 sm:px-3 pt-2 pb-1.5 z-40 bg-white border-b border-[#ECECEC]">
@@ -208,17 +173,17 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           )}
         </AnimatePresence>
 
-        <div className="max-h-[58px] overflow-y-auto pb-1 scrollbar-hide -mx-1 px-1">
-          <div className="flex flex-wrap gap-1.5 items-start content-start">
+        <div className="overflow-y-auto max-h-[120px] scrollbar-hide pb-1 -mx-1 px-1">
+          <div className="flex flex-wrap gap-1.5">
             {tagsToRender.length === 0 ? (
               Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="h-[24px] w-14 bg-[#F5F5F5] animate-pulse rounded-full shrink-0" />
+                <div key={i} className="h-[22px] w-14 bg-[#F5F5F5] animate-pulse rounded-full shrink-0" />
               ))
             ) : (
               tagsToRender.map((tag, idx) => {
                 const strTagId = String(tag.id);
                 const isSelected = (selectedTagIds || []).includes(strTagId);
-                const isPinned = !!tag.is_pinned;
+                const isPinned = !!tag.is_pinned || pinnedIds.includes(strTagId);
                 const isHot = !isPinned && hotIds.has(strTagId); 
                 const label = tag.zh || tag.name;
                 const displayLabel = lang === 'zh' ? label : label.toUpperCase();

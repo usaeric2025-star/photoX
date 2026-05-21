@@ -6,6 +6,7 @@ import { saveSettings } from '../../services/settingService';
 import { useGalleryStore } from '../../store';
 import { Tag } from '../../types';
 import { useFeedback } from '../../hooks';
+import { useTagsDisplay } from '../../hooks/useTagsDisplay';
 
 interface TagEditorProps {
   tags: Tag[];
@@ -46,22 +47,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
     }
   };
 
-  const hotTagsSet = useMemo(() => {
-    if (!showHotEffects) return new Set<string>();
-    const count = settings?.hot_tags_count || 9;
-    const pinned = settings?.pinned_tags || [];
-    const set = new Set<string>(pinned);
-    
-    if (set.size < count && tags.length > 0) {
-      const candidates = tags.filter(t => !set.has(String(t.id)));
-      const sorted = [...candidates].sort((a, b) => a.name.localeCompare(b.name));
-      const needed = count - set.size;
-      for (let i = 0; i < needed && i < sorted.length; i++) {
-         set.add(String(sorted[i].id));
-      }
-    }
-    return set;
-  }, [settings?.hot_tags_count, settings?.pinned_tags, tags, showHotEffects]);
+  const { hotIds: hotTagsSet, pinnedIds } = useTagsDisplay(tags, settings);
 
   const filteredTags = useMemo(() => {
     const list = (Array.from(new Map(tags.map(t => [t.id, t])).values()) as Tag[]).filter((tag: Tag) => 
@@ -74,8 +60,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       if (aSelected && !bSelected) return -1;
       if (!aSelected && bSelected) return 1;
 
-      const aPinned = (settings?.pinned_tags || []).includes(String(a.id));
-      const bPinned = (settings?.pinned_tags || []).includes(String(b.id));
+      const aPinned = pinnedIds.includes(String(a.id));
+      const bPinned = pinnedIds.includes(String(b.id));
       if (aPinned && !bPinned) return -1;
       if (!aPinned && bPinned) return 1;
 
@@ -86,7 +72,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [tags, searchTerm, settings?.pinned_tags, hotTagsSet, selectedTagIds]);
+  }, [tags, searchTerm, pinnedIds, hotTagsSet, selectedTagIds]);
 
   return (
     <div className="space-y-2">
@@ -116,7 +102,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
         {filteredTags.map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
-          const isPinned = (settings?.pinned_tags || []).includes(String(tag.id));
+          const isPinned = pinnedIds.includes(String(tag.id));
           const isDisabled = !isSelected && selectedTagIds.length >= 3;
 
           return (
@@ -190,8 +176,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                     setActiveActionTag(null); 
                   }}
                 >
-                   <Heart size={18} strokeWidth={2.5} className={(settings?.pinned_tags || []).includes(String(activeActionTag.id)) ? "fill-amber-600" : ""} /> 
-                   {(settings?.pinned_tags || []).includes(String(activeActionTag.id)) ? '取消置顶 / Unpin' : '设为置顶 / Pin as Hot'}
+                   <Heart size={18} strokeWidth={2.5} className={pinnedIds.includes(String(activeActionTag.id)) ? "fill-amber-600" : ""} /> 
+                   {pinnedIds.includes(String(activeActionTag.id)) ? '取消置顶 / Unpin' : '设为置顶 / Pin as Hot'}
                 </button>
                 <button 
                   type="button"

@@ -4,6 +4,7 @@ import { Photo } from '../types';
 import { normalizeSearchQuery } from '../utils/stringHelper';
 import { VISIBILITY_OR_QUERY } from '../constants/photoConstants';
 import { globalHandleError } from '../utils/errorHandler';
+import { PAGINATION } from '../config/constants';
 
 export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     if (!item) return {} as Photo;
@@ -201,6 +202,21 @@ export const loadAllPhotosFromCloud = async (
 export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {
     if (!groupId) return [];
 
+    if (!isAdminMode) {
+        try {
+            const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
+            if (error) {
+                console.warn('get_group_with_photos RPC failed, falling back to query', error);
+                throw error;
+            }
+            if (data && data.photos) {
+                return data.photos.map((item: any) => mapSupabasePhoto(item));
+            }
+        } catch (e) {
+            // Fallback: normal query
+        }
+    }
+
     let query = supabase
         .from(DB_CONFIG.TABLE_NAME)
         .select('*, photo_tags(*)')
@@ -220,8 +236,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     return (data || []).map(item => mapSupabasePhoto(item));
 };
 
-import { PAGINATION } from '../config/constants';
-// ...
+
 export const loadPhotosByGroupIdPaginated = async (
   groupId: string,
   page: number = 1,
@@ -232,6 +247,26 @@ export const loadPhotosByGroupIdPaginated = async (
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+
+  if (!isAdminMode) {
+    if (page > 1) {
+       // RPC might return all so only hit on page 1, but just in case, let's keep going if needed?
+       // Let's rely on RPC if possible
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
+      if (error) throw error;
+      if (data && data.photos) {
+         const photos = data.photos.map((item: any) => mapSupabasePhoto(item));
+         // if RPC returns all items, handle pagination here
+         const paginatedPhotos = photos.slice(from, to + 1);
+         return { photos: paginatedPhotos, total: data.total_count || photos.length };
+      }
+    } catch (e) {
+       // Fallback
+    }
+  }
 
   let countQuery = supabase
     .from(DB_CONFIG.TABLE_NAME)

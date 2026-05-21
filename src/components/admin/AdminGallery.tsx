@@ -96,7 +96,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
       return {
         ...t,
         is_pinned: t.is_pinned || pinnedIds.has(strId),
-        usage_count: Math.max(t.usage_count || 0, tagStats[strId] || 0)
+        usage_count: Math.max(t.usage_count || 0, tagStats?.[strId] || 0)
       };
     });
     return sortTagsByPopularity(enrichedTags);
