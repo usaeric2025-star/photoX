@@ -67,14 +67,20 @@ export const PublicPhotoCard: React.FC<PublicPhotoCardProps> = React.memo(({
   lang, t, categories, manufacturers, tagMap, onGroupClick, 
   onLightboxOpen, shareSinglePhoto, displayPhotos
 }) => {
+  const displayPhotosRef = React.useRef(displayPhotos);
+  React.useEffect(() => {
+    displayPhotosRef.current = displayPhotos;
+  }, [displayPhotos]);
+
   const handleOpenLightbox = useCallback(() => {
-    const realIndex = displayPhotos.findIndex((p) => p?.id === photo.id);
+    const currentPhotos = displayPhotosRef.current;
+    const realIndex = currentPhotos.findIndex((p) => p?.id === photo.id);
     if (realIndex !== -1) {
-      onLightboxOpen(realIndex, displayPhotos);
+      onLightboxOpen(realIndex, currentPhotos);
     } else {
-      onLightboxOpen(index, displayPhotos);
+      onLightboxOpen(index, currentPhotos);
     }
-  }, [photo.id, index, displayPhotos, onLightboxOpen]);
+  }, [photo.id, index, onLightboxOpen]);
     
   const handleClick = useCallback(() => {
     if (photo.groupId && onGroupClick) {

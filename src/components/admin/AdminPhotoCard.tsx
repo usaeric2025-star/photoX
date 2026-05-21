@@ -97,14 +97,20 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   const { isMultiSelect, selectedIds, enable, toggle } = useMultiSelect();
   const isSelected = selectedIds.includes(photo.id);
 
+  const displayPhotosRef = React.useRef(displayPhotos);
+  React.useEffect(() => {
+    displayPhotosRef.current = displayPhotos;
+  }, [displayPhotos]);
+
   const handleOpenLightbox = useCallback(() => {
-    const realIndex = displayPhotos.findIndex((p) => p?.id === photo.id);
+    const currentPhotos = displayPhotosRef.current;
+    const realIndex = currentPhotos.findIndex((p) => p?.id === photo.id);
     if (realIndex !== -1) {
-      onLightboxOpen(realIndex, displayPhotos);
+      onLightboxOpen(realIndex, currentPhotos);
     } else {
-      onLightboxOpen(index, displayPhotos);
+      onLightboxOpen(index, currentPhotos);
     }
-  }, [photo.id, index, displayPhotos, onLightboxOpen]);
+  }, [photo.id, index, onLightboxOpen]);
     
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isMultiSelect && !e.shiftKey) {
