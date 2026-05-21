@@ -9,7 +9,7 @@ export const useInfinitePhotos = (filters: {
   searchQuery?: string | null; 
   sortOrder?: 'asc' | 'desc' | string | null;
   isAdminMode?: boolean 
-}, limit: number = 20) => {
+}, limit: number = PAGINATION.DEFAULT_PAGE_SIZE) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
     queryFn: async ({ pageParam = 1, signal }) => {

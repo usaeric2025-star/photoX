@@ -52,11 +52,15 @@ export default function PublicView() {
     setHasLoadedOnce
   } = useStore();
   
+  // 状态
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  
   // 查询
   const infiniteQuery = useInfinitePhotos({
     category_id: filterCatId,
     tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
-    searchQuery: '', // Placeholder, will fix
+    searchQuery: debouncedSearchQuery,
     sortOrder: sortOrder,
     isAdminMode: false
   }, PAGINATION.DEFAULT_PAGE_SIZE);
@@ -64,12 +68,9 @@ export default function PublicView() {
   const { data: countData } = usePhotoCountQuery({
     category_id: filterCatId,
     tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
-    searchQuery: '',
+    searchQuery: debouncedSearchQuery,
   });
   
-  // 状态
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   
