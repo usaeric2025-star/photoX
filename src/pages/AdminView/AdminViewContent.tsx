@@ -165,7 +165,7 @@ export const AdminViewContent: React.FC<Props> = ({
           <main className="flex-1 relative overflow-hidden">
             {/* We keep MainAdminScreen and PublicGallery mounted to preserve scroll position and avoid flickering */}
             <div 
-              className={`absolute inset-0 transition-opacity duration-200 ease-out ${logic.activeScreen === 'home' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
+              className={`absolute inset-0 transition-opacity duration-200 ease-out ${logic.activeScreen === 'home' || logic.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
             >
               <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <MainAdminScreen 

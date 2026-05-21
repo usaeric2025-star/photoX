@@ -148,7 +148,7 @@ const initialState: UIState = {
   viewMode: 'grid',
   adminPreviewMode: 'private',
   isSyncing: false,
-  activeScreen: 'gallery',
+  activeScreen: 'home',
   isInfiniteMode: true,
   geminiApiKey: null,
   customModel: 'gemini-2.0-flash-exp',
@@ -256,7 +256,7 @@ export const useStore = create<StoreState>()(
         const nextMode = state.adminPreviewMode === 'public' ? 'private' : 'public';
         return {
           adminPreviewMode: nextMode,
-          activeScreen: nextMode === 'public' ? 'gallery' : 'settings',
+          activeScreen: nextMode === 'public' ? 'home' : 'settings',
         };
       }),
 

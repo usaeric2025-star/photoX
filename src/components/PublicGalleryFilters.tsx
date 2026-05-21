@@ -173,7 +173,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           )}
         </AnimatePresence>
 
-        <div className="overflow-y-auto max-h-[120px] scrollbar-hide pb-1 -mx-1 px-1">
+        <div className="overflow-y-auto max-h-[85px] scrollbar-hide pb-1 -mx-1 px-1">
           <div className="flex flex-wrap gap-1.5">
             {tagsToRender.length === 0 ? (
               Array.from({ length: 8 }).map((_, i) => (

@@ -202,19 +202,23 @@ export const loadAllPhotosFromCloud = async (
 export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {
     if (!groupId) return [];
 
-    if (!isAdminMode) {
-        try {
-            const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
-            if (error) {
-                console.warn('get_group_with_photos RPC failed, falling back to query', error);
-                throw error;
-            }
-            if (data && data.photos) {
-                return data.photos.map((item: any) => mapSupabasePhoto(item));
-            }
-        } catch (e) {
-            // Fallback: normal query
+    try {
+        const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
+        if (error) {
+            console.warn('get_group_with_photos RPC failed, falling back to query', error);
+            throw error;
         }
+        if (data) {
+            const rows = Array.isArray(data) ? data : (data.photos || []);
+            // For public mode, we could manually filter here just in case the RPC doesn't do it
+            let photos = rows.map((item: any) => mapSupabasePhoto(item));
+            if (!isAdminMode) {
+               photos = photos.filter(p => !p.is_hidden);
+            }
+            return photos;
+        }
+    } catch (e) {
+        // Fallback: normal query
     }
 
     let query = supabase
@@ -248,24 +252,22 @@ export const loadPhotosByGroupIdPaginated = async (
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  if (!isAdminMode) {
-    if (page > 1) {
-       // RPC might return all so only hit on page 1, but just in case, let's keep going if needed?
-       // Let's rely on RPC if possible
+  try {
+    const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
+    if (error) throw error;
+    if (data) {
+       const rows = Array.isArray(data) ? data : (data.photos || []);
+       let photos = rows.map((item: any) => mapSupabasePhoto(item));
+       if (!isAdminMode) {
+          photos = photos.filter(p => !p.is_hidden);
+       }
+       // handle pagination locally if RPC returns all items
+       const paginatedPhotos = photos.slice(from, to + 1);
+       return { photos: paginatedPhotos, total: photos.length || data.total_count || 0 };
     }
-
-    try {
-      const { data, error } = await supabase.rpc('get_group_with_photos', { group_uuid: groupId });
-      if (error) throw error;
-      if (data && data.photos) {
-         const photos = data.photos.map((item: any) => mapSupabasePhoto(item));
-         // if RPC returns all items, handle pagination here
-         const paginatedPhotos = photos.slice(from, to + 1);
-         return { photos: paginatedPhotos, total: data.total_count || photos.length };
-      }
-    } catch (e) {
-       // Fallback
-    }
+  } catch (e) {
+     console.warn("RPC get_group_with_photos failed for paginated:", e);
+     // Fallback
   }
 
   let countQuery = supabase
