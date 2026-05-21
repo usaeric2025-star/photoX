@@ -8,8 +8,8 @@ import ms from '@/locales/ms.json'
 const translations = { zh, en, ms }
 
 export const useTranslation = () => {
-  const language = useStore((s) => s.language)
+  const language = useStore((s) => s.language) || 'zh'
   // @ts-ignore
-  const t = translations[language]
+  const t = translations[language] || translations['zh']
   return { t, language }
 }

@@ -7,7 +7,7 @@ import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePho
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { useStore } from '../store';
-import { PAGINATION } from '../constants/config';
+import { PAGINATION } from '../config/constants';
 import { Photo } from '../types';
 import { safeArray } from '../lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
@@ -92,7 +92,7 @@ export default function PublicView() {
   }, [searchQuery]);
 
   const { data: categoriesData = [] } = useCategoriesQuery();
-  const { settings } = useSettings();
+  const { settings, isLoading: isSettingsLoading } = useSettings();
   const { hasLoadedOnce, setHasLoadedOnce } = useStore();
 
   const infiniteQuery = useInfinitePhotos({
@@ -101,7 +101,7 @@ export default function PublicView() {
     searchQuery: debouncedSearchQuery,
     sortOrder: sortOrder,
     isAdminMode: false
-  }, PAGINATION.PUBLIC_PAGE_SIZE);
+  }, PAGINATION.DEFAULT_PAGE_SIZE);
 
   const { data: countData } = usePhotoCountQuery({
     category_id: filterCatId,

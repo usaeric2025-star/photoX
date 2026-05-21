@@ -8,7 +8,7 @@ export const useSettings = () => {
     queryKey: ['settings'],
     queryFn: async () => {
       const { data } = await supabase.from('settings').select('*').single()
-      return data
+      return data || {}
     },
   })
 
