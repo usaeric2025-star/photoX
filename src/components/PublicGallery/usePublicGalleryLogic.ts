@@ -128,16 +128,12 @@ export const usePublicGalleryLogic = (props: {
     activeClearSelection();
   }, [searchQuery, selectedCatCode, selectedSubId, selectedTagIds, sortOrder, activeClearSelection]);
 
-  // Clear global filters and selections when entering a group
+  // Clear selections when entering a group
   useEffect(() => {
     if (activeGroupId) {
-      setSelectedCatCode(null);
-      setSelectedSubId(null);
-      setSelectedTagIds([]);
-      setSearchQuery('');
       activeClearSelection();
     }
-  }, [activeGroupId, setSelectedCatCode, setSelectedSubId, setSelectedTagIds, setSearchQuery, activeClearSelection]);
+  }, [activeGroupId, activeClearSelection]);
 
   const dpRef = useRef(displayPhotos);
   useEffect(() => {
