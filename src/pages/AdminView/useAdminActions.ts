@@ -98,10 +98,29 @@ export const useAdminActions = (logic: any) => {
   }, [logic, handleError]);
 
   const handleBatchAiAnalyze = useCallback((photos: Photo[]) => {
-    logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos))
-      .catch((e: Error) => { 
-        handleError(e, '识别失败'); 
-      });
+    logic.setAlertDialog({
+      title: 'AI 群组智能识别 / Group AI Identify',
+      message: `请选择对这 ${photos.length} 张照片进行群组识别的模式：\n\n•「跳过已完善」：仅分析未完成或缺属性的照片，避免重复工作和额外额度开销（推荐）\n•「分析全部」：重新分析并同步特征至该群组的所有照片`,
+      cancelLabel: '取消 / Cancel',
+      confirmLabel: '分析全部 / Analyze All',
+      onConfirm: async () => {
+         try {
+           await logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos, true));
+         } catch (e: any) {
+           handleError(e, '识别失败');
+         }
+      },
+      secondaryAction: {
+         label: '跳过已完善 / Skip Completed',
+         onClick: async () => {
+            try {
+              await logic.withLoading('analyzing', () => logic.handleGroupAiIdentify(photos, false));
+            } catch (e: any) {
+              handleError(e, '识别失败');
+            }
+         }
+      }
+    });
   }, [logic, handleError]);
 
   const handleAiAnalyze = useCallback((p: Photo) => {

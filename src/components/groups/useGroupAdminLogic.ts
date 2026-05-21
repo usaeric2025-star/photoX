@@ -47,21 +47,24 @@ export const useGroupAdminLogic = ({
   const { mutate: mutateSetCover } = useGroupCoverMutation();
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
   
+  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
+  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+
   const setCover = useCallback(async (photoId: string) => {
-      mutateSetCover({ photoId, groupId: activeGroupId || undefined });
+      const isAlreadyCover = groupData?.cover_photo_id === photoId;
+      const targetPhotoId = isAlreadyCover ? null : photoId;
+      mutateSetCover({ photoId: targetPhotoId, groupId: activeGroupId || undefined });
       setGroupData(prev => prev ? {
         ...prev,
-        cover_photo_id: photoId
+        cover_photo_id: targetPhotoId
       } : prev);
-  }, [mutateSetCover, activeGroupId]);
+  }, [mutateSetCover, activeGroupId, groupData?.cover_photo_id]);
 
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
-  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
   const virtuosoRef = useRef<any>(null);
 

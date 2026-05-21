@@ -287,7 +287,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       onUngroup={handleUngroupLightbox}
                       onSetGroupCover={handleSetGroupCoverLightbox}
                       onEditPhoto={(p) => {
-                        handleCloseLightbox();
                         onEditPhoto?.(p);
                       }}
                       onToggleHidden={handleToggleHiddenLightbox}

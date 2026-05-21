@@ -10,9 +10,9 @@ export const useGroupCoverMutation = () => {
   const invalidatePhotos = useInvalidatePhotos();
 
   return useMutation({
-    mutationFn: async ({ photoId, groupId }: { photoId: string, groupId?: string }) => {
+    mutationFn: async ({ photoId, groupId }: { photoId: string | null, groupId?: string }) => {
       let resolvedGroupId = groupId;
-      if (!resolvedGroupId) {
+      if (!resolvedGroupId && photoId) {
         const cachedPages = queryClient.getQueryData<InfiniteData<{ photos: Photo[] }>>(['photos', 'infinite']);
         if (cachedPages?.pages) {
           for (const page of cachedPages.pages) {
@@ -27,7 +27,7 @@ export const useGroupCoverMutation = () => {
 
       if (resolvedGroupId) {
         await setPhotoAsGroupCoverInCloud(photoId, resolvedGroupId);
-      } else {
+      } else if (photoId) {
         await updatePhotosGroupInCloud([photoId], { is_group_cover: true });
       }
     },
@@ -37,7 +37,7 @@ export const useGroupCoverMutation = () => {
       const previousInfinite = queryClient.getQueriesData<InfiniteData<{ photos: Photo[] }>>({ queryKey: ['photos', 'infinite'] });
 
       let resolvedGroupId = groupId;
-      if (!resolvedGroupId) {
+      if (!resolvedGroupId && photoId) {
         for (const [, cacheValue] of previousInfinite) {
           if (cacheValue?.pages) {
             for (const page of cacheValue.pages) {
@@ -56,7 +56,7 @@ export const useGroupCoverMutation = () => {
         if (!old) return old;
         return old.map(photo => ({
           ...photo,
-          is_group_cover: photo.id === photoId
+          is_group_cover: photoId ? photo.id === photoId : false
         }));
       });
 
@@ -67,7 +67,7 @@ export const useGroupCoverMutation = () => {
           pages: (old as InfiniteData<{ photos: Photo[] }>).pages.map((page) => ({
             ...page,
             photos: page.photos.map((photo) => {
-              if (photo.id === photoId) {
+              if (photoId && photo.id === photoId) {
                 return { ...photo, is_group_cover: true };
               }
               if (resolvedGroupId && photo.group_id === resolvedGroupId) {

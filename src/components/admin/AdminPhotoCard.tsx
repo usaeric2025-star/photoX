@@ -74,13 +74,13 @@ const PhotoInfoFooter: React.FC<{
         {photoTags.map((tag, i) => (
           <span 
             key={i} 
-            className="shrink-0 text-[8.5px] text-white/95 font-bold px-1.5 py-0.5 bg-white/20 backdrop-blur-md rounded-[4px] border border-white/20 leading-none shadow-sm uppercase tracking-wide"
+            className="shrink-0 text-[7.5px] text-white/95 font-bold px-1 py-[2px] bg-white/20 backdrop-blur-md rounded-[3px] border border-white/20 leading-none shadow-sm uppercase tracking-wide"
           >
             {tag}
           </span>
-        ))}
-      </div>
-    )}
+         ))}
+       </div>
+     )}
   </div>
 );
 

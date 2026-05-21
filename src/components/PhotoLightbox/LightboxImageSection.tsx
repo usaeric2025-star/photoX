@@ -47,19 +47,6 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
       onTouchEnd={onTouchEnd}
     >
       <div className="absolute top-4 right-4 z-20 flex gap-2">
-        {isAdminMode && (
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onClose();
-              onEditPhoto?.(photo);
-            }}
-            className="w-10 h-10 bg-black/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/40 transition-all"
-            title="编辑此照片"
-          >
-            <Edit3 size={20} />
-          </button>
-        )}
         <button 
           type="button"
           onClick={(e) => {

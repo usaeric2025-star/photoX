@@ -89,18 +89,39 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     }
   }, [editPhotoId, loadingType, setAiDebugInfo]);
 
-  const handleBatchAiIdentifyTrigger = useCallback(async () => {
+  const handleBatchAiIdentifyTrigger = useCallback(async (targetPhotos?: Photo[]) => {
     if (checkSyncLock()) return;
     if (loadingType === 'analyzing') {
       abortAnalysis();
-    } else {
-      try {
-        await withLoading('analyzing', () => handleBatchAiIdentify(photos));
-      } catch (err) {
-        showError(err, 'ai-analyze');
-      }
+      return;
     }
-  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, handleBatchAiIdentify, photos, showError]);
+    const photosToProcess = targetPhotos || photos;
+    if (photosToProcess.length === 0) return;
+
+    setAlertDialog({
+      title: 'AI 批量智能识别 / Batch AI Identify',
+      message: `请选择对这 ${photosToProcess.length} 张照片批量识别的模式：\n\n•「跳过已完善」：仅分析未完成或缺属性（如名称、标签、英文翻译）的照片，省时省额度（推荐）\n•「分析全部」：重新分析所有选择的照片，重写/更新现有属性`,
+      cancelLabel: '取消 / Cancel',
+      confirmLabel: '分析全部 / Analyze All',
+      onConfirm: async () => {
+         try {
+           await withLoading('analyzing', () => handleBatchAiIdentify(photosToProcess, undefined, true));
+         } catch (err) {
+           showError(err, 'ai-analyze');
+         }
+      },
+      secondaryAction: {
+         label: '跳过已完善 / Skip Completed',
+         onClick: async () => {
+            try {
+              await withLoading('analyzing', () => handleBatchAiIdentify(photosToProcess, undefined, false));
+            } catch (err) {
+              showError(err, 'ai-analyze');
+            }
+         }
+      }
+    });
+  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, handleBatchAiIdentify, photos, setAlertDialog, showError]);
 
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
      try {

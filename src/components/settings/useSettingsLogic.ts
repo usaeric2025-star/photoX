@@ -4,7 +4,7 @@ import { useGalleryStore } from '@/store';
 import { testAiConnection } from '@/services/geminiService';
 import { deduplicatePhotos } from '@/services/photoMutationService';
 import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
-import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { useFeedback, useInvalidatePhotos, useTaskExecutor } from '@/hooks';
 import { toast } from 'sonner';
 
 interface UseSettingsLogicProps {
@@ -29,6 +29,7 @@ export const useSettingsLogic = ({
   } = useGalleryStore();
   const { handleError, showSuccess } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
+  const { runTask } = useTaskExecutor();
 
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -74,39 +75,57 @@ export const useSettingsLogic = ({
   }, [user, setAlertDialog, withLoading, performPullSync, handleError, showSuccess]);
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
-    const toastId = toast.loading('正在进行系统健康检测...');
-    try {
-        await withLoading('global', async () => {
-            const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
-            const { backfillThumbHashes } = await import('@/services/photo/backfillService');
-            
-            // 1. Check data consistency
-            const broken = await scanAndRepairPhotoIds(allPhotos);
-            if (broken.length > 0) {
-                handleError(new Error(`发现 ${broken.length} 个异常ID，建议刷新`), '系统检测异常');
-                return;
-            }
-            
-            // 2. Perform backfill of missing ThumbHashes
-            let backfilledCount = 0;
-            await backfillThumbHashes((stats) => {
-                toast.loading(`正在修复: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`, { id: toastId });
-                backfilledCount = stats.success;
-            });
-            
-            // 3. Invalidate query cache if needed
-            if (backfilledCount > 0) {
-                invalidatePhotos();
-                toast.success(`一键检测：系统数据正常，已成功为 ${backfilledCount} 张照片补全已缺失的 ThumbHash 占位图！`, { id: toastId });
-            } else {
-                toast.success('一键检测：系统健康，所有照片均已完全符合 ThumbHash 规范且数据高度一致。', { id: toastId });
-            }
+    await runTask('一键健康检测 / Health Check', async () => {
+        const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
+        const { backfillThumbHashes } = await import('@/services/photo/backfillService');
+        const { supabase } = await import('@/services/supabaseService');
+
+        // 1. Check data consistency
+        const broken = await scanAndRepairPhotoIds(allPhotos);
+        if (broken.length > 0) {
+            throw new Error(`发现 ${broken.length} 个异常ID，建议刷新`);
+        }
+
+        // 2. Check if there are any database photo records without thumb_hash
+        const { data: missingHashes, error: countError } = await supabase
+           .from('furniture_items')
+           .select('id')
+           .is('thumb_hash', null);
+
+        if (countError) throw countError;
+
+        if (!missingHashes || missingHashes.length === 0) {
+            // Under user requirements, skip completely as there are no issues.
+            return { backfilledCount: 0, skipped: true };
+        }
+
+        // 3. Otherwise perform the auto-repair loop
+        let backfilledCount = 0;
+        await backfillThumbHashes((stats) => {
+            backfilledCount = stats.success;
         });
-    } catch (e: any) {
-        toast.dismiss(toastId);
-        handleError(e, '诊断失败');
-    }
-  }, [withLoading, handleError, invalidatePhotos]);
+
+        if (backfilledCount > 0) {
+            invalidatePhotos();
+        }
+        return { backfilledCount, skipped: false };
+    }, {
+        onSuccess: (result) => {
+            if (result?.skipped) {
+                toast.success('一键检测：系统完全健康，无需修复 (已自动略过已完善照片)');
+            } else if (result && result.backfilledCount > 0) {
+                toast.success(`一键检测：诊断修复完成，成功回填 ${result.backfilledCount} 张照片的占位图！`);
+            } else {
+                toast.success('一键检测：系统健康，所有照片均完全符合规范！');
+            }
+        },
+        onError: (err) => {
+            handleError(err, '诊断失败');
+        },
+        showSuccessToast: false,
+        showErrorToast: true
+    });
+  }, [runTask, handleError, invalidatePhotos]);
 
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinned_tags || [];

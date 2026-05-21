@@ -43,16 +43,18 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
     activeAiTaskIds
   } = props;
 
-  const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string) => {
+  const handleBatchAiIdentify = async (photosToProcess: Photo[], existingTaskId?: string, forceAll = false) => {
     setAiDebugInfo(null);
     const effectiveKey = geminiApiKey;
     const sPhotosToProcess = safeArray(photosToProcess);
-    const unProcessed = sPhotosToProcess.filter(p => {
-       const rawTagIds = safeArray(p.tag_ids);
-       const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
-       return (!p.category_id || rawTagIds.length < 2 || !p.name || !hasAllTranslations) && !p.is_analyzing;
-    });
-    
+    const unProcessed = forceAll 
+      ? sPhotosToProcess.filter(p => !p.is_analyzing)
+      : sPhotosToProcess.filter(p => {
+         const rawTagIds = safeArray(p.tag_ids);
+         const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
+         return (!p.category_id || rawTagIds.length < 2 || !p.name || !hasAllTranslations) && !p.is_analyzing;
+      });
+     
     if (isAnalyzingRef.current) return;
     isAnalyzingRef.current = true;
     
@@ -61,7 +63,7 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
       if (existingTaskId) {
         updateTask(existingTaskId, { status: 'completed', progress: 100, message: '所有照片已识别完成' });
       } else {
-        showSuccess("所有照片均已是最新，无需重新识别");
+        showSuccess(forceAll ? "选中的照片均在处理中，无法重新识别" : "所有照片均已是最新，无需重新识别");
       }
       return;
     }

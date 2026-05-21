@@ -263,7 +263,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
               categories={props.categories}
               manufacturers={manufacturers || []}
               onEditPhoto={(p) => {
-                setLightboxIndex(null);
                 props.onEditPhoto?.(p.id);
               }}
               onToggleHidden={props.onToggleHidden as any}
@@ -275,26 +274,28 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
         )}
       </AnimatePresence>
 
-      <GroupDetailView 
-        activeGroupId={activeGroupId}
-        setActiveGroupId={(gid) => {
-          setActiveGroupId(gid);
-          if (gid === null) setActivePhotoId(null);
-        }}
-        initialPhotoId={activePhotoId}
-        photos={props.photos}
-        displayPhotos={displayPhotos}
-        setLightboxIndex={setLightboxIndex}
-        isStaffMode={!!props.isStaffMode}
-        lang={lang}
-        t={t}
-        categories={props.categories}
-        manufacturers={manufacturers}
-        tagMap={tagMap}
-        allTags={contextTags}
-        shareGroup={noop}
-        contactWhatsApp={noop}
-      />
+      {!props.isStaffMode && (
+        <GroupDetailView 
+          activeGroupId={activeGroupId}
+          setActiveGroupId={(gid) => {
+            setActiveGroupId(gid);
+            if (gid === null) setActivePhotoId(null);
+          }}
+          initialPhotoId={activePhotoId}
+          photos={props.photos}
+          displayPhotos={displayPhotos}
+          setLightboxIndex={setLightboxIndex}
+          isStaffMode={!!props.isStaffMode}
+          lang={lang}
+          t={t}
+          categories={props.categories}
+          manufacturers={manufacturers}
+          tagMap={tagMap}
+          allTags={contextTags}
+          shareGroup={noop}
+          contactWhatsApp={noop}
+        />
+      )}
     </motion.div>
   );
 };

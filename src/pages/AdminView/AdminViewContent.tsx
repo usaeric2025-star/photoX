@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useFeedback, useAdminMode, useTasks } from '@/hooks';
+import { useFeedback, useAdminMode, useTasks, useTaskExecutor } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { toast } from 'sonner';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -48,25 +48,46 @@ export const AdminViewContent: React.FC<Props> = ({
 }) => {
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
+  const { runTask } = useTaskExecutor();
 
   const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
   const handleRunMaintenance = useCallback(async () => {
     if (isMaintenanceRunning) return;
     setIsMaintenanceRunning(true);
-    const toastId = toast.loading('正在修复缩略图...');
-    try {
+    await runTask('自动修复缩略图 / Auto Repair ThumbHashes', async () => {
+        const { supabase } = await import('@/services/supabaseService');
+        // First check if there are any missing thumb hashes to avoid needless backfilling
+        const { data: missingHashes, error: countError } = await supabase
+           .from('furniture_items')
+           .select('id')
+           .is('thumb_hash', null);
+        
+        if (countError) throw countError;
+        
+        if (!missingHashes || missingHashes.length === 0) {
+            return { skipped: true };
+        }
+
         await backfillThumbHashes((stats) => {
-            toast.loading(`正在修复: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`, { id: toastId });
+            // progress is handled implicitly as we run in the background task list
         });
-        toast.success('缩略图修复完成', { id: toastId });
-    } catch (e: any) {
-        showError(e, '修复失败，已停止');
-        toast.error(`修复过程中出错: ${e?.message || '未知错误'}`, { id: toastId });
-        throw e;
-    } finally {
-        setIsMaintenanceRunning(false);
-    }
-  }, [showError, isMaintenanceRunning]);
+        return { skipped: false };
+    }, {
+        onSuccess: (res) => {
+            if (res?.skipped) {
+                toast.success('诊断完成：所有照片缩略图高度一致，无需修复！ (已跳过已完善项目)');
+            } else {
+                showSuccess('缩略图自动修复完成');
+            }
+        },
+        onError: (e) => {
+            showError(e, '修复失败，已停止');
+        },
+        showSuccessToast: false,
+        showErrorToast: true
+    });
+    setIsMaintenanceRunning(false);
+  }, [runTask, showError, showSuccess, isMaintenanceRunning]);
   const logic = useAdminViewLogic({
     user, sessionValue, photoValue, uiValue,
     onRefresh: sessionValue.onRefresh,

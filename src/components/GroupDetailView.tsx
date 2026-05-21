@@ -261,7 +261,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                       isStaffMode={props.isStaffMode || false}
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
                       onEditPhoto={(p) => {
-                        setFocusedGroupPhotoId(null);
                         props.onEditPhoto?.(p);
                       }}
                       onToggleHidden={props.onToggleHidden}

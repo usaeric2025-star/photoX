@@ -290,9 +290,8 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
   return data;
 };
 
-export const setPhotoAsGroupCoverInCloud = async (photoId: string, groupId: string) => {
-  const validPhotoId = photoId && !photoId.startsWith('temp-');
-  if (!validPhotoId || !groupId) return;
+export const setPhotoAsGroupCoverInCloud = async (photoId: string | null, groupId: string) => {
+  if (!groupId) return;
 
   // 1. Unset cover for all other photos in the same group
   const { error: unsetError } = await supabase
@@ -304,13 +303,24 @@ export const setPhotoAsGroupCoverInCloud = async (photoId: string, groupId: stri
     throw new Error(unsetError.message || JSON.stringify(unsetError));
   }
 
-  // 2. Set cover for selected target photo
-  const { error: setError } = await supabase
-    .from(DB_CONFIG.TABLE_NAME)
-    .update({ is_group_cover: true })
-    .eq('id', photoId);
+  // 2. Set cover for selected target photo if specified
+  if (photoId) {
+    const validPhotoId = photoId && !photoId.startsWith('temp-');
+    if (validPhotoId) {
+      const { error: setError } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .update({ is_group_cover: true })
+        .eq('id', photoId);
 
-  if (setError) {
-    throw new Error(setError.message || JSON.stringify(setError));
+      if (setError) {
+        throw new Error(setError.message || JSON.stringify(setError));
+      }
+    }
   }
+
+  // 3. Update the groups table's cover_photo_id to keep them in perfect sync
+  await supabase
+    .from('groups')
+    .update({ cover_photo_id: photoId || null })
+    .eq('id', groupId);
 };

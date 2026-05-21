@@ -105,13 +105,9 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                 </button>
 
               <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <button className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
-                      <MoreVertical size={18} />
-                    </button>
-                  }
-                />
+                <DropdownMenuTrigger className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-slate-200 rounded-xl bg-white text-slate-700 shadow-sm active:scale-95 transition-all">
+                  <MoreVertical size={18} />
+                </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
                   <DropdownMenuItem 
                     onClick={() => {

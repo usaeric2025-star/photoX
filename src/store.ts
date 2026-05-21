@@ -284,7 +284,18 @@ export const useStore = create<StoreState>()(
       setGeminiApiKey: (key) => set({ geminiApiKey: key }),
       setCustomModel: (model) => set({ customModel: model }),
       setAccessPasscode: (code) => set({ accessPasscode: code }),
-      setSettings: (settings) => set({ settings }),
+      setSettings: (settings) => {
+        if (settings) {
+          set({ 
+            settings,
+            geminiApiKey: settings.gemini_api_key !== undefined ? settings.gemini_api_key : get().geminiApiKey,
+            customModel: settings.custom_model !== undefined ? settings.custom_model : get().customModel,
+            accessPasscode: settings.access_passcode !== undefined ? settings.access_passcode : get().accessPasscode
+          });
+        } else {
+          set({ settings });
+        }
+      },
       setUser: (user) => set({ user }),
       setIsAnalyzing: (value) => set({ isAnalyzing: value }),
       setAiDebugInfo: (info) => set({ aiDebugInfo: info }),

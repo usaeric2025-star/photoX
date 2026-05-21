@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, X, ChevronUp, ChevronDown, CheckCircle2, AlertCircle, PlayCircle } from 'lucide-react';
 
@@ -164,6 +164,13 @@ const BackgroundTaskPanel: React.FC = () => {
   
   const activeTasks = tasks.filter(t => t.status === 'running');
   const hasTasks = tasks.length > 0;
+
+  // Auto expand when there are active tasks starting
+  useEffect(() => {
+    if (activeTasks.length > 0) {
+      setIsExpanded(true);
+    }
+  }, [activeTasks.length]);
 
   if (!hasTasks) return null;
 

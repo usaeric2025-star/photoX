@@ -39,7 +39,7 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
     currentAnalysisControllers, abortAnalysis, activeAiTaskIds
   } = props;
 
-  const handleGroupAiIdentify = async (groupPhotos: Photo[]) => {
+  const handleGroupAiIdentify = async (groupPhotos: Photo[], forceAll = false) => {
     const sGroupPhotos = safeArray(groupPhotos);
     if (sGroupPhotos.length === 0) return;
     setAiDebugInfo(null);
@@ -90,18 +90,26 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
       setAiDebugInfo({ step: '保存中', message: '同步识别结果到所有照片...' });
       updateTask(taskId, { progress: 80, message: '正在同步及保存结果...' });
 
-      const updatedPhotosList: Photo[] = sGroupPhotos.map(p => ({
-        ...p,
-        category_id: result.category_id || p.category_id,
-        tag_ids: Array.from(new Set([...safeArray(p.tag_ids), ...finalTagIds])).slice(0, 3),
-        name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
-        description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
-        description_translations: result.description_translations || p.description_translations,
-        model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
-        dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : safeArray(p.dimensions),
-        updatedAt: formatDate(new Date()),
-        isAnalyzing: false
-      }));
+      const updatedPhotosList: Photo[] = sGroupPhotos.map(p => {
+        const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
+        const hasTags = safeArray(p.tag_ids).length >= 2;
+        const isComplete = p.category_id && hasTags && p.name && hasAllTranslations;
+        if (!forceAll && isComplete) {
+          return p;
+        }
+        return {
+          ...p,
+          category_id: result.category_id || p.category_id,
+          tag_ids: Array.from(new Set([...safeArray(p.tag_ids), ...finalTagIds])).slice(0, 3),
+          name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
+          description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
+          description_translations: result.description_translations || p.description_translations,
+          model_number: (result.modelNumber && (!p.model_number || !p.model_number.trim())) ? result.modelNumber : p.model_number,
+          dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : safeArray(p.dimensions),
+          updatedAt: formatDate(new Date()),
+          isAnalyzing: false
+        };
+      });
       
       if (user) {
         let hasDuplicate = false;

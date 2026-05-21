@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { fetchSettings, saveSettings } from '../services/settingService'
 import { syncCache } from '@/utils/indexedDB'
 
 export const useSettings = () => {
@@ -8,7 +8,7 @@ export const useSettings = () => {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('settings').select('*').single()
+      const data = await fetchSettings()
       if (data) {
         syncCache.saveSettings(data).catch(console.warn);
       }
@@ -17,10 +17,7 @@ export const useSettings = () => {
   })
 
   const updateSettings = useMutation({
-    mutationFn: async (newSettings: any) => {
-      const { data } = await supabase.from('settings').upsert(newSettings)
-      return data
-    },
+    mutationFn: saveSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
     },
