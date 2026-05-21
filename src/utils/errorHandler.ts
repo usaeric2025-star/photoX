@@ -53,15 +53,15 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
   }
 
   // Store Error for Local Audit
-  try {
-      useGalleryStore.getState().setErrors([{ 
-        message, 
-        context, 
-        timestamp: Date.now() 
-      }]);
-  } catch(e) {
-      console.error('Error in storing error log:', e);
-  }
+  // try {
+  //     useGalleryStore.getState().setErrors([{ 
+  //       message, 
+  //       context, 
+  //       timestamp: Date.now() 
+  //     }]);
+  // } catch(e) {
+  //     console.error('Error in storing error log:', e);
+  // }
 };
 
 export const useErrorHandler = () => {

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 import PublicView from './pages/PublicView';
+import PublicViewDebug from './pages/PublicViewDebug';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
 import { useRouteGuard } from './hooks/useRouteGuard';
@@ -31,24 +32,28 @@ function AnimatedRoutes({ user }: { user: any }) {
   const { hash, groupId } = location.state || {};
 
 
+  const isDebug = new URLSearchParams(location.search).get('debug') === 'true';
+  const PublicComponent = isDebug ? PublicViewDebug : PublicView;
+
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path={ROUTES.HOME} element={
             user ? <Navigate to={ROUTES.ADMIN} replace /> : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-                <PublicView />
+                <PublicComponent />
               </motion.div>
             )
         } />
         <Route path="/h/:hash" element={
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-            <PublicView />
+            <PublicComponent />
           </motion.div>
         } />
         <Route path={ROUTES.GROUP(":groupId")} element={
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }}>
-            <PublicView />
+            <PublicComponent />
           </motion.div>
         } />
         <Route path={ROUTES.ADMIN} element={
@@ -63,9 +68,7 @@ function AnimatedRoutes({ user }: { user: any }) {
 }
 
 export default function AppRoutes() {
-  console.log('AppRoutes: Checking auth...', { authChecked: false });
   const { user, authChecked } = useAuth();
-  console.log('AppRoutes: Auth checked:', { user: !!user, authChecked });
   
   // App-level initialization logic can stay, but fetchSettings is handled by useSettings hook.
 

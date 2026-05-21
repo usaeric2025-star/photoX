@@ -30,7 +30,6 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 }
 
 export default function PublicView() {
-  console.log('PublicView: Component mounting');
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useFeedback();
   const { reset } = useMultiSelect();
@@ -94,23 +93,8 @@ export default function PublicView() {
 
   const { data: categoriesData = [] } = useCategoriesQuery();
   const { settings, isLoading: isSettingsLoading } = useSettings();
-  const { user } = useAuth();
-  
-  console.log('PublicView Render Debug:', { 
-    isInitialLoading,
-    isPhotosLoading,
-    settings: !!settings,
-    minTimeElapsed,
-    filterCatId,
-    debouncedSearchQuery,
-    photosCount: photos.length
-  });
-
-  if (isSettingsLoading || !settings) {
-    return <FullPageLoading />;
-  }
-  
   const { hasLoadedOnce, setHasLoadedOnce } = useStore();
+  const { user } = useAuth();
 
   const infiniteQuery = useInfinitePhotos({
     category_id: filterCatId,
@@ -133,8 +117,21 @@ export default function PublicView() {
     isFetchingNextPage,
     refetch,
     isLoading: isPhotosLoading,
-    isFetching: isPhotosFetching
+    isFetching: isFetchingPhotos // Renamed to avoid name collision in log
   } = infiniteQuery;
+
+  const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
+  useEffect(() => {
+    setMinTimeElapsed(true);
+  }, []);
+
+  const isInitialLoading = isPhotosLoading || !settings || !minTimeElapsed;
+
+  if (isSettingsLoading || !settings) {
+    return <FullPageLoading />;
+  }
 
   const { mutateAsync: updatePhotoMutation } = useUpdatePhotoMutation();
 
@@ -145,15 +142,6 @@ export default function PublicView() {
   
   const navigate = useNavigate();
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
-
-  const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
-
-  useEffect(() => {
-    setMinTimeElapsed(true);
-  }, []);
-
-  const isInitialLoading = isPhotosLoading || !settings || !minTimeElapsed;
 
   useEffect(() => {
     if (!isInitialLoading && !hasInitialLoaded) {
@@ -202,8 +190,6 @@ export default function PublicView() {
 
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
-        {console.log('PublicView rendering - Photos data:', photos)}
-        <div className="fixed top-0 left-0 z-[1000] p-2 bg-red-500 text-white text-xs"> DEBUG: Rendering PublicView (Photos: {photos.length})</div>
         {isInitialLoading && !hasLoadedOnce ? (
           <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-50 text-slate-800">LOADING...</div>
         ) : (
