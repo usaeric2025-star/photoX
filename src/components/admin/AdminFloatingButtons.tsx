@@ -3,8 +3,10 @@ import { Plus } from 'lucide-react';
 import { MultiSelectToolbar } from './MultiSelectToolbar';
 import { buttonStyles } from '../../styles/buttonStyles';
 import { useMultiSelect } from '../../hooks';
+import { Photo } from '../../types';
 
 interface AdminFloatingButtonsProps {
+  photos: Photo[];
   onAdd: () => void;
   onBatchAiIdentify: () => void;
   onBatchEdit: () => void;
@@ -15,6 +17,7 @@ interface AdminFloatingButtonsProps {
 }
 
 export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
+  photos = [],
   onAdd,
   onBatchAiIdentify,
   onBatchEdit,
@@ -23,14 +26,25 @@ export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
   onToggleVisibility,
   onClearSelection,
 }) => {
-  const { isMultiSelect, selectedIds, disable } = useMultiSelect();
+  const { isMultiSelect, selectedIds, disable, selectAll, deselectAllForList } = useMultiSelect();
+
+  const currentIds = photos.map(p => p.id);
+  const isAllSelected = currentIds.length > 0 && currentIds.every(id => selectedIds.includes(id));
+
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
+      deselectAllForList(currentIds);
+    } else {
+      selectAll(currentIds);
+    }
+  };
 
   return (
     <>
       {!isMultiSelect && (
         <button
           onClick={onAdd}
-          className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[100] rounded-full`}
+          className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[100] rounded-full shadow-lg hover:shadow-xl transition-shadow`}
           title="Add Photo"
         >
           <Plus size={28} />
@@ -49,6 +63,8 @@ export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
           onGroup={onGroup}
           onDelete={onDelete}
           onToggleVisibility={onToggleVisibility}
+          onToggleSelectAll={handleToggleSelectAll}
+          isAllSelected={isAllSelected}
         />
       )}
     </>

@@ -47,8 +47,8 @@ export const useGroupAdminLogic = ({
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
   
   const setCover = useCallback(async (photoId: string) => {
-      mutateSetCover({ photoId });
-  }, [mutateSetCover]);
+      mutateSetCover({ photoId, groupId: activeGroupId || undefined });
+  }, [mutateSetCover, activeGroupId]);
 
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
   const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);

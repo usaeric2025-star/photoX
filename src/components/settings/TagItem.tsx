@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, Pencil, Trash2 } from 'lucide-react';
 import { Tag } from '../../types';
 import { useGalleryStore } from '../../store';
+import { useClickOutside, useLongPress } from '../../hooks';
 
 interface TagItemProps {
   tag: Tag;
@@ -18,26 +19,19 @@ export const TagItem: React.FC<TagItemProps> = ({
   tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin 
 }) => {
   const { setAlertDialog, setPromptDialog } = useGalleryStore();
-  const [isPressing, setIsPressing] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleStart = () => {
-    setIsPressing(true);
-    timerRef.current = setTimeout(() => {
-      setIsPressing(false);
+  const itemRef = useClickOutside<HTMLDivElement>(
+    activeTagMenuId === tag.id,
+    () => setActiveTagMenuId(null)
+  );
+
+  const longPressProps = useLongPress(
+    () => {
       setActiveTagMenuId(tag.id);
-    }, 600);
-  };
-
-  const handleEnd = () => {
-    setIsPressing(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
-  };
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveTagMenuId(tag.id);
-  };
+    },
+    undefined,
+    { delay: 500, shouldPreventDefault: true }
+  );
 
   const handleDeleteClick = () => {
     setAlertDialog({
@@ -77,13 +71,9 @@ export const TagItem: React.FC<TagItemProps> = ({
 
   return (
     <div 
-      className={`bg-white border border-brand-navy/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeTagMenuId === tag.id ? 'bg-brand-gold/10 border-brand-gold/30 scale-95' : ''}`}
-      onTouchStart={handleStart}
-      onTouchEnd={handleEnd}
-      onMouseDown={handleStart}
-      onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
-      onContextMenu={handleContextMenu}
+      ref={itemRef}
+      className={`bg-white border border-brand-navy/10 pl-4 pr-2 py-1.5 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeTagMenuId === tag.id ? 'bg-brand-gold/10 border-brand-gold/30 scale-95' : ''}`}
+      {...longPressProps}
     >
       <div className="flex flex-col">
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none flex items-center gap-1">
@@ -136,16 +126,6 @@ export const TagItem: React.FC<TagItemProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {activeTagMenuId === tag.id && (
-        <div 
-          className="fixed inset-0 z-[100]" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveTagMenuId(null);
-          }}
-        />
-      )}
     </div>
   );
 };

@@ -10,6 +10,7 @@ import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GroupDetailView } from '../GroupDetailView';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
+import { useScrollRestoration } from '../../hooks';
 
 interface AdminGalleryProps {
   photos: Photo[];
@@ -35,6 +36,8 @@ interface AdminGalleryProps {
 }
 
 export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
+  useScrollRestoration('admin_gallery_scroll');
+
   const logic = usePublicGalleryLogic({
     ...props,
     isAdminMode: true,

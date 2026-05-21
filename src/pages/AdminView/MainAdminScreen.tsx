@@ -94,6 +94,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
           />
         )}
         <AdminFloatingButtons 
+          photos={photos}
           onAdd={onImport}
           onClearSelection={clear}
           onBatchAiIdentify={() => {

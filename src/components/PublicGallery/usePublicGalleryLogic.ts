@@ -122,6 +122,11 @@ export const usePublicGalleryLogic = (props: {
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
+  // Reset lightbox overlay index when switching category, tag filters, search, sorting, or pagination (incomingPhotos)
+  useEffect(() => {
+    setLightboxIndex(null);
+  }, [searchQuery, selectedCatCode, selectedSubId, selectedTagIds, sortOrder, incomingPhotos]);
+
   const dpRef = useRef(displayPhotos);
   useEffect(() => {
     dpRef.current = displayPhotos;

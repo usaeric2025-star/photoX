@@ -36,3 +36,6 @@ export * from './uiFeedback';
 export * from './usePhotoFilters';
 export * from './useTasks';
 export * from './useMultiSelect';
+export * from './useClickOutside';
+export * from './useLongPress';
+export * from './useScrollRestoration';

@@ -33,11 +33,18 @@ export interface PhotoLightboxProps {
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
-    photo, index, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
+    photo, index: propIndex, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
     isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
     onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos: rawDisplayPhotos
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
+
+  // Resolve correct current index using photo.id to prevent mismatched indexing issues
+  const index = React.useMemo(() => {
+    if (!photo) return null;
+    const foundIndex = displayPhotos.findIndex((p) => p.id === photo.id);
+    return foundIndex !== -1 ? foundIndex : propIndex;
+  }, [photo, displayPhotos, propIndex]);
 
   const { isAdmin } = usePermission();
   const queryClient = useQueryClient();

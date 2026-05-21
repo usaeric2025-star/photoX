@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Trash2, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGalleryStore } from '../../store';
+import { useClickOutside, useLongPress } from '../../hooks';
 
 import { Manufacturer } from '../../types';
 
@@ -14,34 +15,25 @@ interface ManufacturerProps {
 export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: ManufacturerProps) => {
   const { setAlertDialog } = useGalleryStore();
   const [activeMenuId, setActiveMenuId] = useState<string | number | null>(null);
-  const [isPressing, setIsPressing] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
-    setIsPressing(true);
-    timerRef.current = setTimeout(() => {
-      setIsPressing(false);
+  const menuRef = useClickOutside<HTMLDivElement>(
+    activeMenuId === manufacturer.id,
+    () => setActiveMenuId(null)
+  );
+
+  const longPressProps = useLongPress(
+    () => {
       setActiveMenuId(manufacturer.id);
-    }, 600);
-  };
-
-  const handleEnd = () => {
-    setIsPressing(false);
-    if (timerRef.current) clearTimeout(timerRef.current);
-  };
+    },
+    undefined,
+    { delay: 500, shouldPreventDefault: true }
+  );
 
   return (
     <div 
-      className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${isPressing || activeMenuId === manufacturer.id ? 'bg-brand-gold/10 border-brand-gold/30 scale-95' : ''}`}
-      onTouchStart={handleStart}
-      onTouchEnd={handleEnd}
-      onMouseDown={handleStart}
-      onMouseUp={handleEnd}
-      onMouseLeave={handleEnd}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        setActiveMenuId(manufacturer.id);
-      }}
+      ref={menuRef}
+      className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === manufacturer.id ? 'bg-brand-gold/10 border-brand-gold/30 scale-95' : ''}`}
+      {...longPressProps}
     >
       <div className="flex flex-col">
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
@@ -115,16 +107,6 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
           </motion.div>
         )}
       </AnimatePresence>
-      
-      {activeMenuId === manufacturer.id && (
-        <div 
-          className="fixed inset-0 z-[100]" 
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveMenuId(null);
-          }}
-        />
-      )}
     </div>
   );
 };

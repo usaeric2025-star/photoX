@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer } from '../../types';
-import { Layers, Heart, Check, Image as ImageIcon } from 'lucide-react';
+import { Layers, Heart, Check, Image as ImageIcon, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
 import { thumbHashToDataURL } from '../../utils/thumbHash';
@@ -26,21 +26,30 @@ interface AdminPhotoCardProps {
   displayPhotos: Photo[];
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => (
-  <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
-    {photo.groupId && (
-      <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
-        <Layers size={8} />
-        {photo.groupId.slice(-4)}
-      </div>
-    )}
-    {photo.isPinned && (
-      <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
-        <span>置頂</span>
-      </div>
-    )}
-  </div>
-);
+const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
+  const isHidden = !!(photo.is_hidden || (photo as any).isHidden);
+  return (
+    <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
+      {photo.groupId && (
+        <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
+          <Layers size={8} />
+          {photo.groupId.slice(-4)}
+        </div>
+      )}
+      {photo.isPinned && (
+        <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
+          <span>置頂</span>
+        </div>
+      )}
+      {isHidden && (
+        <div className="bg-orange-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
+          <EyeOff size={8} />
+          <span>隐藏</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SelectionOverlay: React.FC<{ isSelected: boolean }> = ({ isSelected }) => (
   <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
@@ -139,26 +148,42 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
     [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]
   );
 
+  const isHidden = useMemo(() => !!(photo.is_hidden || (photo as any).isHidden), [photo.is_hidden, (photo as any).isHidden]);
+
   const cardSelectedClasses = isMultiSelect && isSelected 
     ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
     : 'md:hover:scale-[1.02] active:scale-[0.95]';
 
-  const [pressTimer, setPressTimer] = React.useState<NodeJS.Timeout | null>(null);
+  const pressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const isLongPressedRef = React.useRef(false);
+  const isTouchRef = React.useRef(false);
 
-  const startPress = useCallback(() => {
-    const timer = setTimeout(() => {
+  const startPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (e.type === 'touchstart') {
+      isTouchRef.current = true;
+    } else if (isTouchRef.current && e.type === 'mousedown') {
+      return; // Ignore simulated mouse events on touch screens
+    }
+
+    isLongPressedRef.current = false;
+
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+    }
+
+    pressTimerRef.current = setTimeout(() => {
       handleLongPress();
+      isLongPressedRef.current = true;
       if ('vibrate' in navigator) navigator.vibrate(50);
-    }, 500);
-    setPressTimer(timer);
+    }, 500); // stable 500ms duration
   }, [handleLongPress]);
 
-  const cancelPress = useCallback(() => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-      setPressTimer(null);
+  const cancelPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
     }
-  }, [pressTimer]);
+  }, []);
 
   const [initiallyLoaded] = React.useState(() => loadedImagesCache.has(photo.id));
   const [isImageLoaded, setIsImageLoaded] = React.useState(initiallyLoaded);
@@ -182,9 +207,21 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   }, [onTogglePinned, photo]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    cancelPress();
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+
+    // If it was a long press, block the regular click action (lightbox/group view open)
+    if (isLongPressedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      isLongPressedRef.current = false;
+      return;
+    }
+
     handleClick(e);
-  }, [cancelPress, handleClick]);
+  }, [handleClick]);
 
   return (
     <div 
@@ -197,7 +234,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       onTouchMove={cancelPress}
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
-      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${photo.is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
+      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
       {!isImageLoaded && !isImageError && !placeholderDataUrl && (
         <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
@@ -228,7 +265,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${photo.is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
+        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${isHidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
           loadedImagesCache.add(photo.id);
           setIsImageLoaded(true);
@@ -240,6 +277,11 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       />
 
       {isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
+      {isHidden && !isMultiSelect && (
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none">
+          <EyeOff size={24} className="text-white/60 drop-shadow" />
+        </div>
+      )}
       <PhotoStatusBadges photo={photo} />
 
       {onTogglePinned && (

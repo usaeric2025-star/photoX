@@ -184,7 +184,7 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   clearErrors: () => set({ errors: [] }),
   setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
   setBatchProgress: (batchProgress) => set({ batchProgress }),
-  setActiveScreen: (screen) => set({ activeScreen: screen }),
+  setActiveScreen: (screen) => set({ activeScreen: screen, selectedIds: [], isMultiSelect: false }),
   setAlertDialog: (alertDialog) => set({ alertDialog }),
   setPromptDialog: (promptDialog) => set({ promptDialog }),
   setAppLang: (appLang) => {
@@ -193,7 +193,7 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   },
   setViewMode: (viewMode) => {
     sessionStorage.setItem('viewMode', viewMode);
-    set({ viewMode });
+    set({ viewMode, selectedIds: [], isMultiSelect: false });
   },
   setTagStats: (tagStats) => set({ tagStats }),
   setIsSyncing: (isSyncing) => set({ isSyncing }),

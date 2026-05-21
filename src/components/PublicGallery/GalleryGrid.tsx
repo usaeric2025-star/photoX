@@ -59,10 +59,6 @@ const MemoizedPhotoCard = React.memo(({
   onLightboxOpen, shareSinglePhoto, 
   onTogglePinned, onToggleHidden, displayPhotos
 }: MemoizedPhotoCardProps) => {
-  const handleOpenLightbox = useCallback(() => {
-    onLightboxOpen(index, displayPhotos);
-  }, [index, onLightboxOpen, displayPhotos]);
-
   const handleGroupClickInternal = useCallback((gid: string) => {
     onGroupClick(gid, photo.id);
   }, [onGroupClick, photo.id]);
@@ -80,7 +76,7 @@ const MemoizedPhotoCard = React.memo(({
         tagMap={tagMap}
         onEditPhoto={onEditPhoto}
         onGroupClick={handleGroupClickInternal}
-        onLightboxOpen={handleOpenLightbox}
+        onLightboxOpen={onLightboxOpen}
         shareSinglePhoto={shareSinglePhoto}
         onTogglePinned={onTogglePinned}
         onToggleHidden={onToggleHidden}
@@ -100,7 +96,7 @@ const MemoizedPhotoCard = React.memo(({
       manufacturers={manufacturers}
       tagMap={tagMap}
       onGroupClick={handleGroupClickInternal}
-      onLightboxOpen={handleOpenLightbox}
+      onLightboxOpen={onLightboxOpen}
       shareSinglePhoto={shareSinglePhoto}
       displayPhotos={displayPhotos}
     />

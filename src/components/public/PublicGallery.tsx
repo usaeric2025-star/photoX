@@ -14,6 +14,7 @@ import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GalleryDialogs } from '../PublicGallery/GalleryDialogs';
 import { PublicFloatingButtons } from './PublicFloatingButtons';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
+import { useScrollRestoration } from '../../hooks';
 
 interface PublicGalleryProps {
   photos: Photo[];
@@ -39,6 +40,8 @@ interface PublicGalleryProps {
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
+  useScrollRestoration('public_gallery_scroll');
+
   const logic = usePublicGalleryLogic({
     ...props,
     isAdminMode: false,

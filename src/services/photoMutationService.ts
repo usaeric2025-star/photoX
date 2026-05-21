@@ -21,6 +21,33 @@ export const updatePhoto = async (
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('NO_ACTIVE_SESSION');
 
+  // If we are setting this photo as a group cover, we must UN-SET all other photos in the same group first!
+  if (updates.isGroupCover === true) {
+    let groupId = updates.groupId;
+    if (!groupId) {
+      const { data } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select('group_id')
+        .eq('id', photoId)
+        .maybeSingle();
+      if (data?.group_id) {
+        groupId = data.group_id;
+      }
+    }
+
+    if (groupId) {
+      // Unset all other photos in the same group in the cloud
+      await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .update({ is_group_cover: false })
+        .eq('group_id', groupId);
+
+      if (setPhotos) {
+        setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, isGroupCover: false } : p));
+      }
+    }
+  }
+
   const dbUpdates = mapToDb(updates);
   
   if (setPhotos) setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
@@ -261,4 +288,29 @@ export const updatePhotosGroupInCloud = async (photoIds: string[], updates: Reco
   }
   
   return data;
+};
+
+export const setPhotoAsGroupCoverInCloud = async (photoId: string, groupId: string) => {
+  const validPhotoId = photoId && !photoId.startsWith('temp-');
+  if (!validPhotoId || !groupId) return;
+
+  // 1. Unset cover for all other photos in the same group
+  const { error: unsetError } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .update({ is_group_cover: false })
+    .eq('group_id', groupId);
+
+  if (unsetError) {
+    throw new Error(unsetError.message || JSON.stringify(unsetError));
+  }
+
+  // 2. Set cover for selected target photo
+  const { error: setError } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .update({ is_group_cover: true })
+    .eq('id', photoId);
+
+  if (setError) {
+    throw new Error(setError.message || JSON.stringify(setError));
+  }
 };

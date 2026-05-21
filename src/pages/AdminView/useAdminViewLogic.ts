@@ -22,7 +22,14 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     user, sessionValue, photoValue, uiValue, onRefresh, performPullSync,
     hasNextPage = false, isFetchingNextPage = false
   } = props;
-  const { tagIdToNameMap } = useGalleryStore();
+  const { 
+    tagIdToNameMap,
+    searchQuery,
+    filterCatId,
+    filterSubId,
+    filterTagIds,
+    sortOrder
+  } = useGalleryStore();
   
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
@@ -144,6 +151,11 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   }, [checkSyncLock, saveBatchEdit, showError, showSuccess]);
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  // Close lightbox whenever search query, categories, sub-categories, tag filters, sorting order, or photos (pagination) change
+  useEffect(() => {
+    setLightboxIndex(null);
+  }, [searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, photos]);
 
   const onLongPressStart = useCallback((id: string) => {
     hapticFeedback.medium();
