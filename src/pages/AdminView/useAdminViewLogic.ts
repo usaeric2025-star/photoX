@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useGalleryStore } from '@/store';
+import { useGalleryStore, useStore } from '@/store';
 import { useFeedback, usePhotoManagement } from '@/hooks';
 import { usePermission } from '@/hooks/usePermission';
 import { User, Photo } from '@/types';
@@ -30,7 +30,13 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     filterSubId, setFilterSubId,
     filterTagIds, setFilterTagIds,
     sortOrder,
-    resetFilters
+    resetFilters,
+    activeGroupId,
+    setActiveGroupId: setStoreActiveGroupId,
+    lightboxIndex,
+    setLightboxIndex,
+    columns,
+    setColumns
   } = useGalleryStore();
   
   const { 
@@ -58,18 +64,16 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const { showError, showSuccess } = useFeedback();
   const { isAdmin } = usePermission();
-  
-  const [activeGroupId, setActiveGroupIdState] = useState<string | null>(null);
-  
+
   const setActiveGroupId = useCallback((id: string | null) => {
       if (id) {
           resetFilters();
       }
-      setActiveGroupIdState(id);
-  }, [resetFilters]);
-  
+      setStoreActiveGroupId(id);
+  }, [resetFilters, setStoreActiveGroupId]);
+
   const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
-  const [columns, setColumns] = useState<2 | 3 | 5>(3);
+
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
 
   const checkSyncLock = useCallback(() => {
@@ -176,11 +180,8 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     }
   }, [checkSyncLock, saveBatchEdit, showError, showSuccess]);
 
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-
   const onLongPressStart = useCallback((id: string) => {
     hapticFeedback.medium();
-    console.log('long press start', id);
   }, []);
 
   const onLongPressEnd = useCallback(() => {

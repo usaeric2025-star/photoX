@@ -16,7 +16,7 @@ export async function syncPendingOperations(userId: string) {
   }
   if (pendingOps.length === 0) return;
 
-  console.log(`[OfflineSync] Found ${pendingOps.length} pending operations. Starting sync...`);
+  console.debug(`[OfflineSync] Found ${pendingOps.length} pending operations. Starting sync...`);
 
   for (const op of pendingOps) {
     try {
@@ -59,7 +59,7 @@ export function setupOfflineSyncListener(userId: string | undefined) {
   if (!userId) return;
 
   const handleOnline = () => {
-    console.log('[OfflineSync] Device is back online. Triggering sync...');
+    console.debug('[OfflineSync] Device is back online. Triggering sync...');
     syncPendingOperations(userId).catch(err => console.warn('[OfflineSync] auto-sync failed', err));
   };
 

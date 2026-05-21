@@ -20,7 +20,7 @@ export const useMultiSelect = () => {
   }, [setIsMultiSelect, setSelectedIds]);
 
   const toggle = useCallback((id: string) => {
-    const current = useGalleryStore.getState().selectedIds;
+    const current = (useGalleryStore.getState().selectedIds) ?? [];
     const next = current.includes(id) 
       ? current.filter((i: string) => i !== id) 
       : [...current, id];
@@ -38,13 +38,13 @@ export const useMultiSelect = () => {
 
   const selectAll = useCallback((ids: string[]) => {
     setIsMultiSelect(true);
-    const current = useGalleryStore.getState().selectedIds;
+    const current = (useGalleryStore.getState().selectedIds) ?? [];
     const combined = new Set([...current, ...ids]);
     setSelectedIds(Array.from(combined));
   }, [setIsMultiSelect, setSelectedIds]);
 
   const deselectAllForList = useCallback((ids: string[]) => {
-    const current = useGalleryStore.getState().selectedIds;
+    const current = (useGalleryStore.getState().selectedIds) ?? [];
     setSelectedIds(current.filter(id => !ids.includes(id)));
   }, [setSelectedIds]);
 

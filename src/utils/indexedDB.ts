@@ -112,7 +112,7 @@ export const clearExpiredCaches = async (expireDays = 7) => {
         const key = cursor.key as string;
         const data = cursor.value;
         if (key.startsWith('product_') && data && data.savedAt && (now - data.savedAt > expireMs)) {
-          console.log(`[IndexedDB] Clearing expired cache: ${key}`);
+          console.debug(`[IndexedDB] Clearing expired cache: ${key}`);
           store.delete(key);
         }
         cursor.continue();

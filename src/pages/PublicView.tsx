@@ -3,12 +3,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
-import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback } from '../hooks';
+import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback, useTagStats, useTagsQuery } from '../hooks';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { useStore } from '../store';
 import { PAGINATION } from '../config/constants';
-import { Photo } from '../types';
+import { Photo, Tag } from '../types';
 import { safeArray } from '../lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '../hooks/queries/keys';
@@ -19,7 +19,6 @@ import { PublicGallery } from '../components/public/PublicGallery';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ROUTES } from '../config/constants';
-import { useEffectEvent } from '@/hooks/useEffectEvent';
 
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
@@ -30,6 +29,8 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   );
 }
 
+const EMPTY_TAGS: Tag[] = [];
+
 export default function PublicView() {
   // ========== 1. 所有 Hooks 先调用（按顺序，无条件）==========
   const queryClient = useQueryClient();
@@ -38,23 +39,26 @@ export default function PublicView() {
   const { user } = useAuth();
   const { settings, isLoading: isSettingsLoading } = useSettings();
   const categoriesQuery = useCategoriesQuery();
+  const tagsQuery = useTagsQuery();
   const { mutateAsync: updatePhotoMutation } = useUpdatePhotoMutation();
   
   // Store
-  const { 
-    filterCatId,
-    filterTagIds,
-    sortOrder,
-    setFilterCatId,
-    setFilterTagIds,
-    setSearchQuery: setStoreSearchQuery,
-    hasLoadedOnce,
-    setHasLoadedOnce
-  } = useStore();
+  const filterCatId = useStore(s => s.filterCatId);
+  const filterTagIds = useStore(s => s.filterTagIds);
+  const sortOrder = useStore(s => s.sortOrder);
+  const setFilterCatId = useStore(s => s.setFilterCatId);
+  const setFilterTagIds = useStore(s => s.setFilterTagIds);
+  const setStoreSearchQuery = useStore(s => s.setSearchQuery);
+  const hasLoadedOnce = useStore(s => s.hasLoadedOnce);
+  const setHasLoadedOnce = useStore(s => s.setHasLoadedOnce);
+  const searchQuery = useStore(s => s.searchQuery);
+  const setSearchQuery = useStore(s => s.setSearchQuery);
+  const debouncedSearchQuery = useStore(s => s.debouncedSearchQuery);
+  const setDebouncedSearchQuery = useStore(s => s.setDebouncedSearchQuery);
+  const hasInitialLoaded = useStore(s => s.hasInitialLoaded);
+  const setHasInitialLoaded = useStore(s => s.setHasInitialLoaded);
   
-  // 状态
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const resetFiltersAndRefresh = useStore(s => s.resetFiltersAndRefresh);
   
   // 查询
   const infiniteQuery = useInfinitePhotos({
@@ -70,31 +74,26 @@ export default function PublicView() {
     tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
   });
-  
-  const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   
   // ========== 4. 计算状态 (移至此处) ==========
   const isInitialLoading = isSettingsLoading || !minTimeElapsed;
 
-  // ========== Event Handlers ==========
-  const handleRefreshComplete = useEffectEvent(() => {
-    showSuccess('已重置所有筛选');
-  });
-
-  const handleMarkLoaded = useEffectEvent(() => {
+  const handleMarkLoaded = useCallback(() => {
     setHasInitialLoaded(true);
     setHasLoadedOnce(true);
-  });
+  }, [setHasInitialLoaded, setHasLoadedOnce]);
 
   // ========== 2. useEffect ==========
   // 防抖搜索
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 300);
+      if (searchQuery !== debouncedSearchQuery) {
+        setDebouncedSearchQuery(searchQuery);
+      }
+    }, 400);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, debouncedSearchQuery, setDebouncedSearchQuery]);
   
   // 最小加载时间
   useEffect(() => {
@@ -148,14 +147,12 @@ export default function PublicView() {
     };
   }, [reset]);
   
-  const hasMarkedLoaded = useRef(false);
   // 首次加载完成标记
   useEffect(() => {
-    if (!isInitialLoading && !hasInitialLoaded && !hasMarkedLoaded.current) {
-      hasMarkedLoaded.current = true;
+    if (!isInitialLoading && !hasInitialLoaded) {
       handleMarkLoaded();
     }
-  }, [isInitialLoading, hasInitialLoaded]);
+  }, [isInitialLoading, hasInitialLoaded, handleMarkLoaded]);
   
   // ========== 3. useMemo ==========
   const photos = useMemo(() => {
@@ -172,6 +169,13 @@ export default function PublicView() {
   const categoriesData = useMemo(() => {
     return categoriesQuery?.data ?? [];
   }, [categoriesQuery.data]);
+
+  const tagsData = useMemo(() => {
+    return tagsQuery?.data ?? [];
+  }, [tagsQuery.data]);
+  
+  // Calculate tag stats for hot tags functionality
+  useTagStats(photos);
   
   // ========== 5. 导航和参数 ==========
   const navigate = useNavigate();
@@ -180,11 +184,7 @@ export default function PublicView() {
   // ========== 6. 回调函数 ==========
   const handleRefresh = useCallback(async () => {
     try {
-      setStoreSearchQuery('');
-      setSearchQuery('');
-      setDebouncedSearchQuery('');
-      setFilterCatId(null);
-      setFilterTagIds([]);
+      await resetFiltersAndRefresh();
       reset();
       sessionStorage.removeItem('photo-filters');
       localStorage.removeItem('photo-filters');
@@ -192,11 +192,11 @@ export default function PublicView() {
       queryClient.resetQueries({ queryKey: [QUERY_KEYS.photos, 'infinite'] });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       await infiniteQuery.refetch();
-      handleRefreshComplete();
+      showSuccess('已重置所有筛选');
     } catch (e) {
       showError(e, '刷新产品照片失败');
     }
-  }, [infiniteQuery.refetch, showError, handleRefreshComplete, queryClient, setStoreSearchQuery, setFilterCatId, setFilterTagIds, reset]);
+  }, [resetFiltersAndRefresh, reset, queryClient, infiniteQuery, showSuccess, showError]);
   
   const handleLoadMore = useCallback(() => {
     if (infiniteQuery.hasNextPage && !infiniteQuery.isFetchingNextPage) {
@@ -223,7 +223,7 @@ export default function PublicView() {
           <PublicGallery 
             photos={photos}
             categories={categoriesData}
-            tags={[]}
+            tags={tagsData}
             onExit={() => navigate(ROUTES.ADMIN)}
             onLogin={() => navigate(ROUTES.ADMIN)}
             loginWithGoogle={loginWithGoogle}

@@ -19,6 +19,7 @@ interface UIState {
   editPhotoId: string | null
   batchEditIds: string[] | null
   hasLoadedOnce: boolean
+  hasInitialLoaded: boolean
   alertDialog: any | null
   promptDialog: any | null
   language: 'zh' | 'en' | 'ms'
@@ -43,6 +44,10 @@ interface UIState {
   appLang: 'zh' | 'en' | 'ms'
   debouncedSearchQuery: string
   tagIdToNameMap: Record<string, string>
+  columns: 2 | 3 | 5
+  lightboxIndex: number | null
+  showWhatsAppChoice: boolean
+  activePhotoId: string | null
 }
 
 interface UIActions {
@@ -86,6 +91,14 @@ interface UIActions {
   clearErrors: () => void
   setAppLang: (lang: UIState['appLang']) => void
   setDebouncedSearchQuery: (query: string) => void
+  setColumns: (cols: 2 | 3 | 5) => void
+  setLightboxIndex: (index: number | null) => void
+  setShowWhatsAppChoice: (value: boolean) => void
+  setActivePhotoId: (id: string | null) => void
+  setHasInitialLoaded: (value: boolean) => void
+  clearAndExitMultiSelect: () => void
+  resetFiltersAndRefresh: () => Promise<void>
+  togglePreviewMode: () => void
   withLoading: <T>(type: UIState['loadingType'], fn: () => Promise<T>) => Promise<T>
 }
 
@@ -104,7 +117,6 @@ const initialState: UIState = {
   loadingType: 'none',
   editPhotoId: null,
   batchEditIds: null,
-  hasLoadedOnce: false,
   alertDialog: null,
   promptDialog: null,
   language: 'en',
@@ -129,6 +141,12 @@ const initialState: UIState = {
   appLang: 'en',
   debouncedSearchQuery: '',
   tagIdToNameMap: {},
+  columns: 3,
+  lightboxIndex: null,
+  showWhatsAppChoice: false,
+  activePhotoId: null,
+  hasLoadedOnce: false,
+  hasInitialLoaded: false,
 }
 
 // ========== 白名单（只持久化这些）==========
@@ -150,6 +168,7 @@ const PERSIST_KEYS: (keyof UIState)[] = [
   'customModel',
   'accessPasscode',
   'appLang',
+  'columns'
 ]
 
 // ========== 创建 store ==========
@@ -160,12 +179,28 @@ export const useStore = create<StoreState>()(
       ...initialState,
 
       // Actions
-      setFilterCatId: (id) => set({ filterCatId: id }),
-      setFilterTagIds: (idsOrFn) => set((state) => ({ 
-        filterTagIds: typeof idsOrFn === 'function' ? idsOrFn(state.filterTagIds) : idsOrFn 
-      })),
-      setSearchQuery: (query) => set({ searchQuery: query }),
-      setActiveGroupId: (id) => set({ activeGroupId: id }),
+      setFilterCatId: (id) => set({ 
+        filterCatId: id,
+        lightboxIndex: null,
+        selectedIds: []
+      }),
+      setFilterTagIds: (idsOrFn) => set((state) => {
+        const next = typeof idsOrFn === 'function' ? idsOrFn(state.filterTagIds) : idsOrFn;
+        return { 
+          filterTagIds: next,
+          lightboxIndex: null,
+          selectedIds: []
+        };
+      }),
+      setSearchQuery: (query) => set({ 
+        searchQuery: query,
+        lightboxIndex: null,
+        selectedIds: []
+      }),
+      setActiveGroupId: (id) => set({ 
+        activeGroupId: id,
+        selectedIds: [] // 清空选择
+      }),
       setIsMultiSelect: (value) => set({ isMultiSelect: value }),
       setSidebarCollapsed: (value) => set({ sidebarCollapsed: value }),
       setSelectedIds: (idsOrFn) => set((state) => ({ 
@@ -175,12 +210,50 @@ export const useStore = create<StoreState>()(
       setEditPhotoId: (id) => set({ editPhotoId: id }),
       setBatchEditIds: (ids) => set({ batchEditIds: ids }),
       setHasLoadedOnce: (hasLoaded) => set({ hasLoadedOnce: hasLoaded }),
+      setHasInitialLoaded: (value) => set({ hasInitialLoaded: value }),
+      
+      clearAndExitMultiSelect: () => set({
+        selectedIds: [],
+        isMultiSelect: false,
+      }),
+
+      resetFiltersAndRefresh: async () => {
+        set({
+          filterCatId: null,
+          filterTagIds: [],
+          filterSubId: null,
+          searchQuery: '',
+          debouncedSearchQuery: '',
+          lightboxIndex: null,
+          activeGroupId: null,
+          activePhotoId: null,
+        });
+        // Note: resetFiltersAndRefresh might need to trigger a refetch if we had access to queryClient here,
+        // but typically we'll just reset the state and the component will react.
+      },
+
+      togglePreviewMode: () => set((state) => {
+        const nextMode = state.adminPreviewMode === 'public' ? 'private' : 'public';
+        return {
+          adminPreviewMode: nextMode,
+          activeScreen: nextMode === 'public' ? 'gallery' : 'settings',
+        };
+      }),
+
       setAlertDialog: (dialog) => set({ alertDialog: dialog }),
       setPromptDialog: (dialog) => set({ promptDialog: dialog }),
       setLanguage: (lang) => set({ language: lang }),
       setTagStats: (stats) => set({ tagStats: stats }),
-      setFilterSubId: (id) => set({ filterSubId: id }),
-      setSortOrder: (order) => set({ sortOrder: order }),
+      setFilterSubId: (id) => set({ 
+        filterSubId: id,
+        lightboxIndex: null,
+        selectedIds: []
+      }),
+      setSortOrder: (order) => set({ 
+        sortOrder: order,
+        lightboxIndex: null,
+        selectedIds: []
+      }),
       setIsStaffMode: (value) => set({ isStaffMode: value }),
       setShowGroupsCollapsed: (value) => set({ showGroupsCollapsed: value }),
       setViewMode: (mode) => set({ viewMode: mode }),
@@ -197,7 +270,14 @@ export const useStore = create<StoreState>()(
       setAiDebugInfo: (info) => set({ aiDebugInfo: info }),
       clearErrors: () => set({ errors: [] }),
       setAppLang: (lang) => set({ appLang: lang, language: lang }),
-      setDebouncedSearchQuery: (query) => set({ debouncedSearchQuery: query }),
+      setDebouncedSearchQuery: (query) => set({ 
+        debouncedSearchQuery: query,
+        lightboxIndex: null
+      }),
+      setColumns: (cols) => set({ columns: cols }),
+      setLightboxIndex: (index) => set({ lightboxIndex: index }),
+      setShowWhatsAppChoice: (value) => set({ showWhatsAppChoice: value }),
+      setActivePhotoId: (id) => set({ activePhotoId: id }),
 
       addSelectedPhotoId: (id) => set((state) => ({
         selectedIds: state.selectedIds.includes(id)
@@ -277,6 +357,8 @@ export const useStore = create<StoreState>()(
             selectedIds: safeSelectedIds,
             language: old.language ?? 'en',
             sortOrder: old.sortOrder ?? 'newest',
+            appLang: old.appLang ?? 'en',
+            columns: old.columns ?? 3,
             showGroupsCollapsed: true, // 强制默认开启
           }
         }
@@ -285,7 +367,8 @@ export const useStore = create<StoreState>()(
         return {
           ...old,
           filterTagIds: safeFilterTagIds,
-          selectedIds: safeSelectedIds
+          selectedIds: safeSelectedIds,
+          columns: old.columns ?? 3,
         }
       },
 

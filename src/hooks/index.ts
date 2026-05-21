@@ -34,6 +34,7 @@ export * from './usePermission';
 export * from './useAdminMode';
 export * from './uiFeedback';
 export * from './usePhotoFilters';
+export * from './useTagStats';
 export * from './useTasks';
 export * from './useMultiSelect';
 export * from './useClickOutside';

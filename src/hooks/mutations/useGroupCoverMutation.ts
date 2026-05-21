@@ -1,6 +1,8 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { updatePhotosGroupInCloud, setPhotoAsGroupCoverInCloud } from '../../services/photoMutationService';
 import { useFeedback, useInvalidatePhotos } from '../';
+import { Photo } from '../../types/photo';
+import { reportError } from '@/lib/errorReporter';
 
 export const useGroupCoverMutation = () => {
   const queryClient = useQueryClient();
@@ -11,12 +13,12 @@ export const useGroupCoverMutation = () => {
     mutationFn: async ({ photoId, groupId }: { photoId: string, groupId?: string }) => {
       let resolvedGroupId = groupId;
       if (!resolvedGroupId) {
-        const cachedPages = queryClient.getQueryData<any>(['photos', 'infinite']);
+        const cachedPages = queryClient.getQueryData<InfiniteData<{ photos: Photo[] }>>(['photos', 'infinite']);
         if (cachedPages?.pages) {
           for (const page of cachedPages.pages) {
-            const photo = page.photos.find((p: any) => p.id === photoId);
-            if (photo && photo.groupId) {
-              resolvedGroupId = photo.groupId;
+            const photo = page.photos.find((p) => p.id === photoId);
+            if (photo && photo.group_id) {
+              resolvedGroupId = photo.group_id;
               break;
             }
           }
@@ -32,17 +34,16 @@ export const useGroupCoverMutation = () => {
     onMutate: async ({ photoId, groupId }) => {
       await queryClient.cancelQueries({ queryKey: ['photos'] });
       
-      const previousInfinite = queryClient.getQueriesData({ queryKey: ['photos', 'infinite'] });
+      const previousInfinite = queryClient.getQueriesData<InfiniteData<{ photos: Photo[] }>>({ queryKey: ['photos', 'infinite'] });
 
       let resolvedGroupId = groupId;
       if (!resolvedGroupId) {
         for (const [, cacheValue] of previousInfinite) {
-          const typedValue = cacheValue as any;
-          if (typedValue?.pages) {
-            for (const page of typedValue.pages) {
-              const p = page.photos.find((x: any) => x.id === photoId);
-              if (p && p.groupId) {
-                resolvedGroupId = p.groupId;
+          if (cacheValue?.pages) {
+            for (const page of cacheValue.pages) {
+              const p = page.photos.find((x) => x.id === photoId);
+              if (p && p.group_id) {
+                resolvedGroupId = p.group_id;
                 break;
               }
             }
@@ -55,14 +56,14 @@ export const useGroupCoverMutation = () => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: (old as InfiniteData<{ photos: Photo[] }>).pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: any) => {
+            photos: page.photos.map((photo) => {
               if (photo.id === photoId) {
-                return { ...photo, isGroupCover: true, is_group_cover: true };
+                return { ...photo, is_group_cover: true };
               }
-              if (resolvedGroupId && photo.groupId === resolvedGroupId) {
-                return { ...photo, isGroupCover: false, is_group_cover: false };
+              if (resolvedGroupId && photo.group_id === resolvedGroupId) {
+                return { ...photo, is_group_cover: false };
               }
               return photo;
             })
@@ -75,13 +76,13 @@ export const useGroupCoverMutation = () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       invalidatePhotos();
     },
-    onError: (error: any, variables, context: any) => {
+    onError: (error: Error, _variables, context: any) => {
       if (context?.previousInfinite) {
         context.previousInfinite.forEach(([queryKey, value]: any) => {
           queryClient.setQueryData(queryKey, value);
         });
       }
-      showError(error, '设为封面失败');
+      reportError(error, '设为封面失败');
     }
   });
 };

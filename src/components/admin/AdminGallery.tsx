@@ -1,16 +1,18 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { ErrorBoundary } from 'react-error-boundary';
-import { usePublicGalleryLogic } from '../PublicGallery/usePublicGalleryLogic';
 import { GalleryFilters } from '../PublicGallery/GalleryFilters';
 import { GalleryGrid } from '../PublicGallery/GalleryGrid';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GroupDetailView } from '../GroupDetailView';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
-import { useScrollRestoration } from '../../hooks';
+import { useScrollRestoration, usePhotoFilters, useManufacturersQuery, useTagsQuery } from '../../hooks';
+import { useGalleryStore } from '../../store';
+import { translations } from '../../lib/translations';
+import { sortTagsByPopularity } from '../../utils/tagUtils';
 
 interface AdminGalleryProps {
   photos: Photo[];
@@ -38,20 +40,78 @@ interface AdminGalleryProps {
 export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
   useScrollRestoration('admin_gallery_scroll');
 
-  const logic = usePublicGalleryLogic({
-    ...props,
-    isAdminMode: true,
-    user: null, // Admin mode
-  });
+  // Store
+  const searchQuery = useGalleryStore(s => s.searchQuery);
+  const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const selectedCatCode = useGalleryStore(s => s.filterCatId);
+  const setSelectedCatCode = useGalleryStore(s => s.setFilterCatId);
+  const filterSubId = useGalleryStore(s => s.filterSubId);
+  const setFilterSubId = useGalleryStore(s => s.setFilterSubId);
+  const selectedTagIds = useGalleryStore(s => s.filterTagIds);
+  const setSelectedTagIds = useGalleryStore(s => s.setFilterTagIds);
+  const sortOrder = useGalleryStore(s => s.sortOrder);
+  const setSortOrder = useGalleryStore(s => s.setSortOrder);
+  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
+  const setShowGroupsCollapsed = useGalleryStore(s => s.setShowGroupsCollapsed);
+  const langStore = useGalleryStore(s => s.appLang);
+  const tagStats = useGalleryStore(s => s.tagStats);
+  const columns = useGalleryStore(s => s.columns);
+  const setColumns = useGalleryStore(s => s.setColumns);
+  const lightboxIndex = useGalleryStore(s => s.lightboxIndex);
+  const setLightboxIndex = useGalleryStore(s => s.setLightboxIndex);
+  const activeGroupId = useGalleryStore(s => s.activeGroupId);
+  const setActiveGroupId = useGalleryStore(s => s.setActiveGroupId);
+  const activePhotoId = useGalleryStore(s => s.activePhotoId);
+  const setActivePhotoId = useGalleryStore(s => s.setActivePhotoId);
 
-  const {
-    settings, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
-    filterSubId, setFilterSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
-    showGroupsCollapsed, setShowGroupsCollapsed, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
-    lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
-    handleLoadMore, sortedTags, gridPhotos, t, lang, categories, manufacturers, contextTags
-  } = logic;
-  const displayPhotos = useMemo(() => logic.displayPhotos || [], [logic.displayPhotos]);
+  // Queries
+  const { data: qManufacturers = [] } = useManufacturersQuery();
+  const manufacturers = qManufacturers;
+  const contextTags = props.tags || [];
+
+  const lang = langStore || 'zh';
+  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
+
+  // Logic
+  const { displayPhotos, gridPhotos } = usePhotoFilters(
+    props.photos,
+    props.categories,
+    contextTags,
+    {
+      showGroupsCollapsed,
+      isAdminModeOverride: true
+    }
+  );
+
+  const tagMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    contextTags.forEach(t => { map[String(t.id)] = t.name; });
+    return map;
+  }, [contextTags]);
+
+  const sortedTags = useMemo(() => {
+    const pinnedIds = new Set((props.settings?.pinned_tags || []).map(id => String(id)));
+    const enrichedTags = contextTags.map(t => {
+      const strId = String(t.id);
+      return {
+        ...t,
+        is_pinned: t.is_pinned || pinnedIds.has(strId),
+        usage_count: Math.max(t.usage_count || 0, tagStats[strId] || 0)
+      };
+    });
+    return sortTagsByPopularity(enrichedTags);
+  }, [contextTags, tagStats, props.settings?.pinned_tags]);
+
+  const virtuosoRef = useRef<any>(null);
+  const scrollToTop = () => virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+
+  const toggleSortOrder = useCallback(() => {
+    setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
+  }, [sortOrder, setSortOrder]);
+
+  const handleLoadMore = useCallback(() => {
+    if (props.onLoadMore && props.hasMore && !props.isRefreshing) props.onLoadMore();
+  }, [props.onLoadMore, props.hasMore, props.isRefreshing]);
 
   const virtuosoComponents = useMemo(() => ({
     Footer: () => (
@@ -63,6 +123,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
       </div>
     )
   }), [props.settings?.logo_url, props.settings?.app_name]);
+
   const isSyncing = !!props.isRefreshing;
 
   const virtuosoContext = useMemo(() => ({
@@ -89,16 +150,16 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
       className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text"
     >
       <GalleryFilters 
-        settings={settings}
+        settings={props.settings}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         sortOrder={sortOrder}
         toggleSortOrder={toggleSortOrder}
-        columns={props.columns || 3}
-        setColumns={props.setColumns || (() => {})}
+        columns={columns}
+        setColumns={setColumns}
         showGroupsCollapsed={showGroupsCollapsed}
         setShowGroupsCollapsed={setShowGroupsCollapsed}
-        categories={categories}
+        categories={props.categories}
         selectedCatCode={selectedCatCode}
         setSelectedCatCode={setSelectedCatCode}
         filterSubId={filterSubId}
@@ -116,7 +177,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
           {(() => {
             const isInitialLoad = isSyncing && gridPhotos.length === 0;
             if (isInitialLoad) {
-              const skeletonCount = getSkeletonCount(props.totalCount, props.columns || 3);
+              const skeletonCount = getSkeletonCount(props.totalCount, columns);
               return (
                 <motion.div 
                   key="skeleton"
@@ -126,7 +187,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                   transition={{ duration: 0.2 }}
                   className="absolute inset-0 z-10 bg-brand-bg"
                 >
-                  <GallerySkeleton columns={props.columns || 3} count={skeletonCount} />
+                  <GallerySkeleton columns={columns} count={skeletonCount} />
                 </motion.div>
               );
             }
@@ -156,7 +217,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     virtuosoRef={virtuosoRef}
                     gridPhotos={gridPhotos}
                     displayPhotos={displayPhotos}
-                    columns={props.columns || 3}
+                    columns={columns}
                     virtuosoComponents={virtuosoComponents}
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
@@ -164,7 +225,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     showGroupsCollapsed={showGroupsCollapsed}
                     lang={lang}
                     t={t}
-                    categories={categories}
+                    categories={props.categories}
                     manufacturers={manufacturers}
                     tagMap={tagMap}
                     setActiveGroupId={setActiveGroupId}
@@ -199,7 +260,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
               lang={lang}
               t={t}
               tagMap={tagMap}
-              categories={categories}
+              categories={props.categories}
               manufacturers={manufacturers || []}
               onEditPhoto={(p) => props.onEditPhoto && props.onEditPhoto(p.id)}
               onToggleHidden={props.onToggleHidden as any}
@@ -224,7 +285,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
         isStaffMode={!!props.isStaffMode}
         lang={lang}
         t={t}
-        categories={categories}
+        categories={props.categories}
         manufacturers={manufacturers}
         tagMap={tagMap}
         allTags={contextTags}

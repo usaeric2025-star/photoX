@@ -70,7 +70,6 @@ export const useUpdatePhotoMutation = () => {
       const isNetworkError = !navigator.onLine || err.message?.includes('fetch') || err.message?.includes('Network');
       
       if (isNetworkError) {
-        console.log('[Offline] Network unavailable, queuing update operation');
         opsCache.addPendingOp({
           type: 'update',
           photoId: variables.id,

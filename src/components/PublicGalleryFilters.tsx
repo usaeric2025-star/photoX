@@ -82,17 +82,30 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
             >
               {sortOrder === 'oldest' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
             </button>
-            <button
-                onClick={() => {
-                  if (columns === 2) setColumns(3);
-                  else if (columns === 3) setColumns(5);
-                  else setColumns(2);
-                }}
-                className="w-9 h-9 rounded-xl transition-all border shadow-sm flex items-center justify-center bg-white border-brand-navy/5 text-brand-navy"
-                title={`Switch layout`}
-            >
-                <LayoutGrid size={16} className="opacity-40" />
-            </button>
+            <div className="flex bg-white/40 border border-brand-navy/10 rounded-xl p-0.5 shadow-sm">
+              {[2, 3, 5].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => setColumns(num as 2 | 3 | 5)}
+                  className={cn(
+                    "w-8 h-8 rounded-[10px] flex items-center justify-center text-[10px] font-black transition-all relative overflow-hidden",
+                    columns === num 
+                      ? "bg-brand-navy text-brand-bg shadow-sm" 
+                      : "text-brand-navy/30 hover:text-brand-navy hover:bg-white/50"
+                  )}
+                  title={`${num} columns`}
+                >
+                  {num}
+                  {columns === num && (
+                    <motion.div 
+                      layoutId="active-col"
+                      className="absolute inset-0 bg-brand-navy -z-10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
             <button
                 onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
                 className={`w-9 h-9 rounded-xl transition-all border shadow-sm flex items-center justify-center ${showGroupsCollapsed ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/40 hover:text-brand-navy'}`}

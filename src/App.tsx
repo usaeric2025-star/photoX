@@ -86,20 +86,24 @@ export default function AppRoutes() {
   // App-level initialization logic can stay, but fetchSettings is handled by useSettings hook.
 
   useEffect(() => {
-    // 1. Detect OAuth error in URL hash
+    // 1. Detect OAuth error in URL hash OR query params
     const hash = window.location.hash;
-    if (hash && hash.includes('error=')) {
-        const params = new URLSearchParams(hash.substring(1));
+    const search = window.location.search;
+    const hasError = hash.includes('error=') || search.includes('error=');
+    
+    if (hasError) {
+        const errorParams = new URLSearchParams(hash.includes('error=') ? hash.substring(1) : search.substring(1));
+        const errorCode = errorParams.get('error_code') || errorParams.get('error');
+        const errorDesc = errorParams.get('error_description') || '未知错误';
         
-        // Build a detailed message from all parameters
-        const details: string[] = [];
-        params.forEach((value, key) => {
-            details.push(`${key}: ${decodeURIComponent(value.replace(/\+/g, ' '))}`);
-        });
+        // Suppress benign PKCE "already used" errors after first success
+        if (errorDesc.includes('Unable to exchange external code') && user) {
+            console.debug('Suppressed duplicate OAuth exchange error after login success');
+        } else {
+            globalHandleError(new Error(`${errorCode}: ${errorDesc}`), '登录发生错误 (OAuth Error)');
+        }
         
-        globalHandleError(new Error(details.join('\n')), '登录发生错误 (OAuth Error)');
-        
-        // Clear hash to prevent error showing up on refresh
+        // Clear hash and query params to prevent error showing up on refresh
         window.history.replaceState(null, '', window.location.pathname);
     }
 

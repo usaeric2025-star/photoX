@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store'
 import { useAuth } from './useAuth'
 import { ROUTES } from '@/config/constants'
-import { useEffectEvent } from '@/hooks/useEffectEvent';
 
 export function useRouteGuard() {
   const location = useLocation()
@@ -15,7 +14,7 @@ export function useRouteGuard() {
   const resetUI = useStore((state) => state.resetUI)
   const activeGroupId = useStore((state) => state.activeGroupId)
   
-  const handleRouteChange = useEffectEvent(() => {
+  useEffect(() => {
     // 防止在同一个路径重复执行
     if (lastPathRef.current === location.pathname) {
       return
@@ -23,14 +22,10 @@ export function useRouteGuard() {
     lastPathRef.current = location.pathname
     
     // 离开合组页面时清空 activeGroupId
-    if (activeGroupId && !location.pathname.includes('/group/')) {
+    if (activeGroupId && !location.pathname.includes('/group/') && !location.pathname.includes('/g/')) {
       resetUI()
     }
-  });
-
-  useEffect(() => {
-    handleRouteChange();
-  }, [location.pathname, activeGroupId]);
+  }, [location.pathname, activeGroupId, resetUI]);
   
   // 认证检查（不触发刷新，只是重定向）
   useEffect(() => {
