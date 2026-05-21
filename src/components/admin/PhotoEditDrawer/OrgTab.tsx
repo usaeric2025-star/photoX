@@ -31,8 +31,8 @@ export const OrgTab: React.FC<Props> = ({
           <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
           <CategoryGrid 
             categories={categories}
-            selectedId={formState.categoryId}
-            onSelect={(id) => updateForm({ categoryId: id })}
+            selectedId={formState.category_id}
+            onSelect={(id) => updateForm({ category_id: id })}
             appLang={appLang}
           />
       </section>
@@ -40,8 +40,8 @@ export const OrgTab: React.FC<Props> = ({
       <section className="space-y-2">
            <PhotoTagSelector 
               tags={tags}
-              selectedTagIds={safeArray<string>(formState.tagIds)}
-              onChange={(newIds) => updateForm({ tagIds: newIds })}
+              selectedTagIds={safeArray<string>(formState.tag_ids)}
+              onChange={(newIds) => updateForm({ tag_ids: newIds })}
               addTag={onAddTag}
               updateTag={(id, name) => onUpdateTag(id, { name })}
               deleteTag={onDeleteTag}
@@ -56,8 +56,8 @@ export const OrgTab: React.FC<Props> = ({
         />
         <ManufacturerList 
           manufacturers={manufacturers}
-          selectedId={formState?.manufacturerId}
-          onSelect={(id) => updateForm({ manufacturerId: id })}
+          selectedId={formState?.manufacturer_id}
+          onSelect={(id) => updateForm({ manufacturer_id: id })}
           onEdit={onEditManufacturer}
           onDelete={(mfr) => onDeleteManufacturer(mfr.id)}
         />

@@ -81,8 +81,8 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
           
           {isPartOfGroup && (
             <button 
-              onClick={() => updateForm({ isGroupCover: !formState.isGroupCover })}
-              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200 active:bg-slate-100'}`}
+              onClick={() => updateForm({ is_group_cover: !formState.is_group_cover })}
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${formState.is_group_cover ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-500 border-slate-200 active:bg-slate-100'}`}
             >
               <div className="text-[10px] font-bold">封面</div>
             </button>

@@ -25,7 +25,7 @@
 - **❌ 禁止混合命名**: 前端与数据库统一使用 **snake_case**（如 `is_hidden`）。
 
 ## 五、修改前快速检查清单
-1. 是否使用了 `is_hidden` (snake_case) 而非 camelCase？
+1. 是否使用了 `snake_case` (如 `category_id`, `manufacturer_id`, `tag_ids`, `is_group_cover`, `created_at`) 而非 `camelCase` (禁止使用 `categoryId`, `manufacturerId`, `tagIds`, `isGroupCover`, `createdAt`)？
 2. 异步操作是否包裹了 `try...catch` 且调用了 `handleError`？
 3. 是否使用了 `AlertDialog` 进行确认操作？
 4. 业务数据是否仍然由 TanStack Query 管理？

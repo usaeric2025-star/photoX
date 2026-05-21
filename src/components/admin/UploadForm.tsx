@@ -80,7 +80,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               <button 
                 onClick={() => {
                   if (isAnalyzing) return;
-                  withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined))
+                  withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.category_id || undefined))
                     .catch((err: Error) => showError(err, 'AI 分析失败'));
                 }}
                 disabled={isAnalyzing && !abortAnalysis}
@@ -181,10 +181,10 @@ export const UploadForm: React.FC<UploadFormProps> = ({
               return (
               <button 
                 key={cat.id}
-                onClick={() => { updateForm({ categoryId: cat.id }); }}
-                className={`p-3 rounded-2xl border-2 text-center transition-all ${formState.categoryId === cat.id ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 active:bg-slate-50'}`}
+                onClick={() => { updateForm({ category_id: cat.id }); }}
+                className={`p-3 rounded-2xl border-2 text-center transition-all ${formState.category_id === cat.id ? 'bg-blue-600 border-blue-600 shadow-lg' : 'bg-white border-slate-100 text-slate-500 hover:border-slate-200 active:bg-slate-50'}`}
               >
-                <span className={`font-black block text-xs tracking-tight ${formState.categoryId === cat.id ? 'text-white' : 'text-slate-800'}`}>{displayName}</span>
+                <span className={`font-black block text-xs tracking-tight ${formState.category_id === cat.id ? 'text-white' : 'text-slate-800'}`}>{displayName}</span>
               </button>
               );
             })}
@@ -199,8 +199,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
             {safeArray(manufacturers).map((mfr: Manufacturer) => (
               <button 
                 key={mfr.id}
-                onClick={() => updateForm({ manufacturerId: String(mfr.id) })}
-                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all ${String(formState?.manufacturerId) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm active:bg-slate-50'}`}
+                onClick={() => updateForm({ manufacturer_id: String(mfr.id) })}
+                className={`px-5 py-2.5 rounded-full border text-xs font-bold transition-all ${String(formState?.manufacturer_id) === String(mfr.id) ? 'bg-slate-800 border-slate-800 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 shadow-sm active:bg-slate-50'}`}
               >
                 {mfr.name}
               </button>
@@ -214,8 +214,8 @@ export const UploadForm: React.FC<UploadFormProps> = ({
         <section className="space-y-4">
           <PhotoTagSelector 
             tags={tags}
-            selectedTagIds={safeArray<string>(formState.tagIds)}
-            onChange={(newIds) => updateForm({ tagIds: newIds })}
+            selectedTagIds={safeArray<string>(formState.tag_ids)}
+            onChange={(newIds) => updateForm({ tag_ids: newIds })}
             addTag={async (name) => { return await addTagMut(name); }}
             updateTag={async (id, name) => { await updateTagMut({ id, updates: { name } }); return true; }}
             deleteTag={async (id) => { await deleteTagMut(id); return true; }}
@@ -249,7 +249,7 @@ export const UploadForm: React.FC<UploadFormProps> = ({
                   onChange={(newDims) => updateForm({ dimensions: newDims })}
                   showAiButton={!editPhotoId && !!newPhotoData}
                   isAnalyzing={isAnalyzing}
-                  onAiAnalyze={() => withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.categoryId || undefined)).catch((err: Error) => showError(err, 'AI 分析失败'))}
+                  onAiAnalyze={() => withLoading('analyzing', () => handleSingleAiAnalyze(newPhotoData, formState.category_id || undefined)).catch((err: Error) => showError(err, 'AI 分析失败'))}
                   t={t}
                 />
 

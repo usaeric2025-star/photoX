@@ -9,7 +9,7 @@ export const ALLOWED_FIELDS = [
   'id', 'name', 'description', 'description_translations', 'category_id', 'manufacturer_id',
   'tag_ids', 'dimensions', 'model_number', 'manual_code', 'group_id', 'is_group_cover', 'is_pinned',
   'image_url', 'thumb_url', 'thumb_hash', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',
-  'user_id', 'is_hidden', 'image_hash', 'item_code'
+  'user_id', 'is_hidden', 'is_analyzing', 'image_hash', 'item_code'
 ];
 
 export function normalizeDimensionsBeforeSave(dimensions: import('../../types').Dimension[] | null | undefined) {
@@ -59,8 +59,6 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
         // Exclude relational/array fields that are handled separately
         if (['tag_ids', 'dimensions'].includes(key)) continue;
 
-        if (['is_analyzing'].includes(key)) continue;
-        
         let valueToSave = value;
         if (key === 'group_id' || key === 'category_id' || key === 'manufacturer_id') {
             if (value === '' || value === 'uncategorized' || value === 'null' || value === undefined || value === null) {

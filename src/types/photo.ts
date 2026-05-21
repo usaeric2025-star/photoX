@@ -24,41 +24,29 @@ export interface Photo {
   dimensions?: Dimension[] | null;
   exif_data?: Record<string, unknown> | null;
   created_at: string;
-  createdAt?: string; // Alias for backward compatibility
   updated_at?: string;
-  updatedAt?: string; // Alias for backward compatibility
   description_translations?: {
     zh?: string;
     en?: string;
     ms?: string;
   };
   group_id?: string | null;
-  groupId?: string | null; // Alias for backward compatibility
   is_group_cover?: boolean;
-  isGroupCover?: boolean; // Alias for backward compatibility
   is_pinned?: boolean; 
-  isPinned?: boolean; // Alias for backward compatibility
   is_analyzing?: boolean;
-  isAnalyzing?: boolean; // Alias for backward compatibility
   is_hidden?: boolean;
   group_order?: number;
-  groupOrder?: number; // Alias for backward compatibility
   user_id?: string;
-  userId?: string; // Alias for backward compatibility
   type?: string;
   uri?: string; 
   category_id: string | null; 
-  categoryId?: string | null; // Alias for backward compatibility
   manufacturer_id: string | null;
-  manufacturerId?: string | null; // Alias for backward compatibility
   tag_ids: string[]; 
-  tagIds?: string[]; // Alias for backward compatibility
   price?: string;
   note?: string;
   sub_category?: string | null;
   _time?: number; 
   created_at_timestamp?: number; 
-  createdAtTimestamp?: number; // Alias for backward compatibility
 }
 
 export interface SubCategory {
@@ -123,11 +111,8 @@ export interface ProductGroup {
 export interface ProductFormData {
   name: string;
   category_id: string | null;
-  categoryId?: string | null; // Alias for backward compatibility
   manufacturer_id: string | null;
-  manufacturerId?: string | null; // Alias for backward compatibility
   tag_ids: string[];
-  tagIds?: string[]; // Alias for backward compatibility
   description: string;
   description_translations: {
     zh?: string;
@@ -140,5 +125,4 @@ export interface ProductFormData {
   is_hidden: boolean;
   price: string;
   is_group_cover: boolean;
-  isGroupCover?: boolean; // Alias for backward compatibility
 }

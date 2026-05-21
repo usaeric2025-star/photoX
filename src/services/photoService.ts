@@ -47,6 +47,17 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
         .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
     }
 
+    const group_id = item.group_id ? String(item.group_id) : undefined;
+    const created_at = item.created_at as string | undefined;
+    const updated_at = item.updated_at as string | undefined;
+    const is_group_cover = !!item.is_group_cover;
+    const is_pinned = !!item.is_pinned || !!(item as any).is_pinned;
+    const is_analyzing = !!item.is_analyzing;
+    const group_order = item.group_order as number | undefined;
+    const user_id = item.user_id ? String(item.user_id) : undefined;
+    const category_id = item.category_id ? String(item.category_id) : null;
+    const manufacturer_id = item.manufacturer_id ? String(item.manufacturer_id) : null;
+    
     return {
       id: String(item.id),
       storageId: storageId,
@@ -55,24 +66,37 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       model_number: item.model_number as string | undefined,
       image_hash: item.image_hash as string | undefined,
       name: (item.name as string) || 'Unnamed Product',
-      category_id: item.category_id ? String(item.category_id) : null,
-      manufacturer_id: item.manufacturer_id ? String(item.manufacturer_id) : null,
+      category_id: category_id,
+      categoryId: category_id,
+      manufacturer_id: manufacturer_id,
+      manufacturerId: manufacturer_id,
       description: item.description as string | undefined,
       image_url: item.image_url as string | undefined,
       thumb_url: (item.thumb_url as string) || (item.image_url as string),
       exif_data: (item.exif_data as Record<string, unknown>) ?? null,
-      created_at: item.created_at as string | undefined,
-      updated_at: item.updated_at as string | undefined,
-      group_id: item.group_id ? String(item.group_id) : undefined,
-      is_group_cover: !!item.is_group_cover,
+      created_at: created_at,
+      createdAt: created_at,
+      updated_at: updated_at,
+      updatedAt: updated_at,
+      group_id: group_id,
+      groupId: group_id,
+      is_group_cover: is_group_cover,
+      isGroupCover: is_group_cover,
       is_hidden: !!item.is_hidden,
-      is_pinned: !!item.is_pinned || !!(item as any).is_pinned,
-      user_id: item.user_id ? String(item.user_id) : undefined,
+      is_pinned: is_pinned,
+      isPinned: is_pinned,
+      is_analyzing: is_analyzing,
+      isAnalyzing: is_analyzing,
+      user_id: user_id,
+      userId: user_id,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
       description_translations: item.description_translations as Photo['description_translations'] || null,
       tag_ids: Array.isArray(tag_ids) ? tag_ids : [],
-      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : []
+      tagIds: Array.isArray(tag_ids) ? tag_ids : [],
+      dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
+      created_at_timestamp: item.created_at_timestamp as number | undefined,
+      createdAtTimestamp: item.created_at_timestamp as number | undefined
     };
 }
 

@@ -212,8 +212,8 @@ export const BatchEditScreen = ({
           <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
           <CategoryGrid 
             categories={categories}
-            selectedId={formState.categoryId}
-            onSelect={(id) => updateForm({ categoryId: id })}
+            selectedId={formState.category_id}
+            onSelect={(id) => updateForm({ category_id: id })}
             appLang={appLang}
           />
         </section>
@@ -226,16 +226,16 @@ export const BatchEditScreen = ({
           />
           <ManufacturerList 
             manufacturers={manufacturers}
-            selectedId={formState?.manufacturerId}
-            onSelect={(id) => updateForm({ manufacturerId: id })}
+            selectedId={formState?.manufacturer_id}
+            onSelect={(id) => updateForm({ manufacturer_id: id })}
           />
         </section>
 
          <section className="space-y-4">
           <PhotoTagSelector 
             tags={tags}
-            selectedTagIds={safeArray<string>(formState.tagIds)}
-            onChange={(newIds) => updateForm({ tagIds: newIds })}
+            selectedTagIds={safeArray<string>(formState.tag_ids)}
+            onChange={(newIds) => updateForm({ tag_ids: newIds })}
             addTag={addTag}
             updateTag={updateTag}
             deleteTag={deleteTag}

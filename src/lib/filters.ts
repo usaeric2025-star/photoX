@@ -14,7 +14,7 @@ export const cleanPhotos = (photos: unknown[]): Photo[] => {
       return true;
     })
     .map(p => {
-      const createdAt = String(p.createdAt || p.created_at || new Date().toISOString());
+      const created_at = String(p.created_at || (p as any).created_at || new Date().toISOString());
       return {
         ...p,
         id: String(p.id),
@@ -22,11 +22,11 @@ export const cleanPhotos = (photos: unknown[]): Photo[] => {
         item_code: String(p.item_code || ''),
         image_hash: String(p.image_hash || ''),
         image_url: String(p.image_url || ''),
-        createdAt,
-        tagIds: Array.isArray(p.tagIds) ? p.tagIds.map(String) : [],
+        created_at,
+        tag_ids: Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : [],
         dimensions: Array.isArray(p.dimensions) ? p.dimensions as any[] : [],
-        createdAtTimestamp: new Date(createdAt).getTime(),
-        isPinned: !!p.isPinned || !!p.is_pinned
+        created_at_timestamp: new Date(created_at).getTime(),
+        is_pinned: !!(p as any).is_pinned || !!p.is_pinned
       } as Photo;
     });
 
@@ -34,7 +34,7 @@ export const cleanPhotos = (photos: unknown[]): Photo[] => {
   const idMap = new Map<string, Photo>();
   mapped.forEach(p => {
     const existing = idMap.get(p.id);
-    if (!existing || (p.isPinned && !existing.isPinned) || (p.createdAtTimestamp > existing.createdAtTimestamp)) {
+    if (!existing || (p.is_pinned && !existing.is_pinned) || (p.created_at_timestamp! > existing.created_at_timestamp!)) {
       idMap.set(p.id, p);
     }
   });
@@ -44,7 +44,7 @@ export const cleanPhotos = (photos: unknown[]): Photo[] => {
   Array.from(idMap.values()).forEach(p => {
     const key = p.image_hash || p.id;
     const existing = hashMap.get(key);
-    if (!existing || (p.isPinned && !existing.isPinned) || (p.createdAtTimestamp > existing.createdAtTimestamp)) {
+    if (!existing || (p.is_pinned && !existing.is_pinned) || (p.created_at_timestamp! > existing.created_at_timestamp!)) {
       hashMap.set(key, p);
     }
   });
@@ -87,7 +87,7 @@ export function filterPhotos(
 
   let result = filteredPhotos.map(p => ({
     ...p,
-    _time: p.createdAtTimestamp || new Date(p.createdAt || (p as any).created_at || 0).getTime()
+    _time: p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime()
   }));
 
   // 2. Search Filter
@@ -139,7 +139,7 @@ export function filterPhotos(
       }
 
       // Tags match (including aliases)
-      const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : [];
+      const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids : [];
       const hasTagMatch = pTagIds.some(tid => {
         const terms = tagMap.get(String(tid));
         return terms && terms.some(term => term.includes(q));
@@ -147,8 +147,8 @@ export function filterPhotos(
       if (hasTagMatch) return true;
 
       // Category match (including aliases)
-      if (p.categoryId) {
-        const terms = catMap.get(String(p.categoryId));
+      if (p.category_id) {
+        const terms = catMap.get(String(p.category_id));
         if (terms && terms.some(term => term.includes(q))) return true;
       }
 
@@ -158,12 +158,12 @@ export function filterPhotos(
 
   // 3. Category Filter
   if (filterCatId) {
-    result = result.filter(p => String(p.categoryId) === String(filterCatId));
+    result = result.filter(p => String(p.category_id) === String(filterCatId));
   }
 
   // 4. SubCategory/Manufacturer Filter
   if (filterSubId) {
-    result = result.filter(p => p.manufacturerId === filterSubId);
+    result = result.filter(p => p.manufacturer_id === filterSubId);
   }
 
   // 5. Tag Filter
@@ -175,7 +175,7 @@ export function filterPhotos(
     });
     
     result = result.filter(p => {
-      const pTagIds = Array.isArray(p.tagIds) ? p.tagIds.map(String) : (typeof p.tagIds === 'string' ? [String(p.tagIds)] : []);
+      const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : (typeof p.tag_ids === 'string' ? [String(p.tag_ids)] : []);
       
       return filterTagIds.every(tid => {
         const strTid = String(tid);
