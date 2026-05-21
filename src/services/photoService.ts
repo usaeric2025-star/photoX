@@ -198,6 +198,48 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     return (data || []).map(item => mapSupabasePhoto(item));
 };
 
+export const loadPhotosByGroupIdPaginated = async (
+  groupId: string,
+  page: number = 1,
+  pageSize: number = 20,
+  isAdminMode: boolean = false
+): Promise<{ photos: Photo[]; total: number }> => {
+  if (!groupId) return { photos: [], total: 0 };
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let countQuery = supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId);
+
+  let query = supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('*, photo_tags(*)')
+    .eq('group_id', groupId);
+
+  if (!isAdminMode) {
+    countQuery = countQuery.or(VISIBILITY_OR_QUERY);
+    query = query.or(VISIBILITY_OR_QUERY);
+  }
+
+  const [countRes, queryRes] = await Promise.all([
+    countQuery,
+    query.order('is_group_cover', { ascending: false })
+         .order('created_at', { ascending: false })
+         .range(from, to)
+  ]);
+
+  if (queryRes.error) {
+    globalHandleError(queryRes.error, "loadPhotosByGroupIdPaginated", true);
+    return { photos: [], total: 0 };
+  }
+
+  const mapped = (queryRes.data || []).map(item => mapSupabasePhoto(item));
+  return { photos: mapped, total: countRes.count || 0 };
+};
+
 export const getPhotoCount = async (
   categoryId?: string | null,
   tagId?: string | null,

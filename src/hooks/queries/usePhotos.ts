@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
-import { loadAllPhotosFromCloud, loadPhotosByGroupId, getPhotoCount } from '../../services/photoService';
+import { loadAllPhotosFromCloud, loadPhotosByGroupId, loadPhotosByGroupIdPaginated, getPhotoCount } from '../../services/photoService';
 import { QUERY_KEYS } from './keys';
 import { syncCache } from '../../utils/indexedDB';
 
@@ -58,5 +58,20 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
     enabled: !!groupId,
     placeholderData: keepPreviousData,
     select: (data) => data ?? [],
+  });
+};
+
+export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 20) => {
+  return useInfiniteQuery({
+    queryKey: ['photos', 'group', 'infinite', groupId, isAdminMode, pageSize],
+    queryFn: ({ pageParam = 1 }) => 
+      loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode),
+    enabled: !!groupId,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
+      return loaded < lastPage.total ? allPages.length + 1 : undefined;
+    },
+    placeholderData: keepPreviousData,
   });
 };

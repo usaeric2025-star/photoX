@@ -10,11 +10,12 @@ import { getGroupById } from '../services/groupService';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
-import { loadPhotosByGroupId, mapSupabasePhoto } from '../services/photoService';
+import { mapSupabasePhoto } from '../services/photoService';
 import { DB_CONFIG } from '../constants/config';
 
 import { useAdminMode } from '../hooks/useAdminMode';
 import { useFeedback } from '../hooks';
+import { useInfiniteGroupPhotosQuery } from '../hooks/queries/usePhotos';
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
 export interface GroupDetailViewProps extends GroupAdminShellProps {
@@ -34,14 +35,23 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
-  const [localGroupPhotos, setLocalGroupPhotos] = useState<Photo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const virtuosoRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
 
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+
+  // Paginated group photos via React Query Infinite Query
+  const {
+    data: infinitePhotosData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isGroupPhotosLoading
+  } = useInfiniteGroupPhotosQuery(activeGroupId, isAdminMode, 20);
+
+  const isLoading = isGroupPhotosLoading;
 
   useEffect(() => {
     if (activeGroupId && initialPhotoId) {
@@ -76,7 +86,6 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     if (activeGroupId) {
       // Reset state immediately to avoid showing stale data from previous group
       setGroupData(null);
-      setLocalGroupPhotos([]);
       
       // 1. Fetch group metadata
       setIsGroupDataLoading(true);
@@ -87,37 +96,20 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
         showError(err, '获取产品组数据失败');
         setIsGroupDataLoading(false);
       });
-
-      // 2. In public mode, fetch all group photos directly to bypass pagination
-      if (!isAdminMode) {
-        setIsLoading(true);
-        loadPhotosByGroupId(activeGroupId, isAdminMode).then(mapped => {
-          setLocalGroupPhotos(mapped);
-          setIsLoading(false);
-        }).catch(err => {
-          showError(err, '加载产品组照片失败');
-          setIsLoading(false);
-        });
-      }
     } else {
       setGroupData(null);
-      setLocalGroupPhotos([]);
     }
-  }, [activeGroupId, isAdminMode]);
+  }, [activeGroupId]);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
 
-    // Use localGroupPhotos in public mode (to bypass pagination), props.photos in admin mode
-    const sourcePhotos = isAdminMode ? photos : localGroupPhotos;
-
-    const groupPhotos = sourcePhotos
-      .filter(p => String(p.groupId) === String(activeGroupId));
+    const groupPhotos = infinitePhotosData?.pages.flatMap(page => page.photos) || [];
 
     const visiblePhotos = filterPhotosByMode(groupPhotos, isAdminMode);
 
     return sortGroupPhotos(visiblePhotos);
-  }, [activeGroupId, photos, localGroupPhotos, isAdminMode]);
+  }, [activeGroupId, infinitePhotosData, isAdminMode]);
 
   useEffect(() => {
     if (activeGroupId && initialPhotoId) {
@@ -226,11 +218,22 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
              </div>
            ) : (
              <GroupGridView 
+               onEndReached={() => {
+                 if (hasNextPage && !isFetchingNextPage) {
+                   fetchNextPage();
+                 }
+               }}
                virtuosoRef={virtuosoRef}
                photos={activeGroupPhotos} 
                highlightId={currentHighlightId}
                onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
              />
+           )}
+
+           {isFetchingNextPage && (
+             <div className="py-4 flex items-center justify-center bg-brand-bg shrink-0">
+               <span className="w-6 h-6 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin inline-block" />
+             </div>
            )}
 
            {/* Unified Photo Lightbox */}

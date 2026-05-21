@@ -13,6 +13,7 @@ interface GroupGridViewProps {
   selectedPhotoIds?: string[];
   getPhotoProps?: (photo: Photo) => React.HTMLAttributes<HTMLDivElement>;
   highlightId?: string | null;
+  onEndReached?: () => void;
 }
 
 const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighlighted, extraProps, onPhotoClick, onPhotoContextMenu }: {
@@ -142,7 +143,8 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   selectedPhotoIds = [],
   getPhotoProps,
   virtuosoRef,
-  highlightId
+  highlightId,
+  onEndReached
 }) => {
   
   const header = useMemo(() => {
@@ -203,6 +205,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         style={{ height: '100%', width: '100%' }}
         totalCount={photos.length}
         overscan={200}
+        endReached={onEndReached}
         components={{
           Header: () => <div className="p-3 sm:p-6 pb-0">{header}</div>,
           Footer: () => <div className="h-40" />

@@ -56,18 +56,7 @@ export const GroupMultiSelectBar: React.FC<GroupMultiSelectBarProps> = ({
                  <span className="text-[10px] font-bold text-white/60">移出組</span>
               </button>
 
-              <button 
-                onClick={() => {
-                  const allIds = activeGroupPhotos.map(p => p.id);
-                  setSelectedPhotoIds(selectedPhotoIds.length === allIds.length ? [] : allIds);
-                }} 
-                className="flex flex-col items-center gap-1 shrink-0 px-2"
-              >
-                 <div className="w-10 h-10 rounded-xl bg-white/5 text-white/80 flex items-center justify-center border border-white/5 active:scale-95 transition-all">
-                    {selectedPhotoIds.length === activeGroupPhotos.length ? <X size={18} /> : <Check size={18} />}
-                 </div>
-                 <span className="text-[10px] font-bold text-white/60">{selectedPhotoIds.length === activeGroupPhotos.length ? '取消' : '全選'}</span>
-              </button>
+
            </div>
 
            <div className="w-px h-8 bg-white/10" />

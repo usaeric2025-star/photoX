@@ -8,6 +8,7 @@ import { useRemoveFromGroupMutation } from '../../hooks/mutations/useGroupOperat
 import { useGalleryStore } from '../../store';
 import { useAdminMode } from '../../hooks/useAdminMode';
 import { useFeedback } from '../../hooks/uiFeedback';
+import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
 
 interface UseGroupAdminLogicProps {
   activeGroupId: string | null;
@@ -60,9 +61,13 @@ export const useGroupAdminLogic = ({
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
   const virtuosoRef = useRef<any>(null);
 
+  const { data: dbGroupPhotos = [] } = useGroupPhotosQuery(activeGroupId || '', isAdminMode);
+
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    const groupPhotos = photos.filter(p => p && p.groupId === activeGroupId);
+    const groupPhotos = dbGroupPhotos.length > 0
+      ? dbGroupPhotos
+      : photos.filter(p => p && p.groupId === activeGroupId);
     return filterPhotosByMode(groupPhotos, isAdminMode)
       .sort((a, b) => {
         if (a.isGroupCover) return -1;
@@ -74,7 +79,7 @@ export const useGroupAdminLogic = ({
         if (b.groupOrder !== undefined) return 1;
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
-  }, [activeGroupId, photos, isAdminMode]);
+  }, [activeGroupId, photos, dbGroupPhotos, isAdminMode]);
 
   const groupCover = useMemo(() => activeGroupPhotos.find(p => p.isGroupCover) || activeGroupPhotos[0], [activeGroupPhotos]);
   
@@ -163,7 +168,9 @@ export const useGroupAdminLogic = ({
 
   const confirmBulkRemove = useCallback((ids: string[]) => {
     // Determine the true remaining count (including hidden photos)
-    const allGroupPhotos = photos.filter(p => p && p.groupId === activeGroupId);
+    const allGroupPhotos = dbGroupPhotos.length > 0
+      ? dbGroupPhotos
+      : photos.filter(p => p && p.groupId === activeGroupId);
     const remainingCount = allGroupPhotos.length - ids.length;
     const isDissolving = remainingCount <= 1;
     
@@ -191,7 +198,7 @@ export const useGroupAdminLogic = ({
         setAlertDialog(null);
       }
     });
-  }, [showError, setAlertDialog, photos, activeGroupId, removePhotosBatch, setActiveGroupId]);
+  }, [showError, setAlertDialog, photos, dbGroupPhotos, activeGroupId, removePhotosBatch, setActiveGroupId]);
 
   const persistPhotoChange = useCallback(async (photoId: string, updates: Partial<Photo>) => {
     // Optimistic update: temporarily update local state if possible
@@ -222,7 +229,9 @@ export const useGroupAdminLogic = ({
       
       if (updates.hasOwnProperty('is_hidden')) {
         const is_hidden = updates.is_hidden;
-        const groupPhotos = photos.filter(p => p && p.groupId === activeGroupId);
+        const groupPhotos = dbGroupPhotos.length > 0
+          ? dbGroupPhotos
+          : photos.filter(p => p && p.groupId === activeGroupId);
         if (groupPhotos.length > 0 && hookUpdatePhoto) {
            await Promise.all(
              groupPhotos.map(p => hookUpdatePhoto(p.id, { is_hidden }))
@@ -233,7 +242,7 @@ export const useGroupAdminLogic = ({
       showError(err, '更新群组资料失败');
       throw err;
     }
-  }, [activeGroupId, groupData, showError, hookUpdatePhoto, photos]);
+  }, [activeGroupId, groupData, showError, hookUpdatePhoto, photos, dbGroupPhotos]);
 
   const handleToggleTag = useCallback((photo: Photo, tagId: string) => {
     const currentTags = Array.isArray(photo.tagIds) ? photo.tagIds : [];

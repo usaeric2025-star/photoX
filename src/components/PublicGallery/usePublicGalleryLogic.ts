@@ -122,10 +122,22 @@ export const usePublicGalleryLogic = (props: {
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Reset lightbox overlay index when switching category, tag filters, search, sorting, or pagination (incomingPhotos)
+  // Reset lightbox overlay index and clear multi-select when switching category, tag filters, search, or sorting
   useEffect(() => {
     setLightboxIndex(null);
-  }, [searchQuery, selectedCatCode, selectedSubId, selectedTagIds, sortOrder, incomingPhotos]);
+    activeClearSelection();
+  }, [searchQuery, selectedCatCode, selectedSubId, selectedTagIds, sortOrder, activeClearSelection]);
+
+  // Clear global filters and selections when entering a group
+  useEffect(() => {
+    if (activeGroupId) {
+      setSelectedCatCode(null);
+      setSelectedSubId(null);
+      setSelectedTagIds([]);
+      setSearchQuery('');
+      activeClearSelection();
+    }
+  }, [activeGroupId, setSelectedCatCode, setSelectedSubId, setSelectedTagIds, setSearchQuery, activeClearSelection]);
 
   const dpRef = useRef(displayPhotos);
   useEffect(() => {

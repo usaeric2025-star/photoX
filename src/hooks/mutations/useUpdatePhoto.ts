@@ -46,6 +46,20 @@ export const useUpdatePhotoMutation = () => {
         );
       });
 
+      // Optimistically update group infinite photo queries
+      queryClient.setQueriesData({ queryKey: ['photos', 'group', 'infinite'] }, (old: any) => {
+        if (!old || !old.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: { photos: Photo[] }) => ({
+            ...page,
+            photos: page.photos.map((photo: Photo) =>
+              photo.id === id ? { ...photo, ...updates } : photo
+            ),
+          })),
+        };
+      });
+
       return { previousInfinite, previousGroups };
     },
     onSuccess: () => {
@@ -116,6 +130,20 @@ export const useBatchUpdatePhotosMutation = () => {
         return old.map((photo: Photo) => 
           ids.includes(photo.id) ? { ...photo, ...updates } : photo
         );
+      });
+
+      // Optimistically update group infinite photo queries
+      queryClient.setQueriesData({ queryKey: ['photos', 'group', 'infinite'] }, (old: any) => {
+        if (!old || !old.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            photos: page.photos.map((photo: Photo) =>
+              ids.includes(photo.id) ? { ...photo, ...updates } : photo
+            ),
+          })),
+        };
       });
 
       return { previousInfinite, previousGroups };

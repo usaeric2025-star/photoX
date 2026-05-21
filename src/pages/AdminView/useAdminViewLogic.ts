@@ -5,6 +5,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { User, Photo } from '@/types';
 import { loginWithGoogle } from '@/services/supabaseService';
 import { hapticFeedback } from '@/utils/haptics';
+import { loadPhotosByGroupId } from '@/services/photoService';
 
 interface AdminViewLogicProps {
   user: User | null;
@@ -24,11 +25,12 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   } = props;
   const { 
     tagIdToNameMap,
-    searchQuery,
-    filterCatId,
-    filterSubId,
-    filterTagIds,
-    sortOrder
+    searchQuery, setSearchQuery, setDebouncedSearchQuery,
+    filterCatId, setFilterCatId,
+    filterSubId, setFilterSubId,
+    filterTagIds, setFilterTagIds,
+    sortOrder,
+    clearSelection
   } = useGalleryStore();
   
   const { 
@@ -103,9 +105,17 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   const togglePinned = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
     const newStatus = !photo.isPinned;
-    const affectedIds = photo.groupId 
-      ? photos.filter((p: Photo) => p.groupId === photo.groupId).map((p: Photo) => p.id)
-      : [photo.id];
+    let affectedIds = [photo.id];
+    if (photo.groupId) {
+      try {
+        const dbGroupPhotos = await loadPhotosByGroupId(photo.groupId, true);
+        affectedIds = dbGroupPhotos.length > 0
+          ? dbGroupPhotos.map((p: Photo) => p.id)
+          : photos.filter((p: Photo) => p.groupId === photo.groupId).map((p: Photo) => p.id);
+      } catch (e) {
+        affectedIds = photos.filter((p: Photo) => p.groupId === photo.groupId).map((p: Photo) => p.id);
+      }
+    }
     try {
       await updatePhotosBulk(affectedIds, { isPinned: newStatus });
     } catch (e: any) {
@@ -128,7 +138,15 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const setGroupCover = useCallback(async (id: string, groupId: string) => {
     if (checkSyncLock()) return;
-    const groupPhotos = photos.filter((p: Photo) => p.groupId === groupId);
+    let groupPhotos = [];
+    try {
+      groupPhotos = await loadPhotosByGroupId(groupId, true);
+    } catch (e) {
+      // Fallback
+    }
+    if (groupPhotos.length === 0) {
+      groupPhotos = photos.filter((p: Photo) => p.groupId === groupId);
+    }
     try {
       await Promise.all(
          groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
@@ -152,10 +170,23 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Close lightbox whenever search query, categories, sub-categories, tag filters, sorting order, or photos (pagination) change
+  // Close lightbox and reset multiselect whenever search query, categories, sub-categories, tag filters, or sorting order change
   useEffect(() => {
     setLightboxIndex(null);
-  }, [searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, photos]);
+    clearSelection();
+  }, [searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, clearSelection]);
+
+  // Clear global filters and selections when entering a group
+  useEffect(() => {
+    if (activeGroupId) {
+      setFilterCatId(null);
+      setFilterSubId(null);
+      setFilterTagIds([]);
+      setSearchQuery('');
+      setDebouncedSearchQuery('');
+      clearSelection();
+    }
+  }, [activeGroupId, setFilterCatId, setFilterSubId, setFilterTagIds, setSearchQuery, setDebouncedSearchQuery, clearSelection]);
 
   const onLongPressStart = useCallback((id: string) => {
     hapticFeedback.medium();
