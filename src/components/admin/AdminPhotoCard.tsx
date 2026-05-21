@@ -19,11 +19,10 @@ interface AdminPhotoCardProps {
   tagMap: Record<string, string>;
   onEditPhoto?: (id: string) => void;
   onGroupClick?: (groupId: string, photoId?: string) => void;
-  onLightboxOpen: (index: number, photos: Photo[]) => void;
+  onLightboxOpen: (photo: Photo) => void;
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
-  displayPhotos: Photo[];
 }
 
 const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
@@ -91,26 +90,14 @@ const toTitleCase = (str: string) => {
 export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({ 
   photo, index, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onEditPhoto, onGroupClick, 
-  onLightboxOpen, shareSinglePhoto, onTogglePinned, onToggleHidden,
-  displayPhotos
+  onLightboxOpen, shareSinglePhoto, onTogglePinned, onToggleHidden
 }) => {
   const { isMultiSelect, selectedIds, enable, toggle } = useMultiSelect();
   const isSelected = selectedIds.includes(photo.id);
 
-  const displayPhotosRef = React.useRef(displayPhotos);
-  React.useEffect(() => {
-    displayPhotosRef.current = displayPhotos;
-  }, [displayPhotos]);
-
   const handleOpenLightbox = useCallback(() => {
-    const currentPhotos = displayPhotosRef.current;
-    const realIndex = currentPhotos.findIndex((p) => p?.id === photo.id);
-    if (realIndex !== -1) {
-      onLightboxOpen(realIndex, currentPhotos);
-    } else {
-      onLightboxOpen(index, currentPhotos);
-    }
-  }, [photo.id, index, onLightboxOpen]);
+    onLightboxOpen(photo);
+  }, [photo, onLightboxOpen]);
     
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isMultiSelect && !e.shiftKey) {

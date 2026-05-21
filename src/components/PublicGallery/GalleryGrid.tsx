@@ -46,18 +46,17 @@ interface MemoizedPhotoCardProps {
   tagMap: Record<string, string>;
   onEditPhoto?: (id: string) => void;
   onGroupClick: (groupId: string, photoId?: string) => void;
-  onLightboxOpen: (index: number, photos: Photo[]) => void;
+  onLightboxOpen: (photo: Photo) => void;
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
-  displayPhotos: Photo[];
 }
 
 const MemoizedPhotoCard = React.memo(({ 
   index, photo, isAdminMode, showGroupsCollapsed, 
   lang, t, categories, manufacturers, tagMap, onEditPhoto, onGroupClick, 
   onLightboxOpen, shareSinglePhoto, 
-  onTogglePinned, onToggleHidden, displayPhotos
+  onTogglePinned, onToggleHidden
 }: MemoizedPhotoCardProps) => {
   const handleGroupClickInternal = useCallback((gid: string) => {
     onGroupClick(gid, photo.id);
@@ -80,7 +79,6 @@ const MemoizedPhotoCard = React.memo(({
         shareSinglePhoto={shareSinglePhoto}
         onTogglePinned={onTogglePinned}
         onToggleHidden={onToggleHidden}
-        displayPhotos={displayPhotos}
       />
     );
   }
@@ -98,7 +96,6 @@ const MemoizedPhotoCard = React.memo(({
       onGroupClick={handleGroupClickInternal}
       onLightboxOpen={onLightboxOpen}
       shareSinglePhoto={shareSinglePhoto}
-      displayPhotos={displayPhotos}
     />
   );
 });
@@ -120,9 +117,12 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
     props.onEditPhoto?.(id);
   }, [props.onEditPhoto]);
 
-  const handleLightboxOpen = useCallback((index: number, photos: Photo[]) => {
-    props.setLightboxIndex(index);
-  }, [props.setLightboxIndex]);
+  const handleLightboxOpen = useCallback((photo: Photo) => {
+    const realIndex = props.displayPhotos.findIndex(p => p?.id === photo.id);
+    if (realIndex !== -1) {
+      props.setLightboxIndex(realIndex);
+    }
+  }, [props.displayPhotos, props.setLightboxIndex]);
 
   const handleShareSinglePhoto = useCallback((photo: Photo) => {
     props.shareSinglePhoto(photo);
@@ -169,7 +169,6 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
             shareSinglePhoto={handleShareSinglePhoto}
             onTogglePinned={handleTogglePinned}
             onToggleHidden={handleToggleHidden}
-            displayPhotos={props.displayPhotos}
           />
         );
       }}

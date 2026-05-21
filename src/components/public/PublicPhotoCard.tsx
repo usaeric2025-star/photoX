@@ -17,9 +17,8 @@ interface PublicPhotoCardProps {
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
   onGroupClick?: (groupId: string, photoId?: string) => void;
-  onLightboxOpen: (index: number, photos: Photo[]) => void;
+  onLightboxOpen: (photo: Photo) => void;
   shareSinglePhoto: (photo: Photo) => void;
-  displayPhotos: Photo[];
 }
 
 const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => (
@@ -65,22 +64,11 @@ const toTitleCase = (str: string) => {
 export const PublicPhotoCard: React.FC<PublicPhotoCardProps> = React.memo(({ 
   photo, index, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onGroupClick, 
-  onLightboxOpen, shareSinglePhoto, displayPhotos
+  onLightboxOpen, shareSinglePhoto
 }) => {
-  const displayPhotosRef = React.useRef(displayPhotos);
-  React.useEffect(() => {
-    displayPhotosRef.current = displayPhotos;
-  }, [displayPhotos]);
-
   const handleOpenLightbox = useCallback(() => {
-    const currentPhotos = displayPhotosRef.current;
-    const realIndex = currentPhotos.findIndex((p) => p?.id === photo.id);
-    if (realIndex !== -1) {
-      onLightboxOpen(realIndex, currentPhotos);
-    } else {
-      onLightboxOpen(index, currentPhotos);
-    }
-  }, [photo.id, index, onLightboxOpen]);
+    onLightboxOpen(photo);
+  }, [photo, onLightboxOpen]);
     
   const handleClick = useCallback(() => {
     if (photo.groupId && onGroupClick) {
