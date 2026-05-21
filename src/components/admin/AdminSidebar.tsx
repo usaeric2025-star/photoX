@@ -57,7 +57,7 @@ interface Props {
 export const AdminSidebar: React.FC<Props> = ({ 
   settings, activeScreen, setActiveScreen, cloudCount, onRefresh 
 }) => {
-  const { viewMode, setViewMode } = useGalleryStore();
+  const { adminPreviewMode, setAdminPreviewMode } = useGalleryStore();
 
   return (
     <aside className="w-72 bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden">
@@ -87,19 +87,19 @@ export const AdminSidebar: React.FC<Props> = ({
           <SidebarItem 
             icon={Home} 
             label="照片库" 
-            active={activeScreen === 'home' && viewMode === 'private'} 
+            active={activeScreen === 'home' && adminPreviewMode === 'private'} 
             onClick={() => {
               setActiveScreen('home');
-              setViewMode('private');
+              setAdminPreviewMode('private');
             }} 
           />
           <SidebarItem 
             icon={Monitor} 
             label="访客预览" 
-            active={activeScreen === 'home' && viewMode === 'public'} 
+            active={activeScreen === 'home' && adminPreviewMode === 'public'} 
             onClick={() => {
               setActiveScreen('home');
-              setViewMode('public');
+              setAdminPreviewMode('public');
             }} 
           />
         </div>

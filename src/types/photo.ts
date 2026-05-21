@@ -5,13 +5,13 @@ export interface Dimension {
   width: number;
   height: number;
   part?: string;
-  isAI?: boolean;
-  isAIEstimated?: boolean;
+  is_ai?: boolean;
+  is_ai_estimated?: boolean;
 }
 
 export interface Photo {
   id: string; // Database UUID
-  storageId?: string; // Filename for Supabase Storage
+  storage_id?: string; // Filename for Supabase Storage
   item_code: string; // System auto-code (FUR-YYYYMMDD-RAND)
   manual_code?: string; // Hidden price code
   model_number?: string; // Manufacturer model number
@@ -75,9 +75,9 @@ export interface Tag {
   ms?: string;
   aliases: string[];
   user_id?: string;
-  isPinned?: boolean;
-  usageCount?: number;
-  isGlobal?: boolean;
+  is_pinned?: boolean;
+  usage_count?: number;
+  is_global?: boolean;
 }
 
 export interface Manufacturer {

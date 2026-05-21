@@ -109,14 +109,14 @@ export const useSettingsLogic = ({
   }, [withLoading, handleError, invalidatePhotos]);
 
   const togglePin = useCallback((tagId: string) => {
-    const currentPinned = settings?.pinnedTags || [];
+    const currentPinned = settings?.pinned_tags || [];
     let nextPinned;
     if (currentPinned.includes(tagId)) {
       nextPinned = currentPinned.filter((id: string) => id !== tagId);
     } else {
       nextPinned = [...currentPinned, tagId];
     }
-    const nextSettings = { ...settings, pinnedTags: nextPinned };
+    const nextSettings = { ...settings, pinned_tags: nextPinned };
     setSettings(nextSettings);
     setHasChanges(true);
     debouncedSave(nextSettings);

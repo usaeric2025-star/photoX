@@ -10,7 +10,7 @@ export interface BackgroundTask {
   progress: number;
   status: TaskStatus;
   message?: string;
-  finishedAt?: number;
+  finished_at?: number;
   onCancel?: () => void;
 }
 
@@ -83,7 +83,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return { 
             ...t, 
             ...updates, 
-            finishedAt: isFinished && !t.finishedAt ? Date.now() : t.finishedAt 
+            finished_at: isFinished && !t.finished_at ? Date.now() : t.finished_at 
           };
         }
         return t;
@@ -123,7 +123,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateTask(id, {
       status: 'cancelled',
       message: '任务已被用户手动强行取消',
-      finishedAt: Date.now()
+      finished_at: Date.now()
     });
   }, [updateTask]);
 
@@ -134,7 +134,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const now = Date.now();
         const next = prev.filter(t => {
           if (t.status === 'running') return true;
-          if (t.finishedAt && now - t.finishedAt > 8000) return false;
+          if (t.finished_at && now - t.finished_at > 8000) return false;
           return true;
         });
         if (next.length !== prev.length) saveTasks(next);

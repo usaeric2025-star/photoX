@@ -187,7 +187,7 @@ export const deletePhotosBatch = async (
         .eq('image_url', p.image_url);
       
       if (count === 0) {
-        const filename = p.storageId || p.id;
+        const filename = p.storage_id || p.id;
         filesToRemove.push(`public/${filename}.webp`);
         filesToRemove.push(`public/thumb_${filename}.webp`);
       }

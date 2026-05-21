@@ -8,7 +8,7 @@ import { toTitleCase } from '../lib/ui-helpers';
 interface PublicGalleryFiltersProps {
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: 'newest' | 'oldest' | 'name';
   toggleSortOrder: () => void;
   columns: number;
   setColumns: (val: 2 | 3 | 5) => void;
@@ -17,8 +17,8 @@ interface PublicGalleryFiltersProps {
   categories: Category[];
   selectedCatCode: string | null;
   setSelectedCatCode: (id: string | null) => void;
-  selectedSubId: string | null;
-  setSelectedSubId: (id: string | null) => void;
+  filterSubId: string | null;
+  setFilterSubId: (id: string | null) => void;
   selectedTagIds: string[];
   setSelectedTagIds: (fn: (prev: string[]) => string[]) => void;
   sortedTags: Tag[];
@@ -32,23 +32,23 @@ interface PublicGalleryFiltersProps {
 export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
   searchQuery, setSearchQuery, sortOrder, toggleSortOrder, columns, setColumns,
   showGroupsCollapsed, setShowGroupsCollapsed, categories,
-  selectedCatCode, setSelectedCatCode, selectedSubId, setSelectedSubId,
+  selectedCatCode, setSelectedCatCode, filterSubId, setFilterSubId,
   selectedTagIds, setSelectedTagIds, sortedTags, lang, t,  onScrollToTop,
   showHotEffects = true, settings
 }) => {
   const hotIds = useMemo(() => {
-    const hotTagsCount = settings?.hotTagsCount ?? 9;
-    const hotTagThreshold = settings?.hotTagThreshold ?? 1;
-    const pinnedIds = (settings?.pinnedTags || []).map(id => String(id));
+    const hotTagsCount = settings?.hot_tags_count ?? 9;
+    const hotTagThreshold = settings?.hot_tag_threshold ?? 1;
+    const pinnedIds = (settings?.pinned_tags || []).map(id => String(id));
 
     const candidates = sortedTags.filter(tag => 
-      !tag.isPinned && 
+      !tag.is_pinned && 
       !pinnedIds.includes(String(tag.id)) && 
-      (tag.usageCount || 0) >= hotTagThreshold
+      (tag.usage_count || 0) >= hotTagThreshold
     ).slice(0, hotTagsCount);
     
     return new Set(candidates.map(t => String(t.id)));
-  }, [sortedTags, settings?.hotTagsCount, settings?.hotTagThreshold, settings?.pinnedTags]);
+  }, [sortedTags, settings?.hot_tags_count, settings?.hot_tag_threshold, settings?.pinned_tags]);
 
   return (
     <div className="shrink-0 p-3 z-40 bg-brand-bg border-b border-brand-navy/5">
@@ -77,10 +77,10 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           <div className="flex gap-1.5 shrink-0">
             <button 
               onClick={(e) => { e.stopPropagation(); toggleSortOrder(); }}
-              className="w-9 h-9 bg-white border border-brand-navy/5 text-brand-navy rounded-xl flex items-center justify-center shadow-sm hover:bg-brand-navy/5 active:scale-95 transition-all"
-              title={sortOrder === 'desc' ? t.sortOldest : t.sortNewest}
+              className="w-9 h-9 bg-white border border-brand-navy/5 text-brand-navy rounded-xl flex items-center justify-center shadow-sm hover:bg-brand-navy/5 active:scale-95 transition-all text-blue-600 font-bold"
+              title={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest}
             >
-              {sortOrder === 'desc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+              {sortOrder === 'oldest' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
             </button>
             <button
                 onClick={() => {
@@ -105,7 +105,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
 
         <div className="grid grid-cols-4 gap-1.5 px-0.5">
             <button 
-              onClick={() => { setSelectedCatCode(null); setSelectedSubId(null); setSelectedTagIds(() => []); onScrollToTop(); }}
+              onClick={() => { setSelectedCatCode(null); setFilterSubId(null); setSelectedTagIds(() => []); onScrollToTop(); }}
               className={`w-full h-[34px] rounded-md text-[11px] font-black uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${!selectedCatCode && selectedTagIds.length === 0 ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
             >
               {t.allCats}
@@ -119,7 +119,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     key={cat.id}
                     onClick={() => { 
                       setSelectedCatCode(cat.id); 
-                      setSelectedSubId(null);
+                      setFilterSubId(null);
                       setSelectedTagIds(() => []);
                       onScrollToTop();
                     }}
@@ -148,8 +148,8 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                     .map((sub: any) => (
                     <button 
                       key={sub.id}
-                      onClick={() => { setSelectedSubId(selectedSubId === sub.id ? null : sub.id); onScrollToTop(); }}
-                      className={`px-3 py-1 rounded-xl text-[9px] font-bold tracking-wide whitespace-nowrap border-2 transition-all ${selectedSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white/80 border-slate-100 text-slate-500 hover:border-slate-300'}`}
+                      onClick={() => { setFilterSubId(filterSubId === sub.id ? null : sub.id); onScrollToTop(); }}
+                      className={`px-3 py-1 rounded-xl text-[9px] font-bold tracking-wide whitespace-nowrap border-2 transition-all ${filterSubId === sub.id ? 'bg-slate-800 border-slate-800 text-white' : 'bg-white/80 border-slate-100 text-slate-500 hover:border-slate-300'}`}
                     >
                       {sub.name}
                     </button>
@@ -169,7 +169,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
               sortedTags.map(tag => {
                 const strTagId = String(tag.id);
                 const isSelected = (selectedTagIds || []).includes(strTagId);
-                const isPinned = !!tag.isPinned;
+                const isPinned = !!tag.is_pinned;
                 const isHot = !isPinned && hotIds.has(strTagId);
                 
                 return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -19,6 +19,7 @@ import { PublicGallery } from '../components/public/PublicGallery';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import { loginWithGoogle } from '../services/supabaseService';
 import { ROUTES } from '../config/constants';
+import { useEffectEvent } from '@/hooks/useEffectEvent';
 
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
@@ -73,7 +74,17 @@ export default function PublicView() {
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   
   // ========== 4. 计算状态 (移至此处) ==========
-  const isInitialLoading = infiniteQuery.isLoading || isSettingsLoading || !minTimeElapsed;
+  const isInitialLoading = isSettingsLoading || !minTimeElapsed;
+
+  // ========== Event Handlers ==========
+  const handleRefreshComplete = useEffectEvent(() => {
+    showSuccess('已重置所有筛选');
+  });
+
+  const handleMarkLoaded = useEffectEvent(() => {
+    setHasInitialLoaded(true);
+    setHasLoadedOnce(true);
+  });
 
   // ========== 2. useEffect ==========
   // 防抖搜索
@@ -88,7 +99,7 @@ export default function PublicView() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimeElapsed(true);
-    }, 500);
+    }, 300);
     return () => clearTimeout(timer);
   }, []);
   
@@ -112,9 +123,16 @@ export default function PublicView() {
   useEffect(() => {
     (async () => {
       try {
-        const cachedCats = await syncCache.getCategories();
+        const [cachedCats, cachedSettings] = await Promise.all([
+          syncCache.getCategories(),
+          syncCache.getSettings()
+        ]);
+        
         if (cachedCats && cachedCats.length > 0) {
           queryClient.setQueryData(QUERY_KEYS.categories, cachedCats);
+        }
+        if (cachedSettings) {
+          queryClient.setQueryData(['settings'], cachedSettings);
         }
       } catch (e) {
         console.warn('Failed to load local metadata cache', e);
@@ -129,13 +147,14 @@ export default function PublicView() {
     };
   }, [reset]);
   
+  const hasMarkedLoaded = useRef(false);
   // 首次加载完成标记
   useEffect(() => {
-    if (!isInitialLoading && !hasInitialLoaded) {
-      setHasInitialLoaded(true);
-      setHasLoadedOnce(true);
+    if (!isInitialLoading && !hasInitialLoaded && !hasMarkedLoaded.current) {
+      hasMarkedLoaded.current = true;
+      handleMarkLoaded();
     }
-  }, [isInitialLoading, hasInitialLoaded, setHasLoadedOnce]);
+  }, [isInitialLoading, hasInitialLoaded]);
   
   // ========== 3. useMemo ==========
   const photos = useMemo(() => {
@@ -172,11 +191,11 @@ export default function PublicView() {
       queryClient.resetQueries({ queryKey: [QUERY_KEYS.photos, 'infinite'] });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       await infiniteQuery.refetch();
-      showSuccess('已重置所有筛选');
+      handleRefreshComplete();
     } catch (e) {
       showError(e, '刷新产品照片失败');
     }
-  }, [infiniteQuery.refetch, showError, showSuccess, queryClient, setStoreSearchQuery, setFilterCatId, setFilterTagIds, reset]);
+  }, [infiniteQuery.refetch, showError, handleRefreshComplete, queryClient, setStoreSearchQuery, setFilterCatId, setFilterTagIds, reset]);
   
   const handleLoadMore = useCallback(() => {
     if (infiniteQuery.hasNextPage && !infiniteQuery.isFetchingNextPage) {
@@ -197,7 +216,7 @@ export default function PublicView() {
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
       {isInitialLoading && !hasLoadedOnce ? (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-50 text-slate-800">LOADING...</div>
+        <FullPageLoading />
       ) : (
         <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
           <PublicGallery 

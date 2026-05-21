@@ -7,8 +7,10 @@ interface GallerySkeletonProps {
 }
 
 export const GallerySkeleton: React.FC<GallerySkeletonProps> = ({ columns, count = 15 }) => {
+  const columnClass = columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5';
+  
   return (
-    <div className="grid gap-3 p-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+    <div className={`grid gap-3 p-2 ${columnClass}`}>
       {Array.from({ length: count }).map((_, i) => (
         <PhotoCardSkeleton key={`skeleton-${i}`} />
       ))}

@@ -12,11 +12,12 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
   const queryClient = useQueryClient();
   const { showError: handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
-  const isSyncing = useStore(state => state.isSyncing); // If this is actually UI state, keep it, but check types. Actually, user asked to remove business data and Zustand should ONLY store UI state. setIsSyncing should probably be removed if it's business data. Given the constraints, I will remove it if it relates to sync status as a business process. Wait, if it's loading status, it's UI. Let's assume it's UI for now or check types.ts. Actually, just removing business data.
-    // ...
-    // Since I don't have types.ts right now, I'll proceed with removing clear business data.
-  // Actually, I'll remove settings, setIsSyncing from store, and update components to use TanStack Query/useSettings...
-
+  
+  const { 
+    isSyncing, setIsSyncing, 
+    settings, setSettings,
+    adminPreviewMode, setAdminPreviewMode 
+  } = useGalleryStore();
 
   useEffect(() => {
     if (user?.id) {
@@ -25,8 +26,8 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
     }
   }, [user?.id]);
 
-  const refreshCloudData = useCallback(async (user: User | null, force: boolean, setCloudCount: (c: number | null) => void) => {
-    if (!user) return;
+  const refreshCloudData = useCallback(async (userAccount: User | null, force: boolean, setCloudCount: (c: number | null) => void) => {
+    if (!userAccount) return;
     
     await withLoading('sync-pull', async () => {
       try {
@@ -53,8 +54,8 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
   }, [withLoading, setSettings, queryClient, handleError, invalidatePhotos]);
 
   return {
-    viewMode,
-    setViewMode,
+    adminPreviewMode,
+    setAdminPreviewMode,
     settings,
     setSettings,
     refreshCloudData,

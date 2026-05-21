@@ -61,15 +61,15 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
       ) : (
         <div className="space-y-4 pt-1">
           <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl border border-white/10">
-            {user?.avatarUrl ? (
-              <img src={user.avatarUrl} className="w-10 h-10 rounded-full border border-white/20" alt="Avatar" />
+            {user?.avatar_url ? (
+              <img src={user.avatar_url} className="w-10 h-10 rounded-full border border-white/20" alt="Avatar" />
             ) : (
               <div className="w-10 h-10 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold font-black border border-brand-gold/20">
-                {String(user?.displayName || 'U').charAt(0)}
+                {String(user?.display_name || 'U').charAt(0)}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-white text-xs font-black truncate uppercase tracking-tight">{user?.displayName}</p>
+              <p className="text-white text-xs font-black truncate uppercase tracking-tight">{user?.display_name}</p>
               <p className="text-[9px] text-white/40 truncate font-bold tracking-tighter">{user?.email}</p>
             </div>
             <button 

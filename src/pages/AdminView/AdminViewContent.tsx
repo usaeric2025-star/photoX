@@ -104,7 +104,7 @@ export const AdminViewContent: React.FC<Props> = ({
   const handleExitPublic = useCallback(() => {
     reset();
     tasks.filter(t => t.status === 'running').forEach(t => cancelTask(t.id));
-    logic.setViewMode('private');
+    logic.setAdminPreviewMode('private');
   }, [logic, tasks, cancelTask, reset]);
 
   const handleRefreshPublic = useCallback(() => {
@@ -162,7 +162,7 @@ export const AdminViewContent: React.FC<Props> = ({
             <div 
               className={`absolute inset-0 transition-opacity duration-200 ease-out ${logic.activeScreen === 'home' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
             >
-              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.viewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
+              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <MainAdminScreen 
                   {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
                   onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
@@ -173,7 +173,7 @@ export const AdminViewContent: React.FC<Props> = ({
                   onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger} onCancelAnalyze={logic.abortAnalysis} isAnalyzing={logic.loadingType === 'analyzing'} onImport={actions.handleImport}
                 />
               </div>
-              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.viewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
+              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <div className="flex flex-col h-full bg-brand-bg">
                   <PublicGallery 
                     photos={logic.photos} categories={logic.categories} tags={logic.tags} settings={logic.settings}

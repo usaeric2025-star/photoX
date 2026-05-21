@@ -33,7 +33,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   // Upload image if it doesn't have an image_url yet but has a uri
   if (!photo.image_url && photo.uri) {
     try {
-      const filename = photo.storageId || photo.id;
+      const filename = photo.storage_id || photo.id;
       const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri, onStatus);
       photo.image_url = imageUrl;
       photo.thumb_url = thumbUrl;
@@ -149,7 +149,7 @@ export const savePhotosToCloudBatch = async (
   for (const photo of sPhotos) {
     if (!photo.image_url && photo.uri) {
       try {
-        const filename = photo.storageId || photo.id;
+        const filename = photo.storage_id || photo.id;
         const { imageUrl, thumbUrl } = await uploadImages(userId, filename, photo.uri);
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;

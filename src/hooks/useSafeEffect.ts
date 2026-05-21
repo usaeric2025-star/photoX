@@ -10,7 +10,7 @@ export function useSafeEffect(
   options?: { debounceMs?: number }
 ) {
   const isFirstRun = useRef(true)
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   useEffect(() => {
     // 跳过首次执行（如果需要）

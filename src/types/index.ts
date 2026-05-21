@@ -17,24 +17,24 @@ export interface Task {
   progress?: number;
   message?: string;
   onCancel?: () => void;
-  finishedAt?: number;
+  finished_at?: number;
 }
 
 export interface User {
   id: string;
   email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  avatarUrl?: string | null;
-  emailVerified: boolean;
+  display_name: string | null;
+  photo_url: string | null;
+  avatar_url?: string | null;
+  email_verified: boolean;
 }
 
 export interface AppSettings {
   app_name?: string;
   logo_url?: string;
-  pinnedTags?: string[];
-  hotTagsCount?: number;
-  hotTagThreshold?: number;
+  pinned_tags?: string[];
+  hot_tags_count?: number;
+  hot_tag_threshold?: number;
   gemini_api_key?: string;
   custom_model?: string;
   provider?: string;

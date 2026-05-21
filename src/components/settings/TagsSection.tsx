@@ -93,11 +93,11 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
                min={1}
                max={50}
                className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
-               value={settings?.hotTagsCount !== undefined ? settings.hotTagsCount : 9}
+               value={settings?.hot_tags_count !== undefined ? settings.hot_tags_count : 9}
                onChange={(e) => {
                  const val = parseInt(e.target.value);
                  const num = isNaN(val) ? 9 : val;
-                 const nextSettings = { ...settings, hotTagsCount: num } as AppSettings;
+                 const nextSettings = { ...settings, hot_tags_count: num } as AppSettings;
                  setSettings(nextSettings);
                  setHasChanges(true);
                  debouncedSave(nextSettings);
@@ -110,8 +110,8 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
       </div>
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">
         {(Array.from(tags || []) as Tag[]).sort((a, b) => {
-           const ap = (settings?.pinnedTags || []).includes(a.id) ? 1 : 0;
-           const bp = (settings?.pinnedTags || []).includes(b.id) ? 1 : 0;
+           const ap = (settings?.pinned_tags || []).includes(a.id) ? 1 : 0;
+           const bp = (settings?.pinned_tags || []).includes(b.id) ? 1 : 0;
            if (ap !== bp) return bp - ap;
            return String(a.name).localeCompare(String(b.name));
         }).map((tag) => (
@@ -122,7 +122,7 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
             setActiveTagMenuId={setActiveTagMenuId}
             handleUpdateTagName={handleUpdateTagName}
             deleteTag={deleteTag}
-            isPinned={(settings?.pinnedTags || []).includes(tag.id)}
+            isPinned={(settings?.pinned_tags || []).includes(tag.id)}
             togglePin={togglePin}
           />
         ))}

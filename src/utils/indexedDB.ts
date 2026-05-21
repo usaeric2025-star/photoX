@@ -63,6 +63,8 @@ export const syncCache = {
   saveManufacturers: (manufacturers: any[]) => saveData('cached_manufacturers', manufacturers),
   getTags: () => loadData('cached_tags'),
   saveTags: (tags: any[]) => saveData('cached_tags', tags),
+  getSettings: () => loadData('cached_settings'),
+  saveSettings: (settings: any) => saveData('cached_settings', settings),
 };
 
 /**

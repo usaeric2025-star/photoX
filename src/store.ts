@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { storage } from '@/lib/storage'
 import { globalHandleError as handleError } from '@/utils/errorHandler'
+import { User, AppSettings } from '@/types'
 
 // ========== 类型定义 ==========
 
@@ -13,7 +14,7 @@ interface UIState {
   activeGroupId: string | null
   isMultiSelect: boolean
   sidebarCollapsed: boolean
-  selectedPhotoIds: string[]
+  selectedIds: string[]
   loadingType: 'none' | 'global' | 'local' | 'analyzing' | 'sync-pull' | 'sync-push'
   editPhotoId: string | null
   batchEditIds: string[] | null
@@ -22,16 +23,36 @@ interface UIState {
   promptDialog: any | null
   language: 'zh' | 'en' | 'ms'
   tagStats: Record<string, number>
+  filterSubId: string | null
+  sortOrder: 'newest' | 'oldest' | 'name'
+  isStaffMode: boolean
+  showGroupsCollapsed: boolean
+  viewMode: 'grid' | 'list'
+  adminPreviewMode: 'public' | 'private'
+  isSyncing: boolean
+  activeScreen: 'gallery' | 'tags' | 'stats' | 'settings' | 'errors' | 'batch' | 'home' | 'manage' | 'login'
+  isInfiniteMode: boolean
+  geminiApiKey: string | null
+  customModel: string | null
+  accessPasscode: string | null
+  settings: AppSettings | null
+  user: User | null
+  isAnalyzing: boolean
+  aiDebugInfo: any | null
+  errors: any[]
+  appLang: 'zh' | 'en' | 'ms'
+  debouncedSearchQuery: string
+  tagIdToNameMap: Record<string, string>
 }
 
 interface UIActions {
   setFilterCatId: (id: string | null) => void
-  setFilterTagIds: (ids: string[]) => void
+  setFilterTagIds: (idsOrFn: string[] | ((prev: string[]) => string[])) => void
   setSearchQuery: (query: string) => void
   setActiveGroupId: (id: string | null) => void
   setIsMultiSelect: (value: boolean) => void
   setSidebarCollapsed: (value: boolean) => void
-  setSelectedPhotoIds: (ids: string[]) => void
+  setSelectedIds: (idsOrFn: string[] | ((prev: string[]) => string[])) => void
   addSelectedPhotoId: (id: string) => void
   removeSelectedPhotoId: (id: string) => void
   toggleSelectedPhotoId: (id: string) => void
@@ -46,6 +67,25 @@ interface UIActions {
   setPromptDialog: (dialog: any) => void
   setLanguage: (lang: 'zh' | 'en' | 'ms') => void
   setTagStats: (stats: Record<string, number>) => void
+  setFilterSubId: (id: string | null) => void
+  setSortOrder: (order: UIState['sortOrder']) => void
+  setIsStaffMode: (value: boolean) => void
+  setShowGroupsCollapsed: (value: boolean) => void
+  setViewMode: (mode: UIState['viewMode']) => void
+  setAdminPreviewMode: (mode: UIState['adminPreviewMode']) => void
+  setIsSyncing: (value: boolean) => void
+  setActiveScreen: (screen: UIState['activeScreen']) => void
+  setIsInfiniteMode: (value: boolean) => void
+  setGeminiApiKey: (key: string | null) => void
+  setCustomModel: (model: string | null) => void
+  setAccessPasscode: (code: string | null) => void
+  setSettings: (settings: AppSettings | null) => void
+  setUser: (user: User | null) => void
+  setIsAnalyzing: (value: boolean) => void
+  setAiDebugInfo: (info: any) => void
+  clearErrors: () => void
+  setAppLang: (lang: UIState['appLang']) => void
+  setDebouncedSearchQuery: (query: string) => void
   withLoading: <T>(type: UIState['loadingType'], fn: () => Promise<T>) => Promise<T>
 }
 
@@ -60,15 +100,35 @@ const initialState: UIState = {
   activeGroupId: null,
   isMultiSelect: false,
   sidebarCollapsed: false,
-  selectedPhotoIds: [],
+  selectedIds: [],
   loadingType: 'none',
   editPhotoId: null,
   batchEditIds: null,
   hasLoadedOnce: false,
   alertDialog: null,
   promptDialog: null,
-  language: 'zh',
+  language: 'en',
   tagStats: {},
+  filterSubId: null,
+  sortOrder: 'newest',
+  isStaffMode: false,
+  showGroupsCollapsed: true,
+  viewMode: 'grid',
+  adminPreviewMode: 'private',
+  isSyncing: false,
+  activeScreen: 'gallery',
+  isInfiniteMode: true,
+  geminiApiKey: null,
+  customModel: 'gemini-2.0-flash-exp',
+  accessPasscode: null,
+  settings: null,
+  user: null,
+  isAnalyzing: false,
+  aiDebugInfo: null,
+  errors: [],
+  appLang: 'en',
+  debouncedSearchQuery: '',
+  tagIdToNameMap: {},
 }
 
 // ========== 白名单（只持久化这些）==========
@@ -80,8 +140,16 @@ const PERSIST_KEYS: (keyof UIState)[] = [
   'activeGroupId',
   'isMultiSelect',
   'sidebarCollapsed',
-  'selectedPhotoIds',
+  'selectedIds',
   'language',
+  'sortOrder',
+  'showGroupsCollapsed',
+  'viewMode',
+  'isInfiniteMode',
+  'geminiApiKey',
+  'customModel',
+  'accessPasscode',
+  'appLang',
 ]
 
 // ========== 创建 store ==========
@@ -93,12 +161,16 @@ export const useStore = create<StoreState>()(
 
       // Actions
       setFilterCatId: (id) => set({ filterCatId: id }),
-      setFilterTagIds: (ids) => set({ filterTagIds: ids }),
+      setFilterTagIds: (idsOrFn) => set((state) => ({ 
+        filterTagIds: typeof idsOrFn === 'function' ? idsOrFn(state.filterTagIds) : idsOrFn 
+      })),
       setSearchQuery: (query) => set({ searchQuery: query }),
       setActiveGroupId: (id) => set({ activeGroupId: id }),
       setIsMultiSelect: (value) => set({ isMultiSelect: value }),
       setSidebarCollapsed: (value) => set({ sidebarCollapsed: value }),
-      setSelectedPhotoIds: (ids) => set({ selectedPhotoIds: ids }),
+      setSelectedIds: (idsOrFn) => set((state) => ({ 
+        selectedIds: typeof idsOrFn === 'function' ? idsOrFn(state.selectedIds) : idsOrFn 
+      })),
       setLoadingType: (type) => set({ loadingType: type }),
       setEditPhotoId: (id) => set({ editPhotoId: id }),
       setBatchEditIds: (ids) => set({ batchEditIds: ids }),
@@ -107,24 +179,43 @@ export const useStore = create<StoreState>()(
       setPromptDialog: (dialog) => set({ promptDialog: dialog }),
       setLanguage: (lang) => set({ language: lang }),
       setTagStats: (stats) => set({ tagStats: stats }),
+      setFilterSubId: (id) => set({ filterSubId: id }),
+      setSortOrder: (order) => set({ sortOrder: order }),
+      setIsStaffMode: (value) => set({ isStaffMode: value }),
+      setShowGroupsCollapsed: (value) => set({ showGroupsCollapsed: value }),
+      setViewMode: (mode) => set({ viewMode: mode }),
+      setAdminPreviewMode: (mode) => set({ adminPreviewMode: mode }),
+      setIsSyncing: (value) => set({ isSyncing: value }),
+      setActiveScreen: (screen) => set({ activeScreen: screen }),
+      setIsInfiniteMode: (value) => set({ isInfiniteMode: value }),
+      setGeminiApiKey: (key) => set({ geminiApiKey: key }),
+      setCustomModel: (model) => set({ customModel: model }),
+      setAccessPasscode: (code) => set({ accessPasscode: code }),
+      setSettings: (settings) => set({ settings }),
+      setUser: (user) => set({ user }),
+      setIsAnalyzing: (value) => set({ isAnalyzing: value }),
+      setAiDebugInfo: (info) => set({ aiDebugInfo: info }),
+      clearErrors: () => set({ errors: [] }),
+      setAppLang: (lang) => set({ appLang: lang, language: lang }),
+      setDebouncedSearchQuery: (query) => set({ debouncedSearchQuery: query }),
 
       addSelectedPhotoId: (id) => set((state) => ({
-        selectedPhotoIds: state.selectedPhotoIds.includes(id)
-          ? state.selectedPhotoIds
-          : [...state.selectedPhotoIds, id]
+        selectedIds: state.selectedIds.includes(id)
+          ? state.selectedIds
+          : [...state.selectedIds, id]
       })),
 
       removeSelectedPhotoId: (id) => set((state) => ({
-        selectedPhotoIds: state.selectedPhotoIds.filter(i => i !== id)
+        selectedIds: state.selectedIds.filter(i => i !== id)
       })),
 
       toggleSelectedPhotoId: (id) => set((state) => ({
-        selectedPhotoIds: state.selectedPhotoIds.includes(id)
-          ? state.selectedPhotoIds.filter(i => i !== id)
-          : [...state.selectedPhotoIds, id]
+        selectedIds: state.selectedIds.includes(id)
+          ? state.selectedIds.filter(i => i !== id)
+          : [...state.selectedIds, id]
       })),
 
-      clearSelectedPhotos: () => set({ selectedPhotoIds: [] }),
+      clearSelectedPhotos: () => set({ selectedIds: [] }),
 
       resetFilters: () => set({
         filterCatId: null,
@@ -151,7 +242,7 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: 'photoX-ui-storage',
-      version: 3,
+      version: 4,
 
       storage: {
         getItem: (name) => storage.get(name, null),
@@ -160,7 +251,7 @@ export const useStore = create<StoreState>()(
       },
 
       partialize: (state) => {
-        const persisted: Partial<UIState> = {}
+        const persisted: any = {}
         for (const key of PERSIST_KEYS) {
           persisted[key] = state[key]
         }
@@ -168,21 +259,34 @@ export const useStore = create<StoreState>()(
       },
 
       // 正确的迁移逻辑
-      migrate: (persistedState, version) => {
-        if (version === 2) {
-          // v2 -> v3: 移除业务数据
-          const old = persistedState as any
+      migrate: (persistedState: any, version) => {
+        const old = persistedState as any
+        const safeFilterTagIds = Array.isArray(old.filterTagIds) ? old.filterTagIds : []
+        const safeSelectedIds = Array.isArray(old.selectedIds) ? old.selectedIds : (Array.isArray(old.selectedPhotoIds) ? old.selectedPhotoIds : [])
+
+        if (version < 4) {
+          // v4: 重命名 selectedPhotoIds 为 selectedIds, 强制开启分组
           return {
+            ...initialState, // 确保有默认值
             filterCatId: old.filterCatId ?? null,
-            filterTagIds: old.filterTagIds ?? [],
+            filterTagIds: safeFilterTagIds,
             searchQuery: old.searchQuery ?? '',
             activeGroupId: old.activeGroupId ?? null,
             isMultiSelect: old.isMultiSelect ?? false,
             sidebarCollapsed: old.sidebarCollapsed ?? false,
-            selectedPhotoIds: old.selectedPhotoIds ?? [],
+            selectedIds: safeSelectedIds,
+            language: old.language ?? 'en',
+            sortOrder: old.sortOrder ?? 'newest',
+            showGroupsCollapsed: true, // 强制默认开启
           }
         }
-        return persistedState as UIState
+        
+        // Even for version 4, ensure arrays are safe if they somehow got corrupted
+        return {
+          ...old,
+          filterTagIds: safeFilterTagIds,
+          selectedIds: safeSelectedIds
+        }
       },
 
       skipHydration: false,
@@ -198,3 +302,4 @@ export const useStore = create<StoreState>()(
 )
 
 export { useStore as useGalleryStore }
+

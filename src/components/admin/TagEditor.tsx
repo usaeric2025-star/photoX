@@ -33,12 +33,12 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
   const togglePin = async (tagId: string) => {
     try {
-      const pinnedTags = settings?.pinnedTags || [];
+      const pinnedTags = settings?.pinned_tags || [];
       const newPinned = pinnedTags.includes(tagId)
         ? pinnedTags.filter((id: string) => id !== tagId)
         : [...pinnedTags, tagId];
       
-      const nextSettings = { ...settings, pinnedTags: newPinned };
+      const nextSettings = { ...settings, pinned_tags: newPinned };
       setSettings(nextSettings);
       await saveSettings(nextSettings);
     } catch (err) {
@@ -48,8 +48,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
   const hotTagsSet = useMemo(() => {
     if (!showHotEffects) return new Set<string>();
-    const count = settings?.hotTagsCount || 9;
-    const pinned = settings?.pinnedTags || [];
+    const count = settings?.hot_tags_count || 9;
+    const pinned = settings?.pinned_tags || [];
     const set = new Set<string>(pinned);
     
     if (set.size < count && tags.length > 0) {
@@ -61,7 +61,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       }
     }
     return set;
-  }, [settings?.hotTagsCount, settings?.pinnedTags, tags, showHotEffects]);
+  }, [settings?.hot_tags_count, settings?.pinned_tags, tags, showHotEffects]);
 
   const filteredTags = useMemo(() => {
     const list = (Array.from(new Map(tags.map(t => [t.id, t])).values()) as Tag[]).filter((tag: Tag) => 
@@ -74,8 +74,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       if (aSelected && !bSelected) return -1;
       if (!aSelected && bSelected) return 1;
 
-      const aPinned = (settings?.pinnedTags || []).includes(String(a.id));
-      const bPinned = (settings?.pinnedTags || []).includes(String(b.id));
+      const aPinned = (settings?.pinned_tags || []).includes(String(a.id));
+      const bPinned = (settings?.pinned_tags || []).includes(String(b.id));
       if (aPinned && !bPinned) return -1;
       if (!aPinned && bPinned) return 1;
 
@@ -86,7 +86,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
 
       return a.name.localeCompare(b.name, undefined, { numeric: true });
     });
-  }, [tags, searchTerm, settings?.pinnedTags, hotTagsSet, selectedTagIds]);
+  }, [tags, searchTerm, settings?.pinned_tags, hotTagsSet, selectedTagIds]);
 
   return (
     <div className="space-y-2">
@@ -116,7 +116,7 @@ export const TagEditor: React.FC<TagEditorProps> = ({
         {filteredTags.map((tag: Tag) => {
           const isSelected = selectedTagIds.map(String).includes(String(tag.id));
           const isHot = hotTagsSet.has(String(tag.id));
-          const isPinned = (settings?.pinnedTags || []).includes(String(tag.id));
+          const isPinned = (settings?.pinned_tags || []).includes(String(tag.id));
           const isDisabled = !isSelected && selectedTagIds.length >= 3;
 
           return (
@@ -190,8 +190,8 @@ export const TagEditor: React.FC<TagEditorProps> = ({
                     setActiveActionTag(null); 
                   }}
                 >
-                   <Heart size={18} strokeWidth={2.5} className={(settings?.pinnedTags || []).includes(String(activeActionTag.id)) ? "fill-amber-600" : ""} /> 
-                   {(settings?.pinnedTags || []).includes(String(activeActionTag.id)) ? '取消置顶 / Unpin' : '设为置顶 / Pin as Hot'}
+                   <Heart size={18} strokeWidth={2.5} className={(settings?.pinned_tags || []).includes(String(activeActionTag.id)) ? "fill-amber-600" : ""} /> 
+                   {(settings?.pinned_tags || []).includes(String(activeActionTag.id)) ? '取消置顶 / Unpin' : '设为置顶 / Pin as Hot'}
                 </button>
                 <button 
                   type="button"

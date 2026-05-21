@@ -36,7 +36,8 @@ export const AdminHeader: React.FC<Props> = ({
   const { 
     settings: storeSettings, user, viewMode, setViewMode, isSyncing, 
     activeScreen, setActiveScreen,
-    isInfiniteMode, setIsInfiniteMode 
+    isInfiniteMode, setIsInfiniteMode,
+    adminPreviewMode, setAdminPreviewMode
   } = useGalleryStore();
   
   const { isMultiSelect, disable, enable } = useMultiSelect();
@@ -100,7 +101,7 @@ export const AdminHeader: React.FC<Props> = ({
   const toggleToolsMenu = () => setShowToolsMenu(prev => !prev);
   
   const handleToggleViewMode = () => {
-    setViewMode(viewMode === 'public' ? 'private' : 'public');
+    setAdminPreviewMode(adminPreviewMode === 'public' ? 'private' : 'public');
   };
 
   const handleOpenSettings = () => {
@@ -186,7 +187,7 @@ export const AdminHeader: React.FC<Props> = ({
                   )}
                 </button>
 
-                {viewMode !== 'public' && (
+                {adminPreviewMode !== 'public' && (
                   <button 
                     onClick={handleToggleMultiSelect}
                     className={`h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all shadow-sm border ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-500/20' : 'text-brand-navy/60 hover:text-brand-navy bg-white border-brand-navy/10'}`}
@@ -199,10 +200,10 @@ export const AdminHeader: React.FC<Props> = ({
 
                 <button 
                   onClick={handleToggleViewMode}
-                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${viewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
-                  title={viewMode === 'public' ? t.exitGuestView : "访客视图预览"}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${adminPreviewMode === 'public' ? 'bg-green-600 text-white shadow-lg scale-105 ring-4 ring-green-500/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
+                  title={adminPreviewMode === 'public' ? t.exitGuestView : "访客视图预览"}
                 >
-                  {viewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
+                  {adminPreviewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
                 </button>
 
                 {/* More Menu Dropdown */}

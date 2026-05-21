@@ -60,11 +60,11 @@ export const SearchAndFilter: React.FC<Props> = ({
           )}
         </div>
         <button 
-          onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-          className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-95 ${sortOrder === 'asc' ? 'bg-brand-gold border-brand-gold text-white' : 'bg-white border-brand-navy/10 text-brand-navy/50'}`}
-          title={sortOrder === 'desc' ? "按时间正序" : "按时间倒序"}
+          onClick={() => setSortOrder(sortOrder === 'oldest' ? 'newest' : 'oldest')}
+          className={`w-10 h-10 rounded-2xl border transition-all flex items-center justify-center shadow-sm active:scale-95 ${sortOrder === 'oldest' ? 'bg-brand-gold border-brand-gold text-white' : 'bg-white border-brand-navy/10 text-brand-navy/50'}`}
+          title={sortOrder === 'oldest' ? "按时间正序" : "按时间倒序"}
         >
-          {sortOrder === 'desc' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
+          {sortOrder === 'oldest' ? <ArrowDown size={18} /> : <ArrowUp size={18} />}
         </button>
         <button 
           onClick={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}

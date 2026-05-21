@@ -126,7 +126,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
   try {
     let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
-      .select('id, image_hash, created_at, storageId, image_url, user_id, group_id')
+      .select('id, image_hash, created_at, storage_id, image_url, user_id, group_id')
       .order('created_at', { ascending: true });
 
     if (userId) {
@@ -159,7 +159,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
                     .eq('image_url', duplicate.image_url);
                 
                 if (count === 0) {
-                    const filename = duplicate.storageId || duplicate.id;
+                    const filename = duplicate.storage_id || duplicate.id;
                     await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove([`public/${filename}.webp`]);
                 }
             }

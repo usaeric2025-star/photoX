@@ -46,7 +46,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
 
   const {
     settings, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
-    selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
+    filterSubId, setFilterSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     handleLoadMore, sortedTags, gridPhotos, t, lang, categories, manufacturers, contextTags
@@ -101,8 +101,8 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
         categories={categories}
         selectedCatCode={selectedCatCode}
         setSelectedCatCode={setSelectedCatCode}
-        selectedSubId={selectedSubId}
-        setSelectedSubId={setSelectedSubId}
+        filterSubId={filterSubId}
+        setFilterSubId={setFilterSubId}
         selectedTagIds={selectedTagIds}
         setSelectedTagIds={setSelectedTagIds}
         sortedTags={sortedTags}
@@ -172,7 +172,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     setLightboxIndex={handleSetLightboxIndex}
                     shareSinglePhoto={noop}
                     selectedCatCode={selectedCatCode}
-                    selectedSubId={selectedSubId}
+                    filterSubId={filterSubId}
                     selectedTagIds={selectedTagIds}
                     searchQuery={searchQuery}
                     onToggleHidden={props.onToggleHidden}

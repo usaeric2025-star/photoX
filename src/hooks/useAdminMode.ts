@@ -7,8 +7,8 @@ import { useGalleryStore } from '../store';
  */
 export function useAdminMode() {
   const { isAdmin } = usePermission();
-  const { viewMode } = useGalleryStore();
+  const { adminPreviewMode } = useGalleryStore();
   
   // Effective admin mode: Must be in admin mode AND NOT in visitor preview mode
-  return isAdmin && viewMode === 'private';
+  return isAdmin && adminPreviewMode === 'private';
 }

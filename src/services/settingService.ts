@@ -25,9 +25,9 @@ export const fetchSettings = async () => {
         if (data.tags_json) {
             try {
                 const parsed = JSON.parse(data.tags_json);
-                if (parsed.pinnedTags) data.pinnedTags = parsed.pinnedTags;
-                if (parsed.hotTagsCount !== undefined) data.hotTagsCount = parsed.hotTagsCount;
-                if (parsed.hotTagThreshold !== undefined) data.hotTagThreshold = parsed.hotTagThreshold;
+                if (parsed.pinned_tags) data.pinned_tags = parsed.pinned_tags;
+                if (parsed.hot_tags_count !== undefined) data.hot_tags_count = parsed.hot_tags_count;
+                if (parsed.hot_tag_threshold !== undefined) data.hot_tag_threshold = parsed.hot_tag_threshold;
             } catch (e) {}
         }
     }
@@ -48,11 +48,11 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         }
 
         // Handle hot tags
-        if (payload.pinnedTags || payload.hotTagsCount !== undefined || payload.hotTagThreshold !== undefined) {
+        if (payload.pinned_tags || payload.hot_tags_count !== undefined || payload.hot_tag_threshold !== undefined) {
             payload.tags_json = JSON.stringify({
-                pinnedTags: payload.pinnedTags || [],
-                hotTagsCount: payload.hotTagsCount || 9,
-                hotTagThreshold: payload.hotTagThreshold || 1,
+                pinned_tags: payload.pinned_tags || [],
+                hot_tags_count: payload.hot_tags_count || 9,
+                hot_tag_threshold: payload.hot_tag_threshold || 1,
             });
         }
 
@@ -65,9 +65,9 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         delete payload.manufacturers_json;
         delete payload.categories_json;
         
-        delete payload.pinnedTags;
-        delete payload.hotTagsCount;
-        delete payload.hotTagThreshold;
+        delete payload.pinned_tags;
+        delete payload.hot_tags_count;
+        delete payload.hot_tag_threshold;
 
         const { error: upsertError } = await supabase
             .from('settings')

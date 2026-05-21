@@ -13,9 +13,9 @@ export const getLocalizedValue = (
 export const getLocalizedArray = <T extends { zh?: string; en?: string; ms?: string }>(
   items: T[],
   language: 'zh' | 'en' | 'ms'
-): (T & { displayName: string })[] => {
+): (T & { display_name: string })[] => {
   return items.map(item => ({
     ...item,
-    displayName: getLocalizedValue(item, language)
+    display_name: getLocalizedValue(item, language)
   }))
 }

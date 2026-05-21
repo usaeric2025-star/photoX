@@ -15,12 +15,12 @@ import { batchCreateTags } from '../services/tagService';
 export const sortTagsByPopularity = (tags: Tag[]): Tag[] => {
   return [...tags].sort((a, b) => {
     // 1. 推荐状态
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
 
     // 2. 使用频率 (桶排序思想：如果需要更稳定，可以按每10次一个台阶归类)
-    const countA = a.usageCount || 0;
-    const countB = b.usageCount || 0;
+    const countA = a.usage_count || 0;
+    const countB = b.usage_count || 0;
     if (countA !== countB) return countB - countA;
 
     // 3. 确定性降级（字母序）

@@ -11,7 +11,7 @@ import {
 } from '@/store';
 import { 
   useCategoriesQuery, useTagsQuery, useManufacturersQuery, useInfinitePhotos,
-  useAdminCategory
+  useAdminCategory, useAuth
 } from '@/hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
 import { GeneralSettings } from './settings/GeneralSettings';
@@ -43,11 +43,11 @@ const BUTTON_STYLES = {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
   const { showSuccess } = useFeedback();
+  const { user, loginWithGoogle, logout } = useAuth();
   const { 
-    settings, user, geminiApiKey, customModel, accessPasscode,
+    settings, geminiApiKey, customModel, accessPasscode,
     setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
     setAlertDialog,
-    logout, loginWithGoogle,
     loadingType
   } = useGalleryStore();
 

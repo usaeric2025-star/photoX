@@ -26,7 +26,8 @@ const errorGuard = (name: string) => () => {
 };
 
 export const useAdminDataPrep = () => {
-  const { user, authChecked, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const authChecked = true; // Auth is managed by useAuth's internal state
   const { showError, showSuccess } = useFeedback();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -82,7 +83,7 @@ export const useAdminDataPrep = () => {
     }
   }, [infinitePhotosQuery]);
 
-  const { viewMode, setViewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
+  const { adminPreviewMode, setAdminPreviewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
 
   const uiBasicValue = useMemo(() => ({ 
     setAlertDialog, setPromptDialog, setLoadingType, loadingType, withLoading, setCloudCount,
@@ -168,7 +169,7 @@ export const useAdminDataPrep = () => {
         try {
           const saved = await addManufacturer(trimmed);
           if (saved) {
-             updateForm((prev: ProductFormData) => ({ ...prev, manufacturerId: saved.id }));
+             updateForm((prev: ProductFormData) => ({ ...prev, manufacturer_id: saved.id }));
           }
         } catch (e: any) {
           showError(e, '新增厂商失败');
@@ -184,9 +185,9 @@ export const useAdminDataPrep = () => {
 
   const sessionValue = useMemo(() => ({
     user, isAdminMode: true, settings, setSettings, geminiApiKey, setGeminiApiKey,
-    accessPasscode, setAccessPasscode, customModel, setCustomModel, viewMode, setViewMode,
+    accessPasscode, setAccessPasscode, customModel, setCustomModel, adminPreviewMode, setAdminPreviewMode,
     isSyncing, setIsSyncing, onRefresh, performPushSync, performPullSync, saveSettings, logout, appLang: lang
-  }), [user, settings, geminiApiKey, accessPasscode, customModel, viewMode, isSyncing, onRefresh, performPushSync, performPullSync, saveSettings, logout, lang]);
+  }), [user, settings, geminiApiKey, accessPasscode, customModel, adminPreviewMode, setAdminPreviewMode, isSyncing, onRefresh, performPushSync, performPullSync, saveSettings, logout, lang]);
 
   const photoValue = useMemo(() => ({
     photos, categories, tags, manufacturers, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify,

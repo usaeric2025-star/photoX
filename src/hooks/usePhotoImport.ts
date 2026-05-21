@@ -82,7 +82,7 @@ export const usePhotoImport = (
         abortControllerRef.current?.abort();
         abortAnalysis();
         [uploadTaskId, aiTaskId].filter(Boolean).forEach(id => {
-          updateTask(id, { status: 'cancelled', message: '用户已取消', finishedAt: Date.now() });
+          updateTask(id, { status: 'cancelled', message: '用户已取消', finished_at: Date.now() });
         });
       };
 
@@ -133,7 +133,7 @@ export const usePhotoImport = (
           sessionHashes.add(hash);
           const newPhoto = {
             id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            storageId: hash, 
+            storage_id: hash, 
             item_code: generateItemCode(),
             manual_code: '',
             image_hash: hash,

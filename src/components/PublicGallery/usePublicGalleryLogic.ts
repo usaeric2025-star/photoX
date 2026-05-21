@@ -12,6 +12,7 @@ import { saveData, loadData } from '../../utils/indexedDB';
 
 import { useAdminMode, usePhotoFilters, useFeedback } from '../../hooks';
 import { globalHandleError } from '../../utils/errorHandler';
+import { useEffectEvent } from '@/hooks/useEffectEvent';
 
 export const usePublicGalleryLogic = (props: {
   photos: Photo[];
@@ -63,7 +64,7 @@ export const usePublicGalleryLogic = (props: {
   const {
     searchQuery, setSearchQuery,
     filterCatId: selectedCatCode, setFilterCatId: setSelectedCatCode,
-    filterSubId: selectedSubId, setFilterSubId: setSelectedSubId,
+    filterSubId, setFilterSubId,
     filterTagIds: selectedTagIds, setFilterTagIds: setSelectedTagIds,
     sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed,
@@ -122,18 +123,22 @@ export const usePublicGalleryLogic = (props: {
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
+  const handleClearSelection = useEffectEvent(() => {
+    activeClearSelection();
+  });
+
   // Reset lightbox overlay index and clear multi-select when switching category, tag filters, search, or sorting
   useEffect(() => {
     setLightboxIndex(null);
-    activeClearSelection();
-  }, [searchQuery, selectedCatCode, selectedSubId, selectedTagIds, sortOrder, activeClearSelection]);
+    handleClearSelection();
+  }, [searchQuery, selectedCatCode, filterSubId, selectedTagIds, sortOrder]);
 
   // Clear selections when entering a group
   useEffect(() => {
     if (activeGroupId) {
-      activeClearSelection();
+      handleClearSelection();
     }
-  }, [activeGroupId, activeClearSelection]);
+  }, [activeGroupId]);
 
   const dpRef = useRef(displayPhotos);
   useEffect(() => {
@@ -166,7 +171,7 @@ export const usePublicGalleryLogic = (props: {
   }, [contextTags]);
 
   const toggleSortOrder = useCallback(() => {
-    setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+    setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
   }, [sortOrder, setSortOrder]);
 
   const virtuosoRef = useRef<any>(null);
@@ -224,67 +229,61 @@ export const usePublicGalleryLogic = (props: {
   const hasLoadedStats = useRef(Object.keys(tagStats || {}).length > 0);
 
   // Daily Stability: Load or Calculate tag stats only once per day
+  const performSyncStats = useEffectEvent(async () => {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const cached = await loadData('daily_tag_stats');
+      
+      if (cached && cached.date === today) {
+        setTagStats(cached.stats);
+        hasLoadedStats.current = true;
+        return;
+      }
+
+      // If no cache or cache is old, and we have enough photos to make a meaningful calculation
+      if (localPhotos.length > 20) {
+        const counts: Record<string, number> = {};
+        localPhotos.forEach(p => {
+          if (p.tag_ids && Array.isArray(p.tag_ids)) {
+            p.tag_ids.forEach(tid => {
+              const strId = String(tid);
+              counts[strId] = (counts[strId] || 0) + 1;
+            });
+          }
+        });
+        
+        setTagStats(counts);
+        await saveData('daily_tag_stats', { date: today, stats: counts });
+        hasLoadedStats.current = true;
+      }
+    } catch (err) {
+      globalHandleError(err, "Daily stats sync", true);
+    }
+  });
+
   useEffect(() => {
     if (hasLoadedStats.current) return;
-    let active = true;
-
-    const syncStats = async () => {
-      const today = new Date().toISOString().split('T')[0];
-      try {
-        const cached = await loadData('daily_tag_stats');
-        
-        // If we have a valid cache for today, use it and stop
-        if (!active) return;
-        if (cached && cached.date === today) {
-          setTagStats(cached.stats);
-          hasLoadedStats.current = true;
-          return;
-        }
-
-        // If no cache or cache is old, and we have enough photos to make a meaningful calculation
-        if (localPhotos.length > 20) {
-          const counts: Record<string, number> = {};
-          localPhotos.forEach(p => {
-            if (p.tag_ids && Array.isArray(p.tag_ids)) {
-              p.tag_ids.forEach(tid => {
-                const strId = String(tid);
-                counts[strId] = (counts[strId] || 0) + 1;
-              });
-            }
-          });
-          
-          if (!active) return;
-          setTagStats(counts);
-          await saveData('daily_tag_stats', { date: today, stats: counts });
-          hasLoadedStats.current = true;
-        }
-      } catch (err) {
-        globalHandleError(err, "Daily stats sync", true);
-      }
-    };
-
-    syncStats();
-    return () => { active = false; };
-  }, [localPhotos.length]); // Only retry calculation if photo count changes significantly early on
+    performSyncStats();
+  }, [localPhotos.length]);
 
   return useMemo(() => ({
     settings, user, isSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
-    selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
+    filterSubId, setFilterSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, isStaffMode, setIsStaffMode, activeSelectedIds,
-    activeIsMultiSelect, activeToggleSelection, activeClearSelection, activeSetIsMultiSelect,
+    activeIsMultiSelect, activeToggleSelection, activeClearSelection: handleClearSelection, activeSetIsMultiSelect,
     displayPhotos, gridPhotos, categories, manufacturers, contextTags, lang, setLang, t,
     columns, setColumns, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
     handleLoadMore, navigate, sortedTags: (() => {
-      const pinnedIds = new Set((settings?.pinnedTags || []).map(id => String(id)));
+      const pinnedIds = new Set((settings?.pinned_tags || []).map(id => String(id)));
 
       const enrichedTags = contextTags.map(t => {
         const strId = String(t.id);
         return {
           ...t,
-          isPinned: t.isPinned || pinnedIds.has(strId),
-          usageCount: Math.max(t.usageCount || 0, tagStats[strId] || 0)
+          is_pinned: t.is_pinned || pinnedIds.has(strId),
+          usage_count: Math.max(t.usage_count || 0, tagStats[strId] || 0)
         };
       });
       
@@ -292,9 +291,9 @@ export const usePublicGalleryLogic = (props: {
     })()
   }), [
     settings, user, isSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
-    selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
+    filterSubId, setFilterSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, isStaffMode, setIsStaffMode, activeSelectedIds,
-    activeIsMultiSelect, activeToggleSelection, activeClearSelection, activeSetIsMultiSelect,
+    activeIsMultiSelect, activeToggleSelection, handleClearSelection, activeSetIsMultiSelect,
     displayPhotos, gridPhotos, categories, manufacturers, contextTags, lang, setLang, t,
     columns, setColumns, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,

@@ -28,7 +28,7 @@ interface GalleryGridProps {
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   selectedCatCode: string | null;
-  selectedSubId: string | null;
+  filterSubId: string | null;
   selectedTagIds: string[];
   searchQuery: string;
   onToggleHidden?: (photo: Photo) => void;
@@ -148,8 +148,8 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
       components={props.virtuosoComponents}
       context={props.virtuosoContext}
       endReached={handleLoadMore}
-      overscan={800}
-      increaseViewportBy={300}
+      overscan={5}
+      increaseViewportBy={200}
       listClassName={`grid gap-3 p-2 ${props.columns === 2 ? 'grid-cols-2' : props.columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
       itemContent={(index, photo) => {
         return (

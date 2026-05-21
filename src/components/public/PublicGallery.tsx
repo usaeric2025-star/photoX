@@ -51,7 +51,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
 
   const {
     settings, user, isSyncing: rawIsSyncing, searchQuery, setSearchQuery, selectedCatCode, setSelectedCatCode,
-    selectedSubId, setSelectedSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
+    filterSubId, setFilterSubId, selectedTagIds, setSelectedTagIds, sortOrder, setSortOrder,
     showGroupsCollapsed, setShowGroupsCollapsed, activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     lightboxIndex, setLightboxIndex, tagMap, toggleSortOrder, virtuosoRef, scrollToTop,
     showWhatsAppChoice, setShowWhatsAppChoice, openWhatsApp, shareSinglePhoto, shareGroup,
@@ -128,8 +128,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         categories={categories}
         selectedCatCode={selectedCatCode}
         setSelectedCatCode={setSelectedCatCode}
-        selectedSubId={selectedSubId}
-        setSelectedSubId={setSelectedSubId}
+        filterSubId={filterSubId}
+        setFilterSubId={setFilterSubId}
         selectedTagIds={selectedTagIds}
         setSelectedTagIds={setSelectedTagIds}
         sortedTags={sortedTags}
@@ -199,7 +199,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     setLightboxIndex={handleSetLightboxIndex}
                     shareSinglePhoto={shareSinglePhoto}
                     selectedCatCode={selectedCatCode}
-                    selectedSubId={selectedSubId}
+                    filterSubId={filterSubId}
                     selectedTagIds={selectedTagIds}
                     searchQuery={searchQuery}
                   />

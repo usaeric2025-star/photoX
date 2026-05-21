@@ -40,7 +40,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   } = uiValue || {};
   
   const {
-    settings = {}, setSettings = () => {}, viewMode = 'private', setViewMode = () => {}, setIsSyncing = () => {},
+    settings = {}, setSettings = () => {}, adminPreviewMode = 'private', setAdminPreviewMode = () => {}, setIsSyncing = () => {},
     performPushSync = async () => {}, saveSettings = async () => ({})
   } = sessionValue || {};
 
@@ -211,7 +211,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     loadingType, withLoading, cloudCount,
     aiDebugInfo, abortAnalysis, batchProgress,
-    settings, viewMode, setViewMode, onRefresh,
+    settings, adminPreviewMode, setAdminPreviewMode, onRefresh,
     photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
     handleSingleAiAnalyze, handleTranslate, handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal,
     handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,
@@ -228,7 +228,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     loadingType, withLoading, cloudCount,
     aiDebugInfo, abortAnalysis, batchProgress,
-    settings, viewMode, setViewMode, onRefresh,
+    settings, adminPreviewMode, setAdminPreviewMode, onRefresh,
     photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
     handleSingleAiAnalyze, handleTranslate, handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal,
     handleBatchAiIdentifyTrigger, handleDeletePhoto, handleGroupPhotos, handleUngroup,

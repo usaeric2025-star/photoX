@@ -60,7 +60,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     
     return {
       id: String(item.id),
-      storageId: storageId,
+      storage_id: storageId,
       item_code: item.item_code as string | undefined,
       manual_code: item.manual_code as string | undefined,
       model_number: item.model_number as string | undefined,

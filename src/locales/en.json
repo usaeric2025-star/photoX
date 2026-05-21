@@ -7,7 +7,10 @@
     "edit": "Edit",
     "loading": "Loading...",
     "search": "Search",
-    "filter": "Filter"
+    "filter": "Filter",
+    "all": "All",
+    "loadMore": "Load More",
+    "endOfList": "End of List"
   },
   "photo": {
     "upload": "Upload Photo",

@@ -19,7 +19,7 @@ export const useAddTagMutation = () => {
         queryClient.setQueryData<Tag[]>(QUERY_KEYS.tags, [...previousTags, { 
           id: `temp-${Date.now()}`, 
           name: newTag,
-          usageCount: 0 
+          usage_count: 0 
         } as Tag]);
       }
       return { previousTags };

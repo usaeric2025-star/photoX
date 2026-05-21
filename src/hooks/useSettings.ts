@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
+import { syncCache } from '@/utils/indexedDB'
 
 export const useSettings = () => {
   const queryClient = useQueryClient()
@@ -8,6 +9,9 @@ export const useSettings = () => {
     queryKey: ['settings'],
     queryFn: async () => {
       const { data } = await supabase.from('settings').select('*').single()
+      if (data) {
+        syncCache.saveSettings(data).catch(console.warn);
+      }
       return data || {}
     },
   })

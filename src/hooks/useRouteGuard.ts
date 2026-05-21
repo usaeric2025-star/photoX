@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store'
 import { useAuth } from './useAuth'
 import { ROUTES } from '@/config/constants'
+import { useEffectEvent } from '@/hooks/useEffectEvent';
 
 export function useRouteGuard() {
   const location = useLocation()
@@ -14,7 +15,7 @@ export function useRouteGuard() {
   const resetUI = useStore((state) => state.resetUI)
   const activeGroupId = useStore((state) => state.activeGroupId)
   
-  useEffect(() => {
+  const handleRouteChange = useEffectEvent(() => {
     // 防止在同一个路径重复执行
     if (lastPathRef.current === location.pathname) {
       return
@@ -25,7 +26,11 @@ export function useRouteGuard() {
     if (activeGroupId && !location.pathname.includes('/group/')) {
       resetUI()
     }
-  }, [location.pathname, activeGroupId, resetUI])
+  });
+
+  useEffect(() => {
+    handleRouteChange();
+  }, [location.pathname, activeGroupId]);
   
   // 认证检查（不触发刷新，只是重定向）
   useEffect(() => {

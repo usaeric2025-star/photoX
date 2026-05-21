@@ -57,7 +57,7 @@ export interface FilterOptions {
   filterCatId?: string | null;
   filterSubId?: string | null;
   filterTagIds?: string[];
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: 'newest' | 'oldest' | 'name';
   isAdminMode?: boolean;
   isStaffMode?: boolean;
 }
@@ -77,7 +77,7 @@ export function filterPhotos(
     filterCatId,
     filterSubId,
     filterTagIds = [],
-    sortOrder = 'desc',
+    sortOrder = 'newest',
     isAdminMode = false,
     isStaffMode = false,
   } = options;
@@ -199,7 +199,11 @@ export function filterPhotos(
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
     
-    return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
+    if (sortOrder === 'name') {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+    
+    return sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
   });
 
   return result;
@@ -223,7 +227,7 @@ export function sortGroupPhotos(photos: Photo[]): Photo[] {
   });
 }
 
-export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'asc' | 'desc' = 'desc'): Photo[] {
+export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'newest' | 'oldest' | 'name' = 'newest'): Photo[] {
   const cleanedPhotos = cleanPhotos(photos);
   if (cleanedPhotos.length === 0 && Array.isArray(photos) && photos.length > 0) return [];
   if (!showGroupsCollapsed) return cleanedPhotos;
@@ -265,7 +269,11 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
 
-    return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
+    if (sortOrder === 'name') {
+      return (a.name || '').localeCompare(b.name || '');
+    }
+
+    return sortOrder === 'oldest' ? a._time! - b._time! : b._time! - a._time!;
   });
 
   return representatives;

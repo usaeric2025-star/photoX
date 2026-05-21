@@ -7,7 +7,18 @@
     "edit": "编辑",
     "loading": "加载中...",
     "search": "搜索",
-    "filter": "筛选"
+    "filter": "筛选",
+    "all": "全部",
+    "refresh": "刷新",
+    "batchAi": "批量 AI 识别",
+    "selectMode": "选择模式",
+    "cancelSelect": "取消选择",
+    "exitGuestView": "退出访客预览",
+    "loadMore": "加载更多",
+    "endOfList": "没有更多了",
+    "allCats": "全部产品",
+    "sortOldest": "按时间正序",
+    "sortNewest": "按时间倒序"
   },
   "photo": {
     "upload": "上传照片",

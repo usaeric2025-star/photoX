@@ -27,7 +27,7 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
   const handleUpdateLabel = useCallback((idx: number, newPrefix: string, newDimPart: string) => {
     const finalLabel = newPrefix ? `${newPrefix}: ${newDimPart}` : newDimPart;
     const newDims = [...displayDims];
-    newDims[idx] = { ...newDims[idx], label: finalLabel, isAI: false };
+    newDims[idx] = { ...newDims[idx], label: finalLabel, is_ai: false };
     
     // Attempt to parse numbers for background data
     const hMatch = newDimPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
@@ -54,7 +54,7 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
   const handleUnitChange = useCallback((idx: number, u: string) => {
     const newDims = [...displayDims];
     newDims[idx].unit = u as any;
-    newDims[idx].isAI = false;
+    newDims[idx].is_ai = false;
     onChange(newDims);
   }, [displayDims, onChange]);
 
@@ -108,7 +108,7 @@ export const DimensionEditor: React.FC<DimensionEditorProps> = ({
                 <div className="col-span-2 space-y-1">
                   <div className="flex items-center justify-between pl-1">
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">{t.part}</span>
-                    {dim.isAI && (
+                    {dim.is_ai && (
                       <div className="flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                         <Sparkles size={8} />
                         <span className="text-[8px] font-black">AI</span>

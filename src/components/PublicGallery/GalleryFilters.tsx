@@ -6,7 +6,7 @@ interface GalleryFiltersProps {
   settings?: AppSettings;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: 'newest' | 'oldest' | 'name';
   toggleSortOrder: () => void;
   columns: 2 | 3 | 5;
   setColumns: (val: 2 | 3 | 5) => void;
@@ -15,8 +15,8 @@ interface GalleryFiltersProps {
   categories: Category[];
   selectedCatCode: string | null;
   setSelectedCatCode: (id: string | null) => void;
-  selectedSubId: string | null;
-  setSelectedSubId: (id: string | null) => void;
+  filterSubId: string | null;
+  setFilterSubId: (id: string | null) => void;
   selectedTagIds: string[];
   setSelectedTagIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   sortedTags: Tag[];
@@ -40,8 +40,8 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = (props) => {
       categories={props.categories}
       selectedCatCode={props.selectedCatCode}
       setSelectedCatCode={props.setSelectedCatCode}
-      selectedSubId={props.selectedSubId}
-      setSelectedSubId={props.setSelectedSubId}
+      filterSubId={props.filterSubId}
+      setFilterSubId={props.setFilterSubId}
       selectedTagIds={props.selectedTagIds}
       setSelectedTagIds={props.setSelectedTagIds}
       sortedTags={props.sortedTags}

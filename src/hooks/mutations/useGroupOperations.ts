@@ -31,9 +31,7 @@ export const useGroupPhotosMutation = () => {
               if (idSet.has(photo.id)) {
                 return {
                   ...photo,
-                  groupId: tempGroupId,
                   group_id: tempGroupId,
-                  isGroupCover: false,
                   is_group_cover: false
                 };
               }
@@ -54,10 +52,9 @@ export const useGroupPhotosMutation = () => {
           pages: old.pages.map((page: any) => ({
             ...page,
             photos: page.photos.map((photo: any) => {
-              if (photo.groupId === context?.tempGroupId || photo.group_id === context?.tempGroupId) {
+              if (photo.group_id === context?.tempGroupId) {
                 return {
                   ...photo,
-                  groupId: finalGroupId,
                   group_id: finalGroupId
                 };
               }
@@ -99,7 +96,7 @@ export const useRemoveFromGroupMutation = () => {
         if (value?.pages) {
           value.pages.forEach((page: any) => {
             page.photos.forEach((photo: any) => {
-              if ((photo.groupId === groupId || photo.group_id === groupId) && !idSet.has(photo.id)) {
+              if ((photo.group_id === groupId) && !idSet.has(photo.id)) {
                 remainingSameGroupCount++;
               }
             });
@@ -119,22 +116,16 @@ export const useRemoveFromGroupMutation = () => {
               if (idSet.has(photo.id)) {
                 return {
                   ...photo,
-                  groupId: null,
                   group_id: null,
-                  isGroupCover: false,
                   is_group_cover: false,
-                  isPinned: false,
                   is_pinned: false
                 };
               }
-              if (shouldDissolveEntireGroup && (photo.groupId === groupId || photo.group_id === groupId)) {
+              if (shouldDissolveEntireGroup && (photo.group_id === groupId)) {
                 return {
                   ...photo,
-                  groupId: null,
                   group_id: null,
-                  isGroupCover: false,
                   is_group_cover: false,
-                  isPinned: false,
                   is_pinned: false
                 };
               }
@@ -180,14 +171,11 @@ export const useUngroupMutation = () => {
           pages: old.pages.map((page: any) => ({
             ...page,
             photos: page.photos.map((photo: any) => {
-              if (photo.groupId === groupId || photo.group_id === groupId) {
+              if (photo.group_id === groupId) {
                 return {
                   ...photo,
-                  groupId: null,
                   group_id: null,
-                  isGroupCover: false,
                   is_group_cover: false,
-                  isPinned: false,
                   is_pinned: false
                 };
               }
@@ -233,14 +221,11 @@ export const useDeleteGroupFromCloudMutation = () => {
           pages: old.pages.map((page: any) => ({
             ...page,
             photos: page.photos.map((photo: any) => {
-              if (photo.groupId === groupId || photo.group_id === groupId) {
+              if (photo.group_id === groupId) {
                 return {
                   ...photo,
-                  groupId: null,
                   group_id: null,
-                  isGroupCover: false,
                   is_group_cover: false,
-                  isPinned: false,
                   is_pinned: false
                 };
               }
