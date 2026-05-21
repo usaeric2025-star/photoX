@@ -92,14 +92,14 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
         const signal = controller.signal;
                 
         try {
-            const resRaw = await analyzeProductPhoto(photo.uri || photo.image_url!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.categoryId || null, photo.name, signal);
+            const resRaw = await analyzeProductPhoto(photo.uri || photo.image_url!, categories, tags, manufacturers, effectiveKey!, aiProvider, customModel, photo.category_id || null, photo.name, signal);
             const result = cleanObject(resRaw);
             
             if (result.name) {
               const measurementOnlyPattern = /^(\d+(\.\d+)?\s*(cm|inch|mm|["'”]))+$/i;
               if (measurementOnlyPattern.test(result.name)) result.name = '';
-              if (!result.modelNumber && /^[A-Z0-9\-]+$/.test(result.name) && result.name.length > 2) {
-                result.modelNumber = result.name;
+              if (!result.model_number && /^[A-Z0-9\-]+$/.test(result.name) && result.name.length > 2) {
+                result.model_number = result.name;
               }
             }
             if (result.dimensions) result.dimensions = normalizeDimensions(result.dimensions);
@@ -112,21 +112,21 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
               } catch (e) {}
             }
 
-            const finalCatId = result.categoryId || null;
-            const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
-            const mergedTagIds = Array.from(new Set([...safeArray(photo.tagIds), ...finalTagIds])).slice(0, 3);
+            const finalCatId = result.category_id || null;
+            const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tag_ids), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
+            const mergedTagIds = Array.from(new Set([...safeArray(photo.tag_ids), ...finalTagIds])).slice(0, 3);
 
             let updatedPhoto = { 
                 ...photo, 
-                categoryId: photo.categoryId && photo.categoryId !== 'uncategorized' ? photo.categoryId : finalCatId, 
-                tagIds: mergedTagIds,
+                category_id: photo.category_id && photo.category_id !== 'uncategorized' ? photo.category_id : finalCatId, 
+                tag_ids: mergedTagIds,
                 name: shouldUpdateName(photo.name) ? (aiName || photo.name) : photo.name,
                 description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
                 description_translations: result.description_translations || photo.description_translations,
-                model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
+                model_number: (result.model_number && (!photo.model_number || !photo.model_number.trim())) ? result.model_number : photo.model_number,
                 dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : safeArray(photo.dimensions),
-                updatedAt: formatDate(new Date()),
-                isAnalyzing: false 
+                updated_at: formatDate(new Date()),
+                is_analyzing: false 
             };
 
             if (user) {

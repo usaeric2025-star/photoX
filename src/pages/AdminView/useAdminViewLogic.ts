@@ -113,20 +113,20 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const togglePinned = useCallback(async (photo: Photo) => {
     if (checkSyncLock()) return;
-    const newStatus = !photo.isPinned;
+    const newStatus = !photo.is_pinned;
     let affectedIds = [photo.id];
-    if (photo.groupId) {
+    if (photo.group_id) {
       try {
-        const dbGroupPhotos = await loadPhotosByGroupId(photo.groupId, true);
+        const dbGroupPhotos = await loadPhotosByGroupId(photo.group_id, true);
         affectedIds = dbGroupPhotos.length > 0
           ? dbGroupPhotos.map((p: Photo) => p.id)
-          : photos.filter((p: Photo) => p.groupId === photo.groupId).map((p: Photo) => p.id);
+          : photos.filter((p: Photo) => p.group_id === photo.group_id).map((p: Photo) => p.id);
       } catch (e) {
-        affectedIds = photos.filter((p: Photo) => p.groupId === photo.groupId).map((p: Photo) => p.id);
+        affectedIds = photos.filter((p: Photo) => p.group_id === photo.group_id).map((p: Photo) => p.id);
       }
     }
     try {
-      await updatePhotosBulk(affectedIds, { isPinned: newStatus });
+      await updatePhotosBulk(affectedIds, { is_pinned: newStatus });
     } catch (e: any) {
       showError(e, 'toggle-pinned');
       throw e;
@@ -154,11 +154,11 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
       // Fallback
     }
     if (groupPhotos.length === 0) {
-      groupPhotos = photos.filter((p: Photo) => p.groupId === groupId);
+      groupPhotos = photos.filter((p: Photo) => p.group_id === groupId);
     }
     try {
       await Promise.all(
-         groupPhotos.map((p: Photo) => updatePhoto(p.id, { isGroupCover: p.id === id }))
+         groupPhotos.map((p: Photo) => updatePhoto(p.id, { is_group_cover: p.id === id }))
       );
     } catch (e: any) {
       showError(e, 'set-group-cover');
@@ -179,12 +179,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
-  // Close lightbox and reset multiselect whenever search query, categories, sub-categories, tag filters, or sorting order change
-  useEffect(() => {
-    setLightboxIndex(null);
-    clearSelection();
-  }, [searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, clearSelection]);
-
   const onLongPressStart = useCallback((id: string) => {
     hapticFeedback.medium();
     console.log('long press start', id);
@@ -196,7 +190,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const groupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    return photos.filter((p: Photo) => p.groupId === activeGroupId);
+    return photos.filter((p: Photo) => p.group_id === activeGroupId);
   }, [photos, activeGroupId]);
 
   const onEditPhotoById = useCallback((pOrId: Photo | string) => {
@@ -206,9 +200,9 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     
     if (!photo) return;
 
-    if (photo.groupId) {
+    if (photo.group_id) {
       setInitialPhotoId(photo.id);
-      setActiveGroupId(photo.groupId);
+      setActiveGroupId(photo.group_id);
     } else {
       setEditPhotoId(photo.id);
     }

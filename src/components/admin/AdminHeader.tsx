@@ -17,6 +17,7 @@ interface Props {
   loginWithGoogle: () => void;
   onAddPhoto?: () => void;
   onRefresh?: () => void;
+  onRunMaintenance?: () => void;
   photosCount?: number;
   totalPhotosCount?: number;
   cloudCount?: number | null;
@@ -29,7 +30,7 @@ interface Props {
 export const AdminHeader: React.FC<Props> = ({ 
   filteredPhotos, 
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
-  onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
+  onAddPhoto, onRefresh, onRunMaintenance, photosCount, totalPhotosCount, cloudCount,
   appLang = 'en',
   isAnalyzing, batchProgress, settings: propSettings
 }) => {
@@ -217,6 +218,7 @@ export const AdminHeader: React.FC<Props> = ({
                     show={showToolsMenu} 
                     t={t} 
                     handleOpenSettings={handleOpenSettings}
+                    onRunMaintenance={onRunMaintenance}
                     isStaff={sessionStorage.getItem('isStaffMode') === 'true'}
                     handleExitStaffMode={handleExitStaffMode}
                     currentLang={currentLang}

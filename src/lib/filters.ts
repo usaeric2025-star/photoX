@@ -196,8 +196,8 @@ export function filterPhotos(
     if (a.is_hidden && !b.is_hidden) return 1;
     if (!a.is_hidden && b.is_hidden) return -1;
 
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
     
     return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
   });
@@ -207,11 +207,11 @@ export function filterPhotos(
 
 export function sortGroupPhotos(photos: Photo[]): Photo[] {
   return [...photos].sort((a, b) => {
-    if (a.isGroupCover && !b.isGroupCover) return -1;
-    if (!a.isGroupCover && b.isGroupCover) return 1;
+    if (a.is_group_cover && !b.is_group_cover) return -1;
+    if (!a.is_group_cover && b.is_group_cover) return 1;
     
-    const aOrder = a.groupOrder ?? (a as any).group_order;
-    const bOrder = b.groupOrder ?? (b as any).group_order;
+    const aOrder = a.group_order ?? (a as any).group_order;
+    const bOrder = b.group_order ?? (b as any).group_order;
 
     if (aOrder !== undefined && bOrder !== undefined) {
       return aOrder - bOrder;
@@ -232,13 +232,13 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
   const groupMaxTime = new Map<string, number>();
 
   cleanedPhotos.forEach(p => {
-    if (p.groupId) {
-      if (!groups.has(p.groupId)) groups.set(p.groupId, []);
-      groups.get(p.groupId)!.push(p);
+    if (p.group_id) {
+      if (!groups.has(p.group_id)) groups.set(p.group_id, []);
+      groups.get(p.group_id)!.push(p);
 
-      const time = p.createdAtTimestamp || new Date(p.createdAt || (p as any).created_at || 0).getTime();
-      const maxT = groupMaxTime.get(p.groupId) || 0;
-      groupMaxTime.set(p.groupId, Math.max(maxT, time));
+      const time = p.created_at_timestamp || new Date(p.created_at || (p as any).created_at || 0).getTime();
+      const maxT = groupMaxTime.get(p.group_id) || 0;
+      groupMaxTime.set(p.group_id, Math.max(maxT, time));
     }
   });
 
@@ -246,14 +246,14 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
   const groupsSeen = new Set<string>();
 
   cleanedPhotos.forEach(p => {
-    if (!p.groupId) {
+    if (!p.group_id) {
       representatives.push(p);
-    } else if (!groupsSeen.has(p.groupId)) {
-      groupsSeen.add(p.groupId);
-      const groupList = groups.get(p.groupId) || [];
+    } else if (!groupsSeen.has(p.group_id)) {
+      groupsSeen.add(p.group_id);
+      const groupList = groups.get(p.group_id) || [];
       const sorted = sortGroupPhotos(groupList);
       const cover = { ...sorted[0] };
-      cover._time = groupMaxTime.get(p.groupId)!;
+      cover._time = groupMaxTime.get(p.group_id)!;
       representatives.push(cover);
     }
   });
@@ -262,8 +262,8 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
     if (a.is_hidden && !b.is_hidden) return 1;
     if (!a.is_hidden && b.is_hidden) return -1;
 
-    if (a.isPinned && !b.isPinned) return -1;
-    if (!a.isPinned && b.isPinned) return 1;
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
 
     return sortOrder === 'desc' ? b._time! - a._time! : a._time! - b._time!;
   });

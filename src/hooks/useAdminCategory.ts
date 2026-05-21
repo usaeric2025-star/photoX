@@ -82,8 +82,8 @@ export const useAdminCategory = (adminUI: {
           pages: old.pages.map((page: any) => ({
             ...page,
             photos: page.photos.map((p: Photo) => {
-              if (p.id === photoId && p.tagIds) {
-                return { ...p, tagIds: p.tagIds.filter(tId => String(tId) !== String(tagId)) };
+              if (p.id === photoId && p.tag_ids) {
+                return { ...p, tag_ids: p.tag_ids.filter(tId => String(tId) !== String(tagId)) };
               }
               return p;
             })

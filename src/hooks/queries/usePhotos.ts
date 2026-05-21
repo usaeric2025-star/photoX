@@ -4,8 +4,8 @@ import { QUERY_KEYS } from './keys';
 import { syncCache } from '../../utils/indexedDB';
 
 export const useInfinitePhotos = (filters: { 
-  categoryId?: string | null; 
-  tagId?: string | null; 
+  category_id?: string | null; 
+  tag_id?: string | null; 
   searchQuery?: string | null; 
   sortOrder?: 'asc' | 'desc' | string | null;
   isAdminMode?: boolean 
@@ -17,15 +17,15 @@ export const useInfinitePhotos = (filters: {
         undefined,
         (pageParam as number) - 1, // Service is 0-indexed
         limit,
-        filters.categoryId,
-        filters.tagId,
+        filters.category_id,
+        filters.tag_id,
         filters.searchQuery,
         filters.isAdminMode || false,
         signal
       );
 
       // Cache the first page for offline access safely (don't interfere with main fetch state)
-      if (pageParam === 1 && !filters.searchQuery && !filters.categoryId && !filters.tagId) {
+      if (pageParam === 1 && !filters.searchQuery && !filters.category_id && !filters.tag_id) {
         syncCache.savePhotos(photos).catch(() => {});
       }
 
@@ -42,10 +42,10 @@ export const useInfinitePhotos = (filters: {
   });
 };
 
-export const usePhotoCountQuery = (filters: { categoryId?: string | null; tagId?: string | null; searchQuery?: string | null }, isAdminMode: boolean = false) => {
+export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_id?: string | null; searchQuery?: string | null }, isAdminMode: boolean = false) => {
   return useQuery({
     queryKey: QUERY_KEYS.photoCount({ ...filters, isAdminMode }),
-    queryFn: () => getPhotoCount(filters.categoryId, filters.tagId, filters.searchQuery, isAdminMode),
+    queryFn: () => getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode),
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });

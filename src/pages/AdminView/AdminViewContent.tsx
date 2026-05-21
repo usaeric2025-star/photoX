@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks } from '@/hooks';
+import { backfillThumbHashes } from '@/services/photo/backfillService';
+import { toast } from 'sonner';
 import { ErrorBoundary } from 'react-error-boundary';
 import { AdminGlobalModals } from '@/components/admin/AdminGlobalModals';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
@@ -44,6 +46,19 @@ export const AdminViewContent: React.FC<Props> = ({
 }) => {
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
+
+  const handleRunMaintenance = useCallback(async () => {
+    const toastId = toast.loading('正在修复缩略图...');
+    try {
+        await backfillThumbHashes((stats) => {
+            toast.loading(`正在修复: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`, { id: toastId });
+        });
+        toast.success('缩略图修复完成', { id: toastId });
+    } catch (e: any) {
+        showError(e, '修复失败');
+        toast.error('修复过程中出错', { id: toastId });
+    }
+  }, [showError]);
   const logic = useAdminViewLogic({
     user, sessionValue, photoValue, uiValue,
     onRefresh: sessionValue.onRefresh,
@@ -143,7 +158,7 @@ export const AdminViewContent: React.FC<Props> = ({
             >
               <div className={`absolute inset-0 transition-opacity duration-300 ${logic.viewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <MainAdminScreen 
-                  {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
+                  {...logic} onRunMaintenance={handleRunMaintenance} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
                   onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
                   onToggleHidden={actions.handleToggleHidden} onSetGroupCover={logic.setGroupCover} onEditPhoto={actions.handleEditPhoto}
                   onLoadMore={actions.handleLoadMoreCallback} hasNextPage={!!hasNextPage}

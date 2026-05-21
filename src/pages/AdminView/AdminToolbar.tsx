@@ -6,6 +6,7 @@ interface AdminToolbarProps {
   photos: Photo[];
   handleBatchAiIdentifyTrigger: () => void;
   onManageClick: () => void;
+  onRunMaintenance: () => void;
   loginWithGoogle: () => Promise<any>;
   onRefresh: () => void;
   cloudCount: number;
@@ -22,6 +23,7 @@ export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
       handleManageClick={props.onManageClick}
       loginWithGoogle={props.loginWithGoogle}
       onRefresh={props.onRefresh}
+      onRunMaintenance={props.onRunMaintenance}
       photosCount={props.photos.length}
       totalPhotosCount={props.photos.length}
       cloudCount={props.cloudCount}

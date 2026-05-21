@@ -67,16 +67,16 @@ export const useGroupAdminLogic = ({
     if (!activeGroupId) return [];
     const groupPhotos = dbGroupPhotos.length > 0
       ? dbGroupPhotos
-      : photos.filter(p => p && p.groupId === activeGroupId);
+      : photos.filter(p => p && p.group_id === activeGroupId);
     return filterPhotosByMode(groupPhotos, isAdminMode)
       .sort((a, b) => {
-        if (a.isGroupCover) return -1;
-        if (b.isGroupCover) return 1;
-        if (a.groupOrder !== undefined && b.groupOrder !== undefined) {
-          return a.groupOrder - b.groupOrder;
+        if (a.is_group_cover) return -1;
+        if (b.is_group_cover) return 1;
+        if (a.group_order !== undefined && b.group_order !== undefined) {
+          return a.group_order - b.group_order;
         }
-        if (a.groupOrder !== undefined) return -1;
-        if (b.groupOrder !== undefined) return 1;
+        if (a.group_order !== undefined) return -1;
+        if (b.group_order !== undefined) return 1;
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
   }, [activeGroupId, photos, dbGroupPhotos, isAdminMode]);
@@ -140,7 +140,7 @@ export const useGroupAdminLogic = ({
               colors: [],
               materials: [],
               cover_photo_id: groupCover?.id || null,
-              user_id: groupCover?.userId || 'default',
+              user_id: groupCover?.user_id || 'default',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
@@ -231,7 +231,7 @@ export const useGroupAdminLogic = ({
         const is_hidden = updates.is_hidden;
         const groupPhotos = dbGroupPhotos.length > 0
           ? dbGroupPhotos
-          : photos.filter(p => p && p.groupId === activeGroupId);
+          : photos.filter(p => p && p.group_id === activeGroupId);
         if (groupPhotos.length > 0 && hookUpdatePhoto) {
            await Promise.all(
              groupPhotos.map(p => hookUpdatePhoto(p.id, { is_hidden }))
@@ -245,12 +245,12 @@ export const useGroupAdminLogic = ({
   }, [activeGroupId, groupData, showError, hookUpdatePhoto, photos, dbGroupPhotos]);
 
   const handleToggleTag = useCallback((photo: Photo, tagId: string) => {
-    const currentTags = Array.isArray(photo.tagIds) ? photo.tagIds : [];
+    const currentTags = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
     const nextTags = currentTags.includes(tagId)
       ? currentTags.filter(id => id !== tagId)
       : [...currentTags, tagId];
     
-    persistPhotoChange(photo.id, { tagIds: nextTags });
+    persistPhotoChange(photo.id, { tag_ids: nextTags });
   }, [persistPhotoChange]);
 
   const handleBatchUpdateDimensions = useCallback(async (newDims: Dimension[]) => {
@@ -294,13 +294,13 @@ export const useGroupAdminLogic = ({
     
     const updatedPhotosWithOrder = nextGroupPhotos.map((p, index) => ({
       ...p,
-      groupOrder: index
+      group_order: index
     }));
     
     try {
       const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
       await Promise.all(
-        updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { groupOrder: p.groupOrder }))
+        updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { group_order: p.group_order }))
       );
     } catch (err: any) {
       showError(err, '保存排序失败');

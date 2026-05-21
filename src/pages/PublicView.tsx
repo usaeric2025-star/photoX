@@ -82,16 +82,16 @@ export default function PublicView() {
   const { data: categoriesData = [] } = useCategoriesQuery();
 
   const infiniteQuery = useInfinitePhotos({
-    categoryId: filterCatId,
-    tagId: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
+    category_id: filterCatId,
+    tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
     sortOrder: sortOrder,
     isAdminMode: false
   }, PAGINATION.PUBLIC_PAGE_SIZE);
 
   const { data: countData } = usePhotoCountQuery({
-    categoryId: filterCatId,
-    tagId: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
+    category_id: filterCatId,
+    tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery
   });
 
