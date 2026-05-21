@@ -54,14 +54,14 @@ export function setupOfflineSyncListener(userId: string | undefined) {
 
   const handleOnline = () => {
     console.log('[OfflineSync] Device is back online. Triggering sync...');
-    syncPendingOperations(userId);
+    syncPendingOperations(userId).catch(err => console.warn('[OfflineSync] auto-sync failed', err));
   };
 
   window.addEventListener('online', handleOnline);
   
   // Also try immediately if already online
   if (navigator.onLine) {
-    syncPendingOperations(userId);
+    syncPendingOperations(userId).catch(err => console.warn('[OfflineSync] init-sync failed', err));
   }
 
   return () => window.removeEventListener('online', handleOnline);

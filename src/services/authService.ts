@@ -40,9 +40,15 @@ export const loginWithGoogle = async () => {
   }
 };
 
-export const logout = () => {
+export const logout = async () => {
   wasAuthenticated = false;
-  return supabase.auth.signOut();
+  try {
+    const res = await supabase.auth.signOut();
+    return res;
+  } catch (err) {
+    globalHandleError(err, "登出失败(Logout failed)");
+    return { error: err };
+  }
 };
 
 export const onAuthChange = (callback: (user: User | null) => void) => {

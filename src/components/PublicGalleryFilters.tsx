@@ -123,7 +123,7 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       setSelectedTagIds(() => []);
                       onScrollToTop();
                     }}
-                    className={`w-full h-[34px] rounded-md text-[11px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${(selectedCatCode === cat.id || selectedCatCode === cat.code) ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
+                    className={`w-full h-[34px] rounded-md text-[11px] font-bold uppercase tracking-tight transition-all shadow-sm border truncate px-1 ${(String(selectedCatCode) === String(cat.id) || String(selectedCatCode) === String(cat.code)) ? 'bg-brand-navy border-brand-navy text-brand-bg' : 'bg-white border-brand-navy/10 text-brand-navy/60'}`}
                   >
                     {displayName}
                   </button>
