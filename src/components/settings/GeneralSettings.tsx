@@ -48,13 +48,6 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
         cardClass={cardClass}
         inputClass={inputClass}
       />
-      <MaintenanceSection 
-        photos={photos}
-        onHealthCheck={() => onHealthCheck(photos)}
-        isChecking={false}
-        cardClass={cardClass}
-        buttonStyles={buttonStyles}
-      />
     </>
   );
 };

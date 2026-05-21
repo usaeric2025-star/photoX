@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks } from '@/hooks';
 import { ErrorBoundary } from 'react-error-boundary';
 import { AdminGlobalModals } from '@/components/admin/AdminGlobalModals';
-import { ErrorLogViewer } from '@/components/admin/ErrorLogViewer';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { SettingsScreen } from '@/components/SettingsScreen';
 import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
@@ -86,8 +85,6 @@ export const AdminViewContent: React.FC<Props> = ({
         </div>
 
         <div className="flex-1 flex flex-col min-w-0 relative h-full">
-          <div className="px-6 pt-4"><ErrorLogViewer /></div>
-
           <React.Suspense fallback={<div className="flex flex-col items-center justify-center h-screen bg-brand-bg gap-4"><div className="w-8 h-8 border-[1px] border-brand-navy/10 border-t-brand-gold rounded-full animate-spin" /><span className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-widest">Loading...</span></div>}>
             {logic.batchEditIds && (
               <BatchEditScreen 
@@ -131,7 +128,7 @@ export const AdminViewContent: React.FC<Props> = ({
                 />
               </div>
               <div className={`absolute inset-0 transition-opacity duration-300 ${logic.viewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
-                <div className="flex flex-col h-full bg-bg">
+                <div className="flex flex-col h-full bg-brand-bg">
                   <PublicGallery 
                     photos={logic.photos} categories={logic.categories} tags={logic.tags} settings={logic.settings}
                     isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'} isFetchingNextPage={isFetchingNextPage}

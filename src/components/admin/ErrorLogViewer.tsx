@@ -20,9 +20,12 @@ export const ErrorLogViewer = () => {
   };
 
   return (
-    <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 mt-4">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">系統错误与操作日志 ({errors.length})</h3>
+    <div className="bg-white p-6 rounded-[32px] border border-brand-navy/10 mt-4 shadow-sm">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
+          <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
+          系統错误与操作日志 / System Logs
+        </h3>
         <div className="flex gap-2">
           {errors.length > 0 && (
             <>
@@ -57,7 +60,7 @@ export const ErrorLogViewer = () => {
                 console.error('Monitoring import failed', err);
               });
             }}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition"
+            className="px-3 py-1.5 bg-brand-bg border border-brand-navy/10 text-brand-navy rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand-navy/5 shadow-sm transition-all"
             title="监控功能测试"
           >
               测试监控功能

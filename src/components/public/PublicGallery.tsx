@@ -56,7 +56,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   } = logic;
   const displayPhotos = useMemo(() => logic.displayPhotos || [], [logic.displayPhotos]);
 
-  const virtuosoComponents = {};
+  const virtuosoComponents = useMemo(() => ({
+    Footer: () => (
+      <div className="py-12 mt-12 flex flex-col items-center justify-center opacity-30 select-none pb-32">
+        {props.settings?.logo_url && <img src={props.settings.logo_url} className="w-6 h-6 object-cover rounded-xl mb-3 grayscale" alt="Logo" />}
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-navy">
+          {props.settings?.app_name || 'PhotoX Gallery'}
+        </span>
+      </div>
+    )
+  }), [props.settings?.logo_url, props.settings?.app_name]);
   const isSyncing = !!props.isRefreshing;
 
   const virtuosoContext = useMemo(() => ({
@@ -87,7 +96,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col h-full bg-bg w-full overflow-hidden text-text"
+      className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text"
     >
       {lightboxIndex === null && (
         <GalleryHeader 

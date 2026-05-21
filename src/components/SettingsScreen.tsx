@@ -19,6 +19,7 @@ import { AISettings } from './settings/AISettings';
 import { SyncSettings } from './settings/SyncSettings';
 import { TagsManager } from './settings/TagsManager';
 import { CategoriesManager } from './settings/CategoriesManager';
+import { MaintenanceSection } from './settings/MaintenanceSection';
 
 interface SettingsScreenProps {
   setActiveScreen: (screen: 'home' | 'manage' | 'login') => void;
@@ -33,9 +34,9 @@ interface SettingsScreenProps {
 }
 
 const BUTTON_STYLES = {
-  primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
-  secondary: "px-5 py-2.5 bg-brand-bg border border-brand-navy/10 hover:bg-brand-navy/5 text-brand-navy rounded-2xl text-xs font-medium tracking-wide shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
-  accent: "px-5 py-2.5 bg-brand-gold hover:bg-brand-gold/90 text-white rounded-2xl text-xs font-medium tracking-wide shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  secondary: "px-5 py-2.5 bg-brand-bg border border-brand-navy/10 hover:bg-brand-navy/5 text-brand-navy rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
+  accent: "px-5 py-2.5 bg-brand-gold hover:bg-brand-gold/90 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
 };
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
@@ -186,6 +187,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             setSettings={setSettings}
             setHasChanges={setHasChanges}
             debouncedSave={debouncedSave}
+            cardClass={cardClass}
+            buttonStyles={BUTTON_STYLES}
+          />
+
+          <MaintenanceSection 
+            photos={photos}
+            onHealthCheck={() => handleHealthCheck(photos)}
+            isChecking={false}
             cardClass={cardClass}
             buttonStyles={BUTTON_STYLES}
           />

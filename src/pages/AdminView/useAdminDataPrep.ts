@@ -33,45 +33,7 @@ export const useAdminDataPrep = () => {
 
   // Load from IndexedDB on mount for instant UI
   useEffect(() => {
-    (async () => {
-      try {
-        const [cachedCats, cachedTags, cachedMfrs, cachedPhotos] = await Promise.all([
-          syncCache.getCategories(),
-          syncCache.getTags(),
-          syncCache.getManufacturers(),
-          syncCache.getPhotos()
-        ]);
-
-        if (cachedCats && cachedCats.length > 0) queryClient.setQueryData(QUERY_KEYS.categories, cachedCats);
-        if (cachedTags && cachedTags.length > 0) queryClient.setQueryData(QUERY_KEYS.tags, cachedTags);
-        if (cachedMfrs && cachedMfrs.length > 0) queryClient.setQueryData(QUERY_KEYS.manufacturers, cachedMfrs);
-        
-        // Also hydrate infinite photos if nothing is loaded yet
-        if (cachedPhotos && cachedPhotos.length > 0) {
-          const state = useGalleryStore.getState();
-          const filterTagId = Array.isArray(state.filterTagIds) && state.filterTagIds.length > 0 ? state.filterTagIds[0] : null;
-          
-          const defaultKey = QUERY_KEYS.infinitePhotos({ 
-            categoryId: state.filterCatId || null, 
-            tagId: filterTagId, 
-            searchQuery: state.searchQuery || null, 
-            sortOrder: state.sortOrder, 
-            isAdminMode: true, 
-            limit: PAGINATION.ADMIN_BATCH_SIZE 
-          });
-          
-          const currentData = queryClient.getQueryData(defaultKey);
-          if (!currentData) {
-            queryClient.setQueryData(defaultKey, {
-              pages: [{ photos: cachedPhotos, nextPage: cachedPhotos.length === PAGINATION.ADMIN_BATCH_SIZE ? 2 : undefined }],
-              pageParams: [1]
-            });
-          }
-        }
-      } catch (err) {
-        console.warn('[Offline] Failed to load local cache:', err);
-      }
-    })();
+    // Disabled hydration because it conflicts with useInfiniteQuery's internal structure and staleTime
   }, [queryClient]);
 
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminDialogs();

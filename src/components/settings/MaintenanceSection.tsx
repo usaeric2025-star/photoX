@@ -15,11 +15,13 @@ export const MaintenanceSection: React.FC<Props> = ({
 }) => {
   return (
     <div className={cardClass}>
-      <h3 className="text-sm font-bold text-brand-navy flex items-center gap-2">
-        <ShieldCheck size={18} className="text-brand-gold" />
-        系统健康诊断 / System Health Check
-      </h3>
-      <p className="text-xs text-brand-navy/60">检测前端缓存和数据一致性。</p>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
+          <div className="w-1.5 h-3.5 bg-brand-gold rounded-full"></div>
+          系统健康诊断 / System Health Check
+        </h3>
+      </div>
+      <p className="text-xs text-brand-navy/60 mb-4 px-2">检测前端缓存和数据一致性。</p>
       
       <button 
         onClick={onHealthCheck}
