@@ -150,16 +150,9 @@ export const useStore = create<StoreState>()(
       version: 3,
 
       storage: {
-        getItem: (name) => {
-          const value = storage.get(name, null)
-          return value ? { state: value } : null
-        },
-        setItem: (name, value) => {
-          storage.set(name, value.state)
-        },
-        removeItem: (name) => {
-          storage.remove(name)
-        },
+        getItem: (name) => storage.get(name, null),
+        setItem: (name, value) => storage.set(name, value),
+        removeItem: (name) => storage.remove(name),
       },
 
       partialize: (state) => {

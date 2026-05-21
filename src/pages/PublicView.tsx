@@ -91,7 +91,8 @@ export default function PublicView() {
 	  return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  const { data: categoriesData = [] } = useCategoriesQuery();
+  const categoriesQuery = useCategoriesQuery();
+  const categoriesData = categoriesQuery?.data ?? [];
   const { settings, isLoading: isSettingsLoading } = useSettings();
   const { hasLoadedOnce, setHasLoadedOnce } = useStore();
   const { user } = useAuth();
@@ -136,8 +137,14 @@ export default function PublicView() {
   const { mutateAsync: updatePhotoMutation } = useUpdatePhotoMutation();
 
   const photos = useMemo(() => {
-    const allPhotos = paginatedPhotos?.pages?.flatMap(p => p.photos) || [];
-    return cleanPhotos(allPhotos);
+    try {
+      const pages = paginatedPhotos?.pages;
+      if (!pages || !Array.isArray(pages)) return [];
+      return cleanPhotos(pages.flatMap(p => p?.photos || []));
+    } catch (e) {
+      console.error('photos 计算失败:', e);
+      return [];
+    }
   }, [paginatedPhotos]);
   
   const navigate = useNavigate();
@@ -188,6 +195,10 @@ export default function PublicView() {
     // Implement click logic
   }, []);
 
+  if (infiniteQuery.error) {
+    return <div className="p-4 text-red-500">加载失败: {(infiniteQuery.error as Error).message}</div>;
+  }
+
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
         {isInitialLoading && !hasLoadedOnce ? (
@@ -203,7 +214,7 @@ export default function PublicView() {
                 loginWithGoogle={loginWithGoogle}
                 user={user}
                 settings={settings}
-                isRefreshing={isPhotosLoading || isPhotosFetching}
+                isRefreshing={isPhotosLoading || isFetchingPhotos}
                 onRefresh={handleRefresh}
                 onLoadMore={handleLoadMore}
                 hasMore={hasNextPage}

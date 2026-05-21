@@ -68,7 +68,7 @@ function AnimatedRoutes({ user }: { user: any }) {
 }
 
 export default function AppRoutes() {
-  const { user, authChecked } = useAuth();
+  const { user, isLoading } = useAuth();
   
   // App-level initialization logic can stay, but fetchSettings is handled by useSettings hook.
 
@@ -112,7 +112,7 @@ export default function AppRoutes() {
 
   // Handle Global Search Debouncing via local state or query logic
   
-  if (!authChecked) return null;
+  if (isLoading) return null;
 
   return (
     <ErrorBoundary FallbackComponent={Fallback}>
