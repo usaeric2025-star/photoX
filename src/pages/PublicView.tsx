@@ -194,7 +194,7 @@ export default function PublicView() {
         {console.log('PublicView rendering - Photos data:', photos)}
         <div className="fixed top-0 left-0 z-[1000] p-2 bg-red-500 text-white text-xs"> DEBUG: Rendering PublicView (Photos: {photos.length})</div>
         {isInitialLoading && !hasLoadedOnce ? (
-          <FullPageLoading />
+          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-50 text-slate-800">LOADING...</div>
         ) : (
             <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
               <PublicGallery 
