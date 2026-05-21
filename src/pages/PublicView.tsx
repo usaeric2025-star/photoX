@@ -191,6 +191,8 @@ export default function PublicView() {
 
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
+        {console.log('PublicView rendering - Photos data:', photos)}
+        <div className="fixed top-0 left-0 z-[1000] p-2 bg-red-500 text-white text-xs"> DEBUG: Rendering PublicView (Photos: {photos.length})</div>
         {isInitialLoading && !hasLoadedOnce ? (
           <FullPageLoading />
         ) : (
