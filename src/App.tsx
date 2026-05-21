@@ -9,6 +9,7 @@ import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { globalHandleError } from './utils/errorHandler';
+import { ROUTES } from './config/constants';
 
 function Fallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   return (
@@ -33,8 +34,8 @@ function AnimatedRoutes({ user }: { user: any }) {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={
-            user ? <Navigate to="/admin" replace /> : (
+        <Route path={ROUTES.HOME} element={
+            user ? <Navigate to={ROUTES.ADMIN} replace /> : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
                 <PublicView />
               </motion.div>
@@ -45,17 +46,17 @@ function AnimatedRoutes({ user }: { user: any }) {
             <PublicView />
           </motion.div>
         } />
-        <Route path="/g/:groupId" element={
+        <Route path={ROUTES.GROUP(":groupId")} element={
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }}>
             <PublicView />
           </motion.div>
         } />
-        <Route path="/admin" element={
+        <Route path={ROUTES.ADMIN} element={
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
             <AdminView />
           </motion.div>
         } />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
       </Routes>
     </AnimatePresence>
   );

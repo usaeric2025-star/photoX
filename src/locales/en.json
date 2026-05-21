@@ -1,0 +1,25 @@
+{
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "search": "Search",
+    "filter": "Filter"
+  },
+  "photo": {
+    "upload": "Upload Photo",
+    "analyze": "AI Analyze",
+    "hide": "Hide",
+    "unhide": "Unhide",
+    "delete": "Delete Photo"
+  },
+  "group": {
+    "create": "Create Group",
+    "delete": "Delete Group",
+    "rename": "Rename",
+    "cover": "Set as Cover"
+  }
+}

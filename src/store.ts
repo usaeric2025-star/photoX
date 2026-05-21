@@ -20,6 +20,7 @@ interface UIState {
   hasLoadedOnce: boolean
   alertDialog: any | null
   promptDialog: any | null
+  language: 'zh' | 'en' | 'ms'
 }
 
 interface UIActions {
@@ -42,6 +43,7 @@ interface UIActions {
   setHasLoadedOnce: (hasLoaded: boolean) => void
   setAlertDialog: (dialog: any) => void
   setPromptDialog: (dialog: any) => void
+  setLanguage: (lang: 'zh' | 'en' | 'ms') => void
   withLoading: <T>(type: UIState['loadingType'], fn: () => Promise<T>) => Promise<T>
 }
 
@@ -63,6 +65,7 @@ const initialState: UIState = {
   hasLoadedOnce: false,
   alertDialog: null,
   promptDialog: null,
+  language: 'zh',
 }
 
 // ========== 白名单（只持久化这些）==========
@@ -75,6 +78,7 @@ const PERSIST_KEYS: (keyof UIState)[] = [
   'isMultiSelect',
   'sidebarCollapsed',
   'selectedPhotoIds',
+  'language',
 ]
 
 // ========== 创建 store ==========
@@ -98,6 +102,7 @@ export const useStore = create<StoreState>()(
       setHasLoadedOnce: (hasLoaded) => set({ hasLoadedOnce: hasLoaded }),
       setAlertDialog: (dialog) => set({ alertDialog: dialog }),
       setPromptDialog: (dialog) => set({ promptDialog: dialog }),
+      setLanguage: (lang) => set({ language: lang }),
 
       addSelectedPhotoId: (id) => set((state) => ({
         selectedPhotoIds: state.selectedPhotoIds.includes(id)

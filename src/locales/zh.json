@@ -1,0 +1,25 @@
+{
+  "common": {
+    "confirm": "确定",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "loading": "加载中...",
+    "search": "搜索",
+    "filter": "筛选"
+  },
+  "photo": {
+    "upload": "上传照片",
+    "analyze": "AI 分析",
+    "hide": "隐藏",
+    "unhide": "取消隐藏",
+    "delete": "删除照片"
+  },
+  "group": {
+    "create": "创建群组",
+    "delete": "删除群组",
+    "rename": "重命名",
+    "cover": "设为封面"
+  }
+}

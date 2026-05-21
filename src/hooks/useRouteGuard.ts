@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '@/store'
 import { useAuth } from './useAuth'
+import { ROUTES } from '@/config/constants'
 
 export function useRouteGuard() {
   const location = useLocation()
@@ -30,15 +31,15 @@ export function useRouteGuard() {
   useEffect(() => {
     if (isLoading) return
     
-    const isAdminRoute = location.pathname.startsWith('/admin')
-    const isLoginRoute = location.pathname === '/login'
+    const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN)
+    const isLoginRoute = location.pathname === ROUTES.LOGIN
     
     if (!user && isAdminRoute && !isLoginRoute) {
-      navigate('/login', { replace: true })
+      navigate(ROUTES.LOGIN, { replace: true })
     }
     
     if (user && isLoginRoute) {
-      navigate('/admin', { replace: true })
+      navigate(ROUTES.ADMIN, { replace: true })
     }
   }, [user, isLoading, location.pathname, navigate])
 }

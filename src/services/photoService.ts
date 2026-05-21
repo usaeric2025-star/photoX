@@ -212,10 +212,12 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     return (data || []).map(item => mapSupabasePhoto(item));
 };
 
+import { PAGINATION } from '../config/constants';
+// ...
 export const loadPhotosByGroupIdPaginated = async (
   groupId: string,
   page: number = 1,
-  pageSize: number = 20,
+  pageSize: number = PAGINATION.GROUP_PAGE_SIZE,
   isAdminMode: boolean = false
 ): Promise<{ photos: Photo[]; total: number }> => {
   if (!groupId) return { photos: [], total: 0 };

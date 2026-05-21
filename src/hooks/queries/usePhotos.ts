@@ -62,7 +62,10 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
   });
 };
 
-export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 20) => {
+import { PAGINATION } from '@/config/constants';
+// ...
+export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = PAGINATION.GROUP_PAGE_SIZE) => {
+
   return useInfiniteQuery({
     queryKey: ['photos', 'group', 'infinite', groupId, isAdminMode, pageSize],
     queryFn: ({ pageParam = 1 }) => 

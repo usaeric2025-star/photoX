@@ -17,6 +17,8 @@ import { FullPageLoading } from '../components/FullPageLoading';
 import { saveData, syncCache } from '../utils/indexedDB';
 import { PublicGallery } from '../components/public/PublicGallery';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
+import { loginWithGoogle } from '../services/supabaseService';
+import { ROUTES } from '../config/constants';
 
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
@@ -199,8 +201,8 @@ export default function PublicView() {
                 photos={photos}
                 categories={categoriesData}
                 tags={[]} // Pass empty if no tags
-                onExit={() => navigate('/admin')}
-                onLogin={() => navigate('/admin')}
+                onExit={() => navigate(ROUTES.ADMIN)}
+                onLogin={() => navigate(ROUTES.ADMIN)}
                 loginWithGoogle={loginWithGoogle}
                 user={user}
                 settings={settings}

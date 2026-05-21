@@ -1,0 +1,25 @@
+{
+  "common": {
+    "confirm": "Sahkan",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "delete": "Padam",
+    "edit": "Sunting",
+    "loading": "Memuatkan...",
+    "search": "Cari",
+    "filter": "Tapis"
+  },
+  "photo": {
+    "upload": "Muat Naik Foto",
+    "analyze": "Analisis AI",
+    "hide": "Sembunyi",
+    "unhide": "Tunjukkan",
+    "delete": "Padam Foto"
+  },
+  "group": {
+    "create": "Cipta Kumpulan",
+    "delete": "Padam Kumpulan",
+    "rename": "Namakan Semula",
+    "cover": "Jadikan Kulit"
+  }
+}
