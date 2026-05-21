@@ -26,18 +26,7 @@ export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
   onToggleVisibility,
   onClearSelection,
 }) => {
-  const { isMultiSelect, selectedIds, disable, selectAll, deselectAllForList } = useMultiSelect();
-
-  const currentIds = photos.map(p => p.id);
-  const isAllSelected = currentIds.length > 0 && currentIds.every(id => selectedIds.includes(id));
-
-  const handleToggleSelectAll = () => {
-    if (isAllSelected) {
-      deselectAllForList(currentIds);
-    } else {
-      selectAll(currentIds);
-    }
-  };
+  const { isMultiSelect, selectedIds, disable } = useMultiSelect();
 
   return (
     <>
@@ -63,8 +52,6 @@ export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
           onGroup={onGroup}
           onDelete={onDelete}
           onToggleVisibility={onToggleVisibility}
-          onToggleSelectAll={handleToggleSelectAll}
-          isAllSelected={isAllSelected}
         />
       )}
     </>
