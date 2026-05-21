@@ -30,7 +30,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     filterSubId, setFilterSubId,
     filterTagIds, setFilterTagIds,
     sortOrder,
-    clearSelection,
     resetFilters
   } = useGalleryStore();
   

@@ -25,8 +25,7 @@ interface AdminPhotoGridProps {
 }
 
 export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
-  const { togglePhotoSelection, clearSelection } = useGalleryStore();
-  
+
   return (
     <AdminGallery 
       photos={props.photos}

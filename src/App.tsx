@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 import PublicView from './pages/PublicView';
-import PublicViewDebug from './pages/PublicViewDebug';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
 import { useRouteGuard } from './hooks/useRouteGuard';
@@ -47,8 +46,7 @@ function AnimatedRoutes({ user }: { user: any }) {
   const { hash, groupId } = location.state || {};
 
 
-  const isDebug = new URLSearchParams(location.search).get('debug') === 'true';
-  const PublicComponent = isDebug ? PublicViewDebug : PublicView;
+  const PublicComponent = PublicView;
 
 
   return (

@@ -70,8 +70,8 @@ export const usePublicGalleryLogic = (props: {
     isStaffMode, setIsStaffMode,
     selectedIds: storeSelectedIds,
     isMultiSelect: storeIsMultiSelect,
-    togglePhotoSelection,
-    clearSelection,
+    toggleSelectedPhotoId,
+    clearSelectedPhotos,
     setIsMultiSelect: setStoreIsMultiSelect,
     appLang: langStore,
     setAppLang: setLang,
@@ -90,8 +90,8 @@ export const usePublicGalleryLogic = (props: {
   const localPhotos = useMemo(() => incomingPhotos || [], [incomingPhotos]);
   const activeSelectedIds = selectedIds.length > 0 || isMultiSelect ? selectedIds : storeSelectedIds;
   const activeIsMultiSelect = isMultiSelect || storeIsMultiSelect;
-  const activeToggleSelection = onToggleSelection || togglePhotoSelection;
-  const activeClearSelection = onClearSelection || clearSelection;
+  const activeToggleSelection = onToggleSelection || toggleSelectedPhotoId;
+  const activeClearSelection = onClearSelection || clearSelectedPhotos;
   const activeSetIsMultiSelect = onToggleMultiSelect || setStoreIsMultiSelect;
 
   const { showSuccess, showError } = useFeedback();

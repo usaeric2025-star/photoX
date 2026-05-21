@@ -3,7 +3,7 @@ import { useCallback, useEffect } from 'react';
 
 export const useMultiSelect = () => {
   const isMultiSelect = useGalleryStore((state) => state.isMultiSelect);
-  const selectedIds = useGalleryStore((state) => state.selectedIds);
+  const selectedIds = useGalleryStore((state) => state.selectedPhotoIds) ?? [];
   const setIsMultiSelect = useGalleryStore((state) => state.setIsMultiSelect);
   const setSelectedPhotoIds = useGalleryStore((state) => state.setSelectedPhotoIds);
 
@@ -63,5 +63,6 @@ export const useMultiSelect = () => {
     reset,
     selectAll,
     deselectAllForList,
+    activeClearSelection: clear,
   };
 };

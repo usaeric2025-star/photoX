@@ -6,7 +6,16 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import { TaskProvider } from './hooks/useTasks';
 import { setupGlobalErrorHandling } from './lib/errorHandling';
+import { ErrorReporter } from './lib/errorReporter';
 import './index.css';
+
+window.addEventListener('error', (event) => {
+  ErrorReporter.report(event.error || event.message, 'Global');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  ErrorReporter.report(event.reason, 'UnhandledPromise');
+});
 
 setupGlobalErrorHandling();
 

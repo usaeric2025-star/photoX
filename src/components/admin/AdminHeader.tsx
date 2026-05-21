@@ -220,7 +220,7 @@ export const AdminHeader: React.FC<Props> = ({
                     isStaff={sessionStorage.getItem('isStaffMode') === 'true'}
                     handleExitStaffMode={handleExitStaffMode}
                     currentLang={currentLang}
-                    onSetLang={(l) => useGalleryStore.getState().setAppLang(l)}
+                    onSetLang={(l) => useGalleryStore.getState().setLanguage(l as 'zh' | 'en' | 'ms')}
                   />
                 </div>
               </div>
