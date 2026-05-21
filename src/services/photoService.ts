@@ -22,9 +22,9 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       }
     }
 
-    let tagIds: string[] = [];
+    let tag_ids: string[] = [];
     if (Array.isArray(item.photo_tags)) {
-      tagIds = item.photo_tags
+      tag_ids = item.photo_tags
         .map((pt: { tag_id?: string | number; tags?: { id: string | number }; id?: string | number }) => {
           if (pt == null) return null;
           if (typeof pt === 'object') {
@@ -38,7 +38,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
         .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
     } else if (Array.isArray(item.tags)) {
       // Fallback in case tags are returned directly
-      tagIds = (item.tags as { id: string | number }[])
+      tag_ids = (item.tags as { id: string | number }[])
         .map((t: { id?: string | number } | string | number) => {
           if (t == null) return null;
           if (typeof t === 'object' && t.id != null) return String(t.id);
@@ -55,22 +55,23 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       model_number: item.model_number as string | undefined,
       image_hash: item.image_hash as string | undefined,
       name: (item.name as string) || 'Unnamed Product',
-      categoryId: item.category_id ? String(item.category_id) : null,
-      manufacturerId: item.manufacturer_id ? String(item.manufacturer_id) : null,
+      category_id: item.category_id ? String(item.category_id) : null,
+      manufacturer_id: item.manufacturer_id ? String(item.manufacturer_id) : null,
       description: item.description as string | undefined,
       image_url: item.image_url as string | undefined,
       thumb_url: (item.thumb_url as string) || (item.image_url as string),
       exif_data: (item.exif_data as Record<string, unknown>) ?? null,
-      createdAt: item.created_at as string | undefined,
-      groupId: item.group_id ? String(item.group_id) : undefined,
-      isGroupCover: !!item.is_group_cover,
+      created_at: item.created_at as string | undefined,
+      updated_at: item.updated_at as string | undefined,
+      group_id: item.group_id ? String(item.group_id) : undefined,
+      is_group_cover: !!item.is_group_cover,
       is_hidden: !!item.is_hidden,
-      isPinned: !!item.is_pinned || !!(item as any).isPinned,
-      userId: item.user_id ? String(item.user_id) : undefined,
+      is_pinned: !!item.is_pinned || !!(item as any).is_pinned,
+      user_id: item.user_id ? String(item.user_id) : undefined,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
       description_translations: item.description_translations as Photo['description_translations'] || null,
-      tagIds: Array.isArray(tagIds) ? tagIds : [],
+      tag_ids: Array.isArray(tag_ids) ? tag_ids : [],
       dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : []
     };
 }

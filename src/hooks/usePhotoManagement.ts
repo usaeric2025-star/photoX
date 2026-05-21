@@ -12,8 +12,11 @@ export const usePhotoManagement = (
   const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
   const [formState, setFormState] = useState<ProductFormData>({
     name: '',
+    category_id: '',
     categoryId: '',
+    tag_ids: [],
     tagIds: [],
+    manufacturer_id: '',
     manufacturerId: '',
     model_number: '',
     manual_code: '',
@@ -22,6 +25,7 @@ export const usePhotoManagement = (
     description_translations: { en: '', ms: '' },
     dimensions: [],
     price: '',
+    is_group_cover: false,
     isGroupCover: false
   });
   const [showOtherFields, setShowOtherFields] = useState(false);
@@ -32,9 +36,12 @@ export const usePhotoManagement = (
       if (photo) {
         setFormState({
           name: photo.name || '',
-          categoryId: photo.categoryId || '',
-          tagIds: photo.tagIds || [],
-          manufacturerId: photo.manufacturerId || '',
+          category_id: photo.category_id || null,
+          categoryId: photo.category_id || null,
+          tag_ids: photo.tag_ids || [],
+          tagIds: photo.tag_ids || [],
+          manufacturer_id: photo.manufacturer_id || null,
+          manufacturerId: photo.manufacturer_id || null,
           model_number: photo.model_number || '',
           manual_code: photo.manual_code || '',
           description: photo.description || '',
@@ -42,15 +49,19 @@ export const usePhotoManagement = (
           description_translations: photo.description_translations || { en: '', ms: '' },
           dimensions: photo.dimensions || [],
           price: photo.price || '',
-          isGroupCover: !!photo.isGroupCover
+          is_group_cover: !!photo.is_group_cover,
+          isGroupCover: !!photo.is_group_cover
         });
       }
     } else {
         // Reset if not editing
         setFormState({
             name: '',
+            category_id: '',
             categoryId: '',
+            tag_ids: [],
             tagIds: [],
+            manufacturer_id: '',
             manufacturerId: '',
             model_number: '',
             manual_code: '',
@@ -59,6 +70,7 @@ export const usePhotoManagement = (
             description_translations: { en: '', ms: '' },
             dimensions: [],
             price: '',
+            is_group_cover: false,
             isGroupCover: false
         });
     }

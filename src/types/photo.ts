@@ -23,31 +23,42 @@ export interface Photo {
   thumb_hash?: string; // ThumbHash placeholder
   dimensions?: Dimension[] | null;
   exif_data?: Record<string, unknown> | null;
-  createdAt: string;
-  updatedAt?: string;
+  created_at: string;
+  createdAt?: string; // Alias for backward compatibility
+  updated_at?: string;
+  updatedAt?: string; // Alias for backward compatibility
   description_translations?: {
     zh?: string;
     en?: string;
     ms?: string;
   };
-  groupId?: string | null;
-  isGroupCover?: boolean;
-  isPinned?: boolean; 
-  isAnalyzing?: boolean;
+  group_id?: string | null;
+  groupId?: string | null; // Alias for backward compatibility
+  is_group_cover?: boolean;
+  isGroupCover?: boolean; // Alias for backward compatibility
+  is_pinned?: boolean; 
+  isPinned?: boolean; // Alias for backward compatibility
+  is_analyzing?: boolean;
+  isAnalyzing?: boolean; // Alias for backward compatibility
   is_hidden?: boolean;
-  groupOrder?: number;
-  userId?: string;
+  group_order?: number;
+  groupOrder?: number; // Alias for backward compatibility
+  user_id?: string;
+  userId?: string; // Alias for backward compatibility
   type?: string;
   uri?: string; 
-  categoryId: string | null; 
-  manufacturerId: string | null;
-  tagIds: string[]; 
+  category_id: string | null; 
+  categoryId?: string | null; // Alias for backward compatibility
+  manufacturer_id: string | null;
+  manufacturerId?: string | null; // Alias for backward compatibility
+  tag_ids: string[]; 
+  tagIds?: string[]; // Alias for backward compatibility
   price?: string;
   note?: string;
-  category_id?: string | null;
   sub_category?: string | null;
   _time?: number; 
-  createdAtTimestamp?: number; 
+  created_at_timestamp?: number; 
+  createdAtTimestamp?: number; // Alias for backward compatibility
 }
 
 export interface SubCategory {
@@ -111,9 +122,12 @@ export interface ProductGroup {
 
 export interface ProductFormData {
   name: string;
-  categoryId: string | null;
-  manufacturerId: string | null;
-  tagIds: string[];
+  category_id: string | null;
+  categoryId?: string | null; // Alias for backward compatibility
+  manufacturer_id: string | null;
+  manufacturerId?: string | null; // Alias for backward compatibility
+  tag_ids: string[];
+  tagIds?: string[]; // Alias for backward compatibility
   description: string;
   description_translations: {
     zh?: string;
@@ -125,5 +139,6 @@ export interface ProductFormData {
   dimensions: Dimension[];
   is_hidden: boolean;
   price: string;
-  isGroupCover: boolean;
+  is_group_cover: boolean;
+  isGroupCover?: boolean; // Alias for backward compatibility
 }

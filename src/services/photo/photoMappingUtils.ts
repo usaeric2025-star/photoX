@@ -3,30 +3,13 @@ import { safeArray } from '../../lib/utils';
 import { validateDimension } from '../../utils/dimensionValidator';
 import { generateItemCode } from '../utils';
 
-export const FIELD_MAP: Record<string, string> = {
-  groupId: 'group_id',
-  isGroupCover: 'is_group_cover',
-  categoryId: 'category_id',
-  manufacturerId: 'manufacturer_id',
-  isPinned: 'is_pinned',
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
-  itemCode: 'item_code',
-  manualCode: 'manual_code',
-  imageHash: 'image_hash',
-  imageUrl: 'image_url',
-  thumbUrl: 'thumb_url',
-  thumbHash: 'thumb_hash',
-  modelNumber: 'model_number',
-  userId: 'user_id',
-  descriptionTranslations: 'description_translations',
-};
+export const FIELD_MAP: Record<string, string> = {};
 
 export const ALLOWED_FIELDS = [
-  'id', 'name', 'description', 'description_translations', 'categoryId', 'manufacturerId',
-  'tagIds', 'dimensions', 'model_number', 'manual_code', 'groupId', 'isGroupCover', 'isPinned',
-  'image_url', 'thumb_url', 'thumb_hash', 'price', 'note', 'type', 'groupOrder', 'updatedAt', 'createdAt',
-  'updated_at', 'created_at', 'userId', 'is_hidden', 'image_hash', 'item_code'
+  'id', 'name', 'description', 'description_translations', 'category_id', 'manufacturer_id',
+  'tag_ids', 'dimensions', 'model_number', 'manual_code', 'group_id', 'is_group_cover', 'is_pinned',
+  'image_url', 'thumb_url', 'thumb_hash', 'price', 'note', 'type', 'group_order', 'updated_at', 'created_at',
+  'user_id', 'is_hidden', 'image_hash', 'item_code'
 ];
 
 export function normalizeDimensionsBeforeSave(dimensions: import('../../types').Dimension[] | null | undefined) {
@@ -71,24 +54,20 @@ export const mapToDb = (updates: Partial<Photo> & Record<string, unknown>, isCre
         }
     }
     
-    // Map fields
+    // Process fields
     for (const [key, value] of Object.entries(filteredUpdates)) {
         // Exclude relational/array fields that are handled separately
-        if (['tagIds', 'dimensions'].includes(key)) continue;
+        if (['tag_ids', 'dimensions'].includes(key)) continue;
 
-        if (['isAnalyzing'].includes(key)) continue;
+        if (['is_analyzing'].includes(key)) continue;
         
-        if (FIELD_MAP[key]) {
-            let valueToSave = value;
-            if (key === 'groupId' || key === 'categoryId' || key === 'manufacturerId') {
-                if (value === '' || value === 'uncategorized' || value === 'null' || value === undefined || value === null) {
-                    valueToSave = null;
-                }
+        let valueToSave = value;
+        if (key === 'group_id' || key === 'category_id' || key === 'manufacturer_id') {
+            if (value === '' || value === 'uncategorized' || value === 'null' || value === undefined || value === null) {
+                valueToSave = null;
             }
-            dbUpdates[FIELD_MAP[key]] = valueToSave;
-        } else {
-            dbUpdates[key] = value;
         }
+        dbUpdates[key] = valueToSave;
     }
     
     // Auto-timestamps

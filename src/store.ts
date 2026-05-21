@@ -53,6 +53,7 @@ interface GalleryState {
   setSearchQuery: (query: string) => void;
   setDebouncedSearchQuery: (query: string) => void;
   setFilterCatId: (id: string | null) => void;
+  resetFilters: () => void;
   setFilterSubId: (id: string | null) => void;
   setFilterTagIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   setSortOrder: (order: 'asc' | 'desc') => void;
@@ -143,6 +144,13 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setFilterCatId: (filterCatId) => {
     set({ filterCatId });
   },
+  resetFilters: () => set({
+    filterCatId: null,
+    filterSubId: null,
+    filterTagIds: [],
+    searchQuery: '',
+    debouncedSearchQuery: '',
+  }),
   setFilterSubId: (filterSubId) => {
     set({ filterSubId });
   },

@@ -44,13 +44,13 @@ export const usePhotoLightboxLogic = ({
     setIsImageLoading(true);
     setIsImageError(false);
     
-    if (photo?.groupId) {
+    if (photo?.group_id) {
       // Only set loading if it's a different group than what we currently have
-      if (!groupData || groupData.id !== photo.groupId) {
+      if (!groupData || groupData.id !== photo.group_id) {
         setIsGroupDataLoading(true);
       }
       import('../../services/groupService').then(m => {
-        m.getGroupById(photo.groupId!).then(data => {
+        m.getGroupById(photo.group_id!).then(data => {
           setGroupData(data);
           setIsGroupDataLoading(false);
         }).catch(err => {
@@ -65,7 +65,7 @@ export const usePhotoLightboxLogic = ({
       setGroupData(null);
       setIsGroupDataLoading(false);
     }
-  }, [photo?.id, photo?.groupId]);
+  }, [photo?.id, photo?.group_id]);
 
   const slides = useMemo(() => {
     return (displayPhotos || [])

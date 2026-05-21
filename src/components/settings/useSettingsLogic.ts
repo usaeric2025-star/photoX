@@ -4,7 +4,7 @@ import { useGalleryStore } from '@/store';
 import { testAiConnection } from '@/services/geminiService';
 import { deduplicatePhotos } from '@/services/photoMutationService';
 import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
-import { useFeedback } from '@/hooks';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -27,6 +27,7 @@ export const useSettingsLogic = ({
     setSettings, setPromptDialog, setAlertDialog, withLoading 
   } = useGalleryStore();
   const { handleError, showSuccess } = useFeedback();
+  const invalidatePhotos = useInvalidatePhotos();
 
   const [testResult, setTestResult] = useState<{ success?: boolean, error?: string, loading?: boolean } | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -75,17 +76,33 @@ export const useSettingsLogic = ({
     try {
         await withLoading('global', async () => {
             const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
+            const { backfillThumbHashes } = await import('@/services/photo/backfillService');
+            
+            // 1. Check data consistency
             const broken = await scanAndRepairPhotoIds(allPhotos);
             if (broken.length > 0) {
                 handleError(new Error(`发现 ${broken.length} 个异常ID，建议刷新`), '系统检测异常');
+                return;
+            }
+            
+            // 2. Perform backfill of missing ThumbHashes
+            let backfilledCount = 0;
+            await backfillThumbHashes((stats) => {
+                backfilledCount = stats.success;
+            });
+            
+            // 3. Invalidate query cache if needed
+            if (backfilledCount > 0) {
+                invalidatePhotos();
+                showSuccess(`一键检测：系统数据正常，已成功为 ${backfilledCount} 张照片补全已缺失的 ThumbHash 占位图！`);
             } else {
-                showSuccess('系统健康，数据正常。');
+                showSuccess('一键检测：系统健康，所有照片均已完全符合 ThumbHash 规范且数据高度一致。');
             }
         });
     } catch (e: any) {
         handleError(e, '诊断失败');
     }
-  }, [withLoading, handleError, showSuccess]);
+  }, [withLoading, handleError, showSuccess, invalidatePhotos]);
 
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinnedTags || [];

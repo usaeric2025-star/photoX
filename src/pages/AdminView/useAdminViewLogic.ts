@@ -30,7 +30,8 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     filterSubId, setFilterSubId,
     filterTagIds, setFilterTagIds,
     sortOrder,
-    clearSelection
+    clearSelection,
+    resetFilters
   } = useGalleryStore();
   
   const { 
@@ -38,7 +39,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     loadingType="idle", withLoading = async (t: string, f: () => Promise<any>) => await f(), cloudCount = 0, setCloudCount = () => {},
     setAlertDialog = () => {}, setPromptDialog = () => {}, setAiDebugInfo = () => {}, aiDebugInfo = null, abortAnalysis = () => {}, batchProgress = 0
   } = uiValue || {};
-
+  
   const {
     settings = {}, setSettings = () => {}, viewMode = 'private', setViewMode = () => {}, setIsSyncing = () => {},
     performPushSync = async () => {}, saveSettings = async () => ({})
@@ -58,8 +59,16 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
 
   const { showError, showSuccess } = useFeedback();
   const { isAdmin } = usePermission();
-
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+  
+  const [activeGroupId, setActiveGroupIdState] = useState<string | null>(null);
+  
+  const setActiveGroupId = useCallback((id: string | null) => {
+      if (id) {
+          resetFilters();
+      }
+      setActiveGroupIdState(id);
+  }, [resetFilters]);
+  
   const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
   const [columns, setColumns] = useState<2 | 3 | 5>(3);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
@@ -175,16 +184,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     setLightboxIndex(null);
     clearSelection();
   }, [searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, clearSelection]);
-
-  // Clear selections and filters when entering a group
-  useEffect(() => {
-    if (activeGroupId) {
-      clearSelection();
-      setFilterCatId(null);
-      setFilterTagIds([]);
-      setSearchQuery('');
-    }
-  }, [activeGroupId, clearSelection, setFilterCatId, setFilterTagIds, setSearchQuery]);
 
   const onLongPressStart = useCallback((id: string) => {
     hapticFeedback.medium();

@@ -29,13 +29,13 @@ const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
   const is_hidden = !!photo.is_hidden;
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
-      {photo.groupId && (
+      {photo.group_id && (
         <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
           <Layers size={8} />
-          {photo.groupId.slice(-4)}
+          {photo.group_id.slice(-4)}
         </div>
       )}
-      {photo.isPinned && (
+      {photo.is_pinned && (
         <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
           <span>置頂</span>
         </div>
@@ -102,12 +102,12 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isMultiSelect && !e.shiftKey) {
       toggle(photo.id);
-    } else if (photo.groupId && onGroupClick) {
-      onGroupClick(photo.groupId, photo.id);
+    } else if (photo.group_id && onGroupClick) {
+      onGroupClick(photo.group_id, photo.id);
     } else {
       handleOpenLightbox();
     }
-  }, [isMultiSelect, toggle, photo.id, photo.groupId, onGroupClick, handleOpenLightbox]);
+  }, [isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox]);
 
   const handleLongPress = useCallback(() => {
     if (!isMultiSelect) {
@@ -118,27 +118,27 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   }, [isMultiSelect, enable, toggle, photo.id]);
 
   const displayCatName = useMemo(() => 
-    getTranslatedCategoryName(photo.categoryId || photo.category_id, categories, lang, t),
-    [photo.categoryId, photo.category_id, categories, lang, t]
+    getTranslatedCategoryName(photo.category_id, categories, lang, t),
+    [photo.category_id, categories, lang, t]
   );
 
   const isUncategorized = useMemo(() => {
-    const catId = photo.categoryId || photo.category_id;
+    const catId = photo.category_id;
     return isUncategorizedName(displayCatName, t, catId);
-  }, [displayCatName, t, photo.categoryId, photo.category_id]);
+  }, [displayCatName, t, photo.category_id]);
   
   const photoTags = useMemo(() => {
-    const rawTagIds = safeArray<string | number>(photo.tagIds);
+    const rawTagIds = safeArray<string | number>(photo.tag_ids);
     if (!rawTagIds || rawTagIds.length === 0) return [];
     return rawTagIds
       .map(tid => tagMap[String(tid)])
       .filter(Boolean)
       .map(toTitleCase);
-  }, [photo.tagIds, tagMap]);
+  }, [photo.tag_ids, tagMap]);
 
   const thumbSrc = useMemo(() => 
     getCacheBustedImageUrl(photo, 'thumb'),
-    [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]
+    [photo.thumb_url, photo.image_url, photo.uri, photo.updated_at, photo.created_at]
   );
 
   const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
@@ -280,9 +280,9 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       {onTogglePinned && (
          <button 
            onClick={handleTogglePinnedClick}
-           className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.isPinned ? 'text-red-500' : ''} z-10`}
+           className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.is_pinned ? 'text-red-500' : ''} z-10`}
          >
-           <Heart size={12} className={photo.isPinned ? 'fill-current' : ''} />
+           <Heart size={12} className={photo.is_pinned ? 'fill-current' : ''} />
          </button>
       )}
 

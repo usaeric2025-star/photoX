@@ -36,16 +36,16 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   onEditPhoto, onToggleHidden, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
   const isAdminMode = isStaffMode;
-  const catName = getTranslatedCategoryName(photo.categoryId, categories, activeLang, t);
-  const mfrName = getManufacturerName(photo.manufacturerId, manufacturers);
+  const catName = getTranslatedCategoryName(photo.category_id, categories, activeLang, t);
+  const mfrName = getManufacturerName(photo.manufacturer_id, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
 
   const displayTags = React.useMemo(() => {
-    const rawIds = Array.isArray(photo.tagIds) ? photo.tagIds : [];
+    const rawIds = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
     return rawIds
       .map(tid => tagMap[String(tid)])
       .filter((tagName): tagName is string => !!tagName && tagName.trim() !== '');
-  }, [photo.id, photo.tagIds, tagMap]);
+  }, [photo.id, photo.tag_ids, tagMap]);
 
   // Use ref to handle scroll reset without remounting the whole container
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -138,7 +138,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
           </div>
         )}
 
-        {isAdminMode && photo.groupId && (
+        {isAdminMode && photo.group_id && (
           <div className="grid grid-cols-2 gap-2 mt-2">
                <button 
                  onClick={() => onUngroup?.(photo.id)}
@@ -147,8 +147,8 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                  {(t as any).ungroup || 'Ungroup'}
                </button>
                <button 
-                 onClick={() => onSetGroupCover?.(photo.id, photo.groupId!)}
-                 className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${photo.isGroupCover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+                 onClick={() => onSetGroupCover?.(photo.id, photo.group_id!)}
+                 className={`py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border ${photo.is_group_cover ? 'bg-blue-600 text-white border-blue-600' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
                >
                  {(t as any).setCover || 'Set Cover'}
                </button>
@@ -236,7 +236,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                </div>
              )}
 
-             {photo.groupId && (
+             {photo.group_id && (
                <div className="space-y-1.5">
                  <div className="flex items-center gap-2">
                    <div className="w-1.5 h-3 bg-blue-600 rounded-full" />

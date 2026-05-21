@@ -50,7 +50,7 @@ export const usePhotoEditLogic = (props: Props) => {
   const isPartOfGroup = useMemo(() => {
     if (!editPhotoId) return false;
     const photo = photos.find(p => p.id === editPhotoId);
-    return !!(photo && photo.groupId);
+    return !!(photo && photo.group_id);
   }, [editPhotoId, photos]);
 
   const rotatePhoto = async () => {
@@ -119,7 +119,7 @@ export const usePhotoEditLogic = (props: Props) => {
     if (!data) return;
     
     if (handleSingleAiAnalyze) {
-      withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.categoryId || undefined, editPhotoId || undefined)).catch(()=>{});
+      withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.category_id || undefined, editPhotoId || undefined)).catch(()=>{});
     } else {
       showError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
     }

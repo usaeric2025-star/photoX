@@ -66,9 +66,14 @@ export const useDeletePhotoMutation = () => {
             pages: old.pages.map((page) => ({
               ...page,
               photos: page.photos.map(p => {
-                const pGroupId = p.groupId || (p as any).group_id;
-                if (pGroupId && dissolvedGroupIds.includes(pGroupId)) {
-                   return { ...p, groupId: null, group_id: null, isGroupCover: false, is_group_cover: false, groupOrder: undefined, isPinned: false };
+                if (p.group_id && dissolvedGroupIds.includes(p.group_id)) {
+                   return { 
+                     ...p, 
+                     group_id: null, 
+                     is_group_cover: false, 
+                     group_order: undefined, 
+                     is_pinned: false 
+                   };
                 }
                 return p;
               })
