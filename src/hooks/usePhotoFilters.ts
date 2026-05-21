@@ -72,7 +72,7 @@ export function usePhotoFilters(
       isStaffMode
     }, tags, categories, searchMaps.tagMap, searchMaps.catMap);
 
-    const gp = groupPhotos(dp, showGroups, sortOrder);
+    const gp = groupPhotos(dp, showGroups, sortOrder, validPhotos);
     return { displayPhotos: dp, gridPhotos: gp };
   }, [
     incomingPhotos, 

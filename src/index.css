@@ -87,8 +87,8 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: var(--brand-bg);
-  color: var(--brand-navy);
+  background-color: #FFFFFF;
+  color: #1A1A1A;
   font-family: var(--font-sans);
 }
 

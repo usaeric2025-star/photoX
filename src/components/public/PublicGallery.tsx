@@ -42,6 +42,8 @@ interface PublicGalleryProps {
   initialGroupId?: string;
   onLoadMore?: () => void;
   hasMore?: boolean;
+  searchQuery?: string;
+  onSearchChange?: (val: string) => void;
 }
 
 export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
@@ -49,9 +51,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useFeedback();
 
+  // State for login
+  const [showPassPrompt, setShowPassPrompt] = useState(false);
+  const [passInput, setPassInput] = useState('');
+  const [passError, setPassError] = useState(false);
+
   // Store 
-  const searchQuery = useGalleryStore(s => s.searchQuery);
-  const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const _searchQuery = useGalleryStore(s => s.searchQuery);
+  const _setSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const searchQuery = props.searchQuery !== undefined ? props.searchQuery : _searchQuery;
+  const setSearchQuery = props.onSearchChange || _setSearchQuery;
   const selectedCatCode = useGalleryStore(s => s.filterCatId);
   const setSelectedCatCode = useGalleryStore(s => s.setFilterCatId);
   const filterSubId = useGalleryStore(s => s.filterSubId);
@@ -76,6 +85,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   const activePhotoId = useGalleryStore(s => s.activePhotoId);
   const setActivePhotoId = useGalleryStore(s => s.setActivePhotoId);
   const isStaffMode = useGalleryStore(s => s.isStaffMode);
+  const setIsStaffMode = useGalleryStore(s => s.setIsStaffMode);
 
   // Queries
   const { data: qManufacturers = [] } = useManufacturersQuery();
@@ -109,11 +119,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       return {
         ...t,
         is_pinned: t.is_pinned || pinnedIds.has(strId),
-        usage_count: Math.max(t.usage_count || 0, tagStats[strId] || 0)
+        // Stable usage count from DB only to prevent tags jumping as user scrolls
+        usage_count: t.usage_count || 0
       };
     });
     return sortTagsByPopularity(enrichedTags);
-  }, [contextTags, tagStats, props.settings?.pinned_tags]);
+  }, [contextTags, props.settings?.pinned_tags]);
 
   const virtuosoRef = useRef<any>(null);
   const scrollToTop = () => virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
@@ -234,7 +245,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
           onRefresh={props.onRefresh}
           onSetLang={setLang}
           onExit={props.onExit}
-          onLogin={props.onLogin}
+          onLogin={() => setShowPassPrompt(true)}
         />
       )}
 
@@ -360,16 +371,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       />
 
       <GalleryDialogs 
-        showPassPrompt={false}
-        setShowPassPrompt={() => {}}
-        passInput={''}
-        setPassInput={() => {}}
-        passError={false}
-        setPassError={() => {}}
+        showPassPrompt={showPassPrompt}
+        setShowPassPrompt={setShowPassPrompt}
+        passInput={passInput}
+        setPassInput={setPassInput}
+        passError={passError}
+        setPassError={setPassError}
         t={t}
         loginWithGoogle={props.loginWithGoogle}
         settings={props.settings}
-        setIsStaffMode={() => {}}
+        setIsStaffMode={setIsStaffMode}
         navigate={navigate}
         showWhatsAppChoice={showWhatsAppChoice}
         setShowWhatsAppChoice={setShowWhatsAppChoice}

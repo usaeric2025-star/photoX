@@ -10,6 +10,7 @@ import { SettingsScreen } from '@/components/SettingsScreen';
 import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
 import { GroupDetailView } from '@/components/GroupDetailView';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { LoginScreen } from '@/components/admin/LoginScreen';
 import { MainAdminScreen } from './MainAdminScreen';
 import { PublicGallery } from '@/components/public/PublicGallery';
 import { useAdminViewLogic } from './useAdminViewLogic';
@@ -42,7 +43,7 @@ interface Props {
 }
 
 export const AdminViewContent: React.FC<Props> = ({ 
-  user, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage 
+  user, authChecked, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage 
 }) => {
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
@@ -113,6 +114,10 @@ export const AdminViewContent: React.FC<Props> = ({
   }, [logic]);
 
   const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
+
+  if (authChecked && !user) {
+    return <LoginScreen loginWithGoogle={sessionValue.loginWithGoogle} isLoading={sessionValue.loadingType === 'auth'} />;
+  }
 
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback} key="admin-main">

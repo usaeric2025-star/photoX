@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { ErrorBoundary } from 'react-error-boundary';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
+import { User } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useRouteGuard } from './hooks/useRouteGuard';
 import { clearExpiredCaches } from './utils/indexedDB';
@@ -40,7 +41,7 @@ function Fallback({ error, resetErrorBoundary }: { error: Error; resetErrorBound
   );
 }
 
-function AnimatedRoutes({ user }: { user: any }) {
+function AnimatedRoutes({ user }: { user: User | null }) {
   useRouteGuard(); // <--- 使用路由守卫
   const location = useLocation();
   const { hash, groupId } = location.state || {};

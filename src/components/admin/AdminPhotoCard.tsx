@@ -29,10 +29,10 @@ const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
   const is_hidden = !!photo.is_hidden;
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
-      {photo.group_id && (
-        <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
-          <Layers size={8} />
-          {photo.group_id.slice(-4)}
+      {photo.group_id && photo.member_count !== undefined && photo.member_count > 1 && (
+        <div className="bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none">
+          <Layers size={10} strokeWidth={2.5} />
+          {photo.member_count}
         </div>
       )}
       {photo.is_pinned && (
@@ -102,12 +102,12 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isMultiSelect && !e.shiftKey) {
       toggle(photo.id);
-    } else if (photo.group_id && onGroupClick) {
+    } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
       onGroupClick(photo.group_id, photo.id);
     } else {
       handleOpenLightbox();
     }
-  }, [isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox]);
+  }, [isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox, showGroupsCollapsed]);
 
   const handleLongPress = useCallback(() => {
     if (!isMultiSelect) {

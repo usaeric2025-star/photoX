@@ -39,17 +39,9 @@ export const cleanPhotos = (photos: unknown[]): Photo[] => {
     }
   });
 
-  // Then by Hash (for Public View consistency, though usually IDs are unique enough)
-  const hashMap = new Map<string, Photo>();
-  Array.from(idMap.values()).forEach(p => {
-    const key = p.image_hash || p.id;
-    const existing = hashMap.get(key);
-    if (!existing || (p.is_pinned && !existing.is_pinned) || (p.created_at_timestamp! > existing.created_at_timestamp!)) {
-      hashMap.set(key, p);
-    }
-  });
-
-  return Array.from(hashMap.values());
+  // Then by ID (deduplicate by DB ID only)
+  const idResults = Array.from(idMap.values());
+  return idResults;
 };
 
 export interface FilterOptions {
@@ -156,37 +148,40 @@ export function filterPhotos(
     });
   }
 
-  // 3. Category Filter
-  if (filterCatId) {
-    result = result.filter(p => String(p.category_id) === String(filterCatId));
-  }
-
-  // 4. SubCategory/Manufacturer Filter
-  if (filterSubId) {
-    result = result.filter(p => p.manufacturer_id === filterSubId);
-  }
-
-  // 5. Tag Filter
-  if (filterTagIds.length > 0) {
+  // 3. Category / SubId / Tag Filter (OR relation as requested)
+  if (filterCatId || filterSubId || filterTagIds.length > 0) {
     const tagFallbackMap = new Map<string, string>();
-    filterTagIds.forEach(tid => {
-      const tagObj = tags.find(t => String(t.id) === String(tid));
-      if (tagObj) tagFallbackMap.set(tid, tagObj.name.toLowerCase());
-    });
-    
-    result = result.filter(p => {
-      const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : (typeof p.tag_ids === 'string' ? [String(p.tag_ids)] : []);
-      
-      return filterTagIds.every(tid => {
-        const strTid = String(tid);
-        if (pTagIds.includes(strTid)) return true;
-        
-        const fallbackName = tagFallbackMap.get(tid);
-        if (fallbackName) {
-          return pTagIds.some(pt => String(pt).toLowerCase() === fallbackName);
-        }
-        return false;
+    if (filterTagIds.length > 0) {
+      filterTagIds.forEach(tid => {
+        const tagObj = tags.find(t => String(t.id) === String(tid));
+        if (tagObj) tagFallbackMap.set(tid, tagObj.name.toLowerCase());
       });
+    }
+
+    result = result.filter(p => {
+      // 3.1 Category Match
+      if (filterCatId && String(p.category_id) === String(filterCatId)) return true;
+      
+      // 3.2 SubCategory/Manufacturer Match
+      if (filterSubId && p.manufacturer_id === filterSubId) return true;
+
+      // 3.3 Tag Match
+      if (filterTagIds.length > 0) {
+        const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : (typeof p.tag_ids === 'string' ? [String(p.tag_ids)] : []);
+        const matchesAllTagsSelected = filterTagIds.every(tid => {
+          const strTid = String(tid);
+          if (pTagIds.includes(strTid)) return true;
+          
+          const fallbackName = tagFallbackMap.get(tid);
+          if (fallbackName) {
+            return pTagIds.some(pt => String(pt).toLowerCase() === fallbackName);
+          }
+          return false;
+        });
+        if (matchesAllTagsSelected) return true;
+      }
+
+      return false;
     });
   }
 
@@ -227,7 +222,7 @@ export function sortGroupPhotos(photos: Photo[]): Photo[] {
   });
 }
 
-export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'newest' | 'oldest' | 'name' = 'newest'): Photo[] {
+export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortOrder: 'newest' | 'oldest' | 'name' = 'newest', globalPhotos?: Photo[]): Photo[] {
   const cleanedPhotos = cleanPhotos(photos);
   if (cleanedPhotos.length === 0 && Array.isArray(photos) && photos.length > 0) return [];
   if (!showGroupsCollapsed) return cleanedPhotos;
@@ -246,6 +241,16 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
     }
   });
 
+  // Calculate global group counts if globalPhotos is provided
+  const globalGroupCounts = new Map<string, number>();
+  if (globalPhotos && globalPhotos.length > 0) {
+    globalPhotos.forEach(p => {
+      if (p.group_id) {
+        globalGroupCounts.set(p.group_id, (globalGroupCounts.get(p.group_id) || 0) + 1);
+      }
+    });
+  }
+
   const representatives: Photo[] = [];
   const groupsSeen = new Set<string>();
 
@@ -256,7 +261,12 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
       groupsSeen.add(p.group_id);
       const groupList = groups.get(p.group_id) || [];
       const sorted = sortGroupPhotos(groupList);
-      const cover = { ...sorted[0] };
+      
+      const trueMemberCount = globalGroupCounts.has(p.group_id) 
+        ? globalGroupCounts.get(p.group_id)! 
+        : groupList.length;
+        
+      const cover = { ...sorted[0], member_count: trueMemberCount };
       cover._time = groupMaxTime.get(p.group_id)!;
       representatives.push(cover);
     }

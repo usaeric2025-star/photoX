@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
-import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback, useTagStats, useTagsQuery } from '../hooks';
+import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback, useTagStats, useTagsQuery, useScrollRestoration, useDebouncedSearch } from '../hooks';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { useStore } from '../store';
-import { PAGINATION } from '../config/constants';
+import { PAGINATION, ROUTES, UI } from '../config/constants';
 import { Photo, Tag } from '../types';
 import { safeArray } from '../lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
@@ -18,7 +18,6 @@ import { saveData, syncCache } from '../utils/indexedDB';
 import { PublicGallery } from '../components/public/PublicGallery';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 import { loginWithGoogle } from '../services/supabaseService';
-import { ROUTES } from '../config/constants';
 
 function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
   return (
@@ -84,40 +83,26 @@ export default function PublicView() {
     setHasLoadedOnce(true);
   }, [setHasInitialLoaded, setHasLoadedOnce]);
 
-  // ========== 2. useEffect ==========
-  // 防抖搜索
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery !== debouncedSearchQuery) {
-        setDebouncedSearchQuery(searchQuery);
-      }
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery, debouncedSearchQuery, setDebouncedSearchQuery]);
-  
-  // 最小加载时间
+  // ========== 2. useEffect & Callbacks ==========
+  // 滚动恢复
+  useScrollRestoration('public_view_scroll');
+
+  // 防抖搜索 (Unified implementation)
+  const debouncedSetSearch = useDebouncedSearch((value: string) => {
+    setDebouncedSearchQuery(value);
+  });
+
+  // 最小加载时间 (Consolidated)
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimeElapsed(true);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // 滚动位置保存
-  useEffect(() => {
-    const handleScroll = () => {
-      sessionStorage.setItem('scrollPosition', String(window.scrollY));
+    }, UI.MIN_LOADING_TIME_MS);
+    
+    return () => {
+      clearTimeout(timer);
+      reset(); // Multi-select cleanup on unmount
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-  
-  useEffect(() => {
-    const savedPosition = sessionStorage.getItem('scrollPosition');
-    if (savedPosition) {
-      window.scrollTo({ top: parseInt(savedPosition), behavior: 'auto' });
-    }
-  }, []);
+  }, [reset]);
   
   // 缓存预加载
   useEffect(() => {
@@ -140,19 +125,13 @@ export default function PublicView() {
     })();
   }, [queryClient]);
   
-  // 多选重置
-  useEffect(() => {
-    return () => {
-      reset();
-    };
-  }, [reset]);
-  
   // 首次加载完成标记
   useEffect(() => {
     if (!isInitialLoading && !hasInitialLoaded) {
-      handleMarkLoaded();
+      setHasInitialLoaded(true);
+      setHasLoadedOnce(true);
     }
-  }, [isInitialLoading, hasInitialLoaded, handleMarkLoaded]);
+  }, [isInitialLoading, hasInitialLoaded, setHasInitialLoaded, setHasLoadedOnce]);
   
   // ========== 3. useMemo ==========
   const photos = useMemo(() => {
@@ -216,30 +195,45 @@ export default function PublicView() {
   // ========== 8. 正常渲染 ==========
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
-      {isInitialLoading && !hasLoadedOnce ? (
-        <FullPageLoading />
-      ) : (
-        <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
-          <PublicGallery 
-            photos={photos}
-            categories={categoriesData}
-            tags={tagsData}
-            onExit={() => navigate(ROUTES.ADMIN)}
-            onLogin={() => navigate(ROUTES.ADMIN)}
-            loginWithGoogle={loginWithGoogle}
-            user={user}
-            settings={settings}
-            isRefreshing={infiniteQuery.isLoading || infiniteQuery.isFetching}
-            onRefresh={handleRefresh}
-            onLoadMore={handleLoadMore}
-            hasMore={infiniteQuery.hasNextPage}
-            isFetchingNextPage={infiniteQuery.isFetchingNextPage}
-            totalCount={countData}
-            initialHash={hash}
-            initialGroupId={groupId}
-          />
-        </ErrorBoundary>
-      )}
+      <AnimatePresence mode="wait">
+        {isInitialLoading && !hasLoadedOnce ? (
+          <FullPageLoading key="loader" />
+        ) : (
+          <motion.div 
+            key="content"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 overflow-hidden"
+          >
+            <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
+              <PublicGallery 
+                photos={photos}
+                categories={categoriesData}
+                tags={tagsData}
+                onExit={() => navigate(ROUTES.ADMIN)}
+                onLogin={() => navigate(ROUTES.ADMIN)}
+                loginWithGoogle={loginWithGoogle}
+                user={user}
+                settings={settings}
+                isRefreshing={infiniteQuery.isLoading || infiniteQuery.isFetching}
+                onRefresh={handleRefresh}
+                onLoadMore={handleLoadMore}
+                hasMore={infiniteQuery.hasNextPage}
+                isFetchingNextPage={infiniteQuery.isFetchingNextPage}
+                totalCount={countData}
+                initialHash={hash}
+                initialGroupId={groupId}
+                searchQuery={searchQuery}
+                onSearchChange={(val) => {
+                   setSearchQuery(val);
+                   debouncedSetSearch(val);
+                }}
+              />
+            </ErrorBoundary>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

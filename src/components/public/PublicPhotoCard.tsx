@@ -22,11 +22,11 @@ interface PublicPhotoCardProps {
 }
 
 const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => (
-  <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
-    {photo.group_id && (
-      <div className="bg-black/50 px-1 py-0.5 rounded text-[7px] text-white font-bold flex items-center gap-0.5 border border-white/10 uppercase pointer-events-none">
-        <Layers size={8} />
-        {photo.group_id.slice(-4)}
+  <div className="absolute top-2 left-2 z-10 flex gap-0.5 flex-col pointer-events-none">
+    {photo.group_id && photo.member_count !== undefined && photo.member_count > 1 && (
+      <div className="bg-black/40 backdrop-blur-[4px] px-2 py-0.5 rounded-md text-[9px] text-white font-bold flex items-center gap-1 border border-white/10 pointer-events-none">
+        <Layers size={9} strokeWidth={2.5} />
+        {photo.member_count}
       </div>
     )}
   </div>
@@ -37,20 +37,22 @@ const PhotoInfoFooter: React.FC<{
   isUncategorized: boolean; 
   photoTags: string[] 
 }> = ({ displayCatName, isUncategorized, photoTags }) => (
-  <div className="absolute bottom-0 left-0 w-full p-1.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+  <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[45%] flex flex-col justify-end items-start gap-0.5">
      {!isUncategorized && displayCatName && (
-      <p className="text-[11px] font-bold tracking-tight text-white drop-shadow-lg mb-0.5 truncate">
+      <p className="text-[16px] font-extrabold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate w-full mb-0.5 tracking-tight px-0.5">
         {displayCatName}
       </p>
     )}
     {photoTags.length > 0 && (
-      <div className="w-full flex flex-nowrap gap-0.5 items-center overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        {photoTags.slice(0, 3).map((tagName, idx) => (
-          <span key={idx} className="bg-black/30 text-white text-[9px] px-1.5 rounded font-medium whitespace-nowrap">
-            {tagName}
+      <div className="flex flex-nowrap gap-0.5 w-full overflow-hidden px-0.5 pb-0.5">
+        {photoTags.slice(0, 3).map((tag, i) => (
+          <span 
+            key={i} 
+            className="shrink-0 text-[7.5px] text-white/95 font-bold px-1 py-[2px] bg-white/20 backdrop-blur-md rounded-[4px] border border-white/20 leading-none whitespace-nowrap shadow-sm"
+          >
+            {tag}
           </span>
         ))}
-        {photoTags.length > 3 && <span className="text-[9px] text-white/70 px-1">...</span>}
       </div>
     )}
   </div>
@@ -71,12 +73,12 @@ export const PublicPhotoCard: React.FC<PublicPhotoCardProps> = React.memo(({
   }, [photo, onLightboxOpen]);
     
   const handleClick = useCallback(() => {
-    if (photo.group_id && onGroupClick) {
+    if (showGroupsCollapsed && photo.group_id && onGroupClick) {
       onGroupClick(photo.group_id, photo.id);
     } else {
       handleOpenLightbox();
     }
-  }, [photo.id, photo.group_id, onGroupClick, handleOpenLightbox]);
+  }, [photo.id, photo.group_id, onGroupClick, handleOpenLightbox, showGroupsCollapsed]);
 
   const displayCatName = useMemo(() => 
     getTranslatedCategoryName(photo.category_id, categories, lang, t),

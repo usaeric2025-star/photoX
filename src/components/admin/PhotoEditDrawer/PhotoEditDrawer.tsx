@@ -113,7 +113,7 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
                   logic.setPromptDialog({
                     title: '新增厂商 / New Manufacturer',
                     placeholder: '输入厂商名称',
-                    onSubmit: (name) => logic.addManufacturer(name)
+                    onSubmit: async (name) => { await logic.addManufacturer(name); }
                   })
                 }}
                 onEditManufacturer={(mfr) => {

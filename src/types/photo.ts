@@ -47,6 +47,7 @@ export interface Photo {
   sub_category?: string | null;
   _time?: number; 
   created_at_timestamp?: number; 
+  member_count?: number;
 }
 
 export interface SubCategory {

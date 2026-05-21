@@ -103,10 +103,6 @@ export const AdminHeader: React.FC<Props> = ({
   const handleToggleViewMode = () => {
     const nextMode = adminPreviewMode === 'public' ? 'private' : 'public';
     setAdminPreviewMode(nextMode);
-    // When entering public preview, ensure we are on the gallery screen
-    if (nextMode === 'public') {
-      setActiveScreen('home');
-    }
   };
 
   const handleOpenSettings = () => {

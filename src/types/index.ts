@@ -55,16 +55,17 @@ export interface AppError {
 export interface DialogData {
   title: string;
   message?: string;
-  onConfirm?: () => void;
+  onConfirm?: () => void | Promise<void>;
   onCancel?: () => void;
   confirmLabel?: string;
   cancelLabel?: string;
   type?: 'info' | 'warning' | 'danger' | 'success';
-  onSubmit?: (val: string) => void;
+  onSubmit?: (val: string) => void | Promise<void>;
   placeholder?: string;
+  defaultValue?: string;
   secondaryAction?: {
     label: string;
-    onClick: () => void;
+    onClick: () => void | Promise<void>;
     type?: 'info' | 'warning' | 'danger' | 'success';
   };
 }

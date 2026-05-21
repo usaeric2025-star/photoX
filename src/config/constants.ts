@@ -9,6 +9,7 @@ export const UI = {
   DEBOUNCE_DELAY_MS: 300,
   LONG_PRESS_DELAY_MS: 500,
   TOAST_DURATION_MS: 3000,
+  MIN_LOADING_TIME_MS: 350,
 }
 
 export const ROUTES = {

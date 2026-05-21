@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCcw, Grid3X3, Plus, Globe, Settings2, Sparkles } from 'lucide-react';
+import { RefreshCcw, Grid3X3, Plus, Globe, Settings2, Sparkles, LogIn } from 'lucide-react';
 import { Photo, AppSettings } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { LanguageCode } from '../lib/translations';
@@ -29,56 +29,66 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
   onHeaderClick, onRefresh, onAddPhoto, onSetLang, onExit, onLogin, onOpenSettings, totalCount
 }) => {
   return (
-    <header className="shrink-0 z-50 bg-brand-bg px-3 sm:px-4 py-1 flex items-center justify-between gap-1 sm:gap-4 border-b border-brand-navy/5">
-      <div className="flex items-center gap-2 sm:gap-4 min-w-0" onClick={onHeaderClick}>
+    <header className="shrink-0 z-50 bg-white h-[58px] px-4 sm:px-6 flex items-center justify-between border-b border-[#ECECEC]">
+      <div className="flex items-center gap-2.5 min-w-0" onClick={onHeaderClick}>
         {settings?.logo_url ? (
-          <img src={settings.logo_url} alt="Logo" className="h-10 sm:h-14 max-w-[150px] sm:max-w-[220px] object-contain rounded-xl border border-brand-navy/10 p-1 bg-white shadow-sm" />
+          <img 
+            src={settings.logo_url} 
+            alt="Logo" 
+            className="h-8 w-auto object-contain transition-transform active:scale-95 cursor-pointer" 
+          />
         ) : (
-          <div className="shrink-0">
-            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy italic leading-none">GALLERY</h1>
+          <div className="shrink-0 cursor-pointer">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tighter text-[#1A1A1A] italic leading-none">
+              PHOT<span className="text-[#0051BA]">O</span>X
+            </h1>
           </div>
         )}
         
-        <div className="flex items-center gap-1 bg-brand-navy/5 px-2 py-0.5 rounded-full border border-brand-navy/10 shrink-0 cursor-pointer" onClick={onRefresh}>
-          <span className="text-[8px] sm:text-[9px] font-black text-brand-navy/60 italic flex items-center gap-1 lowercase">
-            {totalCount !== undefined && totalCount !== null ? (
-               t.gallerySub(totalCount)
-            ) : (
-              <>
-                <div className="w-2 h-2 border border-brand-navy/20 border-t-brand-navy rounded-full animate-spin shrink-0" />
-                {t.gallerySub(photos?.length || 0)}
-              </>
-            )}
+        <div className="flex items-center bg-[#F1F3F4] px-2.5 py-1 rounded-full border border-[#ECECEC] shrink-0">
+          <span className="text-[11px] font-bold text-[#5F6368] tracking-tight whitespace-nowrap">
+            {totalCount !== undefined && totalCount !== null 
+              ? `${totalCount} photos` 
+              : `${photos?.length || 0} photos`}
           </span>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center bg-[#F1F3F4] p-1 rounded-full border border-[#ECECEC]">
             {[
               { code: 'zh', label: '中文' },
               { code: 'en', label: 'EN' },
               { code: 'ms', label: 'BM' }
             ].map(l => (
-              <button key={l.code} onClick={() => onSetLang(l.code as LanguageCode)} className={`${lang === l.code ? 'bg-brand-navy text-brand-bg' : 'bg-brand-navy/5 text-brand-navy/40'} px-2 h-9 flex items-center justify-center rounded-xl transition-all shadow-sm active:scale-95`}>
+              <button 
+                key={l.code} 
+                onClick={() => onSetLang(l.code as LanguageCode)} 
+                className={`px-2.5 h-7 flex items-center justify-center rounded-full text-[11px] font-bold transition-all ${lang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888]'}`}
+              >
                 {l.label}
               </button>
             ))}
           </div>
+
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all shadow-sm ${isRefreshing ? 'bg-blue-600 text-white animate-spin ring-4 ring-blue-100' : 'bg-brand-navy/5 text-brand-navy hover:bg-brand-navy/10 active:scale-90'}`}
+            className={`w-9 h-9 flex items-center justify-center rounded-full transition-all border border-[#ECECEC] ${isRefreshing ? 'bg-[#0051BA] text-white animate-spin' : 'bg-[#F1F3F4] text-[#555555] active:scale-95'}`}
           >
-            <RefreshCcw size={18} />
+            <RefreshCcw size={16} />
           </button>
+
           <button
-             onClick={onExit}
-             className="w-9 h-9 bg-white border border-slate-200 text-slate-500 rounded-xl flex items-center justify-center shadow-sm hover:bg-slate-50 active:scale-95 transition-all ml-1 text-blue-600"
+             onClick={onLogin}
+             className="w-9 h-9 bg-white border border-[#ECECEC] text-[#555555] rounded-full flex items-center justify-center hover:bg-[#F1F3F4] active:scale-95 transition-all shadow-none"
              title={t.login}
           >
-            <div className="flex items-center justify-center relative">
-              <Globe size={18} className="opacity-40" />
-              <Plus size={10} className="absolute -top-1 -right-1 text-blue-600 stroke-[3px]" />
+            <div className="relative">
+              <Globe size={16} />
+              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#0051BA] rounded-full flex items-center justify-center border-2 border-white">
+                <Plus size={5} className="text-white" />
+              </div>
             </div>
           </button>
       </div>

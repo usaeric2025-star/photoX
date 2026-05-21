@@ -119,16 +119,24 @@ export const loadAllPhotosFromCloud = async (
     query = query.gt('updated_at', since);
   }
 
+  let filterSegments: string[] = [];
   if (categoryId) {
-    query = query.eq('category_id', categoryId);
+    filterSegments.push(`category_id.eq.${categoryId}`);
   }
 
   if (tagId) {
-    // Bug Fix: Pre-fetch IDs to avoid filtering the joined tags collection in the final result
     const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
     const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
-    if (photoIdsWithTag.length === 0) return [];
-    query = query.in('id', photoIdsWithTag);
+    if (photoIdsWithTag.length > 0) {
+      filterSegments.push(`id.in.(${photoIdsWithTag.join(',')})`);
+    } else if (!categoryId) {
+      // If no matching tag and no category, result is empty
+      return [];
+    }
+  }
+
+  if (filterSegments.length > 0) {
+    query = query.or(filterSegments.join(','));
   }
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');
@@ -270,12 +278,23 @@ export const getPhotoCount = async (
     query = query.or(VISIBILITY_OR_QUERY);
   }
 
+  let filterSegments: string[] = [];
   if (categoryId) {
-    query = query.eq('category_id', categoryId);
+    filterSegments.push(`category_id.eq.${categoryId}`);
   }
 
   if (tagId) {
-    query = query.eq('photo_tags.tag_id', tagId);
+    const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
+    const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
+    if (photoIdsWithTag.length > 0) {
+      filterSegments.push(`id.in.(${photoIdsWithTag.join(',')})`);
+    } else if (!categoryId) {
+      return 0;
+    }
+  }
+  
+  if (filterSegments.length > 0) {
+    query = query.or(filterSegments.join(','));
   }
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');

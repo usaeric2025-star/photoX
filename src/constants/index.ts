@@ -1,7 +1,6 @@
 export * from './ai';
 export * from './config';
 export * from './photoConstants';
-export * from './systemTemplates';
 
 import { Category, Tag } from '../types';
 

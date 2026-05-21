@@ -20,8 +20,28 @@ interface UIState {
   batchEditIds: string[] | null
   hasLoadedOnce: boolean
   hasInitialLoaded: boolean
-  alertDialog: any | null
-  promptDialog: any | null
+  alertDialog: {
+    title: string
+    message: string
+    type?: 'info' | 'danger' | 'warning'
+    confirmLabel?: string
+    cancelLabel?: string
+    onConfirm?: () => void | Promise<void>
+    onCancel?: () => void
+    secondaryAction?: {
+      label: string
+      onClick: () => void | Promise<void>
+      type?: 'info' | 'danger'
+    }
+  } | null
+  promptDialog: {
+    title: string
+    message?: string
+    placeholder?: string
+    defaultValue?: string
+    onSubmit: (value: string) => void | Promise<void>
+    onCancel?: () => void
+  } | null
   language: 'zh' | 'en' | 'ms'
   tagStats: Record<string, number>
   filterSubId: string | null
@@ -68,8 +88,8 @@ interface UIActions {
   setEditPhotoId: (id: string | null) => void
   setBatchEditIds: (ids: string[] | null) => void
   setHasLoadedOnce: (hasLoaded: boolean) => void
-  setAlertDialog: (dialog: any) => void
-  setPromptDialog: (dialog: any) => void
+  setAlertDialog: (dialog: StoreState['alertDialog']) => void
+  setPromptDialog: (dialog: StoreState['promptDialog']) => void
   setLanguage: (lang: 'zh' | 'en' | 'ms') => void
   setTagStats: (stats: Record<string, number>) => void
   setFilterSubId: (id: string | null) => void
