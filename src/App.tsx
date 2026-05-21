@@ -4,7 +4,6 @@ import { ErrorBoundary } from 'react-error-boundary';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
-import { useSettings } from './hooks/useSettings';
 import { useRouteGuard } from './hooks/useRouteGuard';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
