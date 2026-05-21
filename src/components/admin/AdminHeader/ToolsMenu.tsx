@@ -10,11 +10,10 @@ interface ToolsMenuProps {
   isStaff: boolean;
   currentLang: string;
   onSetLang: (l: string) => void;
-  onRunMaintenance?: () => void;
 }
 
 export const ToolsMenu: React.FC<ToolsMenuProps> = ({ 
-  show, t, handleOpenSettings, handleExitStaffMode, isStaff, currentLang, onSetLang, onRunMaintenance 
+  show, t, handleOpenSettings, handleExitStaffMode, isStaff, currentLang, onSetLang 
 }) => {
   return (
     <AnimatePresence>
@@ -51,13 +50,6 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
           >
             <Settings2 size={16} /> <span className="text-xs font-bold uppercase">{t.systemSettings}</span>
-          </button>
-          
-          <button 
-            onClick={onRunMaintenance}
-            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left text-blue-600"
-          >
-            <Settings2 size={16} /> <span className="text-xs font-bold uppercase">修复缩略图</span>
           </button>
           
           {isStaff && (

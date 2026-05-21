@@ -17,22 +17,22 @@ export const reconcileData = (
     const updates: Partial<Photo> = {};
 
     // Check category
-    if (p.categoryId && !catIds.has(String(p.categoryId))) {
-      updates.categoryId = null;
+    if (p.category_id && !catIds.has(String(p.category_id))) {
+      updates.category_id = null;
       photoChanged = true;
     }
 
     // Check manufacturer
-    if (p.manufacturerId && !mfrIds.has(String(p.manufacturerId))) {
-      updates.manufacturerId = null;
+    if (p.manufacturer_id && !mfrIds.has(String(p.manufacturer_id))) {
+      updates.manufacturer_id = null;
       photoChanged = true;
     }
 
     // Check tags
-    if (Array.isArray(p.tagIds)) {
-      const validTags = p.tagIds.filter(id => tagIds.has(String(id)));
-      if (validTags.length !== p.tagIds.length) {
-        updates.tagIds = validTags;
+    if (Array.isArray(p.tag_ids)) {
+      const validTags = p.tag_ids.filter(id => tagIds.has(String(id)));
+      if (validTags.length !== p.tag_ids.length) {
+        updates.tag_ids = validTags;
         photoChanged = true;
       }
     }

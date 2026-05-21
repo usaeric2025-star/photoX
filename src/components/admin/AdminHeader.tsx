@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, CheckSquare, Eye, Globe, RefreshCcw, ChevronDown, Menu, LogIn } from 'lucide-react';
+import { Sparkles, CheckSquare, Eye, Globe, RefreshCcw, ChevronDown, Menu, LogIn, Wrench } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
 
 import { translations, LanguageCode } from '../../lib/translations';
@@ -186,6 +186,16 @@ export const AdminHeader: React.FC<Props> = ({
                     <Sparkles size={18} />
                   )}
                 </button>
+
+                {onRunMaintenance && (
+                  <button 
+                    onClick={onRunMaintenance}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all text-blue-600/50 hover:text-blue-600 bg-white border border-blue-600/10 shadow-sm"
+                    title="修复缩略图"
+                  >
+                    <Wrench size={18} />
+                  </button>
+                )}
                 
                 {viewMode !== 'public' && (
                   <button 

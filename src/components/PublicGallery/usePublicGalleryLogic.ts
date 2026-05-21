@@ -154,7 +154,7 @@ export const usePublicGalleryLogic = (props: {
 
   useEffect(() => {
     if (initialGroupId && activeGroupId === null && lpRef.current.length > 0) {
-      const groupExists = lpRef.current.some(p => p.groupId === initialGroupId);
+      const groupExists = lpRef.current.some(p => p.group_id === initialGroupId);
       if (groupExists) setActiveGroupId(initialGroupId);
     }
   }, [initialGroupId, activeGroupId]); // localPhotos check via ref

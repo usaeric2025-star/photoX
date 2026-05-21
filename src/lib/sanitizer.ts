@@ -1,7 +1,7 @@
 import { Photo, Tag } from '../types';
 
 export const sanitizePhotoTags = (photo: Photo, tags: Tag[]): Photo => {
-  const photoTagIds = Array.isArray(photo.tagIds) ? photo.tagIds : [];
+  const photoTagIds = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
   const rawTags = (photo as any).tags || [];
   
   const namesAndIds = new Set([...photoTagIds, ...rawTags]);
@@ -25,6 +25,6 @@ export const sanitizePhotoTags = (photo: Photo, tags: Tag[]): Photo => {
 
   return {
     ...photo,
-    tagIds: Array.from(new Set(validTagIds)),
+    tag_ids: Array.from(new Set(validTagIds)),
   };
 };
