@@ -21,9 +21,6 @@ export const CategoriesManager: React.FC<CategoriesManagerProps> = (props) => {
     <>
       <CategoriesSection 
         categories={props.categories}
-        deleteCategory={props.deleteCategory}
-        updateCategory={props.updateCategory}
-        addCategory={props.addCategory}
         cardClass={props.cardClass}
       />
       <ManufacturersSection 

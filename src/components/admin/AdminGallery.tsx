@@ -25,11 +25,6 @@ interface AdminGalleryProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isFetchingNextPage?: boolean;
-  activeSelectedIds: string[];
-  activeIsMultiSelect: boolean;
-  activeToggleSelection: (id: string) => void;
-  activeSetIsMultiSelect: (val: boolean) => void;
-  activeClearSelection: () => void;
   isStaffMode?: boolean;
   onEditPhoto?: (id: string) => void;
   onToggleHidden?: (p: Photo) => Promise<void>;
@@ -80,15 +75,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
   const handleSetLightboxIndex = useCallback((index: number) => {
     setLightboxIndex(index);
   }, [setLightboxIndex]);
-
-  const handleToggleSelection = props.activeToggleSelection;
-
-  const startLongPress = useCallback((id: string) => {
-    props.activeSetIsMultiSelect(true);
-    if (!props.activeSelectedIds.includes(id)) {
-      props.activeToggleSelection(id);
-    }
-  }, [props.activeSetIsMultiSelect, props.activeSelectedIds, props.activeToggleSelection]);
 
   // Stable empty handlers to prevent unnecessary re-renders of all PhotoCards
   const noop = useCallback(() => {}, []);
@@ -171,21 +157,16 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     virtuosoComponents={virtuosoComponents}
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
-                    activeIsMultiSelect={props.activeIsMultiSelect}
                     isAdminMode={true}
-                    activeSelectedIds={props.activeSelectedIds}
                     showGroupsCollapsed={showGroupsCollapsed}
                     lang={lang}
                     t={t}
                     categories={categories}
                     manufacturers={manufacturers}
                     tagMap={tagMap}
-                    activeToggleSelection={handleToggleSelection}
                     setActiveGroupId={setActiveGroupId}
                     setActivePhotoId={setActivePhotoId}
                     setLightboxIndex={handleSetLightboxIndex}
-                    startLongPress={startLongPress}
-                    endLongPress={noop}
                     shareSinglePhoto={noop}
                     selectedCatCode={selectedCatCode}
                     selectedSubId={selectedSubId}

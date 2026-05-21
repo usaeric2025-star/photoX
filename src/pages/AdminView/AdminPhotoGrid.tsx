@@ -16,9 +16,6 @@ interface AdminPhotoGridProps {
   onLoadMore: () => void;
   hasNextPage: boolean;
   isFetchingNextPage?: boolean;
-  selectedIds: string[];
-  isMultiSelect: boolean;
-  setIsMultiSelect: (m: boolean) => void;
   onEditPhoto?: (id: string) => void;
   onToggleHidden?: (p: Photo) => Promise<void>;
   onAiAnalyze?: (photo: Photo) => Promise<any>;
@@ -44,11 +41,6 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
       onLoadMore={props.onLoadMore}
       hasMore={props.hasNextPage}
       isFetchingNextPage={props.isFetchingNextPage}
-      activeSelectedIds={props.selectedIds}
-      activeIsMultiSelect={props.isMultiSelect}
-      activeToggleSelection={togglePhotoSelection}
-      activeSetIsMultiSelect={props.setIsMultiSelect}
-      activeClearSelection={clearSelection}
       isStaffMode={true}
       onEditPhoto={props.onEditPhoto}
       onToggleHidden={props.onToggleHidden}

@@ -27,11 +27,20 @@ import { AppSettings, Photo } from '../types';
 import { safeArray } from '../lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '../hooks/queries/keys';
+import { useMultiSelect } from '../hooks/useMultiSelect';
 
 export default function PublicView() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useFeedback();
+  const { reset } = useMultiSelect();
+
+  // Reset multi select on unmount
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
 
   // 保存滚动位置
   useEffect(() => {
@@ -67,9 +76,7 @@ export default function PublicView() {
     filterCatId,
     filterTagIds,
     debouncedSearchQuery,
-    sortOrder,
-    setIsMultiSelect,
-    setSelectedIds
+    sortOrder
   } = useGalleryStore();
 
   const { data: categoriesData = [] } = useCategoriesQuery();
@@ -104,11 +111,6 @@ export default function PublicView() {
     const allPhotos = paginatedPhotos?.pages.flatMap(p => p.photos) || [];
     return cleanPhotos(allPhotos);
   }, [paginatedPhotos]);
-
-  useEffect(() => {
-    setIsMultiSelect(false);
-    setSelectedIds([]);
-  }, [setIsMultiSelect, setSelectedIds]);
   
   const { settings, hasLoadedOnce, setHasLoadedOnce } = useGalleryStore();
   const navigate = useNavigate();
@@ -137,8 +139,7 @@ export default function PublicView() {
       useGalleryStore.getState().setDebouncedSearchQuery('');
       useGalleryStore.getState().setFilterCatId(null);
       useGalleryStore.getState().setFilterTagIds([]);
-      useGalleryStore.getState().setSelectedIds([]);
-      useGalleryStore.getState().setIsMultiSelect(false);
+      reset();
       
       // 2. 清除持久化的筛选
       sessionStorage.removeItem('photo-filters');

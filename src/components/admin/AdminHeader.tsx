@@ -4,18 +4,14 @@ import { Skeleton } from '../ui/Skeleton';
 
 import { translations, LanguageCode } from '../../lib/translations';
 import { useGalleryStore } from '../../store';
-import { useFeedback } from '../../hooks';
+import { useFeedback, useMultiSelect } from '../../hooks';
 
 import { Photo, AppSettings } from '../../types';
 import { RefreshMenu } from './AdminHeader/RefreshMenu';
 import { ToolsMenu } from './AdminHeader/ToolsMenu';
 
 interface Props {
-  isMultiSelect: boolean;
-  selectedIds: string[];
   filteredPhotos: Photo[];
-  setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
-  setIsMultiSelect: React.Dispatch<React.SetStateAction<boolean>>;
   handleBatchAiIdentifyTrigger: () => void;
   handleManageClick: () => void;
   loginWithGoogle: () => void;
@@ -31,8 +27,7 @@ interface Props {
 }
 
 export const AdminHeader: React.FC<Props> = ({ 
-  isMultiSelect, selectedIds, 
-  filteredPhotos, setSelectedIds, setIsMultiSelect, 
+  filteredPhotos, 
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
   appLang = 'en',
@@ -44,7 +39,16 @@ export const AdminHeader: React.FC<Props> = ({
     isInfiniteMode, setIsInfiniteMode 
   } = useGalleryStore();
   
+  const { isMultiSelect, disable, enable } = useMultiSelect();
   const { showError, showSuccess } = useFeedback();
+
+  const handleToggleMultiSelect = () => {
+    if (isMultiSelect) {
+      disable();
+    } else {
+      enable();
+    }
+  };
   
   const settings = propSettings || storeSettings;
   
@@ -95,15 +99,6 @@ export const AdminHeader: React.FC<Props> = ({
   const toggleRefreshMenu = () => setShowRefreshMenu(prev => !prev);
   const toggleToolsMenu = () => setShowToolsMenu(prev => !prev);
   
-  const handleToggleMultiSelect = () => {
-    if (isMultiSelect) {
-      setIsMultiSelect(false);
-      setSelectedIds([]);
-    } else {
-      setIsMultiSelect(true);
-    }
-  };
-
   const handleToggleViewMode = () => {
     setViewMode(viewMode === 'public' ? 'private' : 'public');
   };

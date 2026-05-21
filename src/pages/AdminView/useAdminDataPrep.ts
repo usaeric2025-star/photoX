@@ -10,7 +10,7 @@ import {
   useUpdatePhotoMutation, useBatchEditMutation, useDeletePhotoMutation, useGroupPhotosMutation, useUngroupMutation,
   useSettingsMutation, useSyncMutation,
   useAdminDialogs, useLoading, useInfinitePhotos, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
-  useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback
+  useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback, useMultiSelect
 } from '../../hooks';
 import { useGalleryStore } from '../../store';
 import { PAGINATION } from '../../constants/config';
@@ -69,11 +69,12 @@ export const useAdminDataPrep = () => {
     setCloudCount(cloudCountData);
   }, [cloudCountData]);
 
+  const { reset: resetMultiSelect } = useMultiSelect();
+
   useEffect(() => {
     // Ensure multi-select is off on route enter
-    useGalleryStore.getState().setIsMultiSelect(false);
-    useGalleryStore.getState().setSelectedIds([]);
-  }, []);
+    resetMultiSelect();
+  }, [resetMultiSelect]);
 
   const handleLoadMoreAdmin = useCallback(() => {
     if (infinitePhotosQuery.hasNextPage && !infinitePhotosQuery.isFetchingNextPage) {

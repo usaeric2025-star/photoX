@@ -35,3 +35,4 @@ export * from './useAdminMode';
 export * from './uiFeedback';
 export * from './usePhotoFilters';
 export * from './useTasks';
+export * from './useMultiSelect';

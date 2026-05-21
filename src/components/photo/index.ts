@@ -1,4 +1,5 @@
-export { PhotoCard } from '../PhotoCard';
+export { PublicPhotoCard } from '../public/PublicPhotoCard';
+export { AdminPhotoCard } from './../admin/AdminPhotoCard';
 export { PhotoLightbox } from '../PhotoLightbox';
 export { GroupDetailView } from '../GroupDetailView';
 export { PublicGallery } from '../public/PublicGallery';

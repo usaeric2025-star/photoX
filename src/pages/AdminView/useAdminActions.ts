@@ -4,10 +4,12 @@ import { useFeedback } from '@/hooks';
 import { uploadLogo } from '@/services/settingService';
 import { useGalleryStore } from '@/store';
 import { useQueryClient } from '@tanstack/react-query';
+import { useMultiSelect } from '@/hooks/useMultiSelect';
 
 export const useAdminActions = (logic: any) => {
   const { showSuccess, handleError } = useFeedback();
   const queryClient = useQueryClient();
+  const { disable } = useMultiSelect();
 
   const handleLoadMoreCallback = useCallback(() => {
     if (logic.hasNextPage && !logic.isFetchingNextPage) {
@@ -25,8 +27,7 @@ export const useAdminActions = (logic: any) => {
     useGalleryStore.getState().setDebouncedSearchQuery('');
     useGalleryStore.getState().setFilterCatId(null);
     useGalleryStore.getState().setFilterTagIds([]);
-    useGalleryStore.getState().setSelectedIds([]);
-    useGalleryStore.getState().setIsMultiSelect(false);
+    disable();
     
     // 2. 清除持久化的筛选
     sessionStorage.removeItem('photo-filters');
@@ -61,8 +62,7 @@ export const useAdminActions = (logic: any) => {
     const targetPhotos = logic.photos.filter((p: any) => ids.includes(p.id));
     const allHidden = targetPhotos.every((p: any) => p.is_hidden);
     await logic.updatePhotosBulk(ids, { is_hidden: !allHidden }, '批量更新隐藏状态');
-    logic.setSelectedIds([]);
-    logic.setIsMultiSelect(false);
+    disable();
   }, [logic]);
 
   const handleEditPhoto = useCallback((id: string) => logic.onEditPhotoById(id), [logic]);
@@ -70,20 +70,18 @@ export const useAdminActions = (logic: any) => {
   const handleDeletePhotos = useCallback((ids: string[]) => {
       if (logic.checkSyncLock()) return;
       logic.handleDeletePhoto(ids);
-      logic.setSelectedIds([]);
-      logic.setIsMultiSelect(false);
-  }, [logic]);
+      disable();
+  }, [logic, disable]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
       if (logic.checkSyncLock()) return;
       try {
         await logic.handleGroupPhotos(ids);
-        logic.setSelectedIds([]);
-        logic.setIsMultiSelect(false);
+        disable();
       } catch (e: any) {
         handleError(e, '合组失败');
       }
-  }, [logic, handleError]);
+  }, [logic, handleError, disable]);
 
   const handleBatchEdit = useCallback((ids: string[]) => {
       if (logic.checkSyncLock()) return;

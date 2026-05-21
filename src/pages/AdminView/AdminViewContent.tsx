@@ -12,6 +12,7 @@ import { MainAdminScreen } from './MainAdminScreen';
 import { PublicGallery } from '@/components/public/PublicGallery';
 import { useAdminViewLogic } from './useAdminViewLogic';
 import { useAdminActions } from './useAdminActions';
+import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { User, Photo } from '@/types';
 import { TranslationType } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
@@ -53,6 +54,14 @@ export const AdminViewContent: React.FC<Props> = ({
 
   const actions = useAdminActions(logic);
   const { tasks, cancelTask } = useTasks();
+  const { reset, clear } = useMultiSelect();
+
+  // Reset multi select on unmount
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
 
   // 保存滚动位置
   useEffect(() => {
@@ -72,11 +81,10 @@ export const AdminViewContent: React.FC<Props> = ({
   }, []);
 
   const handleExitPublic = useCallback(() => {
-    logic.setSelectedIds([]);
-    logic.setIsMultiSelect(false);
+    reset();
     tasks.filter(t => t.status === 'running').forEach(t => cancelTask(t.id));
     logic.setViewMode('private');
-  }, [logic, tasks, cancelTask]);
+  }, [logic, tasks, cancelTask, reset]);
 
   const handleRefreshPublic = useCallback(() => {
     if (logic.checkSyncLock()) return;

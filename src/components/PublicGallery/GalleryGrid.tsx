@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
 import { VirtuosoGrid, VirtuosoGridHandle, VirtuosoGridProps as BaseVirtuosoGridProps } from 'react-virtuoso';
 import { Photo, Category, Manufacturer } from '../../types';
-import { PhotoCard } from '../PhotoCard';
+import { PublicPhotoCard } from '../public/PublicPhotoCard';
+import { AdminPhotoCard } from '../admin/AdminPhotoCard';
 import { TranslationType } from '../../lib/ui-helpers';
 import { useAdminMode } from '../../hooks/useAdminMode';
 
@@ -13,22 +14,17 @@ interface GalleryGridProps {
   virtuosoComponents?: BaseVirtuosoGridProps<Photo, any>['components'];
   virtuosoContext?: any;
   handleLoadMore: () => void;
-  activeIsMultiSelect: boolean;
   isAdminMode: boolean;
-  activeSelectedIds: string[];
   showGroupsCollapsed: boolean;
   lang: string;
   t: TranslationType;
   categories: Category[];
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
-  activeToggleSelection: (id: string) => void;
   onEditPhoto?: (id: string) => void;
   setActiveGroupId: (id: string) => void;
   setActivePhotoId: (id: string) => void;
   setLightboxIndex: (index: number) => void;
-  startLongPress: (id: string) => void;
-  endLongPress: () => void;
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   selectedCatCode: string | null;
@@ -41,21 +37,16 @@ interface GalleryGridProps {
 interface MemoizedPhotoCardProps {
   index: number;
   photo: Photo;
-  isMultiSelect: boolean;
   isAdminMode: boolean;
-  isSelected: boolean;
   showGroupsCollapsed: boolean;
   lang: string;
   t: TranslationType;
   categories: Category[];
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
-  onToggleSelection: (id: string) => void;
   onEditPhoto?: (id: string) => void;
   onGroupClick: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (index: number, photos: Photo[]) => void;
-  onLongPressStart: (id: string) => void;
-  onLongPressEnd: () => void;
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
@@ -63,9 +54,9 @@ interface MemoizedPhotoCardProps {
 }
 
 const MemoizedPhotoCard = React.memo(({ 
-  index, photo, isMultiSelect, isAdminMode, isSelected, showGroupsCollapsed, 
-  lang, t, categories, manufacturers, tagMap, onToggleSelection, onEditPhoto, onGroupClick, 
-  onLightboxOpen, onLongPressStart, onLongPressEnd, shareSinglePhoto, 
+  index, photo, isAdminMode, showGroupsCollapsed, 
+  lang, t, categories, manufacturers, tagMap, onEditPhoto, onGroupClick, 
+  onLightboxOpen, shareSinglePhoto, 
   onTogglePinned, onToggleHidden, displayPhotos
 }: MemoizedPhotoCardProps) => {
   const handleOpenLightbox = useCallback(() => {
@@ -76,28 +67,41 @@ const MemoizedPhotoCard = React.memo(({
     onGroupClick(gid, photo.id);
   }, [onGroupClick, photo.id]);
 
+  if (isAdminMode) {
+    return (
+      <AdminPhotoCard 
+        photo={photo}
+        index={index}
+        showGroupsCollapsed={showGroupsCollapsed}
+        lang={lang}
+        t={t}
+        categories={categories}
+        manufacturers={manufacturers}
+        tagMap={tagMap}
+        onEditPhoto={onEditPhoto}
+        onGroupClick={handleGroupClickInternal}
+        onLightboxOpen={handleOpenLightbox}
+        shareSinglePhoto={shareSinglePhoto}
+        onTogglePinned={onTogglePinned}
+        onToggleHidden={onToggleHidden}
+        displayPhotos={displayPhotos}
+      />
+    );
+  }
+
   return (
-    <PhotoCard 
+    <PublicPhotoCard 
       photo={photo}
       index={index}
-      isMultiSelect={isMultiSelect}
-      isAdminMode={isAdminMode}
-      isSelected={isSelected}
       showGroupsCollapsed={showGroupsCollapsed}
       lang={lang}
       t={t}
       categories={categories}
       manufacturers={manufacturers}
       tagMap={tagMap}
-      onToggleSelection={onToggleSelection}
-      onEditPhoto={onEditPhoto}
       onGroupClick={handleGroupClickInternal}
       onLightboxOpen={handleOpenLightbox}
-      onLongPressStart={onLongPressStart}
-      onLongPressEnd={onLongPressEnd}
       shareSinglePhoto={shareSinglePhoto}
-      onTogglePinned={onTogglePinned}
-      onToggleHidden={onToggleHidden}
       displayPhotos={displayPhotos}
     />
   );
@@ -116,10 +120,6 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
     props.handleLoadMore();
   }, [props.handleLoadMore]);
 
-  const handleToggleSelection = useCallback((id: string) => {
-    props.activeToggleSelection(id);
-  }, [props.activeToggleSelection]);
-
   const handleEditPhoto = useCallback((id: string) => {
     props.onEditPhoto?.(id);
   }, [props.onEditPhoto]);
@@ -127,14 +127,6 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
   const handleLightboxOpen = useCallback((index: number, photos: Photo[]) => {
     props.setLightboxIndex(index);
   }, [props.setLightboxIndex]);
-
-  const handleLongPressStart = useCallback((id: string) => {
-    props.startLongPress(id);
-  }, [props.startLongPress]);
-
-  const handleLongPressEnd = useCallback(() => {
-    props.endLongPress();
-  }, [props.endLongPress]);
 
   const handleShareSinglePhoto = useCallback((photo: Photo) => {
     props.shareSinglePhoto(photo);
@@ -168,21 +160,16 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
           <MemoizedPhotoCard
             index={index}
             photo={photo}
-            isMultiSelect={props.activeIsMultiSelect}
             isAdminMode={props.isAdminMode}
-            isSelected={photo ? !!props.activeSelectedIds.includes(photo.id) : false}
             showGroupsCollapsed={props.showGroupsCollapsed}
             lang={props.lang}
             t={props.t}
             categories={props.categories}
             manufacturers={props.manufacturers}
             tagMap={props.tagMap}
-            onToggleSelection={handleToggleSelection}
             onEditPhoto={handleEditPhoto}
             onGroupClick={handleGroupClick}
             onLightboxOpen={handleLightboxOpen}
-            onLongPressStart={handleLongPressStart}
-            onLongPressEnd={handleLongPressEnd}
             shareSinglePhoto={handleShareSinglePhoto}
             onTogglePinned={handleTogglePinned}
             onToggleHidden={handleToggleHidden}

@@ -22,15 +22,7 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     user, sessionValue, photoValue, uiValue, onRefresh, performPullSync,
     hasNextPage = false, isFetchingNextPage = false
   } = props;
-  const { 
-    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds,
-    tagIdToNameMap
-  } = useGalleryStore();
-  
-  const clearSelection = useCallback(() => {
-    setIsMultiSelect(false);
-    setSelectedIds([]);
-  }, [setIsMultiSelect, setSelectedIds]);
+  const { tagIdToNameMap } = useGalleryStore();
   
   const { 
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds, 
@@ -183,7 +175,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
   }, [photos, setEditPhotoId]);
 
   return useMemo(() => ({
-    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     loadingType, withLoading, cloudCount,
     aiDebugInfo, abortAnalysis, batchProgress,
@@ -201,7 +192,6 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     performPushSync, performPullSync, saveSettings, loginWithGoogle, setAlertDialog, setPromptDialog, showError,
     onEditPhotoById, hasNextPage, isFetchingNextPage
   }), [
-    isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, clearSelection,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     loadingType, withLoading, cloudCount,
     aiDebugInfo, abortAnalysis, batchProgress,

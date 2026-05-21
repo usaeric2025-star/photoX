@@ -3,11 +3,7 @@ import { AdminHeader } from '@/components/admin/AdminHeader';
 import { Photo } from '@/types';
 
 interface AdminToolbarProps {
-  isMultiSelect: boolean;
-  selectedIds: string[];
   photos: Photo[];
-  setSelectedIds: (ids: string[]) => void;
-  setIsMultiSelect: (m: boolean) => void;
   handleBatchAiIdentifyTrigger: () => void;
   onManageClick: () => void;
   loginWithGoogle: () => Promise<any>;
@@ -21,11 +17,7 @@ interface AdminToolbarProps {
 export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
   return (
     <AdminHeader 
-      isMultiSelect={props.isMultiSelect}
-      selectedIds={props.selectedIds}
       filteredPhotos={props.photos}
-      setSelectedIds={props.setSelectedIds}
-      setIsMultiSelect={props.setIsMultiSelect}
       handleBatchAiIdentifyTrigger={props.handleBatchAiIdentifyTrigger}
       handleManageClick={props.onManageClick}
       loginWithGoogle={props.loginWithGoogle}

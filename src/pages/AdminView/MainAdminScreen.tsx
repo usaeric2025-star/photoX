@@ -6,11 +6,7 @@ import { AdminPhotoGrid } from './AdminPhotoGrid';
 import { AdminEmptyState } from './AdminEmptyState';
 
 interface Props {
-  isMultiSelect: boolean;
-  selectedIds: string[];
   photos: Photo[];
-  setSelectedIds: (ids: string[]) => void;
-  setIsMultiSelect: (m: boolean) => void;
   handleBatchAiIdentifyTrigger: () => void;
   onManageClick: () => void;
   onRefresh: () => void;
@@ -45,9 +41,11 @@ interface Props {
   isAdmin?: boolean;
 }
 
+import { useMultiSelect } from '@/hooks/useMultiSelect';
+
 export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
   const {
-    isMultiSelect, selectedIds, photos, setSelectedIds, setIsMultiSelect,
+    photos,
     handleBatchAiIdentifyTrigger, onManageClick, onRefresh, cloudCount,
     lang, loadingType, batchProgress, categories, tags,
     settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
@@ -55,14 +53,12 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
     isFetchingNextPage, onEditPhoto, onToggleHidden, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
   } = props;
 
+  const { selectedIds, clear } = useMultiSelect();
+
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AdminToolbar 
-        isMultiSelect={isMultiSelect}
-        selectedIds={selectedIds}
         photos={photos}
-        setSelectedIds={setSelectedIds}
-        setIsMultiSelect={setIsMultiSelect}
         handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
         onManageClick={onManageClick}
         loginWithGoogle={loginWithGoogle}
@@ -89,9 +85,6 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
             onLoadMore={onLoadMore}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
-            selectedIds={selectedIds}
-            isMultiSelect={isMultiSelect}
-            setIsMultiSelect={setIsMultiSelect}
             onEditPhoto={onEditPhoto}
             onToggleHidden={onToggleHidden}
             onAiAnalyze={onAiAnalyze}
@@ -102,9 +95,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
         )}
         <AdminFloatingButtons 
           onAdd={onImport}
-          isMultiSelect={isMultiSelect}
-          selectedIds={selectedIds}
-          setIsMultiSelect={setIsMultiSelect}
+          onClearSelection={clear}
           onBatchAiIdentify={() => {
               if (onBatchAiAnalyze) onBatchAiAnalyze(photos.filter(p => selectedIds.includes(p.id)));
           }}
@@ -126,8 +117,6 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
   );
 }, (prevProps, nextProps) => {
   return prevProps.photos === nextProps.photos &&
-         prevProps.isMultiSelect === nextProps.isMultiSelect &&
-         prevProps.selectedIds === nextProps.selectedIds &&
          prevProps.cloudCount === nextProps.cloudCount &&
          prevProps.lang === nextProps.lang &&
          prevProps.loadingType === nextProps.loadingType &&

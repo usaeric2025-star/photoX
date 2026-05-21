@@ -90,8 +90,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     setLightboxIndex(index);
   }, [setLightboxIndex]);
 
-  const noop = useCallback(() => {}, []);
-
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -186,21 +184,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     virtuosoComponents={virtuosoComponents}
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
-                    activeIsMultiSelect={false}
                     isAdminMode={false}
-                    activeSelectedIds={[]}
                     showGroupsCollapsed={showGroupsCollapsed}
                     lang={lang}
                     t={t}
                     categories={categories}
                     manufacturers={manufacturers}
                     tagMap={tagMap}
-                    activeToggleSelection={noop}
                     setActiveGroupId={setActiveGroupId}
                     setActivePhotoId={setActivePhotoId}
                     setLightboxIndex={handleSetLightboxIndex}
-                    startLongPress={noop}
-                    endLongPress={noop}
                     shareSinglePhoto={shareSinglePhoto}
                     selectedCatCode={selectedCatCode}
                     selectedSubId={selectedSubId}

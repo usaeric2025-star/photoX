@@ -2,30 +2,29 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { MultiSelectToolbar } from './MultiSelectToolbar';
 import { buttonStyles } from '../../styles/buttonStyles';
+import { useMultiSelect } from '../../hooks';
 
 interface AdminFloatingButtonsProps {
   onAdd: () => void;
-  isMultiSelect: boolean;
-  selectedIds: string[];
-  setIsMultiSelect: (m: boolean) => void;
   onBatchAiIdentify: () => void;
   onBatchEdit: () => void;
   onGroup: () => void;
   onDelete: () => void;
   onToggleVisibility?: () => void;
+  onClearSelection?: () => void;
 }
 
 export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
   onAdd,
-  isMultiSelect,
-  selectedIds,
-  setIsMultiSelect,
   onBatchAiIdentify,
   onBatchEdit,
   onGroup,
   onDelete,
   onToggleVisibility,
+  onClearSelection,
 }) => {
+  const { isMultiSelect, selectedIds, disable } = useMultiSelect();
+
   return (
     <>
       {!isMultiSelect && (
@@ -41,7 +40,10 @@ export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
       {isMultiSelect && selectedIds.length > 0 && (
         <MultiSelectToolbar
           selectedCount={selectedIds.length}
-          onClose={() => setIsMultiSelect(false)}
+          onClose={() => {
+            disable();
+            if (onClearSelection) onClearSelection();
+          }}
           onBatchAiIdentify={onBatchAiIdentify}
           onBatchEdit={onBatchEdit}
           onGroup={onGroup}

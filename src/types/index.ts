@@ -30,6 +30,7 @@ export interface User {
 }
 
 export interface AppSettings {
+  app_name?: string;
   logo_url?: string;
   pinnedTags?: string[];
   hotTagsCount?: number;
