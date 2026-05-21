@@ -151,7 +151,7 @@ const initialState: UIState = {
   activeScreen: 'home',
   isInfiniteMode: true,
   geminiApiKey: null,
-  customModel: 'gemini-2.0-flash-exp',
+  customModel: 'Gemini 2.5 Flash Lite Preview 09-2025',
   accessPasscode: null,
   settings: null,
   user: null,

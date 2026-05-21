@@ -7,8 +7,7 @@ export const translateDescription = async (
   customModel?: string,
   signal?: AbortSignal
 ): Promise<{ en: string; ms: string }> => {
-  const modelName = customModel;
-  if (!modelName) throw new Error('请在设置中配置 AI 模型 (Model Name)');
+  const modelName = customModel || 'Gemini 2.5 Flash Lite Preview 09-2025';
 
   const isProxy = !apiKey;
   const prompt = AI_PROMPTS.TRANSLATE_DESCRIPTION(zhText);

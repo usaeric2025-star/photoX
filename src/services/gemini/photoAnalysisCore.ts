@@ -22,10 +22,7 @@ export const analyzeProductPhoto = async (
 ) => {
   const apiKey = customApiKey;
 
-  let modelName = customModel;
-  if (!modelName) {
-    throw new Error('请在设置中配置 AI 模型 (Model Name)');
-  }
+  let modelName = customModel || 'Gemini 2.5 Flash Lite Preview 09-2025';
   
   if (!modelName.includes('/')) {
      modelName = 'google/' + modelName;

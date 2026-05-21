@@ -90,10 +90,10 @@ export const useAdminDataPrep = () => {
 
   const { settings: fetchedSettings } = useSettings();
   useEffect(() => {
-    if (fetchedSettings && Object.keys(fetchedSettings).length > 0 && !settings) {
+    if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
       setSettings(fetchedSettings as any);
     }
-  }, [fetchedSettings, settings, setSettings]);
+  }, [fetchedSettings, setSettings]);
 
 
   const uiBasicValue = useMemo(() => ({ 

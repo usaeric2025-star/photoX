@@ -19,8 +19,8 @@ export const fetchSettings = async () => {
     
     // Map custom columns back to app expectations
     if (data) {
-        if (data.api_key) data.gemini_api_key = data.api_key;
-        if (data.model_name) data.custom_model = data.model_name;
+        data.gemini_api_key = data.api_key;
+        data.custom_model = data.model_name;
         
         if (data.tags_json) {
             try {
@@ -40,10 +40,10 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         const payload = { ...settings };
         
         // Map fields to requested columns
-        if (payload.gemini_api_key) {
+        if (payload.gemini_api_key !== undefined) {
             payload.api_key = payload.gemini_api_key;
         }
-        if (payload.custom_model) {
+        if (payload.custom_model !== undefined) {
             payload.model_name = payload.custom_model;
         }
 

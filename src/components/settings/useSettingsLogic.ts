@@ -75,17 +75,19 @@ export const useSettingsLogic = ({
   }, [user, setAlertDialog, withLoading, performPullSync, handleError, showSuccess]);
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
-    await runTask('一键健康检测 / Health Check', async () => {
+    await runTask('一键健康检测 / Health Check', async ({ updateProgress }) => {
         const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
         const { backfillThumbHashes } = await import('@/services/photo/backfillService');
         const { supabase } = await import('@/services/supabaseService');
 
+        updateProgress(10, '正在检测本地缓存一致性...');
         // 1. Check data consistency
         const broken = await scanAndRepairPhotoIds(allPhotos);
         if (broken.length > 0) {
             throw new Error(`发现 ${broken.length} 个异常ID，建议刷新`);
         }
 
+        updateProgress(30, '正在检测云端数据库未生成缩略图项目...');
         // 2. Check if there are any database photo records without thumb_hash
         const { data: missingHashes, error: countError } = await supabase
            .from('furniture_items')
@@ -95,13 +97,20 @@ export const useSettingsLogic = ({
         if (countError) throw countError;
 
         if (!missingHashes || missingHashes.length === 0) {
+            updateProgress(100, '诊断完成：所有项目具备完整占位缩略图！');
             // Under user requirements, skip completely as there are no issues.
             return { backfilledCount: 0, skipped: true };
         }
 
+        updateProgress(50, `正在修复回填 ${missingHashes.length} 张照片占位图...`);
         // 3. Otherwise perform the auto-repair loop
         let backfilledCount = 0;
         await backfillThumbHashes((stats) => {
+            const progressPct = 50 + (stats.processed / stats.total) * 50;
+            updateProgress(
+                progressPct,
+                `自动修复中: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`
+            );
             backfilledCount = stats.success;
         });
 
@@ -142,18 +151,19 @@ export const useSettingsLogic = ({
   }, [settings, setSettings, debouncedSave]);
 
   const setSettingField = useCallback(<K extends keyof AppSettings>(field: K, value: AppSettings[K]) => {
-    if (!settings) return;
-    const newSettings = { ...settings, [field]: value };
+    const current = settings || {};
+    const newSettings = { ...current, [field]: value };
     setSettings(newSettings);
     setHasChanges(true);
-  }, [settings, setSettings]);
+    debouncedSave(newSettings);
+  }, [settings, setSettings, debouncedSave]);
 
   const testConnection = useCallback(async () => {
     if (!settings?.gemini_api_key) return;
     setTestResult({ loading: true });
     try {
       const provider = (settings as any).ai_provider || 'google';
-      const model = settings.custom_model || 'gemini-1.5-flash';
+      const model = settings.custom_model || 'Gemini 2.5 Flash Lite Preview 09-2025';
       const ok = await testAiConnection(settings.gemini_api_key, provider, model);
       setTestResult(ok ? { success: true } : { success: false, error: '连接失败' });
     } catch (e: any) {

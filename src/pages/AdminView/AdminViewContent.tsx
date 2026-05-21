@@ -54,8 +54,9 @@ export const AdminViewContent: React.FC<Props> = ({
   const handleRunMaintenance = useCallback(async () => {
     if (isMaintenanceRunning) return;
     setIsMaintenanceRunning(true);
-    await runTask('自动修复缩略图 / Auto Repair ThumbHashes', async () => {
+    await runTask('自动修复缩略图 / Auto Repair ThumbHashes', async ({ updateProgress }) => {
         const { supabase } = await import('@/services/supabaseService');
+        updateProgress(15, '正在分析未生成缩略图占位项目的数量...');
         // First check if there are any missing thumb hashes to avoid needless backfilling
         const { data: missingHashes, error: countError } = await supabase
            .from('furniture_items')
@@ -65,11 +66,17 @@ export const AdminViewContent: React.FC<Props> = ({
         if (countError) throw countError;
         
         if (!missingHashes || missingHashes.length === 0) {
+            updateProgress(100, '完美分析完成，没有缺失占位图的照片。');
             return { skipped: true };
         }
 
+        updateProgress(40, `正在为 ${missingHashes.length} 项商品自动回填修复...`);
         await backfillThumbHashes((stats) => {
-            // progress is handled implicitly as we run in the background task list
+            const progressPct = 40 + (stats.processed / stats.total) * 60;
+            updateProgress(
+                progressPct,
+                `正在修复: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`
+            );
         });
         return { skipped: false };
     }, {

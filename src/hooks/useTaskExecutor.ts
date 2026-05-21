@@ -7,7 +7,7 @@ export function useTaskExecutor() {
 
   const runTask = async <T>(
     name: string,
-    fn: () => Promise<T>,
+    fn: (ctx: { updateProgress: (pct: number, msg?: string) => void }) => Promise<T>,
     options?: {
       onSuccess?: (result: T) => void;
       onError?: (error: Error) => void;
@@ -17,8 +17,12 @@ export function useTaskExecutor() {
   ): Promise<T | null> => {
     const taskId = addTask({ name });
 
+    const updateProgress = (pct: number, msg?: string) => {
+      updateTask(taskId, { progress: Math.min(Math.max(pct, 0), 100), message: msg });
+    };
+
     try {
-      const result = await fn();
+      const result = await fn({ updateProgress });
       updateTask(taskId, { status: 'completed', progress: 100, message: `${name} 成功` });
       if (options?.showSuccessToast !== false) {
         toast.success(`${name} 完成`);
