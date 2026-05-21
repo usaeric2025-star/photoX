@@ -83,19 +83,12 @@ interface GalleryState {
 }
 
 export const useGalleryStore = create<GalleryState>((set) => ({
-  searchQuery: sessionStorage.getItem('searchQuery') || '',
+  searchQuery: '',
   debouncedSearchQuery: '',
-  filterCatId: sessionStorage.getItem('filterCatId') || null,
-  filterSubId: sessionStorage.getItem('filterSubId') || null,
-  filterTagIds: (() => {
-    try {
-      const saved = sessionStorage.getItem('filterTagIds');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  })(),
-  sortOrder: (sessionStorage.getItem('sortOrder') as any) || 'desc',
+  filterCatId: null,
+  filterSubId: null,
+  filterTagIds: [],
+  sortOrder: 'desc',
   selectedIds: [],
   isMultiSelect: false,
   showGroupsCollapsed: true,
@@ -144,25 +137,21 @@ export const useGalleryStore = create<GalleryState>((set) => ({
   setHasLoadedOnce: (hasLoadedOnce) => set({ hasLoadedOnce }),
 
   setSearchQuery: (searchQuery) => {
-    sessionStorage.setItem('searchQuery', searchQuery);
     set({ searchQuery });
   },
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
   setFilterCatId: (filterCatId) => {
-    sessionStorage.setItem('filterCatId', filterCatId || '');
     set({ filterCatId });
   },
   setFilterSubId: (filterSubId) => {
-    sessionStorage.setItem('filterSubId', filterSubId || '');
     set({ filterSubId });
   },
   setFilterTagIds: (ids: string[] | ((prev: string[]) => string[])) => set((state) => {
     const nextIds = typeof ids === 'function' ? ids(state.filterTagIds) : ids;
-    sessionStorage.setItem('filterTagIds', JSON.stringify(nextIds));
     return { filterTagIds: nextIds };
   }),
   setSortOrder: (sortOrder) => {
-    sessionStorage.setItem('sortOrder', sortOrder);
+    sessionStorage.setItem('sortOrder', sortOrder); // Optional: sort order is fine to keep, or we can clear
     set({ sortOrder });
   },
   setIsMultiSelect: (isMultiSelect) => set({ isMultiSelect }),

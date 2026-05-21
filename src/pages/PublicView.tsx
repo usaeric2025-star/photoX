@@ -31,7 +31,24 @@ import { QUERY_KEYS } from '../hooks/queries/keys';
 export default function PublicView() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { showError } = useFeedback();
+  const { showError, showSuccess } = useFeedback();
+
+  // 保存滚动位置
+  useEffect(() => {
+    const handleScroll = () => {
+      sessionStorage.setItem('scrollPosition', String(window.scrollY));
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 恢复滚动位置
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('scrollPosition');
+    if (savedPosition) {
+      window.scrollTo({ top: parseInt(savedPosition), behavior: 'auto' });
+    }
+  }, []);
 
   // Pre-seed cache from local storage
   useEffect(() => {
@@ -115,11 +132,31 @@ export default function PublicView() {
 
   const handleRefresh = useCallback(async () => {
     try {
+      // 1. 清空临时状态
+      useGalleryStore.getState().setSearchQuery('');
+      useGalleryStore.getState().setDebouncedSearchQuery('');
+      useGalleryStore.getState().setFilterCatId(null);
+      useGalleryStore.getState().setFilterTagIds([]);
+      useGalleryStore.getState().setSelectedIds([]);
+      useGalleryStore.getState().setIsMultiSelect(false);
+      
+      // 2. 清除持久化的筛选
+      sessionStorage.removeItem('photo-filters');
+      localStorage.removeItem('photo-filters');
+      
+      // 3. 重置 React Query 缓存
+      queryClient.resetQueries({ queryKey: ['photos'] });
+      queryClient.resetQueries({ queryKey: ['photos', 'infinite'] });
+      
+      // 4. 滚动到顶部
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
       await refetch();
+      showSuccess('已重置所有筛选');
     } catch (e) {
       showError(e, '刷新产品照片失败');
     }
-  }, [refetch, showError]);
+  }, [refetch, showError, showSuccess, queryClient]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

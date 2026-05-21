@@ -2,9 +2,12 @@ import { useCallback } from 'react';
 import { Photo } from '@/types';
 import { useFeedback } from '@/hooks';
 import { uploadLogo } from '@/services/settingService';
+import { useGalleryStore } from '@/store';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useAdminActions = (logic: any) => {
   const { showSuccess, handleError } = useFeedback();
+  const queryClient = useQueryClient();
 
   const handleLoadMoreCallback = useCallback(() => {
     if (logic.hasNextPage && !logic.isFetchingNextPage) {
@@ -16,8 +19,29 @@ export const useAdminActions = (logic: any) => {
   
   const handleRefresh = useCallback(() => {
     if (logic.checkSyncLock()) return;
+    
+    // 1. 清空临时状态
+    useGalleryStore.getState().setSearchQuery('');
+    useGalleryStore.getState().setDebouncedSearchQuery('');
+    useGalleryStore.getState().setFilterCatId(null);
+    useGalleryStore.getState().setFilterTagIds([]);
+    useGalleryStore.getState().setSelectedIds([]);
+    useGalleryStore.getState().setIsMultiSelect(false);
+    
+    // 2. 清除持久化的筛选
+    sessionStorage.removeItem('photo-filters');
+    localStorage.removeItem('photo-filters');
+    
+    // 3. 重置 React Query 缓存
+    queryClient.resetQueries({ queryKey: ['photos'] });
+    queryClient.resetQueries({ queryKey: ['photos', 'infinite'] });
+    
+    // 4. 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
     logic.performPullSync(true);
-  }, [logic]);
+    showSuccess('已重置所有筛选');
+  }, [logic, showSuccess, queryClient]);
 
   const handleToggleHidden = useCallback(async (photo: Photo) => {
     if (logic.checkSyncLock()) {

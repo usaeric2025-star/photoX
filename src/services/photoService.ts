@@ -142,8 +142,7 @@ export const loadAllPhotosFromCloud = async (
       `manual_code.ilike.%${q}%`,
       `model_number.ilike.%${q}%`,
       `description.ilike.%${q}%`,
-      `item_code.ilike.%${q}%`,
-      `price.ilike.%${q}%`
+      `item_code.ilike.%${q}%`
     ];
 
     if (catIds.length > 0) {
@@ -246,8 +245,7 @@ export const getPhotoCount = async (
       `manual_code.ilike.%${q}%`,
       `model_number.ilike.%${q}%`,
       `description.ilike.%${q}%`,
-      `item_code.ilike.%${q}%`,
-      `price.ilike.%${q}%`
+      `item_code.ilike.%${q}%`
     ];
 
     if (catIds.length > 0) {

@@ -122,19 +122,29 @@ export const usePublicGalleryLogic = (props: {
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
+  const dpRef = useRef(displayPhotos);
   useEffect(() => {
-    if (initialHash && lightboxIndex === null && displayPhotos.length > 0) {
-      const idx = displayPhotos.findIndex(p => p.image_hash === initialHash);
-      if (idx !== -1) setLightboxIndex(idx);
-    }
-  }, [initialHash, displayPhotos, lightboxIndex]);
+    dpRef.current = displayPhotos;
+  }, [displayPhotos]);
 
   useEffect(() => {
-    if (initialGroupId && activeGroupId === null && localPhotos.length > 0) {
-      const groupExists = localPhotos.some(p => p.groupId === initialGroupId);
+    if (initialHash && lightboxIndex === null && dpRef.current.length > 0) {
+      const idx = dpRef.current.findIndex(p => p.image_hash === initialHash);
+      if (idx !== -1) setLightboxIndex(idx);
+    }
+  }, [initialHash, lightboxIndex]); // displayPhotos check via ref
+
+  const lpRef = useRef(localPhotos);
+  useEffect(() => {
+    lpRef.current = localPhotos;
+  }, [localPhotos]);
+
+  useEffect(() => {
+    if (initialGroupId && activeGroupId === null && lpRef.current.length > 0) {
+      const groupExists = lpRef.current.some(p => p.groupId === initialGroupId);
       if (groupExists) setActiveGroupId(initialGroupId);
     }
-  }, [initialGroupId, localPhotos, activeGroupId]);
+  }, [initialGroupId, activeGroupId]); // localPhotos check via ref
 
   const tagMap = useMemo(() => {
     const map: Record<string, string> = {};

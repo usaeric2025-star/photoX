@@ -7,7 +7,13 @@ import { updatePhotoInCloud, deletePhotoFromCloud, updatePhotosGroupInCloud } fr
 export async function syncPendingOperations(userId: string) {
   if (!userId) return;
   
-  const pendingOps = await opsCache.getPendingOps();
+  let pendingOps: PendingOp[] = [];
+  try {
+    pendingOps = await opsCache.getPendingOps();
+  } catch (err) {
+    console.warn('[OfflineSync] opsCache error:', err);
+    return;
+  }
   if (pendingOps.length === 0) return;
 
   console.log(`[OfflineSync] Found ${pendingOps.length} pending operations. Starting sync...`);

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks } from '@/hooks';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -53,6 +53,23 @@ export const AdminViewContent: React.FC<Props> = ({
 
   const actions = useAdminActions(logic);
   const { tasks, cancelTask } = useTasks();
+
+  // 保存滚动位置
+  useEffect(() => {
+    const handleScroll = () => {
+      sessionStorage.setItem('scrollPosition', String(window.scrollY));
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // 恢复滚动位置
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('scrollPosition');
+    if (savedPosition) {
+      window.scrollTo({ top: parseInt(savedPosition), behavior: 'auto' });
+    }
+  }, []);
 
   const handleExitPublic = useCallback(() => {
     logic.setSelectedIds([]);

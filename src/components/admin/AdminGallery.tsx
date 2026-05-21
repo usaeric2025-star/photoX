@@ -123,13 +123,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
       />
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
-        {/* Persistent Watermark Background */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center opacity-10 pointer-events-none select-none z-0">
-          {settings?.logo_url && <img src={settings.logo_url} className="w-12 h-12 object-cover rounded-2xl mb-4 grayscale" alt="Logo" />}
-          <span className="text-[14px] font-black uppercase tracking-[0.3em] text-brand-navy">
-            {settings?.app_name || 'PhotoX Gallery'}
-          </span>
-        </div>
         <AnimatePresence>
           {(() => {
             const isInitialLoad = isSyncing && gridPhotos.length === 0;
