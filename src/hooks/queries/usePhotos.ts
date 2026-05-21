@@ -58,6 +58,7 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
     enabled: !!groupId,
     placeholderData: keepPreviousData,
     select: (data) => data ?? [],
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -73,5 +74,6 @@ export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode:
       return loaded < lastPage.total ? allPages.length + 1 : undefined;
     },
     placeholderData: keepPreviousData,
+    refetchOnWindowFocus: false,
   });
 };

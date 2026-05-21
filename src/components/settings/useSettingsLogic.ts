@@ -5,6 +5,7 @@ import { testAiConnection } from '@/services/geminiService';
 import { deduplicatePhotos } from '@/services/photoMutationService';
 import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { toast } from 'sonner';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -73,6 +74,7 @@ export const useSettingsLogic = ({
   }, [user, setAlertDialog, withLoading, performPullSync, handleError, showSuccess]);
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
+    const toastId = toast.loading('正在进行系统健康检测...');
     try {
         await withLoading('global', async () => {
             const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
@@ -88,21 +90,23 @@ export const useSettingsLogic = ({
             // 2. Perform backfill of missing ThumbHashes
             let backfilledCount = 0;
             await backfillThumbHashes((stats) => {
+                toast.loading(`正在修复: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`, { id: toastId });
                 backfilledCount = stats.success;
             });
             
             // 3. Invalidate query cache if needed
             if (backfilledCount > 0) {
                 invalidatePhotos();
-                showSuccess(`一键检测：系统数据正常，已成功为 ${backfilledCount} 张照片补全已缺失的 ThumbHash 占位图！`);
+                toast.success(`一键检测：系统数据正常，已成功为 ${backfilledCount} 张照片补全已缺失的 ThumbHash 占位图！`, { id: toastId });
             } else {
-                showSuccess('一键检测：系统健康，所有照片均已完全符合 ThumbHash 规范且数据高度一致。');
+                toast.success('一键检测：系统健康，所有照片均已完全符合 ThumbHash 规范且数据高度一致。', { id: toastId });
             }
         });
     } catch (e: any) {
+        toast.dismiss(toastId);
         handleError(e, '诊断失败');
     }
-  }, [withLoading, handleError, showSuccess, invalidatePhotos]);
+  }, [withLoading, handleError, invalidatePhotos]);
 
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinnedTags || [];

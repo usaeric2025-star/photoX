@@ -1,0 +1,44 @@
+import { useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useStore } from '@/store'
+import { useAuth } from './useAuth'
+
+export function useRouteGuard() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { user, isLoading } = useAuth()
+  const lastPathRef = useRef(location.pathname)
+  
+  // 重置 UI 状态（仅在离开合组页面时）
+  const resetUI = useStore((state) => state.resetUI)
+  const activeGroupId = useStore((state) => state.activeGroupId)
+  
+  useEffect(() => {
+    // 防止在同一个路径重复执行
+    if (lastPathRef.current === location.pathname) {
+      return
+    }
+    lastPathRef.current = location.pathname
+    
+    // 离开合组页面时清空 activeGroupId
+    if (activeGroupId && !location.pathname.includes('/group/')) {
+      resetUI()
+    }
+  }, [location.pathname, activeGroupId, resetUI])
+  
+  // 认证检查（不触发刷新，只是重定向）
+  useEffect(() => {
+    if (isLoading) return
+    
+    const isAdminRoute = location.pathname.startsWith('/admin')
+    const isLoginRoute = location.pathname === '/login'
+    
+    if (!user && isAdminRoute && !isLoginRoute) {
+      navigate('/login', { replace: true })
+    }
+    
+    if (user && isLoginRoute) {
+      navigate('/admin', { replace: true })
+    }
+  }, [user, isLoading, location.pathname, navigate])
+}

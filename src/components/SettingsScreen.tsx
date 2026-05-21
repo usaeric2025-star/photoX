@@ -47,7 +47,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     settings, user, geminiApiKey, customModel, accessPasscode,
     setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
     setAlertDialog,
-    logout, loginWithGoogle
+    logout, loginWithGoogle,
+    loadingType
   } = useGalleryStore();
 
   const { data: categories = [] } = useCategoriesQuery();
@@ -197,7 +198,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             photos={photos}
             onHealthCheck={() => handleHealthCheck(photos)}
             onRunMaintenance={props.onRunMaintenance}
-            isChecking={false}
+            isChecking={loadingType === 'global'}
             isMaintenanceRunning={props.isMaintenanceRunning}
             cardClass={cardClass}
             buttonStyles={BUTTON_STYLES}

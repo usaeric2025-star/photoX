@@ -6,6 +6,7 @@ import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
 import { useGalleryStore } from './store';
+import { useRouteGuard } from './hooks/useRouteGuard';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { fetchSettings } from './services/settingService';
 import { supabase } from './lib/supabase';
@@ -28,6 +29,7 @@ function Fallback({ error, resetErrorBoundary }: { error: Error; resetErrorBound
 }
 
 function AnimatedRoutes({ user }: { user: any }) {
+  useRouteGuard(); // <--- 使用路由守卫
   const location = useLocation();
   const { hash, groupId } = location.state || {};
 
