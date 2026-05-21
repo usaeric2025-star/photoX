@@ -91,7 +91,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                   {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}
                 </button>
                 <button 
-                  onClick={() => onEditPhoto?.(photo)}
+                  onClick={(e) => { e.stopPropagation(); onEditPhoto?.(photo); }}
                   className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all"
                 >
                   <Edit3 size={16}/>

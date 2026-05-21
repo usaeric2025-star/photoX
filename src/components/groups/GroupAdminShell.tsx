@@ -286,7 +286,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       contactWhatsApp={contactWhatsApp}
                       onUngroup={handleUngroupLightbox}
                       onSetGroupCover={handleSetGroupCoverLightbox}
-                      onEditPhoto={onEditPhoto}
+                      onEditPhoto={(p) => {
+                        handleCloseLightbox();
+                        onEditPhoto?.(p);
+                      }}
                       onToggleHidden={handleToggleHiddenLightbox}
                       onAiAnalyze={onAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}

@@ -260,7 +260,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                       tagMap={props.tagMap || {}}
                       isStaffMode={props.isStaffMode || false}
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
-                      onEditPhoto={props.onEditPhoto}
+                      onEditPhoto={(p) => {
+                        setFocusedGroupPhotoId(null);
+                        props.onEditPhoto?.(p);
+                      }}
                       onToggleHidden={props.onToggleHidden}
                       onAiAnalyze={props.onAiAnalyze}
                       onCancelAnalyze={props.onCancelAnalyze}

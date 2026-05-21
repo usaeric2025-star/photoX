@@ -262,7 +262,10 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
               tagMap={tagMap}
               categories={props.categories}
               manufacturers={manufacturers || []}
-              onEditPhoto={(p) => props.onEditPhoto && props.onEditPhoto(p.id)}
+              onEditPhoto={(p) => {
+                setLightboxIndex(null);
+                props.onEditPhoto?.(p.id);
+              }}
               onToggleHidden={props.onToggleHidden as any}
               onAiAnalyze={props.onAiAnalyze as any}
               onSetGroupCover={props.onSetGroupCover as any}

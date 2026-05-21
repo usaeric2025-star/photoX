@@ -49,7 +49,8 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
       <div className="absolute top-4 right-4 z-20 flex gap-2">
         {isAdminMode && (
           <button 
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               onClose();
               onEditPhoto?.(photo);
             }}
