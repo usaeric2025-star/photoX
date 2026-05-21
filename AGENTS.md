@@ -1,70 +1,33 @@
-# Project Specific Rules
+# PhotoX AI 行为准则 (AGENTS.md)
 
-- **Do Not Translate**: The terms "Tag" (标签) and "Manufacturer" (厂商) should remain as they are and not be translated or localized into other languages unless specifically requested.
+> 快速检查清单，AI 助手在每次修改代码前必须对照此表。
 
-### PhotoX Technical Stack Standards (Mandatory)
+## 一、技术栈底线
+- **服务端状态**: 使用 **TanStack Query** 处理所有数据流（查询、缓存、分页）。
+- **UI 状态**: 使用 **Zustand** 仅存储纯 UI 状态（弹窗、侧边栏、多选、筛选条件）。
+- **数据写入**: 所有的写入/更新/删除操作必须通过对应的 **MutationService**。
 
-1. **TanStack Query (Data Flow)**
-   - **Query Keys**: MUST be unique and specific. Use `['photos', 'infinite', filters]` or `['photos', 'group', id]`. NEVER use a generic `['photos']` that triggers global invalidation.
-   - **Invalidation**: Use the `useInvalidatePhotos()` hook for photo-related refreshes. Avoid `invalidateQueries({ queryKey: ['photos'] })`.
-   - **Loading States**: Distinguish between `isLoading` (initial), `isFetching` (background), and `isFetchingNextPage`. Use skeletons for initial load and smooth transitions for refreshes.
+## 二、错误处理强制规范
+- **统一入口**: 所有异步操作必须使用 `handleError(error, context)` 或 `useFeedback` 导出的 `showError`。
+- **防止乱弹**: 严禁直接使用 `toast.error` 或 `console.error` 作为唯一的反馈手段。
 
-2. **Zustand (UI State Only)**
-   - **Strict Separation**: Zustand is ONLY for UI states (modals, sidebars, select mode, filters). 
-   - **No Business Data**: Categories, Tags, Manufacturers, and Photos MUST stay in TanStack Query. DO NOT sync business data into Zustand.
+## 三、性能与稳定性底线
+- **数据初始化**: 所有查询 Hook 返回的数据必须初始化为空数组 `[]`。
+- **核心优化**: 
+  - `displayPhotos` 必须使用 `useMemo`。
+  - 列表项事件处理器必须使用 `useCallback`。
+  - 禁止在列表组件中使用内联函数作为事件处理器。
 
-3. **Error & Feedback (Sonner)**
-   - **Unified API**: Use `useFeedback()` hook.
-   - **Success**: Call `showSuccess(message)`.
-   - **Error**: Call `showError(error, context)`.
-   - **Prohibition**: Direct `toast.success()` or `toast.error()` calls from `sonner` are prohibited to ensure consistent formatting and error logging.
+## 四、禁止项清单 (Prohibitions)
+- **❌ 禁止全量刷新**: 严禁使用 `invalidateQueries({ queryKey: ['photos'] })`，必须使用精确的 Query Key。
+- **❌ 禁止业务数据入 Zustand**: Photos、Categories、Tags 严禁存入 Zustand。
+- **❌ 禁止直接调用 Supabase**: 禁止在组件内直接使用 `supabase.from(...).update()`，必须走 Service 层。
+- **❌ 禁止混合命名**: 前端与数据库统一使用 **snake_case**（如 `is_hidden`）。
 
-### PhotoX Systematic Rules (Consistency)
-
-1. **Error Handling & Notifications**
-   - **Unified Error System**: All asynchronous operations (upload, delete, edit, batch, AI, sync, category/tag/manuf. ops) MUST use `handleError(error, 'Operation Name')`.
-   - **Prohibition**: Direct usage of `toast.error` for errors is STRICTLY PROHIBITED.
-   - **Notification Policy**: Maintain a single notification strategy: one user action → one definitive final feedback message. Prevent stacked/repeated notifications.
-
-2. **Optimistic Updates**
-   - UI must update immediately.
-   - `onError` callbacks are MANDATORY: implement rollback and call `handleError`. No "False Success" states.
-
-3. **Loading States**
-   - Provide concrete feedback (skeleton screens, loading indicators) for all long-running asynchronous actions (batching, AI operations, switching categories/tags).
-
-4. **AI Behavior**
-   - When modifying code, ensure error handling, feedback (no stacking), and loading states are integrated strictly according to these rules.
-
-### 最终错误闭环规则 (Final Block/Cancel Integrity)
-
-1. **任何异步操作（包括 Service、AI、同步）失败时**：
-   - 必须调用 `handleError` / `showError` 挂载完整错误追踪上下文。
-   - 严格禁止只编写 `console.error` 或单独调用 `toast.error` 绕开统一反馈体系。
-2. **任务取消机制**：
-   - 任务取消或中断必须调用并保证完全走 `useTasks` 的 `cancelTask(taskId)` 流程，严防未注册/绕行或被数据迭代覆盖等无反应行为。
-
-### 错误处理与性能优化底线 (Performance & Stability Bottom Lines - MANDATORY)
-
-1. **数据源头原则**
-   - 所有查询 Hook（useQuery / useInfiniteQuery）返回的数据 **必须初始化为空数组 `[]`**。
-   - 禁止在组件中使用 `?.` 或 `||` 作为主要防御手段掩盖 undefined 数据。
-   - 违反此规则的代码必须回退。
-
-2. **滚动性能原则**
-   - `displayPhotos` **必须**使用 `useMemo` 包裹。
-   - `PhotoCard` 等列表组件的事件处理器 **必须**使用 `useCallback`。
-   - 禁止使用内联函数作为列表项的事件处理器。
-   - 违反此规则的代码不得合入。
-
-3. **缓存管理原则**
-   - 禁止使用 `invalidateQueries({ queryKey: ['photos'] })` 全量刷新，必须精确指定 queryKey 范围。
-   - 禁止在 Service 层使用内存缓存（如 `Map`、`{}` 对象缓存），数据请求必须受控于 TanStack Query。
-
-4. **状态管理原则**
-   - Zustand **只存 UI 状态**（多选模式、侧边栏、弹窗）。
-   - 禁止在 Zustand 中存储业务数据（photos、categories、tags）。
-
-5. **架构底线**
-   - 已完成的优化（`useCallback`、`useMemo`、数据源头初始化）**不得回退**。
-   - 任何修改必须保持或提升当前性能水平。
+## 五、修改前快速检查清单
+1. 是否使用了 `is_hidden` (snake_case) 而非 camelCase？
+2. 异步操作是否包裹了 `try...catch` 且调用了 `handleError`？
+3. 是否使用了 `AlertDialog` 进行确认操作？
+4. 业务数据是否仍然由 TanStack Query 管理？
+5. 列表渲染是否考虑了性能（Memo/Callback）？
+6. 是否有无意义的 `invalidateQueries` 调用？

@@ -20,7 +20,6 @@ export const FIELD_MAP: Record<string, string> = {
   modelNumber: 'model_number',
   userId: 'user_id',
   descriptionTranslations: 'description_translations',
-  is_hidden: 'is_hidden',
 };
 
 export const ALLOWED_FIELDS = [

@@ -176,12 +176,15 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     clearSelection();
   }, [searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, clearSelection]);
 
-  // Clear selections when entering a group
+  // Clear selections and filters when entering a group
   useEffect(() => {
     if (activeGroupId) {
       clearSelection();
+      setFilterCatId(null);
+      setFilterTagIds([]);
+      setSearchQuery('');
     }
-  }, [activeGroupId, clearSelection]);
+  }, [activeGroupId, clearSelection, setFilterCatId, setFilterTagIds, setSearchQuery]);
 
   const onLongPressStart = useCallback((id: string) => {
     hapticFeedback.medium();

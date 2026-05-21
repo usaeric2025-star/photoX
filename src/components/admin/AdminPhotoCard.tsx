@@ -26,7 +26,7 @@ interface AdminPhotoCardProps {
 }
 
 const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
-  const isHidden = !!(photo.is_hidden || (photo as any).isHidden);
+  const is_hidden = !!photo.is_hidden;
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
       {photo.groupId && (
@@ -40,7 +40,7 @@ const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
           <span>置頂</span>
         </div>
       )}
-      {isHidden && (
+      {is_hidden && (
         <div className="bg-orange-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
           <EyeOff size={8} />
           <span>隐藏</span>
@@ -141,7 +141,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
     [photo.thumb_url, photo.image_url, photo.uri, photo.updatedAt, photo.createdAt]
   );
 
-  const isHidden = useMemo(() => !!(photo.is_hidden || (photo as any).isHidden), [photo.is_hidden, (photo as any).isHidden]);
+  const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
 
   const cardSelectedClasses = isMultiSelect && isSelected 
     ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
@@ -227,7 +227,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       onTouchMove={cancelPress}
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
-      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${isHidden ? 'ring-2 ring-yellow-400/50' : ''}`}
+      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
       {!isImageLoaded && !isImageError && !placeholderDataUrl && (
         <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
@@ -258,7 +258,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
-        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${isHidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
+        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
           loadedImagesCache.add(photo.id);
           setIsImageLoaded(true);
@@ -270,7 +270,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       />
 
       {isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
-      {isHidden && !isMultiSelect && (
+      {is_hidden && !isMultiSelect && (
         <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none">
           <EyeOff size={24} className="text-white/60 drop-shadow" />
         </div>
