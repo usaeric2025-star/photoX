@@ -203,7 +203,7 @@ export const usePublicGalleryLogic = (props: {
 
   const shareGroup = useCallback((photos: Photo[]) => {
     const validPhotos = photos.filter(p => !!p);
-    const gId = validPhotos[0]?.groupId || activeGroupId;
+    const gId = validPhotos[0]?.group_id || activeGroupId;
     const shareUrl = `${window.location.origin}/g/${gId}`;
     const msg = validPhotos.map(p => p.name || 'Furniture').slice(0, 3).join(', ') + (validPhotos.length > 3 ? '...' : '');
     const shareText = `${t.sharePrompt}\n\n${t.shareTitle}: ${msg}\n\nView full collection: ${shareUrl}`;
@@ -245,8 +245,8 @@ export const usePublicGalleryLogic = (props: {
         if (localPhotos.length > 20) {
           const counts: Record<string, number> = {};
           localPhotos.forEach(p => {
-            if (p.tagIds && Array.isArray(p.tagIds)) {
-              p.tagIds.forEach(tid => {
+            if (p.tag_ids && Array.isArray(p.tag_ids)) {
+              p.tag_ids.forEach(tid => {
                 const strId = String(tid);
                 counts[strId] = (counts[strId] || 0) + 1;
               });

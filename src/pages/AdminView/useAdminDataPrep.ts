@@ -51,8 +51,8 @@ export const useAdminDataPrep = () => {
   const { data: manufacturers = [] } = useManufacturersQuery();
 
   const infinitePhotosQuery = useInfinitePhotos({
-    categoryId: filterCatId,
-    tagId: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
     sortOrder: sortOrder,
     isAdminMode: true
