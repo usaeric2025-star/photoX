@@ -16,6 +16,7 @@ interface AdminPhotoGridProps {
   onLoadMore: () => void;
   hasNextPage: boolean;
   isFetchingNextPage?: boolean;
+  isLoading?: boolean;
   onEditPhoto?: (id: string) => void;
   onToggleHidden?: (p: Photo) => Promise<void>;
   onAiAnalyze?: (photo: Photo) => Promise<any>;
@@ -32,7 +33,7 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
       categories={props.categories}
       tags={props.tags}
       settings={props.settings}
-      isRefreshing={props.loadingType === 'sync-pull' || props.loadingType === 'sync-push'}
+      isRefreshing={props.loadingType === 'sync-pull' || props.loadingType === 'sync-push' || props.isLoading}
       onRefresh={props.onRefresh}
       columns={props.columns}
       setColumns={props.setColumns}

@@ -250,6 +250,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
           src={placeholderDataUrl || photo.thumb_url || ''} 
           alt=""
           loading={shouldEagerLoad ? "eager" : "lazy"}
+          width={400}
           className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-filter duration-300 ${placeholderDataUrl ? '' : 'blur-md'}`}
         />
       )}
@@ -260,6 +261,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
         referrerPolicy="no-referrer"
         src={thumbSrc} 
         alt={photo.name}
+        width={400}
         className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
         onLoad={() => {
           loadedImagesCache.add(photo.id);

@@ -175,7 +175,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
         <AnimatePresence>
           {(() => {
-            const isInitialLoad = isSyncing && gridPhotos.length === 0;
+            const isInitialLoad = (isSyncing || props.isRefreshing) && gridPhotos.length === 0;
             if (isInitialLoad) {
               const skeletonCount = getSkeletonCount(props.totalCount, columns);
               return (

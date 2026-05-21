@@ -38,6 +38,7 @@ interface Props {
   onBatchToggleHidden?: (ids: string[]) => void;
   isAnalyzing?: boolean;
   isFetchingNextPage?: boolean;
+  isLoading?: boolean;
   isAdmin?: boolean;
 }
 
@@ -50,7 +51,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
     lang, loadingType, batchProgress, categories, tags,
     settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
     onDeletePhotos, onGroupPhotos, onBatchEdit, onBatchAiAnalyze, onBatchToggleHidden,
-    isFetchingNextPage, onEditPhoto, onToggleHidden, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
+    isFetchingNextPage, isLoading, onEditPhoto, onToggleHidden, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
   } = props;
 
   const { selectedIds, clear } = useMultiSelect();
@@ -69,7 +70,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
         batchProgress={batchProgress}
       />
       <div className="flex-1 min-h-0 relative">
-        {photos.length === 0 && loadingType !== 'sync-pull' ? (
+        {photos.length === 0 && loadingType !== 'sync-pull' && !isLoading ? (
           <AdminEmptyState t={t} />
         ) : (
           <AdminPhotoGrid 
@@ -85,6 +86,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
             onLoadMore={onLoadMore}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
+            isLoading={isLoading}
             onEditPhoto={onEditPhoto}
             onToggleHidden={onToggleHidden}
             onAiAnalyze={onAiAnalyze}

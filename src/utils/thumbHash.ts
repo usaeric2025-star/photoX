@@ -11,6 +11,9 @@ export async function generateThumbHash(source: File | string): Promise<string |
     await new Promise((resolve, reject) => {
       img.onload = resolve;
       img.onerror = reject;
+      if (typeof source === 'string' && source.startsWith('http')) {
+        img.crossOrigin = 'anonymous';
+      }
       img.src = url;
     });
 

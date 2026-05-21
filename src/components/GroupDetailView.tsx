@@ -140,6 +140,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     <AnimatePresence>
       {activeGroupId !== null && (
         <motion.div 
+          key={activeGroupId}
           ref={containerRef}
           onScroll={handleScroll}
           initial={{ opacity: 0 }}
@@ -212,23 +213,18 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
               </div>
             )}
 
-           {isLoading ? (
-             <div className="flex-1 flex items-center justify-center p-12">
-               <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
-             </div>
-           ) : (
-             <GroupGridView 
-               onEndReached={() => {
-                 if (hasNextPage && !isFetchingNextPage) {
-                   fetchNextPage();
-                 }
-               }}
-               virtuosoRef={virtuosoRef}
-               photos={activeGroupPhotos} 
-               highlightId={currentHighlightId}
-               onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
-             />
-           )}
+           <GroupGridView 
+             onEndReached={() => {
+               if (hasNextPage && !isFetchingNextPage) {
+                 fetchNextPage();
+               }
+             }}
+             virtuosoRef={virtuosoRef}
+             photos={activeGroupPhotos} 
+             isLoading={isLoading}
+             highlightId={currentHighlightId}
+             onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
+           />
 
            {isFetchingNextPage && (
              <div className="py-4 flex items-center justify-center bg-brand-bg shrink-0">

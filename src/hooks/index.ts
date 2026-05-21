@@ -13,6 +13,7 @@ export * from './mutations/useGroupOperations';
 export * from './mutations/useAdminMutations';
 export * from './mutations/useGroupCoverMutation';
 export * from './mutations/useSettingsMutation';
+export * from './useSettings';
 export * from './mutations/useBatchEditMutation';
 export * from './mutations/useSyncMutation';
 

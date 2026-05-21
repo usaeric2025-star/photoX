@@ -10,6 +10,7 @@ export const AdminView: React.FC = () => {
       {...data} 
       hasNextPage={data.infinitePhotosQuery.hasNextPage}
       isFetchingNextPage={data.infinitePhotosQuery.isFetchingNextPage}
+      isLoading={data.infinitePhotosQuery.isLoading}
     />
   );
 };

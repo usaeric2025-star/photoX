@@ -40,10 +40,11 @@ interface Props {
   uiValue: any;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  isLoading?: boolean;
 }
 
 export const AdminViewContent: React.FC<Props> = ({ 
-  user, authChecked, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage 
+  user, authChecked, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage, isLoading 
 }) => {
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
@@ -149,17 +150,15 @@ export const AdminViewContent: React.FC<Props> = ({
               />
             )}
             
-            {logic.activeGroupId && (
-              <GroupDetailView
-                activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId} setAlertDialog={logic.setAlertDialog}
-                photos={logic.photos} displayPhotos={logic.groupPhotos} initialPhotoId={logic.initialPhotoId}
-                setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
-                onEditPhoto={(p: Photo) => actions.handleEditPhoto(p.id)} onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
-                onBatchEdit={actions.handleBatchEdit} onUngroup={actions.handleUngroup} onAddPhotoToGroup={actions.handleImport}
-                lang={lang} t={t} categories={logic.categories} manufacturers={logic.manufacturers} allTags={logic.tags} tagMap={logic.tagIdToNameMap}
-                onBatchAiAnalyze={actions.handleBatchAiAnalyze} onAiAnalyze={actions.handleAiAnalyze} onToggleHidden={actions.handleToggleHidden} updatePhoto={actions.handleUpdatePhoto}
-              />
-            )}
+            <GroupDetailView
+              activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId} setAlertDialog={logic.setAlertDialog}
+              photos={logic.photos} displayPhotos={logic.groupPhotos} initialPhotoId={logic.initialPhotoId}
+              setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
+              onEditPhoto={(p: Photo) => actions.handleEditPhoto(p.id)} onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
+              onBatchEdit={actions.handleBatchEdit} onUngroup={actions.handleUngroup} onAddPhotoToGroup={actions.handleImport}
+              lang={lang} t={t} categories={logic.categories} manufacturers={logic.manufacturers} allTags={logic.tags} tagMap={logic.tagIdToNameMap}
+              onBatchAiAnalyze={actions.handleBatchAiAnalyze} onAiAnalyze={actions.handleAiAnalyze} onToggleHidden={actions.handleToggleHidden} updatePhoto={actions.handleUpdatePhoto}
+            />
           </React.Suspense>
 
           <main className="flex-1 relative overflow-hidden">
@@ -170,6 +169,7 @@ export const AdminViewContent: React.FC<Props> = ({
               <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <MainAdminScreen 
                   {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
+                  isLoading={isLoading}
                   onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
                   onToggleHidden={actions.handleToggleHidden} onSetGroupCover={logic.setGroupCover} onEditPhoto={actions.handleEditPhoto}
                   onLoadMore={actions.handleLoadMoreCallback} hasNextPage={!!hasNextPage}
@@ -191,7 +191,7 @@ export const AdminViewContent: React.FC<Props> = ({
               </div>
             </div>
 
-            {logic.activeScreen === 'manage' && (
+            {(logic.activeScreen === 'manage' || logic.activeScreen === 'settings') && (
               <div className="absolute inset-0 z-20 bg-brand-bg">
                 <SettingsScreen 
                   setActiveScreen={logic.setActiveScreen} saveSettings={logic.saveSettings} handleLogoUpload={actions.handleLogoUpload}

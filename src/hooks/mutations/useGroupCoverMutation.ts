@@ -52,6 +52,14 @@ export const useGroupCoverMutation = () => {
         }
       }
       
+      queryClient.setQueriesData({ queryKey: ['photos', 'group', resolvedGroupId] }, (old: Photo[] | undefined) => {
+        if (!old) return old;
+        return old.map(photo => ({
+          ...photo,
+          is_group_cover: photo.id === photoId
+        }));
+      });
+
       queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
         if (!old || !old.pages) return old;
         return {

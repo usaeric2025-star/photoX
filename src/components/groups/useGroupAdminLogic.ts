@@ -49,6 +49,10 @@ export const useGroupAdminLogic = ({
   
   const setCover = useCallback(async (photoId: string) => {
       mutateSetCover({ photoId, groupId: activeGroupId || undefined });
+      setGroupData(prev => prev ? {
+        ...prev,
+        cover_photo_id: photoId
+      } : prev);
   }, [mutateSetCover, activeGroupId]);
 
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
@@ -61,13 +65,11 @@ export const useGroupAdminLogic = ({
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
   const virtuosoRef = useRef<any>(null);
 
-  const { data: dbGroupPhotos = [] } = useGroupPhotosQuery(activeGroupId || '', isAdminMode);
+  const { data: dbGroupPhotos = [], isLoading: isGroupPhotosLoading } = useGroupPhotosQuery(activeGroupId || '', isAdminMode);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    const groupPhotos = dbGroupPhotos.length > 0
-      ? dbGroupPhotos
-      : photos.filter(p => p && p.group_id === activeGroupId);
+    const groupPhotos = dbGroupPhotos;
     return filterPhotosByMode(groupPhotos, isAdminMode)
       .sort((a, b) => {
         if (a.is_group_cover) return -1;
@@ -139,8 +141,8 @@ export const useGroupAdminLogic = ({
               description: '',
               colors: [],
               materials: [],
-              cover_photo_id: groupCover?.id || null,
-              user_id: groupCover?.user_id || 'default',
+              cover_photo_id: null,
+              user_id: 'default',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
@@ -158,7 +160,7 @@ export const useGroupAdminLogic = ({
       setIsGroupDataLoading(false);
     }
     return () => { active = false; };
-  }, [activeGroupId, groupCover?.id, groupCover?.user_id]);
+  }, [activeGroupId]);
 
   useEffect(() => {
     if (isMultiSelectMode && selectedPhotoIds.length === 0) {
@@ -348,6 +350,7 @@ export const useGroupAdminLogic = ({
     setCover,
     setPromptDialog,
     setAlertDialog,
-    showError
+    showError,
+    isGroupPhotosLoading
   };
 };

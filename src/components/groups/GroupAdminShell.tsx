@@ -106,7 +106,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     handleBulkAction,
     setCover,
     setPromptDialog,
-    setAlertDialog
+    setAlertDialog,
+    isGroupPhotosLoading
   } = useGroupAdminLogic({
     activeGroupId,
     initialPhotoId: props.initialPhotoId,
@@ -176,6 +177,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
       <AnimatePresence mode="wait">
         {activeGroupId !== null && (
           <motion.div 
+            key={activeGroupId}
             ref={containerRef}
             onScroll={handleScroll}
             initial={{ opacity: 0 }}
@@ -204,24 +206,25 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
            <GroupGridView 
              virtuosoRef={virtuosoRef}
              photos={activeGroupPhotos}
+             isLoading={isGroupPhotosLoading}
              isMultiSelectMode={isMultiSelectMode}
-             selectedPhotoIds={selectedPhotoIds}
-             highlightId={currentHighlightId}
-             onPhotoClick={handlePhotoClick}
-             onPhotoContextMenu={handlePhotoContextMenu}
-             getPhotoProps={useCallback((photo) => ({
-               draggable: isAdminMode && !isMultiSelectMode,
-               onDragStart: () => setDraggedPhotoId(photo.id),
-               onDragOver: (e: React.DragEvent) => e.preventDefault(),
-               onDrop: (e: React.DragEvent) => {
-                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                 if (draggedPhotoId) {
-                   handleReorder(draggedPhotoId, photo.id);
-                   setDraggedPhotoId(null);
+               selectedPhotoIds={selectedPhotoIds}
+               highlightId={currentHighlightId}
+               onPhotoClick={handlePhotoClick}
+               onPhotoContextMenu={handlePhotoContextMenu}
+               getPhotoProps={useCallback((photo) => ({
+                 draggable: isAdminMode && !isMultiSelectMode,
+                 onDragStart: () => setDraggedPhotoId(photo.id),
+                 onDragOver: (e: React.DragEvent) => e.preventDefault(),
+                 onDrop: (e: React.DragEvent) => {
+                   if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                   if (draggedPhotoId) {
+                     handleReorder(draggedPhotoId, photo.id);
+                     setDraggedPhotoId(null);
+                   }
                  }
-               }
-             }), [isAdminMode, isMultiSelectMode, draggedPhotoId, handleReorder])}
-           />
+               }), [isAdminMode, isMultiSelectMode, draggedPhotoId, handleReorder])}
+             />
 
            {/* Multi-Select Floating Bar */}
            <GroupMultiSelectBar 

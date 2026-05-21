@@ -8,7 +8,7 @@ import {
   useAddCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
   useUpdatePhotoMutation, useBatchEditMutation, useDeletePhotoMutation, useGroupPhotosMutation, useUngroupMutation,
-  useSettingsMutation, useSyncMutation,
+  useSettingsMutation, useSyncMutation, useSettings,
   useAdminDialogs, useLoading, useInfinitePhotos, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
   useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback, useMultiSelect, useTagStats
 } from '../../hooks';
@@ -87,6 +87,14 @@ export const useAdminDataPrep = () => {
   }, [infinitePhotosQuery]);
 
   const { adminPreviewMode, setAdminPreviewMode, settings, setSettings, refreshCloudData, isSyncing, setIsSyncing } = useSyncEngine(withLoading);
+
+  const { settings: fetchedSettings } = useSettings();
+  useEffect(() => {
+    if (fetchedSettings && Object.keys(fetchedSettings).length > 0 && !settings) {
+      setSettings(fetchedSettings as any);
+    }
+  }, [fetchedSettings, settings, setSettings]);
+
 
   const uiBasicValue = useMemo(() => ({ 
     setAlertDialog, setPromptDialog, setLoadingType, loadingType, withLoading, setCloudCount,

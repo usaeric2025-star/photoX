@@ -134,7 +134,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
   );
 });
 
-export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.Ref<any> }> = ({
+export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.Ref<any>, isLoading?: boolean }> = ({
   photos,
   groupData,
   onPhotoClick,
@@ -144,7 +144,8 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   getPhotoProps,
   virtuosoRef,
   highlightId,
-  onEndReached
+  onEndReached,
+  isLoading = false
 }) => {
   
   const header = useMemo(() => {
@@ -203,8 +204,10 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
       <VirtuosoGrid
         ref={virtuosoRef}
         style={{ height: '100%', width: '100%' }}
-        totalCount={photos.length}
-        overscan={200}
+        totalCount={isLoading ? 12 : photos.length}
+        overscan={3}
+        increaseViewportBy={300}
+        useWindowScroll={false}
         endReached={onEndReached}
         components={{
           Header: () => <div className="p-3 sm:p-6 pb-0">{header}</div>,
@@ -212,6 +215,9 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         }}
         listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-6 p-3 sm:p-6"
         itemContent={(index) => {
+          if (isLoading) {
+            return <Skeleton className="aspect-square rounded-[1.25rem] bg-slate-100" />;
+          }
           const photo = photos[index];
           if (!photo) return null;
           
