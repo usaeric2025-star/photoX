@@ -1,17 +1,14 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
-import * as ErrorMonitor from '@sentry/react';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { useAuth } from './hooks/useAuth';
-import { useGalleryStore } from './store';
+import { useSettings } from './hooks/useSettings';
 import { useRouteGuard } from './hooks/useRouteGuard';
 import { clearExpiredCaches } from './utils/indexedDB';
-import { fetchSettings } from './services/settingService';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
-import { Toaster, toast } from 'sonner';
 import { globalHandleError } from './utils/errorHandler';
 
 function Fallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
@@ -67,27 +64,8 @@ function AnimatedRoutes({ user }: { user: any }) {
 
 export default function AppRoutes() {
   const { user, authChecked } = useAuth();
-  const { setSettings, setUser, user: galleryUser } = useGalleryStore();
   
-  useEffect(() => {
-    // Only update if we have a real change, and avoid unnecessary re-triggers
-    if (user?.id !== galleryUser?.id) {
-      setUser(user);
-    }
-  }, [user?.id, galleryUser?.id]); // Removed setUser from dependency as it should be stable
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const s = await fetchSettings();
-        if (active && s) setSettings(s as any);
-      } catch (e) {
-        if (active) globalHandleError(e, '加载系统配置失败');
-      }
-    })();
-    return () => { active = false; };
-  }, [setSettings]);
+  // App-level initialization logic can stay, but fetchSettings is handled by useSettings hook.
 
   useEffect(() => {
     // 1. Detect OAuth error in URL hash
@@ -127,14 +105,7 @@ export default function AppRoutes() {
     };
   }, [user]);
 
-  // Handle Global Search Debouncing
-  const { searchQuery, setDebouncedSearchQuery } = useGalleryStore();
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 400); // 400ms debounce
-    return () => clearTimeout(timer);
-  }, [searchQuery, setDebouncedSearchQuery]);
+  // Handle Global Search Debouncing via local state or query logic
   
   if (!authChecked) return null;
 

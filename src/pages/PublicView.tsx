@@ -3,10 +3,18 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
-import { 
-  useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback
-} from '../hooks';
-import { fetchSettings, loginWithGoogle } from '../services/supabaseService';
+import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback } from '../hooks';
+import { useAuth } from '../hooks/useAuth';
+import { useSettings } from '../hooks/useSettings';
+import { useStore } from '../store';
+import { PAGINATION } from '../constants/config';
+import { Photo } from '../types';
+import { safeArray } from '../lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '../hooks/queries/keys';
+import { useMultiSelect } from '../hooks/useMultiSelect';
+import { FullPageLoading } from '../components/FullPageLoading';
+import { saveData, syncCache } from '../utils/indexedDB';
 import { PublicGallery } from '../components/public/PublicGallery';
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 
@@ -18,19 +26,8 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
     </div>
   );
 }
-import { FullPageLoading } from '../components/FullPageLoading';
-import { saveData, syncCache } from '../utils/indexedDB';
-import { useAuth } from '../hooks/useAuth';
-import { useGalleryStore } from '../store';
-import { PAGINATION } from '../constants/config';
-import { AppSettings, Photo } from '../types';
-import { safeArray } from '../lib/utils';
-import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../hooks/queries/keys';
-import { useMultiSelect } from '../hooks/useMultiSelect';
 
 export default function PublicView() {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useFeedback();
   const { reset } = useMultiSelect();
@@ -72,14 +69,29 @@ export default function PublicView() {
       }
     })();
   }, [queryClient]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  
+  // Use store for UI state that should persist
   const { 
     filterCatId,
     filterTagIds,
-    debouncedSearchQuery,
-    sortOrder
-  } = useGalleryStore();
+    sortOrder,
+    setFilterCatId,
+    setFilterTagIds,
+    setSearchQuery: setStoreSearchQuery
+  } = useStore();
+  
+  useEffect(() => {
+	  const timer = setTimeout(() => {
+		  setDebouncedSearchQuery(searchQuery);
+	  }, 300);
+	  return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const { data: categoriesData = [] } = useCategoriesQuery();
+  const { settings } = useSettings();
+  const { hasLoadedOnce, setHasLoadedOnce } = useStore();
 
   const infiniteQuery = useInfinitePhotos({
     category_id: filterCatId,
@@ -108,11 +120,10 @@ export default function PublicView() {
   const { mutateAsync: updatePhotoMutation } = useUpdatePhotoMutation();
 
   const photos = useMemo(() => {
-    const allPhotos = paginatedPhotos?.pages.flatMap(p => p.photos) || [];
+    const allPhotos = paginatedPhotos?.pages?.flatMap(p => p.photos) || [];
     return cleanPhotos(allPhotos);
   }, [paginatedPhotos]);
   
-  const { settings, hasLoadedOnce, setHasLoadedOnce } = useGalleryStore();
   const navigate = useNavigate();
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
 
@@ -135,10 +146,11 @@ export default function PublicView() {
   const handleRefresh = useCallback(async () => {
     try {
       // 1. 清空临时状态
-      useGalleryStore.getState().setSearchQuery('');
-      useGalleryStore.getState().setDebouncedSearchQuery('');
-      useGalleryStore.getState().setFilterCatId(null);
-      useGalleryStore.getState().setFilterTagIds([]);
+      setStoreSearchQuery('');
+      setSearchQuery('');
+      setDebouncedSearchQuery('');
+      setFilterCatId(null);
+      setFilterTagIds([]);
       reset();
       
       // 2. 清除持久化的筛选

@@ -1,37 +1,30 @@
-import { useState, useEffect } from 'react';
-import { onAuthChange, loginWithGoogle, logout } from '../services/supabaseService';
-
-import { User } from '../types';
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase'
 
 export const useAuth = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const [authChecked, setAuthChecked] = useState(false);
-    const [authError, setAuthError] = useState<string | null>(null);
-    
-    useEffect(() => {
-        const unsubscribe = onAuthChange((u) => {
-            setUser((prevUser) => {
-                // If it's the same user identity, don't trigger a re-render
-                if (prevUser?.id === u?.id) {
-                    return prevUser;
-                }
-                return u;
-            });
-            setAuthChecked(true);
-        });
-        
-        // Safety fallback: if no event within 5s, assume checked
-        const timer = setTimeout(() => {
-            if (!authChecked) {
-                setAuthChecked(true);
-            }
-        }, 5000);
-        
-        return () => {
-            unsubscribe();
-            clearTimeout(timer);
-        };
-    }, []);
+  const { data: user, isLoading } = useQuery({
+    queryKey: ['auth', 'user'],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser()
+      return data.user
+    },
+    staleTime: Infinity,
+  })
 
-    return { user, authChecked, authError, loginWithGoogle, logout };
-};
+  const loginWithGoogle = useMutation({
+    mutationFn: async () => {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/admin' }
+      })
+    },
+  })
+
+  const logout = useMutation({
+    mutationFn: async () => {
+      await supabase.auth.signOut()
+    },
+  })
+
+  return { user, isLoading, loginWithGoogle: loginWithGoogle.mutateAsync, logout: logout.mutateAsync }
+}
