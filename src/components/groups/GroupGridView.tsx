@@ -37,7 +37,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
   return (
     <div 
       {...extraProps}
-      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer h-full ${photo.isGroupCover ? 'ring-4 ring-brand-gold border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${isHighlighted ? 'ring-4 ring-blue-400 animate-pulse bg-blue-50' : ''} ${extraProps.className || ''}`}
+      className={`bg-white rounded-[1.25rem] overflow-hidden shadow-sm hover:shadow-md border p-1.5 flex flex-col group transition-all duration-300 relative cursor-pointer h-full ${photo.is_group_cover ? 'ring-4 ring-brand-gold border-transparent' : isSelected ? 'ring-4 ring-blue-500' : 'border-slate-100'} ${isHighlighted ? 'ring-4 ring-blue-400 animate-pulse bg-blue-50' : ''} ${extraProps.className || ''}`}
       onClick={(e) => {
          if (extraProps.onClick) extraProps.onClick(e);
          onPhotoClick(photo);
@@ -85,12 +85,12 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
         
         {/* Status Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
-           {photo.isGroupCover && !isMultiSelectMode && (
+           {photo.is_group_cover && !isMultiSelectMode && (
              <div className="bg-brand-gold text-white p-1 rounded-lg flex items-center justify-center shadow-lg">
                <Star size={12} fill="currentColor" />
              </div>
            )}
-           {photo.isAnalyzing && (
+           {photo.is_analyzing && (
              <Skeleton className="bg-purple-600 text-white p-1 rounded-lg flex items-center justify-center shadow-lg">
                <Sparkles size={12} />
              </Skeleton>

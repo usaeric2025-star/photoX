@@ -49,11 +49,11 @@ export const updatePhotosBatch = async (
     if (error) throw error;
     
     // Also sync tags if provided in updates
-    if ('tagIds' in updates) {
+    if ('tag_ids' in updates) {
        for (const photoId of chunkIds) {
           if (signal?.aborted) throw new Error('Operation aborted');
           await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-          const uTagIds = safeArray(updates.tagIds);
+          const uTagIds = safeArray(updates.tag_ids);
           if (uTagIds.length > 0) {
             const tagAssociations = uTagIds.map(tagId => ({
               photo_id: photoId,

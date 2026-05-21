@@ -49,7 +49,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
 
   const payload: Record<string, unknown> = mapToDb({
     ...photo,
-    userId: session.user.id,
+    user_id: session.user.id,
   }, true); // Always map to DB as if new
 
   // Explicitly remove id from payload to let DB generate UUID IF it is temporary or missing
@@ -89,7 +89,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
     photo.id = finalPhotoId;
   }
 
-  const sTagIds = safeArray(photo.tagIds);
+  const sTagIds = safeArray(photo.tag_ids);
   if (sTagIds.length >= 0) {
     await supabase.from('photo_tags').delete().eq('photo_id', finalPhotoId);
     
@@ -172,19 +172,19 @@ export const savePhotosToCloudBatch = async (
       manual_code: photo.manual_code || '',
       image_hash: photo.image_hash,
       name: photo.name,
-      category_id: photo.categoryId || null,
-      manufacturer_id: photo.manufacturerId || null,
+      category_id: photo.category_id || null,
+      manufacturer_id: photo.manufacturer_id || null,
       description: photo.description || '',
       image_url: photo.image_url,
       thumb_url: photo.thumb_url || null,
       dimensions: photo.dimensions || null,
       model_number: photo.model_number || '',
       description_translations: photo.description_translations || null,
-      created_at: photo.createdAt,
-      group_id: photo.groupId || null,
-      is_group_cover: photo.isGroupCover || false,
+      created_at: photo.created_at,
+      group_id: photo.group_id || null,
+      is_group_cover: photo.is_group_cover || false,
       is_hidden: photo.is_hidden || false,
-      updated_at: photo.updatedAt || new Date().toISOString()
+      updated_at: photo.updated_at || new Date().toISOString()
     };
     if (isUUID) {
       payload.id = photo.id;
@@ -273,7 +273,7 @@ export const savePhotosToCloudBatch = async (
 
   const newTagAssociations: { photo_id: string; tag_id: string }[] = [];
   safeArray(results).forEach(p => {
-    const pTagIds = safeArray(p.tagIds);
+    const pTagIds = safeArray(p.tag_ids);
     if (pTagIds.length > 0) {
       pTagIds.forEach(tid => {
         if (tid) newTagAssociations.push({ photo_id: p.id, tag_id: tid });

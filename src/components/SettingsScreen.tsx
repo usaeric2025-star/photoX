@@ -31,6 +31,8 @@ interface SettingsScreenProps {
   cloudCount: number | null;
   lastSyncTime: number | null;
   isSyncing: boolean;
+  onRunMaintenance: () => Promise<void>;
+  isMaintenanceRunning: boolean;
 }
 
 const BUTTON_STYLES = {
@@ -194,7 +196,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           <MaintenanceSection 
             photos={photos}
             onHealthCheck={() => handleHealthCheck(photos)}
+            onRunMaintenance={props.onRunMaintenance}
             isChecking={false}
+            isMaintenanceRunning={props.isMaintenanceRunning}
             cardClass={cardClass}
             buttonStyles={BUTTON_STYLES}
           />

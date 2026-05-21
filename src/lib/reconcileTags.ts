@@ -6,7 +6,7 @@ export const reconcileTags = async (photos: Photo[], currentTags: Tag[]): Promis
   // 1. Collect all tags actually used in photos
   const usedTagIds = new Set<string>();
   photos.forEach(p => {
-    const pTagIds = Array.isArray(p.tagIds) ? p.tagIds : (typeof p.tagIds === 'string' ? [p.tagIds] : []);
+    const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids : (typeof p.tag_ids === 'string' ? [p.tag_ids] : []);
     pTagIds.forEach(id => usedTagIds.add(id));
   });
 

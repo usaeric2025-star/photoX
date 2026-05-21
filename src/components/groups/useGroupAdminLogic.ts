@@ -81,7 +81,7 @@ export const useGroupAdminLogic = ({
       });
   }, [activeGroupId, photos, dbGroupPhotos, isAdminMode]);
 
-  const groupCover = useMemo(() => activeGroupPhotos.find(p => p.isGroupCover) || activeGroupPhotos[0], [activeGroupPhotos]);
+  const groupCover = useMemo(() => activeGroupPhotos.find(p => p.is_group_cover) || activeGroupPhotos[0], [activeGroupPhotos]);
   
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -158,7 +158,7 @@ export const useGroupAdminLogic = ({
       setIsGroupDataLoading(false);
     }
     return () => { active = false; };
-  }, [activeGroupId, groupCover?.id, groupCover?.userId]);
+  }, [activeGroupId, groupCover?.id, groupCover?.user_id]);
 
   useEffect(() => {
     if (isMultiSelectMode && selectedPhotoIds.length === 0) {
@@ -170,7 +170,7 @@ export const useGroupAdminLogic = ({
     // Determine the true remaining count (including hidden photos)
     const allGroupPhotos = dbGroupPhotos.length > 0
       ? dbGroupPhotos
-      : photos.filter(p => p && p.groupId === activeGroupId);
+      : photos.filter(p => p && p.group_id === activeGroupId);
     const remainingCount = allGroupPhotos.length - ids.length;
     const isDissolving = remainingCount <= 1;
     

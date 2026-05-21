@@ -56,19 +56,19 @@ export const processSinglePhoto = async (
       }
 
       const finalTagIds = await resolveTagIdsBatch(
-        Array.from(new Set([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)])),
+        Array.from(new Set([...safeArray<string>(result.tag_ids), ...safeArray<string>(result.new_tags)])),
         tags, tagNameToIdMap
       );
 
       updated = {
         ...initialPhoto,
-        isAnalyzing: false,
+        is_analyzing: false,
         name: shouldUpdateName(initialPhoto.name) ? (aiName || initialPhoto.name) : initialPhoto.name,
-        categoryId: result.categoryId || initialPhoto.categoryId,
-        tagIds: finalTagIds.slice(0, 3),
+        category_id: result.category_id || initialPhoto.category_id,
+        tag_ids: finalTagIds.slice(0, 3),
         description: (result.description && (!initialPhoto.description || !initialPhoto.description.trim())) ? result.description : initialPhoto.description,
         description_translations: result.description_translations || initialPhoto.description_translations,
-        model_number: initialPhoto.model_number || result.modelNumber || '',
+        model_number: initialPhoto.model_number || result.model_number || '',
         dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : initialPhoto.dimensions
       };
       

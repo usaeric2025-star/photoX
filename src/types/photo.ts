@@ -63,7 +63,7 @@ export interface Category {
   ms?: string;
   aliases: string[];
   subcategories: SubCategory[];
-  userId?: string;
+  user_id?: string;
   code?: string;
 }
 
@@ -74,7 +74,7 @@ export interface Tag {
   en?: string;
   ms?: string;
   aliases: string[];
-  userId?: string;
+  user_id?: string;
   isPinned?: boolean;
   usageCount?: number;
   isGlobal?: boolean;

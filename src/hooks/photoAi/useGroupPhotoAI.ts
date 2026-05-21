@@ -68,8 +68,8 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
       currentAnalysisControllers.current.set(taskId, { controller, timeoutId });
       const signal = controller.signal;
 
-      const firstPhoto = sGroupPhotos.find(p => p.isGroupCover) || sGroupPhotos[0];
-      const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.categoryId, firstPhoto.name, signal);
+      const firstPhoto = sGroupPhotos.find(p => p.is_group_cover) || sGroupPhotos[0];
+      const resRaw = await analyzeProductPhoto(firstPhoto.uri || firstPhoto.image_url!, categories, tags, manufacturers, effectiveKey, aiProvider, customModel, firstPhoto.category_id, firstPhoto.name, signal);
       
       if (signal?.aborted) return;
       const result = cleanObject(resRaw);
@@ -85,15 +85,15 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
         } catch (e) {}
       }
 
-      const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
+      const finalTagIds = await resolveTagIdsBatch([...safeArray<string>(result.tag_ids), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
       
       setAiDebugInfo({ step: '保存中', message: '同步识别结果到所有照片...' });
       updateTask(taskId, { progress: 80, message: '正在同步及保存结果...' });
 
       const updatedPhotosList: Photo[] = sGroupPhotos.map(p => ({
         ...p,
-        categoryId: result.categoryId || p.categoryId,
-        tagIds: Array.from(new Set([...safeArray(p.tagIds), ...finalTagIds])).slice(0, 3),
+        category_id: result.category_id || p.category_id,
+        tag_ids: Array.from(new Set([...safeArray(p.tag_ids), ...finalTagIds])).slice(0, 3),
         name: shouldUpdateName(p.name) ? (aiName || p.name) : p.name,
         description: (result.description && (!p.description || !p.description.trim())) ? result.description : p.description,
         description_translations: result.description_translations || p.description_translations,

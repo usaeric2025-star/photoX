@@ -25,7 +25,7 @@ export function useDelete() {
       // Better: Get user from context or pass it.
       // In this app, we typically have a single user or handle it in the service if needed.
       // But useDeletePhotoMutation explicitly asks for {userId, photos}.
-      const userId = photosToDelete[0]?.userId || ''; 
+      const userId = photosToDelete[0]?.user_id || ''; 
       await deletePhotoMutation.mutateAsync({ userId, photos: photosToDelete });
       return { success: true };
     } catch (err) {

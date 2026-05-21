@@ -142,14 +142,14 @@ export const useAdminDataPrep = () => {
         if (!normalized) return;
         const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
         if (existing) {
-          updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(existing.id)])] }));
+          updateForm((prev: ProductFormData) => ({ ...prev, tag_ids: [...new Set([...(prev.tag_ids || []), String(existing.id)])] }));
           showError(new Error(`标签 "${normalized}" 已存在`), '新增标签');
           return;
         }
         try {
           const saved = await addTag(normalized);
           if (saved) {
-             updateForm((prev: ProductFormData) => ({ ...prev, tagIds: [...new Set([...(prev.tagIds || []), String(saved.id)])] }));
+             updateForm((prev: ProductFormData) => ({ ...prev, tag_ids: [...new Set([...(prev.tag_ids || []), String(saved.id)])] }));
           }
         } catch (e: any) {
           showError(e, '新增标签失败');

@@ -130,7 +130,7 @@ export const analyzeProductPhoto = async (
     const zh = parsedData.description || '';
     parsedData.description_translations = { zh, en: '', ms: '' };
     parsedData.description = zh;
-    parsedData.manualCode = null;
+    parsedData.manual_code = null;
 
     let safeDims: Dimension[] = [];
     if (Array.isArray(parsedData.dimensions)) {
@@ -140,14 +140,14 @@ export const analyzeProductPhoto = async (
     }
     
     parsedData.dimensions = normalizeDimensions(safeDims);
-    parsedData.tagIds = normalizeTagIds(parsedData.tagIds, tags || []);
+    parsedData.tag_ids = normalizeTagIds(parsedData.tagIds, tags || []);
 
     let resolvedCategoryId: string | null = null;
-    if (parsedData.categoryId) {
+    if (parsedData.category_id) {
       const match = (categories || []).find(c => 
-        String(c.id) === String(parsedData.categoryId) || 
-        String(c.name || '').toLowerCase() === String(parsedData.categoryId).toLowerCase() ||
-        String(c.zh || '').toLowerCase() === String(parsedData.categoryId).toLowerCase()
+        String(c.id) === String(parsedData.category_id) || 
+        String(c.name || '').toLowerCase() === String(parsedData.category_id).toLowerCase() ||
+        String(c.zh || '').toLowerCase() === String(parsedData.category_id).toLowerCase()
       );
       if (match) {
         resolvedCategoryId = match.id;
@@ -159,7 +159,7 @@ export const analyzeProductPhoto = async (
         resolvedCategoryId = match.id;
       }
     }
-    parsedData.categoryId = resolvedCategoryId;
+    parsedData.category_id = resolvedCategoryId;
 
     // Get active category for checking redundancies
     const activeCat = (categories || []).find(c => String(c.id) === String(resolvedCategoryId));
@@ -196,8 +196,8 @@ export const analyzeProductPhoto = async (
     };
 
     let newTagList: string[] = [];
-    if (Array.isArray(parsedData.newTags)) {
-      newTagList = parsedData.newTags
+    if (Array.isArray(parsedData.new_tags)) {
+      newTagList = parsedData.new_tags
         .map(s => String(s).trim())
         .filter(s => s && !containsChinese(s));
     }
@@ -233,8 +233,8 @@ export const analyzeProductPhoto = async (
       }
     }
     
-    parsedData.tagIds = currentTagIds;
-    parsedData.newTags = Array.from(new Set(newTagList));
+    parsedData.tag_ids = currentTagIds;
+    parsedData.new_tags = Array.from(new Set(newTagList));
     parsedData._aiModelUsed = modelName;
     return parsedData;
   } catch (error: unknown) {

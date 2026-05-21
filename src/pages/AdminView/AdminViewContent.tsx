@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
@@ -47,7 +47,10 @@ export const AdminViewContent: React.FC<Props> = ({
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
 
+  const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
   const handleRunMaintenance = useCallback(async () => {
+    if (isMaintenanceRunning) return;
+    setIsMaintenanceRunning(true);
     const toastId = toast.loading('正在修复缩略图...');
     try {
         await backfillThumbHashes((stats) => {
@@ -55,10 +58,13 @@ export const AdminViewContent: React.FC<Props> = ({
         });
         toast.success('缩略图修复完成', { id: toastId });
     } catch (e: any) {
-        showError(e, '修复失败');
-        toast.error('修复过程中出错', { id: toastId });
+        showError(e, '修复失败，已停止');
+        toast.error(`修复过程中出错: ${e?.message || '未知错误'}`, { id: toastId });
+        throw e;
+    } finally {
+        setIsMaintenanceRunning(false);
     }
-  }, [showError]);
+  }, [showError, isMaintenanceRunning]);
   const logic = useAdminViewLogic({
     user, sessionValue, photoValue, uiValue,
     onRefresh: sessionValue.onRefresh,
@@ -158,7 +164,7 @@ export const AdminViewContent: React.FC<Props> = ({
             >
               <div className={`absolute inset-0 transition-opacity duration-300 ${logic.viewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <MainAdminScreen 
-                  {...logic} onRunMaintenance={handleRunMaintenance} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
+                  {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
                   onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
                   onToggleHidden={actions.handleToggleHidden} onSetGroupCover={logic.setGroupCover} onEditPhoto={actions.handleEditPhoto}
                   onLoadMore={actions.handleLoadMoreCallback} hasNextPage={!!hasNextPage}
@@ -187,6 +193,8 @@ export const AdminViewContent: React.FC<Props> = ({
                   performPushSync={actions.handlePerformPushSync} performPullSync={actions.handlePerformPullSync} 
                   refreshCloudData={async () => logic.onRefresh()} cloudCount={logic.cloudCount} lastSyncTime={lastSyncTime}
                   isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
+                  onRunMaintenance={handleRunMaintenance}
+                  isMaintenanceRunning={isMaintenanceRunning}
                 />
               </div>
             )}

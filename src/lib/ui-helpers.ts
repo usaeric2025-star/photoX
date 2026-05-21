@@ -44,7 +44,7 @@ export const getPhotoDisplayName = (
 
   if (!isPlaceholder) return photo.name;
   
-  const catName = getTranslatedCategoryName(photo.categoryId, categories, lang, t);
+  const catName = getTranslatedCategoryName(photo.category_id, categories, lang, t);
   if (catName && catName !== t.uncategorized) return catName;
 
   return t.furniture;
@@ -70,8 +70,8 @@ export const getCacheBustedImageUrl = (photo: Photo, type: 'image' | 'thumb' = '
   if (!url) return '';
   if (url.startsWith('data:')) return url;
   
-  const timestamp = photo.updatedAt ? new Date(photo.updatedAt).getTime() : 
-                   (photo.createdAt ? new Date(photo.createdAt).getTime() : 0);
+  const timestamp = photo.updated_at ? new Date(photo.updated_at).getTime() : 
+                   (photo.created_at ? new Date(photo.created_at).getTime() : 0);
   
   if (timestamp === 0) return url;
   return `${url}${url.includes('?') ? '&' : '?'}t=${timestamp}`;

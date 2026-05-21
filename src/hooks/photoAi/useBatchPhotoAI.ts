@@ -48,9 +48,9 @@ export const useBatchPhotoAI = (props: BatchAiProps) => {
     const effectiveKey = geminiApiKey;
     const sPhotosToProcess = safeArray(photosToProcess);
     const unProcessed = sPhotosToProcess.filter(p => {
-       const rawTagIds = safeArray(p.tagIds);
+       const rawTagIds = safeArray(p.tag_ids);
        const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
-       return (!p.categoryId || rawTagIds.length < 2 || !p.name || !hasAllTranslations) && !p.isAnalyzing;
+       return (!p.category_id || rawTagIds.length < 2 || !p.name || !hasAllTranslations) && !p.is_analyzing;
     });
     
     if (isAnalyzingRef.current) return;

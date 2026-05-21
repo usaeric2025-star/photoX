@@ -22,8 +22,8 @@ export const updatePhoto = async (
   if (!session) throw new Error('NO_ACTIVE_SESSION');
 
   // If we are setting this photo as a group cover, we must UN-SET all other photos in the same group first!
-  if (updates.isGroupCover === true) {
-    let groupId = updates.groupId;
+  if (updates.is_group_cover === true) {
+    let groupId = updates.group_id;
     if (!groupId) {
       const { data } = await supabase
         .from(DB_CONFIG.TABLE_NAME)
@@ -43,7 +43,7 @@ export const updatePhoto = async (
         .eq('group_id', groupId);
 
       if (setPhotos) {
-        setPhotos(prev => prev.map(p => p.groupId === groupId ? { ...p, isGroupCover: false } : p));
+        setPhotos(prev => prev.map(p => p.group_id === groupId ? { ...p, is_group_cover: false } : p));
       }
     }
   }
@@ -55,9 +55,9 @@ export const updatePhoto = async (
   await updatePhotoInCloud(photoId, dbUpdates);
     
   // Sync tags if needed
-  if ('tagIds' in updates) {
+  if ('tag_ids' in updates) {
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
-      const uTagIds = safeArray(updates.tagIds);
+      const uTagIds = safeArray(updates.tag_ids);
       if (uTagIds.length > 0) {
           const tagAssociations = uTagIds.map(tagId => ({
               photo_id: photoId,
@@ -115,7 +115,7 @@ export const updatePhotoHidden = async (photoId: string, is_hidden: boolean) => 
 };
 
 export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promise<{ dissolvedGroupId?: string }> => {
-  const groupId = photo.groupId || (photo as any).group_id;
+  const groupId = photo.group_id;
   
   const { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
@@ -165,7 +165,7 @@ export const deletePhotosBatch = async (
     const ids = chunk.map(p => p.id).filter(id => id && !id.startsWith('temp-'));
     if (ids.length === 0) continue;
 
-    chunk.forEach(p => { if (p.groupId) affectedGroupIds.add(p.groupId); });
+    chunk.forEach(p => { if (p.group_id) affectedGroupIds.add(p.group_id); });
     
     const { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)

@@ -7,7 +7,6 @@ import { AdminEmptyState } from './AdminEmptyState';
 
 interface Props {
   photos: Photo[];
-  onRunMaintenance: () => void;
   handleBatchAiIdentifyTrigger: () => void;
   onManageClick: () => void;
   onRefresh: () => void;
@@ -46,7 +45,7 @@ import { useMultiSelect } from '@/hooks/useMultiSelect';
 
 export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
   const {
-    photos, onRunMaintenance,
+    photos, 
     handleBatchAiIdentifyTrigger, onManageClick, onRefresh, cloudCount,
     lang, loadingType, batchProgress, categories, tags,
     settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
@@ -60,7 +59,6 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AdminToolbar 
         photos={photos}
-        onRunMaintenance={onRunMaintenance}
         handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
         onManageClick={onManageClick}
         loginWithGoogle={loginWithGoogle}

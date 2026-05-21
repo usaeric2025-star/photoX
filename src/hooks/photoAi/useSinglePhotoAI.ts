@@ -114,18 +114,18 @@ export const useSinglePhotoAI = (props: SingleAiProps) => {
         const photo = photosRef.current.find(p => p.id === effectiveEditId);
         if (photo) {
           updateTask(taskId, { progress: 80, message: '正在保存结果...' });
-          const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tagIds), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
+          const resolvedTags = await resolveTagIdsBatch([...safeArray<string>(result.tag_ids), ...safeArray<string>(result.newTags)], tags, tagNameToIdMap);
           let updatedPhoto = { 
             ...photo, 
-            categoryId: result.categoryId || photo.categoryId,
-            tagIds: Array.from(new Set([...safeArray(photo.tagIds), ...resolvedTags])).slice(0, 3),
+            category_id: result.category_id || photo.category_id,
+            tag_ids: Array.from(new Set([...safeArray(photo.tag_ids), ...resolvedTags])).slice(0, 3),
             name: shouldUpdateName(photo.name) ? (aiName || photo.name) : photo.name,
             description: (result.description && (!photo.description || !photo.description.trim())) ? result.description : photo.description,
             description_translations: result.description_translations || photo.description_translations,
             model_number: (result.modelNumber && (!photo.model_number || !photo.model_number.trim())) ? result.modelNumber : photo.model_number,
             dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : photo.dimensions,
-            updatedAt: formatDate(new Date()),
-            isAnalyzing: false 
+            updated_at: formatDate(new Date()),
+            is_analyzing: false 
           };
           if (user) {
             const finalId = await savePhotoToCloud(user.id, updatedPhoto);

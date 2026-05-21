@@ -13,11 +13,8 @@ export const usePhotoManagement = (
   const [formState, setFormState] = useState<ProductFormData>({
     name: '',
     category_id: '',
-    categoryId: '',
     tag_ids: [],
-    tagIds: [],
     manufacturer_id: '',
-    manufacturerId: '',
     model_number: '',
     manual_code: '',
     description: '',
@@ -25,8 +22,7 @@ export const usePhotoManagement = (
     description_translations: { en: '', ms: '' },
     dimensions: [],
     price: '',
-    is_group_cover: false,
-    isGroupCover: false
+    is_group_cover: false
   });
   const [showOtherFields, setShowOtherFields] = useState(false);
 
@@ -37,11 +33,8 @@ export const usePhotoManagement = (
         setFormState({
           name: photo.name || '',
           category_id: photo.category_id || null,
-          categoryId: photo.category_id || null,
           tag_ids: photo.tag_ids || [],
-          tagIds: photo.tag_ids || [],
           manufacturer_id: photo.manufacturer_id || null,
-          manufacturerId: photo.manufacturer_id || null,
           model_number: photo.model_number || '',
           manual_code: photo.manual_code || '',
           description: photo.description || '',
@@ -49,8 +42,7 @@ export const usePhotoManagement = (
           description_translations: photo.description_translations || { en: '', ms: '' },
           dimensions: photo.dimensions || [],
           price: photo.price || '',
-          is_group_cover: !!photo.is_group_cover,
-          isGroupCover: !!photo.is_group_cover
+          is_group_cover: !!photo.is_group_cover
         });
       }
     } else {
@@ -58,11 +50,8 @@ export const usePhotoManagement = (
         setFormState({
             name: '',
             category_id: '',
-            categoryId: '',
             tag_ids: [],
-            tagIds: [],
             manufacturer_id: '',
-            manufacturerId: '',
             model_number: '',
             manual_code: '',
             description: '',
@@ -70,8 +59,7 @@ export const usePhotoManagement = (
             description_translations: { en: '', ms: '' },
             dimensions: [],
             price: '',
-            is_group_cover: false,
-            isGroupCover: false
+            is_group_cover: false
         });
     }
   }, [ui.editPhotoId, photos]);

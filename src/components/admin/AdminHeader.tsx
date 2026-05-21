@@ -17,7 +17,6 @@ interface Props {
   loginWithGoogle: () => void;
   onAddPhoto?: () => void;
   onRefresh?: () => void;
-  onRunMaintenance?: () => void;
   photosCount?: number;
   totalPhotosCount?: number;
   cloudCount?: number | null;
@@ -30,7 +29,7 @@ interface Props {
 export const AdminHeader: React.FC<Props> = ({ 
   filteredPhotos, 
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
-  onAddPhoto, onRefresh, onRunMaintenance, photosCount, totalPhotosCount, cloudCount,
+  onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
   appLang = 'en',
   isAnalyzing, batchProgress, settings: propSettings
 }) => {
@@ -187,16 +186,6 @@ export const AdminHeader: React.FC<Props> = ({
                   )}
                 </button>
 
-                {onRunMaintenance && (
-                  <button 
-                    onClick={onRunMaintenance}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all text-blue-600/50 hover:text-blue-600 bg-white border border-blue-600/10 shadow-sm"
-                    title="修复缩略图"
-                  >
-                    <Wrench size={18} />
-                  </button>
-                )}
-                
                 {viewMode !== 'public' && (
                   <button 
                     onClick={handleToggleMultiSelect}
@@ -228,7 +217,6 @@ export const AdminHeader: React.FC<Props> = ({
                     show={showToolsMenu} 
                     t={t} 
                     handleOpenSettings={handleOpenSettings}
-                    onRunMaintenance={onRunMaintenance}
                     isStaff={sessionStorage.getItem('isStaffMode') === 'true'}
                     handleExitStaffMode={handleExitStaffMode}
                     currentLang={currentLang}

@@ -105,7 +105,7 @@ export const useAdminActions = (logic: any) => {
   }, [logic, handleError]);
 
   const handleAiAnalyze = useCallback((p: Photo) => {
-    return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.categoryId || undefined, p.id)
+    return logic.handleSingleAiAnalyze(p.uri || p.image_url, p.category_id || undefined, p.id)
       .catch((e: Error) => handleError(e, '识别失败'));
   }, [logic, handleError]);
 
