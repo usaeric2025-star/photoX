@@ -63,7 +63,9 @@ function AnimatedRoutes({ user }: { user: any }) {
 }
 
 export default function AppRoutes() {
+  console.log('AppRoutes: Checking auth...', { authChecked: false });
   const { user, authChecked } = useAuth();
+  console.log('AppRoutes: Auth checked:', { user: !!user, authChecked });
   
   // App-level initialization logic can stay, but fetchSettings is handled by useSettings hook.
 

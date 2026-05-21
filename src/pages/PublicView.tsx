@@ -30,6 +30,7 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 }
 
 export default function PublicView() {
+  console.log('PublicView: Component mounting');
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useFeedback();
   const { reset } = useMultiSelect();
@@ -95,6 +96,16 @@ export default function PublicView() {
   const { settings, isLoading: isSettingsLoading } = useSettings();
   const { user } = useAuth();
   
+  console.log('PublicView Render Debug:', { 
+    isInitialLoading,
+    isPhotosLoading,
+    settings: !!settings,
+    minTimeElapsed,
+    filterCatId,
+    debouncedSearchQuery,
+    photosCount: photos.length
+  });
+
   if (isSettingsLoading || !settings) {
     return <FullPageLoading />;
   }
