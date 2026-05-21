@@ -46,7 +46,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
             ) : (
               <>
                 <div className="w-2 h-2 border border-brand-navy/20 border-t-brand-navy rounded-full animate-spin shrink-0" />
-                {t.gallerySub(photos.length)}
+                {t.gallerySub(photos?.length || 0)}
               </>
             )}
           </span>

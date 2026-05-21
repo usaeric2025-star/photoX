@@ -30,18 +30,69 @@ function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
 }
 
 export default function PublicView() {
+  // ========== 1. 所有 Hooks 先调用（按顺序，无条件）==========
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useFeedback();
   const { reset } = useMultiSelect();
+  const { user } = useAuth();
+  const { settings, isLoading: isSettingsLoading } = useSettings();
+  const categoriesQuery = useCategoriesQuery();
+  const { mutateAsync: updatePhotoMutation } = useUpdatePhotoMutation();
+  
+  // Store
+  const { 
+    filterCatId,
+    filterTagIds,
+    sortOrder,
+    setFilterCatId,
+    setFilterTagIds,
+    setSearchQuery: setStoreSearchQuery,
+    hasLoadedOnce,
+    setHasLoadedOnce
+  } = useStore();
+  
+  // 查询
+  const infiniteQuery = useInfinitePhotos({
+    category_id: filterCatId,
+    tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
+    searchQuery: '', // Placeholder, will fix
+    sortOrder: sortOrder,
+    isAdminMode: false
+  }, PAGINATION.DEFAULT_PAGE_SIZE);
+  
+  const { data: countData } = usePhotoCountQuery({
+    category_id: filterCatId,
+    tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
+    searchQuery: '',
+  });
+  
+  // 状态
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  
+  // ========== 4. 计算状态 (移至此处) ==========
+  const isInitialLoading = infiniteQuery.isLoading || isSettingsLoading || !minTimeElapsed;
 
-  // Reset multi select on unmount
+  // ========== 2. useEffect ==========
+  // 防抖搜索
   useEffect(() => {
-    return () => {
-      reset();
-    };
-  }, [reset]);
-
-  // 保存滚动位置
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+  
+  // 最小加载时间
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // 滚动位置保存
   useEffect(() => {
     const handleScroll = () => {
       sessionStorage.setItem('scrollPosition', String(window.scrollY));
@@ -49,16 +100,15 @@ export default function PublicView() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // 恢复滚动位置
+  
   useEffect(() => {
     const savedPosition = sessionStorage.getItem('scrollPosition');
     if (savedPosition) {
       window.scrollTo({ top: parseInt(savedPosition), behavior: 'auto' });
     }
   }, []);
-
-  // Pre-seed cache from local storage
+  
+  // 缓存预加载
   useEffect(() => {
     (async () => {
       try {
@@ -71,160 +121,105 @@ export default function PublicView() {
       }
     })();
   }, [queryClient]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   
-  // Use store for UI state that should persist
-  const { 
-    filterCatId,
-    filterTagIds,
-    sortOrder,
-    setFilterCatId,
-    setFilterTagIds,
-    setSearchQuery: setStoreSearchQuery
-  } = useStore();
-  
+  // 多选重置
   useEffect(() => {
-	  const timer = setTimeout(() => {
-		  setDebouncedSearchQuery(searchQuery);
-	  }, 300);
-	  return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const categoriesQuery = useCategoriesQuery();
-  const categoriesData = categoriesQuery?.data ?? [];
-  const { settings, isLoading: isSettingsLoading } = useSettings();
-  const { hasLoadedOnce, setHasLoadedOnce } = useStore();
-  const { user } = useAuth();
-
-  const infiniteQuery = useInfinitePhotos({
-    category_id: filterCatId,
-    tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
-    searchQuery: debouncedSearchQuery,
-    sortOrder: sortOrder,
-    isAdminMode: false
-  }, PAGINATION.DEFAULT_PAGE_SIZE);
-
-  const { data: countData } = usePhotoCountQuery({
-    category_id: filterCatId,
-    tag_id: safeArray(filterTagIds).length > 0 ? filterTagIds[0] : null,
-    searchQuery: debouncedSearchQuery
-  });
-
-  const {
-    data: paginatedPhotos,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    refetch,
-    isLoading: isPhotosLoading,
-    isFetching: isFetchingPhotos // Renamed to avoid name collision in log
-  } = infiniteQuery;
-
-  const [hasInitialLoaded, setHasInitialLoaded] = useState(false);
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
-
-  useEffect(() => {
-    setMinTimeElapsed(true);
-  }, []);
-
-  const isInitialLoading = isPhotosLoading || !settings || !minTimeElapsed;
-
-  if (isSettingsLoading || !settings) {
-    return <FullPageLoading />;
-  }
-
-  const { mutateAsync: updatePhotoMutation } = useUpdatePhotoMutation();
-
-  const photos = useMemo(() => {
-    try {
-      const pages = paginatedPhotos?.pages;
-      if (!pages || !Array.isArray(pages)) return [];
-      return cleanPhotos(pages.flatMap(p => p?.photos || []));
-    } catch (e) {
-      console.error('photos 计算失败:', e);
-      return [];
-    }
-  }, [paginatedPhotos]);
+    return () => {
+      reset();
+    };
+  }, [reset]);
   
-  const navigate = useNavigate();
-  const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
-
+  // 首次加载完成标记
   useEffect(() => {
     if (!isInitialLoading && !hasInitialLoaded) {
       setHasInitialLoaded(true);
       setHasLoadedOnce(true);
     }
   }, [isInitialLoading, hasInitialLoaded, setHasLoadedOnce]);
-
+  
+  // ========== 3. useMemo ==========
+  const photos = useMemo(() => {
+    try {
+      const pages = infiniteQuery.data?.pages;
+      if (!pages || !Array.isArray(pages)) return [];
+      return cleanPhotos(pages.flatMap(p => p?.photos || []));
+    } catch (e) {
+      console.error('photos 计算失败:', e);
+      return [];
+    }
+  }, [infiniteQuery.data]);
+  
+  const categoriesData = useMemo(() => {
+    return categoriesQuery?.data ?? [];
+  }, [categoriesQuery.data]);
+  
+  // ========== 5. 导航和参数 ==========
+  const navigate = useNavigate();
+  const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
+  
+  // ========== 6. 回调函数 ==========
   const handleRefresh = useCallback(async () => {
     try {
-      // 1. 清空临时状态
       setStoreSearchQuery('');
       setSearchQuery('');
       setDebouncedSearchQuery('');
       setFilterCatId(null);
       setFilterTagIds([]);
       reset();
-      
-      // 2. 清除持久化的筛选
       sessionStorage.removeItem('photo-filters');
       localStorage.removeItem('photo-filters');
-      
-      // 3. 重置 React Query 缓存
-      queryClient.resetQueries({ queryKey: ['photos'] });
-      queryClient.resetQueries({ queryKey: ['photos', 'infinite'] });
-      
-      // 4. 滚动到顶部
+      queryClient.resetQueries({ queryKey: [QUERY_KEYS.photos] });
+      queryClient.resetQueries({ queryKey: [QUERY_KEYS.photos, 'infinite'] });
       window.scrollTo({ top: 0, behavior: 'smooth' });
-
-      await refetch();
+      await infiniteQuery.refetch();
       showSuccess('已重置所有筛选');
     } catch (e) {
       showError(e, '刷新产品照片失败');
     }
-  }, [refetch, showError, showSuccess, queryClient]);
-
+  }, [infiniteQuery.refetch, showError, showSuccess, queryClient, setStoreSearchQuery, setFilterCatId, setFilterTagIds, reset]);
+  
   const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
+    if (infiniteQuery.hasNextPage && !infiniteQuery.isFetchingNextPage) {
+      infiniteQuery.fetchNextPage();
     }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handlePhotoClick = useCallback((photo: Photo) => {
-    // Implement click logic
-  }, []);
-
+  }, [infiniteQuery]);
+  
+  // ========== 7. 错误处理/加载状态（条件 return）==========
   if (infiniteQuery.error) {
     return <div className="p-4 text-red-500">加载失败: {(infiniteQuery.error as Error).message}</div>;
   }
-
+  
+  if (isSettingsLoading || !settings) {
+    return <FullPageLoading />;
+  }
+  
+  // ========== 8. 正常渲染 ==========
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
-        {isInitialLoading && !hasLoadedOnce ? (
-          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-50 text-slate-800">LOADING...</div>
-        ) : (
-            <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
-              <PublicGallery 
-                photos={photos}
-                categories={categoriesData}
-                tags={[]} // Pass empty if no tags
-                onExit={() => navigate(ROUTES.ADMIN)}
-                onLogin={() => navigate(ROUTES.ADMIN)}
-                loginWithGoogle={loginWithGoogle}
-                user={user}
-                settings={settings}
-                isRefreshing={isPhotosLoading || isFetchingPhotos}
-                onRefresh={handleRefresh}
-                onLoadMore={handleLoadMore}
-                hasMore={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
-                totalCount={countData}
-                initialHash={hash}
-                initialGroupId={groupId}
-              />
-            </ErrorBoundary>
-        )}
+      {isInitialLoading && !hasLoadedOnce ? (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-50 text-slate-800">LOADING...</div>
+      ) : (
+        <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
+          <PublicGallery 
+            photos={photos}
+            categories={categoriesData}
+            tags={[]}
+            onExit={() => navigate(ROUTES.ADMIN)}
+            onLogin={() => navigate(ROUTES.ADMIN)}
+            loginWithGoogle={loginWithGoogle}
+            user={user}
+            settings={settings}
+            isRefreshing={infiniteQuery.isLoading || infiniteQuery.isFetching}
+            onRefresh={handleRefresh}
+            onLoadMore={handleLoadMore}
+            hasMore={infiniteQuery.hasNextPage}
+            isFetchingNextPage={infiniteQuery.isFetchingNextPage}
+            totalCount={countData}
+            initialHash={hash}
+            initialGroupId={groupId}
+          />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }

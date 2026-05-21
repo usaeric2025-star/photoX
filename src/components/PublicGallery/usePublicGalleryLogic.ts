@@ -141,7 +141,7 @@ export const usePublicGalleryLogic = (props: {
   }, [displayPhotos]);
 
   useEffect(() => {
-    if (initialHash && lightboxIndex === null && dpRef.current.length > 0) {
+    if (initialHash && lightboxIndex === null && (dpRef.current?.length || 0) > 0) {
       const idx = dpRef.current.findIndex(p => p.image_hash === initialHash);
       if (idx !== -1) setLightboxIndex(idx);
     }
@@ -153,7 +153,7 @@ export const usePublicGalleryLogic = (props: {
   }, [localPhotos]);
 
   useEffect(() => {
-    if (initialGroupId && activeGroupId === null && lpRef.current.length > 0) {
+    if (initialGroupId && activeGroupId === null && (lpRef.current?.length || 0) > 0) {
       const groupExists = lpRef.current.some(p => p.group_id === initialGroupId);
       if (groupExists) setActiveGroupId(initialGroupId);
     }
@@ -221,7 +221,7 @@ export const usePublicGalleryLogic = (props: {
     if (onLoadMore && hasMore && !isSyncing) onLoadMore();
   }, [onLoadMore, hasMore, isSyncing]);
 
-  const hasLoadedStats = useRef(Object.keys(tagStats).length > 0);
+  const hasLoadedStats = useRef(Object.keys(tagStats || {}).length > 0);
 
   // Daily Stability: Load or Calculate tag stats only once per day
   useEffect(() => {

@@ -21,6 +21,7 @@ interface UIState {
   alertDialog: any | null
   promptDialog: any | null
   language: 'zh' | 'en' | 'ms'
+  tagStats: Record<string, number>
 }
 
 interface UIActions {
@@ -44,6 +45,7 @@ interface UIActions {
   setAlertDialog: (dialog: any) => void
   setPromptDialog: (dialog: any) => void
   setLanguage: (lang: 'zh' | 'en' | 'ms') => void
+  setTagStats: (stats: Record<string, number>) => void
   withLoading: <T>(type: UIState['loadingType'], fn: () => Promise<T>) => Promise<T>
 }
 
@@ -66,6 +68,7 @@ const initialState: UIState = {
   alertDialog: null,
   promptDialog: null,
   language: 'zh',
+  tagStats: {},
 }
 
 // ========== 白名单（只持久化这些）==========
@@ -103,6 +106,7 @@ export const useStore = create<StoreState>()(
       setAlertDialog: (dialog) => set({ alertDialog: dialog }),
       setPromptDialog: (dialog) => set({ promptDialog: dialog }),
       setLanguage: (lang) => set({ language: lang }),
+      setTagStats: (stats) => set({ tagStats: stats }),
 
       addSelectedPhotoId: (id) => set((state) => ({
         selectedPhotoIds: state.selectedPhotoIds.includes(id)

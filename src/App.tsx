@@ -14,11 +14,26 @@ import { ROUTES } from './config/constants';
 
 function Fallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center h-screen p-4 text-center">
-      <p className="text-red-500 mb-4">页面出错了: {error.message}</p>
-      <button 
+    <div style={{
+      position: 'fixed', inset: 0, background: '#0f172a', color: '#f1f5f9',
+      padding: 16, overflow: 'auto', fontFamily: 'monospace', fontSize: 13,
+      whiteSpace: 'pre-wrap', wordBreak: 'break-all', zIndex: 99999
+    }}>
+      <div style={{ color: '#fbbf24', fontWeight: 700, marginBottom: 12 }}>
+        🔴 React Error
+      </div>
+      <div style={{ color: '#f87171', marginBottom: 8 }}>
+        {error.message}
+      </div>
+      <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 16 }}>
+        {error.stack}
+      </div>
+      <button
         onClick={resetErrorBoundary}
-        className="px-4 py-2 bg-slate-900 text-white rounded-lg"
+        style={{
+          padding: '8px 16px', background: '#3b82f6', color: '#fff',
+          border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer'
+        }}
       >
         重试
       </button>
