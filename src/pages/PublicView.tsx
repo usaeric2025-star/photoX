@@ -93,6 +93,7 @@ export default function PublicView() {
 
   const { data: categoriesData = [] } = useCategoriesQuery();
   const { settings, isLoading: isSettingsLoading } = useSettings();
+  const { user } = useAuth();
   const { hasLoadedOnce, setHasLoadedOnce } = useStore();
 
   const infiniteQuery = useInfinitePhotos({
@@ -184,18 +185,10 @@ export default function PublicView() {
   }, []);
 
   return (
-    <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
-      <AnimatePresence mode="wait">
+    <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
         {isInitialLoading && !hasLoadedOnce ? (
-          <FullPageLoading key="loader" />
+          <FullPageLoading />
         ) : (
-          <motion.div
-            key="content"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex flex-col h-full"
-          >
             <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
               <PublicGallery 
                 photos={photos}
@@ -216,9 +209,7 @@ export default function PublicView() {
                 initialGroupId={groupId}
               />
             </ErrorBoundary>
-          </motion.div>
         )}
-      </AnimatePresence>
     </div>
   );
 }
