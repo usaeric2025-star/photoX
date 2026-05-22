@@ -1,6 +1,6 @@
 
 import { create } from 'zustand';
-import { Photo, Category, Tag, Manufacturer, AppSettings, User } from './types';
+import { Photo, Category, Tag, Manufacturer, AppSettings, User, DialogData } from './types';
 import { translations } from './lib/translations';
 
 interface StoreState {
@@ -48,19 +48,10 @@ interface StoreState {
   setHasLoadedOnce: (hasLoaded: boolean) => void;
   hasInitialLoaded: boolean;
   setHasInitialLoaded: (value: boolean) => void;
-  alertDialog: {
-    title: string;
-    description?: string;
-    message?: string;
-    onConfirm: () => void;
-  } | null;
-  setAlertDialog: (dialog: { title: string; description?: string; message?: string; onConfirm: () => void } | null) => void;
-  promptDialog: {
-    title: string;
-    defaultValue: string;
-    onConfirm: (val: string) => void;
-  } | null;
-  setPromptDialog: (dialog: { title: string; defaultValue: string; onConfirm: (val: string) => void } | null) => void;
+  alertDialog: DialogData | null;
+  setAlertDialog: (dialog: DialogData | null) => void;
+  promptDialog: DialogData | null;
+  setPromptDialog: (dialog: DialogData | null) => void;
   // Multi-select and Drag-and-drop
   isMultiSelectMode: boolean;
   setIsMultiSelectMode: (is: boolean) => void;
