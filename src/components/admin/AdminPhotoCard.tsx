@@ -241,7 +241,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       onTouchMove={cancelPress}
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
-      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${is_hidden ? 'ring-[3px] ring-orange-500 shadow-md' : ''}`}
+      className={`aspect-square bg-slate-50 rounded-lg overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group ${cardSelectedClasses} ${is_hidden ? 'ring-[3px] ring-orange-500 shadow-md' : ''}`}
     >
       <PhotoImageContainer
         photoId={photo.id}

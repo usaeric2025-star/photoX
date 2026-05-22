@@ -6,8 +6,19 @@ export const FullPageLoading = () => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 flex items-center justify-center bg-white z-50"
+    className="fixed inset-0 flex items-center justify-center bg-white/90 backdrop-blur-sm z-50"
   >
-    <div className="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
+    <motion.div
+      animate={{ 
+        scale: [1, 1.1, 1],
+        opacity: [0.5, 1, 0.5]
+      }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+      className="text-blue-600 font-black tracking-widest text-sm"
+    >
+      PHOT
+      <span className="text-amber-500">O</span>
+      X
+    </motion.div>
   </motion.div>
 );

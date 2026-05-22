@@ -16,21 +16,21 @@ export const FilterChip = ({ label, selected, pinned, hot, onClick, onRemove, ic
   <button
     onClick={onClick}
     className={cn(
-      "inline-flex items-center gap-1 px-3 h-[22px] rounded-full text-[10px] font-bold transition-all border flex items-center shrink-0 whitespace-nowrap",
+      "inline-flex items-center gap-1 px-3 h-[24px] rounded-full text-[10px] font-bold transition-all border flex items-center shrink-0 whitespace-nowrap",
       pinned 
-        ? "border-amber-400 bg-amber-100 text-amber-900 shadow-sm"
+        ? "border-amber-400 bg-amber-50 text-amber-900 shadow-sm"
         : hot 
-          ? "border-orange-300 bg-orange-100 text-orange-900"
+          ? "border-amber-300 bg-amber-50 text-amber-900 hover:border-amber-400"
           : selected
             ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-            : 'bg-slate-100 border-transparent text-slate-700 hover:bg-slate-200'
+            : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
     )}
   >
     {icon}
     <span>{label}</span>
     {pinned && <Pin size={8} className="fill-current rotate-45" />}
     {hot && !pinned && (
-      <span className="text-[7px] font-black px-1 bg-[#FFB700] text-white rounded-[3px] tracking-tighter">
+      <span className="text-[7px] font-black px-1 py-0.5 bg-amber-500 text-white rounded-[3px] shadow-sm">
         HOT
       </span>
     )}

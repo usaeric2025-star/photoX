@@ -1,6 +1,11 @@
 import React, { useMemo } from 'react';
-import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart, X, Pin, Grid2X2, Grid3X3, Grid } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { FilterChip } from '@/components/ui/FilterChip';
+import { CategoryChip } from '@/components/ui/CategoryChip';
+import { SubCategoryChip } from '@/components/ui/SubCategoryChip';
+import { SortButton } from '@/components/ui/SortButton';
+import { LayoutButton } from '@/components/ui/LayoutButton';
+import { GroupToggle } from '@/components/ui/GroupToggle';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGalleryStore } from '../store';
 import { Category, Tag, AppSettings } from '../types';
@@ -67,51 +72,28 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
           </div>
           
           <div className="flex gap-1 shrink-0">
-            <button 
-              onClick={(e) => { e.stopPropagation(); toggleSortOrder(); }}
-              className="w-8 h-8 bg-white border border-[#ECECEC] text-[#555555] rounded-full flex items-center justify-center hover:bg-[#F7F7F7] transition-all active:scale-95"
-              title={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest}
-            >
-              {sortOrder === 'oldest' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
-            </button>
+            <SortButton onClick={toggleSortOrder} label={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest} />
             
-            <button
+            <LayoutButton 
+              isGrid={columns !== 2} 
               onClick={() => {
                 const next = columns === 2 ? 3 : columns === 3 ? 5 : 2;
                 setColumns(next as 2 | 3 | 5);
               }}
-              className="w-8 h-8 bg-white border border-[#ECECEC] text-[#555555] rounded-full flex items-center justify-center hover:bg-[#F7F7F7] transition-all active:scale-95"
-              title={`${columns} columns`}
-            >
-              <LayoutGrid size={14} />
-            </button>
-
-            <button
-                onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)}
-                className={cn(
-                  "w-8 h-8 rounded-full transition-all border flex items-center justify-center",
-                  showGroupsCollapsed 
-                    ? 'bg-[#1A1A1A] border-[#1A1A1A] text-white' 
-                    : 'bg-white border-[#ECECEC] text-[#555555] hover:bg-[#F7F7F7]'
-                )}
-            >
-                {showGroupsCollapsed ? <Layers size={14} /> : <Grid size={14} />}
-            </button>
+            />
+            <GroupToggle 
+                showGroupsCollapsed={showGroupsCollapsed} 
+                onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)} 
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-4 gap-1">
-            <button 
-              onClick={() => { setSelectedCatCode(null); setFilterSubId(null); setSelectedTagIds(() => []); onScrollToTop(); }}
-              className={cn(
-                "h-[32px] flex items-center justify-center rounded-[8px] text-[12px] font-bold transition-all border whitespace-nowrap",
-                !selectedCatCode 
-                  ? 'bg-[#1A1C3E] border-[#1A1C3E] text-white shadow-sm' 
-                  : 'bg-white border-[#ECECEC] text-[#555555]'
-              )}
-            >
-              {t.allCats.toUpperCase()}
-            </button>
+            <CategoryChip 
+                name={t.allCats.toUpperCase()} 
+                selected={!selectedCatCode} 
+                onClick={() => { setSelectedCatCode(null); setFilterSubId(null); setSelectedTagIds(() => []); onScrollToTop(); }} 
+            />
             
             {categories
               .slice(0, 7) 
@@ -120,23 +102,17 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 const displayName = lang === 'zh' ? rawName : rawName.toUpperCase();
                 const isActive = String(selectedCatCode) === String(cat.id) || String(selectedCatCode) === String(cat.code);
                 return (
-                  <button 
+                  <CategoryChip
                     key={cat.id}
+                    name={displayName}
+                    selected={isActive}
                     onClick={() => { 
                       setSelectedCatCode(cat.id); 
                       setFilterSubId(null);
                       setSelectedTagIds(() => []);
                       onScrollToTop();
                     }}
-                    className={cn(
-                      "h-[32px] flex items-center justify-center rounded-[8px] text-[12px] font-bold transition-all border whitespace-nowrap truncate px-1",
-                      isActive 
-                        ? 'bg-[#1A1C3E] border-[#1A1C3E] text-white shadow-sm' 
-                        : 'bg-white border-[#ECECEC] text-[#555555]'
-                    )}
-                  >
-                    {displayName}
-                  </button>
+                  />
                 );
               })}
         </div>
@@ -156,18 +132,12 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   const subList = currentCat?.subcategories || [];
                   return Array.from(new Map(subList.map((s: any) => [s.id, s])).values())
                     .map((sub: any) => (
-                  <button 
+                  <SubCategoryChip
                     key={sub.id}
+                    name={toTitleCase(sub.name)}
+                    selected={filterSubId === sub.id}
                     onClick={() => { setFilterSubId(filterSubId === sub.id ? null : sub.id); onScrollToTop(); }}
-                    className={cn(
-                      "px-3 h-[28px] rounded-[6px] text-[12px] font-normal transition-all border",
-                      filterSubId === sub.id 
-                        ? 'bg-[#1A1A1A] border-[#1A1A1A] text-white' 
-                        : 'bg-[#F5F5F5] border-transparent text-[#333333] hover:border-[#ECECEC]'
-                    )}
-                  >
-                    {toTitleCase(sub.name)}
-                  </button>
+                  />
                 ));
               })()}
             </motion.div>

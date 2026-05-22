@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { thumbHashToDataURL } from '../../utils/thumbHash';
 
@@ -26,10 +26,26 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
   imgClassName = '',
   loading = 'lazy'
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const cacheKey = photoId || src || '';
   const [initiallyLoaded] = useState(() => (cacheKey ? loadedImagesCache.has(cacheKey) : false));
+  const [shouldLoad, setShouldLoad] = useState(initiallyLoaded);
   const [isImageLoaded, setIsImageLoaded] = useState(initiallyLoaded);
   const [isImageError, setIsImageError] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    if (containerRef.current) observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const placeholderDataUrl = useMemo(() => {
     if (!thumbHash) return null;
@@ -38,6 +54,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
 
   return (
     <div 
+      ref={containerRef}
       className={`absolute inset-0 w-full h-full select-none overflow-hidden ${className}`}
       onClick={onClick}
     >
@@ -69,7 +86,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
       )}
 
       {/* 4. The actual loaded image */}
-      {!isImageError && src && (
+      {!isImageError && src && shouldLoad && (
         <img 
           draggable={false}
           loading={loading}

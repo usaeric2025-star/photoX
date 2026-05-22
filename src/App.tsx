@@ -1,8 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import PublicView from './pages/PublicView';
-import AdminView from './pages/AdminView';
+import { FullPageLoading } from '@/components/FullPageLoading';
 import { User } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useRouteGuard } from './hooks/useRouteGuard';
@@ -12,6 +11,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { globalHandleError } from './utils/errorHandler';
 import { ROUTES } from './config/constants';
 
+const PublicView = lazy(() => import('@/pages/PublicView'));
+const AdminView = lazy(() => import('@/pages/AdminView'));
+
 /* Removed Fallback component */
 
 function AnimatedRoutes({ user }: { user: User | null }) {
@@ -20,32 +22,37 @@ function AnimatedRoutes({ user }: { user: User | null }) {
   const { hash, groupId } = location.state || {};
 
 
-  const PublicComponent = PublicView;
-
-
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path={ROUTES.HOME} element={
             user ? <Navigate to={ROUTES.ADMIN} replace /> : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-                <PublicComponent />
+                <Suspense fallback={<FullPageLoading />}>
+                  <PublicView />
+                </Suspense>
               </motion.div>
             )
         } />
         <Route path="/h/:hash" element={
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-            <PublicComponent />
+            <Suspense fallback={<FullPageLoading />}>
+              <PublicView />
+            </Suspense>
           </motion.div>
         } />
         <Route path={ROUTES.GROUP(":groupId")} element={
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }}>
-            <PublicComponent />
+            <Suspense fallback={<FullPageLoading />}>
+              <PublicView />
+            </Suspense>
           </motion.div>
         } />
         <Route path={ROUTES.ADMIN} element={
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
-            <AdminView />
+            <Suspense fallback={<FullPageLoading />}>
+              <AdminView />
+            </Suspense>
           </motion.div>
         } />
         <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
