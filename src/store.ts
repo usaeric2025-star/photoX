@@ -30,14 +30,14 @@ interface StoreState {
   setEditPhotoId: (id: string | null) => void;
   editingPhotoId: string | null;
   setEditingPhotoId: (id: string | null) => void;
-  batchEditIds: string[] | null;
-  setBatchEditIds: (ids: string[] | null) => void;
-  groupSettingsOpen: boolean;
-  setGroupSettingsOpen: (open: boolean) => void;
+  // Batch Editing and Groups
   batchEditingIds: string[] | null;
   setBatchEditingIds: (ids: string[] | null) => void;
+  groupSettingsOpen: boolean;
+  setGroupSettingsOpen: (open: boolean) => void;
   batchAiAnalyzeTrigger: boolean;
   setBatchAiAnalyzeTrigger: (trigger: boolean) => void;
+
   isMultiSelect: boolean;
   setIsMultiSelect: (is: boolean) => void;
   selectedIds: string[];
@@ -83,7 +83,7 @@ interface StoreState {
   setIsInfiniteMode: (mode: boolean) => void;
   adminPreviewMode: boolean;
   setAdminPreviewMode: (mode: boolean) => void;
-  setLanguage: (lang: string) => void;
+  setLanguage: (lang: 'zh' | 'en') => void;
   errors: any[];
   clearErrors: () => void;
   setDebouncedSearchQuery: (q: string) => void;
@@ -128,12 +128,10 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setEditPhotoId: (editPhotoId) => set({ editPhotoId }),
   editingPhotoId: null,
   setEditingPhotoId: (editingPhotoId) => set({ editingPhotoId }),
-  batchEditIds: null,
-  setBatchEditIds: (batchEditIds) => set({ batchEditIds }),
-  groupSettingsOpen: false,
-  setGroupSettingsOpen: (groupSettingsOpen) => set({ groupSettingsOpen }),
   batchEditingIds: null,
   setBatchEditingIds: (batchEditingIds) => set({ batchEditingIds }),
+  groupSettingsOpen: false,
+  setGroupSettingsOpen: (groupSettingsOpen) => set({ groupSettingsOpen }),
   batchAiAnalyzeTrigger: false,
   setBatchAiAnalyzeTrigger: (batchAiAnalyzeTrigger) => set({ batchAiAnalyzeTrigger }),
   isMultiSelect: false,
@@ -182,7 +180,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
   adminPreviewMode: false,
   setAdminPreviewMode: (adminPreviewMode) => set({ adminPreviewMode }),
-  setLanguage: (appLang) => set({ appLang }),
+  setLanguage: (appLang: 'zh' | 'en') => set({ appLang }),
   errors: [],
   clearErrors: () => set({ errors: [] }),
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),

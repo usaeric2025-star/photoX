@@ -82,6 +82,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
   const {
     activeGroupPhotos,
+    focusedGroupPhotoId, setFocusedGroupPhotoId,
+    draggedPhotoId, setDraggedPhotoId,
+    isMultiSelectMode,
     showGroupSettings, groupSettingsOpen, setGroupSettingsOpen,
     batchEditingIds, setBatchEditingIds,
     batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger,

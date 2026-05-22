@@ -40,7 +40,10 @@ export const useGroupAdminLogic = ({
     setAlertDialog: contextSetAlertDialog, 
     setPromptDialog,
     isMultiSelect, setIsMultiSelect,
-    selectedIds, setSelectedIds
+    selectedIds, setSelectedIds,
+    groupSettingsOpen, setGroupSettingsOpen,
+    batchEditingIds, setBatchEditingIds,
+    batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger
   } = useGalleryStore();
   
   const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
@@ -338,6 +341,9 @@ export const useGroupAdminLogic = ({
     selectedIds, setSelectedIds,
     draggedPhotoId, setDraggedPhotoId,
     showGroupSettings, setShowGroupSettings,
+    groupSettingsOpen, setGroupSettingsOpen,
+    batchEditingIds, setBatchEditingIds,
+    batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger,
     groupData, setGroupData,
     isGroupDataLoading,
     activeGroupPhotos,
