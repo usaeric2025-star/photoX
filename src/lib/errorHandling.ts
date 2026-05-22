@@ -11,7 +11,7 @@ export const setupGlobalErrorHandling = () => {
     // Check for cancellable triggers to keep logs clean
     const isCancellation = 
       reason?.name === 'AbortError' || 
-      /cancel|abort|precondition|offline/i.test(message) ||
+      /cancel|abort|precondition|offline|websocket|websocket|hmr/i.test(message) ||
       message.includes('DOMException') ||
       message.includes('user_cancel') ||
       message.includes('Failed to fetch') ||

@@ -187,10 +187,6 @@ export function filterPhotos(
 
   // 6. Sort
   result.sort((a, b) => {
-    // Sort hidden to the absolute end, regardless of pinned status
-    if (a.is_hidden && !b.is_hidden) return 1;
-    if (!a.is_hidden && b.is_hidden) return -1;
-
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
     
@@ -285,9 +281,6 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
   });
   
   representatives.sort((a, b) => {
-    if (a.is_hidden && !b.is_hidden) return 1;
-    if (!a.is_hidden && b.is_hidden) return -1;
-
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
 

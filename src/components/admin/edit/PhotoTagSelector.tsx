@@ -33,15 +33,19 @@ export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
     ));
   }, [selectedTagIds]);
 
-  const sortedTags = [...tags].sort((a, b) => {
-    const isASelected = cleanSelectedIds.includes(String(a.id));
-    const isBSelected = cleanSelectedIds.includes(String(b.id));
+  const [initialSelectedIds] = React.useState(() => cleanSelectedIds);
 
-    if (isASelected && !isBSelected) return -1;
-    if (!isASelected && isBSelected) return 1;
-    
-    return a.name.localeCompare(b.name, undefined, { numeric: true });
-  });
+  const sortedTags = React.useMemo(() => {
+    return [...tags].sort((a, b) => {
+      const isASelected = initialSelectedIds.includes(String(a.id));
+      const isBSelected = initialSelectedIds.includes(String(b.id));
+
+      if (isASelected && !isBSelected) return -1;
+      if (!isASelected && isBSelected) return 1;
+      
+      return a.name.localeCompare(b.name, undefined, { numeric: true });
+    });
+  }, [tags, initialSelectedIds]);
 
   const handleToggleTag = (tag: Tag) => {
     const strId = String(tag.id);

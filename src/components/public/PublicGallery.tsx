@@ -190,15 +190,27 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   };
 
   const virtuosoComponents = useMemo(() => ({
-    Footer: () => (
-      <div className="py-12 mt-12 flex flex-col items-center justify-center opacity-30 select-none pb-32">
-        {props.settings?.logo_url && <img src={props.settings.logo_url} className="w-6 h-6 object-cover rounded-xl mb-3 grayscale" alt="Logo" />}
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-navy">
-          {props.settings?.app_name || 'PhotoX Gallery'}
-        </span>
-      </div>
-    )
-  }), [props.settings?.logo_url, props.settings?.app_name]);
+    Footer: () => {
+      if (props.isFetchingNextPage) {
+        return (
+          <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+            <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+            <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
+              {t.loading || '正在载入更多...'}
+            </span>
+          </div>
+        );
+      }
+      return (
+        <div className="py-12 mt-12 flex flex-col items-center justify-center opacity-30 select-none pb-32">
+          {props.settings?.logo_url && <img src={props.settings.logo_url} className="w-6 h-6 object-cover rounded-xl mb-3 grayscale" alt="Logo" />}
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-navy">
+            {props.settings?.app_name || 'PhotoX Gallery'}
+          </span>
+        </div>
+      );
+    }
+  }), [props.settings?.logo_url, props.settings?.app_name, props.isFetchingNextPage, t.loading]);
 
   const isSyncing = !!props.isRefreshing;
 

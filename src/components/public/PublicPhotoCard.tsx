@@ -1,11 +1,9 @@
 import React, { useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer } from '../../types';
-import { Layers, Image as ImageIcon } from 'lucide-react';
-import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
+import { Layers } from 'lucide-react';
+import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
-import { thumbHashToDataURL } from '../../utils/thumbHash';
-
-const loadedImagesCache = new Set<string>();
+import { PhotoImageContainer } from '../photo/PhotoImageContainer';
 
 interface PublicPhotoCardProps {
   photo: Photo;
@@ -104,12 +102,6 @@ export const PublicPhotoCard: React.FC<PublicPhotoCardProps> = React.memo(({
     [photo.thumb_url, photo.image_url, photo.uri, photo.updated_at, photo.created_at]
   );
 
-  const [initiallyLoaded] = React.useState(() => loadedImagesCache.has(photo.id));
-  const [isImageLoaded, setIsImageLoaded] = React.useState(initiallyLoaded);
-  const [isImageError, setIsImageError] = React.useState(false);
-
-  const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
-
   const shouldEagerLoad = index < 10;
 
   const handleShare = useCallback((e: React.MouseEvent) => {
@@ -124,46 +116,12 @@ export const PublicPhotoCard: React.FC<PublicPhotoCardProps> = React.memo(({
       onClick={handleClick}
       className="aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:scale-[1.02] active:scale-[0.95]"
     >
-      {!isImageLoaded && !isImageError && !placeholderDataUrl && (
-        <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
-          <ImageIcon className="text-slate-300 w-8 h-8 opacity-20" />
-        </div>
-      )}
-
-      {isImageError && (
-        <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
-          <ImageIcon className="text-slate-300 w-8 h-8 opacity-50" />
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{t.imageLoadFailed || 'Load Failed'}</span>
-        </div>
-      )}
-
-      {!isImageError && !isImageLoaded && (
-        <img 
-          draggable={false}
-          src={placeholderDataUrl || photo.thumb_url || ''} 
-          alt=""
-          loading={shouldEagerLoad ? "eager" : "lazy"}
-          width={400}
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-filter duration-300 ${placeholderDataUrl ? '' : 'blur-md'}`}
-        />
-      )}
-
-      <img 
-        draggable={false}
-        loading={shouldEagerLoad ? "eager" : "lazy"}
-        referrerPolicy="no-referrer"
-        src={thumbSrc} 
-        alt={photo.name}
-        width={400}
-        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isImageError ? 'hidden' : ''}`}
-        onLoad={() => {
-          loadedImagesCache.add(photo.id);
-          setIsImageLoaded(true);
-        }}
-        onError={() => {
-          setIsImageLoaded(true);
-          setIsImageError(true);
-        }}
+      <PhotoImageContainer
+        photoId={photo.id}
+        src={thumbSrc}
+        thumbHash={photo.thumb_hash}
+        alt={photo.name || 'Photo'}
+        loading={shouldEagerLoad ? 'eager' : 'lazy'}
       />
 
       <PhotoStatusBadges photo={photo} />

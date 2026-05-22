@@ -27,51 +27,55 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
       if (!d) return null;
       const originalLabel = typeof d === 'string' ? d : String(d.label || '');
       
-      let length = 0;
-      let width = 0;
-      let height = 0;
+      let length = d && typeof d.length === 'number' ? d.length : Number(d?.length) || 0;
+      let width = d && typeof d.width === 'number' ? d.width : Number(d?.width) || 0;
+      let height = d && typeof d.height === 'number' ? d.height : Number(d?.height) || 0;
 
-      // Handle part name separation (e.g. "WD: H..." -> parse dimensions from "H...")
-      let parsingPart = originalLabel;
-      const partPrefixMatch = originalLabel.match(/^([A-Z]+):\s*(.*)/);
-      if (partPrefixMatch) {
-        parsingPart = partPrefixMatch[2];
-      }
+      const hasPreparsed = length > 0 || width > 0 || height > 0;
 
-      const nums = parsingPart.match(/(\d+(\.\d+)?)/g) || [];
-      const hasH = /H/i.test(parsingPart);
-      const hasW = /W/i.test(parsingPart);
-      const hasD = /D/i.test(parsingPart);
-      const hasL = /L/i.test(parsingPart);
-
-      if (hasH || hasW || hasD || hasL) {
-        // 1️⃣ Strict identification by labels (H/W/D/L)
-        const hMatch = parsingPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-        const wMatch = parsingPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-        const lMatch = parsingPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-        const dMatch = parsingPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
-
-        if (hMatch) height = parseFloat(hMatch[1]);
-        
-        if (wMatch && lMatch) {
-          width = parseFloat(wMatch[1]);
-          length = parseFloat(lMatch[1]);
-        } else if (wMatch) {
-          width = parseFloat(wMatch[1]);
-        } else if (lMatch) {
-          length = parseFloat(lMatch[1]);
+      if (!hasPreparsed) {
+        // Handle part name separation (e.g. "WD: H..." -> parse dimensions from "H...")
+        let parsingPart = originalLabel;
+        const partPrefixMatch = originalLabel.match(/^([A-Z]+):\s*(.*)/);
+        if (partPrefixMatch) {
+          parsingPart = partPrefixMatch[2];
         }
 
-        if (dMatch) {
-          const depthVal = parseFloat(dMatch[1]);
-          if (length === 0) length = depthVal;
-          else if (width === 0) width = depthVal;
+        const nums = parsingPart.match(/(\d+(\.\d+)?)/g) || [];
+        const hasH = /H/i.test(parsingPart);
+        const hasW = /W/i.test(parsingPart);
+        const hasD = /D/i.test(parsingPart);
+        const hasL = /L/i.test(parsingPart);
+
+        if (hasH || hasW || hasD || hasL) {
+          // 1️⃣ Strict identification by labels (H/W/D/L)
+          const hMatch = parsingPart.match(/H\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+          const wMatch = parsingPart.match(/W\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+          const lMatch = parsingPart.match(/L\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+          const dMatch = parsingPart.match(/D\s*[:：=x*]?\s*(\d+(\.\d+)?)/i);
+
+          if (hMatch) height = parseFloat(hMatch[1]);
+          
+          if (wMatch && lMatch) {
+            width = parseFloat(wMatch[1]);
+            length = parseFloat(lMatch[1]);
+          } else if (wMatch) {
+            width = parseFloat(wMatch[1]);
+          } else if (lMatch) {
+            length = parseFloat(lMatch[1]);
+          }
+
+          if (dMatch) {
+            const depthVal = parseFloat(dMatch[1]);
+            if (length === 0) length = depthVal;
+            else if (width === 0) width = depthVal;
+          }
+        } else if (nums.length > 0) {
+          // 2️⃣ Pattern fallback: length -> width -> height (Standard LWH)
+          length = parseFloat(nums[0]);
+          if (nums.length >= 2) width = parseFloat(nums[1]);
+          if (nums.length >= 3) height = parseFloat(nums[2]);
         }
-      } else if (nums.length > 0) {
-        // 2️⃣ Pattern fallback: length -> width -> height (Standard LWH)
-        length = parseFloat(nums[0]);
-        if (nums.length >= 2) width = parseFloat(nums[1]);
-        if (nums.length >= 3) height = parseFloat(nums[2]);
       }
       
       const is_ai_estimated = !!(d && (d.is_ai_estimated === true || /AI/i.test(originalLabel)));

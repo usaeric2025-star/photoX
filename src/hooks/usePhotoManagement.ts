@@ -26,24 +26,29 @@ export const usePhotoManagement = (
   });
   const [showOtherFields, setShowOtherFields] = useState(false);
 
+  const [loadedPhotoId, setLoadedPhotoId] = useState<string | null>(null);
+
   useEffect(() => {
     if (ui.editPhotoId) {
-      const photo = photos.find(p => p.id === ui.editPhotoId);
-      if (photo) {
-        setFormState({
-          name: photo.name || '',
-          category_id: photo.category_id || null,
-          tag_ids: photo.tag_ids || [],
-          manufacturer_id: photo.manufacturer_id || null,
-          model_number: photo.model_number || '',
-          manual_code: photo.manual_code || '',
-          description: photo.description || '',
-          is_hidden: !!photo.is_hidden,
-          description_translations: photo.description_translations || { en: '', ms: '' },
-          dimensions: photo.dimensions || [],
-          price: photo.price || '',
-          is_group_cover: !!photo.is_group_cover
-        });
+      if (ui.editPhotoId !== loadedPhotoId) {
+        const photo = photos.find(p => p.id === ui.editPhotoId);
+        if (photo) {
+          setFormState({
+            name: photo.name || '',
+            category_id: photo.category_id || null,
+            tag_ids: photo.tag_ids || [],
+            manufacturer_id: photo.manufacturer_id || null,
+            model_number: photo.model_number || '',
+            manual_code: photo.manual_code || '',
+            description: photo.description || '',
+            is_hidden: !!photo.is_hidden,
+            description_translations: photo.description_translations || { en: '', ms: '' },
+            dimensions: photo.dimensions || [],
+            price: photo.price || '',
+            is_group_cover: !!photo.is_group_cover
+          });
+          setLoadedPhotoId(ui.editPhotoId);
+        }
       }
     } else {
         // Reset if not editing
@@ -61,8 +66,9 @@ export const usePhotoManagement = (
             price: '',
             is_group_cover: false
         });
+        setLoadedPhotoId(null);
     }
-  }, [ui.editPhotoId, photos]);
+  }, [ui.editPhotoId, photos, loadedPhotoId]);
 
   const updateForm = useCallback((update: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
     setFormState(prev => {

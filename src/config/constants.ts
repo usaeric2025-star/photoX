@@ -1,7 +1,7 @@
 // 静态常量，不依赖环境
 export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 50,
-  GROUP_PAGE_SIZE: 50,
+  DEFAULT_PAGE_SIZE: 24,
+  GROUP_PAGE_SIZE: 24,
   MAX_PAGE_SIZE: 100,
 }
 

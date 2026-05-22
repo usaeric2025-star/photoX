@@ -34,3 +34,44 @@
 5. 列表渲染是否考虑了性能（Memo/Callback）？
 6. 是否有无意义的 `invalidateQueries` 调用？
 7. 所有新增或改造的异步执行，是否均已迁移并绑定至 `useTaskExecutor` 管理？
+
+## 六、强制执行新规范（2026-05-22）
+
+### 1. 任务管理
+- ✅ 所有异步操作必须优先使用 `useTaskExecutor` 对接状态机制
+- ❌ 禁止使用手动 `useState` 管理 loading 状态
+- ❌ 禁止零散落单的 `toast.success/error`
+
+### 2. 错误处理与上报
+- ✅ 所有异步捕获错误必须使用包含全局记录的 `reportError` 或 `handleError` 统一入口
+- ❌ 禁止在组件或服务层直接使用裸露的 `console.error` 或 `window.alert`
+
+### 3. 提示与通知
+- ✅ 由 `runTask` 提供的选项自动处理 toast 状态响应
+- ❌ 禁止无故在多各业务分叉中手动单独调用外围 UI 通知库
+
+### 4. 统一加载状态
+- ✅ 界面应统一从 `tasks` 全局执行池结构进行加载阶段的派生
+- ❌ 禁止写散落的独立 `setLoading` 零碎逻辑
+
+### 5. 标准规范代码对比
+
+```ts
+// ✅ 正确示范
+const { runTask } = useTaskExecutor();
+await runTask('保存', saveData, { showSuccessToast: true });
+
+// ❌ 错误示范
+const [loading, setLoading] = useState(false);
+try {
+  setLoading(true);
+  await saveData();
+  toast.success('保存成功');
+} catch (e) {
+  console.error(e);
+  toast.error('保存失败');
+} finally {
+  setLoading(false);
+}
+```
+

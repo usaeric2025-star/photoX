@@ -124,6 +124,20 @@ export const analyzeProductPhoto = async (
       throw new Error('回传格式错误，找不到有效的 JSON 对象');
     }
     
+    // Normalize camelCase properties from AI to snake_case
+    if (parsedData.categoryId && !parsedData.category_id) {
+      parsedData.category_id = parsedData.categoryId;
+    }
+    if (parsedData.tagIds && !parsedData.tag_ids) {
+      parsedData.tag_ids = parsedData.tagIds;
+    }
+    if (parsedData.newTags && !parsedData.new_tags) {
+      parsedData.new_tags = parsedData.newTags;
+    }
+    if (parsedData.modelNumber && !parsedData.model_number) {
+      parsedData.model_number = parsedData.modelNumber;
+    }
+    
     const zh = parsedData.description || '';
     parsedData.description_translations = { zh, en: '', ms: '' };
     parsedData.description = zh;
@@ -137,19 +151,36 @@ export const analyzeProductPhoto = async (
     }
     
     parsedData.dimensions = normalizeDimensions(safeDims);
-    parsedData.tag_ids = normalizeTagIds(parsedData.tagIds, tags || []);
+    parsedData.tag_ids = normalizeTagIds(parsedData.tag_ids || parsedData.tagIds, tags || []);
 
     let resolvedCategoryId: string | null = null;
-    if (parsedData.category_id) {
-      const match = (categories || []).find(c => 
-        String(c.id) === String(parsedData.category_id) || 
-        String(c.name || '').toLowerCase() === String(parsedData.category_id).toLowerCase() ||
-        String(c.zh || '').toLowerCase() === String(parsedData.category_id).toLowerCase()
+    const catIdToCheck = String(parsedData.category_id || '').trim();
+    if (catIdToCheck) {
+      // 1. Exact or case-insensitive match
+      let match = (categories || []).find(c => 
+        String(c.id) === catIdToCheck || 
+        String(c.name || '').toLowerCase() === catIdToCheck.toLowerCase() ||
+        String(c.zh || '').toLowerCase() === catIdToCheck.toLowerCase()
       );
+      
+      // 2. Fuzzy match: check if the AI output contains the category name or vice versa
+      if (!match) {
+        match = (categories || []).find(c => {
+          const name = String(c.name || '').toLowerCase().trim();
+          const zh = String(c.zh || '').toLowerCase().trim();
+          const checkNormalized = catIdToCheck.toLowerCase();
+          return (
+            (name && (checkNormalized.includes(name) || name.includes(checkNormalized))) ||
+            (zh && (checkNormalized.includes(zh) || zh.includes(checkNormalized)))
+          );
+        });
+      }
+      
       if (match) {
         resolvedCategoryId = match.id;
       }
     }
+    
     if (!resolvedCategoryId && targetCategoryId) {
       const match = (categories || []).find(c => String(c.id) === String(targetCategoryId));
       if (match) {

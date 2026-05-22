@@ -1,12 +1,10 @@
 import React, { useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer } from '../../types';
-import { Layers, Heart, Check, Image as ImageIcon, EyeOff } from 'lucide-react';
-import { getTranslatedCategoryName, getManufacturerName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
+import { Layers, Heart, Check, EyeOff } from 'lucide-react';
+import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
-import { thumbHashToDataURL } from '../../utils/thumbHash';
 import { useMultiSelect } from '../../hooks/useMultiSelect';
-
-const loadedImagesCache = new Set<string>();
+import { PhotoImageContainer } from '../photo/PhotoImageContainer';
 
 interface AdminPhotoCardProps {
   photo: Photo;
@@ -51,9 +49,9 @@ const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
 };
 
 const SelectionOverlay: React.FC<{ isSelected: boolean }> = ({ isSelected }) => (
-  <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
+  <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10 ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
-        {isSelected && <Check size={16} className="text-white sm:size-20" />}
+        {isSelected && <Check size={16} className="text-white" />}
      </div>
   </div>
 );
@@ -63,7 +61,7 @@ const PhotoInfoFooter: React.FC<{
   isUncategorized: boolean; 
   photoTags: string[] 
 }> = ({ displayCatName, isUncategorized, photoTags }) => (
-<div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
+  <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
      {!isUncategorized && displayCatName && (
       <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
         {displayCatName}
@@ -157,7 +155,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
     if (e.type === 'touchstart') {
       isTouchRef.current = true;
     } else if (isTouchRef.current && e.type === 'mousedown') {
-      return; // Ignore simulated mouse events on touch screens
+      return; 
     }
 
     isLongPressedRef.current = false;
@@ -170,7 +168,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       handleLongPress();
       isLongPressedRef.current = true;
       if ('vibrate' in navigator) navigator.vibrate(50);
-    }, 500); // stable 500ms duration
+    }, 500); 
   }, [handleLongPress]);
 
   const cancelPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -179,12 +177,6 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       pressTimerRef.current = null;
     }
   }, []);
-
-  const [initiallyLoaded] = React.useState(() => loadedImagesCache.has(photo.id));
-  const [isImageLoaded, setIsImageLoaded] = React.useState(initiallyLoaded);
-  const [isImageError, setIsImageError] = React.useState(false);
-
-  const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
 
   const shouldEagerLoad = index < 10;
 
@@ -207,7 +199,6 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       pressTimerRef.current = null;
     }
 
-    // If it was a long press, block the regular click action (lightbox/group view open)
     if (isLongPressedRef.current) {
       e.preventDefault();
       e.stopPropagation();
@@ -217,6 +208,10 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
 
     handleClick(e);
   }, [handleClick]);
+
+  const imgClassName = useMemo(() => {
+    return `${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''}`;
+  }, [isMultiSelect, isSelected, is_hidden]);
 
   return (
     <div 
@@ -231,60 +226,28 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       onClick={handleCardClick}
       className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
     >
-      {!isImageLoaded && !isImageError && !placeholderDataUrl && (
-        <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
-          <ImageIcon className="text-slate-300 w-8 h-8 opacity-20" />
-        </div>
-      )}
-
-      {isImageError && (
-        <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
-          <ImageIcon className="text-slate-300 w-8 h-8 opacity-50" />
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{t.imageLoadFailed || 'Load Failed'}</span>
-        </div>
-      )}
-
-      {!isImageError && !isImageLoaded && (
-        <img 
-          draggable={false}
-          src={placeholderDataUrl || photo.thumb_url || ''} 
-          alt=""
-          loading={shouldEagerLoad ? "eager" : "lazy"}
-          width={400}
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none transition-filter duration-300 ${placeholderDataUrl ? '' : 'blur-md'}`}
-        />
-      )}
-
-      <img 
-        draggable={false}
-        loading={shouldEagerLoad ? "eager" : "lazy"}
-        referrerPolicy="no-referrer"
-        src={thumbSrc} 
-        alt={photo.name}
-        width={400}
-        className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${initiallyLoaded ? '' : isImageLoaded ? 'opacity-100' : 'opacity-0'} ${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''} ${isImageError ? 'hidden' : ''}`}
-        onLoad={() => {
-          loadedImagesCache.add(photo.id);
-          setIsImageLoaded(true);
-        }}
-        onError={() => {
-          setIsImageLoaded(true);
-          setIsImageError(true);
-        }}
+      <PhotoImageContainer
+        photoId={photo.id}
+        src={thumbSrc}
+        thumbHash={photo.thumb_hash}
+        alt={photo.name || 'Photo'}
+        loading={shouldEagerLoad ? 'eager' : 'lazy'}
+        imgClassName={imgClassName}
       />
 
       {isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
       {is_hidden && !isMultiSelect && (
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
           <EyeOff size={24} className="text-white/60 drop-shadow" />
         </div>
       )}
+      
       <PhotoStatusBadges photo={photo} />
 
       {onTogglePinned && (
          <button 
            onClick={handleTogglePinnedClick}
-           className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.is_pinned ? 'text-red-500' : ''} z-10`}
+           className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.is_pinned ? 'text-red-500' : ''} z-20 hover:scale-115 active:scale-95 transition-transform`}
          >
            <Heart size={12} className={photo.is_pinned ? 'fill-current' : ''} />
          </button>
