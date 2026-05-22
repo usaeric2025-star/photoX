@@ -98,6 +98,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     handleBatchUpdateDimensions,
     handleReorder,
     handleBulkAction,
+    isMultiSelect, setIsMultiSelect,
+    selectedIds, setSelectedIds,
     setCover,
     setPromptDialog,
     setAlertDialog,
@@ -132,23 +134,23 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   }, [batchEditingIds, onBatchEdit, setBatchEditingIds]);
 
   const handlePhotoClick = useCallback((photo: Photo) => {
-    if (isMultiSelectMode) {
-      setSelectedPhotoIds(prev => 
+    if (isMultiSelect) {
+      setSelectedIds(prev => 
         prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
       );
     } else {
       setFocusedGroupPhotoId(photo.id);
     }
-  }, [isMultiSelectMode, setSelectedPhotoIds, setFocusedGroupPhotoId]);
+  }, [isMultiSelect, setSelectedIds, setFocusedGroupPhotoId]);
 
   const handlePhotoContextMenu = useCallback((e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
     if (isAdminMode) {
-      setIsMultiSelectMode(true);
-      setSelectedPhotoIds([photo.id]);
+      setIsMultiSelect(true);
+      setSelectedIds([photo.id]);
       if ('vibrate' in navigator) navigator.vibrate(50);
     }
-  }, [isAdminMode, setIsMultiSelectMode, setSelectedPhotoIds]);
+  }, [isAdminMode, setIsMultiSelect, setSelectedIds]);
 
   const handleAddPhotoToGroupClick = useCallback(async () => {
     if (onAddPhotoToGroup) {
@@ -205,17 +207,17 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
              isGroupDataLoading={isGroupDataLoading}
              activeGroupPhotos={activeGroupPhotos}
              onAddPhotoToGroup={onAddPhotoToGroup}
-             selectedPhotoIds={selectedPhotoIds}
-             setIsMultiSelectMode={setIsMultiSelectMode}
-             setSelectedPhotoIds={setSelectedPhotoIds}
+             selectedPhotoIds={selectedIds}
+             setIsMultiSelectMode={setIsMultiSelect}
+             setSelectedPhotoIds={setSelectedIds}
            />
 
            <GroupGridView 
              virtuosoRef={virtuosoRef}
              photos={activeGroupPhotos}
              isLoading={isGroupPhotosLoading}
-             isMultiSelectMode={isMultiSelectMode}
-               selectedPhotoIds={selectedPhotoIds}
+             isMultiSelectMode={isMultiSelect}
+               selectedPhotoIds={selectedIds}
                highlightId={currentHighlightId}
                onPhotoClick={handlePhotoClick}
                onPhotoContextMenu={handlePhotoContextMenu}

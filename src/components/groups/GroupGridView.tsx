@@ -79,7 +79,6 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
           src={photo.thumb_url || photo.image_url || photo.uri} 
           className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
           referrerPolicy="no-referrer"
-          loading="lazy"
           decoding="async"
           onLoad={() => setIsLoaded(true)}
         />

@@ -39,6 +39,8 @@ export const useGroupAdminLogic = ({
   const { 
     setAlertDialog: contextSetAlertDialog, 
     setPromptDialog,
+    isMultiSelect, setIsMultiSelect,
+    selectedIds, setSelectedIds
   } = useGalleryStore();
   
   const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
@@ -61,8 +63,8 @@ export const useGroupAdminLogic = ({
   }, [mutateSetCover, activeGroupId, groupData?.cover_photo_id]);
 
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
-  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
+  // const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+  // const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
@@ -166,10 +168,10 @@ export const useGroupAdminLogic = ({
   }, [activeGroupId]);
 
   useEffect(() => {
-    if (isMultiSelectMode && selectedPhotoIds.length === 0) {
-      setIsMultiSelectMode(false);
+    if (isMultiSelect && selectedIds.length === 0) {
+      setIsMultiSelect(false);
     }
-  }, [selectedPhotoIds.length, isMultiSelectMode]);
+  }, [selectedIds.length, isMultiSelect]);
 
   const confirmBulkRemove = useCallback((ids: string[]) => {
     // Determine the true remaining count (including hidden photos)
@@ -186,8 +188,8 @@ export const useGroupAdminLogic = ({
         : `确定要将选中的 ${ids.length} 张照片移出群组吗？`,
       onConfirm: async () => {
         try {
-          setIsMultiSelectMode(false);
-          setSelectedPhotoIds([]);
+          setIsMultiSelect(false);
+          setSelectedIds([]);
           
           if (activeGroupId) {
              const targetIds = isDissolving ? allGroupPhotos.map(p => p.id) : ids;
@@ -314,26 +316,26 @@ export const useGroupAdminLogic = ({
   }, [activeGroupPhotos, showError]);
 
   const handleBulkAction = useCallback(async (action: 'ai' | 'remove' | 'batch') => {
-    if (selectedPhotoIds.length === 0) return;
+    if (selectedIds.length === 0) return;
     
     if (action === 'ai') {
-      const targetPhotos = activeGroupPhotos.filter(p => selectedPhotoIds.includes(p.id));
+      const targetPhotos = activeGroupPhotos.filter(p => selectedIds.includes(p.id));
       onBatchAiAnalyze?.(targetPhotos);
-      setIsMultiSelectMode(false);
-      setSelectedPhotoIds([]);
+      setIsMultiSelect(false);
+      setSelectedIds([]);
     } else if (action === 'remove') {
-      confirmBulkRemove(selectedPhotoIds);
+      confirmBulkRemove(selectedIds);
     } else if (action === 'batch') {
-      onBatchEdit?.(selectedPhotoIds);
-      setIsMultiSelectMode(false);
-      setSelectedPhotoIds([]);
+      onBatchEdit?.(selectedIds);
+      setIsMultiSelect(false);
+      setSelectedIds([]);
     }
-  }, [activeGroupPhotos, confirmBulkRemove, onBatchAiAnalyze, onBatchEdit, selectedPhotoIds]);
+  }, [activeGroupPhotos, confirmBulkRemove, onBatchAiAnalyze, onBatchEdit, selectedIds]);
 
   return {
     focusedGroupPhotoId, setFocusedGroupPhotoId,
-    isMultiSelectMode, setIsMultiSelectMode,
-    selectedPhotoIds, setSelectedPhotoIds,
+    isMultiSelect, setIsMultiSelect,
+    selectedIds, setSelectedIds,
     draggedPhotoId, setDraggedPhotoId,
     showGroupSettings, setShowGroupSettings,
     groupData, setGroupData,
