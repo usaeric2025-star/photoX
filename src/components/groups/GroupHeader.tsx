@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
+import { useGalleryStore } from '../../store';
 
 interface GroupHeaderProps {
   activeGroupId: string | null;
@@ -18,10 +19,7 @@ interface GroupHeaderProps {
   groupData: ProductGroup | null;
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
-  setShowGroupSettings: (show: boolean) => void;
   onAddPhotoToGroup?: () => void;
-  onBatchEdit?: (ids: string[]) => void;
   selectedPhotoIds: string[];
   setIsMultiSelectMode: (mode: boolean) => void;
   setSelectedPhotoIds: (ids: string[]) => void;
@@ -34,14 +32,13 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   groupData,
   isGroupDataLoading,
   activeGroupPhotos,
-  onBatchAiAnalyze,
-  setShowGroupSettings,
   onAddPhotoToGroup,
-  onBatchEdit,
   selectedPhotoIds,
   setIsMultiSelectMode,
   setSelectedPhotoIds
 }) => {
+  const { setGroupSettingsOpen, setBatchEditingIds, setBatchAiAnalyzeTrigger } = useGalleryStore();
+  
   return (
     <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
       <div className="flex items-center gap-3">
@@ -56,7 +53,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
           className="flex flex-col cursor-pointer group"
           onClick={() => {
             if (isAdminMode) {
-              setShowGroupSettings(true);
+              setGroupSettingsOpen(true);
             }
           }}
         >
@@ -88,11 +85,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
          {isAdminMode && (
            <div className="flex items-center gap-1.5 sm:gap-2">
               <button 
-                onClick={() => {
-                  if (onBatchAiAnalyze) {
-                    onBatchAiAnalyze(activeGroupPhotos);
-                  }
-                }}
+                onClick={() => setBatchAiAnalyzeTrigger(true)}
                 className="hidden sm:flex px-3 h-10 items-center justify-center border border-[#7A00E6]/20 rounded-xl bg-[#F3E8FF] text-[#7A00E6] font-bold shadow-sm active:scale-95 transition-all gap-1.5"
                 title="AI 整組處理"
               >
@@ -100,7 +93,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                 <span className="text-xs">AI</span>
               </button>
 
-                <button onClick={() => setShowGroupSettings(true)} className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all" title="群组数据库">
+                <button onClick={() => setGroupSettingsOpen(true)} className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-indigo-200 rounded-xl bg-indigo-50 text-indigo-600 shadow-sm active:scale-95 transition-all" title="群组数据库">
                   <Settings2 size={18} />
                 </button>
 
@@ -112,7 +105,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                   <DropdownMenuItem 
                     onClick={() => {
                       const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
-                      onBatchEdit?.(ids);
+                      setBatchEditingIds(ids);
                       setIsMultiSelectMode(false);
                       setSelectedPhotoIds([]);
                     }}
@@ -122,9 +115,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                     <span className="text-sm font-bold text-slate-700">批量编辑 / Batch Edit</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => {
-                      if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);
-                    }}
+                    onClick={() => setBatchAiAnalyzeTrigger(true)}
                     className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
                   >
                     <Sparkles size={16} className="text-purple-500" />

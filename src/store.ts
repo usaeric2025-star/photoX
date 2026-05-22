@@ -19,6 +19,9 @@ interface UIState {
   editPhotoId: string | null
   editingPhotoId: string | null
   batchEditIds: string[] | null
+  groupSettingsOpen: boolean
+  batchEditingIds: string[] | null
+  batchAiAnalyzeTrigger: boolean
   hasLoadedOnce: boolean
   hasInitialLoaded: boolean
   alertDialog: {
@@ -88,6 +91,9 @@ interface UIActions {
   setEditPhotoId: (id: string | null) => void
   setEditingPhotoId: (id: string | null) => void
   setBatchEditIds: (ids: string[] | null) => void
+  setGroupSettingsOpen: (open: boolean) => void
+  setBatchEditingIds: (ids: string[] | null) => void
+  setBatchAiAnalyzeTrigger: (trigger: boolean) => void
   setHasLoadedOnce: (hasLoaded: boolean) => void
   setAlertDialog: (dialog: StoreState['alertDialog']) => void
   setPromptDialog: (dialog: StoreState['promptDialog']) => void
@@ -138,6 +144,9 @@ const initialState: UIState = {
   editPhotoId: null,
   editingPhotoId: null,
   batchEditIds: null,
+  groupSettingsOpen: false,
+  batchEditingIds: null,
+  batchAiAnalyzeTrigger: false,
   alertDialog: null,
   promptDialog: null,
   language: 'en',
@@ -230,6 +239,9 @@ export const useStore = create<StoreState>()(
       setEditPhotoId: (id) => set({ editPhotoId: id }),
       setEditingPhotoId: (id) => set({ editingPhotoId: id }),
       setBatchEditIds: (ids) => set({ batchEditIds: ids }),
+      setGroupSettingsOpen: (open) => set({ groupSettingsOpen: open }),
+      setBatchEditingIds: (ids) => set({ batchEditingIds: ids }),
+      setBatchAiAnalyzeTrigger: (trigger) => set({ batchAiAnalyzeTrigger: trigger }),
       setHasLoadedOnce: (hasLoaded) => set({ hasLoadedOnce: hasLoaded }),
       setHasInitialLoaded: (value) => set({ hasInitialLoaded: value }),
       

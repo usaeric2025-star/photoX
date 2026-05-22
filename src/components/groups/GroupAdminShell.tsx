@@ -82,14 +82,12 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   } = props;
 
   const {
-    focusedGroupPhotoId, setFocusedGroupPhotoId,
-    isMultiSelectMode, setIsMultiSelectMode,
-    selectedPhotoIds, setSelectedPhotoIds,
-    draggedPhotoId, setDraggedPhotoId,
-    showGroupSettings, setShowGroupSettings,
+    activeGroupPhotos,
+    showGroupSettings, groupSettingsOpen, setGroupSettingsOpen,
+    batchEditingIds, setBatchEditingIds,
+    batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger,
     groupData, setGroupData,
     isGroupDataLoading,
-    activeGroupPhotos,
     containerRef,
     virtuosoRef,
     currentHighlightId,
@@ -109,12 +107,29 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     initialPhotoId: props.initialPhotoId,
     photos,
     hookUpdatePhoto,
-    onBatchAiAnalyze,
     onRefresh: onRefresh || (() => {}),
-    onBatchEdit,
     onUngroup,
     setActiveGroupId
   });
+
+  // Watch for batch triggers
+  useEffect(() => {
+    if (batchAiAnalyzeTrigger) {
+      if (onBatchAiAnalyze) {
+         onBatchAiAnalyze(activeGroupPhotos);
+      }
+      setBatchAiAnalyzeTrigger(false);
+    }
+  }, [batchAiAnalyzeTrigger, activeGroupPhotos, onBatchAiAnalyze, setBatchAiAnalyzeTrigger]);
+
+  useEffect(() => {
+    if (batchEditingIds) {
+      if (onBatchEdit) {
+        onBatchEdit(batchEditingIds);
+      }
+      setBatchEditingIds(null);
+    }
+  }, [batchEditingIds, onBatchEdit, setBatchEditingIds]);
 
   const handlePhotoClick = useCallback((photo: Photo) => {
     if (isMultiSelectMode) {
@@ -189,10 +204,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
              groupData={groupData}
              isGroupDataLoading={isGroupDataLoading}
              activeGroupPhotos={activeGroupPhotos}
-             onBatchAiAnalyze={onBatchAiAnalyze}
-             setShowGroupSettings={setShowGroupSettings}
              onAddPhotoToGroup={onAddPhotoToGroup}
-             onBatchEdit={onBatchEdit}
              selectedPhotoIds={selectedPhotoIds}
              setIsMultiSelectMode={setIsMultiSelectMode}
              setSelectedPhotoIds={setSelectedPhotoIds}
@@ -243,8 +255,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
             {/* Group Settings Sheet */}
             <GroupSettingsSheet 
-              showGroupSettings={showGroupSettings}
-              setShowGroupSettings={setShowGroupSettings}
+              showGroupSettings={groupSettingsOpen}
+              setShowGroupSettings={setGroupSettingsOpen}
               activeGroupId={activeGroupId}
               groupData={groupData}
               setGroupData={setGroupData}
