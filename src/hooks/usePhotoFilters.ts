@@ -18,15 +18,13 @@ export function usePhotoFilters(
     isAdminModeOverride?: boolean;
   } = {}
 ) {
-  const {
-    searchQuery,
-    filterCatId,
-    filterSubId,
-    filterTagIds,
-    sortOrder,
-    isStaffMode,
-    showGroupsCollapsed: storeShowGroupsCollapsed
-  } = useGalleryStore();
+  const searchQuery = useGalleryStore(s => s.searchQuery);
+  const filterCatId = useGalleryStore(s => s.filterCatId);
+  const filterSubId = useGalleryStore(s => s.filterSubId);
+  const filterTagIds = useGalleryStore(s => s.filterTagIds);
+  const sortOrder = useGalleryStore(s => s.sortOrder);
+  const isStaffMode = useGalleryStore(s => s.isStaffMode);
+  const storeShowGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
 
   const hookIsAdminMode = useAdminMode();
   const effectiveIsAdminMode = options.isAdminModeOverride !== undefined 

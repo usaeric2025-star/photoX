@@ -23,7 +23,13 @@ interface Props {
 
 export const usePhotoEditLogic = (props: Props) => {
   const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, handleSingleAiAnalyze, saveNewPhoto } = props;
-  const { isAnalyzing, aiDebugInfo, setPromptDialog, setAlertDialog, withLoading, appLang, isSyncing: sessionSyncing } = useGalleryStore();
+  const isAnalyzing = useGalleryStore(s => s.isAnalyzing);
+  const aiDebugInfo = useGalleryStore(s => s.aiDebugInfo);
+  const setPromptDialog = useGalleryStore(s => s.setPromptDialog);
+  const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
+  const withLoading = useGalleryStore(s => s.withLoading);
+  const appLang = useGalleryStore(s => s.appLang);
+  const sessionSyncing = useGalleryStore(s => s.isSyncing);
   const { showError, showSuccess } = useFeedback();
   const { validatePhotoForm } = useFormValidation();
 

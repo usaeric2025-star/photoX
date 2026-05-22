@@ -23,7 +23,7 @@ interface AdminPhotoCardProps {
   onToggleHidden?: (photo: Photo) => void;
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
+const PhotoStatusBadges: React.FC<{ photo: Photo }> = React.memo(({ photo }) => {
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
       {photo.group_id && photo.member_count !== undefined && photo.member_count > 1 && (
@@ -33,27 +33,29 @@ const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
         </div>
       )}
       {photo.is_pinned && (
-        <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
-          <span>置頂</span>
+        <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 shadow-sm pointer-events-none">
+          <Heart size={8} className="fill-current" />
         </div>
       )}
     </div>
   );
-};
+});
+PhotoStatusBadges.displayName = 'PhotoStatusBadges';
 
-const SelectionOverlay: React.FC<{ isSelected: boolean }> = ({ isSelected }) => (
+const SelectionOverlay: React.FC<{ isSelected: boolean }> = React.memo(({ isSelected }) => (
   <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10 ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
         {isSelected && <Check size={16} className="text-white" />}
      </div>
   </div>
-);
+));
+SelectionOverlay.displayName = 'SelectionOverlay';
 
 const PhotoInfoFooter: React.FC<{ 
   displayCatName: string; 
   isUncategorized: boolean; 
   photoTags: string[] 
-}> = ({ displayCatName, isUncategorized, photoTags }) => (
+}> = React.memo(({ displayCatName, isUncategorized, photoTags }) => (
   <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
      {!isUncategorized && displayCatName && (
       <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
@@ -71,9 +73,10 @@ const PhotoInfoFooter: React.FC<{
           </span>
          ))}
        </div>
-     )}
+    )}
   </div>
-);
+));
+PhotoInfoFooter.displayName = 'PhotoInfoFooter';
 
 const toTitleCase = (str: string) => {
   if (!str) return '';

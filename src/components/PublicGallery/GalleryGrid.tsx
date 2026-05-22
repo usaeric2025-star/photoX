@@ -148,8 +148,8 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
       components={props.virtuosoComponents}
       context={props.virtuosoContext}
       endReached={handleLoadMore}
-      overscan={props.columns * 2}
-      increaseViewportBy={300}
+      overscan={props.columns * 4}
+      increaseViewportBy={1000}
       useWindowScroll={false}
       itemClassName="virtuoso-grid-item"
       listClassName={`grid gap-2 px-1.5 py-2 ${props.columns === 2 ? 'grid-cols-2' : props.columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}

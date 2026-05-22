@@ -38,7 +38,7 @@ interface AdminGalleryProps {
   isAnalyzing?: boolean;
 }
 
-export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
+export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
   useScrollRestoration('admin_gallery_scroll');
 
   // Store
