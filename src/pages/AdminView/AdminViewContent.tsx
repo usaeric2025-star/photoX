@@ -157,6 +157,7 @@ export const AdminViewContent: React.FC<Props> = ({
   }, [logic]);
 
   const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
+  const hasLoadedOnce = useGalleryStore((s) => s.hasLoadedOnce);
 
   const isActuallyLoading = showImmediateLoading || isLoading;
   if (isActuallyLoading) {
@@ -166,8 +167,6 @@ export const AdminViewContent: React.FC<Props> = ({
   if (authChecked && !user) {
     return <LoginScreen loginWithGoogle={sessionValue.loginWithGoogle} isLoading={sessionValue.loadingType === 'auth'} />;
   }
-
-  const hasLoadedOnce = useGalleryStore((s) => s.hasLoadedOnce);
 
   return <pre style={{ padding: 20, backgroundColor: '#f0f0f0' }}>
     {JSON.stringify({
