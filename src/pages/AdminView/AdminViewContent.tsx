@@ -41,6 +41,7 @@ interface Props {
 export const AdminViewContent: React.FC<Props> = ({ 
   user, authChecked, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage, isLoading 
 }) => {
+  console.log('AdminView render', { isLoading });
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
   const { runTask } = useTaskExecutor();

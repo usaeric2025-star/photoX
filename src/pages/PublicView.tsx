@@ -24,6 +24,7 @@ import { loginWithGoogle } from '../services/supabaseService';
 const EMPTY_TAGS: Tag[] = [];
 
 export default function PublicView() {
+  console.log('PublicView render', { isLoading: false });
   // ========== 1. 所有 Hooks 先调用（按顺序，无条件）==========
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useFeedback();
