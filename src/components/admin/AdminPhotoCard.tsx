@@ -3,7 +3,7 @@ import { Photo, Category, Manufacturer } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
-import { useMultiSelect } from '../../hooks/useMultiSelect';
+import { useGalleryStore } from '../../store';
 import { PhotoImageContainer } from '../photo/PhotoImageContainer';
 
 interface AdminPhotoCardProps {
@@ -24,7 +24,6 @@ interface AdminPhotoCardProps {
 }
 
 const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
-  const is_hidden = !!photo.is_hidden;
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
       {photo.group_id && photo.member_count !== undefined && photo.member_count > 1 && (
@@ -36,12 +35,6 @@ const PhotoStatusBadges: React.FC<{ photo: Photo }> = ({ photo }) => {
       {photo.is_pinned && (
         <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
           <span>置頂</span>
-        </div>
-      )}
-      {is_hidden && (
-        <div className="bg-orange-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 uppercase shadow-sm pointer-events-none">
-          <EyeOff size={8} />
-          <span>隐藏</span>
         </div>
       )}
     </div>
@@ -92,8 +85,23 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   lang, t, categories, manufacturers, tagMap, onEditPhoto, onGroupClick, 
   onLightboxOpen, shareSinglePhoto, onTogglePinned, onToggleHidden
 }) => {
-  const { isMultiSelect, selectedIds, enable, toggle } = useMultiSelect();
-  const isSelected = selectedIds.includes(photo.id);
+  const isMultiSelect = useGalleryStore((state) => state.isMultiSelect);
+  const isSelected = useGalleryStore((state) => (state.selectedIds ?? []).includes(photo.id));
+  const setIsMultiSelect = useGalleryStore((state) => state.setIsMultiSelect);
+  const setSelectedIds = useGalleryStore((state) => state.setSelectedIds);
+
+  const enable = useCallback(() => {
+    setIsMultiSelect(true);
+    setSelectedIds([photo.id]);
+  }, [setIsMultiSelect, setSelectedIds, photo.id]);
+
+  const toggle = useCallback(() => {
+    const current = (useGalleryStore.getState().selectedIds) ?? [];
+    const next = current.includes(photo.id) 
+      ? current.filter((i: string) => i !== photo.id) 
+      : [...current, photo.id];
+    setSelectedIds(next);
+  }, [setSelectedIds, photo.id]);
 
   const handleOpenLightbox = useCallback(() => {
     onLightboxOpen(photo);
@@ -101,7 +109,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
     
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (isMultiSelect && !e.shiftKey) {
-      toggle(photo.id);
+      toggle();
     } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
       onGroupClick(photo.group_id, photo.id);
     } else {
@@ -111,11 +119,11 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
 
   const handleLongPress = useCallback(() => {
     if (!isMultiSelect) {
-      enable(photo.id);
+      enable();
     } else {
-      toggle(photo.id);
+      toggle();
     }
-  }, [isMultiSelect, enable, toggle, photo.id]);
+  }, [isMultiSelect, enable, toggle]);
 
   const displayCatName = useMemo(() => 
     getTranslatedCategoryName(photo.category_id, categories, lang, t),
@@ -224,7 +232,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       onTouchMove={cancelPress}
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
-      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${is_hidden ? 'ring-2 ring-yellow-400/50' : ''}`}
+      className={`aspect-square bg-slate-100 rounded-xl overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 group ${cardSelectedClasses} ${is_hidden ? 'ring-[3px] ring-orange-500 shadow-md' : ''}`}
     >
       <PhotoImageContainer
         photoId={photo.id}

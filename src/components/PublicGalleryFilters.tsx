@@ -207,11 +207,6 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                   >
                     {displayLabel}
                     {isPinned && <Pin size={8} className="fill-current text-amber-600 rotate-45" />}
-                    {isPinned && (
-                      <span className="text-[7px] font-black px-1 bg-amber-500 text-white rounded-[3px] tracking-tighter">
-                        置顶
-                      </span>
-                    )}
                     {isHot && (
                       <span className="text-[7px] font-black px-1.5 bg-[#FFB700] text-white rounded-[3px] tracking-tighter">
                         HOT

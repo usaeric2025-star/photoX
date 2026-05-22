@@ -153,6 +153,10 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
     setLightboxIndex(index);
   }, [setLightboxIndex]);
 
+  const handleEditPhotoProp = useCallback((id: string) => {
+    props.onEditPhoto?.(id);
+  }, [props.onEditPhoto]);
+
   // Stable empty handlers to prevent unnecessary re-renders of all PhotoCards
   const noop = useCallback(() => {}, []);
 
@@ -251,7 +255,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     searchQuery={searchQuery}
                     onToggleHidden={props.onToggleHidden}
                     onTogglePinned={props.onTogglePinned}
-                    onEditPhoto={(id) => props.onEditPhoto && props.onEditPhoto(id)}
+                    onEditPhoto={handleEditPhotoProp}
                   />
                 </ErrorBoundary>
               </motion.div>

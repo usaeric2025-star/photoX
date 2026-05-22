@@ -57,14 +57,23 @@ export async function generateThumbHash(source: File | string): Promise<string |
   }
 }
 
+const thumbHashCache = new Map<string, string>();
+
 /**
  * Converts a ThumbHash base64 string to a Data URL
  */
 export function thumbHashToDataURL(hash: string | undefined): string | undefined {
   if (!hash) return undefined;
+  if (thumbHashCache.has(hash)) {
+    return thumbHashCache.get(hash);
+  }
   try {
     const binary = Uint8Array.from(atob(hash), c => c.charCodeAt(0));
-    return thumbhash.thumbHashToDataURL(binary);
+    const dataUrl = thumbhash.thumbHashToDataURL(binary);
+    if (dataUrl) {
+      thumbHashCache.set(hash, dataUrl);
+    }
+    return dataUrl;
   } catch (e) {
     console.error('[ThumbHash] Conversion failed:', e);
     return undefined;

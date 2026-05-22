@@ -14,7 +14,7 @@ export const useInfinitePhotos = (filters: {
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
     queryFn: async ({ pageParam = 1, signal }) => {
       const getPageSize = (p: number) => {
-        return p === 1 ? 24 : 50;
+        return p === 1 ? 60 : 60;
       };
       const pageSize = getPageSize(pageParam as number);
 
