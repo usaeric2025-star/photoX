@@ -1,7 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import PublicView from '@/pages/PublicView';
-import AdminView from '@/pages/AdminView';
 import { User } from './types';
 import { useAuth } from './hooks/useAuth';
 import { useRouteGuard } from './hooks/useRouteGuard';
@@ -10,6 +8,10 @@ import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { globalHandleError } from './utils/errorHandler';
 import { ROUTES } from './config/constants';
+import { FullPageLoading } from './components/FullPageLoading';
+
+const PublicView = lazy(() => import('@/pages/PublicView'));
+const AdminView = lazy(() => import('@/pages/AdminView'));
 
 /* Removed Fallback component */
 
@@ -99,11 +101,13 @@ export default function AppRoutes() {
 
   // Handle Global Search Debouncing via local state or query logic
   
-  if (isLoading) return null;
+  if (isLoading) return <FullPageLoading />;
 
   return (
       <BrowserRouter>
-        <AnimatedRoutes user={user} />
+        <Suspense fallback={<FullPageLoading />}>
+          <AnimatedRoutes user={user} />
+        </Suspense>
       </BrowserRouter>
   );
 }

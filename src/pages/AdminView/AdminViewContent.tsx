@@ -168,7 +168,7 @@ export const AdminViewContent: React.FC<Props> = ({
       >
         <AdminGlobalModals />
       
-      <div className="flex h-screen overflow-hidden bg-brand-bg">
+      <div className="flex h-[100dvh] overflow-hidden bg-brand-bg">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block shrink-0">
           <AdminSidebar 

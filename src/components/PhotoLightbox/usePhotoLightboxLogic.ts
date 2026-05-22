@@ -32,9 +32,12 @@ export const usePhotoLightboxLogic = ({
   const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
   
   // Swipe support
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchEndX, setTouchEndX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchEndY, setTouchEndY] = useState<number | null>(null);
   const minSwipeDistance = 50;
+  const minVerticalSwipeDistance = 80;
 
   useEffect(() => {
     setActiveLang(lang || 'en');
@@ -105,19 +108,38 @@ export const usePhotoLightboxLogic = ({
   }, [photo]);
 
   const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0]?.clientX);
+    setTouchEndX(null);
+    setTouchEndY(null);
+    setTouchStartX(e.targetTouches[0]?.clientX);
+    setTouchStartY(e.targetTouches[0]?.clientY);
   };
 
-  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0]?.clientX);
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEndX(e.targetTouches[0]?.clientX);
+    setTouchEndY(e.targetTouches[0]?.clientY);
+  };
 
   const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-    if (isLeftSwipe) onNext();
-    if (isRightSwipe) onPrev();
+    if (touchStartX === null || touchEndX === null || touchStartY === null || touchEndY === null) return;
+    
+    const distanceX = touchStartX - touchEndX;
+    const distanceY = touchStartY - touchEndY;
+    
+    const absX = Math.abs(distanceX);
+    const absY = Math.abs(distanceY);
+    
+    // Horizontal swipe is dominant and exceeds swipe distance threshold
+    if (absX > absY && absX > minSwipeDistance) {
+      if (distanceX > 0) {
+        onNext();
+      } else {
+        onPrev();
+      }
+    } 
+    // Vertical swipe is dominant and exceeds vertical swipe distance threshold
+    else if (absY > absX && absY > minVerticalSwipeDistance) {
+      onClose();
+    }
   };
 
   const retryImageLoad = () => {
