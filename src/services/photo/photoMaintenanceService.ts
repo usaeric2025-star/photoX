@@ -126,7 +126,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
   try {
     let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
-      .select('id, image_hash, created_at, storage_id, image_url, user_id, group_id')
+      .select('id, image_hash, created_at, image_url, user_id, group_id')
       .order('created_at', { ascending: true });
 
     if (userId) {

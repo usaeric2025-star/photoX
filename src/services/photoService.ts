@@ -72,6 +72,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       description: item.description as string | undefined,
       image_url: item.image_url as string | undefined,
       thumb_url: (item.thumb_url as string) || (item.image_url as string),
+      thumb_hash: item.thumb_hash as string | undefined,
       exif_data: (item.exif_data as Record<string, unknown>) ?? null,
       created_at: created_at,
       updated_at: updated_at,
@@ -80,6 +81,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       is_hidden: !!item.is_hidden,
       is_pinned: is_pinned,
       is_analyzing: is_analyzing,
+      group_order: group_order,
       user_id: user_id,
       uri: item.image_url as string | undefined,
       price: item.price ? String(item.price) : '',
@@ -89,6 +91,8 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       created_at_timestamp: item.created_at_timestamp as number | undefined
     };
 }
+
+const PHOTO_SELECT_FIELDS = 'id, name, item_code, manual_code, model_number, image_hash, category_id, manufacturer_id, sub_category, description, image_url, thumb_url, thumb_hash, created_at, updated_at, group_id, is_group_cover, is_hidden, is_pinned, is_analyzing, user_id, price, description_translations, dimensions, photo_tags(tag_id)';
 
 export const loadAllPhotosFromCloud = async (
     since?: string,
@@ -100,9 +104,7 @@ export const loadAllPhotosFromCloud = async (
     isAdminMode: boolean = false,
     signal?: AbortSignal
 ): Promise<Photo[]> => {
-    const selectQuery = searchQuery
-        ? `*, photo_tags(*)`
-        : `*, photo_tags(*)`;
+    const selectQuery = PHOTO_SELECT_FIELDS;
 
     let query = supabase
         .from(DB_CONFIG.TABLE_NAME)
@@ -223,7 +225,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
 
     let query = supabase
         .from(DB_CONFIG.TABLE_NAME)
-        .select('*, photo_tags(*)')
+        .select(PHOTO_SELECT_FIELDS)
         .eq('group_id', groupId);
 
     if (!isAdminMode) {
@@ -277,7 +279,7 @@ export const loadPhotosByGroupIdPaginated = async (
 
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .select('*, photo_tags(*)')
+    .select(PHOTO_SELECT_FIELDS)
     .eq('group_id', groupId);
 
   if (!isAdminMode) {

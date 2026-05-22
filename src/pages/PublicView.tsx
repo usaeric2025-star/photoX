@@ -188,7 +188,8 @@ export default function PublicView() {
     return <div className="p-4 text-red-500">加载失败: {(infiniteQuery.error as Error).message}</div>;
   }
   
-  if (isSettingsLoading || !settings) {
+  const isActuallyLoading = infiniteQuery.isLoading || isSettingsLoading;
+  if (isActuallyLoading || !settings) {
     return <FullPageLoading />;
   }
   
