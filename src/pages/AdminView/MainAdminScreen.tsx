@@ -51,7 +51,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
     lang, loadingType, batchProgress, categories, tags,
     settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
     onDeletePhotos, onGroupPhotos, onBatchEdit, onBatchAiAnalyze, onBatchToggleHidden,
-    isFetchingNextPage, isLoading, onEditPhoto, onToggleHidden, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
+    isFetchingNextPage, isLoading, onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
   } = props;
 
   const { selectedIds, clear } = useMultiSelect();
@@ -89,6 +89,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
             isLoading={isLoading}
             onEditPhoto={onEditPhoto}
             onToggleHidden={onToggleHidden}
+            onTogglePinned={onTogglePinned}
             onAiAnalyze={onAiAnalyze}
             onSetGroupCover={onSetGroupCover}
             onCancelAnalyze={onCancelAnalyze}

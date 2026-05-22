@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X } from 'lucide-react';
+import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X, Heart } from 'lucide-react';
 import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer } from '../../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
 import { Skeleton } from '../ui/Skeleton';
@@ -24,6 +24,7 @@ interface LightboxInfoPanelProps {
   onCancelAnalyze?: () => void;
   onEditPhoto?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
+  onTogglePinned?: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   contactWhatsApp: (photo: Photo) => void;
@@ -33,7 +34,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
   isStaffMode, isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
-  onEditPhoto, onToggleHidden, onUngroup, onSetGroupCover, contactWhatsApp
+  onEditPhoto, onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
   const isAdminMode = isStaffMode;
   const catName = getTranslatedCategoryName(photo.category_id, categories, activeLang, t);
@@ -102,6 +103,15 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                 >
                   {photo.is_hidden ? <EyeOff size={16}/> : <Eye size={16}/>}
                 </button>
+                {onTogglePinned && (
+                  <button 
+                    onClick={() => onTogglePinned?.(photo)}
+                    className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${photo.is_pinned ? 'bg-rose-50 text-rose-650 border border-rose-100 hover:bg-rose-100' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                    title={photo.is_pinned ? "取消置顶" : "设为置顶"}
+                  >
+                    <Heart size={16} className={photo.is_pinned ? 'fill-current text-rose-600' : ''} />
+                  </button>
+                )}
               </>
             )}
           </div>

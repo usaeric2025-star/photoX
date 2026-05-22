@@ -19,6 +19,7 @@ interface AdminPhotoGridProps {
   isLoading?: boolean;
   onEditPhoto?: (id: string) => void;
   onToggleHidden?: (p: Photo) => Promise<void>;
+  onTogglePinned?: (p: Photo) => Promise<void>;
   onAiAnalyze?: (photo: Photo) => Promise<any>;
   onSetGroupCover?: (id: string, gid: string) => Promise<void>;
   onCancelAnalyze?: () => void;
@@ -44,6 +45,7 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
       isStaffMode={true}
       onEditPhoto={props.onEditPhoto}
       onToggleHidden={props.onToggleHidden}
+      onTogglePinned={props.onTogglePinned}
       onAiAnalyze={props.onAiAnalyze}
       onSetGroupCover={props.onSetGroupCover}
       onCancelAnalyze={props.onCancelAnalyze}

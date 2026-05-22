@@ -73,6 +73,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
         <img 
           draggable={false}
           loading={loading}
+          decoding="async"
           referrerPolicy="no-referrer"
           src={src} 
           alt={alt}

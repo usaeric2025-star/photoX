@@ -31,6 +31,7 @@ interface AdminGalleryProps {
   isStaffMode?: boolean;
   onEditPhoto?: (id: string) => void;
   onToggleHidden?: (p: Photo) => Promise<void>;
+  onTogglePinned?: (p: Photo) => Promise<void>;
   onAiAnalyze?: (photo: Photo) => Promise<any>;
   onSetGroupCover?: (id: string, gid: string) => Promise<void>;
   onCancelAnalyze?: () => void;
@@ -249,6 +250,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                     selectedTagIds={selectedTagIds}
                     searchQuery={searchQuery}
                     onToggleHidden={props.onToggleHidden}
+                    onTogglePinned={props.onTogglePinned}
                     onEditPhoto={(id) => props.onEditPhoto && props.onEditPhoto(id)}
                   />
                 </ErrorBoundary>
@@ -278,6 +280,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = (props) => {
                 props.onEditPhoto?.(p.id);
               }}
               onToggleHidden={props.onToggleHidden as any}
+              onTogglePinned={props.onTogglePinned}
               onAiAnalyze={props.onAiAnalyze as any}
               onSetGroupCover={props.onSetGroupCover as any}
               onCancelAnalyze={props.onCancelAnalyze}

@@ -13,10 +13,15 @@ export const useInfinitePhotos = (filters: {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
     queryFn: async ({ pageParam = 1, signal }) => {
+      const getPageSize = (p: number) => {
+        return p === 1 ? 24 : 50;
+      };
+      const pageSize = getPageSize(pageParam as number);
+
       const photos = await loadAllPhotosFromCloud(
         undefined,
         (pageParam as number) - 1, // Service is 0-indexed
-        limit,
+        pageSize,
         filters.category_id,
         filters.tag_id,
         filters.searchQuery,
@@ -31,7 +36,7 @@ export const useInfinitePhotos = (filters: {
 
       return {
         photos: photos || [],
-        nextPage: (photos || []).length === limit ? (pageParam as number) + 1 : undefined
+        nextPage: (photos || []).length === pageSize ? (pageParam as number) + 1 : undefined
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,

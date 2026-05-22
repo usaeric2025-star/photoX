@@ -26,6 +26,7 @@ export interface PhotoLightboxProps {
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   onEditPhoto?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
+  onTogglePinned?: (photo: Photo) => void;
   onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
@@ -35,7 +36,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
     photo, index: propIndex, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
     isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
-    onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos: rawDisplayPhotos
+    onToggleHidden, onTogglePinned, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos: rawDisplayPhotos
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
 
@@ -136,6 +137,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
           onCancelAnalyze={onCancelAnalyze}
           onEditPhoto={isStaffMode ? onEditPhoto : undefined}
           onToggleHidden={isStaffMode ? onToggleHidden : undefined}
+          onTogglePinned={isStaffMode ? onTogglePinned : undefined}
           onUngroup={isStaffMode ? onUngroup : undefined}
           onSetGroupCover={isStaffMode ? onSetGroupCover : undefined}
           contactWhatsApp={contactWhatsApp}

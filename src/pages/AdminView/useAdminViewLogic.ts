@@ -224,9 +224,8 @@ export const useAdminViewLogic = (props: AdminViewLogicProps) => {
     if (photo.group_id) {
       setInitialPhotoId(photo.id);
       setActiveGroupId(photo.group_id);
-    } else {
-      setEditPhotoId(photo.id);
     }
+    setEditPhotoId(photo.id);
   }, [photos, setEditPhotoId]);
 
   return useMemo(() => ({

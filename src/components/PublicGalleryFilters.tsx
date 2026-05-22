@@ -198,13 +198,20 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                       "px-3 h-[22px] rounded-full text-[9px] font-extrabold transition-all border flex items-center gap-1 shrink-0 whitespace-nowrap",
                       isSelected 
                         ? 'bg-[#0051BA] border-[#0051BA] text-white shadow-sm' 
-                        : isHot
-                          ? "border-[#E8BA5A]/50 bg-[#FFF9EA]/80 text-[#B8860B]"
-                          : 'bg-[#F1F3F4]/70 border-transparent text-[#888888]'
+                        : isPinned
+                          ? 'border-amber-200 bg-amber-50/90 text-amber-700 shadow-xs'
+                          : isHot
+                            ? "border-[#E8BA5A]/50 bg-[#FFF9EA]/80 text-[#B8860B]"
+                            : 'bg-[#F1F3F4]/70 border-transparent text-[#888888]'
                     )}
                   >
                     {displayLabel}
-                    {isPinned && <Pin size={7} className="fill-current" />}
+                    {isPinned && <Pin size={8} className="fill-current text-amber-600 rotate-45" />}
+                    {isPinned && (
+                      <span className="text-[7px] font-black px-1 bg-amber-500 text-white rounded-[3px] tracking-tighter">
+                        置顶
+                      </span>
+                    )}
                     {isHot && (
                       <span className="text-[7px] font-black px-1.5 bg-[#FFB700] text-white rounded-[3px] tracking-tighter">
                         HOT
