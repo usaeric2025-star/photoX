@@ -93,7 +93,8 @@ export const useGroupPhotoAI = (props: GroupAiProps) => {
       const updatedPhotosList: Photo[] = sGroupPhotos.map(p => {
         const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
         const hasTags = safeArray(p.tag_ids).length >= 2;
-        const isComplete = p.category_id && hasTags && p.name && hasAllTranslations;
+        const isGeneric = shouldUpdateName(p.name);
+        const isComplete = p.category_id && hasTags && !isGeneric && hasAllTranslations;
         if (!forceAll && isComplete) {
           return p;
         }

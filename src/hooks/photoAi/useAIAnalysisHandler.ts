@@ -90,6 +90,10 @@ export const processSinglePhoto = async (
       }
     }
   } catch (err) {
+    const idx = photosRef.current.findIndex(p => p.id === initialPhoto.id);
+    if (idx !== -1) {
+      photosRef.current[idx].is_analyzing = false;
+    }
     throw err;
   } finally {
     onProgressUpdate();
