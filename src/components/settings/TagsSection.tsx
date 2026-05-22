@@ -1,10 +1,13 @@
 import React from 'react';
-import { Plus, Heart } from 'lucide-react';
+import { Plus, Heart, RefreshCw } from 'lucide-react';
 import { Tag, AppSettings } from '../../types';
 import { TagItem } from './TagItem';
 import { useGalleryStore } from '../../store';
 import { useFeedback } from '../../hooks';
 import { normalizeTagName } from '../../utils/stringHelper';
+import { useTaskExecutor } from '../../hooks/useTaskExecutor';
+import { triggerRefreshTagHotScores } from '../../services/tagsMutationService';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TagsSectionProps {
   tags: Tag[];
@@ -39,6 +42,15 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
 }) => {
   const { setPromptDialog } = useGalleryStore();
   const { showSuccess, showError } = useFeedback();
+  const { runTask } = useTaskExecutor();
+  const queryClient = useQueryClient();
+
+  const handleRefreshHotScores = async () => {
+    await runTask('刷新热门标签', async () => {
+      await triggerRefreshTagHotScores();
+      await queryClient.invalidateQueries({ queryKey: ['tags'] });
+    }, { showSuccessToast: true });
+  };
 
   const handleAddTag = () => {
     setPromptDialog({
@@ -79,11 +91,12 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
         </h3>
         <span className="text-[10px] text-brand-navy/40 font-black uppercase">{(tags || []).length} Items</span>
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center justify-between">
         <button onClick={handleAddTag} className={buttonStyles.accent}>
           <Plus size={16} /> 新增标签 / Add Tag
         </button>
-        <div className="flex flex-wrap items-center gap-3 bg-brand-navy/5 px-4 py-2 rounded-2xl border border-brand-navy/10 ml-auto h-full">
+        <div className="flex flex-wrap items-center gap-3.5 bg-brand-navy/5 px-4 py-2 rounded-2xl border border-brand-navy/10">
+           {/* Hot Limit */}
            <div className="flex flex-col gap-0.5">
              <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
                <Heart size={10} className="text-brand-gold fill-brand-gold" /> Hot Limit
@@ -105,7 +118,41 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
              />
            </div>
            
-           <div className="w-px h-8 bg-brand-navy/10 mx-1"></div>
+           <div className="w-px h-8 bg-brand-navy/10"></div>
+
+           {/* Hot Threshold */}
+           <div className="flex flex-col gap-0.5">
+             <span className="text-[9px] font-black text-brand-navy uppercase tracking-widest flex items-center gap-1">
+               热度阈值 / Hot Threshold
+             </span>
+             <input 
+               type="number"
+               min={0}
+               max={100}
+               className="w-14 text-center bg-white border border-brand-navy/10 text-xs font-black text-brand-navy rounded-md py-1 outline-none focus:border-brand-gold"
+               value={settings?.hot_tag_threshold !== undefined ? settings.hot_tag_threshold : 10}
+               onChange={(e) => {
+                 const val = parseInt(e.target.value);
+                 const num = isNaN(val) ? 10 : val;
+                 const nextSettings = { ...settings, hot_tag_threshold: num } as AppSettings;
+                 setSettings(nextSettings);
+                 setHasChanges(true);
+                 debouncedSave(nextSettings);
+               }}
+             />
+           </div>
+
+           <div className="w-px h-8 bg-brand-navy/10"></div>
+
+           {/* Refresh Scores Button */}
+           <button
+             onClick={handleRefreshHotScores}
+             className="px-3 py-1.5 bg-brand-gold hover:bg-brand-gold/85 text-brand-navy font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1 cursor-pointer"
+             title="重新计算所有标签的使用次数和热度分值"
+           >
+             <RefreshCw size={12} />
+             <span>刷新热门标签 / Refresh</span>
+           </button>
         </div>
       </div>
       <div className="flex flex-wrap gap-2 p-3 bg-brand-navy/5 rounded-[28px] border border-brand-navy/10 shadow-inner min-h-[48px]">

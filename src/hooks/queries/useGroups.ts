@@ -1,5 +1,5 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { loadGroupsFromCloud } from '../../services/groupService';
+import { loadGroupsFromCloud, getGroupById } from '../../services/groupService';
 import { QUERY_KEYS } from './keys';
 
 export const useGroupsQuery = (userId: string) => {
@@ -9,3 +9,13 @@ export const useGroupsQuery = (userId: string) => {
     placeholderData: keepPreviousData,
   });
 };
+
+export const useGroupDetailQuery = (groupId: string | null) => {
+  return useQuery({
+    queryKey: ['group', groupId],
+    queryFn: () => getGroupById(groupId!),
+    enabled: !!groupId,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+  });
+};
+

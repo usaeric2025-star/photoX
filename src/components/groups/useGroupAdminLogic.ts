@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
-import { getGroupById, saveGroupToCloud } from '../../services/groupService';
+import { saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
 import { useRemoveFromGroupMutation } from '../../hooks/mutations/useGroupOperations';
@@ -9,6 +9,8 @@ import { useGalleryStore } from '../../store';
 import { useAdminMode } from '../../hooks/useAdminMode';
 import { useFeedback } from '../../hooks/uiFeedback';
 import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
+import { useGroupDetailQuery } from '../../hooks';
+
 
 interface UseGroupAdminLogicProps {
   activeGroupId: string | null;
@@ -53,7 +55,7 @@ export const useGroupAdminLogic = ({
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
   
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+  const { data: queriedGroupData, isLoading: isGroupDataLoading } = useGroupDetailQuery(activeGroupId);
 
   const setCover = useCallback(async (photoId: string) => {
       const isAlreadyCover = groupData?.cover_photo_id === photoId;
@@ -134,41 +136,24 @@ export const useGroupAdminLogic = ({
   };
   
   useEffect(() => {
-    let active = true;
-    if (activeGroupId) {
-      setGroupData(null);
-      setIsGroupDataLoading(true);
-      getGroupById(activeGroupId).then(data => {
-        if (active) {
-          if (data) {
-            setGroupData(data);
-          } else {
-            setGroupData({
-              id: activeGroupId,
-              name: '',
-              description: '',
-              colors: [],
-              materials: [],
-              cover_photo_id: null,
-              user_id: 'default',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-          }
-          setIsGroupDataLoading(false);
-        }
-      }).catch(err => {
-        if (active) {
-          setIsGroupDataLoading(false);
-          showError(err, '获取产品组详情失败');
-        }
+    if (queriedGroupData) {
+      setGroupData(queriedGroupData);
+    } else if (activeGroupId && !isGroupDataLoading) {
+      setGroupData({
+        id: activeGroupId,
+        name: '',
+        description: '',
+        colors: [],
+        materials: [],
+        cover_photo_id: null,
+        user_id: 'default',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
     } else {
       setGroupData(null);
-      setIsGroupDataLoading(false);
     }
-    return () => { active = false; };
-  }, [activeGroupId]);
+  }, [queriedGroupData, activeGroupId, isGroupDataLoading]);
 
   useEffect(() => {
     if (isMultiSelect && selectedIds.length === 0) {

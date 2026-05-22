@@ -40,7 +40,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const cacheKey = photoId || src || '';
   const [initiallyLoaded] = useState(() => (cacheKey ? loadedImagesCache.has(cacheKey) : false));
-  const [shouldLoad, setShouldLoad] = useState(initiallyLoaded);
+  const [shouldLoad, setShouldLoad] = useState(initiallyLoaded || loading === 'eager');
   const [isImageLoaded, setIsImageLoaded] = useState(initiallyLoaded);
   const [isImageError, setIsImageError] = useState(false);
 
@@ -53,8 +53,8 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
     const isCached = loadedImagesCache.has(newCacheKey);
     const newBaseUrl = getBaseUrl(src);
 
-    if (isCached) {
-      setIsImageLoaded(true);
+    if (isCached || loading === 'eager') {
+      setIsImageLoaded(isCached);
       setIsImageError(false);
       setShouldLoad(true);
       lastSuccessfulBaseUrlRef.current = newBaseUrl;
@@ -68,9 +68,13 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
         setIsImageError(false);
       }
     }
-  }, [src, photoId]);
+  }, [src, photoId, loading]);
 
   useEffect(() => {
+    if (loading === 'eager' || initiallyLoaded) {
+      setShouldLoad(true);
+      return;
+    }
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -82,7 +86,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
     );
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [loading, initiallyLoaded]);
 
   const placeholderDataUrl = useMemo(() => {
     if (!thumbHash) return null;

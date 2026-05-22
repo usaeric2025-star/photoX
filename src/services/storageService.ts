@@ -43,7 +43,8 @@ export const uploadImages = async (
   photoId: string, 
   base64Data: string,
   onStatus?: (status: 'compressing' | 'uploading' | 'done') => void,
-  onProgress?: (percent: number) => void
+  onProgress?: (percent: number) => void,
+  force = false
 ): Promise<{imageUrl: string, thumbUrl: string}> => {
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -77,7 +78,7 @@ export const uploadImages = async (
       
       const fileExists = existingFile && existingFile.length > 0;
       
-      if (!fileExists) {
+      if (!fileExists || force) {
         const res = await fetch(base64);
         const blob = await res.blob();
         

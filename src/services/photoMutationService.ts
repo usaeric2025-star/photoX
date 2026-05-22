@@ -48,6 +48,16 @@ export const updatePhoto = async (
     }
   }
 
+  // If a new base64 image (rotated/edited) is provided, upload it and update image URLs
+  if (updates.uri && updates.uri.startsWith('data:image')) {
+    const { uploadImages } = await import('./storageService');
+    const { imageUrl, thumbUrl } = await uploadImages(session.user.id, photoId, updates.uri, undefined, undefined, true);
+    updates.image_url = imageUrl;
+    updates.thumb_url = thumbUrl;
+    updates.updated_at = new Date().toISOString();
+    delete updates.uri;
+  }
+
   const dbUpdates = mapToDb(updates);
   
   if (setPhotos) setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));

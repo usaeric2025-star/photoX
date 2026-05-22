@@ -201,9 +201,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             isMaintenanceRunning={props.isMaintenanceRunning}
             cardClass={cardClass}
             buttonStyles={BUTTON_STYLES}
-            settings={settings}
-            setSettingField={setSettingField}
-            inputClass={inputClass}
           />
 
           <ErrorLogViewer />

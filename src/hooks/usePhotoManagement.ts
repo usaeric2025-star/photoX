@@ -85,8 +85,14 @@ export const usePhotoManagement = (
 
   const saveNewPhoto = async () => {
     if (ui.editPhotoId) {
-      await updatePhotoFn({ id: ui.editPhotoId, updates: formState });
-      ui.setEditPhotoId(null);
+      await updatePhotoFn({ 
+        id: ui.editPhotoId, 
+        updates: {
+          ...formState,
+          uri: newPhotoData || undefined
+        } 
+      });
+      resetAddState();
     }
   };
 

@@ -6,7 +6,6 @@ import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '../utils/photoVisibility';
 import { PhotoLightbox } from './PhotoLightbox';
-import { getGroupById } from '../services/groupService';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
@@ -14,8 +13,9 @@ import { mapSupabasePhoto } from '../services/photoService';
 import { DB_CONFIG } from '../constants/config';
 
 import { useAdminMode } from '../hooks/useAdminMode';
-import { useFeedback } from '../hooks';
+import { useFeedback, useGroupDetailQuery } from '../hooks';
 import { useInfiniteGroupPhotosQuery } from '../hooks/queries/usePhotos';
+
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
 export interface GroupDetailViewProps extends GroupAdminShellProps {
@@ -39,8 +39,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const virtuosoRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
 
-  const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+  const { data: groupData, isLoading: isGroupDataLoading } = useGroupDetailQuery(activeGroupId);
 
   // Paginated group photos via React Query Infinite Query
   const {
@@ -82,24 +81,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     }
   };
 
-  useEffect(() => {
-    if (activeGroupId) {
-      // Reset state immediately to avoid showing stale data from previous group
-      setGroupData(null);
-      
-      // 1. Fetch group metadata
-      setIsGroupDataLoading(true);
-      getGroupById(activeGroupId).then(data => {
-        if (data) setGroupData(data);
-        setIsGroupDataLoading(false);
-      }).catch(err => {
-        showError(err, '获取产品组数据失败');
-        setIsGroupDataLoading(false);
-      });
-    } else {
-      setGroupData(null);
-    }
-  }, [activeGroupId]);
+
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];

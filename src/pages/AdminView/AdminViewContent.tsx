@@ -18,7 +18,7 @@ import { useAdminViewLogic } from './useAdminViewLogic';
 import { useAdminActions } from './useAdminActions';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { User, Photo } from '@/types';
-import { TranslationType } from '@/lib/ui-helpers';
+import { TranslationType, getCacheBustedImageUrl } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
 
 /* Removed ErrorFallback component */
@@ -257,7 +257,11 @@ export const AdminViewContent: React.FC<Props> = ({
                 showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
                 newPhotoData={logic.newPhotoData} setNewPhotoData={logic.setNewPhotoData}
                 onDelete={(id) => logic.handleDeletePhoto(id)}
-                editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
+                editPhotoPreview={(() => {
+                  if (!logic.editPhotoId) return null;
+                  const photo = logic.photos.find((p: Photo) => p.id === logic.editPhotoId);
+                  return photo ? getCacheBustedImageUrl(photo, 'image') : null;
+                })()}
                 abortAnalysis={logic.abortAnalysis} handleSingleAiAnalyze={logic.handleSingleAiAnalyze} handleTranslate={logic.handleTranslate} t={t}
               />
             )}

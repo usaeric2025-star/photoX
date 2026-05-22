@@ -66,7 +66,7 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
 
       <div className="absolute inset-0 z-0">
         <img 
-          src={placeholderDataUrl || photo.thumb_url || ''} 
+          src={placeholderDataUrl || getCacheBustedImageUrl(photo, 'thumb')} 
           className={`w-full h-full object-contain ${placeholderDataUrl ? '' : 'blur-xl'} opacity-30 transition-opacity duration-1000 ${isImageLoading ? 'opacity-30' : 'opacity-0'}`}
           aria-hidden="true"
           loading="lazy"

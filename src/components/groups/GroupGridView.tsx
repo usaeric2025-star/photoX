@@ -5,6 +5,7 @@ import { Skeleton } from '../ui/Skeleton';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { VIRTUOSO_CONFIG } from '@/config/virtuoso.config';
 import { useGalleryStore } from '../../store';
+import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 
 interface GroupGridViewProps {
   photos: Photo[];
@@ -77,7 +78,7 @@ const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighligh
           </div>
         )}
         <img 
-          src={photo.thumb_url || photo.image_url || photo.uri} 
+          src={getCacheBustedImageUrl(photo, 'thumb')} 
           className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
           referrerPolicy="no-referrer"
           decoding="async"
@@ -216,7 +217,15 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-6 p-3 sm:p-6"
         itemContent={(index) => {
           if (isLoading) {
-            return <Skeleton className="aspect-square rounded-[1.25rem] bg-slate-100" />;
+            return (
+              <div className="bg-white rounded-[1.25rem] border border-slate-100 p-1.5 flex flex-col h-full animate-pulse shadow-sm">
+                <div className="aspect-square rounded-xl bg-slate-100/80 relative overflow-hidden" />
+                <div className="mt-2.5 px-1 pb-1 space-y-1.5">
+                  <div className="h-3 w-2/3 bg-slate-100 rounded-lg" />
+                  <div className="h-2 w-1/2 bg-slate-50 rounded-lg" />
+                </div>
+              </div>
+            );
           }
           const photo = photos[index];
           if (!photo) return null;
