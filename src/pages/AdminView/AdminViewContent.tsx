@@ -167,106 +167,15 @@ export const AdminViewContent: React.FC<Props> = ({
     return <LoginScreen loginWithGoogle={sessionValue.loginWithGoogle} isLoading={sessionValue.loadingType === 'auth'} />;
   }
 
-  return (
-    <ErrorBoundary>
-      <AdminGlobalModals />
-      
-      <div className="flex h-screen overflow-hidden bg-brand-bg">
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block shrink-0">
-          <AdminSidebar 
-            settings={logic.settings}
-            activeScreen={logic.activeScreen}
-            setActiveScreen={logic.setActiveScreen}
-            cloudCount={logic.cloudCount}
-            onRefresh={logic.onRefresh}
-          />
-        </div>
+  const hasLoadedOnce = useGalleryStore((s) => s.hasLoadedOnce);
 
-        <div className="flex-1 flex flex-col min-w-0 relative h-full">
-          <React.Suspense fallback={<div className="flex flex-col items-center justify-center h-screen bg-brand-bg gap-4"><div className="w-8 h-8 border-[1px] border-brand-navy/10 border-t-brand-gold rounded-full animate-spin" /><span className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-widest">Loading...</span></div>}>
-            {logic.batchEditIds && (
-              <BatchEditScreen 
-                resetAddState={logic.resetAddState} saveBatchEdit={logic.saveBatchEditWithSuccess}
-                batchEditIds={logic.batchEditIds} formState={logic.formState} updateForm={logic.updateForm}
-                batchIsHiddenApplied={logic.batchIsHiddenApplied} setBatchIsHiddenApplied={logic.setBatchIsHiddenApplied}
-                showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
-                quickAddManufacturer={logic.quickAddManufacturer} quickAddTag={logic.quickAddTag}
-                updateTag={logic.updateTag} deleteTag={logic.deleteTag} addTag={logic.addTag}
-                onDelete={logic.handleDeletePhoto}
-              />
-            )}
-            
-            <GroupDetailView
-              activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId} setAlertDialog={logic.setAlertDialog}
-              photos={logic.photos} displayPhotos={logic.groupPhotos} initialPhotoId={logic.initialPhotoId}
-              setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
-              onEditPhoto={(p: Photo) => actions.handleEditPhoto(p.id)} onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
-              onBatchEdit={actions.handleBatchEdit} onUngroup={actions.handleUngroup} onAddPhotoToGroup={actions.handleImport}
-              lang={lang} t={t} categories={logic.categories} manufacturers={logic.manufacturers} allTags={logic.tags} tagMap={logic.tagIdToNameMap}
-              onBatchAiAnalyze={actions.handleBatchAiAnalyze} onAiAnalyze={actions.handleAiAnalyze} onToggleHidden={actions.handleToggleHidden} updatePhoto={actions.handleUpdatePhoto}
-            />
-          </React.Suspense>
-
-          <main className="flex-1 relative overflow-hidden">
-            {/* We keep MainAdminScreen and PublicGallery mounted to preserve scroll position and avoid flickering */}
-            <div 
-              className={`absolute inset-0 transition-opacity duration-200 ease-out ${logic.activeScreen === 'home' || logic.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
-            >
-              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
-                <MainAdminScreen 
-                  {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
-                  isLoading={isLoading}
-                  onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
-                  onToggleHidden={actions.handleToggleHidden} onSetGroupCover={logic.setGroupCover} onEditPhoto={actions.handleEditPhoto}
-                  onLoadMore={actions.handleLoadMoreCallback} hasNextPage={!!hasNextPage}
-                  onDeletePhotos={actions.handleDeletePhotos} onGroupPhotos={actions.handleGroupPhotos} onBatchEdit={actions.handleBatchEdit}
-                  onBatchToggleHidden={actions.handleBatchToggleHidden} onAiAnalyze={actions.handleAiAnalyze}
-                  onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger} onCancelAnalyze={logic.abortAnalysis} isAnalyzing={logic.loadingType === 'analyzing'} onImport={actions.handleImport}
-                />
-              </div>
-              <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
-                <div className="flex flex-col h-full bg-brand-bg">
-                  <PublicGallery 
-                    photos={logic.photos} categories={logic.categories} tags={logic.tags} settings={logic.settings}
-                    isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'} isFetchingNextPage={isFetchingNextPage}
-                    onExit={handleExitPublic} showExit={true} onRefresh={handleRefreshPublic}
-                    columns={logic.columns} setColumns={logic.setColumns} totalCount={logic.cloudCount}
-                    user={user} loginWithGoogle={logic.loginWithGoogle} onLoadMore={actions.handleLoadMoreCallback} hasMore={hasNextPage}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {(logic.activeScreen === 'manage' || logic.activeScreen === 'settings') && (
-              <div className="absolute inset-0 z-20 bg-brand-bg">
-                <SettingsScreen 
-                  setActiveScreen={logic.setActiveScreen} saveSettings={logic.saveSettings} handleLogoUpload={actions.handleLogoUpload}
-                  performPushSync={actions.handlePerformPushSync} performPullSync={actions.handlePerformPullSync} 
-                  refreshCloudData={async () => logic.onRefresh()} cloudCount={logic.cloudCount} lastSyncTime={lastSyncTime}
-                  isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
-                  onRunMaintenance={handleRunMaintenance}
-                  isMaintenanceRunning={isMaintenanceRunning}
-                />
-              </div>
-            )}
-          </main>
-
-          <AnimatePresence>
-            {(logic.editPhotoId || logic.newPhotoData) && (
-              <PhotoEditDrawer 
-                photos={logic.photos} editPhotoId={logic.editPhotoId} resetAddState={logic.resetAddState} 
-                saveNewPhoto={actions.handleSaveNewPhoto} formState={logic.formState} updateForm={logic.updateForm}
-                showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
-                newPhotoData={logic.newPhotoData} setNewPhotoData={logic.setNewPhotoData}
-                onDelete={(id) => logic.handleDeletePhoto(id)}
-                editPhotoPreview={logic.editPhotoId ? logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.image_url || logic.photos.find((p: Photo) => p.id === logic.editPhotoId)?.uri : null}
-                abortAnalysis={logic.abortAnalysis} handleSingleAiAnalyze={logic.handleSingleAiAnalyze} handleTranslate={logic.handleTranslate} t={t}
-              />
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-    </ErrorBoundary>
-  );
+  return <pre style={{ padding: 20, backgroundColor: '#f0f0f0' }}>
+    {JSON.stringify({
+      photos: logic.photos?.length,
+      categories: logic.categories?.length,
+      settings: !!logic.settings,
+      hasLoadedOnce,
+      error: 'infiniteQuery not directly exposed',
+    }, null, 2)}
+  </pre>;
 };
