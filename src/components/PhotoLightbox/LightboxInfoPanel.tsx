@@ -13,7 +13,7 @@ interface LightboxInfoPanelProps {
   isGroupDataLoading: boolean;
   activeLang: string;
   setActiveLang: (v: string) => void;
-  isStaffMode: boolean;
+  isAdminMode: boolean;
   isCopied: boolean;
   isAnalyzing?: boolean;
   t: TranslationType;
@@ -32,11 +32,10 @@ interface LightboxInfoPanelProps {
 
 export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
-  isStaffMode, isCopied, isAnalyzing, t, categories,
+  isAdminMode, isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
-  const isAdminMode = isStaffMode;
   const { onEditPhoto } = useGalleryStore(useShallow(s => ({
     onEditPhoto: s.onEditPhoto
   })));
@@ -272,7 +271,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
           </div>
         )}
 
-        {(isAdminMode || isStaffMode) && photo.manual_code && (
+        {(isAdminMode) && photo.manual_code && (
           <div className="bg-red-50 border border-red-100 p-3 rounded-xl mt-4">
             <h3 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Internal Reference</h3>
             <p className="font-mono font-black text-red-600 tracking-wider uppercase">{photo.manual_code}</p>

@@ -6,8 +6,8 @@ import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { usePermission } from '../../hooks/usePermission';
-import { useGalleryStore } from '../../store';
+import { useAdminMode, usePermission } from '../../hooks';
+import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { useCategoriesQuery, useManufacturersQuery, useTagsQuery } from '../../hooks';
 
@@ -43,13 +43,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const manufacturers = qManufacturers;
   
   const tagMap = React.useMemo(() => {
-    const map: Record<string, string> = {};
+    const map: Record<string, string> = { };
     contextTags.forEach(t => { map[String(t.id)] = t.name; });
     return map;
   }, [contextTags]);
 
   const lang = useGalleryStore(s => s.appLang);
-  const isStaffMode = useGalleryStore(s => s.isStaffMode);
+  const isAdminMode = useAdminMode();
   const t = React.useMemo(() => translations[lang] || translations['zh'], [lang]);
 
   // Resolve correct current index using photo.id to prevent mismatched indexing issues
@@ -137,7 +137,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
           isGroupDataLoading={isGroupDataLoading}
           activeLang={activeLang}
           setActiveLang={setActiveLang}
-          isStaffMode={isStaffMode}
+          isAdminMode={isAdminMode}
           isCopied={isCopied}
           isAnalyzing={isAnalyzing}
           t={t}
@@ -145,12 +145,12 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
           manufacturers={manufacturers}
           tagMap={tagMap}
           handleShare={handleShare}
-          onAiAnalyze={isStaffMode ? onAiAnalyze : undefined}
+          onAiAnalyze={isAdminMode ? onAiAnalyze : undefined}
           onCancelAnalyze={onCancelAnalyze}
-          onToggleHidden={isStaffMode ? onToggleHidden : undefined}
-          onTogglePinned={isStaffMode ? onTogglePinned : undefined}
-          onUngroup={isStaffMode ? onUngroup : undefined}
-          onSetGroupCover={isStaffMode ? onSetGroupCover : undefined}
+          onToggleHidden={isAdminMode ? onToggleHidden : undefined}
+          onTogglePinned={isAdminMode ? onTogglePinned : undefined}
+          onUngroup={isAdminMode ? onUngroup : undefined}
+          onSetGroupCover={isAdminMode ? onSetGroupCover : undefined}
           contactWhatsApp={contactWhatsApp}
         />
       )}
