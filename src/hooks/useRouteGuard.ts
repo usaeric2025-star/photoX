@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useStore } from '@/store'
+import { useGalleryStore as useStore } from '@/store'
 import { useAuth } from './useAuth'
 import { ROUTES } from '@/config/constants'
 
