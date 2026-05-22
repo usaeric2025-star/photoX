@@ -55,6 +55,7 @@ export interface GroupAdminShellProps {
   tagMap?: Record<string, string>;
   allTags?: Tag[];
   updatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
+  onEditPhoto?: (photo: Photo) => void;
 }
 
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
@@ -77,14 +78,14 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     onToggleHidden = () => {},
     lang = 'en',
     t, categories, tagMap, allTags = [],
-    updatePhoto: hookUpdatePhoto
+    updatePhoto: hookUpdatePhoto,
+    onEditPhoto
   } = props;
 
   const {
     activeGroupPhotos,
     focusedGroupPhotoId, setFocusedGroupPhotoId,
     draggedPhotoId, setDraggedPhotoId,
-    isMultiSelectMode,
     showGroupSettings, groupSettingsOpen, setGroupSettingsOpen,
     batchEditingIds, setBatchEditingIds,
     batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger,
@@ -229,7 +230,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                      setDraggedPhotoId(null);
                    }
                  }
-               }), [isAdminMode, isMultiSelectMode, draggedPhotoId, handleReorder])}
+               }), [isAdminMode, isMultiSelect, draggedPhotoId, handleReorder])}
              />
 
            {/* Multi-Select Floating Bar */}

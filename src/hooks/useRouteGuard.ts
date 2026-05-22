@@ -27,6 +27,8 @@ export function useRouteGuard() {
     }
   }, [location.pathname, activeGroupId, resetUI]);
   
+  const isStaffMode = useStore((state) => state.isStaffMode)
+  
   // 认证检查（不触发刷新，只是重定向）
   useEffect(() => {
     if (isLoading) return
@@ -34,12 +36,12 @@ export function useRouteGuard() {
     const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN)
     const isLoginRoute = location.pathname === ROUTES.LOGIN
     
-    if (!user && isAdminRoute && !isLoginRoute) {
+    if (!user && !isStaffMode && isAdminRoute && !isLoginRoute) {
       navigate(ROUTES.LOGIN, { replace: true })
     }
     
-    if (user && isLoginRoute) {
+    if ((user || isStaffMode) && isLoginRoute) {
       navigate(ROUTES.ADMIN, { replace: true })
     }
-  }, [user, isLoading, location.pathname, navigate])
+  }, [user, isStaffMode, isLoading, location.pathname, navigate])
 }

@@ -57,7 +57,7 @@ export const useSettingsLogic = ({
       confirmLabel: '执行排重',
       onConfirm: async () => {
         try {
-          await withLoading('sync-push', async () => {
+          await withLoading(async () => {
             const { removed } = await deduplicatePhotos(user.id);
             if (removed > 0) {
               showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);

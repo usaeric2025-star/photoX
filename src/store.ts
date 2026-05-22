@@ -16,8 +16,8 @@ interface StoreState {
   setSortOrder: (order: 'newest' | 'oldest') => void;
   showGroupsCollapsed: boolean;
   setShowGroupsCollapsed: (show: boolean) => void;
-  appLang: 'zh' | 'en';
-  setAppLang: (lang: 'zh' | 'en') => void;
+  appLang: 'zh' | 'en' | 'ms';
+  setAppLang: (lang: 'zh' | 'en' | 'ms') => void;
   columns: 2 | 3 | 5;
   setColumns: (cols: 2 | 3 | 5) => void;
   lightboxIndex: number | null;
@@ -81,9 +81,9 @@ interface StoreState {
   setActiveScreen: (screen: string) => void;
   isInfiniteMode: boolean;
   setIsInfiniteMode: (mode: boolean) => void;
-  adminPreviewMode: boolean;
-  setAdminPreviewMode: (mode: boolean) => void;
-  setLanguage: (lang: 'zh' | 'en') => void;
+  adminPreviewMode: 'private' | 'public';
+  setAdminPreviewMode: (mode: 'private' | 'public') => void;
+  setLanguage: (lang: 'zh' | 'en' | 'ms') => void;
   errors: any[];
   clearErrors: () => void;
   setDebouncedSearchQuery: (q: string) => void;
@@ -181,9 +181,9 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setActiveScreen: (activeScreen) => set({ activeScreen }),
   isInfiniteMode: false,
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
-  adminPreviewMode: false,
+  adminPreviewMode: 'private',
   setAdminPreviewMode: (adminPreviewMode) => set({ adminPreviewMode }),
-  setLanguage: (appLang: 'zh' | 'en') => set({ appLang }),
+  setLanguage: (appLang: 'zh' | 'en' | 'ms') => set({ appLang }),
   errors: [],
   clearErrors: () => set({ errors: [] }),
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),

@@ -125,7 +125,7 @@ export const usePhotoEditLogic = (props: Props) => {
     if (!data) return;
     
     if (handleSingleAiAnalyze) {
-      withLoading('analyzing', () => handleSingleAiAnalyze(data, formState.category_id || undefined, editPhotoId || undefined)).catch(()=>{});
+      withLoading(() => handleSingleAiAnalyze(data, formState.category_id || undefined, editPhotoId || undefined)).catch(()=>{});
     } else {
       showError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
     }

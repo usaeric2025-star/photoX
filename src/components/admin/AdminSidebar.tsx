@@ -8,7 +8,9 @@ import {
   Terminal,
   Home,
   Monitor,
-  Sparkles
+  Sparkles,
+  Wrench,
+  LogIn
 } from 'lucide-react';
 import { useGalleryStore } from '../../store';
 import { AppSettings } from '../../types';
@@ -57,7 +59,7 @@ interface Props {
 export const AdminSidebar: React.FC<Props> = ({ 
   settings, activeScreen, setActiveScreen, cloudCount, onRefresh 
 }) => {
-  const { adminPreviewMode, setAdminPreviewMode } = useGalleryStore();
+  const { adminPreviewMode, setAdminPreviewMode, isStaffMode, appLang } = useGalleryStore();
 
   return (
     <aside className="w-72 bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden">
@@ -151,7 +153,28 @@ export const AdminSidebar: React.FC<Props> = ({
       </div>
 
       {/* Footer Info */}
-      <div className="p-6 bg-brand-navy/5 border-t border-brand-navy/5">
+      <div className="p-6 bg-brand-navy/5 border-t border-brand-navy/5 space-y-4">
+        {isStaffMode && (
+          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2 text-amber-900">
+              <Wrench size={16} className="animate-pulse" />
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {appLang === 'zh' ? '员工模式' : appLang === 'ms' ? 'Mod Staf' : 'Staff Mode'}
+              </span>
+            </div>
+            <button 
+              onClick={() => {
+                useGalleryStore.getState().setIsStaffMode(false);
+                sessionStorage.removeItem('isStaffMode');
+                window.location.reload();
+              }}
+              className="w-full py-2.5 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-500/25"
+            >
+              <LogIn size={14} className="rotate-180" />
+              {appLang === 'zh' ? '退出员工模式' : appLang === 'ms' ? 'Keluar Mod Staf' : 'Exit Staff Mode'}
+            </button>
+          </div>
+        )}
         <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-brand-navy/10 shadow-sm">
           <div className="space-y-0.5">
             <p className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest">Version</p>

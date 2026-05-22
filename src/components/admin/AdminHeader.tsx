@@ -102,7 +102,7 @@ export const AdminHeader: React.FC<Props> = ({
   const toggleToolsMenu = () => setShowToolsMenu(prev => !prev);
   
   const handleToggleViewMode = () => {
-    setAdminPreviewMode(!adminPreviewMode);
+    setAdminPreviewMode(adminPreviewMode === 'private' ? 'public' : 'private');
   };
 
   const handleOpenSettings = () => {
@@ -144,6 +144,15 @@ export const AdminHeader: React.FC<Props> = ({
                   )}
                 </span>
               </div>
+            </div>
+          )}
+
+          {isStaffMode && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-700 border border-amber-500/10 rounded-full text-[11px] font-bold shadow-sm animate-pulse shrink-0">
+               <Wrench size={12} />
+               <span>
+                 {appLang === 'zh' ? '员工模式' : appLang === 'ms' ? 'Mod Staf' : 'Staff Mode'}
+               </span>
             </div>
           )}
 
@@ -189,7 +198,7 @@ export const AdminHeader: React.FC<Props> = ({
                   )}
                 </button>
 
-                {!adminPreviewMode && (
+                 {adminPreviewMode === 'private' && (
                   <button 
                     onClick={handleToggleMultiSelect}
                     className={`h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all shadow-sm border ${isMultiSelect ? 'bg-blue-600 text-white shadow-lg ring-4 ring-blue-500/20' : 'text-brand-navy/60 hover:text-brand-navy bg-white border-brand-navy/10'}`}
@@ -206,11 +215,22 @@ export const AdminHeader: React.FC<Props> = ({
                     handleToggleViewMode();
                   }}
                   type="button"
-                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${adminPreviewMode ? 'bg-green-600 text-white shadow-lg ring-4 ring-green-400/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
-                  title={adminPreviewMode ? t.exitGuestView : "访客视图预览"}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${adminPreviewMode === 'public' ? 'bg-green-600 text-white shadow-lg ring-4 ring-green-400/30' : 'text-brand-navy/40 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm'}`}
+                  title={adminPreviewMode === 'public' ? t.exitGuestView : "访客视图预览"}
                 >
-                  {adminPreviewMode ? <Eye size={18} /> : <Globe size={18} />}
+                  {adminPreviewMode === 'public' ? <Eye size={18} /> : <Globe size={18} />}
                 </button>
+
+                {isStaffMode && (
+                  <button 
+                    onClick={handleExitStaffMode}
+                    className="h-9 sm:h-10 px-3 flex items-center gap-1.5 rounded-xl text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 bg-red-50/50 shadow-sm transition-all active:scale-95"
+                    title={t.exitStaffMode}
+                  >
+                    <LogIn size={16} className="rotate-180" />
+                    <span className="hidden md:inline text-[10px] font-black tracking-widest uppercase whitespace-nowrap">{t.exitStaffMode}</span>
+                  </button>
+                )}
 
                 {/* More Menu Dropdown */}
                 <div className="relative" ref={toolsRef}>
