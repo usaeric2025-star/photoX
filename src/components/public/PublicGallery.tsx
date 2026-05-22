@@ -260,24 +260,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
 
       <GalleryFilters 
         settings={props.settings}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        sortOrder={sortOrder}
-        toggleSortOrder={toggleSortOrder}
-        columns={columns}
-        setColumns={setColumns}
-        showGroupsCollapsed={showGroupsCollapsed}
-        setShowGroupsCollapsed={setShowGroupsCollapsed}
         categories={props.categories}
-        selectedCatCode={selectedCatCode}
-        setSelectedCatCode={setSelectedCatCode}
-        filterSubId={filterSubId}
-        setFilterSubId={setFilterSubId}
-        selectedTagIds={selectedTagIds}
-        setSelectedTagIds={setSelectedTagIds}
         sortedTags={sortedTags}
-        lang={lang}
-        t={t}
         onScrollToTop={scrollToTop}
       />
 
@@ -326,25 +310,13 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     virtuosoRef={virtuosoRef}
                     gridPhotos={gridPhotos}
                     displayPhotos={displayPhotos}
-                    columns={columns}
                     virtuosoComponents={virtuosoComponents}
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
-                    isAdminMode={isStaffMode}
-                    showGroupsCollapsed={showGroupsCollapsed}
-                    lang={lang}
-                    t={t}
                     categories={props.categories}
                     manufacturers={manufacturers}
                     tagMap={tagMap}
-                    setActiveGroupId={setActiveGroupId}
-                    setActivePhotoId={setActivePhotoId}
-                    setLightboxIndex={setLightboxIndex}
                     shareSinglePhoto={shareSinglePhoto}
-                    selectedCatCode={selectedCatCode}
-                    filterSubId={filterSubId}
-                    selectedTagIds={selectedTagIds}
-                    searchQuery={searchQuery}
                   />
                 </ErrorBoundary>
               </motion.div>
@@ -405,10 +377,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
               onClose={() => setLightboxIndex(null)}
               onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : (displayPhotos?.length || 0) - 1)}
               onNext={() => setLightboxIndex(lightboxIndex < (displayPhotos?.length || 0) - 1 ? lightboxIndex + 1 : 0)}
-              isStaffMode={isStaffMode}
               contactWhatsApp={handleContactWhatsApp}
-              lang={lang}
-              t={t}
               tagMap={tagMap}
               categories={props.categories}
               manufacturers={manufacturers || []}

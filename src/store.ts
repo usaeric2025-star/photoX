@@ -101,7 +101,7 @@ interface StoreState {
 
 export const useGalleryStore = create<StoreState>()((set) => ({
   searchQuery: '',
-  setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setSearchQuery: (searchQuery) => set({ searchQuery, debouncedSearchQuery: searchQuery }),
   filterCatId: null,
   setFilterCatId: (filterCatId) => set({ filterCatId }),
   filterSubId: null,

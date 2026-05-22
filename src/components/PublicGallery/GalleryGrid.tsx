@@ -1,46 +1,31 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { VirtuosoGrid, VirtuosoGridHandle, VirtuosoGridProps as BaseVirtuosoGridProps } from 'react-virtuoso';
 import { VIRTUOSO_CONFIG } from '../../config/virtuoso.config';
 import { Photo, Category, Manufacturer } from '../../types';
 import { PhotoCard } from '../photo/PhotoCard';
 import { TranslationType } from '../../lib/ui-helpers';
-import { useAdminMode } from '../../hooks/useAdminMode';
+import { useGalleryStore } from '../../store';
+import { translations } from '../../lib/translations';
 
 interface GalleryGridProps {
   virtuosoRef: React.RefObject<VirtuosoGridHandle | null>;
   gridPhotos: Photo[];
   displayPhotos: Photo[];
-  columns: 2 | 3 | 5;
   virtuosoComponents?: BaseVirtuosoGridProps<Photo, any>['components'];
   virtuosoContext?: any;
   handleLoadMore: () => void;
-  isAdminMode: boolean;
-  showGroupsCollapsed: boolean;
-  lang: string;
-  t: TranslationType;
   categories: Category[];
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
   onEditPhoto?: (id: string) => void;
-  setActiveGroupId: (id: string) => void;
-  setActivePhotoId: (id: string) => void;
-  setLightboxIndex: (index: number) => void;
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
-  selectedCatCode: string | null;
-  filterSubId: string | null;
-  selectedTagIds: string[];
-  searchQuery: string;
   onToggleHidden?: (photo: Photo) => void;
 }
 
 interface MemoizedPhotoCardProps {
   index: number;
   photo: Photo;
-  isAdminMode: boolean;
-  showGroupsCollapsed: boolean;
-  lang: string;
-  t: TranslationType;
   categories: Category[];
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
@@ -53,11 +38,18 @@ interface MemoizedPhotoCardProps {
 }
 
 const MemoizedPhotoCard = React.memo(({ 
-  index, photo, isAdminMode, showGroupsCollapsed, 
-  lang, t, categories, manufacturers, tagMap, onEditPhoto, onGroupClick, 
+  index, photo, categories, manufacturers, tagMap, onEditPhoto, onGroupClick, 
   onLightboxOpen, shareSinglePhoto, 
   onTogglePinned, onToggleHidden
 }: MemoizedPhotoCardProps) => {
+  const isStaffMode = useGalleryStore(s => s.isStaffMode);
+  const viewMode = useGalleryStore(s => s.viewMode);
+  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
+  const lang = useGalleryStore(s => s.appLang);
+
+  const isAdminMode = viewMode === 'admin' || isStaffMode;
+  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
+
   const handleGroupClickInternal = useCallback((gid: string) => {
     onGroupClick(gid, photo.id);
   }, [onGroupClick, photo.id]);
@@ -85,12 +77,17 @@ const MemoizedPhotoCard = React.memo(({
 MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
 
 export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
+  const columns = useGalleryStore(s => s.columns);
+  const setActiveGroupId = useGalleryStore(s => s.setActiveGroupId);
+  const setActivePhotoId = useGalleryStore(s => s.setActivePhotoId);
+  const setLightboxIndex = useGalleryStore(s => s.setLightboxIndex);
+
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
-     props.setActiveGroupId(gid);
+     setActiveGroupId(gid);
      if (photoId) {
-       props.setActivePhotoId(photoId);
+       setActivePhotoId(photoId);
      }
-  }, [props.setActiveGroupId, props.setActivePhotoId]);
+  }, [setActiveGroupId, setActivePhotoId]);
 
   const handleLoadMore = useCallback(() => {
     props.handleLoadMore();
@@ -103,9 +100,9 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
   const handleLightboxOpen = useCallback((photo: Photo) => {
     const realIndex = props.displayPhotos.findIndex(p => p?.id === photo.id);
     if (realIndex !== -1) {
-      props.setLightboxIndex(realIndex);
+      setLightboxIndex(realIndex);
     }
-  }, [props.displayPhotos, props.setLightboxIndex]);
+  }, [props.displayPhotos, setLightboxIndex]);
 
   const handleShareSinglePhoto = useCallback((photo: Photo) => {
     props.shareSinglePhoto(photo);
@@ -131,20 +128,16 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
       components={props.virtuosoComponents}
       context={props.virtuosoContext}
       endReached={handleLoadMore}
-      overscan={VIRTUOSO_CONFIG.overscan(props.columns)}
+      overscan={VIRTUOSO_CONFIG.overscan(columns)}
       increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
       useWindowScroll={false}
       itemClassName="virtuoso-grid-item"
-      listClassName={`grid gap-2 px-1.5 py-2 ${props.columns === 2 ? 'grid-cols-2' : props.columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
+      listClassName={`grid gap-2 px-1.5 py-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
       itemContent={(index, photo) => {
         return (
           <MemoizedPhotoCard
             index={index}
             photo={photo}
-            isAdminMode={props.isAdminMode}
-            showGroupsCollapsed={props.showGroupsCollapsed}
-            lang={props.lang}
-            t={props.t}
             categories={props.categories}
             manufacturers={props.manufacturers}
             tagMap={props.tagMap}

@@ -235,12 +235,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                         const next = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
                         setFocusedGroupPhotoId(activeGroupPhotos[next].id);
                       }}
-                      t={props.t}
-                      lang={props.lang || 'en'}
                       categories={props.categories || []}
                       manufacturers={props.manufacturers || []}
                       tagMap={props.tagMap || {}}
-                      isStaffMode={props.isStaffMode || false}
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
                       onEditPhoto={(p) => {
                         props.onEditPhoto?.(p);

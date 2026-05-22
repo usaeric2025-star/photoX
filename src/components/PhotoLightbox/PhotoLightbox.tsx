@@ -7,6 +7,8 @@ import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { usePermission } from '../../hooks/usePermission';
+import { useGalleryStore } from '../../store';
+import { translations } from '../../lib/translations';
 
 export interface PhotoLightboxProps {
   photo: Photo | null;
@@ -15,12 +17,9 @@ export interface PhotoLightboxProps {
   onClose: () => void;
   onPrev: (e?: React.MouseEvent) => void;
   onNext: (e?: React.MouseEvent) => void;
-  t: TranslationType;
-  lang: string;
   categories: Category[];
   manufacturers: Manufacturer[];
   tagMap: Record<string, string>;
-  isStaffMode: boolean;
   contactWhatsApp: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
@@ -34,11 +33,15 @@ export interface PhotoLightboxProps {
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
-    photo, index: propIndex, onClose, onPrev, onNext, t, lang, categories, manufacturers, tagMap,
-    isStaffMode, contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
+    photo, index: propIndex, onClose, onPrev, onNext, categories, manufacturers, tagMap,
+    contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
     onToggleHidden, onTogglePinned, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos: rawDisplayPhotos
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
+
+  const lang = useGalleryStore(s => s.appLang);
+  const isStaffMode = useGalleryStore(s => s.isStaffMode);
+  const t = React.useMemo(() => translations[lang] || translations['zh'], [lang]);
 
   // Resolve correct current index using photo.id to prevent mismatched indexing issues
   const index = React.useMemo(() => {

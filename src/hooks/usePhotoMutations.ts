@@ -42,13 +42,14 @@ export const usePhotoMutations = (
         await deletePhotoMut({ userId: user.id, photos: targetPhotos });
         updateTask(taskId, { status: 'completed', progress: 100, message: '删除成功' });
         setTimeout(() => removeTask(taskId), 5000);
-      } catch (e: any) {
-        updateTask(taskId, { status: 'error', message: `删除失败: ${e.message || '未知错误'}` });
+      } catch (e: unknown) {
+        const errMsg = e instanceof Error ? e.message : '未知错误';
+        updateTask(taskId, { status: 'error', message: `删除失败: ${errMsg}` });
       }
     } else {
       try {
         await deletePhotoMut({ userId: user.id, photos: targetPhotos });
-      } catch (e: any) {
+      } catch (e: unknown) {
         showError(e, "删除照片失败");
       }
     }
@@ -94,7 +95,7 @@ export const usePhotoMutations = (
       for (const id of ids) {
         try {
           await updatePhotoMut({ id, updates: finalUpdates });
-        } catch (e: any) {
+        } catch (e: unknown) {
           // Handled in mutation hook onError
         }
       }

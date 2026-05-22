@@ -14,8 +14,7 @@ import { LoginScreen } from '@/components/admin/LoginScreen';
 import { MainAdminScreen } from './MainAdminScreen';
 import { PublicGallery } from '@/components/public/PublicGallery';
 import { useGalleryStore } from '@/store';
-import { useAdminViewLogic } from './useAdminViewLogic';
-import { useAdminActions } from './useAdminActions';
+import { useAdminDataPrep } from './useAdminDataPrep';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { User, Photo } from '@/types';
 import { TranslationType, getCacheBustedImageUrl } from '@/lib/ui-helpers';
@@ -23,23 +22,16 @@ import { LanguageCode } from '@/lib/translations';
 
 /* Removed ErrorFallback component */
 
-interface Props {
-  user: User | null;
-  authChecked: boolean;
-  logout: () => void;
-  t: TranslationType;
-  lang: LanguageCode;
-  sessionValue: any;
-  photoValue: any;
-  uiValue: any;
-  hasNextPage?: boolean;
-  isFetchingNextPage?: boolean;
-  isLoading?: boolean;
-}
+export const AdminViewContent: React.FC = () => {
+  const logic = useAdminDataPrep();
+  const actions = logic;
 
-export const AdminViewContent: React.FC<Props> = ({ 
-  user, authChecked, t, lang, sessionValue, photoValue, uiValue, hasNextPage, isFetchingNextPage, isLoading 
-}) => {
+  const {
+    user, authChecked, t, lang, hasNextPage, isFetchingNextPage, loadingType, infinitePhotosQuery
+  } = logic;
+
+  const isLoading = infinitePhotosQuery.isLoading;
+
   console.log('AdminView render', { isLoading });
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
@@ -59,7 +51,7 @@ export const AdminViewContent: React.FC<Props> = ({
     setIsMaintenanceRunning(true);
     await runTask('自动修复缩略图 / Auto Repair ThumbHashes', async ({ updateProgress }) => {
         const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
-        updateProgress(15, '正在分析未生成缩略图占位项目的数量...');
+        updateProgress(15, '正在 analysis 未生成缩略图占位项目的数量...');
         // First check if there are any missing thumb hashes to avoid needless backfilling
         const missingHashes = await getPhotosWithoutThumbHash();
         
@@ -93,13 +85,6 @@ export const AdminViewContent: React.FC<Props> = ({
     });
     setIsMaintenanceRunning(false);
   }, [runTask, showError, showSuccess, isMaintenanceRunning]);
-  const logic = useAdminViewLogic({
-    user, sessionValue, photoValue, uiValue,
-    onRefresh: sessionValue.onRefresh,
-    performPullSync: sessionValue.performPullSync,
-    hasNextPage,
-    isFetchingNextPage
-  });
 
   const editingPhotoId = useGalleryStore((s) => s.editingPhotoId);
   const setEditingPhotoId = useGalleryStore((s) => s.setEditingPhotoId);
@@ -111,7 +96,6 @@ export const AdminViewContent: React.FC<Props> = ({
     }
   }, [editingPhotoId, setEditingPhotoId, logic]);
 
-  const actions = useAdminActions(logic);
   const { tasks, cancelTask } = useTasks();
   const { reset, clear } = useMultiSelect();
 
@@ -147,7 +131,7 @@ export const AdminViewContent: React.FC<Props> = ({
 
   const handleRefreshPublic = useCallback(() => {
     if (logic.checkSyncLock()) return;
-    logic.performPullSync(true);
+    logic.performPullSync();
   }, [logic]);
 
   const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
@@ -156,7 +140,7 @@ export const AdminViewContent: React.FC<Props> = ({
   const isStaffMode = useGalleryStore((s) => s.isStaffMode);
 
   if (authChecked && !user && !isStaffMode) {
-    return <LoginScreen loginWithGoogle={sessionValue.loginWithGoogle} isLoading={sessionValue.loadingType === 'auth'} />;
+    return <LoginScreen loginWithGoogle={async () => { await logic.loginWithGoogle(); }} isLoading={(loadingType as string) === 'auth'} />;
   }
 
   return (

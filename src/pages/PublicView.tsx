@@ -87,11 +87,6 @@ export default function PublicView() {
   // 滚动恢复
   useScrollRestoration('public_view_scroll');
 
-  // 防抖搜索 (Unified implementation)
-  const debouncedSetSearch = useDebouncedSearch((value: string) => {
-    setDebouncedSearchQuery(value);
-  });
-
   // 最小加载时间 (Consolidated)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -212,10 +207,7 @@ export default function PublicView() {
             initialHash={hash}
             initialGroupId={groupId}
             searchQuery={searchQuery}
-            onSearchChange={(val) => {
-               setSearchQuery(val);
-               debouncedSetSearch(val);
-            }}
+            onSearchChange={setSearchQuery}
           />
         </ErrorBoundary>
       </DataLoadingContainer>

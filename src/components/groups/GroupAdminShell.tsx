@@ -280,12 +280,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       onClose={handleCloseLightbox}
                       onPrev={() => handlePrevLightbox(currentIndex)}
                       onNext={() => handleNextLightbox(currentIndex)}
-                      t={t}
-                      lang={lang}
                       categories={categories || []}
                       manufacturers={manufacturers}
                       tagMap={tagMap || {}}
-                      isStaffMode={isStaffMode}
                       contactWhatsApp={contactWhatsApp}
                       onUngroup={handleUngroupLightbox}
                       onSetGroupCover={handleSetGroupCoverLightbox}

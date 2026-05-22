@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
+import { useDebouncedCallback } from 'use-debounce';
 import { FilterChip } from '../../components/ui/FilterChip';
 import { CategoryChip } from '../../components/ui/CategoryChip';
 import { SubCategoryChip } from '../../components/ui/SubCategoryChip';
@@ -13,54 +14,59 @@ import { cn } from '../../lib/utils';
 import { toTitleCase } from '../../lib/ui-helpers';
 import { useTagsDisplay } from '../../hooks/useTagsDisplay';
 
+import { translations } from '../../lib/translations';
+
 interface GalleryFiltersProps {
   settings?: AppSettings;
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  sortOrder: 'newest' | 'oldest' | 'name';
-  toggleSortOrder: () => void;
-  columns: 2 | 3 | 5;
-  setColumns: (val: 2 | 3 | 5) => void;
-  showGroupsCollapsed: boolean;
-  setShowGroupsCollapsed: (val: boolean) => void;
   categories: Category[];
-  selectedCatCode: string | null;
-  setSelectedCatCode: (id: string | null) => void;
-  filterSubId: string | null;
-  setFilterSubId: (id: string | null) => void;
-  selectedTagIds: string[];
-  setSelectedTagIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   sortedTags: Tag[];
-  lang: string;
-  t: any;
   onScrollToTop: () => void;
   showHotEffects?: boolean;
 }
 
 export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   settings,
-  searchQuery,
-  setSearchQuery,
-  sortOrder,
-  toggleSortOrder,
-  columns,
-  setColumns,
-  showGroupsCollapsed,
-  setShowGroupsCollapsed,
   categories,
-  selectedCatCode,
-  setSelectedCatCode,
-  filterSubId,
-  setFilterSubId,
-  selectedTagIds,
-  setSelectedTagIds,
   sortedTags,
-  lang,
-  t,
   onScrollToTop,
   showHotEffects = true
 }) => {
+  const searchQuery = useGalleryStore(s => s.searchQuery);
+  const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const sortOrder = useGalleryStore(s => s.sortOrder);
+  const setSortOrder = useGalleryStore(s => s.setSortOrder);
+  const columns = useGalleryStore(s => s.columns);
+  const setColumns = useGalleryStore(s => s.setColumns);
+  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
+  const setShowGroupsCollapsed = useGalleryStore(s => s.setShowGroupsCollapsed);
+  const selectedCatCode = useGalleryStore(s => s.filterCatId);
+  const setSelectedCatCode = useGalleryStore(s => s.setFilterCatId);
+  const filterSubId = useGalleryStore(s => s.filterSubId);
+  const setFilterSubId = useGalleryStore(s => s.setFilterSubId);
+  const selectedTagIds = useGalleryStore(s => s.filterTagIds);
+  const setSelectedTagIds = useGalleryStore(s => s.setFilterTagIds);
+  const lang = useGalleryStore(s => s.appLang);
+
+  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
+
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
+  };
+
   const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(sortedTags, settings);
+
+  // Local state for instant typing responsive feedback
+  const [localSearch, setLocalSearch] = useState(searchQuery || '');
+
+  // Keep local search value synced if the searchQuery prop resets from external actions
+  useEffect(() => {
+    setLocalSearch(searchQuery || '');
+  }, [searchQuery]);
+
+  // Debounced parent state update (500ms delay to make it smooth, prevent "always flashing")
+  const debouncedSetSearchQuery = useDebouncedCallback((val: string) => {
+    setSearchQuery(val);
+  }, 500);
 
   // Safely wrap setSelectedTagIds to conform to whatever callback is needed
   const handleSetSelectedTagIds = (updater: string[] | ((prev: string[]) => string[])) => {
@@ -79,14 +85,22 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
             <input 
               type="text" 
               placeholder={t.search}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={localSearch}
+              onChange={(e) => {
+                const val = e.target.value;
+                setLocalSearch(val);
+                debouncedSetSearchQuery(val);
+              }}
               className="w-full bg-[#F7F7F7] border border-[#ECECEC] rounded-full py-1.5 pl-8 pr-8 text-[13px] font-normal text-[#1A1A1A] placeholder-[#999999] focus:outline-none focus:bg-white transition-all"
             />
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888888]" />
-            {searchQuery && (
+            {localSearch && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => {
+                  setLocalSearch('');
+                  debouncedSetSearchQuery.cancel();
+                  setSearchQuery('');
+                }}
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-[#888888] hover:text-[#1A1A1A] transition-colors"
                 aria-label="Clear search"
               >
@@ -187,7 +201,11 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                     pinned={isPinned}
                     hot={isHot}
                     onClick={() => { 
-                      handleSetSelectedTagIds(prev => (prev || []).includes(strTagId) ? [] : [strTagId]);
+                      const nextTags = isSelected
+                        ? (selectedTagIds || []).filter(id => id !== strTagId)
+                        : [...(selectedTagIds || []), strTagId];
+                      setSelectedTagIds(nextTags);
+                      onScrollToTop();
                     }}
                   />
                 );
