@@ -73,6 +73,13 @@ export const deleteTag = async (tagId: string) => {
     }
 };
 
+export const triggerRefreshTagHotScores = async () => {
+    const { error } = await supabase.rpc('refresh_tag_hot_scores');
+    if (error) {
+        throw new Error(error.message);
+    }
+};
+
 export const removeTagFromPhoto = async (photoId: string, tagId: string) => {
     const { error } = await supabase
         .from('photo_tags')

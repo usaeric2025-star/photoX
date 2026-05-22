@@ -2,8 +2,7 @@ import React, { useCallback } from 'react';
 import { VirtuosoGrid, VirtuosoGridHandle, VirtuosoGridProps as BaseVirtuosoGridProps } from 'react-virtuoso';
 import { VIRTUOSO_CONFIG } from '../../config/virtuoso.config';
 import { Photo, Category, Manufacturer } from '../../types';
-import { PublicPhotoCard } from '../public/PublicPhotoCard';
-import { AdminPhotoCard } from '../admin/AdminPhotoCard';
+import { PhotoCard } from '../photo/PhotoCard';
 import { TranslationType } from '../../lib/ui-helpers';
 import { useAdminMode } from '../../hooks/useAdminMode';
 
@@ -63,29 +62,9 @@ const MemoizedPhotoCard = React.memo(({
     onGroupClick(gid, photo.id);
   }, [onGroupClick, photo.id]);
 
-  if (isAdminMode) {
-    return (
-      <AdminPhotoCard 
-        photo={photo}
-        index={index}
-        showGroupsCollapsed={showGroupsCollapsed}
-        lang={lang}
-        t={t}
-        categories={categories}
-        manufacturers={manufacturers}
-        tagMap={tagMap}
-        onEditPhoto={onEditPhoto}
-        onGroupClick={handleGroupClickInternal}
-        onLightboxOpen={onLightboxOpen}
-        shareSinglePhoto={shareSinglePhoto}
-        onTogglePinned={onTogglePinned}
-        onToggleHidden={onToggleHidden}
-      />
-    );
-  }
-
   return (
-    <PublicPhotoCard 
+    <PhotoCard 
+      variant={isAdminMode ? 'admin' : 'public'}
       photo={photo}
       index={index}
       showGroupsCollapsed={showGroupsCollapsed}
@@ -94,9 +73,12 @@ const MemoizedPhotoCard = React.memo(({
       categories={categories}
       manufacturers={manufacturers}
       tagMap={tagMap}
+      onEditPhoto={onEditPhoto}
       onGroupClick={handleGroupClickInternal}
       onLightboxOpen={onLightboxOpen}
       shareSinglePhoto={shareSinglePhoto}
+      onTogglePinned={onTogglePinned}
+      onToggleHidden={onToggleHidden}
     />
   );
 });

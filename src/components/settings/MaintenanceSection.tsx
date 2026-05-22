@@ -4,7 +4,7 @@ import { ShieldCheck, RefreshCw } from 'lucide-react';
 import { Photo } from '../../types';
 import { AppSettings } from '@/types';
 import { useTaskExecutor } from '@/hooks/useTaskExecutor';
-import { supabase } from '@/lib/supabase';
+import { triggerRefreshTagHotScores } from '@/services/tagsMutationService';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface Props {
@@ -29,7 +29,7 @@ export const MaintenanceSection: React.FC<Props> = ({
 
   const handleRefreshHotScores = async () => {
     await runTask('刷新热门标签', async () => {
-      await supabase.rpc('refresh_tag_hot_scores');
+      await triggerRefreshTagHotScores();
       await queryClient.invalidateQueries({ queryKey: ['tags'] });
     }, { showSuccessToast: true });
   };

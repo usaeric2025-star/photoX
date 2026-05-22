@@ -106,3 +106,18 @@ const setAlertDialog = useStore(s => s.setAlertDialog);
 - [ ] 所有 UI 状态用 Zustand 管理（或局部 useState）
 - [ ] 无 props 传递地狱
 
+## 八、大重构时代规范 - 架构与复用底线（2026-05-22 新增）
+
+### 1. 规避双轨冗余，推行「单组件 Variant 模式」
+- **核心原则**: 严禁为管理员 (Admin) 和普通用户 (Public) 分别编写两套独立、高度相似的 UI 组件（例如旧版的 `AdminPhotoCard`/`PublicPhotoCard` 以及 `PublicGalleryFilters`/`GalleryFilters` 已被全面合并、废弃）。
+- **执行方式**: 必须统一在 `/src/components/photo/PhotoCard.tsx` 与 `/src/components/PublicGallery/GalleryFilters.tsx` 等公用高内聚路径下维护，通过 `variant: 'admin' | 'public'`、配置 hooks 或配置 props 精准隔离细节交互。确保未来的视觉改进与交互优化能同时无缝覆盖双端。
+
+### 2. 精准全局提示，杜绝零散外部 Toast 引入
+- **核心原则**: 在业务页面与逻辑 Hook（如 `useSettingsLogic`、`AdminViewContent` 等）中，**严禁直接 `import { toast } from 'sonner'`** 操作轻提示。
+- **执行方式**: 一律通过 `useFeedback` 导出的 `showSuccess`/`showError` 展现操作反馈，或借助 `useTaskExecutor` 核心执行器内的选项（如 `showSuccessToast: true`）实现安全、静默的自动拦截提示，从而确保系统的提示风格完全一致、整洁优雅。
+
+### 3. 系统维护集成与异步进度监测
+- **核心原则**: 所有针对数据库排重、分类修复、或大量缩略图高一致性检测（如 `deduplicatePhotos`、`backfillThumbHashes` 诊断逻辑）的全局维护任务，必须高度接入 `useTaskExecutor` 中的 `runTask` 骨架下。
+- **执行方式**: 善用 `updateProgress` 以异步提供实时进度百分比及当前动作（如 `updateProgress(20, '正在扫描中...')`），使得极重的大型重构级或同步级任务均能享受精美进度条/通知联动，严禁裸奔异步。
+
+

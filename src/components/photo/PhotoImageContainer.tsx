@@ -5,6 +5,17 @@ import { thumbHashToDataURL } from '../../utils/thumbHash';
 // Shared set to keep track of loaded images to prevent flickering on re-renders
 export const loadedImagesCache = new Set<string>();
 
+const getBaseUrl = (url?: string): string => {
+  if (!url) return '';
+  try {
+    const u = new URL(url);
+    u.searchParams.delete('t');
+    return u.toString();
+  } catch (e) {
+    return url.split(/[?&]t=/)[0];
+  }
+};
+
 export interface PhotoImageContainerProps {
   photoId?: string;
   src: string | undefined;
@@ -32,6 +43,32 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
   const [shouldLoad, setShouldLoad] = useState(initiallyLoaded);
   const [isImageLoaded, setIsImageLoaded] = useState(initiallyLoaded);
   const [isImageError, setIsImageError] = useState(false);
+
+  const lastSuccessfulBaseUrlRef = useRef<string>(src ? getBaseUrl(src) : '');
+
+  // Handle dynamic source changes smoothly without flashing placeholder when only params like timestamp alter
+  useEffect(() => {
+    if (!src) return;
+    const newCacheKey = photoId || src || '';
+    const isCached = loadedImagesCache.has(newCacheKey);
+    const newBaseUrl = getBaseUrl(src);
+
+    if (isCached) {
+      setIsImageLoaded(true);
+      setIsImageError(false);
+      setShouldLoad(true);
+      lastSuccessfulBaseUrlRef.current = newBaseUrl;
+    } else {
+      // If the core image URL is matching the already present one, keep it loaded as transition
+      if (lastSuccessfulBaseUrlRef.current && lastSuccessfulBaseUrlRef.current === newBaseUrl) {
+        setShouldLoad(true);
+      } else {
+        // Genuine new photo, fall back to blur-hash placeholder to fetch freshly
+        setIsImageLoaded(false);
+        setIsImageError(false);
+      }
+    }
+  }, [src, photoId]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -103,6 +140,9 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
               loadedImagesCache.add(cacheKey);
             }
             setIsImageLoaded(true);
+            if (src) {
+              lastSuccessfulBaseUrlRef.current = getBaseUrl(src);
+            }
           }}
           onError={() => {
             setIsImageLoaded(true);

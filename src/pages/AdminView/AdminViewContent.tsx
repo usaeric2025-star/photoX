@@ -2,9 +2,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks, useTaskExecutor } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
-import { toast } from 'sonner';
-import { FullPageLoading } from '@/components/FullPageLoading';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { AdminGlobalModals } from '@/components/admin/AdminGlobalModals';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { SettingsScreen } from '@/components/SettingsScreen';
@@ -59,15 +58,10 @@ export const AdminViewContent: React.FC<Props> = ({
     if (isMaintenanceRunning) return;
     setIsMaintenanceRunning(true);
     await runTask('自动修复缩略图 / Auto Repair ThumbHashes', async ({ updateProgress }) => {
-        const { supabase } = await import('@/services/supabaseService');
+        const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
         updateProgress(15, '正在分析未生成缩略图占位项目的数量...');
         // First check if there are any missing thumb hashes to avoid needless backfilling
-        const { data: missingHashes, error: countError } = await supabase
-           .from('furniture_items')
-           .select('id')
-           .is('thumb_hash', null);
-        
-        if (countError) throw countError;
+        const missingHashes = await getPhotosWithoutThumbHash();
         
         if (!missingHashes || missingHashes.length === 0) {
             updateProgress(100, '完美分析完成，没有缺失占位图的照片。');
@@ -86,7 +80,7 @@ export const AdminViewContent: React.FC<Props> = ({
     }, {
         onSuccess: (res) => {
             if (res?.skipped) {
-                toast.success('诊断完成：所有照片缩略图高度一致，无需修复！ (已跳过已完善项目)');
+                showSuccess('诊断完成：所有照片缩略图高度一致，无需修复！ (已跳过已完善项目)');
             } else {
                 showSuccess('缩略图自动修复完成');
             }
@@ -161,18 +155,18 @@ export const AdminViewContent: React.FC<Props> = ({
 
   const isStaffMode = useGalleryStore((s) => s.isStaffMode);
 
-  const isActuallyLoading = showImmediateLoading || isLoading;
-  if (isActuallyLoading) {
-    return <FullPageLoading />;
-  }
-
   if (authChecked && !user && !isStaffMode) {
     return <LoginScreen loginWithGoogle={sessionValue.loginWithGoogle} isLoading={sessionValue.loadingType === 'auth'} />;
   }
 
   return (
     <ErrorBoundary>
-      <AdminGlobalModals />
+      <DataLoadingContainer
+        isLoading={!!isLoading}
+        hasData={!!logic.photos && logic.photos.length > 0}
+        showImmediateLoading={showImmediateLoading}
+      >
+        <AdminGlobalModals />
       
       <div className="flex h-screen overflow-hidden bg-brand-bg">
         {/* Desktop Sidebar */}
@@ -270,6 +264,7 @@ export const AdminViewContent: React.FC<Props> = ({
           </AnimatePresence>
         </div>
       </div>
+      </DataLoadingContainer>
     </ErrorBoundary>
   );
 };

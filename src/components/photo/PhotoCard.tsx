@@ -1,12 +1,15 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { Photo, Category, Manufacturer } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
 import { useGalleryStore } from '../../store';
-import { PhotoImageContainer } from '../photo/PhotoImageContainer';
+import { PhotoImageContainer } from './PhotoImageContainer';
 
-interface AdminPhotoCardProps {
+export type PhotoCardVariant = 'admin' | 'public';
+
+export interface PhotoCardProps {
+  variant: PhotoCardVariant;
   photo: Photo;
   index: number;
   showGroupsCollapsed: boolean;
@@ -21,18 +24,24 @@ interface AdminPhotoCardProps {
   shareSinglePhoto: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
+  className?: string;
+  onClick?: (e: React.MouseEvent) => void;
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo }> = React.memo(({ photo }) => {
+const PhotoStatusBadges: React.FC<{ photo: Photo; variant: PhotoCardVariant }> = React.memo(({ photo, variant }) => {
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
       {photo.group_id && photo.member_count !== undefined && photo.member_count > 1 && (
-        <div className="bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none">
-          <Layers size={10} strokeWidth={2.5} />
+        <div className={
+          variant === 'admin'
+            ? "bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none"
+            : "bg-black/40 backdrop-blur-[4px] px-2 py-0.5 rounded-md text-[9px] text-white font-bold flex items-center gap-1 border border-white/10 pointer-events-none"
+        }>
+          <Layers size={variant === 'admin' ? 10 : 9} strokeWidth={2.5} />
           {photo.member_count}
         </div>
       )}
-      {photo.is_pinned && (
+      {variant === 'admin' && photo.is_pinned && (
         <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 shadow-sm pointer-events-none">
           <Heart size={8} className="fill-current" />
         </div>
@@ -83,21 +92,16 @@ const toTitleCase = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
-export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({ 
-  photo, index, showGroupsCollapsed,
+export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
+  variant, photo, index, showGroupsCollapsed,
   lang, t, categories, manufacturers, tagMap, onGroupClick, 
-  onLightboxOpen, shareSinglePhoto, onTogglePinned, onToggleHidden
+  onLightboxOpen, shareSinglePhoto, onTogglePinned, onToggleHidden,
+  className = '', onClick
 }) => {
   const isMultiSelect = useGalleryStore((state) => state.isMultiSelect);
   const isSelected = useGalleryStore((state) => (state.selectedIds ?? []).includes(photo.id));
   const setIsMultiSelect = useGalleryStore((state) => state.setIsMultiSelect);
   const setSelectedIds = useGalleryStore((state) => state.setSelectedIds);
-  const setEditingPhotoId = useGalleryStore((state) => state.setEditingPhotoId);
-
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingPhotoId(photo.id);
-  };
 
   const enable = useCallback(() => {
     setIsMultiSelect(true);
@@ -117,22 +121,36 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   }, [photo, onLightboxOpen]);
     
   const handleClick = useCallback((e: React.MouseEvent) => {
-    if (isMultiSelect && !e.shiftKey) {
-      toggle();
-    } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
-      onGroupClick(photo.group_id, photo.id);
-    } else {
-      handleOpenLightbox();
+    if (onClick) {
+      onClick(e);
+      return;
     }
-  }, [isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox, showGroupsCollapsed]);
+
+    if (variant === 'admin') {
+      if (isMultiSelect && !e.shiftKey) {
+        toggle();
+      } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
+        onGroupClick(photo.group_id, photo.id);
+      } else {
+        handleOpenLightbox();
+      }
+    } else {
+      if (showGroupsCollapsed && photo.group_id && onGroupClick) {
+        onGroupClick(photo.group_id, photo.id);
+      } else {
+        handleOpenLightbox();
+      }
+    }
+  }, [variant, isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox, showGroupsCollapsed, onClick]);
 
   const handleLongPress = useCallback(() => {
+    if (variant !== 'admin') return;
     if (!isMultiSelect) {
       enable();
     } else {
       toggle();
     }
-  }, [isMultiSelect, enable, toggle]);
+  }, [variant, isMultiSelect, enable, toggle]);
 
   const displayCatName = useMemo(() => 
     getTranslatedCategoryName(photo.category_id, categories, lang, t),
@@ -160,15 +178,18 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
 
   const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
 
-  const cardSelectedClasses = isMultiSelect && isSelected 
-    ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
-    : 'md:hover:scale-[1.02] active:scale-[0.95]';
+  const cardSelectedClasses = variant === 'admin'
+    ? (isMultiSelect && isSelected 
+        ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
+        : 'md:hover:scale-[1.02] active:scale-[0.95]')
+    : 'active:scale-[0.95]'; // Public card: No zoom on hover as specified by the instructions
 
-  const pressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
-  const isLongPressedRef = React.useRef(false);
-  const isTouchRef = React.useRef(false);
+  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isLongPressedRef = useRef(false);
+  const isTouchRef = useRef(false);
 
   const startPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (variant !== 'admin') return;
     if (e.type === 'touchstart') {
       isTouchRef.current = true;
     } else if (isTouchRef.current && e.type === 'mousedown') {
@@ -186,22 +207,27 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       isLongPressedRef.current = true;
       if ('vibrate' in navigator) navigator.vibrate(50);
     }, 500); 
-  }, [handleLongPress]);
+  }, [variant, handleLongPress]);
 
   const cancelPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (variant !== 'admin') return;
     if (pressTimerRef.current) {
       clearTimeout(pressTimerRef.current);
       pressTimerRef.current = null;
     }
-  }, []);
+  }, [variant]);
 
   const shouldEagerLoad = index < 10;
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    handleLongPress();
+    if (variant === 'admin') {
+      handleLongPress();
+    } else {
+      shareSinglePhoto(photo);
+    }
     if ('vibrate' in navigator) navigator.vibrate(50);
-  }, [handleLongPress]);
+  }, [variant, handleLongPress, photo, shareSinglePhoto]);
 
   const handleTogglePinnedClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -211,24 +237,36 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
   }, [onTogglePinned, photo]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
+    if (variant === 'admin') {
+      if (pressTimerRef.current) {
+        clearTimeout(pressTimerRef.current);
+        pressTimerRef.current = null;
+      }
 
-    if (isLongPressedRef.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      isLongPressedRef.current = false;
-      return;
+      if (isLongPressedRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        isLongPressedRef.current = false;
+        return;
+      }
     }
 
     handleClick(e);
-  }, [handleClick]);
+  }, [variant, handleClick]);
 
   const imgClassName = useMemo(() => {
-    return `${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''}`;
-  }, [isMultiSelect, isSelected, is_hidden]);
+    if (variant === 'admin') {
+      return `${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''}`;
+    }
+    return '';
+  }, [variant, isMultiSelect, isSelected, is_hidden]);
+
+  const containerClasses = useMemo(() => {
+    const base = "aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group";
+    const bg = variant === 'admin' ? 'bg-slate-50 rounded-lg' : 'bg-slate-100 rounded-xl';
+    const border = variant === 'admin' && is_hidden ? 'ring-[3px] ring-orange-500 shadow-md' : '';
+    return `${base} ${bg} ${cardSelectedClasses} ${border} ${className}`;
+  }, [variant, is_hidden, cardSelectedClasses, className]);
 
   return (
     <div 
@@ -241,7 +279,7 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
       onTouchMove={cancelPress}
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
-      className={`aspect-square bg-slate-50 rounded-lg overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group ${cardSelectedClasses} ${is_hidden ? 'ring-[3px] ring-orange-500 shadow-md' : ''}`}
+      className={containerClasses}
     >
       <PhotoImageContainer
         photoId={photo.id}
@@ -252,16 +290,16 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
         imgClassName={imgClassName}
       />
 
-      {isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
-      {is_hidden && !isMultiSelect && (
+      {variant === 'admin' && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
+      {variant === 'admin' && is_hidden && !isMultiSelect && (
         <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
           <EyeOff size={24} className="text-white/60 drop-shadow" />
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} />
+      <PhotoStatusBadges photo={photo} variant={variant} />
 
-      {onTogglePinned && (
+      {variant === 'admin' && onTogglePinned && (
          <button 
            onClick={handleTogglePinnedClick}
            className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.is_pinned ? 'text-red-500' : ''} z-20 hover:scale-115 active:scale-95 transition-transform`}
@@ -278,3 +316,5 @@ export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({
     </div>
   );
 });
+
+PhotoCard.displayName = 'PhotoCard';

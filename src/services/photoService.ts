@@ -384,3 +384,15 @@ export const getPhotoCount = async (
 
   return count || 0;
 };
+
+export const getPhotosWithoutThumbHash = async (): Promise<{ id: string }[]> => {
+  const { data, error } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('id')
+    .is('thumb_hash', null);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data || [];
+};

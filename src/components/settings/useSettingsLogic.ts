@@ -5,7 +5,6 @@ import { testAiConnection } from '@/services/geminiService';
 import { deduplicatePhotos } from '@/services/photoMutationService';
 import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
 import { useFeedback, useInvalidatePhotos, useTaskExecutor } from '@/hooks';
-import { toast } from 'sonner';
 
 interface UseSettingsLogicProps {
   user: User | null;
@@ -56,29 +55,37 @@ export const useSettingsLogic = ({
       message: '系统将扫描云端数据库，保留最早上传的版本，删除重复的照片记录。此操作不可撤销。',
       confirmLabel: '执行排重',
       onConfirm: async () => {
-        try {
-          await withLoading(async () => {
-            const { removed } = await deduplicatePhotos(user.id);
+        await runTask('排重清理 / Deduplicate Photos', async ({ updateProgress }) => {
+          updateProgress(20, '扫描云端数据库中...');
+          const { removed } = await deduplicatePhotos(user.id);
+          updateProgress(70, '重置及拉取最新的数据库缓存...');
+          if (removed > 0) {
+            await performPullSync();
+          }
+          return removed;
+        }, {
+          onSuccess: (removed) => {
             if (removed > 0) {
               showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
-              await performPullSync();
             } else {
-              // We could use toast.info but standardizing on showSuccess for positive feedback
               showSuccess('未发现重复记录。');
             }
-          });
-        } catch (e: any) {
-          handleError(e, '排重失败');
-        }
+          },
+          onError: (err) => {
+            handleError(err, '排重失败');
+          },
+          showSuccessToast: false,
+          showErrorToast: true
+        });
       }
     });
-  }, [user, setAlertDialog, withLoading, performPullSync, handleError, showSuccess]);
+  }, [user, setAlertDialog, runTask, performPullSync, handleError, showSuccess]);
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
     await runTask('一键健康检测 / Health Check', async ({ updateProgress }) => {
         const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
         const { backfillThumbHashes } = await import('@/services/photo/backfillService');
-        const { supabase } = await import('@/services/supabaseService');
+        const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
 
         updateProgress(10, '正在检测本地缓存一致性...');
         // 1. Check data consistency
@@ -89,12 +96,7 @@ export const useSettingsLogic = ({
 
         updateProgress(30, '正在检测云端数据库未生成缩略图项目...');
         // 2. Check if there are any database photo records without thumb_hash
-        const { data: missingHashes, error: countError } = await supabase
-           .from('furniture_items')
-           .select('id')
-           .is('thumb_hash', null);
-
-        if (countError) throw countError;
+        const missingHashes = await getPhotosWithoutThumbHash();
 
         if (!missingHashes || missingHashes.length === 0) {
             updateProgress(100, '诊断完成：所有项目具备完整占位缩略图！');
@@ -121,11 +123,11 @@ export const useSettingsLogic = ({
     }, {
         onSuccess: (result) => {
             if (result?.skipped) {
-                toast.success('一键检测：系统完全健康，无需修复 (已自动略过已完善照片)');
+                showSuccess('一键检测：系统完全健康，无需修复 (已自动略过已完善照片)');
             } else if (result && result.backfilledCount > 0) {
-                toast.success(`一键检测：诊断修复完成，成功回填 ${result.backfilledCount} 张照片的占位图！`);
+                showSuccess(`一键检测：诊断修复完成，成功回填 ${result.backfilledCount} 张照片的占位图！`);
             } else {
-                toast.success('一键检测：系统健康，所有照片均完全符合规范！');
+                showSuccess('一键检测：系统健康，所有照片均完全符合规范！');
             }
         },
         onError: (err) => {
@@ -161,15 +163,28 @@ export const useSettingsLogic = ({
   const testConnection = useCallback(async () => {
     if (!settings?.gemini_api_key) return;
     setTestResult({ loading: true });
-    try {
+    
+    await runTask('测试 AI 连接 / Test AI Connection', async () => {
       const provider = (settings as any).ai_provider || 'google';
       const model = settings.custom_model || 'Gemini 2.5 Flash Lite Preview 09-2025';
       const ok = await testAiConnection(settings.gemini_api_key, provider, model);
-      setTestResult(ok ? { success: true } : { success: false, error: '连接失败' });
-    } catch (e: any) {
-      setTestResult({ success: false, error: e.message });
-    }
-  }, [settings]);
+      if (ok) {
+        setTestResult({ success: true });
+      } else {
+        setTestResult({ success: false, error: '连接失败' });
+        throw new Error('连接失败');
+      }
+    }, {
+      onSuccess: () => {
+        showSuccess('测试成功：AI 服务连接正常！');
+      },
+      onError: (e) => {
+        setTestResult({ success: false, error: e.message });
+      },
+      showSuccessToast: false,
+      showErrorToast: false
+    });
+  }, [settings, runTask, showSuccess]);
 
   return {
     testResult, setTestResult,

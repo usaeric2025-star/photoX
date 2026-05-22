@@ -13,7 +13,7 @@ import { safeArray } from '../lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '../hooks/queries/keys';
 import { useMultiSelect } from '../hooks/useMultiSelect';
-import { FullPageLoading } from '../components/FullPageLoading';
+import { DataLoadingContainer } from '../components/ui/DataLoadingContainer';
 import { saveData, syncCache } from '../utils/indexedDB';
 import { PublicGallery } from '../components/public/PublicGallery';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -185,53 +185,40 @@ export default function PublicView() {
     return <div className="p-4 text-red-500">加载失败: {(infiniteQuery.error as Error).message}</div>;
   }
   
-  const isActuallyLoading = showImmediateLoading || infiniteQuery.isLoading || isSettingsLoading;
-  if (isActuallyLoading || !settings) {
-    return <FullPageLoading />;
-  }
-  
   // ========== 8. 正常渲染 ==========
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
-      <AnimatePresence mode="wait">
-        {isInitialLoading && !hasLoadedOnce ? (
-          <FullPageLoading key="loader" />
-        ) : (
-          <motion.div 
-            key="content"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex-1 overflow-hidden"
-          >
-            <ErrorBoundary>
-              <PublicGallery 
-                photos={photos}
-                categories={categoriesData}
-                tags={tagsData}
-                onExit={() => navigate(ROUTES.ADMIN)}
-                onLogin={() => navigate(ROUTES.ADMIN)}
-                loginWithGoogle={loginWithGoogle}
-                user={user}
-                settings={settings}
-                isRefreshing={infiniteQuery.isLoading || infiniteQuery.isFetching}
-                onRefresh={handleRefresh}
-                onLoadMore={handleLoadMore}
-                hasMore={infiniteQuery.hasNextPage}
-                isFetchingNextPage={infiniteQuery.isFetchingNextPage}
-                totalCount={countData}
-                initialHash={hash}
-                initialGroupId={groupId}
-                searchQuery={searchQuery}
-                onSearchChange={(val) => {
-                   setSearchQuery(val);
-                   debouncedSetSearch(val);
-                }}
-              />
-            </ErrorBoundary>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <DataLoadingContainer
+        isLoading={infiniteQuery.isLoading || isSettingsLoading || !settings}
+        hasData={!!photos && photos.length > 0}
+        showImmediateLoading={showImmediateLoading}
+      >
+        <ErrorBoundary>
+          <PublicGallery 
+            photos={photos}
+            categories={categoriesData}
+            tags={tagsData}
+            onExit={() => navigate(ROUTES.ADMIN)}
+            onLogin={() => navigate(ROUTES.ADMIN)}
+            loginWithGoogle={loginWithGoogle}
+            user={user}
+            settings={settings}
+            isRefreshing={infiniteQuery.isLoading || infiniteQuery.isFetching}
+            onRefresh={handleRefresh}
+            onLoadMore={handleLoadMore}
+            hasMore={infiniteQuery.hasNextPage}
+            isFetchingNextPage={infiniteQuery.isFetchingNextPage}
+            totalCount={countData}
+            initialHash={hash}
+            initialGroupId={groupId}
+            searchQuery={searchQuery}
+            onSearchChange={(val) => {
+               setSearchQuery(val);
+               debouncedSetSearch(val);
+            }}
+          />
+        </ErrorBoundary>
+      </DataLoadingContainer>
     </div>
   );
 }
