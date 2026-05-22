@@ -317,5 +317,5 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
       )}
     </motion.div>
   );
-};
+});
 
