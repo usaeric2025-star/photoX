@@ -54,7 +54,6 @@ export interface GroupAdminShellProps {
   categories?: Category[];
   tagMap?: Record<string, string>;
   allTags?: Tag[];
-  isMultiSelect?: boolean;
   updatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
 }
 

@@ -2,11 +2,6 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, Sparkles, Pencil, Layers, X } from 'lucide-react';
 import { Photo } from '../../types';
-
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Check, Sparkles, Pencil, Layers, X } from 'lucide-react';
-import { Photo } from '../../types';
 import { useGalleryStore } from '../../store';
 
 interface GroupMultiSelectBarProps {

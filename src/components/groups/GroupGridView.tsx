@@ -4,6 +4,7 @@ import { Star, Sparkles, Check, Info, Palette, Layers, Quote } from 'lucide-reac
 import { Skeleton } from '../ui/Skeleton';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { VIRTUOSO_CONFIG } from '@/config/virtuoso.config';
+import { useGalleryStore } from '../../store';
 
 interface GroupGridViewProps {
   photos: Photo[];
