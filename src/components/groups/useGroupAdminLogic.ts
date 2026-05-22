@@ -26,7 +26,6 @@ export const useGroupAdminLogic = ({
     selectedIds, setSelectedIds,
     groupSettingsOpen, setGroupSettingsOpen,
     batchEditingIds, setBatchEditingIds,
-    batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger,
     onBatchAiAnalyze, onBatchEdit
   } = useGalleryStore();
   
@@ -305,7 +304,6 @@ export const useGroupAdminLogic = ({
     showGroupSettings, setShowGroupSettings,
     groupSettingsOpen, setGroupSettingsOpen,
     batchEditingIds, setBatchEditingIds,
-    batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger,
     groupData, setGroupData,
     isGroupDataLoading,
     activeGroupPhotos,

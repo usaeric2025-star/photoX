@@ -21,7 +21,7 @@ export const PhotoEditDrawer: React.FC = () => {
   const { 
     editPhotoId, formState, updateForm, newPhotoData, setNewPhotoData, 
     appLang, filterCatId, filterTagIds, debouncedSearchQuery, sortOrder,
-    onDeletePhoto, abortAnalysis, setBatchEditingIds, setEditingPhotoId, setEditPhotoId
+    onDeletePhoto, abortAnalysis, setBatchEditingIds, setEditPhotoId
   } = useGalleryStore(useShallow(s => ({
     editPhotoId: s.editPhotoId,
     formState: s.formState,
@@ -36,7 +36,6 @@ export const PhotoEditDrawer: React.FC = () => {
     onDeletePhoto: s.onDeletePhoto,
     abortAnalysis: s.abortAnalysis,
     setBatchEditingIds: s.setBatchEditingIds,
-    setEditingPhotoId: s.setEditingPhotoId,
     setEditPhotoId: s.setEditPhotoId
   })));
 
@@ -115,7 +114,7 @@ export const PhotoEditDrawer: React.FC = () => {
         onToggleHidden={logic.toggleHidden}
         onClose={() => {
           resetAddState();
-          setEditingPhotoId(null);
+          setEditPhotoId(null);
         }}
         onErrorClick={(err) => {
           const readableError = err.includes('|') ? err.split('|').slice(1).join(': ') : err;

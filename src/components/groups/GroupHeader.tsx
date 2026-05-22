@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 
 interface GroupHeaderProps {
   activeGroupId: string | null;
