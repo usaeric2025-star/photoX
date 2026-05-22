@@ -11,7 +11,7 @@ import {
   useAdminDialogs, useLoading, useInfinitePhotos, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
   useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback, useMultiSelect
 } from '../../hooks';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { PAGINATION } from '../../constants/config';
 import { ProductFormData, Photo, AppSettings } from '../../types';
 import { cleanPhotos } from '../../lib/filters';
@@ -40,7 +40,35 @@ export const useAdminDataPrep = () => {
     activeGroupId, setActiveGroupId, columns, setColumns,
     adminPreviewMode, setAdminPreviewMode, setIsSyncing, isSyncing,
     lightboxIndex, setLightboxIndex
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+    filterCatId: s.filterCatId,
+    filterTagIds: s.filterTagIds,
+    debouncedSearchQuery: s.debouncedSearchQuery,
+    sortOrder: s.sortOrder,
+    appLang: s.appLang,
+    activeScreen: s.activeScreen,
+    setActiveScreen: s.setActiveScreen,
+    geminiApiKey: s.geminiApiKey,
+    setGeminiApiKey: s.setGeminiApiKey,
+    accessPasscode: s.accessPasscode,
+    setAccessPasscode: s.setAccessPasscode,
+    customModel: s.customModel,
+    setCustomModel: s.setCustomModel,
+    editPhotoId: s.editPhotoId,
+    setEditPhotoId: s.setEditPhotoId,
+    batchEditingIds: s.batchEditingIds,
+    setBatchEditingIds: s.setBatchEditingIds,
+    activeGroupId: s.activeGroupId,
+    setActiveGroupId: s.setActiveGroupId,
+    columns: s.columns,
+    setColumns: s.setColumns,
+    adminPreviewMode: s.adminPreviewMode,
+    setAdminPreviewMode: s.setAdminPreviewMode,
+    setIsSyncing: s.setIsSyncing,
+    isSyncing: s.isSyncing,
+    lightboxIndex: s.lightboxIndex,
+    setLightboxIndex: s.setLightboxIndex
+  })));
 
   const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
 
@@ -85,8 +113,11 @@ export const useAdminDataPrep = () => {
   useEffect(() => {
     if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
       setSettings(fetchedSettings as AppSettings);
+      if (fetchedSettings.gemini_api_key) setGeminiApiKey(fetchedSettings.gemini_api_key);
+      if (fetchedSettings.custom_model) setCustomModel(fetchedSettings.custom_model);
+      if (fetchedSettings.access_passcode) setAccessPasscode(fetchedSettings.access_passcode);
     }
-  }, [fetchedSettings, setSettings]);
+  }, [fetchedSettings, setSettings, setGeminiApiKey, setCustomModel, setAccessPasscode]);
 
   const uiBasicValue = useMemo(() => ({ 
     setAlertDialog, setPromptDialog, setLoadingType, loadingType, withLoading, setCloudCount,
@@ -116,7 +147,7 @@ export const useAdminDataPrep = () => {
   const { mutateAsync: saveSettings } = useSettingsMutation();
 
   const { 
-    batchProgress, handleSingleAiAnalyze, handleTranslate, handleBatchAiIdentify, handleGroupAiIdentify, 
+    batchProgress, analyzeSingle, handleTranslate, analyzeBatch, analyzeGroup, 
     handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos,
     importProgress, importTotal, abortAnalysis, aiDebugInfo, setAiDebugInfo
   } = useAdminPhotos(
@@ -219,8 +250,8 @@ export const useAdminDataPrep = () => {
       cancelLabel: '取消 / Cancel',
       confirmLabel: '分析全部 / Analyze All',
       onConfirm: async () => {
-         try {
-           await withLoading('analyzing', () => handleBatchAiIdentify(photosToProcess, undefined, true));
+          try {
+           await withLoading('analyzing', () => analyzeBatch(photosToProcess, undefined, true));
          } catch (err) {
            showError(err, 'ai-analyze');
          }
@@ -229,14 +260,14 @@ export const useAdminDataPrep = () => {
          label: '跳过已完善 / Skip Completed',
          onClick: async () => {
             try {
-              await withLoading('analyzing', () => handleBatchAiIdentify(photosToProcess, undefined, false));
+              await withLoading('analyzing', () => analyzeBatch(photosToProcess, undefined, false));
             } catch (err) {
               showError(err, 'ai-analyze');
             }
          }
       }
     });
-  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, handleBatchAiIdentify, photos, setAlertDialog, showError]);
+  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, analyzeBatch, photos, setAlertDialog, showError]);
 
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
      try {
@@ -444,7 +475,7 @@ export const useAdminDataPrep = () => {
       confirmLabel: '分析全部 / Analyze All',
       onConfirm: async () => {
          try {
-           await withLoading('analyzing', () => handleGroupAiIdentify(photosToAnalyze, true));
+           await withLoading('analyzing', () => analyzeGroup(photosToAnalyze, true));
          } catch (e: unknown) {
            showError(e, '识别失败');
          }
@@ -453,19 +484,18 @@ export const useAdminDataPrep = () => {
          label: '跳过已完善 / Skip Completed',
          onClick: async () => {
             try {
-              await withLoading('analyzing', () => handleGroupAiIdentify(photosToAnalyze, false));
+              await withLoading('analyzing', () => analyzeGroup(photosToAnalyze, false));
             } catch (e: unknown) {
               showError(e, '识别失败');
             }
          }
       }
     });
-  }, [setAlertDialog, withLoading, handleGroupAiIdentify, showError]);
+  }, [setAlertDialog, withLoading, analyzeGroup, showError]);
 
   const handleAiAnalyze = useCallback((p: Photo) => {
-    return handleSingleAiAnalyze(p.uri || p.image_url, p.category_id || undefined, p.id)
-      .catch((e: Error) => showError(e, '识别失败'));
-  }, [handleSingleAiAnalyze, showError]);
+    return analyzeSingle(p).catch((e: Error) => showError(e, '识别失败'));
+  }, [analyzeSingle, showError]);
 
   const handleUpdatePhoto = useCallback(async (id: string, updates: Partial<Photo>) => {
     if (checkSyncLock()) return;
@@ -568,7 +598,7 @@ export const useAdminDataPrep = () => {
     }
   }, [handleTranslate]);
 
-  return {
+  return useMemo(() => ({
     user, authChecked, logout, navigate,
     infinitePhotosQuery, t, lang, onRefresh,
     
@@ -580,7 +610,7 @@ export const useAdminDataPrep = () => {
     
     settings, adminPreviewMode, setAdminPreviewMode,
     photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
-    handleSingleAiAnalyze, handleGroupAiIdentify, handlePhotoImport, importProgress, importTotal,
+    analyzeSingle, analyzeGroup, handlePhotoImport, importProgress, importTotal,
     handleBatchAiIdentifyTrigger, handleDeletePhoto,
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
     activeGroupId, setActiveGroupId, initialPhotoId, setInitialPhotoId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
@@ -615,7 +645,22 @@ export const useAdminDataPrep = () => {
     addTag,
     onLongPressStart,
     onLongPressEnd,
-    handlePerformPushSync,
-    handlePerformPullSync
-  };
+    // (Note: duplicate handlePerformPushSync/PullSync removed from direct return, they are already above)
+  }), [
+    user, authChecked, logout, navigate, infinitePhotosQuery, t, lang, onRefresh,
+    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
+    alertDialog, setAlertDialog, promptDialog, setPromptDialog, loadingType, setLoadingType, withLoading,
+    batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis, cloudCount, setCloudCount, settings,
+    adminPreviewMode, setAdminPreviewMode, photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
+    analyzeSingle, analyzeGroup, handlePhotoImport, importProgress, importTotal, handleBatchAiIdentifyTrigger, handleDeletePhoto,
+    formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
+    activeGroupId, setActiveGroupId, initialPhotoId, setInitialPhotoId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
+    checkSyncLock, togglePinned, toggleHidden, setGroupCover, loginWithGoogle, showError, onEditPhotoById,
+    updateTagWrapper, updateCategoryWrapper, updateManufacturerWrapper, handleSaveSettingsWrapper,
+    handleTranslateWrapper, handleGroupPhotosCallback, handleUngroupCallback, handlePerformPushSync, handlePerformPullSync,
+    handleLoadMoreCallback, handleManageClick, handleRefresh, handleToggleHidden, handleBatchToggleHidden, handleEditPhoto,
+    handleDeletePhotos, handleBatchEdit, handleBatchAiAnalyze, handleAiAnalyze, handleUpdatePhoto, handleLogoUpload,
+    handleSaveNewPhoto, handleImport, lightboxIndex, setLightboxIndex, saveBatchEditWithSuccess,
+    quickAddManufacturer, quickAddTag, deleteTag, addTag, onLongPressStart, onLongPressEnd
+  ]);
 };

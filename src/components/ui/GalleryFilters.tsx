@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search, X, Sparkles, Pin, Share, Globe } from 'lucide-react';
 import { useDebouncedCallback } from 'use-debounce';
 import { FilterChip } from '../../components/ui/FilterChip';
 import { CategoryChip } from '../../components/ui/CategoryChip';
@@ -16,21 +16,32 @@ import { useTagsDisplay } from '../../hooks/useTagsDisplay';
 
 import { translations } from '../../lib/translations';
 
+import { useCategoriesQuery, useTagsQuery, useSettings } from '../../hooks';
+
 interface GalleryFiltersProps {
-  settings?: AppSettings;
-  categories: Category[];
-  sortedTags: Tag[];
   onScrollToTop: () => void;
   showHotEffects?: boolean;
+  variant?: 'admin' | 'public';
+  onBatchAiIdentify?: () => void;
+  isAnalyzing?: boolean;
+  batchProgress?: { current: number; total: number };
+  onSetLang?: (lang: string) => void;
+  onShare?: () => void;
 }
 
 export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
-  settings,
-  categories,
-  sortedTags,
   onScrollToTop,
-  showHotEffects = true
+  showHotEffects = true,
+  variant = 'public',
+  onBatchAiIdentify,
+  isAnalyzing,
+  batchProgress,
+  onSetLang,
+  onShare
 }) => {
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: tags = [] } = useTagsQuery();
+  const { settings } = useSettings();
   const searchQuery = useGalleryStore(s => s.searchQuery);
   const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
   const sortOrder = useGalleryStore(s => s.sortOrder);
@@ -53,7 +64,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
     setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
   };
 
-  const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(sortedTags, settings);
+  const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(tags, settings);
 
   // Local state for instant typing responsive feedback
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
@@ -81,6 +92,12 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
     <div className="shrink-0 px-2 sm:px-3 pt-2 pb-1.5 z-40 bg-white border-b border-[#ECECEC]">
       <div className="space-y-1.5 pb-1">
         <div className="flex gap-1.5">
+          {variant === 'public' && onShare && (
+             <button onClick={onShare} className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" title={t.share}>
+               <Share size={16} />
+             </button>
+          )}
+
           <div className="relative flex-1">
             <input 
               type="text" 
@@ -110,6 +127,44 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
           </div>
           
           <div className="flex gap-1 shrink-0">
+            {variant === 'public' && onSetLang && (
+              <div className="flex items-center bg-[#F7F7F7] p-0.5 rounded-full border border-[#ECECEC] h-9 mr-1">
+                {[
+                  { code: 'zh', label: '中文' },
+                  { code: 'en', label: 'EN' },
+                  { code: 'ms', label: 'BM' }
+                ].map(l => (
+                  <button 
+                    key={l.code} 
+                    onClick={() => onSetLang(l.code)} 
+                    className={`px-2 h-7 flex items-center justify-center rounded-full text-[11px] font-bold transition-all ${lang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888]'}`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {variant === 'admin' && onBatchAiIdentify && (
+                <button 
+                  onClick={onBatchAiIdentify}
+                  disabled={isAnalyzing}
+                  className={`h-9 px-2.5 rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/70 hover:text-purple-600 bg-white border border-purple-600/20 shadow-sm'}`}
+                  title={t.batchAi}
+                >
+                  {isAnalyzing ? (
+                    batchProgress?.current > 0 ? (
+                      <span className="text-[10px] font-bold text-white">{batchProgress.current}</span>
+                    ) : (
+                      <Sparkles size={16} className="animate-spin" />
+                    )
+                  ) : (
+                    <Sparkles size={16} className="mr-1" />
+                  )}
+                  {!isAnalyzing && <span className="text-[11px] font-bold">AI</span>}
+                </button>
+            )}
+
             <SortButton onClick={toggleSortOrder} label={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest} />
             
             <LayoutButton 

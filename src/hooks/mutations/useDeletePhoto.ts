@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { Photo } from '@/types';
-import { deletePhotoFromCloud } from '@/services/photoMutationService';
+import { deletePhotoFromCloud } from '@/services/photoService';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
 import { opsCache } from '@/utils/indexedDB';
 

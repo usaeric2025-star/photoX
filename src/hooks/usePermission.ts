@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useAuth } from './useAuth';
 
 /**
@@ -5,24 +6,20 @@ import { useAuth } from './useAuth';
  */
 export function usePermission() {
   const { user } = useAuth();
-  // Authenticated users are admins.
-  const isAdmin = !!user;
-  const isStaff = !!user; // Assuming logged in users can view private gallery/photos
-
   
-  // Basic policies
-  const canEdit = isAdmin;
-  const canDelete = isAdmin;
-  const canBatchEdit = isAdmin;
-  const canManageSystem = isAdmin;
+  return useMemo(() => {
+    // Authenticated users are admins.
+    const isAdmin = !!user;
+    const isStaff = !!user; // Assuming logged in users can view private gallery/photos
 
-  return {
-    isAdmin,
-    isStaff,
-    canEdit,
-    canDelete,
-    canBatchEdit,
-    canManageSystem,
-    userId: user?.id
-  };
+    return {
+      isAdmin,
+      isStaff,
+      canEdit: isAdmin,
+      canDelete: isAdmin,
+      canBatchEdit: isAdmin,
+      canManageSystem: isAdmin,
+      userId: user?.id
+    };
+  }, [user]);
 }

@@ -1,6 +1,12 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updatePhotosBatch } from '../../services/photoMutationService';
+import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { updatePhotosBatch } from '../../services/photoService';
 import { useFeedback, useInvalidatePhotos } from '../../hooks';
+import { Photo } from '../../types';
+
+interface InfinitePhotosData {
+  photos: Photo[];
+  nextCursor?: string;
+}
 
 export const useBatchEditMutation = (userId: string) => {
   const queryClient = useQueryClient();
@@ -8,24 +14,24 @@ export const useBatchEditMutation = (userId: string) => {
   const invalidatePhotos = useInvalidatePhotos();
 
   return useMutation({
-    mutationFn: ({ ids, updates }: { ids: string[]; updates: any }) => 
+    mutationFn: ({ ids, updates }: { ids: string[]; updates: Partial<Photo> }) => 
       updatePhotosBatch(userId, ids, updates),
     onMutate: async ({ ids, updates }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['photos'] });
 
       // Snapshot
-      const previousInfinite = queryClient.getQueryData(['photos', 'infinite']);
-      const previousGroups = queryClient.getQueriesData({ queryKey: ['photos', 'group'] });
+      const previousInfinite = queryClient.getQueryData<InfiniteData<InfinitePhotosData>>(['photos', 'infinite']);
+      const previousGroups = queryClient.getQueriesData<Photo[]>({ queryKey: ['photos', 'group'] });
 
       // Optimistically update all infinite photo queries
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: any) =>
+            photos: page.photos.map((photo) =>
               ids.includes(photo.id) ? { ...photo, ...updates } : photo
             ),
           })),
@@ -33,9 +39,9 @@ export const useBatchEditMutation = (userId: string) => {
       });
 
       // Update group queries too
-      queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+      queryClient.setQueriesData<Photo[]>({ queryKey: ['photos', 'group'] }, (old) => {
         if (!Array.isArray(old)) return old;
-        return old.map((photo: any) => 
+        return old.map((photo) => 
           ids.includes(photo.id) ? { ...photo, ...updates } : photo
         );
       });
@@ -45,12 +51,12 @@ export const useBatchEditMutation = (userId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
-    onError: (err, variables, context: any) => {
+    onError: (err: unknown, variables, context: { previousInfinite?: InfiniteData<InfinitePhotosData>; previousGroups?: [any, Photo[]][] } = {}) => {
       if (context?.previousInfinite) {
         queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
       }
       if (context?.previousGroups) {
-        context.previousGroups.forEach(([queryKey, data]: [any, any]) => {
+        context.previousGroups.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }

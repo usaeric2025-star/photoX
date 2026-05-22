@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react';
 import { User, Photo, Category, Tag, Manufacturer } from '@/types';
 import { 
   savePhotoToCloud
-} from '@/services/photoMutationService';
+} from '@/services/photoService';
 import { generateItemCode } from '@/services/utils';
 import { formatDate } from '@/utils/dateFormat';
 import { saveData } from '@/utils/indexedDB';
@@ -11,7 +11,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useFeedback } from '@/hooks';
 import { useImageHash } from '@/hooks/useImageHash';
 import { useDuplicateCheck } from '@/hooks/useDuplicateCheck';
-import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/useAIAnalysisHandler';
+import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/usePhotoAI';
 
 export const usePhotoImport = (
   user: User | null,

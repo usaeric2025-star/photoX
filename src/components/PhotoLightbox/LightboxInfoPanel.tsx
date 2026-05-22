@@ -37,7 +37,9 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
   const isAdminMode = isStaffMode;
-  const setEditingPhotoId = useGalleryStore((s) => s.setEditingPhotoId);
+  const { onEditPhoto } = useGalleryStore(useShallow(s => ({
+    onEditPhoto: s.onEditPhoto
+  })));
   const catName = getTranslatedCategoryName(photo.category_id, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturer_id, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
@@ -93,7 +95,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                   {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}
                 </button>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); setEditingPhotoId(photo.id); }}
+                  onClick={(e) => { e.stopPropagation(); if (onEditPhoto) onEditPhoto(photo); }}
                   className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all"
                 >
                   <Edit3 size={16}/>

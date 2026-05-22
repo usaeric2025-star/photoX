@@ -1,8 +1,13 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { Photo } from '@/types';
-import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '@/services/photoMutationService';
+import { updatePhoto as updatePhotoFn, updatePhotosBatch } from '@/services/photoService';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
 import { opsCache } from '@/utils/indexedDB';
+
+interface InfinitePhotosData {
+  photos: Photo[];
+  nextCursor?: string;
+}
 
 export const useUpdatePhotoMutation = () => {
   const queryClient = useQueryClient();
@@ -21,17 +26,17 @@ export const useUpdatePhotoMutation = () => {
       await queryClient.cancelQueries({ queryKey: ['photos'] });
 
       // Snapshot the previous values
-      const previousInfinite = queryClient.getQueryData<any>(['photos', 'infinite']);
+      const previousInfinite = queryClient.getQueryData<InfiniteData<InfinitePhotosData>>(['photos', 'infinite']);
       const previousGroups = queryClient.getQueriesData<Photo[]>({ queryKey: ['photos', 'group'] });
 
       // Optimistically update all infinite photo queries
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old) return old;
         return {
           ...old,
-          pages: old.pages.map((page: { photos: Photo[] }) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: Photo) =>
+            photos: page.photos.map((photo) =>
               photo.id === id ? { ...photo, ...updates } : photo
             ),
           })),
@@ -39,19 +44,19 @@ export const useUpdatePhotoMutation = () => {
       });
 
       // Also update any specific group queries
-      queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+      queryClient.setQueriesData<Photo[]>({ queryKey: ['photos', 'group'] }, (old) => {
         if (!Array.isArray(old)) return old;
-        return old.map((photo: Photo) => 
+        return old.map((photo) => 
           photo.id === id ? { ...photo, ...updates } : photo
         );
       });
 
       // Optimistically update group infinite photo queries
-      queryClient.setQueriesData({ queryKey: ['photos', 'group', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'group', 'infinite'] }, (old) => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: { photos: Photo[] }) => ({
+          pages: old.pages.map((page) => ({
             ...page,
             photos: page.photos.map((photo: Photo) =>
               photo.id === id ? { ...photo, ...updates } : photo
@@ -68,9 +73,10 @@ export const useUpdatePhotoMutation = () => {
         invalidatePhotos();
       }
     },
-    onError: (err: any, variables, context: { previousInfinite?: any; previousGroups?: [any, Photo[]][] }) => {
+    onError: (err: unknown, variables, context: { previousInfinite?: InfiniteData<InfinitePhotosData>; previousGroups?: [any, Photo[]][] } = {}) => {
       // Check if it's a network error
-      const isNetworkError = !navigator.onLine || err.message?.includes('fetch') || err.message?.includes('Network');
+      const errorMsg = err instanceof Error ? err.message : '';
+      const isNetworkError = !navigator.onLine || errorMsg.includes('fetch') || errorMsg.includes('Network');
       
       if (isNetworkError) {
         opsCache.addPendingOp({
@@ -111,35 +117,35 @@ export const useBatchUpdatePhotosMutation = () => {
     }) => updatePhotosBatch(userId, ids, updates, onProgress, signal),
     onMutate: async ({ ids, updates }) => {
       await queryClient.cancelQueries({ queryKey: ['photos'] });
-      const previousInfinite = queryClient.getQueryData(['photos', 'infinite']);
-      const previousGroups = queryClient.getQueriesData({ queryKey: ['photos', 'group'] });
+      const previousInfinite = queryClient.getQueryData<InfiniteData<InfinitePhotosData>>(['photos', 'infinite']);
+      const previousGroups = queryClient.getQueriesData<Photo[]>({ queryKey: ['photos', 'group'] });
 
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: Photo) =>
+            photos: page.photos.map((photo) =>
               ids.includes(photo.id) ? { ...photo, ...updates } : photo
             ),
           })),
         };
       });
 
-      queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => {
+      queryClient.setQueriesData<Photo[]>({ queryKey: ['photos', 'group'] }, (old) => {
         if (!Array.isArray(old)) return old;
-        return old.map((photo: Photo) => 
+        return old.map((photo) => 
           ids.includes(photo.id) ? { ...photo, ...updates } : photo
         );
       });
 
       // Optimistically update group infinite photo queries
-      queryClient.setQueriesData({ queryKey: ['photos', 'group', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'group', 'infinite'] }, (old) => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
             photos: page.photos.map((photo: Photo) =>
               ids.includes(photo.id) ? { ...photo, ...updates } : photo
@@ -150,8 +156,9 @@ export const useBatchUpdatePhotosMutation = () => {
 
       return { previousInfinite, previousGroups };
     },
-    onError: (err: any, variables, context: any) => {
-      const isNetworkError = !navigator.onLine || err.message?.includes('fetch') || err.message?.includes('Network');
+    onError: (err: unknown, variables, context: { previousInfinite?: InfiniteData<InfinitePhotosData>; previousGroups?: [any, Photo[]][] } = {}) => {
+      const errorMsg = err instanceof Error ? err.message : '';
+      const isNetworkError = !navigator.onLine || errorMsg.includes('fetch') || errorMsg.includes('Network');
       
       if (isNetworkError) {
         opsCache.addPendingOp({
@@ -167,7 +174,7 @@ export const useBatchUpdatePhotosMutation = () => {
         queryClient.setQueryData(['photos', 'infinite'], context.previousInfinite);
       }
       if (context?.previousGroups) {
-        context.previousGroups.forEach(([queryKey, data]: [any, any]) => {
+        context.previousGroups.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
         });
       }

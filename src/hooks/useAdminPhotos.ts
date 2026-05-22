@@ -92,7 +92,7 @@ export const useAdminPhotos = (
     if (sPhotos.length > 0) {
       const runningBatchTask = tasks.find(t => t.status === 'running' && t.name.includes('批量 AI 识别'));
       if (runningBatchTask && !aiHook.aiDebugInfo) {
-        aiHook.handleBatchAiIdentify(sPhotos, runningBatchTask.id);
+        aiHook.analyzeBatch(sPhotos, runningBatchTask.id);
       }
     }
   }, [safeArray(photos).length]);
@@ -137,9 +137,9 @@ export const useAdminPhotos = (
     importTotal: importHook.importTotal,
     
     // AI Hook
-    handleSingleAiAnalyze: aiHook.handleSingleAiAnalyze,
-    handleBatchAiIdentify: aiHook.handleBatchAiIdentify,
-    handleGroupAiIdentify: aiHook.handleGroupAiIdentify,
+    analyzeSingle: aiHook.analyzeSingle,
+    analyzeBatch: aiHook.analyzeBatch,
+    analyzeGroup: aiHook.analyzeGroup,
     aiDebugInfo: aiHook.aiDebugInfo,
     setAiDebugInfo: aiHook.setAiDebugInfo,
     batchProgress: aiHook.batchProgress,
@@ -158,7 +158,7 @@ export const useAdminPhotos = (
   }), [
     photos, currentLoadingState, cloudCount, setCloudCount,
     importHook.handlePhotoImport, importHook.importProgress, importHook.importTotal,
-    aiHook.handleSingleAiAnalyze, aiHook.handleBatchAiIdentify, aiHook.handleGroupAiIdentify,
+    aiHook.analyzeSingle, aiHook.analyzeBatch, aiHook.analyzeGroup,
     aiHook.aiDebugInfo, aiHook.setAiDebugInfo, aiHook.batchProgress, aiHook.abortAnalysis,
     geminiApiKey, customModel, groupPhotosMutation, mutationHook.deletePhoto, 
     mutationHook.updatePhoto, mutationHook.updatePhotosBulk

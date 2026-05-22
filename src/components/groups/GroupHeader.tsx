@@ -31,7 +31,15 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   activeGroupPhotos,
   onAddPhotoToGroup,
 }) => {
-  const { setGroupSettingsOpen, setBatchEditingIds, setBatchAiAnalyzeTrigger, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore();
+  const { setGroupSettingsOpen, onBatchEdit, onBatchAiAnalyze, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore(useShallow(s => ({
+    setGroupSettingsOpen: s.setGroupSettingsOpen,
+    onBatchEdit: s.onBatchEdit,
+    onBatchAiAnalyze: s.onBatchAiAnalyze,
+    isMultiSelect: s.isMultiSelect,
+    setIsMultiSelect: s.setIsMultiSelect,
+    selectedIds: s.selectedIds,
+    setSelectedIds: s.setSelectedIds
+  })));
   
   return (
     <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
@@ -79,7 +87,9 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
          {isAdminMode && (
            <div className="flex items-center gap-1.5 sm:gap-2">
               <button 
-                onClick={() => setBatchAiAnalyzeTrigger(true)}
+                onClick={() => {
+                  if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);
+                }}
                 className="hidden sm:flex px-3 h-10 items-center justify-center border border-[#7A00E6]/20 rounded-xl bg-[#F3E8FF] text-[#7A00E6] font-bold shadow-sm active:scale-95 transition-all gap-1.5"
                 title="AI 整組處理"
               >
@@ -99,7 +109,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                   <DropdownMenuItem 
                     onClick={() => {
                       const ids = selectedIds.length > 0 ? selectedIds : activeGroupPhotos.map(p => p.id);
-                      setBatchEditingIds(ids);
+                      if (onBatchEdit) onBatchEdit(ids);
                       setIsMultiSelect(false);
                       setSelectedIds([]);
                     }}
@@ -109,7 +119,12 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                     <span className="text-sm font-bold text-slate-700">批量编辑 / Batch Edit</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => setBatchAiAnalyzeTrigger(true)}
+                    onClick={() => {
+                      const photosToAnalyze = selectedIds.length > 0 
+                        ? activeGroupPhotos.filter(p => selectedIds.includes(p.id))
+                        : activeGroupPhotos;
+                      if (onBatchAiAnalyze) onBatchAiAnalyze(photosToAnalyze);
+                    }}
                     className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
                   >
                     <Sparkles size={16} className="text-purple-500" />

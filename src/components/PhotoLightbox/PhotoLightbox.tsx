@@ -9,6 +9,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { usePermission } from '../../hooks/usePermission';
 import { useGalleryStore } from '../../store';
 import { translations } from '../../lib/translations';
+import { useCategoriesQuery, useManufacturersQuery, useTagsQuery } from '../../hooks';
 
 export interface PhotoLightboxProps {
   photo: Photo | null;
@@ -17,9 +18,6 @@ export interface PhotoLightboxProps {
   onClose: () => void;
   onPrev: (e?: React.MouseEvent) => void;
   onNext: (e?: React.MouseEvent) => void;
-  categories: Category[];
-  manufacturers: Manufacturer[];
-  tagMap: Record<string, string>;
   contactWhatsApp: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
@@ -33,11 +31,22 @@ export interface PhotoLightboxProps {
 
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
-    photo, index: propIndex, onClose, onPrev, onNext, categories, manufacturers, tagMap,
+    photo, index: propIndex, onClose, onPrev, onNext,
     contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
     onToggleHidden, onTogglePinned, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos: rawDisplayPhotos
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
+
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: qManufacturers = [] } = useManufacturersQuery();
+  const { data: contextTags = [] } = useTagsQuery();
+  const manufacturers = qManufacturers;
+  
+  const tagMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    contextTags.forEach(t => { map[String(t.id)] = t.name; });
+    return map;
+  }, [contextTags]);
 
   const lang = useGalleryStore(s => s.appLang);
   const isStaffMode = useGalleryStore(s => s.isStaffMode);

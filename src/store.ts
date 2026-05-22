@@ -1,9 +1,12 @@
 
 import { create } from 'zustand';
-import { Photo, Category, Tag, Manufacturer, AppSettings, User, DialogData } from './types';
+import { useShallow } from 'zustand/react/shallow';
+import { Photo, Category, Tag, Manufacturer, AppSettings, User, DialogData, ProductFormData } from './types';
 import { translations } from './lib/translations';
 
 interface StoreState {
+  abortAnalysis?: () => void;
+  setAbortAnalysis: (fn: () => void) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   filterCatId: string | null;
@@ -28,15 +31,11 @@ interface StoreState {
   setActivePhotoId: (id: string | null) => void;
   editPhotoId: string | null;
   setEditPhotoId: (id: string | null) => void;
-  editingPhotoId: string | null;
-  setEditingPhotoId: (id: string | null) => void;
   // Batch Editing and Groups
   batchEditingIds: string[] | null;
   setBatchEditingIds: (ids: string[] | null) => void;
   groupSettingsOpen: boolean;
   setGroupSettingsOpen: (open: boolean) => void;
-  batchAiAnalyzeTrigger: boolean;
-  setBatchAiAnalyzeTrigger: (trigger: boolean) => void;
 
   isMultiSelect: boolean;
   setIsMultiSelect: (is: boolean) => void;
@@ -97,9 +96,47 @@ interface StoreState {
   showWhatsAppChoice: boolean;
   setShowWhatsAppChoice: (show: boolean) => void;
   tagIdToNameMap: Record<string, string>;
+  // Photo Editing Form State
+  formState: ProductFormData;
+  updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => void;
+  newPhotoData: string | null;
+  setNewPhotoData: (data: string | null) => void;
+  showOtherFields: boolean;
+  setShowOtherFields: (show: boolean) => void;
+
+  // Action fallbacks to prevent prop drilling
+  onTogglePinned?: (photo: Photo) => Promise<void>;
+  onDeletePhoto?: (id: string | string[]) => Promise<void>;
+  onUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
+  onToggleHidden?: (photo: Photo) => Promise<void>;
+  onGroupPhotos?: (ids: string[]) => Promise<void>;
+  onUngroup?: (groupId: string) => Promise<void>;
+  onBatchAiAnalyze?: (photos: Photo[]) => void;
+  onBatchEdit?: (ids: string[]) => void;
+  onEditPhoto?: (p: Photo) => void;
+  onAiAnalyze?: (photo: Photo) => Promise<any>;
+  onSetGroupCover?: (id: string, gid: string) => Promise<void>;
+  onCancelAnalyze?: () => void;
+  
+  setActions: (actions: {
+    onTogglePinned?: (photo: Photo) => Promise<void>;
+    onDeletePhoto?: (id: string | string[]) => Promise<void>;
+    onUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
+    onToggleHidden?: (photo: Photo) => Promise<void>;
+    onGroupPhotos?: (ids: string[]) => Promise<void>;
+    onUngroup?: (groupId: string) => Promise<void>;
+    onBatchAiAnalyze?: (photos: Photo[]) => void;
+    onBatchEdit?: (ids: string[]) => void;
+    onEditPhoto?: (p: Photo) => void;
+    onAiAnalyze?: (photo: Photo) => Promise<any>;
+    onSetGroupCover?: (id: string, gid: string) => Promise<void>;
+    onCancelAnalyze?: () => void;
+  }) => void;
 }
 
+export { useShallow };
 export const useGalleryStore = create<StoreState>()((set) => ({
+  setAbortAnalysis: (abortAnalysis) => set({ abortAnalysis }),
   searchQuery: '',
   setSearchQuery: (searchQuery) => set({ searchQuery, debouncedSearchQuery: searchQuery }),
   filterCatId: null,
@@ -126,14 +163,10 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setActivePhotoId: (activePhotoId) => set({ activePhotoId }),
   editPhotoId: null,
   setEditPhotoId: (editPhotoId) => set({ editPhotoId }),
-  editingPhotoId: null,
-  setEditingPhotoId: (editingPhotoId) => set({ editingPhotoId }),
   batchEditingIds: null,
   setBatchEditingIds: (batchEditingIds) => set({ batchEditingIds }),
   groupSettingsOpen: false,
   setGroupSettingsOpen: (groupSettingsOpen) => set({ groupSettingsOpen }),
-  batchAiAnalyzeTrigger: false,
-  setBatchAiAnalyzeTrigger: (batchAiAnalyzeTrigger) => set({ batchAiAnalyzeTrigger }),
   isMultiSelect: false,
   setIsMultiSelect: (isMultiSelect) => set({ isMultiSelect }),
   selectedIds: [],
@@ -197,6 +230,28 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   showWhatsAppChoice: false,
   setShowWhatsAppChoice: (showWhatsAppChoice) => set({ showWhatsAppChoice }),
   tagIdToNameMap: {},
+  formState: {
+    name: '',
+    category_id: '',
+    tag_ids: [],
+    manufacturer_id: '',
+    model_number: '',
+    manual_code: '',
+    description: '',
+    is_hidden: false,
+    description_translations: { en: '', ms: '' },
+    dimensions: [],
+    price: '',
+    is_group_cover: false
+  },
+  updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => set((state) => ({ 
+    formState: typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates } 
+  })),
+  newPhotoData: null,
+  setNewPhotoData: (newPhotoData) => set({ newPhotoData }),
+  showOtherFields: false,
+  setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
+  setActions: (actions) => set({ ...actions }),
 }));
 
 export const useStore = useGalleryStore;

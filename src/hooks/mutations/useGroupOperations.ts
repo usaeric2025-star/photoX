@@ -1,6 +1,12 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { groupPhotos, ungroupPhotos, removePhotosFromGroup } from '@/services/photoMutationService';
+import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
+import { groupPhotos, ungroupPhotos, removePhotosFromGroup } from '@/services/photoService';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { Photo } from '@/types';
+
+interface InfinitePhotosData {
+  photos: Photo[];
+  nextCursor?: string;
+}
 
 export const useGroupPhotosMutation = () => {
   const queryClient = useQueryClient();
@@ -18,16 +24,16 @@ export const useGroupPhotosMutation = () => {
       await queryClient.cancelQueries({ queryKey: ['groups'] });
 
       const tempGroupId = crypto.randomUUID();
-      const previousInfinite = queryClient.getQueriesData({ queryKey: ['photos', 'infinite'] });
+      const previousInfinite = queryClient.getQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] });
 
       const idSet = new Set(photoIds);
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: any) => {
+            photos: page.photos.map((photo) => {
               if (idSet.has(photo.id)) {
                 return {
                   ...photo,
@@ -45,13 +51,13 @@ export const useGroupPhotosMutation = () => {
     },
     onSuccess: (data, variables, context) => {
       const finalGroupId = data.newGroupId;
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: any) => {
+            photos: page.photos.map((photo) => {
               if (photo.group_id === context?.tempGroupId) {
                 return {
                   ...photo,
@@ -65,7 +71,7 @@ export const useGroupPhotosMutation = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
-    onError: (error: any, photoIds, context) => {
+    onError: (error: unknown, photoIds, context) => {
       if (context?.previousInfinite) {
         context.previousInfinite.forEach(([queryKey, value]) => {
           queryClient.setQueryData(queryKey, value);
@@ -88,14 +94,14 @@ export const useRemoveFromGroupMutation = () => {
       await queryClient.cancelQueries({ queryKey: ['photos'] });
       await queryClient.cancelQueries({ queryKey: ['groups'] });
 
-      const previousInfinite = queryClient.getQueriesData({ queryKey: ['photos', 'infinite'] });
+      const previousInfinite = queryClient.getQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] });
       const idSet = new Set(photoIds);
 
       let remainingSameGroupCount = 0;
-      previousInfinite.forEach(([_, value]: any) => {
+      previousInfinite.forEach(([_, value]) => {
         if (value?.pages) {
-          value.pages.forEach((page: any) => {
-            page.photos.forEach((photo: any) => {
+          value.pages.forEach((page) => {
+            page.photos.forEach((photo) => {
               if ((photo.group_id === groupId) && !idSet.has(photo.id)) {
                 remainingSameGroupCount++;
               }
@@ -106,13 +112,13 @@ export const useRemoveFromGroupMutation = () => {
 
       const shouldDissolveEntireGroup = remainingSameGroupCount <= 1;
 
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: any) => {
+            photos: page.photos.map((photo) => {
               if (idSet.has(photo.id)) {
                 return {
                   ...photo,
@@ -140,7 +146,7 @@ export const useRemoveFromGroupMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousInfinite) {
         context.previousInfinite.forEach(([queryKey, value]) => {
           queryClient.setQueryData(queryKey, value);
@@ -162,15 +168,15 @@ export const useUngroupMutation = () => {
       await queryClient.cancelQueries({ queryKey: ['photos'] });
       await queryClient.cancelQueries({ queryKey: ['groups'] });
 
-      const previousInfinite = queryClient.getQueriesData({ queryKey: ['photos', 'infinite'] });
+      const previousInfinite = queryClient.getQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] });
 
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: any) => {
+            photos: page.photos.map((photo) => {
               if (photo.group_id === groupId) {
                 return {
                   ...photo,
@@ -190,7 +196,7 @@ export const useUngroupMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousInfinite) {
         context.previousInfinite.forEach(([queryKey, value]) => {
           queryClient.setQueryData(queryKey, value);
@@ -212,15 +218,15 @@ export const useDeleteGroupFromCloudMutation = () => {
       await queryClient.cancelQueries({ queryKey: ['photos'] });
       await queryClient.cancelQueries({ queryKey: ['groups'] });
 
-      const previousInfinite = queryClient.getQueriesData({ queryKey: ['photos', 'infinite'] });
+      const previousInfinite = queryClient.getQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] });
 
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] }, (old) => {
         if (!old || !old.pages) return old;
         return {
           ...old,
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
-            photos: page.photos.map((photo: any) => {
+            photos: page.photos.map((photo) => {
               if (photo.group_id === groupId) {
                 return {
                   ...photo,
@@ -240,7 +246,7 @@ export const useDeleteGroupFromCloudMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousInfinite) {
         context.previousInfinite.forEach(([queryKey, value]) => {
           queryClient.setQueryData(queryKey, value);

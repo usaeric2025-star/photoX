@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '@/types';
 import { useGalleryStore } from '@/store';
 import { testAiConnection } from '@/services/geminiService';
-import { deduplicatePhotos } from '@/services/photoMutationService';
+import { deduplicatePhotos } from '@/services/photoService';
 import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
 import { useFeedback, useInvalidatePhotos, useTaskExecutor } from '@/hooks';
 

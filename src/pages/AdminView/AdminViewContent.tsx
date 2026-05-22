@@ -86,16 +86,6 @@ export const AdminViewContent: React.FC = () => {
     setIsMaintenanceRunning(false);
   }, [runTask, showError, showSuccess, isMaintenanceRunning]);
 
-  const editingPhotoId = useGalleryStore((s) => s.editingPhotoId);
-  const setEditingPhotoId = useGalleryStore((s) => s.setEditingPhotoId);
-
-  useEffect(() => {
-    if (editingPhotoId) {
-      logic.setEditPhotoId(editingPhotoId);
-      setEditingPhotoId(null);
-    }
-  }, [editingPhotoId, setEditingPhotoId, logic]);
-
   const { tasks, cancelTask } = useTasks();
   const { reset, clear } = useMultiSelect();
 
@@ -138,6 +128,36 @@ export const AdminViewContent: React.FC = () => {
   const hasLoadedOnce = useGalleryStore((s) => s.hasLoadedOnce);
 
   const isStaffMode = useGalleryStore((s) => s.isStaffMode);
+  const setActions = useGalleryStore((s) => s.setActions);
+  const setAbortAnalysis = useGalleryStore((s) => s.setAbortAnalysis);
+
+  const {
+    togglePinned, handleDeletePhoto, handleUpdatePhoto, handleToggleHidden,
+    handleGroupPhotos, handleUngroup, handleBatchAiIdentifyTrigger, handleBatchEdit,
+    onEditPhotoById, handleAiAnalyze, setGroupCover, abortAnalysis
+  } = logic;
+
+  useEffect(() => {
+    setActions({
+      onTogglePinned: togglePinned,
+      onDeletePhoto: handleDeletePhoto,
+      onUpdatePhoto: handleUpdatePhoto,
+      onToggleHidden: handleToggleHidden,
+      onGroupPhotos: handleGroupPhotos,
+      onUngroup: handleUngroup,
+      onBatchAiAnalyze: handleBatchAiIdentifyTrigger,
+      onBatchEdit: handleBatchEdit,
+      onEditPhoto: onEditPhotoById,
+      onAiAnalyze: handleAiAnalyze,
+      onSetGroupCover: setGroupCover,
+      onCancelAnalyze: abortAnalysis
+    });
+    setAbortAnalysis(abortAnalysis);
+  }, [
+    setActions, setAbortAnalysis, togglePinned, handleDeletePhoto, handleUpdatePhoto,
+    handleToggleHidden, handleGroupPhotos, handleUngroup, handleBatchAiIdentifyTrigger,
+    handleBatchEdit, onEditPhotoById, handleAiAnalyze, setGroupCover, abortAnalysis
+  ]);
 
   if (authChecked && !user && !isStaffMode) {
     return <LoginScreen loginWithGoogle={async () => { await logic.loginWithGoogle(); }} isLoading={(loadingType as string) === 'auth'} />;
@@ -182,10 +202,7 @@ export const AdminViewContent: React.FC = () => {
               activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId}
               photos={logic.photos} displayPhotos={logic.groupPhotos} initialPhotoId={logic.initialPhotoId}
               setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
-              onEditPhoto={(p: Photo) => actions.handleEditPhoto(p.id)} onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
-              onBatchEdit={actions.handleBatchEdit} onUngroup={actions.handleUngroup} onAddPhotoToGroup={actions.handleImport}
-              lang={lang} t={t} categories={logic.categories} manufacturers={logic.manufacturers} allTags={logic.tags} tagMap={logic.tagIdToNameMap}
-              onBatchAiAnalyze={actions.handleBatchAiAnalyze} onAiAnalyze={actions.handleAiAnalyze} onToggleHidden={actions.handleToggleHidden} updatePhoto={actions.handleUpdatePhoto}
+              onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
             />
           </React.Suspense>
 
@@ -196,24 +213,21 @@ export const AdminViewContent: React.FC = () => {
             >
               <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <MainAdminScreen 
-                  {...logic} user={user} isAdmin={isAdminMode} lang={lang} t={t} isFetchingNextPage={isFetchingNextPage}
-                  isLoading={isLoading}
-                  onManageClick={actions.handleManageClick} onRefresh={actions.handleRefresh} onTogglePinned={logic.togglePinned}
-                  onToggleHidden={actions.handleToggleHidden} onSetGroupCover={logic.setGroupCover} onEditPhoto={actions.handleEditPhoto}
-                  onLoadMore={actions.handleLoadMoreCallback} hasNextPage={!!hasNextPage}
-                  onDeletePhotos={actions.handleDeletePhotos} onGroupPhotos={actions.handleGroupPhotos} onBatchEdit={actions.handleBatchEdit}
-                  onBatchToggleHidden={actions.handleBatchToggleHidden} onAiAnalyze={actions.handleAiAnalyze}
-                  onBatchAiAnalyze={logic.handleBatchAiIdentifyTrigger} onCancelAnalyze={logic.abortAnalysis} isAnalyzing={logic.loadingType === 'analyzing'} onImport={actions.handleImport}
+                  {...logic} isAdmin={isAdminMode} isFetchingNextPage={!!infinitePhotosQuery.isFetchingNextPage}
+                  isLoading={infinitePhotosQuery.isLoading}
+                  onManageClick={logic.handleManageClick} onRefresh={logic.onRefresh}
+                  onLoadMore={logic.handleLoadMoreCallback} hasNextPage={!!infinitePhotosQuery.hasNextPage}
+                  onImport={logic.handleImport}
                 />
               </div>
               <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                 <div className="flex flex-col h-full bg-brand-bg">
                   <PublicGallery 
-                    photos={logic.photos} categories={logic.categories} tags={logic.tags} settings={logic.settings}
-                    isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'} isFetchingNextPage={isFetchingNextPage}
+                    photos={logic.photos}
+                    isRefreshing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'} isFetchingNextPage={infinitePhotosQuery.isFetchingNextPage}
                     onExit={handleExitPublic} showExit={true} onRefresh={handleRefreshPublic}
-                    columns={logic.columns} setColumns={logic.setColumns} totalCount={logic.cloudCount}
-                    user={user} loginWithGoogle={logic.loginWithGoogle} onLoadMore={actions.handleLoadMoreCallback} hasMore={hasNextPage}
+                    totalCount={logic.cloudCount}
+                    user={user} loginWithGoogle={logic.loginWithGoogle} onLoadMore={logic.handleLoadMoreCallback} hasMore={infinitePhotosQuery.hasNextPage}
                   />
                 </div>
               </div>
@@ -222,8 +236,8 @@ export const AdminViewContent: React.FC = () => {
             {(logic.activeScreen === 'manage' || logic.activeScreen === 'settings') && (
               <div className="absolute inset-0 z-20 bg-brand-bg">
                 <SettingsScreen 
-                  setActiveScreen={logic.setActiveScreen} saveSettings={logic.saveSettings} handleLogoUpload={actions.handleLogoUpload}
-                  performPushSync={actions.handlePerformPushSync} performPullSync={actions.handlePerformPullSync} 
+                  setActiveScreen={logic.setActiveScreen} saveSettings={logic.saveSettings} handleLogoUpload={logic.handleLogoUpload}
+                  performPushSync={logic.performPushSync} performPullSync={logic.performPullSync} 
                   refreshCloudData={async () => logic.onRefresh()} cloudCount={logic.cloudCount} lastSyncTime={lastSyncTime}
                   isSyncing={logic.loadingType === 'sync-pull' || logic.loadingType === 'sync-push'}
                   onRunMaintenance={handleRunMaintenance}
@@ -235,19 +249,7 @@ export const AdminViewContent: React.FC = () => {
 
           <AnimatePresence>
             {(logic.editPhotoId || logic.newPhotoData) && (
-              <PhotoEditDrawer 
-                photos={logic.photos} editPhotoId={logic.editPhotoId} resetAddState={logic.resetAddState} 
-                saveNewPhoto={actions.handleSaveNewPhoto} formState={logic.formState} updateForm={logic.updateForm}
-                showOtherFields={logic.showOtherFields} setShowOtherFields={logic.setShowOtherFields}
-                newPhotoData={logic.newPhotoData} setNewPhotoData={logic.setNewPhotoData}
-                onDelete={(id) => logic.handleDeletePhoto(id)}
-                editPhotoPreview={(() => {
-                  if (!logic.editPhotoId) return null;
-                  const photo = logic.photos.find((p: Photo) => p.id === logic.editPhotoId);
-                  return photo ? getCacheBustedImageUrl(photo, 'image') : null;
-                })()}
-                abortAnalysis={logic.abortAnalysis} handleSingleAiAnalyze={logic.handleSingleAiAnalyze} handleTranslate={logic.handleTranslate} t={t}
-              />
+              <PhotoEditDrawer />
             )}
           </AnimatePresence>
         </div>

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useGalleryStore } from '../store';
+import { useGalleryStore, useShallow } from '../store';
 import { User, AppSettings } from '../types';
 import { fetchSettings } from '../services/settingService';
 import { getPhotoCount } from '../services/photoService';
@@ -17,7 +17,14 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
     isSyncing, setIsSyncing, 
     settings, setSettings,
     adminPreviewMode, setAdminPreviewMode 
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+    isSyncing: (s.loadingType as string) === 'sync-pull' || (s.loadingType as string) === 'sync-push',
+    setIsSyncing: s.setIsSyncing,
+    settings: s.settings,
+    setSettings: s.setSettings,
+    adminPreviewMode: s.adminPreviewMode,
+    setAdminPreviewMode: s.setAdminPreviewMode
+  })));
 
   useEffect(() => {
     if (user?.id) {

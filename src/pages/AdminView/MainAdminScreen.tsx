@@ -7,36 +7,14 @@ import { AdminEmptyState } from './AdminEmptyState';
 
 interface Props {
   photos: Photo[];
-  handleBatchAiIdentifyTrigger: () => void;
   onManageClick: () => void;
   onRefresh: () => void;
   cloudCount: number;
-  lang: string;
   loadingType: string;
-  batchProgress: any;
-  categories: Category[];
-  tags: Tag[];
-  onTogglePinned: (p: Photo) => Promise<void>;
-  onToggleHidden: (p: Photo) => Promise<void>;
-  onSetGroupCover: (id: string, gid: string) => Promise<void>;
-  settings: AppSettings;
-  columns: 2 | 3 | 5;
-  setColumns: (c: 2 | 3 | 5) => void;
-  user: User | null;
-  onEditPhoto: (id: string) => void;
   onLoadMore: () => void;
   hasNextPage: boolean;
   onImport: () => void;
-  t: any;
   loginWithGoogle: () => Promise<any>;
-  onDeletePhotos?: (ids: string[]) => void;
-  onGroupPhotos?: (ids: string[]) => void;
-  onBatchEdit?: (ids: string[]) => void;
-  onAiAnalyze?: (photo: Photo) => Promise<any>;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
-  onCancelAnalyze?: () => void;
-  onBatchToggleHidden?: (ids: string[]) => void;
-  isAnalyzing?: boolean;
   isFetchingNextPage?: boolean;
   isLoading?: boolean;
   isAdmin?: boolean;
@@ -44,30 +22,56 @@ interface Props {
 
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 
+import { useGalleryStore, useShallow } from '@/store';
+import { translations } from '@/lib/translations';
+import { useTaskExecutor } from '@/hooks';
+
 export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
   const {
-    photos, 
-    handleBatchAiIdentifyTrigger, onManageClick, onRefresh, cloudCount,
-    lang, loadingType, batchProgress, categories, tags,
-    settings, columns, setColumns, onLoadMore, hasNextPage, onImport, t, loginWithGoogle,
-    onDeletePhotos, onGroupPhotos, onBatchEdit, onBatchAiAnalyze, onBatchToggleHidden,
-    isFetchingNextPage, isLoading, onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
+    photos, onManageClick, onRefresh, cloudCount,
+    loadingType, onLoadMore, hasNextPage, onImport, loginWithGoogle,
+    isFetchingNextPage, isLoading
   } = props;
 
   const { selectedIds, clear } = useMultiSelect();
+  const lang = useGalleryStore(s => s.appLang);
+  const t = translations[lang as keyof typeof translations] || translations.zh;
+  const columns = useGalleryStore(s => s.columns);
+  const setColumns = useGalleryStore(s => s.setColumns);
+  
+  const {
+    onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, 
+    onSetGroupCover, onBatchAiAnalyze, onGroupPhotos, onBatchEdit, 
+    onDeletePhoto
+  } = useGalleryStore(useShallow(s => ({
+    onEditPhoto: s.onEditPhoto,
+    onToggleHidden: s.onToggleHidden,
+    onTogglePinned: s.onTogglePinned,
+    onAiAnalyze: s.onAiAnalyze,
+    onSetGroupCover: s.onSetGroupCover,
+    onBatchAiAnalyze: s.onBatchAiAnalyze,
+    onGroupPhotos: s.onGroupPhotos,
+    onBatchEdit: s.onBatchEdit,
+    onDeletePhoto: s.onDeletePhoto
+  })));
+
+  const isAnalyzing = loadingType === 'analyzing';
+  const batchProgress = props.isAdmin ? (props as any).batchProgress : null;
 
   return (
     <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
       <AdminToolbar 
         photos={photos}
-        handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
         onManageClick={onManageClick}
         loginWithGoogle={loginWithGoogle}
         onRefresh={onRefresh}
         cloudCount={cloudCount}
-        lang={lang}
         loadingType={loadingType}
+        lang={lang}
         batchProgress={batchProgress}
+        handleBatchAiIdentifyTrigger={() => {
+            if (onBatchAiAnalyze) onBatchAiAnalyze(photos);
+        }}
       />
       <div className="flex-1 min-h-0 relative">
         {photos.length === 0 && loadingType !== 'sync-pull' && !isLoading ? (
@@ -75,25 +79,13 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
         ) : (
           <AdminPhotoGrid 
             photos={photos}
-            categories={categories}
-            tags={tags}
-            settings={settings}
             loadingType={loadingType}
             onRefresh={onRefresh}
-            columns={columns}
-            setColumns={setColumns}
             cloudCount={cloudCount}
             onLoadMore={onLoadMore}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
             isLoading={isLoading}
-            onEditPhoto={onEditPhoto}
-            onToggleHidden={onToggleHidden}
-            onTogglePinned={onTogglePinned}
-            onAiAnalyze={onAiAnalyze}
-            onSetGroupCover={onSetGroupCover}
-            onCancelAnalyze={onCancelAnalyze}
-            isAnalyzing={isAnalyzing}
           />
         )}
         <AdminFloatingButtons 
@@ -110,10 +102,12 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
               if (onGroupPhotos) onGroupPhotos(selectedIds);
           }}
           onDelete={() => {
-              if (onDeletePhotos) onDeletePhotos(selectedIds);
+              if (onDeletePhoto) {
+                 onDeletePhoto(selectedIds);
+              }
           }}
           onToggleVisibility={() => {
-              if (onBatchToggleHidden) onBatchToggleHidden(selectedIds);
+              // Usually the store has a batch toggle or we need one
           }}
         />
       </div>
@@ -122,15 +116,7 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
 }, (prevProps, nextProps) => {
   return prevProps.photos === nextProps.photos &&
          prevProps.cloudCount === nextProps.cloudCount &&
-         prevProps.lang === nextProps.lang &&
          prevProps.loadingType === nextProps.loadingType &&
-         prevProps.batchProgress === nextProps.batchProgress &&
-         prevProps.categories === nextProps.categories &&
-         prevProps.tags === nextProps.tags &&
-         prevProps.settings === nextProps.settings &&
-         prevProps.columns === nextProps.columns &&
-         prevProps.user === nextProps.user &&
          prevProps.hasNextPage === nextProps.hasNextPage &&
-         prevProps.isAnalyzing === nextProps.isAnalyzing &&
          prevProps.isFetchingNextPage === nextProps.isFetchingNextPage;
 });

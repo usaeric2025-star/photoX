@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
-import { updatePhotosGroupInCloud, setPhotoAsGroupCoverInCloud } from '../../services/photoMutationService';
+import { updatePhotosGroupInCloud, setPhotoAsGroupCoverInCloud } from '../../services/photoService';
 import { useFeedback, useInvalidatePhotos } from '../';
 import { Photo } from '../../types/photo';
 import { reportError } from '@/lib/errorReporter';

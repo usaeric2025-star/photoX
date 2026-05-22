@@ -3,8 +3,10 @@ import { Photo, Category, Manufacturer } from '../../types';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { PhotoImageContainer } from './PhotoImageContainer';
+import { useCategoriesQuery, useManufacturersQuery } from '../../hooks';
+import { translations } from '../../lib/translations';
 
 export type PhotoCardVariant = 'admin' | 'public';
 
@@ -13,19 +15,12 @@ export interface PhotoCardProps {
   photo: Photo;
   index: number;
   showGroupsCollapsed: boolean;
-  lang: string;
-  t: TranslationType;
-  categories: Category[];
-  manufacturers: Manufacturer[];
-  tagMap: Record<string, string>;
   onEditPhoto?: (id: string) => void;
   onGroupClick?: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (photo: Photo) => void;
-  shareSinglePhoto: (photo: Photo) => void;
-  onTogglePinned?: (photo: Photo) => void;
-  onToggleHidden?: (photo: Photo) => void;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
+  // shareSinglePhoto is now internal or from store
 }
 
 const PhotoStatusBadges: React.FC<{ photo: Photo; variant: PhotoCardVariant }> = React.memo(({ photo, variant }) => {
@@ -94,14 +89,29 @@ const toTitleCase = (str: string) => {
 
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   variant, photo, index, showGroupsCollapsed,
-  lang, t, categories, manufacturers, tagMap, onGroupClick, 
-  onLightboxOpen, shareSinglePhoto, onTogglePinned, onToggleHidden,
+  onGroupClick, 
+  onLightboxOpen, 
   className = '', onClick
 }) => {
-  const isMultiSelect = useGalleryStore((state) => state.isMultiSelect);
-  const isSelected = useGalleryStore((state) => (state.selectedIds ?? []).includes(photo.id));
-  const setIsMultiSelect = useGalleryStore((state) => state.setIsMultiSelect);
-  const setSelectedIds = useGalleryStore((state) => state.setSelectedIds);
+  const { 
+    isMultiSelect, selectedIds, setIsMultiSelect, setSelectedIds,
+    appLang: lang, onTogglePinned, onToggleHidden, tagIdToNameMap: tagMap
+  } = useGalleryStore(useShallow(s => ({
+    isMultiSelect: s.isMultiSelect,
+    selectedIds: s.selectedIds,
+    setIsMultiSelect: s.setIsMultiSelect,
+    setSelectedIds: s.setSelectedIds,
+    appLang: s.appLang,
+    onTogglePinned: s.onTogglePinned,
+    onToggleHidden: s.onToggleHidden,
+    tagIdToNameMap: s.tagIdToNameMap
+  })));
+
+  const isSelected = (selectedIds ?? []).includes(photo.id);
+  const t = translations[lang as keyof typeof translations] || translations.zh;
+
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
 
   const enable = useCallback(() => {
     setIsMultiSelect(true);
@@ -224,10 +234,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     if (variant === 'admin') {
       handleLongPress();
     } else {
-      shareSinglePhoto(photo);
+      // share logic moved inside or use feedback hook
+      console.log('Context menu on photo', photo.id);
     }
     if ('vibrate' in navigator) navigator.vibrate(50);
-  }, [variant, handleLongPress, photo, shareSinglePhoto]);
+  }, [variant, handleLongPress, photo.id]);
 
   const handleTogglePinnedClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

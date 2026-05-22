@@ -17,12 +17,12 @@ interface Props {
   newPhotoData?: string | null;
   editPhotoPreview?: string | null;
   setNewPhotoData?: (data: string | null) => void;
-  handleSingleAiAnalyze: (imageData: string | null, catId?: string, editId?: string) => Promise<any>;
+  analyzeSingle: (photo: Photo) => Promise<any>;
   saveNewPhoto: () => Promise<void>;
 }
 
 export const usePhotoEditLogic = (props: Props) => {
-  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, handleSingleAiAnalyze, saveNewPhoto } = props;
+  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, analyzeSingle, saveNewPhoto } = props;
   const isAnalyzing = useGalleryStore(s => s.isAnalyzing);
   const aiDebugInfo = useGalleryStore(s => s.aiDebugInfo);
   const setPromptDialog = useGalleryStore(s => s.setPromptDialog);
@@ -106,7 +106,7 @@ export const usePhotoEditLogic = (props: Props) => {
     
     if (editPhotoId && !editPhotoId.startsWith('temp-')) {
         try {
-            const m = await import('../../../services/photoMutationService');
+            const m = await import('../../../services/photoService');
             await m.updatePhotoHidden(editPhotoId, nextValue);
             showSuccess(`照片已${nextValue ? '隐藏' : '显示'}`);
         } catch (e) {
@@ -124,8 +124,12 @@ export const usePhotoEditLogic = (props: Props) => {
     const data = newPhotoData || editPhotoPreview;
     if (!data) return;
     
-    if (handleSingleAiAnalyze) {
-      withLoading(() => handleSingleAiAnalyze(data, formState.category_id || undefined, editPhotoId || undefined)).catch(()=>{});
+    if (analyzeSingle) {
+      const p = { 
+        id: editPhotoId || '', uri: data, image_url: data, 
+        category_id: formState.category_id || undefined 
+      } as Photo;
+      withLoading(() => analyzeSingle(p)).catch(()=>{});
     } else {
       showError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
     }

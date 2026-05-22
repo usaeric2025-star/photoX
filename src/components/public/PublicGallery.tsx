@@ -6,15 +6,15 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
 import { GroupDetailView } from '../GroupDetailView';
 import { GalleryHeader } from '../PublicGallery/GalleryHeader';
-import { GalleryFilters } from '../PublicGallery/GalleryFilters';
-import { GalleryGrid } from '../PublicGallery/GalleryGrid';
+import { GalleryFilters } from '../ui/GalleryFilters';
+import PhotoBoard from '@/components/photo/PhotoGrid';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GalleryDialogs } from '../PublicGallery/GalleryDialogs';
 import { PublicFloatingButtons } from './PublicFloatingButtons';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
-import { useScrollRestoration, usePhotoFilters, useFeedback, useManufacturersQuery, useCategoriesQuery, useTagsQuery } from '../../hooks';
-import { useGalleryStore } from '../../store';
+import { useScrollRestoration, usePhotoFilters, useFeedback, useManufacturersQuery, useCategoriesQuery, useTagsQuery, useSettings } from '../../hooks';
+import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { useNavigate } from 'react-router-dom';
 import { getPhotoDisplayName } from '../../lib/ui-helpers';
@@ -23,20 +23,14 @@ import { globalHandleError } from '../../utils/errorHandler';
 
 interface PublicGalleryProps {
   photos: Photo[];
-  categories: Category[];
-  tags: Tag[];
-  manufacturers?: Manufacturer[];
   onExit?: () => void;
   showExit?: boolean;
   onLogin?: () => void;
   loginWithGoogle?: () => Promise<any>;
-  settings?: AppSettings;
   isRefreshing?: boolean;
   isFetchingNextPage?: boolean;
   onRefresh?: () => void;
   user?: User | null;
-  columns?: 2 | 3 | 5;
-  setColumns?: (val: 2 | 3 | 5) => void;
   totalCount?: number;
   initialHash?: string;
   initialGroupId?: string;
@@ -51,53 +45,56 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useFeedback();
 
+  // Queries
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: contextTags = [] } = useTagsQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
+  const { settings } = useSettings();
+
   // State for login
   const [showPassPrompt, setShowPassPrompt] = useState(false);
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
 
   // Store 
-  const _searchQuery = useGalleryStore(s => s.searchQuery);
-  const _setSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const { 
+    searchQuery: _searchQuery, setSearchQuery: _setSearchQuery,
+    showGroupsCollapsed, appLang: langStore,
+    lightboxIndex, setLightboxIndex,
+    showWhatsAppChoice, setShowWhatsAppChoice,
+    activeGroupId, setActiveGroupId,
+    activePhotoId, setActivePhotoId,
+    isStaffMode, setIsStaffMode,
+    sortOrder, setSortOrder
+  } = useGalleryStore(useShallow(s => ({
+    searchQuery: s.searchQuery,
+    setSearchQuery: s.setSearchQuery,
+    showGroupsCollapsed: s.showGroupsCollapsed,
+    appLang: s.appLang,
+    lightboxIndex: s.lightboxIndex,
+    setLightboxIndex: s.setLightboxIndex,
+    showWhatsAppChoice: s.showWhatsAppChoice,
+    setShowWhatsAppChoice: s.setShowWhatsAppChoice,
+    activeGroupId: s.activeGroupId,
+    setActiveGroupId: s.setActiveGroupId,
+    activePhotoId: s.activePhotoId,
+    setActivePhotoId: s.setActivePhotoId,
+    isStaffMode: s.isStaffMode,
+    setIsStaffMode: s.setIsStaffMode,
+    sortOrder: s.sortOrder,
+    setSortOrder: s.setSortOrder
+  })));
+
   const searchQuery = props.searchQuery !== undefined ? props.searchQuery : _searchQuery;
   const setSearchQuery = props.onSearchChange || _setSearchQuery;
-  const selectedCatCode = useGalleryStore(s => s.filterCatId);
-  const setSelectedCatCode = useGalleryStore(s => s.setFilterCatId);
-  const filterSubId = useGalleryStore(s => s.filterSubId);
-  const setFilterSubId = useGalleryStore(s => s.setFilterSubId);
-  const selectedTagIds = useGalleryStore(s => s.filterTagIds);
-  const setSelectedTagIds = useGalleryStore(s => s.setFilterTagIds);
-  const sortOrder = useGalleryStore(s => s.sortOrder);
-  const setSortOrder = useGalleryStore(s => s.setSortOrder);
-  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
-  const setShowGroupsCollapsed = useGalleryStore(s => s.setShowGroupsCollapsed);
-  const langStore = useGalleryStore(s => s.appLang);
-  const setLang = useGalleryStore(s => s.setAppLang);
-  const columns = useGalleryStore(s => s.columns);
-  const setColumns = useGalleryStore(s => s.setColumns);
-  const lightboxIndex = useGalleryStore(s => s.lightboxIndex);
-  const setLightboxIndex = useGalleryStore(s => s.setLightboxIndex);
-  const showWhatsAppChoice = useGalleryStore(s => s.showWhatsAppChoice);
-  const setShowWhatsAppChoice = useGalleryStore(s => s.setShowWhatsAppChoice);
-  const activeGroupId = useGalleryStore(s => s.activeGroupId);
-  const setActiveGroupId = useGalleryStore(s => s.setActiveGroupId);
-  const activePhotoId = useGalleryStore(s => s.activePhotoId);
-  const setActivePhotoId = useGalleryStore(s => s.setActivePhotoId);
-  const isStaffMode = useGalleryStore(s => s.isStaffMode);
-  const setIsStaffMode = useGalleryStore(s => s.setIsStaffMode);
-
-  // Queries
-  const { data: qManufacturers = [] } = useManufacturersQuery();
-  const manufacturers = qManufacturers;
-  const contextTags = props.tags || [];
-
+  
   const lang = langStore || 'zh';
   const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
 
   // Logic
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     props.photos,
-    props.categories,
+    categories,
     contextTags,
     {
       showGroupsCollapsed,
@@ -111,18 +108,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     return map;
   }, [contextTags]);
 
-  const sortedTags = useMemo(() => {
-    const pinnedIds = new Set((props.settings?.pinned_tags || []).map(id => String(id)));
-    const enrichedTags = contextTags.map(t => {
-      const strId = String(t.id);
-      return {
-        ...t,
-        is_pinned: t.is_pinned || pinnedIds.has(strId)
-      };
-    });
-    return sortTagsByPopularity(enrichedTags);
-  }, [contextTags, props.settings?.pinned_tags]);
-
   const virtuosoRef = useRef<any>(null);
   const scrollToTop = () => virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
 
@@ -135,14 +120,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   }, [props.onLoadMore, props.hasMore, props.isRefreshing]);
 
   const getShareMessage = useCallback((p: Photo) => {
-    const displayName = getPhotoDisplayName(p, props.categories, lang, t);
+    const displayName = getPhotoDisplayName(p, categories, lang, t);
     const suffix = isStaffMode ? (p.manual_code ? ` [${p.manual_code}]` : '') : (p.model_number ? ` (${p.model_number})` : '');
     const shareUrl = `${window.location.origin}/h/${p.image_hash}`;
 
     if (lang === 'ms') return `Halo, saya berminat dengan perabot ini:\n\n${displayName}${suffix}\n\nLink: ${shareUrl}`;
     if (lang === 'en') return `Hello, I'm interested in this furniture:\n\n${displayName}${suffix}\n\nLink: ${shareUrl}`;
     return `你好，我对这个家具有兴趣：\n\n${displayName}${suffix}\n\n链接: ${shareUrl}`;
-  }, [props.categories, lang, t, isStaffMode]);
+  }, [categories, lang, t, isStaffMode]);
 
   const openWhatsApp = (num: string, photo?: Photo) => {
     if (!num) return;
@@ -179,8 +164,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   }, [t, activeGroupId, showSuccess, showError]);
 
   const handleContactWhatsApp = (photo: Photo) => {
-    if (props.settings?.whatsapp_1 && !props.settings?.whatsapp_2) {
-      openWhatsApp(props.settings.whatsapp_1, photo);
+    if (settings?.whatsapp_1 && !settings?.whatsapp_2) {
+      openWhatsApp(settings.whatsapp_1, photo);
     } else {
       setShowWhatsAppChoice(true);
     }
@@ -200,14 +185,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       }
       return (
         <div className="py-12 mt-12 flex flex-col items-center justify-center opacity-30 select-none pb-32">
-          {props.settings?.logo_url && <img src={props.settings.logo_url} className="w-6 h-6 object-cover rounded-xl mb-3 grayscale" alt="Logo" />}
+          {settings?.logo_url && <img src={settings.logo_url} className="w-6 h-6 object-cover rounded-xl mb-3 grayscale" alt="Logo" />}
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-navy">
-            {props.settings?.app_name || 'PhotoX Gallery'}
+            {settings?.app_name || 'PhotoX Gallery'}
           </span>
         </div>
       );
     }
-  }), [props.settings?.logo_url, props.settings?.app_name, props.isFetchingNextPage, t.loading]);
+  }), [settings?.logo_url, settings?.app_name, props.isFetchingNextPage, t.loading]);
 
   const isSyncing = !!props.isRefreshing;
 
@@ -245,58 +230,24 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       {lightboxIndex === null && (
         <GalleryHeader 
           totalCount={props.totalCount}
-          settings={props.settings}
           photos={props.photos}
           isRefreshing={isSyncing}
           isMultiSelect={false}
-          lang={lang}
-          t={t}
           onRefresh={props.onRefresh}
-          onSetLang={setLang}
           onExit={props.onExit}
           onLogin={() => setShowPassPrompt(true)}
         />
       )}
 
       <GalleryFilters 
-        settings={props.settings}
-        categories={props.categories}
-        sortedTags={sortedTags}
         onScrollToTop={scrollToTop}
+        variant="public"
       />
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
         <AnimatePresence>
           {(() => {
             const isInitialLoad = isSyncing && gridPhotos.length === 0;
-            if (isInitialLoad) {
-              const skeletonCount = getSkeletonCount(props.totalCount, columns);
-              return (
-                <motion.div 
-                  key="skeleton"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute inset-0 z-10 bg-brand-bg"
-                >
-                  <GallerySkeleton columns={columns} count={skeletonCount} />
-                </motion.div>
-              );
-            }
-            if (gridPhotos.length === 0 && !props.isFetchingNextPage) {
-              return (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="h-full"
-                >
-                  <GalleryEmpty t={t} />
-                </motion.div>
-              );
-            }
             return (
               <motion.div
                 key="grid"
@@ -306,17 +257,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                 className="h-full"
               >
                 <ErrorBoundary>
-                  <GalleryGrid 
+                  <PhotoBoard
                     virtuosoRef={virtuosoRef}
                     gridPhotos={gridPhotos}
                     displayPhotos={displayPhotos}
                     virtuosoComponents={virtuosoComponents}
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
-                    categories={props.categories}
-                    manufacturers={manufacturers}
-                    tagMap={tagMap}
-                    shareSinglePhoto={shareSinglePhoto}
+                    isInitialLoad={isInitialLoad}
+                    totalCount={props.totalCount}
                   />
                 </ErrorBoundary>
               </motion.div>
@@ -341,12 +290,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
         isStaffMode={isStaffMode}
-        lang={lang}
-        t={t}
-        categories={props.categories}
-        manufacturers={manufacturers}
-        tagMap={tagMap}
-        allTags={contextTags}
         shareGroup={shareGroup}
         contactWhatsApp={() => setShowWhatsAppChoice(true)}
       />
@@ -360,7 +303,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         setPassError={setPassError}
         t={t}
         loginWithGoogle={props.loginWithGoogle}
-        settings={props.settings}
         setIsStaffMode={setIsStaffMode}
         navigate={navigate}
         showWhatsAppChoice={showWhatsAppChoice}
@@ -378,9 +320,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
               onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : (displayPhotos?.length || 0) - 1)}
               onNext={() => setLightboxIndex(lightboxIndex < (displayPhotos?.length || 0) - 1 ? lightboxIndex + 1 : 0)}
               contactWhatsApp={handleContactWhatsApp}
-              tagMap={tagMap}
-              categories={props.categories}
-              manufacturers={manufacturers || []}
             />
         )}
       </AnimatePresence>

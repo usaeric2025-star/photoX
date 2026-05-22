@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
+import { updatePhotosGroupInCloud } from '../../services/photoService';
 import { getGroupById, saveGroupToCloud } from '../../services/groupService';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupSettingsSheet } from './GroupSettingsSheet';
@@ -31,56 +31,64 @@ import { GroupGridView } from './GroupGridView';
 
 import { useAdminMode } from '../../hooks/useAdminMode';
 
+import { useGalleryStore } from '../../store';
+import { useFeedback } from '../../hooks';
+import { translations } from '../../lib/translations';
+
+import { 
+  useInfinitePhotos, useCategoriesQuery, useManufacturersQuery 
+} from '../../hooks';
+import { cleanPhotos } from '../../lib/filters';
+import { PAGINATION } from '../../constants/config';
+
 export interface GroupAdminShellProps {
-  activeGroupId: string | null;
   initialPhotoId?: string | null;
-  setActiveGroupId: (id: string | null) => void;
-  photos: Photo[];
-  onBatchEdit?: (ids: string[]) => void;
-  onUngroup?: (groupId: string) => void;
   onAddPhotoToGroup?: () => void;
-  updateGroupPhotos?: (ids: string[], groupId: string | null) => void;
   onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
-  onRefresh?: () => void;
-  manufacturers?: Manufacturer[];
-  isStaffMode?: boolean;
-  contactWhatsApp?: (photo: Photo) => void;
-  onToggleHidden?: (photo: Photo) => void;
-  lang?: string;
-  t?: TranslationType;
-  categories?: Category[];
-  tagMap?: Record<string, string>;
-  allTags?: Tag[];
-  updatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
-  onEditPhoto?: (photo: Photo) => void;
 }
 
-import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
-import { useGalleryStore } from '../../store';
-import { useFeedback } from '../../hooks';
-
-import { DimensionEditor } from '../admin/edit/DimensionEditor';
-
 export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
+  const { 
+    onAddPhotoToGroup, onAiAnalyze, onCancelAnalyze, isAnalyzing,
+  } = props;
   const { showError } = useFeedback();
   const isAdminMode = useAdminMode();
   const {
-    activeGroupId, setActiveGroupId, photos,
-    onBatchEdit, onUngroup, onAddPhotoToGroup,
-    updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
-    onRefresh,
-    manufacturers = [],
-    isStaffMode = false,
-    contactWhatsApp = () => {},
-    onToggleHidden = () => {},
-    lang = 'en',
-    t, categories, tagMap, allTags = [],
-    updatePhoto: hookUpdatePhoto,
-    onEditPhoto
-  } = props;
+     activeGroupId, setActiveGroupId, appLang,
+     tagIdToNameMap, isStaffMode,
+     onToggleHidden: storeToggleHidden, onUpdatePhoto, onTogglePinned, onDeletePhoto,
+     adminPreviewMode,
+     setEditPhotoId,
+     filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
+  } = useGalleryStore();
+
+  const infinitePhotosQuery = useInfinitePhotos({
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: debouncedSearchQuery,
+    sortOrder: sortOrder,
+    isAdminMode: true
+  }, PAGINATION.ADMIN_BATCH_SIZE);
+
+  const photos = React.useMemo(() => {
+    const allPhotos = infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
+    return cleanPhotos(allPhotos);
+  }, [infinitePhotosQuery.data]);
+
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
+
+  const { 
+    onBatchAiAnalyze, onBatchEdit, onUngroup, 
+    onTogglePinned: storeTogglePinned, tagIdToNameMap: tagMap,
+    onEditPhoto: storeEditPhoto
+  } = useGalleryStore();
+
+  const contactWhatsApp = (photo: Photo) => {
+    // Placeholder or implement if needed
+  };
 
   const {
     activeGroupPhotos,
@@ -106,35 +114,23 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     setCover,
     setPromptDialog,
     setAlertDialog,
-    isGroupPhotosLoading
+    isGroupPhotosLoading,
+    handleToggleTag,
+    handleBulkAction: hookHandleBulkAction
   } = useGroupAdminLogic({
-    activeGroupId,
     initialPhotoId: props.initialPhotoId,
-    photos,
-    hookUpdatePhoto,
-    onRefresh: onRefresh || (() => {}),
-    onUngroup,
-    setActiveGroupId
+    photos // MUST pass photos here since we pulled it via hook
   });
 
-  // Watch for batch triggers
-  useEffect(() => {
-    if (batchAiAnalyzeTrigger) {
-      if (onBatchAiAnalyze) {
-         onBatchAiAnalyze(activeGroupPhotos);
-      }
-      setBatchAiAnalyzeTrigger(false);
-    }
-  }, [batchAiAnalyzeTrigger, activeGroupPhotos, onBatchAiAnalyze, setBatchAiAnalyzeTrigger]);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  useEffect(() => {
-    if (batchEditingIds) {
-      if (onBatchEdit) {
-        onBatchEdit(batchEditingIds);
-      }
-      setBatchEditingIds(null);
+  const handleEditPhoto = useCallback((p: Photo) => {
+    if (storeEditPhoto) {
+       storeEditPhoto(p);
+    } else {
+       setEditPhotoId(p.id);
     }
-  }, [batchEditingIds, onBatchEdit, setBatchEditingIds]);
+  }, [storeEditPhoto, setEditPhotoId]);
 
   const handlePhotoClick = useCallback((photo: Photo) => {
     if (isMultiSelect) {
@@ -236,7 +232,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
            {/* Multi-Select Floating Bar */}
            <GroupMultiSelectBar 
              activeGroupPhotos={activeGroupPhotos}
-             handleBulkAction={handleBulkAction}
+             handleBulkAction={hookHandleBulkAction}
            />
 
             <div className="p-4 flex justify-center">
@@ -280,15 +276,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                       onClose={handleCloseLightbox}
                       onPrev={() => handlePrevLightbox(currentIndex)}
                       onNext={() => handleNextLightbox(currentIndex)}
-                      categories={categories || []}
-                      manufacturers={manufacturers}
-                      tagMap={tagMap || {}}
                       contactWhatsApp={contactWhatsApp}
                       onUngroup={handleUngroupLightbox}
                       onSetGroupCover={handleSetGroupCoverLightbox}
-                      onEditPhoto={(p) => {
-                        onEditPhoto?.(p);
-                      }}
+                      onEditPhoto={handleEditPhoto}
                       onToggleHidden={handleToggleHiddenLightbox}
                       onAiAnalyze={onAiAnalyze}
                       onCancelAnalyze={onCancelAnalyze}

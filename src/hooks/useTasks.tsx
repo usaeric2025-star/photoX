@@ -145,8 +145,12 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(timer);
   }, []);
 
+  const value = React.useMemo(() => ({
+    tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask
+  }), [tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask]);
+
   return (
-    <TaskContext.Provider value={{ tasks, addTask, updateTask, removeTask, clearCompleted, isAvoidingSelection, setAvoidingSelection, cancelTask }}>
+    <TaskContext.Provider value={value}>
       {children}
       <BackgroundTaskPanel />
     </TaskContext.Provider>

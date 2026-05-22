@@ -51,8 +51,8 @@ export const saveSettings = async (settings: Partial<AppSettings> & Record<strin
         if (payload.pinned_tags || payload.hot_tags_count !== undefined || payload.hot_tag_threshold !== undefined) {
             payload.tags_json = JSON.stringify({
                 pinned_tags: payload.pinned_tags || [],
-                hot_tags_count: payload.hot_tags_count || 9,
-                hot_tag_threshold: payload.hot_tag_threshold || 1,
+                hot_tags_count: payload.hot_tags_count ?? 9,
+                hot_tag_threshold: payload.hot_tag_threshold ?? 1,
             });
         }
 

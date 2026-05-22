@@ -1,5 +1,5 @@
 import { Photo, User } from '@/types';
-import { checkImageHashExists } from '@/services/photoMutationService';
+import { checkImageHashExists } from '@/services/photoService';
 
 export const useDuplicateCheck = (
   photosRef: React.MutableRefObject<Photo[]>,

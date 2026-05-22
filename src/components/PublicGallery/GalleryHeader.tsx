@@ -4,17 +4,16 @@ import { User, AppSettings, Photo } from '../../types';
 
 import { useAdminMode } from '../../hooks/useAdminMode';
 
+import { useGalleryStore } from '../../store';
+import { translations } from '../../lib/translations';
+
 interface GalleryHeaderProps {
   totalCount?: number;
-  settings?: AppSettings;
   photos: Photo[];
   isRefreshing: boolean;
   isMultiSelect: boolean;
-  lang: string;
-  t: any;
   onRefresh?: () => void;
   onAddPhoto?: () => void;
-  onSetLang: (lang: any) => void;
   onExit: () => void;
   onLogin?: () => void;
   onOpenSettings?: () => void;
@@ -22,20 +21,17 @@ interface GalleryHeaderProps {
 
 export const GalleryHeader: React.FC<GalleryHeaderProps> = (props) => {
   const isAdminMode = useAdminMode();
+  const lang = useGalleryStore(s => s.appLang);
+  const t = translations[lang] || translations.zh;
+
   return (
     <PublicGalleryHeader 
       totalCount={props.totalCount}
-      settings={props.settings}
       photos={props.photos}
       isAdminMode={isAdminMode}
       isRefreshing={props.isRefreshing}
-      isMultiSelect={props.isMultiSelect}
-      lang={props.lang}
-      t={props.t}
-      onHeaderClick={() => {}}
       onRefresh={props.onRefresh || (() => {})}
       onAddPhoto={props.onAddPhoto || (() => {})}
-      onSetLang={props.onSetLang}
       onExit={props.onExit}
       onLogin={props.onLogin}
       onOpenSettings={props.onOpenSettings}

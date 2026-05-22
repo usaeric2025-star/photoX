@@ -1,3 +1,4 @@
+import React, { useCallback } from 'react';
 import { useGalleryStore } from '../store';
 import { toast } from 'sonner';
 import { logErrorToSupabase } from '../services/logService';
@@ -102,5 +103,8 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
 };
 
 export const useErrorHandler = () => {
-  return { handleError: globalHandleError };
+  const handleError = useCallback((error: any, context: string, silent: boolean = false) => {
+    globalHandleError(error, context, silent);
+  }, []);
+  return { handleError };
 };

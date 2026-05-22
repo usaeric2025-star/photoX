@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
-import { Photo, Tag, Category, ProductGroup } from '../types';
+import { Photo, Tag, Category, ProductGroup, Manufacturer } from '../types';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '../utils/photoVisibility';
@@ -15,23 +15,36 @@ import { DB_CONFIG } from '../constants/config';
 import { useAdminMode } from '../hooks/useAdminMode';
 import { useFeedback, useGroupDetailQuery } from '../hooks';
 import { useInfiniteGroupPhotosQuery } from '../hooks/queries/usePhotos';
+import { useGalleryStore } from '../store';
+import { translations } from '../lib/translations';
 
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
 export interface GroupDetailViewProps extends GroupAdminShellProps {
+  activeGroupId: string | null;
+  setActiveGroupId: (id: string | null) => void;
+  photos: Photo[];
   displayPhotos?: Photo[];
   setLightboxIndex?: (idx: number) => void;
   onLongPressStart?: (photo: Photo) => void;
   onLongPressEnd?: () => void;
   shareGroup?: (photos: Photo[]) => void;
-  t: TranslationType;
   initialPhotoId?: string | null;
+  isStaffMode?: boolean;
+  contactWhatsApp?: (photo: Photo) => void;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { activeGroupId, setActiveGroupId, photos, shareGroup, initialPhotoId } = props;
   const isAdminMode = useAdminMode();
   const { showError } = useFeedback();
+
+  const lang = useGalleryStore(s => s.appLang);
+  const t = translations[lang as keyof typeof translations] || translations.zh;
+  
+  const {
+      onEditPhoto, onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing
+  } = useGalleryStore();
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
@@ -115,7 +128,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   if (!activeGroupId) return null;
 
   if (isAdminMode) {
-    return <GroupAdminShell {...props} activeGroupId={activeGroupId} />;
+    return <GroupAdminShell initialPhotoId={initialPhotoId} {...props} />;
   }
 
   return (
@@ -176,11 +189,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
             </div>
             
             {/* Series Story Section */}
-            {(isGroupDataLoading || (groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description)) && (
+            {(isGroupDataLoading || (groupData?.description_translations?.[lang as 'zh'|'en'|'ms'] || groupData?.description)) && (
               <div className="px-5 py-4 bg-white border-b border-slate-100">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-3 bg-blue-600 rounded-full" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{props.t?.seriesStory || 'Series Story'}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t?.seriesStory || 'Series Story'}</span>
                 </div>
                 {isGroupDataLoading ? (
                   <div className="space-y-2">
@@ -189,7 +202,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                   </div>
                 ) : (
                   <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
-                    {groupData?.description_translations?.[props.lang as 'zh'|'en'|'ms'] || groupData?.description}
+                    {groupData?.description_translations?.[lang as 'zh'|'en'|'ms'] || groupData?.description}
                   </p>
                 )}
               </div>
@@ -235,17 +248,12 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                         const next = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
                         setFocusedGroupPhotoId(activeGroupPhotos[next].id);
                       }}
-                      categories={props.categories || []}
-                      manufacturers={props.manufacturers || []}
-                      tagMap={props.tagMap || {}}
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
-                      onEditPhoto={(p) => {
-                        props.onEditPhoto?.(p);
-                      }}
-                      onToggleHidden={props.onToggleHidden}
-                      onAiAnalyze={props.onAiAnalyze}
-                      onCancelAnalyze={props.onCancelAnalyze}
-                      isAnalyzing={props.isAnalyzing}
+                      onEditPhoto={onEditPhoto}
+                      onToggleHidden={onToggleHidden}
+                      onAiAnalyze={onAiAnalyze as any}
+                      onCancelAnalyze={onCancelAnalyze}
+                      isAnalyzing={isAnalyzing}
                     />
                  );
              })()}

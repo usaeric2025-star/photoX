@@ -1,6 +1,6 @@
 import { supabase } from '../supabaseService';
 import { generateThumbHash } from '../../utils/thumbHash';
-import { updatePhotoInCloud } from '../photoMutationService';
+import { updatePhotoInCloud } from '../photoService';
 
 export interface BackfillStats {
   total: number;

@@ -191,13 +191,10 @@ export default function PublicView() {
         <ErrorBoundary>
           <PublicGallery 
             photos={photos}
-            categories={categoriesData}
-            tags={tagsData}
             onExit={() => navigate(ROUTES.ADMIN)}
             onLogin={() => navigate(ROUTES.ADMIN)}
             loginWithGoogle={loginWithGoogle}
             user={user}
-            settings={settings}
             isRefreshing={infiniteQuery.isLoading || infiniteQuery.isFetching}
             onRefresh={handleRefresh}
             onLoadMore={handleLoadMore}

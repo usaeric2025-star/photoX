@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { saveGroupToCloud } from '../../services/groupService';
-import { updatePhotosGroupInCloud } from '../../services/photoMutationService';
+import { updatePhotosGroupInCloud } from '../../services/photoService';
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
 import { useRemoveFromGroupMutation } from '../../hooks/mutations/useGroupOperations';
 import { useGalleryStore } from '../../store';
@@ -12,43 +12,25 @@ import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
 import { useGroupDetailQuery } from '../../hooks';
 
 
-interface UseGroupAdminLogicProps {
-  activeGroupId: string | null;
-  initialPhotoId?: string | null;
-  photos: Photo[];
-  onRefresh: () => void;
-  hookUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
-  propsSetAlertDialog?: (d: DialogData | null) => void;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
-  onBatchEdit?: (ids: string[]) => void;
-  onUngroup?: (groupId: string) => void;
-  setActiveGroupId?: (id: string | null) => void;
-}
-
 export const useGroupAdminLogic = ({
-  activeGroupId,
   initialPhotoId,
   photos,
-  onRefresh,
-  hookUpdatePhoto,
-  propsSetAlertDialog,
-  onBatchAiAnalyze,
-  onBatchEdit,
-  onUngroup,
-  setActiveGroupId
-}: UseGroupAdminLogicProps) => {
+}: { initialPhotoId?: string | null, photos: Photo[] }) => {
   const isAdminMode = useAdminMode();
   const { 
+    activeGroupId, setActiveGroupId, appLang,
+    onTogglePinned, onDeletePhoto, onUpdatePhoto, onToggleHidden, onGroupPhotos, onUngroup: hookOnUngroup,
     setAlertDialog: contextSetAlertDialog, 
     setPromptDialog,
     isMultiSelect, setIsMultiSelect,
     selectedIds, setSelectedIds,
     groupSettingsOpen, setGroupSettingsOpen,
     batchEditingIds, setBatchEditingIds,
-    batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger
+    batchAiAnalyzeTrigger, setBatchAiAnalyzeTrigger,
+    onBatchAiAnalyze, onBatchEdit
   } = useGalleryStore();
   
-  const setAlertDialog = propsSetAlertDialog || contextSetAlertDialog;
+  const setAlertDialog = contextSetAlertDialog;
   const { showError, showSuccess } = useFeedback();
 
   const { mutate: mutateSetCover } = useGroupCoverMutation();
@@ -196,22 +178,17 @@ export const useGroupAdminLogic = ({
   }, [showError, setAlertDialog, photos, dbGroupPhotos, activeGroupId, removePhotosBatch, setActiveGroupId]);
 
   const persistPhotoChange = useCallback(async (photoId: string, updates: Partial<Photo>) => {
-    // Optimistic update: temporarily update local state if possible
-    // Note: Assuming `photos` is provided by the parent via props or context and it's reactive
-    
     try {
-      if (hookUpdatePhoto) {
-        await hookUpdatePhoto(photoId, updates);
+      if (onUpdatePhoto) {
+        await onUpdatePhoto(photoId, updates);
       } else {
-         const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
+         const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoService');
          await serviceUpdatePhoto(photoId, updates);
       }
-      onRefresh();
     } catch (err: any) {
       showError(err, '保存照片修改失败');
-      // Potential rollback would go here if we had local state modification
     }
-  }, [showError, hookUpdatePhoto, onRefresh]);
+  }, [showError, onUpdatePhoto]);
 
   const handleUpdateGroupData = useCallback(async (updates: Partial<ProductGroup>) => {
     if (!activeGroupId || !groupData) return;
@@ -227,9 +204,9 @@ export const useGroupAdminLogic = ({
         const groupPhotos = dbGroupPhotos.length > 0
           ? dbGroupPhotos
           : photos.filter(p => p && p.group_id === activeGroupId);
-        if (groupPhotos.length > 0 && hookUpdatePhoto) {
+        if (groupPhotos.length > 0 && onUpdatePhoto) {
            await Promise.all(
-             groupPhotos.map(p => hookUpdatePhoto(p.id, { is_hidden }))
+             groupPhotos.map(p => onUpdatePhoto(p.id, { is_hidden }))
            );
         }
       }
@@ -237,7 +214,7 @@ export const useGroupAdminLogic = ({
       showError(err, '更新群组资料失败');
       throw err;
     }
-  }, [activeGroupId, groupData, showError, hookUpdatePhoto, photos, dbGroupPhotos]);
+  }, [activeGroupId, groupData, showError, onUpdatePhoto, photos, dbGroupPhotos]);
 
   const handleToggleTag = useCallback((photo: Photo, tagId: string) => {
     const currentTags = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
@@ -256,12 +233,12 @@ export const useGroupAdminLogic = ({
       message: `确定要将群组内所有 ${activeGroupPhotos.length} 张照片的尺寸更新为当前设置吗？此操作不可撤销。`,
       onConfirm: async () => {
         try {
-          if (hookUpdatePhoto) {
+          if (onUpdatePhoto) {
             await Promise.all(
-              activeGroupPhotos.map(p => hookUpdatePhoto(p.id, { dimensions: newDims }))
+              activeGroupPhotos.map(p => onUpdatePhoto(p.id, { dimensions: newDims }))
             );
           } else {
-            const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
+            const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoService');
             await Promise.all(
               activeGroupPhotos.map(p => serviceUpdatePhoto(p.id, { dimensions: newDims }))
             );
@@ -273,7 +250,7 @@ export const useGroupAdminLogic = ({
         setAlertDialog(null);
       }
     });
-  }, [activeGroupId, activeGroupPhotos, showError, hookUpdatePhoto, setAlertDialog]);
+  }, [activeGroupId, activeGroupPhotos, showError, onUpdatePhoto, setAlertDialog]);
 
   const handleReorder = useCallback(async (draggedId: string, targetId: string) => {
     if (draggedId === targetId) return;
@@ -293,7 +270,7 @@ export const useGroupAdminLogic = ({
     }));
     
     try {
-      const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoMutationService');
+      const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoService');
       await Promise.all(
         updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { group_order: p.group_order }))
       );

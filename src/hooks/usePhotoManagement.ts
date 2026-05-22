@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { User, ProductFormData, Photo } from '../types';
+import { useGalleryStore, useShallow } from '../store';
 
 export const usePhotoManagement = (
   user: User | null, 
@@ -9,28 +10,27 @@ export const usePhotoManagement = (
   updatePhotoFn: (params: { id: string; updates: Partial<Photo> }) => Promise<any>,
   updateBatchFn: (params: { userId: string; ids: string[]; updates: Partial<Photo> }) => Promise<any>
 ) => {
-  const [newPhotoData, setNewPhotoData] = useState<string | null>(null);
-  const [formState, setFormState] = useState<ProductFormData>({
-    name: '',
-    category_id: '',
-    tag_ids: [],
-    manufacturer_id: '',
-    model_number: '',
-    manual_code: '',
-    description: '',
-    is_hidden: false,
-    description_translations: { en: '', ms: '' },
-    dimensions: [],
-    price: '',
-    is_group_cover: false
-  });
-  const [showOtherFields, setShowOtherFields] = useState(false);
+  const { 
+    formState, updateForm, newPhotoData, setNewPhotoData, 
+    showOtherFields, setShowOtherFields 
+  } = useGalleryStore(useShallow(s => ({
+    formState: s.formState,
+    updateForm: s.updateForm,
+    newPhotoData: s.newPhotoData,
+    setNewPhotoData: s.setNewPhotoData,
+    showOtherFields: s.showOtherFields,
+    setShowOtherFields: s.setShowOtherFields
+  })));
 
-  const [loadedPhotoId, setLoadedPhotoId] = useState<string | null>(null);
+  const setFormState = useCallback((val: ProductFormData) => {
+    useGalleryStore.setState({ formState: val });
+  }, []);
+
+  const loadedPhotoId = useRef<string | null>(null);
 
   useEffect(() => {
     if (ui.editPhotoId) {
-      if (ui.editPhotoId !== loadedPhotoId) {
+      if (ui.editPhotoId !== loadedPhotoId.current) {
         const photo = photos.find(p => p.id === ui.editPhotoId);
         if (photo) {
           setFormState({
@@ -47,7 +47,7 @@ export const usePhotoManagement = (
             price: photo.price || '',
             is_group_cover: !!photo.is_group_cover
           });
-          setLoadedPhotoId(ui.editPhotoId);
+          loadedPhotoId.current = ui.editPhotoId;
         }
       }
     } else {
@@ -66,22 +66,15 @@ export const usePhotoManagement = (
             price: '',
             is_group_cover: false
         });
-        setLoadedPhotoId(null);
+        loadedPhotoId.current = null;
     }
-  }, [ui.editPhotoId, photos, loadedPhotoId]);
-
-  const updateForm = useCallback((update: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => {
-    setFormState(prev => {
-      const next = typeof update === 'function' ? update(prev) : { ...prev, ...update };
-      return next;
-    });
-  }, []);
+  }, [ui.editPhotoId, photos]);
 
   const resetAddState = useCallback(() => {
     setNewPhotoData(null);
     ui.setEditPhotoId(null);
     ui.setBatchEditIds(null);
-  }, [ui]);
+  }, [ui, setNewPhotoData]);
 
   const saveNewPhoto = async () => {
     if (ui.editPhotoId) {

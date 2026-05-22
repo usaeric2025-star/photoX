@@ -3,7 +3,7 @@ import { Sparkles, CheckSquare, Eye, Globe, RefreshCcw, ChevronDown, Menu, LogIn
 import { Skeleton } from '../ui/Skeleton';
 
 import { translations, LanguageCode } from '../../lib/translations';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { useFeedback, useMultiSelect } from '../../hooks';
 
 import { Photo, AppSettings } from '../../types';
@@ -39,7 +39,20 @@ export const AdminHeader: React.FC<Props> = ({
     isInfiniteMode, setIsInfiniteMode,
     adminPreviewMode, setAdminPreviewMode,
     isStaffMode
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+    settings: s.settings,
+    user: s.user,
+    viewMode: s.viewMode,
+    setViewMode: s.setViewMode,
+    isSyncing: (s.loadingType as string) === 'sync-pull' || (s.loadingType as string) === 'sync-push',
+    activeScreen: s.activeScreen,
+    setActiveScreen: s.setActiveScreen,
+    isInfiniteMode: s.isInfiniteMode,
+    setIsInfiniteMode: s.setIsInfiniteMode,
+    adminPreviewMode: s.adminPreviewMode,
+    setAdminPreviewMode: s.setAdminPreviewMode,
+    isStaffMode: s.isStaffMode
+  })));
   
   const { isMultiSelect, disable, enable } = useMultiSelect();
   const { showError, showSuccess } = useFeedback();
@@ -180,23 +193,6 @@ export const AdminHeader: React.FC<Props> = ({
                   
                   <RefreshMenu show={showRefreshMenu} isInfiniteMode={isInfiniteMode} t={t} toggleInfinite={toggleInfinite} />
                 </div>
-                
-                <button 
-                  onClick={handleBatchAiIdentifyTrigger}
-                  disabled={isAnalyzing}
-                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/50 hover:text-purple-600 bg-white border border-purple-600/10 shadow-sm'}`}
-                  title={t.batchAi}
-                >
-                  {isAnalyzing ? (
-                    batchProgress.current > 0 ? (
-                      <span className="text-[10px] font-bold text-white">{batchProgress.current}</span>
-                    ) : (
-                      <Sparkles size={16} className="animate-spin" />
-                    )
-                  ) : (
-                    <Sparkles size={18} />
-                  )}
-                </button>
 
                  {adminPreviewMode === 'private' && (
                   <button 

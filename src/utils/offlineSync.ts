@@ -1,5 +1,5 @@
 import { opsCache, PendingOp } from './indexedDB';
-import { updatePhotoInCloud, deletePhotoFromCloud, updatePhotosGroupInCloud } from '../services/photoMutationService';
+import { updatePhotoInCloud, deletePhotoFromCloud, updatePhotosGroupInCloud } from '../services/photoService';
 
 /**
  * Syncs pending operations stored in IndexedDB to the backend

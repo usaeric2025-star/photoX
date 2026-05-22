@@ -12,7 +12,7 @@ import {
   Wrench,
   LogIn
 } from 'lucide-react';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { AppSettings } from '../../types';
 
 interface SidebarItemProps {
@@ -59,7 +59,12 @@ interface Props {
 export const AdminSidebar: React.FC<Props> = ({ 
   settings, activeScreen, setActiveScreen, cloudCount, onRefresh 
 }) => {
-  const { adminPreviewMode, setAdminPreviewMode, isStaffMode, appLang } = useGalleryStore();
+  const { adminPreviewMode, setAdminPreviewMode, isStaffMode, appLang } = useGalleryStore(useShallow(s => ({
+    adminPreviewMode: s.adminPreviewMode,
+    setAdminPreviewMode: s.setAdminPreviewMode,
+    isStaffMode: s.isStaffMode,
+    appLang: s.appLang
+  })));
 
   return (
     <aside className="w-72 bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden">

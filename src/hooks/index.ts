@@ -42,3 +42,4 @@ export * from './useClickOutside';
 export * from './useLongPress';
 export * from './useScrollRestoration';
 export { useTaskExecutor } from './useTaskExecutor';
+export { useGalleryStore, useStore, useShallow } from '../store';
