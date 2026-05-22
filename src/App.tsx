@@ -10,8 +10,38 @@ import { globalHandleError } from './utils/errorHandler';
 import { ROUTES } from './config/constants';
 import { FullPageLoading } from './components/FullPageLoading';
 
-const PublicView = lazy(() => import('@/pages/PublicView'));
-const AdminView = lazy(() => import('@/pages/AdminView'));
+function lazyWithRetry(importFn: () => Promise<any>, pageName: string) {
+  return lazy(() => 
+    importFn().catch(error => {
+      console.error(`[Dynamic Import Error] Failed to load component ${pageName}:`, error);
+      
+      const isDynamicImportError = 
+        error.message?.includes('Failed to fetch dynamically imported module') ||
+        error.name === 'TypeError' ||
+        String(error).includes('dynamically imported module') ||
+        String(error).includes('loading chunk');
+
+      if (isDynamicImportError) {
+        const lastReloadKey = `last_chunk_reload_${pageName}`;
+        const lastReload = sessionStorage.getItem(lastReloadKey);
+        const now = Date.now();
+        
+        if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+          sessionStorage.setItem(lastReloadKey, String(now));
+          console.warn(`Dynamic import of ${pageName} failed. Performing automatic page reload...`);
+          window.location.reload();
+          return new Promise(() => {}); 
+        }
+      }
+      
+      globalHandleError(error, `加载页面组件 (${pageName}) 失败`);
+      throw error;
+    })
+  );
+}
+
+const PublicView = lazyWithRetry(() => import('./pages/PublicView'), 'PublicView');
+const AdminView = lazyWithRetry(() => import('./pages/AdminView'), 'AdminView');
 
 /* Removed Fallback component */
 

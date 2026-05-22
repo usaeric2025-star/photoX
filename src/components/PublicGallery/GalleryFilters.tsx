@@ -116,7 +116,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
             <CategoryChip 
                 name={t.allCats.toUpperCase()} 
                 selected={!selectedCatCode} 
-                onClick={() => { setSelectedCatCode(null); setFilterSubId(null); handleSetSelectedTagIds([]); onScrollToTop(); }} 
+                onClick={() => { setSelectedCatCode(null); setFilterSubId(null); onScrollToTop(); }} 
             />
             
             {categories
@@ -133,7 +133,6 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                     onClick={() => { 
                       setSelectedCatCode(cat.id); 
                       setFilterSubId(null);
-                      handleSetSelectedTagIds([]);
                       onScrollToTop();
                     }}
                   />
