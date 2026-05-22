@@ -16,14 +16,14 @@ export const FilterChip = ({ label, selected, pinned, hot, onClick, onRemove, ic
   <button
     onClick={onClick}
     className={cn(
-      "inline-flex items-center gap-1 px-3 h-[22px] rounded-full text-[9px] font-extrabold transition-all border flex items-center shrink-0 whitespace-nowrap",
+      "inline-flex items-center gap-1 px-3 h-[22px] rounded-full text-[10px] font-bold transition-all border flex items-center shrink-0 whitespace-nowrap",
       pinned 
-        ? "border-amber-200 bg-amber-50/90 text-amber-700 shadow-xs"
+        ? "border-amber-400 bg-amber-100 text-amber-900 shadow-sm"
         : hot 
-          ? "border-[#E8BA5A]/50 bg-[#FFF9EA]/80 text-[#B8860B]"
+          ? "border-orange-300 bg-orange-100 text-orange-900"
           : selected
-            ? 'bg-[#0051BA] border-[#0051BA] text-white shadow-sm'
-            : 'bg-[#F1F3F4]/70 border-transparent text-[#888888] hover:bg-[#E8E8E8]'
+            ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+            : 'bg-slate-100 border-transparent text-slate-700 hover:bg-slate-200'
     )}
   >
     {icon}
