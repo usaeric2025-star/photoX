@@ -3,26 +3,26 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Check, Sparkles, Pencil, Layers, X } from 'lucide-react';
 import { Photo } from '../../types';
 
+import React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Check, Sparkles, Pencil, Layers, X } from 'lucide-react';
+import { Photo } from '../../types';
+import { useGalleryStore } from '../../store';
+
 interface GroupMultiSelectBarProps {
-  isMultiSelectMode: boolean;
-  selectedPhotoIds: string[];
   activeGroupPhotos: Photo[];
   handleBulkAction: (action: 'ai' | 'remove' | 'batch') => void;
-  setSelectedPhotoIds: (ids: string[] | ((prev: string[]) => string[])) => void;
-  setIsMultiSelectMode: (mode: boolean) => void;
 }
 
 export const GroupMultiSelectBar: React.FC<GroupMultiSelectBarProps> = ({
-  isMultiSelectMode,
-  selectedPhotoIds,
   activeGroupPhotos,
   handleBulkAction,
-  setSelectedPhotoIds,
-  setIsMultiSelectMode
 }) => {
+  const { isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore();
+
   return (
     <AnimatePresence>
-      {isMultiSelectMode && selectedPhotoIds.length > 0 && (
+      {isMultiSelect && selectedIds.length > 0 && (
         <motion.div 
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -31,7 +31,7 @@ export const GroupMultiSelectBar: React.FC<GroupMultiSelectBarProps> = ({
         >
            <div className="bg-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5">
              <Check size={14} className="text-white" />
-             <span className="text-sm font-black text-white">{selectedPhotoIds.length}</span>
+             <span className="text-sm font-black text-white">{selectedIds.length}</span>
            </div>
            
            <div className="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth">
@@ -60,7 +60,7 @@ export const GroupMultiSelectBar: React.FC<GroupMultiSelectBarProps> = ({
            </div>
 
            <div className="w-px h-8 bg-white/10" />
-           <button onClick={() => { setIsMultiSelectMode(false); setSelectedPhotoIds([]); }} className="p-2 text-white/40 hover:text-white">
+           <button onClick={() => { setIsMultiSelect(false); setSelectedIds([]); }} className="p-2 text-white/40 hover:text-white">
               <X size={20} />
            </button>
         </motion.div>

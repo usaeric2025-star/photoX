@@ -207,22 +207,17 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
              isGroupDataLoading={isGroupDataLoading}
              activeGroupPhotos={activeGroupPhotos}
              onAddPhotoToGroup={onAddPhotoToGroup}
-             selectedPhotoIds={selectedIds}
-             setIsMultiSelectMode={setIsMultiSelect}
-             setSelectedPhotoIds={setSelectedIds}
            />
 
            <GroupGridView 
              virtuosoRef={virtuosoRef}
              photos={activeGroupPhotos}
              isLoading={isGroupPhotosLoading}
-             isMultiSelectMode={isMultiSelect}
-               selectedPhotoIds={selectedIds}
                highlightId={currentHighlightId}
                onPhotoClick={handlePhotoClick}
                onPhotoContextMenu={handlePhotoContextMenu}
                getPhotoProps={useCallback((photo) => ({
-                 draggable: isAdminMode && !isMultiSelectMode,
+                 draggable: isAdminMode && !isMultiSelect,
                  onDragStart: () => setDraggedPhotoId(photo.id),
                  onDragOver: (e: React.DragEvent) => e.preventDefault(),
                  onDrop: (e: React.DragEvent) => {
@@ -237,12 +232,8 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
            {/* Multi-Select Floating Bar */}
            <GroupMultiSelectBar 
-             isMultiSelectMode={isMultiSelectMode}
-             selectedPhotoIds={selectedPhotoIds}
              activeGroupPhotos={activeGroupPhotos}
              handleBulkAction={handleBulkAction}
-             setSelectedPhotoIds={setSelectedPhotoIds}
-             setIsMultiSelectMode={setIsMultiSelectMode}
            />
 
             <div className="p-4 flex justify-center">

@@ -20,9 +20,6 @@ interface GroupHeaderProps {
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
   onAddPhotoToGroup?: () => void;
-  selectedPhotoIds: string[];
-  setIsMultiSelectMode: (mode: boolean) => void;
-  setSelectedPhotoIds: (ids: string[]) => void;
 }
 
 export const GroupHeader: React.FC<GroupHeaderProps> = ({
@@ -33,11 +30,8 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   isGroupDataLoading,
   activeGroupPhotos,
   onAddPhotoToGroup,
-  selectedPhotoIds,
-  setIsMultiSelectMode,
-  setSelectedPhotoIds
 }) => {
-  const { setGroupSettingsOpen, setBatchEditingIds, setBatchAiAnalyzeTrigger } = useGalleryStore();
+  const { setGroupSettingsOpen, setBatchEditingIds, setBatchAiAnalyzeTrigger, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore();
   
   return (
     <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
@@ -104,10 +98,10 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                 <DropdownMenuContent align="end" className="w-48 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-[200]">
                   <DropdownMenuItem 
                     onClick={() => {
-                      const ids = selectedPhotoIds.length > 0 ? selectedPhotoIds : activeGroupPhotos.map(p => p.id);
+                      const ids = selectedIds.length > 0 ? selectedIds : activeGroupPhotos.map(p => p.id);
                       setBatchEditingIds(ids);
-                      setIsMultiSelectMode(false);
-                      setSelectedPhotoIds([]);
+                      setIsMultiSelect(false);
+                      setSelectedIds([]);
                     }}
                     className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
                   >

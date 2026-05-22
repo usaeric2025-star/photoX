@@ -139,14 +139,13 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   groupData,
   onPhotoClick,
   onPhotoContextMenu,
-  isMultiSelectMode = false,
-  selectedPhotoIds = [],
   getPhotoProps,
   virtuosoRef,
   highlightId,
   onEndReached,
   isLoading = false
 }) => {
+  const { isMultiSelect, selectedIds } = useGalleryStore();
   
   const header = useMemo(() => {
     if (!groupData || (!groupData.description && (!groupData.colors || groupData.colors.length === 0) && (!groupData.materials || groupData.materials.length === 0))) {
@@ -221,7 +220,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
           const photo = photos[index];
           if (!photo) return null;
           
-          const isSelected = selectedPhotoIds.includes(photo.id);
+          const isSelected = selectedIds.includes(photo.id);
           const isHighlighted = highlightId === photo.id;
           const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
           
@@ -230,7 +229,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
               key={photo.id}
               photo={photo}
               isSelected={isSelected}
-              isMultiSelectMode={isMultiSelectMode}
+              isMultiSelectMode={isMultiSelect}
               isHighlighted={isHighlighted}
               extraProps={extraProps}
               onPhotoClick={onPhotoClick}

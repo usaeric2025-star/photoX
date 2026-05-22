@@ -42,6 +42,8 @@ interface StoreState {
   setIsMultiSelect: (is: boolean) => void;
   selectedIds: string[];
   setSelectedIds: (ids: string[] | (prev: string[]) => string[]) => void;
+  isStaffMode: boolean;
+  setIsStaffMode: (is: boolean) => void;
   hasLoadedOnce: boolean;
   setHasLoadedOnce: (hasLoaded: boolean) => void;
   hasInitialLoaded: boolean;
@@ -103,6 +105,8 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setSelectedIds: (updater) => set((state) => ({ 
     selectedIds: typeof updater === 'function' ? updater(state.selectedIds) : updater 
   })),
+  isStaffMode: false,
+  setIsStaffMode: (isStaffMode) => set({ isStaffMode }),
   hasLoadedOnce: false,
   setHasLoadedOnce: (hasLoadedOnce) => set({ hasLoadedOnce }),
   hasInitialLoaded: false,
