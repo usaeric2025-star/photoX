@@ -37,7 +37,8 @@ export const AdminHeader: React.FC<Props> = ({
     settings: storeSettings, user, viewMode, setViewMode, isSyncing, 
     activeScreen, setActiveScreen,
     isInfiniteMode, setIsInfiniteMode,
-    adminPreviewMode, setAdminPreviewMode
+    adminPreviewMode, setAdminPreviewMode,
+    isStaffMode
   } = useGalleryStore();
   
   const { isMultiSelect, disable, enable } = useMultiSelect();
@@ -114,6 +115,7 @@ export const AdminHeader: React.FC<Props> = ({
   };
 
   const handleExitStaffMode = () => {
+    useGalleryStore.getState().setIsStaffMode(false);
     sessionStorage.removeItem('isStaffMode');
     window.location.reload();
   };
@@ -222,7 +224,7 @@ export const AdminHeader: React.FC<Props> = ({
                     show={showToolsMenu} 
                     t={t} 
                     handleOpenSettings={handleOpenSettings}
-                    isStaff={sessionStorage.getItem('isStaffMode') === 'true'}
+                    isStaff={isStaffMode}
                     handleExitStaffMode={handleExitStaffMode}
                     currentLang={currentLang}
                     onSetLang={(l) => useGalleryStore.getState().setLanguage(l as 'zh' | 'en' | 'ms')}

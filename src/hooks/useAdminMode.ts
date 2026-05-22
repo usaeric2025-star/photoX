@@ -7,8 +7,8 @@ import { useGalleryStore } from '../store';
  */
 export function useAdminMode() {
   const { isAdmin } = usePermission();
-  const { adminPreviewMode } = useGalleryStore();
+  const { adminPreviewMode, isStaffMode } = useGalleryStore();
   
-  // Effective admin mode: Must be in admin mode AND NOT in visitor preview mode
-  return isAdmin && adminPreviewMode === 'private';
+  // Effective admin mode: (Must be logged in as admin OR in staff mode) AND NOT in visitor preview mode
+  return (isAdmin || isStaffMode) && adminPreviewMode === 'private';
 }

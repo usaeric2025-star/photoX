@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PublicView from '@/pages/PublicView';
 import AdminView from '@/pages/AdminView';
 import { User } from './types';
@@ -103,10 +102,8 @@ export default function AppRoutes() {
   if (isLoading) return null;
 
   return (
-    <ErrorBoundary>
       <BrowserRouter>
         <AnimatedRoutes user={user} />
       </BrowserRouter>
-    </ErrorBoundary>
   );
 }
