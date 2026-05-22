@@ -130,6 +130,13 @@ export const AdminViewContent: React.FC = () => {
   const isStaffMode = useGalleryStore((s) => s.isStaffMode);
   const setActions = useGalleryStore((s) => s.setActions);
   const setAbortAnalysis = useGalleryStore((s) => s.setAbortAnalysis);
+  const setTagIdToNameMap = useGalleryStore((s) => s.setTagIdToNameMap);
+
+  useEffect(() => {
+    if (logic.tagIdToNameMap) {
+      setTagIdToNameMap(logic.tagIdToNameMap);
+    }
+  }, [logic.tagIdToNameMap, setTagIdToNameMap]);
 
   const {
     togglePinned, handleDeletePhoto, handleUpdatePhoto, handleToggleHidden,

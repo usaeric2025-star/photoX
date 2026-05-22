@@ -96,6 +96,7 @@ interface StoreState {
   showWhatsAppChoice: boolean;
   setShowWhatsAppChoice: (show: boolean) => void;
   tagIdToNameMap: Record<string, string>;
+  setTagIdToNameMap: (map: Record<string, string>) => void;
   // Photo Editing Form State
   formState: ProductFormData;
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => void;
@@ -230,6 +231,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   showWhatsAppChoice: false,
   setShowWhatsAppChoice: (showWhatsAppChoice) => set({ showWhatsAppChoice }),
   tagIdToNameMap: {},
+  setTagIdToNameMap: (tagIdToNameMap) => set({ tagIdToNameMap }),
   formState: {
     name: '',
     category_id: '',

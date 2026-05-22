@@ -65,7 +65,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     activeGroupId, setActiveGroupId,
     activePhotoId, setActivePhotoId,
     isStaffMode, setIsStaffMode,
-    sortOrder, setSortOrder
+    sortOrder, setSortOrder, setTagIdToNameMap
   } = useGalleryStore(useShallow(s => ({
     searchQuery: s.searchQuery,
     setSearchQuery: s.setSearchQuery,
@@ -82,8 +82,17 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     isStaffMode: s.isStaffMode,
     setIsStaffMode: s.setIsStaffMode,
     sortOrder: s.sortOrder,
-    setSortOrder: s.setSortOrder
+    setSortOrder: s.setSortOrder,
+    setTagIdToNameMap: s.setTagIdToNameMap
   })));
+
+  useEffect(() => {
+    if (contextTags && contextTags.length > 0) {
+      const map: Record<string, string> = { };
+      contextTags.forEach(t => { map[String(t.id)] = t.name; });
+      setTagIdToNameMap(map);
+    }
+  }, [contextTags, setTagIdToNameMap]);
 
   const searchQuery = props.searchQuery !== undefined ? props.searchQuery : _searchQuery;
   const setSearchQuery = props.onSearchChange || _setSearchQuery;
