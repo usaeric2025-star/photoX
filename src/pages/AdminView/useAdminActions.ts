@@ -58,23 +58,32 @@ export const useAdminActions = (logic: any) => {
   }, [logic, showSuccess, handleError]);
 
   const handleBatchToggleHidden = useCallback(async (ids: string[]) => {
-    if (logic.checkSyncLock()) return;
+    if (logic.checkSyncLock()) {
+      handleError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
+      return;
+    }
     const targetPhotos = logic.photos.filter((p: any) => ids.includes(p.id));
     const allHidden = targetPhotos.every((p: any) => p.is_hidden);
     await logic.updatePhotosBulk(ids, { is_hidden: !allHidden }, '批量更新隐藏状态');
     disable();
-  }, [logic]);
+  }, [logic, disable, handleError]);
 
   const handleEditPhoto = useCallback((id: string) => logic.onEditPhotoById(id), [logic]);
 
   const handleDeletePhotos = useCallback((ids: string[]) => {
-      if (logic.checkSyncLock()) return;
+      if (logic.checkSyncLock()) {
+        handleError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
+        return;
+      }
       logic.handleDeletePhoto(ids);
       disable();
-  }, [logic, disable]);
+  }, [logic, disable, handleError]);
 
   const handleGroupPhotos = useCallback(async (ids: string[]) => {
-      if (logic.checkSyncLock()) return;
+      if (logic.checkSyncLock()) {
+        handleError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
+        return;
+      }
       try {
         await logic.handleGroupPhotos(ids);
         disable();
@@ -84,9 +93,12 @@ export const useAdminActions = (logic: any) => {
   }, [logic, handleError, disable]);
 
   const handleBatchEdit = useCallback((ids: string[]) => {
-      if (logic.checkSyncLock()) return;
+      if (logic.checkSyncLock()) {
+        handleError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
+        return;
+      }
       logic.setBatchEditIds(ids);
-  }, [logic]);
+  }, [logic, handleError]);
 
   const handleUngroup = useCallback(async (groupId: string) => { 
     if (logic.checkSyncLock()) return;

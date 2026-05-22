@@ -85,13 +85,19 @@ const toTitleCase = (str: string) => {
 
 export const AdminPhotoCard: React.FC<AdminPhotoCardProps> = React.memo(({ 
   photo, index, showGroupsCollapsed,
-  lang, t, categories, manufacturers, tagMap, onEditPhoto, onGroupClick, 
+  lang, t, categories, manufacturers, tagMap, onGroupClick, 
   onLightboxOpen, shareSinglePhoto, onTogglePinned, onToggleHidden
 }) => {
   const isMultiSelect = useGalleryStore((state) => state.isMultiSelect);
   const isSelected = useGalleryStore((state) => (state.selectedIds ?? []).includes(photo.id));
   const setIsMultiSelect = useGalleryStore((state) => state.setIsMultiSelect);
   const setSelectedIds = useGalleryStore((state) => state.setSelectedIds);
+  const setEditingPhotoId = useGalleryStore((state) => state.setEditingPhotoId);
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPhotoId(photo.id);
+  };
 
   const enable = useCallback(() => {
     setIsMultiSelect(true);

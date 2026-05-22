@@ -36,7 +36,6 @@ export interface GroupAdminShellProps {
   initialPhotoId?: string | null;
   setActiveGroupId: (id: string | null) => void;
   photos: Photo[];
-  onEditPhoto?: (photo: Photo) => void;
   onBatchEdit?: (ids: string[]) => void;
   onUngroup?: (groupId: string) => void;
   onAddPhotoToGroup?: () => void;
@@ -56,7 +55,6 @@ export interface GroupAdminShellProps {
   tagMap?: Record<string, string>;
   allTags?: Tag[];
   isMultiSelect?: boolean;
-  setAlertDialog?: (d: DialogData | null) => void;
   updatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
 }
 
@@ -71,7 +69,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const isAdminMode = useAdminMode();
   const {
     activeGroupId, setActiveGroupId, photos,
-    onEditPhoto,
     onBatchEdit, onUngroup, onAddPhotoToGroup,
     updateGroupPhotos, onAiAnalyze, onCancelAnalyze, isAnalyzing, onBatchAiAnalyze,
     onRefresh,
@@ -81,7 +78,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     onToggleHidden = () => {},
     lang = 'en',
     t, categories, tagMap, allTags = [],
-    setAlertDialog: propsSetAlertDialog,
     updatePhoto: hookUpdatePhoto
   } = props;
 
@@ -113,7 +109,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     initialPhotoId: props.initialPhotoId,
     photos,
     hookUpdatePhoto,
-    propsSetAlertDialog: propsSetAlertDialog as any,
     onBatchAiAnalyze,
     onRefresh: onRefresh || (() => {}),
     onBatchEdit,

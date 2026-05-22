@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
+import { useGalleryStore } from '../../store';
 import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X, Heart } from 'lucide-react';
 import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer } from '../../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
@@ -22,7 +23,6 @@ interface LightboxInfoPanelProps {
   handleShare: () => void;
   onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
-  onEditPhoto?: (photo: Photo) => void;
   onToggleHidden?: (photo: Photo) => void;
   onTogglePinned?: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
@@ -34,9 +34,10 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
   isStaffMode, isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
-  onEditPhoto, onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
+  onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
   const isAdminMode = isStaffMode;
+  const setEditingPhotoId = useGalleryStore((s) => s.setEditingPhotoId);
   const catName = getTranslatedCategoryName(photo.category_id, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturer_id, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
@@ -92,7 +93,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                   {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}
                 </button>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); onEditPhoto?.(photo); }}
+                  onClick={(e) => { e.stopPropagation(); setEditingPhotoId(photo.id); }}
                   className="w-9 h-9 flex items-center justify-center bg-slate-100 text-slate-500 hover:bg-slate-200 rounded-xl transition-all"
                 >
                   <Edit3 size={16}/>

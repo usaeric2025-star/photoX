@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, X, ChevronUp, ChevronDown, CheckCircle2, AlertCircle, PlayCircle } from 'lucide-react';
+import { Spinner } from '@/components/ui/Spinner';
 
 export type TaskStatus = 'running' | 'completed' | 'error' | 'cancelled';
 
@@ -216,7 +217,7 @@ const BackgroundTaskPanel: React.FC = () => {
                     <div className="flex items-center justify-between mb-2">
                        <div className="flex items-center gap-2 truncate flex-1 mr-2">
                          {task.status === 'running' ? (
-                           <Loader2 size={12} className="animate-spin text-blue-500 shrink-0" />
+                           <Spinner size="sm" className="text-blue-500" />
                          ) : task.status === 'completed' ? (
                            <CheckCircle2 size={12} className="text-green-500 shrink-0" />
                          ) : (
@@ -294,7 +295,7 @@ const BackgroundTaskPanel: React.FC = () => {
       >
         <div className="relative">
           {activeTasks.length > 0 ? (
-            <Loader2 size={20} className="animate-spin text-white" />
+            <Spinner className="text-white" />
           ) : (
             <CheckCircle2 size={20} className="text-green-500" />
           )}

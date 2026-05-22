@@ -2,6 +2,7 @@ import React from 'react';
 import { SyncSection } from './SyncSection';
 import { ExportDataSection } from './ExportDataSection';
 import { User, Photo, Category, Tag, Manufacturer, ApiResponse } from '@/types';
+import { useGalleryStore } from '@/store';
 
 interface SyncSettingsProps {
   user: User | null;
@@ -13,7 +14,6 @@ interface SyncSettingsProps {
   cloudCount: number | null;
   lastSyncTime: number | null;
   isSyncing: boolean;
-  setAlertDialog: (config: any) => void;
   photos: Photo[];
   categories: Category[];
   tags: Tag[];
@@ -24,6 +24,7 @@ interface SyncSettingsProps {
 }
 
 export const SyncSettings: React.FC<SyncSettingsProps> = (props) => {
+  const { setAlertDialog } = useGalleryStore();
   return (
     <>
       <SyncSection 
@@ -36,7 +37,7 @@ export const SyncSettings: React.FC<SyncSettingsProps> = (props) => {
         cloudCount={props.cloudCount}
         lastSyncTime={props.lastSyncTime}
         isSyncing={props.isSyncing}
-        setAlertDialog={props.setAlertDialog}
+        setAlertDialog={setAlertDialog}
       />
       <ExportDataSection 
         photos={props.photos}

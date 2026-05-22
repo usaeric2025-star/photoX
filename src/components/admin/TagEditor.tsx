@@ -7,6 +7,7 @@ import { useGalleryStore } from '../../store';
 import { Tag } from '../../types';
 import { useFeedback } from '../../hooks';
 import { useTagsDisplay } from '../../hooks/useTagsDisplay';
+import { SearchInput } from '@/components/ui/SearchInput';
 
 interface TagEditorProps {
   tags: Tag[];
@@ -79,22 +80,12 @@ export const TagEditor: React.FC<TagEditorProps> = ({
       <div className="space-y-2 mb-3">
         <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none px-1">标签 / TAGS</h3>
         <div className="flex items-center gap-2 px-1 relative group">
-          <input 
-            type="text"
+          <SearchInput
             placeholder="搜索标签..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 bg-white border border-slate-200 rounded-lg pl-3 pr-8 py-1.5 text-[10px] focus:outline-none focus:border-blue-500"
+            onSearch={setSearchTerm}
+            delay={0}
+            className="flex-1"
           />
-          {searchTerm && (
-            <button 
-              type="button" 
-              onClick={() => setSearchTerm('')} 
-              className="absolute right-[5.5rem] top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 p-1 bg-white/80 rounded-full shadow-sm"
-            >
-              <X size={12} />
-            </button>
-          )}
           <button type="button" onClick={onQuickAdd} className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-1.5 rounded-lg border border-blue-100 active:bg-blue-100 transition-colors">+ 新增</button>
         </div>
       </div>

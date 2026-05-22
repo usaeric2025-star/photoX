@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import PublicView from './pages/PublicView';
 import AdminView from './pages/AdminView';
 import { User } from './types';
@@ -12,34 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { globalHandleError } from './utils/errorHandler';
 import { ROUTES } from './config/constants';
 
-function Fallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
-  return (
-    <div style={{
-      position: 'fixed', inset: 0, background: '#0f172a', color: '#f1f5f9',
-      padding: 16, overflow: 'auto', fontFamily: 'monospace', fontSize: 13,
-      whiteSpace: 'pre-wrap', wordBreak: 'break-all', zIndex: 99999
-    }}>
-      <div style={{ color: '#fbbf24', fontWeight: 700, marginBottom: 12 }}>
-        🔴 React Error
-      </div>
-      <div style={{ color: '#f87171', marginBottom: 8 }}>
-        {error.message}
-      </div>
-      <div style={{ color: '#94a3b8', fontSize: 11, marginBottom: 16 }}>
-        {error.stack}
-      </div>
-      <button
-        onClick={resetErrorBoundary}
-        style={{
-          padding: '8px 16px', background: '#3b82f6', color: '#fff',
-          border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer'
-        }}
-      >
-        重试
-      </button>
-    </div>
-  );
-}
+/* Removed Fallback component */
 
 function AnimatedRoutes({ user }: { user: User | null }) {
   useRouteGuard(); // <--- 使用路由守卫
@@ -133,7 +106,7 @@ export default function AppRoutes() {
   if (isLoading) return null;
 
   return (
-    <ErrorBoundary FallbackComponent={Fallback}>
+    <ErrorBoundary>
       <BrowserRouter>
         <AnimatedRoutes user={user} />
       </BrowserRouter>

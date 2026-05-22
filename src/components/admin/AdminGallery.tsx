@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { GalleryFilters } from '../PublicGallery/GalleryFilters';
 import { GalleryGrid } from '../PublicGallery/GalleryGrid';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
@@ -55,7 +55,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
   const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
   const setShowGroupsCollapsed = useGalleryStore(s => s.setShowGroupsCollapsed);
   const langStore = useGalleryStore(s => s.appLang);
-  const tagStats = useGalleryStore(s => s.tagStats);
   const columns = useGalleryStore(s => s.columns);
   const setColumns = useGalleryStore(s => s.setColumns);
   const lightboxIndex = useGalleryStore(s => s.lightboxIndex);
@@ -97,11 +96,11 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
       return {
         ...t,
         is_pinned: t.is_pinned || pinnedIds.has(strId),
-        usage_count: Math.max(t.usage_count || 0, tagStats?.[strId] || 0)
+        usage_count: t.usage_count || 0
       };
     });
     return sortTagsByPopularity(enrichedTags);
-  }, [contextTags, tagStats, props.settings?.pinned_tags]);
+  }, [contextTags, props.settings?.pinned_tags]);
 
   const virtuosoRef = useRef<any>(null);
   const scrollToTop = () => virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
@@ -229,7 +228,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
                 transition={{ duration: 0.3 }}
                 className="h-full"
               >
-                <ErrorBoundary fallback={<div className="p-4 text-center">加载失败，请刷新页面</div>}>
+                <ErrorBoundary>
                   <GalleryGrid 
                     virtuosoRef={virtuosoRef}
                     gridPhotos={gridPhotos}

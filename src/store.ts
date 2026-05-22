@@ -17,6 +17,7 @@ interface UIState {
   selectedIds: string[]
   loadingType: 'none' | 'global' | 'local' | 'analyzing' | 'sync-pull' | 'sync-push'
   editPhotoId: string | null
+  editingPhotoId: string | null
   batchEditIds: string[] | null
   hasLoadedOnce: boolean
   hasInitialLoaded: boolean
@@ -43,7 +44,6 @@ interface UIState {
     onCancel?: () => void
   } | null
   language: 'zh' | 'en' | 'ms'
-  tagStats: Record<string, number>
   filterSubId: string | null
   sortOrder: 'newest' | 'oldest' | 'name'
   isStaffMode: boolean
@@ -86,12 +86,12 @@ interface UIActions {
   resetUI: () => void
   setLoadingType: (type: UIState['loadingType']) => void
   setEditPhotoId: (id: string | null) => void
+  setEditingPhotoId: (id: string | null) => void
   setBatchEditIds: (ids: string[] | null) => void
   setHasLoadedOnce: (hasLoaded: boolean) => void
   setAlertDialog: (dialog: StoreState['alertDialog']) => void
   setPromptDialog: (dialog: StoreState['promptDialog']) => void
   setLanguage: (lang: 'zh' | 'en' | 'ms') => void
-  setTagStats: (stats: Record<string, number>) => void
   setFilterSubId: (id: string | null) => void
   setSortOrder: (order: UIState['sortOrder']) => void
   setIsStaffMode: (value: boolean) => void
@@ -136,11 +136,11 @@ const initialState: UIState = {
   selectedIds: [],
   loadingType: 'none',
   editPhotoId: null,
+  editingPhotoId: null,
   batchEditIds: null,
   alertDialog: null,
   promptDialog: null,
   language: 'en',
-  tagStats: {},
   filterSubId: null,
   sortOrder: 'newest',
   isStaffMode: false,
@@ -228,6 +228,7 @@ export const useStore = create<StoreState>()(
       })),
       setLoadingType: (type) => set({ loadingType: type }),
       setEditPhotoId: (id) => set({ editPhotoId: id }),
+      setEditingPhotoId: (id) => set({ editingPhotoId: id }),
       setBatchEditIds: (ids) => set({ batchEditIds: ids }),
       setHasLoadedOnce: (hasLoaded) => set({ hasLoadedOnce: hasLoaded }),
       setHasInitialLoaded: (value) => set({ hasInitialLoaded: value }),
@@ -263,7 +264,6 @@ export const useStore = create<StoreState>()(
       setAlertDialog: (dialog) => set({ alertDialog: dialog }),
       setPromptDialog: (dialog) => set({ promptDialog: dialog }),
       setLanguage: (lang) => set({ language: lang }),
-      setTagStats: (stats) => set({ tagStats: stats }),
       setFilterSubId: (id) => set({ 
         filterSubId: id,
         lightboxIndex: null,

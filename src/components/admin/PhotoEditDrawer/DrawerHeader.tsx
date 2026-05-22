@@ -1,8 +1,9 @@
-import React from 'react';
+          import React from 'react';
 import { X as CloseIcon, EyeOff, Eye, RefreshCcw, Sparkles, Save, Trash2 } from 'lucide-react';
 import { Skeleton } from '../../ui/Skeleton';
 import { useGalleryStore } from '../../../store';
 import { ProductFormData } from '../../../types';
+import { Spinner } from '@/components/ui/Spinner';
 
 interface HeaderProps {
   editPhotoId: string | null;
@@ -75,7 +76,7 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
               disabled={isAnalyzing && !onAbort}
               className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200'}`}
             >
-              {isAnalyzing ? <RefreshCcw size={18} className="animate-spin" /> : <Sparkles size={18} />}
+              {isAnalyzing ? <Spinner size="sm" className="text-current" /> : <Sparkles size={18} />}
             </button>
           </div>
           
@@ -111,7 +112,7 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
             disabled={isSyncing}
             className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isSyncing ? 'bg-blue-400 text-white border-blue-400 cursor-wait' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700'}`}
           >
-            {isSyncing ? <Skeleton className="bg-transparent text-white"><RefreshCcw size={18} className="animate-spin" /></Skeleton> : <Save size={18}/>}
+            {isSyncing ? <Spinner size="sm" className="text-current" /> : <Save size={18}/>}
           </button>
           <button 
             onClick={onClose} 

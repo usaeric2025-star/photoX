@@ -75,3 +75,34 @@ try {
 }
 ```
 
+## 七、UI与状态管理规范
+
+### 核心原则
+- **Zustand 管理状态**（开关、数据、回调）
+- **shadcn/ui 渲染 UI**（弹窗、抽屉、菜单）
+
+### 统一用法示例
+
+```tsx
+// Zustand 状态
+const alertDialog = useStore(s => s.alertDialog);
+const setAlertDialog = useStore(s => s.setAlertDialog);
+
+// shadcn/ui 渲染
+<AlertDialog open={!!alertDialog} onOpenChange={() => setAlertDialog(null)}>
+  <AlertDialogContent>
+    <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
+    <AlertDialogDescription>{alertDialog?.description}</AlertDialogDescription>
+    <AlertDialogFooter>
+      <AlertDialogCancel>取消</AlertDialogCancel>
+      <AlertDialogAction onClick={alertDialog?.onConfirm}>确认</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+```
+
+### 检查清单
+- [ ] 所有弹窗用 shadcn/ui，不用原生 alert/confirm
+- [ ] 所有 UI 状态用 Zustand 管理（或局部 useState）
+- [ ] 无 props 传递地狱
+

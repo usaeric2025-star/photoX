@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react'
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
 import { GroupDetailView } from '../GroupDetailView';
 import { GalleryHeader } from '../PublicGallery/GalleryHeader';
@@ -73,7 +73,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   const setShowGroupsCollapsed = useGalleryStore(s => s.setShowGroupsCollapsed);
   const langStore = useGalleryStore(s => s.appLang);
   const setLang = useGalleryStore(s => s.setAppLang);
-  const tagStats = useGalleryStore(s => s.tagStats);
   const columns = useGalleryStore(s => s.columns);
   const setColumns = useGalleryStore(s => s.setColumns);
   const lightboxIndex = useGalleryStore(s => s.lightboxIndex);
@@ -324,7 +323,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                 transition={{ duration: 0.3 }}
                 className="h-full"
               >
-                <ErrorBoundary fallback={<div className="p-4 text-center">加载失败，请刷新页面</div>}>
+                <ErrorBoundary>
                   <GalleryGrid 
                     virtuosoRef={virtuosoRef}
                     gridPhotos={gridPhotos}

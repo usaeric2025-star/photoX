@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Photo, ProductFormData } from '../../../types';
 import { usePhotoEditLogic } from './usePhotoEditLogic';
 import { DrawerHeader } from './DrawerHeader';
+import { useGalleryStore } from '../../../store';
 import { BasicInfoTab } from './BasicInfoTab';
 import { OrgTab } from './OrgTab';
 import { DetailsTab } from './DetailsTab';
@@ -28,6 +29,7 @@ interface Props {
 }
 
 export const PhotoEditDrawer: React.FC<Props> = (props) => {
+  const setEditingPhotoId = useGalleryStore((s) => s.setEditingPhotoId);
   const logic = usePhotoEditLogic({
     photos: props.photos,
     editPhotoId: props.editPhotoId,
@@ -69,7 +71,10 @@ export const PhotoEditDrawer: React.FC<Props> = (props) => {
         } : undefined}
         onSave={logic.handleSave}
         onToggleHidden={logic.toggleHidden}
-        onClose={props.resetAddState}
+        onClose={() => {
+          props.resetAddState();
+          setEditingPhotoId(null);
+        }}
         onErrorClick={(err) => {
           const readableError = err.includes('|') ? err.split('|').slice(1).join(': ') : err;
           logic.showError(new Error(readableError), 'AI识别错误');

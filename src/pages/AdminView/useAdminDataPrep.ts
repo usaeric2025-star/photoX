@@ -10,7 +10,7 @@ import {
   useUpdatePhotoMutation, useBatchEditMutation, useDeletePhotoMutation, useGroupPhotosMutation, useUngroupMutation,
   useSettingsMutation, useSyncMutation, useSettings,
   useAdminDialogs, useLoading, useInfinitePhotos, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
-  useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback, useMultiSelect, useTagStats
+  useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback, useMultiSelect
 } from '../../hooks';
 import { useGalleryStore } from '../../store';
 import { PAGINATION } from '../../constants/config';
@@ -67,7 +67,7 @@ export const useAdminDataPrep = () => {
   }, [infinitePhotosQuery.data]);
 
   // Unified tag stats calculation
-  useTagStats(photos);
+  // useTagStats(photos); (removed/migrated to DB)
 
   useEffect(() => {
     setCloudCount(cloudCountData);

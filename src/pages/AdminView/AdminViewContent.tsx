@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks, useTaskExecutor } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { toast } from 'sonner';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AdminGlobalModals } from '@/components/admin/AdminGlobalModals';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
 import { SettingsScreen } from '@/components/SettingsScreen';
@@ -13,6 +13,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { MainAdminScreen } from './MainAdminScreen';
 import { PublicGallery } from '@/components/public/PublicGallery';
+import { useGalleryStore } from '@/store';
 import { useAdminViewLogic } from './useAdminViewLogic';
 import { useAdminActions } from './useAdminActions';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
@@ -20,14 +21,7 @@ import { User, Photo } from '@/types';
 import { TranslationType } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
 
-function ErrorFallback({ error, resetErrorBoundary }: { error: any, resetErrorBoundary: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <p className="text-red-500">页面出错了: {error.message}</p>
-      <button onClick={resetErrorBoundary} className="mt-4 px-4 py-2 bg-slate-900 text-white rounded">重试</button>
-    </div>
-  );
-}
+/* Removed ErrorFallback component */
 
 interface Props {
   user: User | null;
@@ -49,6 +43,7 @@ export const AdminViewContent: React.FC<Props> = ({
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
   const { runTask } = useTaskExecutor();
+  const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
 
   const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
   const handleRunMaintenance = useCallback(async () => {
@@ -103,6 +98,16 @@ export const AdminViewContent: React.FC<Props> = ({
     isFetchingNextPage
   });
 
+  const editingPhotoId = useGalleryStore((s) => s.editingPhotoId);
+  const setEditingPhotoId = useGalleryStore((s) => s.setEditingPhotoId);
+
+  useEffect(() => {
+    if (editingPhotoId) {
+      logic.setEditPhotoId(editingPhotoId);
+      setEditingPhotoId(null);
+    }
+  }, [editingPhotoId, setEditingPhotoId, logic]);
+
   const actions = useAdminActions(logic);
   const { tasks, cancelTask } = useTasks();
   const { reset, clear } = useMultiSelect();
@@ -149,7 +154,7 @@ export const AdminViewContent: React.FC<Props> = ({
   }
 
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback} key="admin-main">
+    <ErrorBoundary>
       <AdminGlobalModals />
       
       <div className="flex h-screen overflow-hidden bg-brand-bg">

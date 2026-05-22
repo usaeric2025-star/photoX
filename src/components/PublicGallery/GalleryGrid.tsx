@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { VirtuosoGrid, VirtuosoGridHandle, VirtuosoGridProps as BaseVirtuosoGridProps } from 'react-virtuoso';
+import { VIRTUOSO_CONFIG } from '../../config/virtuoso.config';
 import { Photo, Category, Manufacturer } from '../../types';
 import { PublicPhotoCard } from '../public/PublicPhotoCard';
 import { AdminPhotoCard } from '../admin/AdminPhotoCard';
@@ -148,8 +149,8 @@ export const GalleryGrid: React.FC<GalleryGridProps> = (props) => {
       components={props.virtuosoComponents}
       context={props.virtuosoContext}
       endReached={handleLoadMore}
-      overscan={props.columns * 4}
-      increaseViewportBy={1000}
+      overscan={VIRTUOSO_CONFIG.overscan(props.columns)}
+      increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
       useWindowScroll={false}
       itemClassName="virtuoso-grid-item"
       listClassName={`grid gap-2 px-1.5 py-2 ${props.columns === 2 ? 'grid-cols-2' : props.columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}

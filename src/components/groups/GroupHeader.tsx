@@ -61,7 +61,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
           }}
         >
           <div className="flex items-center gap-2 min-h-[1.5rem]">
-            {isGroupDataLoading && activeGroupPhotos.length === 0 ? (
+            {isGroupDataLoading ? (
               <Skeleton className="h-6 w-32 bg-slate-200" />
             ) : (
               <>

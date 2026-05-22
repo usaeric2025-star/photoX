@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
-import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback, useTagStats, useTagsQuery, useScrollRestoration, useDebouncedSearch } from '../hooks';
+import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback, useTagsQuery, useScrollRestoration, useDebouncedSearch } from '../hooks';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
 import { useStore } from '../store';
@@ -16,17 +16,10 @@ import { useMultiSelect } from '../hooks/useMultiSelect';
 import { FullPageLoading } from '../components/FullPageLoading';
 import { saveData, syncCache } from '../utils/indexedDB';
 import { PublicGallery } from '../components/public/PublicGallery';
-import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { loginWithGoogle } from '../services/supabaseService';
 
-function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
-  return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <p className="text-red-500">页面出错了: {error instanceof Error ? error.message : String(error)}</p>
-      <button onClick={resetErrorBoundary} className="mt-4 px-4 py-2 bg-slate-900 text-white rounded">重试</button>
-    </div>
-  );
-}
+/* Removed ErrorFallback component */
 
 const EMPTY_TAGS: Tag[] = [];
 
@@ -153,9 +146,6 @@ export default function PublicView() {
     return tagsQuery?.data ?? [];
   }, [tagsQuery.data]);
   
-  // Calculate tag stats for hot tags functionality
-  useTagStats(photos);
-  
   // ========== 5. 导航和参数 ==========
   const navigate = useNavigate();
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
@@ -207,7 +197,7 @@ export default function PublicView() {
             exit={{ opacity: 0 }}
             className="flex-1 overflow-hidden"
           >
-            <ErrorBoundary FallbackComponent={ErrorFallback} key="publicGallery">
+            <ErrorBoundary>
               <PublicGallery 
                 photos={photos}
                 categories={categoriesData}

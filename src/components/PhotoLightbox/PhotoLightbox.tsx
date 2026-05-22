@@ -135,7 +135,6 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
           handleShare={handleShare}
           onAiAnalyze={isStaffMode ? onAiAnalyze : undefined}
           onCancelAnalyze={onCancelAnalyze}
-          onEditPhoto={isStaffMode ? onEditPhoto : undefined}
           onToggleHidden={isStaffMode ? onToggleHidden : undefined}
           onTogglePinned={isStaffMode ? onTogglePinned : undefined}
           onUngroup={isStaffMode ? onUngroup : undefined}

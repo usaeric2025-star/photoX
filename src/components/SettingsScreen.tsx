@@ -127,7 +127,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             cloudCount={cloudCount}
             lastSyncTime={lastSyncTime}
             isSyncing={isSyncing}
-            setAlertDialog={setAlertDialog}
             photos={photos}
             categories={categories}
             tags={tags}

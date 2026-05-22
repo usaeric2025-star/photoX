@@ -3,6 +3,7 @@ import { Photo, ProductGroup } from '../../types';
 import { Star, Sparkles, Check, Info, Palette, Layers, Quote } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
 import { VirtuosoGrid } from 'react-virtuoso';
+import { VIRTUOSO_CONFIG } from '@/config/virtuoso.config';
 
 interface GroupGridViewProps {
   photos: Photo[];
@@ -205,8 +206,8 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         ref={virtuosoRef}
         style={{ height: '100%', width: '100%' }}
         totalCount={isLoading ? 12 : photos.length}
-        overscan={3}
-        increaseViewportBy={300}
+        overscan={VIRTUOSO_CONFIG.overscan(4)}
+        increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
         useWindowScroll={false}
         endReached={onEndReached}
         components={{

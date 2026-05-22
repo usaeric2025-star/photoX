@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCcw } from 'lucide-react';
+import { Spinner } from '@/components/ui/Spinner';
 import { ProductFormData } from '../../../types';
 
 interface Props {
@@ -23,7 +23,7 @@ export const BasicInfoTab: React.FC<Props> = ({
              <div className="aspect-square rounded-2xl overflow-hidden bg-slate-900 shadow-lg border-2 border-white relative">
                 {isProcessingImage && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40">
-                    <RefreshCcw className="text-white animate-spin" size={24} />
+                    <Spinner size="md" className="text-white" />
                   </div>
                 )}
                 <img src={previewSrc} className="w-full h-full object-contain" alt="Preview" />

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { Search, ArrowDown, ArrowUp, LayoutGrid, Layers, Heart, X, Pin, Grid2X2, Grid3X3, Grid } from 'lucide-react';
+import { FilterChip } from '@/components/ui/FilterChip';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGalleryStore } from '../store';
 import { Category, Tag, AppSettings } from '../types';
@@ -180,39 +181,22 @@ export const PublicGalleryFilters: React.FC<PublicGalleryFiltersProps> = ({
                 <div key={i} className="h-[22px] w-14 bg-[#F5F5F5] animate-pulse rounded-full shrink-0" />
               ))
             ) : (
-              tagsToRender.map((tag, idx) => {
+                          tagsToRender.map((tag, idx) => {
                 const strTagId = String(tag.id);
                 const isSelected = (selectedTagIds || []).includes(strTagId);
                 const isPinned = !!tag.is_pinned || pinnedIds.includes(strTagId);
-                const isHot = !isPinned && hotIds.has(strTagId); 
-                const label = tag.zh || tag.name;
-                const displayLabel = lang === 'zh' ? label : label.toUpperCase();
-                
+                const isHot = !isPinned && hotIds.has(strTagId);
                 return (
-                  <button 
+                  <FilterChip
                     key={strTagId}
+                    label={lang === 'zh' ? (tag.zh || tag.name) : (tag.zh || tag.name).toUpperCase()}
+                    selected={isSelected}
+                    pinned={isPinned}
+                    hot={isHot}
                     onClick={() => { 
                       setSelectedTagIds(prev => (prev || []).includes(strTagId) ? [] : [strTagId]);
                     }}
-                    className={cn(
-                      "px-3 h-[22px] rounded-full text-[9px] font-extrabold transition-all border flex items-center gap-1 shrink-0 whitespace-nowrap",
-                      isSelected 
-                        ? 'bg-[#0051BA] border-[#0051BA] text-white shadow-sm' 
-                        : isPinned
-                          ? 'border-amber-200 bg-amber-50/90 text-amber-700 shadow-xs'
-                          : isHot
-                            ? "border-[#E8BA5A]/50 bg-[#FFF9EA]/80 text-[#B8860B]"
-                            : 'bg-[#F1F3F4]/70 border-transparent text-[#888888]'
-                    )}
-                  >
-                    {displayLabel}
-                    {isPinned && <Pin size={8} className="fill-current text-amber-600 rotate-45" />}
-                    {isHot && (
-                      <span className="text-[7px] font-black px-1.5 bg-[#FFB700] text-white rounded-[3px] tracking-tighter">
-                        HOT
-                      </span>
-                    )}
-                  </button>
+                  />
                 );
               })
             )}
