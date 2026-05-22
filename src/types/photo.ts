@@ -77,7 +77,7 @@ export interface Tag {
   aliases: string[];
   user_id?: string;
   is_pinned?: boolean;
-  usage_count?: number;
+  hot_score?: number;
   is_global?: boolean;
 }
 

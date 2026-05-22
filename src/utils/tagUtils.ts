@@ -4,7 +4,7 @@ import { batchCreateTags } from '../services/tagService';
 /**
  * 标签排序算法：
  * 1. 推荐（Pinned）优先
- * 2. 使用次数（usageCount）降序
+ * 2. 使用次数（hotScore）降序
  * 3. 名称（name/zh）升序（保持同频波动下的确定性）
  * 
  * 稳定性设计：
@@ -19,8 +19,8 @@ export const sortTagsByPopularity = (tags: Tag[]): Tag[] => {
     if (!a.is_pinned && b.is_pinned) return 1;
 
     // 2. 使用频率 (桶排序思想：如果需要更稳定，可以按每10次一个台阶归类)
-    const countA = a.usage_count || 0;
-    const countB = b.usage_count || 0;
+    const countA = a.hot_score || 0;
+    const countB = b.hot_score || 0;
     if (countA !== countB) return countB - countA;
 
     // 3. 确定性降级（字母序）

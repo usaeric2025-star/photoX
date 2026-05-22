@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useFeedback, useAdminMode, useTasks, useTaskExecutor } from '@/hooks';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { toast } from 'sonner';
+import { FullPageLoading } from '@/components/FullPageLoading';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AdminGlobalModals } from '@/components/admin/AdminGlobalModals';
 import { BatchEditScreen } from '@/components/admin/BatchEditScreen';
@@ -46,6 +47,13 @@ export const AdminViewContent: React.FC<Props> = ({
   const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
 
   const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
+  const [showImmediateLoading, setShowImmediateLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowImmediateLoading(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
+  
   const handleRunMaintenance = useCallback(async () => {
     if (isMaintenanceRunning) return;
     setIsMaintenanceRunning(true);
@@ -148,6 +156,11 @@ export const AdminViewContent: React.FC<Props> = ({
   }, [logic]);
 
   const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
+
+  const isActuallyLoading = showImmediateLoading || isLoading;
+  if (isActuallyLoading) {
+    return <FullPageLoading />;
+  }
 
   if (authChecked && !user) {
     return <LoginScreen loginWithGoogle={sessionValue.loginWithGoogle} isLoading={sessionValue.loadingType === 'auth'} />;

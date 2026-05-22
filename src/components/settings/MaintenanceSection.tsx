@@ -2,6 +2,7 @@ import React from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ShieldCheck, RefreshCw } from 'lucide-react';
 import { Photo } from '../../types';
+import { AppSettings } from '@/types';
 import { useTaskExecutor } from '@/hooks/useTaskExecutor';
 import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,10 +15,14 @@ interface Props {
   isMaintenanceRunning: boolean;
   cardClass: string;
   buttonStyles: any;
+  settings: AppSettings;
+  setSettingField: (field: keyof AppSettings, value: any) => void;
+  inputClass: string;
 }
 
 export const MaintenanceSection: React.FC<Props> = ({ 
-  photos, onHealthCheck, onRunMaintenance, isChecking, isMaintenanceRunning, cardClass, buttonStyles 
+  photos, onHealthCheck, onRunMaintenance, isChecking, isMaintenanceRunning, cardClass, buttonStyles,
+  settings, setSettingField, inputClass
 }) => {
   const { runTask } = useTaskExecutor();
   const queryClient = useQueryClient();
@@ -39,6 +44,34 @@ export const MaintenanceSection: React.FC<Props> = ({
       </div>
       <p className="text-xs text-brand-navy/60 mb-4 px-2">检测数据健康状况或修复存储库错误。</p>
       
+      <div className="space-y-4 mb-6 pt-2 border-t border-brand-navy/5">
+        <label className="text-[10px] font-bold text-brand-navy uppercase tracking-widest">热门标签配置 / Hot Tags Config</label>
+        
+        {/* 热门标签数量 */}
+        <div className="space-y-1">
+          <label className="text-xs text-brand-navy/70">热门标签显示数量</label>
+          <input
+            type="number"
+            value={settings?.hot_tags_count ?? 9}
+            onChange={(e) => setSettingField('hot_tags_count', parseInt(e.target.value) || 9)}
+            className={inputClass}
+          />
+          <p className="text-[10px] text-brand-navy/40">前台显示多少个热门标签</p>
+        </div>
+
+        {/* 热门标签阈值 */}
+        <div className="space-y-1">
+          <label className="text-xs text-brand-navy/70">热门标签热度阈值</label>
+          <input
+            type="number"
+            value={settings?.hot_tag_threshold ?? 10}
+            onChange={(e) => setSettingField('hot_tag_threshold', parseInt(e.target.value) || 10)}
+            className={inputClass}
+          />
+          <p className="text-[10px] text-brand-navy/40">热度大于此值才显示热门标签</p>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <button 
           onClick={onHealthCheck}

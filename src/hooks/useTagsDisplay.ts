@@ -14,15 +14,15 @@ export function useTagsDisplay(tags: Tag[], settings?: AppSettings) {
 
     const candidates = tags.map(tag => ({
       ...tag,
-      usage_count: tag.usage_count || 0
+      hot_score: tag.hot_score || 0
     })).filter(tag => 
       !tag.is_pinned && 
       !pinnedIds.includes(String(tag.id)) && 
-      (tag.usage_count || 0) >= hotTagThreshold
+      (tag.hot_score || 0) >= hotTagThreshold
     );
 
     const sorted = [...candidates].sort((a, b) => {
-      const diff = (b.usage_count || 0) - (a.usage_count || 0);
+      const diff = (b.hot_score || 0) - (a.hot_score || 0);
       if (diff !== 0) return diff;
       return (a.zh || a.name || '').localeCompare(b.zh || b.name || '', 'zh-CN');
     });
@@ -43,8 +43,8 @@ export function useTagsDisplay(tags: Tag[], settings?: AppSettings) {
       if (aHot && !bHot) return -1;
       if (!aHot && bHot) return 1;
       
-      const countA = a.usage_count || 0;
-      const countB = b.usage_count || 0;
+      const countA = a.hot_score || 0;
+      const countB = b.hot_score || 0;
       return countB - countA || (a.zh || a.name || '').localeCompare(b.zh || b.name || '', 'zh-CN');
     });
   }, [tags, hotIds, pinnedIds]);

@@ -95,8 +95,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
       const strId = String(t.id);
       return {
         ...t,
-        is_pinned: t.is_pinned || pinnedIds.has(strId),
-        usage_count: t.usage_count || 0
+        is_pinned: t.is_pinned || pinnedIds.has(strId)
       };
     });
     return sortTagsByPopularity(enrichedTags);
