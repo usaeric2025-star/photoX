@@ -330,7 +330,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
                     virtuosoComponents={virtuosoComponents}
                     virtuosoContext={virtuosoContext}
                     handleLoadMore={handleLoadMore}
-                    isAdminMode={false}
+                    isAdminMode={isStaffMode}
                     showGroupsCollapsed={showGroupsCollapsed}
                     lang={lang}
                     t={t}
@@ -368,7 +368,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         photos={props.photos}
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
-        isStaffMode={false}
+        isStaffMode={isStaffMode}
         lang={lang}
         t={t}
         categories={props.categories}
@@ -405,7 +405,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
               onClose={() => setLightboxIndex(null)}
               onPrev={() => setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : (displayPhotos?.length || 0) - 1)}
               onNext={() => setLightboxIndex(lightboxIndex < (displayPhotos?.length || 0) - 1 ? lightboxIndex + 1 : 0)}
-              isStaffMode={false}
+              isStaffMode={isStaffMode}
               contactWhatsApp={handleContactWhatsApp}
               lang={lang}
               t={t}
