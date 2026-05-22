@@ -39,12 +39,27 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cacheKey = photoId || src || '';
-  const [initiallyLoaded] = useState(() => (cacheKey ? loadedImagesCache.has(cacheKey) : false));
-  const [shouldLoad, setShouldLoad] = useState(initiallyLoaded || loading === 'eager');
-  const [isImageLoaded, setIsImageLoaded] = useState(initiallyLoaded);
+  
+  const isInitiallyLoaded = useMemo(() => {
+    return cacheKey ? loadedImagesCache.has(cacheKey) : false;
+  }, [cacheKey]);
+
+  const [shouldLoad, setShouldLoad] = useState(isInitiallyLoaded || loading === 'eager');
+  const [isImageLoaded, setIsImageLoaded] = useState(isInitiallyLoaded);
   const [isImageError, setIsImageError] = useState(false);
 
+  const [prevKey, setPrevKey] = useState(cacheKey);
   const lastSuccessfulBaseUrlRef = useRef<string>(src ? getBaseUrl(src) : '');
+
+  // Synchronously reset state during render when the item is recycled to a new image
+  if (cacheKey !== prevKey) {
+    setPrevKey(cacheKey);
+    const currentlyCached = cacheKey ? loadedImagesCache.has(cacheKey) : false;
+    setIsImageLoaded(currentlyCached);
+    setIsImageError(false);
+    setShouldLoad(currentlyCached || loading === 'eager');
+    lastSuccessfulBaseUrlRef.current = src ? getBaseUrl(src) : '';
+  }
 
   // Handle dynamic source changes smoothly without flashing placeholder when only params like timestamp alter
   useEffect(() => {
@@ -53,8 +68,8 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
     const isCached = loadedImagesCache.has(newCacheKey);
     const newBaseUrl = getBaseUrl(src);
 
-    if (isCached || loading === 'eager') {
-      setIsImageLoaded(isCached);
+    if (isCached) {
+      setIsImageLoaded(true);
       setIsImageError(false);
       setShouldLoad(true);
       lastSuccessfulBaseUrlRef.current = newBaseUrl;
@@ -66,12 +81,15 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
         // Genuine new photo, fall back to blur-hash placeholder to fetch freshly
         setIsImageLoaded(false);
         setIsImageError(false);
+        if (loading === 'eager') {
+          setShouldLoad(true);
+        }
       }
     }
   }, [src, photoId, loading]);
 
   useEffect(() => {
-    if (loading === 'eager' || initiallyLoaded) {
+    if (loading === 'eager' || isInitiallyLoaded) {
       setShouldLoad(true);
       return;
     }
@@ -86,7 +104,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
     );
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [loading, initiallyLoaded]);
+  }, [loading, isInitiallyLoaded]);
 
   const placeholderDataUrl = useMemo(() => {
     if (!thumbHash) return null;
@@ -100,8 +118,12 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
       onClick={onClick}
     >
       {/* 1. Pulse fallback if neither loaded nor having a thumbhash placeholder */}
-      {!isImageLoaded && !isImageError && !placeholderDataUrl && (
-        <div className="absolute inset-0 bg-slate-200 animate-pulse flex items-center justify-center">
+      {!isImageError && !placeholderDataUrl && (
+        <div 
+          className={`absolute inset-0 bg-slate-200 flex items-center justify-center transition-opacity duration-300 ${
+            isImageLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100 animate-pulse'
+          }`}
+        >
           <ImageIcon className="text-slate-300 w-8 h-8 opacity-20" />
         </div>
       )}
@@ -117,12 +139,14 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
       )}
 
       {/* 3. Thumbhash blur placeholder */}
-      {!isImageError && !isImageLoaded && placeholderDataUrl && (
+      {!isImageError && placeholderDataUrl && (
         <img 
           draggable={false}
           src={placeholderDataUrl} 
           alt=""
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none filter blur-sm scale-110"
+          className={`absolute inset-0 w-full h-full object-cover pointer-events-none filter blur-sm scale-110 transition-opacity duration-350 ${
+            isInitiallyLoaded ? 'opacity-0 pointer-events-none' : isImageLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
         />
       )}
 
@@ -137,7 +161,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
           alt={alt}
           width={400}
           className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${
-            initiallyLoaded ? 'opacity-100' : isImageLoaded ? 'opacity-100' : 'opacity-0'
+            isInitiallyLoaded ? 'opacity-100' : isImageLoaded ? 'opacity-100' : 'opacity-0'
           } ${imgClassName}`}
           onLoad={() => {
             if (cacheKey) {
