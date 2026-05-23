@@ -66,7 +66,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
       if (onAiAnalyze) {
           await onAiAnalyze(photo);
       }
-      console.log('AI 分析完成');
+      // AI 分析完成
     } catch (error) {
       console.error('AI 分析失败:', error);
     } finally {

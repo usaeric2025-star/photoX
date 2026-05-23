@@ -15,7 +15,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
 
   const { 
     formState, updateForm, newPhotoData, setNewPhotoData, 
-    showOtherFields, setShowOtherFields, resetForm, isStaffMode 
+    showOtherFields, setShowOtherFields, resetForm, isStaffMode, batchEditingIds
   } = useGalleryStore(useShallow(s => ({
     formState: s.formState,
     updateForm: s.updateForm,
@@ -24,11 +24,50 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     showOtherFields: s.showOtherFields,
     setShowOtherFields: s.setShowOtherFields,
     resetForm: s.resetForm,
-    isStaffMode: s.isStaffMode
+    isStaffMode: s.isStaffMode,
+    batchEditingIds: s.batchEditingIds
   })));
 
   // ... (Consolidate PhotoManagement logic here...)
   
+  // Calculate common attributes for batch editing
+  useEffect(() => {
+    if (!batchEditingIds || batchEditingIds.length === 0) return;
+    
+    const selectedPhotos = photos.filter(p => batchEditingIds.includes(p.id));
+    if (selectedPhotos.length === 0) return;
+
+    // Helper for simple fields
+    const getCommonValue = <T>(key: keyof Photo): T | undefined => {
+      const first = selectedPhotos[0];
+      const val = first[key];
+      if (selectedPhotos.every(p => p[key] === val)) return val as T;
+      return undefined;
+    };
+
+    const commonCategory = getCommonValue<string | null>('category_id');
+    const commonManufacturer = getCommonValue<string | null>('manufacturer_id');
+    
+    // Tag intersection
+    const commonTags = selectedPhotos.reduce<string[]>((acc, p, i) => {
+      if (i === 0) return p.tag_ids || [];
+      return acc.filter(id => (p.tag_ids || []).includes(id));
+    }, []);
+
+    // Only update if we have a valid common value (string or array)
+    const updates: Partial<ProductFormData> = {};
+    if (commonCategory !== undefined) updates.category_id = commonCategory;
+    if (commonManufacturer !== undefined) updates.manufacturer_id = commonManufacturer;
+    // For tags, only set if it's the same set of tags and not empty? 
+    // Actually, intersection could be empty if they share NO tags.
+    // Let's set it if intersection is not empty
+    if (commonTags.length > 0) updates.tag_ids = commonTags;
+
+    if (Object.keys(updates).length > 0) {
+      updateForm(updates);
+    }
+  }, [batchEditingIds, photos, updateForm]);
+
   const deletePhoto = useCallback(async (idOrIds: string | string[]) => {
     const isStaff = isStaffMode || !!user;
     if (!isStaff) return;

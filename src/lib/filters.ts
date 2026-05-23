@@ -190,6 +190,9 @@ export function filterPhotos(
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
     
+    if (a.is_hidden && !b.is_hidden) return 1;
+    if (!a.is_hidden && b.is_hidden) return -1;
+    
     if (sortOrder === 'name') {
       return (a.name || '').localeCompare(b.name || '');
     }
@@ -283,6 +286,9 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
   representatives.sort((a, b) => {
     if (a.is_pinned && !b.is_pinned) return -1;
     if (!a.is_pinned && b.is_pinned) return 1;
+
+    if (a.is_hidden && !b.is_hidden) return 1;
+    if (!a.is_hidden && b.is_hidden) return -1;
 
     if (sortOrder === 'name') {
       return (a.name || '').localeCompare(b.name || '');

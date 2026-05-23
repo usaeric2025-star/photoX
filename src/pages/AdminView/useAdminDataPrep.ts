@@ -51,7 +51,8 @@ export const useAdminDataPrep = () => {
     setPromptDialog: s.setPromptDialog,
     setLightboxIndex: s.setLightboxIndex,
     totalCount: s.totalCount,
-    isStaffMode: s.isStaffMode
+    isStaffMode: s.isStaffMode,
+    resetForm: s.resetForm
   })));
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
@@ -175,6 +176,7 @@ export const useAdminDataPrep = () => {
     initialPhotoId, setInitialPhotoId, checkSyncLock, loginWithGoogle, showError, onEditPhotoById, handleLogoUpload,
     isMaintenanceRunning, onRunMaintenance: handleRunMaintenance,
     handleManageClick: () => store.setActiveScreen('manage'),
+    resetForm: store.resetForm,
     handleToggleHidden: (p: Photo) => {
       if (checkSyncLock()) {
         showError(new Error('系统忙碌'), '系统忙碌');

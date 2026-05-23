@@ -33,9 +33,6 @@ export const MainAdminScreen: React.FC = React.memo(() => {
   
   const t = translations[lang] || translations.zh;
   
-  // Debug log to trace admin data loading
-  console.log('[DEBUG] MainAdminScreen Render - Photos:', photos.length, 'Syncing:', isSyncing, 'Loading:', isLoading);
-  
   const {
     onBatchAiAnalyze, onGroupPhotos, onBatchEdit, 
     onDeletePhoto

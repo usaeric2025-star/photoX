@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { X as CloseIcon, RefreshCcw, ChevronRight, EyeOff, Eye, Save, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -18,7 +18,7 @@ export const BatchEditScreen = () => {
     formState, updateForm, batchIsHiddenApplied, setBatchIsHiddenApplied,
     showOtherFields, setShowOtherFields, handleDeletePhotos: onDelete,
     quickAddManufacturer: quickAddMfr, quickAddTag: quickAddT,
-    addTag, updateTag, deleteTag
+    addTag, updateTag, deleteTag, resetForm
   } = logic;
   
   const [isLocalSaving, setIsLocalSaving] = useState(false);
@@ -33,8 +33,13 @@ export const BatchEditScreen = () => {
     setAlertDialog: s.setAlertDialog,
     isSyncing: s.isSyncing,
     appLang: s.appLang,
-    setBatchEditingIds: s.setBatchEditingIds
+    setBatchEditingIds: s.setBatchEditingIds,
+    resetForm: s.resetForm
   })));
+
+  useEffect(() => {
+    resetForm();
+  }, [resetForm]);
 
   const handleSave = async () => {
     setIsLocalSaving(true);

@@ -177,7 +177,7 @@ export const usePhotoAI = (
         
         const resRaw = await analyzeProductPhoto(imageData, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel, photo.category_id, originalName, signal);
         const result = cleanObject(resRaw);
-        console.log('AI 返回结果:', result);
+        // AI 返回结果: result
         
         if (result.name) {
           if (isMeasurementOnly(result.name)) result.name = '';
