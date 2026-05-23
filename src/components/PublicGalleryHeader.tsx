@@ -72,12 +72,7 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
              className="w-9 h-9 bg-white border border-[#ECECEC] text-[#555555] rounded-full flex items-center justify-center hover:bg-[#F1F3F4] active:scale-95 transition-all shadow-none"
              title={t.login}
           >
-            <div className="relative">
-              <Globe size={16} />
-              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#0051BA] rounded-full flex items-center justify-center border-2 border-white">
-                <Plus size={5} className="text-white" />
-              </div>
-            </div>
+             <LogIn size={16} />
           </button>
       </div>
     </header>

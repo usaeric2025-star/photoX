@@ -87,12 +87,17 @@ export const useAdminPhotos = (
   }, [photos]);
 
   // Handle AI Resume
+  const isProcessingRef = useRef(false);
   useEffect(() => {
+    if (isProcessingRef.current) return;
     const sPhotos = safeArray(photos);
     if (sPhotos.length > 0) {
       const runningBatchTask = tasks.find(t => t.status === 'running' && t.name.includes('批量 AI 识别'));
       if (runningBatchTask && !aiHook.aiDebugInfo) {
-        aiHook.analyzeBatch(sPhotos, runningBatchTask.id);
+        isProcessingRef.current = true;
+        aiHook.analyzeBatch(sPhotos, runningBatchTask.id).finally(() => {
+          isProcessingRef.current = false;
+        });
       }
     }
   }, [safeArray(photos).length]);

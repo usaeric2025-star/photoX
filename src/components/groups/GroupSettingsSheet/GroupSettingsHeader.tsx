@@ -25,7 +25,7 @@ export const GroupSettingsHeader: React.FC<{
         <Settings2 size={20} />
         <SheetTitle className="font-black text-lg tracking-tight text-white m-0">合组设置</SheetTitle>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
          <button 
            onClick={() => {
              if (onUngroup && activeGroupId) {
@@ -51,7 +51,7 @@ export const GroupSettingsHeader: React.FC<{
                });
              }
            }}
-           className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all"
+           className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all active:scale-95"
            title="解散群组"
          >
            <Trash2 size={18} />
@@ -74,7 +74,7 @@ export const GroupSettingsHeader: React.FC<{
              }
            }}
            disabled={isSaving}
-           className="w-24 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white text-indigo-600 hover:bg-white shadow-xl transition-all font-black disabled:opacity-50"
+           className="px-6 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-white text-indigo-600 hover:bg-slate-50 shadow-xl transition-all font-black disabled:opacity-50 active:scale-95"
            title="保存并关闭"
          >
            {isSaving ? 'Saving...' : '保存'}
