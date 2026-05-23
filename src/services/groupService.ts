@@ -95,7 +95,8 @@ export const upsertGroup = async (group: Partial<ProductGroup> & { id: string })
     }
 };
 
-export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: string, user_id: string }) => {
+export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: string }) => {
+  console.log('saveGroupToCloud group:', group);
   await upsertGroup(group);
 };
 
