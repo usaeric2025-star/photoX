@@ -243,6 +243,9 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     if (!isAdminMode) {
         query = query.or(VISIBILITY_OR_QUERY);
     }
+    
+    query = query.order('is_hidden', { ascending: true, nullsFirst: true })
+                 .order('created_at', { ascending: false });
 
     const { data, error } = await query;
 
@@ -301,6 +304,7 @@ export const loadPhotosByGroupIdPaginated = async (
   const [countRes, queryRes] = await Promise.all([
     countQuery,
     query.order('is_group_cover', { ascending: false })
+         .order('is_hidden', { ascending: true, nullsFirst: true })
          .order('created_at', { ascending: false })
          .range(from, to)
   ]);
