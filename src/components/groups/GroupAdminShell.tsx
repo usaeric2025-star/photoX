@@ -386,14 +386,16 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                                 : 'border-slate-100 hover:border-slate-200'
                             }`}
                           >
-                            <PhotoImageContainer 
-                              src={getCacheBustedImageUrl(photo, 'thumb')}
-                              thumbHash={photo.thumb_hash}
-                              alt="Item"
-                              className="w-full h-full"
-                              imgClassName="w-full h-full object-cover"
-                              loading="lazy"
-                            />
+                            <div className="relative w-full h-full bg-slate-50">
+                              <PhotoImageContainer 
+                                src={photo.thumb_url || photo.image_url}
+                                thumbHash={photo.thumb_hash}
+                                alt="Item"
+                                className="w-full h-full"
+                                imgClassName="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
                             {photo.item_code && (
                               <div className="absolute bottom-1 left-1 right-1 bg-black/60 backdrop-blur-xs text-[8px] font-mono text-white px-1 py-0.5 rounded text-center truncate">
                                 {photo.item_code}
