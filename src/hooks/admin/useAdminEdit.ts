@@ -55,7 +55,6 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     }, []);
 
     // Only update if we have a valid common value (string or array)
-    // AND it differs from current formState to avoid infinite loop
     const updates: Partial<ProductFormData> = {};
     if (commonCategory !== undefined && formState.category_id !== commonCategory) updates.category_id = commonCategory;
     if (commonManufacturer !== undefined && formState.manufacturer_id !== commonManufacturer) updates.manufacturer_id = commonManufacturer;
@@ -66,7 +65,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     if (Object.keys(updates).length > 0) {
       updateForm(updates);
     }
-  }, [batchEditingIds, photos, updateForm]);
+  }, [batchEditingIds, photos, updateForm, formState.category_id, formState.manufacturer_id, formState.tag_ids]);
 
   // 批量编辑 API 调用
   const batchUpdatePhotos = useCallback(async (ids: string[], changes: any) => {
