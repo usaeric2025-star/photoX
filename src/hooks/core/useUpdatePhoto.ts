@@ -67,11 +67,8 @@ export const useUpdatePhotoMutation = () => {
 
       return { previousInfinite, previousGroups };
     },
-    onSuccess: (data, variables) => {
-      // If the image file itself was updated (rotated or re-uploaded), we must invalidate to reload the new images/thumbnails URLs immediately
-      if (variables.updates.uri || variables.updates.image_url) {
-        invalidatePhotos();
-      }
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['photos', 'group'] });
     },
     onError: (err: unknown, variables, context: { previousInfinite?: InfiniteData<InfinitePhotosData>; previousGroups?: [any, Photo[]][] } = {}) => {
       // Check if it's a network error

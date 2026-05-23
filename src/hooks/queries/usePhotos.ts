@@ -47,7 +47,6 @@ export const useInfinitePhotos = (filters: {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     staleTime: 1000 * 60, // 1 分钟
-    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
@@ -63,7 +62,6 @@ export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_i
       isAdminMode 
     }),
     queryFn: () => getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode),
-    refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
   });
 };
@@ -74,7 +72,6 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
     queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
     select: (data) => data ?? [],
-    refetchOnWindowFocus: false,
   });
 };
 
@@ -92,6 +89,5 @@ export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode:
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
       return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
     },
-    refetchOnWindowFocus: false,
   });
 };
