@@ -39,6 +39,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
 }) => {
   
   const { onEditPhoto } = usePhotoActions();
+  const { canEdit } = usePermission();
   const catName = getTranslatedCategoryName(photo.category_id, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturer_id, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
@@ -82,7 +83,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
             >
               {isCopied ? <Check size={16} /> : <Share2 size={16} />}
             </button>
-            {isAdminMode && (
+            {isAdminMode && canEdit && (
               <>
                 <button 
                   onClick={() => {
@@ -150,7 +151,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
           </div>
         )}
 
-        {isAdminMode && photo.group_id && (
+        {isAdminMode && canEdit && photo.group_id && (
           <div className="grid grid-cols-2 gap-2 mt-2">
                <button 
                  onClick={() => onUngroup?.(photo.id)}

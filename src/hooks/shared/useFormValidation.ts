@@ -7,9 +7,10 @@ export function useFormValidation() {
     const { isBatch = false } = options;
 
     if (!isBatch) {
-      if (!form.name || !form.name.trim()) {
-        errors.push('产品名称不能为空');
-      }
+      // Product name is now optional to prevent blocking normal updates/saves
+      // if (!form.name || !form.name.trim()) {
+      //   errors.push('产品名称不能为空');
+      // }
 
       // Category is now optional to reduce friction
       // if (!form.categoryId || form.categoryId === 'uncategorized') {

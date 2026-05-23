@@ -19,19 +19,27 @@ export const loginWithGoogle = async () => {
       return { user: session.user };
     }
 
-    const redirectUrl = window.location.origin;
-    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl,
-        queryParams: {
-          prompt: 'select_account',
-        }
+        redirectTo: window.location.origin + '/admin',
+        skipBrowserRedirect: true
       }
     });
 
     if (error) throw error;
+    if (!data?.url) throw new Error('No authorization URL returned from Supabase');
+
+    const authWindow = window.open(
+      data.url,
+      'supabase_oauth_popup',
+      'width=600,height=700'
+    );
+
+    if (!authWindow) {
+      throw new Error('Please allow popups for this site to complete login.');
+    }
+
     return data;
   } catch (err: unknown) {
     throw err;

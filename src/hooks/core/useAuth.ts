@@ -23,10 +23,28 @@ export const useAuth = () => {
 
   const loginWithGoogle = useMutation({
     mutationFn: async () => {
-      await supabase.auth.signInWithOAuth({
+      // 1. Get the OAuth URL without redirecting current window
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: window.location.origin + '/admin' }
-      })
+        options: { 
+          redirectTo: window.location.origin + '/admin',
+          skipBrowserRedirect: true
+        }
+      });
+      
+      if (error) throw error;
+      if (!data?.url) throw new Error('No authorization URL returned from Supabase');
+
+      // 2. Open login in popup window
+      const authWindow = window.open(
+        data.url,
+        'supabase_oauth_popup',
+        'width=600,height=700'
+      );
+
+      if (!authWindow) {
+        throw new Error('Please allow popups for this site to complete login.');
+      }
     },
   })
 

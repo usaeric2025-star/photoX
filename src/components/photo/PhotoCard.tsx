@@ -6,7 +6,7 @@ import { safeArray } from '../../utils/safeAccess';
 import { useGalleryStore, useShallow } from '../../store';
 import { PhotoImageContainer } from './PhotoImageContainer';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
-import { useCategoriesQuery, useManufacturersQuery } from '../../hooks';
+import { useCategoriesQuery, useManufacturersQuery, usePermission } from '../../hooks';
 import { translations } from '../../lib/translations';
 
 export type PhotoCardVariant = 'admin' | 'public';
@@ -112,6 +112,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
+  const { canEdit } = usePermission();
 
   const enable = useCallback(() => {
     setIsMultiSelect(true);
@@ -154,13 +155,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [variant, isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox, showGroupsCollapsed, onClick]);
 
   const handleLongPress = useCallback(() => {
-    if (variant !== 'admin') return;
+    if (variant !== 'admin' || !canEdit) return;
     if (!isMultiSelect) {
       enable();
     } else {
       toggle();
     }
-  }, [variant, isMultiSelect, enable, toggle]);
+  }, [variant, isMultiSelect, enable, toggle, canEdit]);
 
   const displayCatName = useMemo(() => 
     getTranslatedCategoryName(photo.category_id, categories, lang, t),
@@ -199,7 +200,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const isTouchRef = useRef(false);
 
   const startPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (variant !== 'admin') return;
+    if (variant !== 'admin' || !canEdit) return;
     if (e.type === 'touchstart') {
       isTouchRef.current = true;
     } else if (isTouchRef.current && e.type === 'mousedown') {
@@ -309,7 +310,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       
       <PhotoStatusBadges photo={photo} variant={variant} />
 
-      {variant === 'admin' && onTogglePinned && (
+      {variant === 'admin' && canEdit && onTogglePinned && (
          <button 
            onClick={handleTogglePinnedClick}
            className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.is_pinned ? 'text-red-500' : ''} z-20 hover:scale-115 active:scale-95 transition-transform`}

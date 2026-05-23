@@ -259,7 +259,7 @@ export const analyzeProductPhoto = async (
     }
 
     // Filter redundant tagIds (existing tags) and new tags
-    let currentTagIds = (dataToProcess.tagIds || []).filter((tid: string) => {
+    let currentTagIds = (dataToProcess.tag_ids || dataToProcess.tagIds || []).filter((tid: string) => {
       const tObj = (tags || []).find(t => String(t.id) === String(tid));
       if (!tObj) return true;
       if (isRedundantTag(tObj.name)) return false;

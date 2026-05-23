@@ -32,7 +32,8 @@ import { GroupGridView } from './GroupGridView';
 import { useAdminMode } from '@/hooks';
 
 import { useGalleryStore, useShallow } from '../../store';
-import { useFeedback } from '../../hooks';
+import { useFeedback, useTaskExecutor } from '../../hooks';
+import { useQueryClient } from '@tanstack/react-query';
 import { translations } from '../../lib/translations';
 
 import { useInfinitePhotos, useCategoriesQuery, useManufacturersQuery } from '../../hooks';
@@ -89,6 +90,50 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
+
+  const queryClient = useQueryClient();
+  const { runTask } = useTaskExecutor();
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [selectedPhotosToAdd, setSelectedPhotosToAdd] = useState<string[]>([]);
+  const [addSearchKeyword, setAddSearchKeyword] = useState('');
+
+  // Sourcing all ungrouped photos
+  const ungroupedPhotosQuery = useInfinitePhotos({
+    isAdminMode: true
+  }, 120);
+
+  const ungroupedPhotos = useMemo(() => {
+    const rawList = ungroupedPhotosQuery.data?.pages.flatMap(p => p.photos) || [];
+    return cleanPhotos(rawList).filter(p => !p.group_id);
+  }, [ungroupedPhotosQuery.data]);
+
+  const filteredUngroupedPhotos = useMemo(() => {
+    if (!addSearchKeyword.trim()) return ungroupedPhotos;
+    const kw = addSearchKeyword.toLowerCase();
+    return ungroupedPhotos.filter(p => 
+      (p.name || '').toLowerCase().includes(kw) ||
+      (p.item_code || '').toLowerCase().includes(kw) ||
+      (p.model_number || '').toLowerCase().includes(kw) ||
+      (p.description || '').toLowerCase().includes(kw)
+    );
+  }, [ungroupedPhotos, addSearchKeyword]);
+
+  const handleConfirmAddPhotos = useCallback(async () => {
+    if (selectedPhotosToAdd.length === 0) return;
+    await runTask('添加照片到合组 / Add Photos to Group', async () => {
+      await updatePhotosGroupInCloud(selectedPhotosToAdd, { group_id: activeGroupId });
+      
+      // Clear selections and close drawer
+      setSelectedPhotosToAdd([]);
+      setIsAddSheetOpen(false);
+      
+      // Invalidate queries to refresh the group photos and main gallery
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['groupPhotos', activeGroupId] }),
+        queryClient.invalidateQueries({ queryKey: ['photos'] })
+      ]);
+    }, { showSuccessToast: true });
+  }, [selectedPhotosToAdd, activeGroupId, runTask, queryClient]);
 
   const { 
     tagIdToNameMap: tagMap
@@ -164,7 +209,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     if (onAddPhotoToGroup) {
       await onAddPhotoToGroup();
     } else {
-      console.warn('onAddPhotoToGroup is not defined');
+      setIsAddSheetOpen(true);
     }
   }, [onAddPhotoToGroup]);
 
@@ -269,6 +314,119 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
               setPromptDialog={setPromptDialog}
               t={t}
             />
+
+            {/* Add Photos to Group Dialog / Sheet */}
+            <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
+              <SheetContent side="right" className="w-[450px] max-w-full sm:w-[540px] bg-white p-0 flex flex-col h-full border-l border-slate-100 shadow-2xl z-[250]">
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                  <SheetTitle className="text-lg font-black text-slate-800 tracking-tight">
+                    添加照片到合组 / Add Photos to Group
+                  </SheetTitle>
+                  <button 
+                    onClick={() => setIsAddSheetOpen(false)}
+                    className="p-1 rounded-lg hover:bg-slate-150 text-slate-450 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="p-4 bg-slate-50 border-b border-slate-100 flex flex-col gap-2 shrink-0">
+                  <div className="relative">
+                    <input 
+                      type="text"
+                      className="w-full bg-white border border-slate-200 focus:outline-none focus:border-blue-500 rounded-xl px-4 py-2 text-xs font-bold font-sans pr-10"
+                      placeholder="搜索未分组照片... / Search ungrouped..."
+                      value={addSearchKeyword}
+                      onChange={(e) => setAddSearchKeyword(e.target.value)}
+                    />
+                    {addSearchKeyword && (
+                      <button 
+                        onClick={() => setAddSearchKeyword('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                    <span>未分组数量 / Ungrouped: {filteredUngroupedPhotos.length}</span>
+                    <span>已选择 / Selected: {selectedPhotosToAdd.length}</span>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 min-h-0 no-scrollbar">
+                  {ungroupedPhotosQuery.isLoading ? (
+                    <div className="space-y-3">
+                      <Skeleton className="h-24 w-full bg-slate-100 rounded-xl animate-pulse" />
+                      <Skeleton className="h-24 w-full bg-slate-100 rounded-xl animate-pulse" />
+                      <Skeleton className="h-24 w-full bg-slate-100 rounded-xl animate-pulse" />
+                    </div>
+                  ) : filteredUngroupedPhotos.length === 0 ? (
+                    <div className="text-center py-12 space-y-2">
+                      <Layers className="mx-auto text-slate-200" size={32} />
+                      <p className="text-xs font-semibold text-slate-400">没有找到未分组的照片</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-3">
+                      {filteredUngroupedPhotos.map((photo) => {
+                        const isSelected = selectedPhotosToAdd.includes(photo.id);
+                        return (
+                          <div 
+                            key={photo.id}
+                            onClick={() => {
+                              setSelectedPhotosToAdd(prev => 
+                                isSelected ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
+                              );
+                            }}
+                            className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer border-2 transition-all group select-none ${
+                              isSelected 
+                                ? 'border-blue-600 scale-95 shadow-md shadow-blue-500/10' 
+                                : 'border-slate-100 hover:border-slate-200'
+                            }`}
+                          >
+                            <img 
+                              src={photo.thumb_url || photo.uri || photo.image_url} 
+                              alt="Item" 
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                            {photo.item_code && (
+                              <div className="absolute bottom-1 left-1 right-1 bg-black/60 backdrop-blur-xs text-[8px] font-mono text-white px-1 py-0.5 rounded text-center truncate">
+                                {photo.item_code}
+                              </div>
+                            )}
+                            <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                              isSelected ? 'bg-blue-600 text-white shadow-sm' : 'bg-black/30 text-transparent border border-white/50'
+                            }`}>
+                              <Check size={10} className="stroke-[3]" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-slate-100 flex gap-3 shrink-0 bg-white">
+                  <button 
+                    onClick={() => {
+                      setSelectedPhotosToAdd([]);
+                      setIsAddSheetOpen(false);
+                    }}
+                    className="flex-1 py-3 text-slate-500 hover:bg-slate-50 font-bold text-xs uppercase tracking-wider rounded-xl border border-slate-150 transition-colors"
+                  >
+                    取消 / Cancel
+                  </button>
+                  <button 
+                    onClick={handleConfirmAddPhotos}
+                    disabled={selectedPhotosToAdd.length === 0}
+                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-blue-500/20 active:scale-95 transition-all text-center flex items-center justify-center"
+                  >
+                    确认添加 ({selectedPhotosToAdd.length})
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
 
            {/* Unified Photo Lightbox */}
            <AnimatePresence>

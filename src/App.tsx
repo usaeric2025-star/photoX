@@ -84,7 +84,41 @@ function AnimatedRoutes({ user }: { user: User | null }) {
 export default function AppRoutes() {
   const { user, isLoading } = useAuth();
   
-  // App-level initialization logic can stay, but fetchSettings is handled by useSettings hook.
+  // If loading inside a popup, detect auth credentials, wait for Supabase to persist them, send success postMessage, and close.
+  useEffect(() => {
+    if (window.opener && window.opener !== window) {
+      const hasAuthData = window.location.hash.includes('access_token') || 
+                          window.location.search.includes('code=') ||
+                          window.location.hash.includes('error=');
+      if (hasAuthData) {
+        const timer = setTimeout(() => {
+          try {
+            window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+            window.close();
+          } catch (e) {
+            console.error('Failed to postMessage or close popup:', e);
+          }
+        }, 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
+
+  // Listen for login success event in the main application frame
+  useEffect(() => {
+    const handleOauthMessage = (event: MessageEvent) => {
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('webcontainer')) {
+        return;
+      }
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        // Force reload the application to grab the session from localStorage
+        window.location.reload();
+      }
+    };
+    window.addEventListener('message', handleOauthMessage);
+    return () => window.removeEventListener('message', handleOauthMessage);
+  }, []);
 
   useEffect(() => {
     // 1. Detect OAuth error in URL hash OR query params

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings2, LogIn } from 'lucide-react';
+import { Settings2, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks';
 
 interface ToolsMenuProps {
   show: boolean;
@@ -15,6 +16,8 @@ interface ToolsMenuProps {
 export const ToolsMenu: React.FC<ToolsMenuProps> = ({ 
   show, t, handleOpenSettings, handleExitStaffMode, isStaff, currentLang, onSetLang 
 }) => {
+  const { user, loginWithGoogle, logout } = useAuth();
+
   return (
     <AnimatePresence>
       {show && (
@@ -45,6 +48,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                 ))}
              </div>
           </div>
+          
           <button 
             onClick={handleOpenSettings}
             className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
@@ -52,10 +56,35 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             <Settings2 size={16} /> <span className="text-xs font-bold uppercase">{t.systemSettings}</span>
           </button>
           
+          {user ? (
+            <button 
+              onClick={async () => {
+                await logout();
+                window.location.reload();
+              }}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 text-red-650 transition-colors text-left"
+            >
+              <LogOut size={16} /> <span className="text-xs font-bold uppercase">管理员登出 / Log Out</span>
+            </button>
+          ) : (
+            <button 
+              onClick={async () => {
+                try {
+                  await loginWithGoogle();
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 text-blue-600 transition-colors text-left"
+            >
+              <LogIn size={16} /> <span className="text-xs font-bold uppercase">管理员登录 / Admin Login</span>
+            </button>
+          )}
+
           {isStaff && (
             <button 
               onClick={handleExitStaffMode}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-left text-red-600"
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-left text-red-600 border-t border-slate-100"
             >
               <LogIn size={16} /> <span className="text-xs font-bold uppercase">{t.exitStaffMode}</span>
             </button>

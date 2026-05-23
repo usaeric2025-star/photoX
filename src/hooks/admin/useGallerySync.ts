@@ -19,14 +19,15 @@ export const useGallerySync = (
 ) => {
   const { 
     setPhotos, setTotalCount, setIsFetching, setIsFetchingNextPage, 
-    setHasNextPage, setLoadMorePhotos 
+    setHasNextPage, setLoadMorePhotos, setSettings 
   } = useGalleryStore(useShallow(s => ({
     setPhotos: s.setPhotos,
     setTotalCount: s.setTotalCount,
     setIsFetching: s.setIsFetching,
     setIsFetchingNextPage: s.setIsFetchingNextPage,
     setHasNextPage: s.setHasNextPage,
-    setLoadMorePhotos: s.setLoadMorePhotos
+    setLoadMorePhotos: s.setLoadMorePhotos,
+    setSettings: s.setSettings
   })));
 
   useEffect(() => {
@@ -49,9 +50,10 @@ export const useGallerySync = (
 
   useEffect(() => {
     if (settings && Object.keys(settings).length > 0) {
+      setSettings(settings);
       if (settings.gemini_api_key) setGeminiApiKey(settings.gemini_api_key);
       if (settings.custom_model) setCustomModel(settings.custom_model);
       if (settings.access_passcode) setAccessPasscode(settings.access_passcode);
     }
-  }, [settings, setGeminiApiKey, setCustomModel, setAccessPasscode]);
+  }, [settings, setSettings, setGeminiApiKey, setCustomModel, setAccessPasscode]);
 };

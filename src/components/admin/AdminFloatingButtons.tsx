@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { MultiSelectToolbar } from './MultiSelectToolbar';
 import { buttonStyles } from '../../styles/buttonStyles';
-import { useMultiSelect } from '../../hooks';
+import { useMultiSelect, usePermission } from '../../hooks';
 import { Photo } from '../../types';
 
 interface AdminFloatingButtonsProps {
@@ -27,6 +27,9 @@ export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
   onClearSelection,
 }) => {
   const { isMultiSelect, selectedIds, disable } = useMultiSelect();
+  const { canEdit } = usePermission();
+
+  if (!canEdit) return null;
 
   return (
     <>

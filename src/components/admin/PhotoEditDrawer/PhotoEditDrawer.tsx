@@ -39,7 +39,7 @@ export const PhotoEditDrawer: React.FC = () => {
     setEditPhotoId: s.setEditPhotoId
   })));
 
-  const { onDeletePhoto } = usePhotoActions();
+  const { onDeletePhoto, onUpdatePhoto, onAiAnalyze } = usePhotoActions();
 
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: filterCatId,
@@ -78,9 +78,18 @@ export const PhotoEditDrawer: React.FC = () => {
     newPhotoData,
     editPhotoPreview,
     setNewPhotoData,
-    // These should ideally be global actions if they are needed here
-    analyzeSingle: async (p: Photo) => { /* should be provided by store or hook */ }, 
-    saveNewPhoto: async () => { /* should be provided by store or hook */ }
+    analyzeSingle: async (p: Photo) => {
+      if (onAiAnalyze) {
+        return onAiAnalyze(p);
+      }
+    }, 
+    saveNewPhoto: async () => {
+      if (editPhotoId && onUpdatePhoto) {
+        // Map formState to partial edit to update in cloud
+        await onUpdatePhoto(editPhotoId, formState as any);
+        setEditPhotoId(null); // Close the drawer upon successful save
+      }
+    }
   });
 
   if (!editPhotoId && !newPhotoData) return null;

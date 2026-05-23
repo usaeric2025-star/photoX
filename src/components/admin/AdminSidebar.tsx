@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
+import { useAuth } from '../../hooks';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -57,6 +58,8 @@ export const AdminSidebar: React.FC = () => {
     isStaffMode: s.isStaffMode,
     appLang: s.appLang
   })));
+
+  const { user, loginWithGoogle, logout } = useAuth();
 
   return (
     <aside className="w-72 bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden">
@@ -140,12 +143,12 @@ export const AdminSidebar: React.FC = () => {
       </div>
 
       {/* Footer Info */}
-      <div className="p-6 bg-brand-navy/5 border-t border-brand-navy/5 space-y-4">
+      <div className="p-4 bg-brand-navy/5 border-t border-brand-navy/5 space-y-3 shrink-0">
         {isStaffMode && (
-          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-3">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-2">
             <div className="flex items-center gap-2 text-amber-900">
-              <Wrench size={16} className="animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-wider">
+              <Wrench size={14} className="animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">
                 {appLang === 'zh' ? '员工模式' : appLang === 'ms' ? 'Mod Staf' : 'Staff Mode'}
               </span>
             </div>
@@ -155,23 +158,73 @@ export const AdminSidebar: React.FC = () => {
                 sessionStorage.removeItem('isStaffMode');
                 window.location.reload();
               }}
-              className="w-full py-2.5 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-500/25"
+              className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-500/25"
             >
-              <LogIn size={14} className="rotate-180" />
+              <LogIn size={12} className="rotate-180" />
               {appLang === 'zh' ? '退出员工模式' : appLang === 'ms' ? 'Keluar Mod Staf' : 'Exit Staff Mode'}
             </button>
           </div>
         )}
-        <div className="flex items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-brand-navy/10 shadow-sm">
+
+        {/* Account Auth Card */}
+        {user ? (
+          <div className="flex flex-col gap-2.5 bg-white p-3 rounded-2xl border border-brand-navy/10 shadow-sm">
+            <div className="flex items-center gap-2.5">
+              {user.photo_url || user.avatar_url ? (
+                <img 
+                  src={user.photo_url || user.avatar_url || ''} 
+                  className="w-8 h-8 rounded-full border border-brand-navy/10 object-cover" 
+                  referrerPolicy="no-referrer" 
+                  alt="Avatar" 
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-brand-navy/10 text-brand-navy font-black flex items-center justify-center text-[10px] uppercase">
+                  {user.display_name?.substring(0, 2) || 'AD'}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-black text-brand-navy truncate leading-tight">{user.display_name}</p>
+                <p className="text-[8px] font-bold text-green-600 uppercase tracking-widest leading-none">Admin Mode</p>
+              </div>
+            </div>
+            <button 
+              onClick={async () => {
+                await logout();
+                window.location.reload();
+              }}
+              className="w-full py-1.5 px-2 bg-slate-900 border border-slate-950 hover:bg-slate-800 active:scale-[0.97] text-white font-bold text-[9px] uppercase tracking-wide rounded-xl transition-all flex items-center justify-center gap-1.5"
+            >
+              登出账号 / Log Out
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 bg-white p-3 rounded-2xl border border-brand-navy/10 shadow-sm">
+            <p className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-widest leading-none text-center">Not Authed (Read-Only)</p>
+            <button 
+              onClick={async () => {
+                try {
+                  await loginWithGoogle();
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+              className="w-full py-1.5 px-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold text-[9px] uppercase tracking-wide rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10"
+            >
+              管理员登录 / Admin Login
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-brand-navy/10 shadow-sm">
           <div className="space-y-0.5">
-            <p className="text-[10px] font-bold text-brand-navy/40 uppercase tracking-widest">Version</p>
-            <p className="text-[11px] font-bold text-brand-navy italic">PhotoX v1.0.4 <span className="not-italic opacity-30">PRO</span></p>
+            <p className="text-[8px] font-bold text-brand-navy/40 uppercase tracking-widest">Version</p>
+            <p className="text-[10px] font-bold text-brand-navy italic">PhotoX v1.0.4 <span className="not-italic opacity-30">PRO</span></p>
           </div>
           <button 
            onClick={onRefresh}
-           className="w-8 h-8 rounded-xl bg-brand-navy text-white flex items-center justify-center active:scale-95 transition-transform shadow-lg shadow-brand-navy/20"
+           className="w-7 h-7 rounded-lg bg-brand-navy text-white flex items-center justify-center active:scale-95 transition-transform shadow-md"
           >
-            <Settings2 size={14} />
+            <Settings2 size={12} />
           </button>
         </div>
       </div>

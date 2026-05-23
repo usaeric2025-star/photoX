@@ -1,3 +1,5 @@
+import { jsonrepair } from 'jsonrepair';
+
 /**
  * AI Parsing Utilities
  * Provides robust JSON extraction from potentially messy AI outputs.
@@ -23,7 +25,16 @@ export function extractJsonObject(text: string): any {
       return JSON.parse(directText.substring(0, lastBraceIndex + 1));
     }
   } catch (e) {
-    // ignore and proceed to robust extraction
+    // ignore
+  }
+
+  // Use jsonrepair on the clean text substring starting from '{'
+  try {
+    const rawJson = cleanText.substring(startIndex);
+    const repaired = jsonrepair(rawJson);
+    return JSON.parse(repaired);
+  } catch (repairErr) {
+    console.warn("jsonRepair direct pass failed, trying substring search:", repairErr);
   }
 
   // Balanced brace matching to find the true end of the JSON object
@@ -63,31 +74,25 @@ export function extractJsonObject(text: string): any {
     endIndex = cleanText.lastIndexOf('}');
   }
   
-  if (endIndex === -1 || endIndex <= startIndex) return null;
+  if (endIndex === -1 || endIndex <= startIndex) {
+    try {
+      const repaired = jsonrepair(cleanText.substring(startIndex));
+      return JSON.parse(repaired);
+    } catch (e) {
+      return null;
+    }
+  }
   
   const jsonStr = cleanText.substring(startIndex, endIndex + 1);
   
-  // Sanitization: Remove comments and fix common AI output quirks
-  const sanitized = jsonStr
-    .replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm, '') 
-    .replace(/[\u0000-\u0019]+/g, "")
-    .replace(/,\s*([\]}])/g, '$1')
-    .trim();
-
   try {
-    return JSON.parse(sanitized);
+    return JSON.parse(jsonStr);
   } catch (e) {
-    // Second pass: try to fix common escaping issues and newline-in-string issues
     try {
-      const secondPass = sanitized
-        .replace(/\r?\n|\r/g, " ") 
-        .replace(/\\(?!"|u|n|r|t|b|f)/g, "\\\\");
-      return JSON.parse(secondPass);
+      const repaired = jsonrepair(jsonStr);
+      return JSON.parse(repaired);
     } catch (finalErr) {
-      // Third pass: Try a more aggressive clean of typical unescaped nested double quotes in JSON
-      // e.g., "description": "some "nested" quotes here"
-      // We can try to replace newlines, and if that still fails, print details and return null
-      console.error("AI Parsing Final Failure:", finalErr, "Content:", sanitized);
+      console.error("AI Parsing Final Failure:", finalErr, "Content:", jsonStr);
       return null;
     }
   }
