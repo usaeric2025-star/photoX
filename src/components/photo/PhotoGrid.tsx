@@ -8,7 +8,7 @@ import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
-import { useCategoriesQuery, useTagsQuery, usePhotoFilters } from '../../hooks';
+import { useCategoriesQuery, useTagsQuery, usePhotoFilters, useAdminMode } from '../../hooks';
 
 interface MemoizedPhotoCardProps {
   index: number;
@@ -71,7 +71,9 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   const { data: contextTags = [] } = useTagsQuery();
   const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
 
-  const isAdminMode = viewMode === 'admin' || isStaffMode;
+  const isHookAdminMode = useAdminMode();
+  const isPageAdmin = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
+  const isAdminMode = isHookAdminMode || isPageAdmin || viewMode === 'admin' || isStaffMode;
 
   const lang = appLang;
   const t = translations[lang] || translations['zh'];

@@ -10,6 +10,7 @@ import { useAdminMode, usePermission } from '../../hooks';
 import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { useCategoriesQuery, useManufacturersQuery, useTagsQuery } from '../../hooks';
+import { usePhotoActions } from '../../contexts/PhotoActionsContext';
 
 export interface PhotoLightboxProps {
   photo: Photo | null;
@@ -32,10 +33,21 @@ export interface PhotoLightboxProps {
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
     photo, index: propIndex, onClose, onPrev, onNext,
-    contactWhatsApp, onUngroup, onSetGroupCover, onEditPhoto,
-    onToggleHidden, onTogglePinned, onAiAnalyze, onCancelAnalyze, isAnalyzing, displayPhotos: rawDisplayPhotos
+    contactWhatsApp, displayPhotos: rawDisplayPhotos
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
+
+  const actions = usePhotoActions();
+  const storeIsAnalyzing = useGalleryStore(s => s.isAnalyzing);
+
+  const onEditPhoto = props.onEditPhoto ?? actions.onEditPhoto;
+  const onToggleHidden = props.onToggleHidden ?? actions.onToggleHidden;
+  const onTogglePinned = props.onTogglePinned ?? actions.onTogglePinned;
+  const onAiAnalyze = props.onAiAnalyze ?? actions.onAiAnalyze;
+  const onCancelAnalyze = props.onCancelAnalyze ?? actions.onCancelAnalyze;
+  const onUngroup = props.onUngroup ?? actions.onUngroup;
+  const onSetGroupCover = props.onSetGroupCover ?? actions.onSetGroupCover;
+  const isAnalyzing = props.isAnalyzing ?? storeIsAnalyzing;
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: qManufacturers = [] } = useManufacturersQuery();

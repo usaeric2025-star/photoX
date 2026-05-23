@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { User, Photo, ProductFormData } from '@/types';
 import { useGalleryStore, useShallow } from '@/store';
-import { useTaskExecutor, useDeletePhotoMutation, useUpdatePhotoMutation, useBatchEditMutation, useGroupPhotosMutation, useUngroupMutation } from '@/hooks';
+import { useTaskExecutor, useDeletePhotoMutation, useUpdatePhotoMutation, useBatchEditMutation, useGroupPhotosMutation, useUngroupMutation, useFeedback } from '@/hooks';
 import { loadPhotosByGroupId } from '@/services/photoService';
 
 export const useAdminEdit = (user: User | null, photos: Photo[]) => {
   const { runTask } = useTaskExecutor();
+  const { showSuccess, showError } = useFeedback();
   const { mutateAsync: deletePhotoMut } = useDeletePhotoMutation();
   const { mutateAsync: updatePhotoMut } = useUpdatePhotoMutation();
   const { mutateAsync: batchUpdateMut } = useBatchEditMutation(user?.id || '');
@@ -39,17 +40,23 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
   const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, taskName?: string) => {
     if (ids.length === 0 || !user) return;
     
+    // For single photo updates (saves, rotations, edits), apply directly and optimistically
+    // to bypass the heavy background task queue UI for a frictionless, ultra-responsive feel
+    if (ids.length === 1) {
+      try {
+        await updatePhotoMut({ id: ids[0], updates });
+        showSuccess('保存成功');
+      } catch (err: any) {
+        showError(err, '保存失败');
+      }
+      return;
+    }
+
     await runTask(taskName || `更新 ${ids.length} 张照片`, async ({ updateProgress }) => {
-        if (ids.length > 1) {
-            updateProgress(50, '正在应用批量更新...');
-            await batchUpdateMut({ ids, updates });
-        } else {
-            for (const id of ids) {
-                await updatePhotoMut({ id, updates });
-            }
-        }
+        updateProgress(50, '正在应用批量更新...');
+        await batchUpdateMut({ ids, updates });
     }, { showSuccessToast: true });
-  }, [user, batchUpdateMut, updatePhotoMut, runTask]);
+  }, [user, batchUpdateMut, updatePhotoMut, runTask, showSuccess, showError]);
 
   const updatePhoto = useCallback((id: string, updates: Partial<Photo>) => {
     return updatePhotosBulk([id], updates);
