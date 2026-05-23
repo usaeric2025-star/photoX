@@ -155,7 +155,10 @@ export const usePhotoAI = (
 
   const analyzeSingle = useCallback(async (photo: Photo) => {
     const imageData = photo.uri || photo.image_url;
-    if (!imageData) return;
+    if (!imageData) {
+      handleError(new Error('未找到有效的照片源物理数据，请重新上传或选择照片！'), 'AI 单图识别');
+      return;
+    }
     setAiDebugInfo(null);
     
     return await runTask(`AI 单图识别 ${photo.id ? '(编辑中)' : ''}`, async ({ updateProgress }) => {
@@ -267,21 +270,28 @@ export const usePhotoAI = (
 
   const analyzeBatch = useCallback(async (photos: Photo[], forceAll = false) => {
     setAiDebugInfo(null);
-    if (!geminiApiKey) return;
+    
+    if (!geminiApiKey) {
+      handleError(new Error('未在系统设置中配置 Gemini API Key，请先于系统设置中配置'), 'AI 批量识别');
+      return;
+    }
     
     const unProcessed = forceAll ? photos : photos.filter(p => {
        const hasAllTranslations = p.description_translations?.zh && p.description_translations?.en && p.description_translations?.ms;
        return !p.category_id || safeArray(p.tag_ids).length < 2 || shouldUpdateName(p.name) || !hasAllTranslations;
     });
        
-    if (isAnalyzingRef.current) return;
-    isAnalyzingRef.current = true;
-    
-    if (unProcessed.length === 0) {
-      isAnalyzingRef.current = false;
-      showSuccess(forceAll ? "均在处理中" : "均已是最新");
+    if (isAnalyzingRef.current) {
+      handleError(new Error('AI 批量智能识别正在后台运行中，请等候当前批次结束后再操作'), 'AI 批量识别');
       return;
     }
+    
+    if (unProcessed.length === 0) {
+      showSuccess(forceAll ? "当前选择的照片无可用作 AI 识别的信息" : "所选照片的分类、标签和翻译均已完善，无需重复识别");
+      return;
+    }
+
+    isAnalyzingRef.current = true;
     
     await runTask(`批量识别 (${unProcessed.length} 张)`, async ({ updateProgress }) => {
       let completedCount = 0;
@@ -376,7 +386,15 @@ export const usePhotoAI = (
   ]);
 
   const analyzeGroup = useCallback(async (photos: Photo[], forceAll = false) => {
-    if (photos.length === 0 || !geminiApiKey) return;
+    if (photos.length === 0) {
+      handleError(new Error('当前合组中无可用照片'), '群组识别');
+      return;
+    }
+    
+    if (!geminiApiKey) {
+      handleError(new Error('未在系统设置中配置 Gemini API Key，请先于系统设置中配置'), 'AI 群组识别');
+      return;
+    }
     
     await runTask(`群组识别 (${photos.length} 张)`, async ({ updateProgress }) => {
       updateProgress(10, '分析首图...');

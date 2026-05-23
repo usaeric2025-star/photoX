@@ -236,9 +236,11 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                <div className="space-y-1.5">
                  <div className="flex items-center gap-1.5">
                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
-                   <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
-                     <Sparkles size={8} /> AI
-                   </div>
+                   {photo.description_translations?.[activeLang as any] && (
+                     <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
+                       <Sparkles size={8} /> AI
+                     </div>
+                   )}
                  </div>
                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm min-h-[60px]">
                    <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">

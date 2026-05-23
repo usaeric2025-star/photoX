@@ -103,13 +103,22 @@ export const analyzeProductPhoto = async (
     clearTimeout(timeoutId);
 
     if (!fetchResponse.ok) {
-      let errorData;
+      let errorData: any;
       try {
         errorData = await fetchResponse.json();
       } catch (e) {
         errorData = await fetchResponse.text();
       }
-      throw { status: fetchResponse.status, url: fetchUrl, response: { data: errorData }, message: JSON.stringify(errorData) };
+      
+      const serverMessage = errorData?.error?.message || errorData?.message || (typeof errorData === 'string' ? errorData : JSON.stringify(errorData));
+      const detailedMessage = `HTTP ${fetchResponse.status}: ${serverMessage}`;
+      
+      const detailedError = new Error(detailedMessage);
+      (detailedError as any).status = fetchResponse.status;
+      (detailedError as any).url = fetchUrl;
+      (detailedError as any).response = { data: errorData };
+      
+      throw detailedError;
     }
 
     const data = await fetchResponse.json();

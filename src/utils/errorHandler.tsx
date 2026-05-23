@@ -3,68 +3,108 @@ import { toast } from 'sonner';
 import { logErrorToSupabase } from '../services/logService';
 import * as ErrorMonitor from '@sentry/react';
 
+export function extractErrorMessage(error: any): string {
+  if (!error) return '未知错误';
+  if (typeof error === 'string') return error;
+  
+  try {
+    if (typeof error === 'object') {
+      // 1. Check for detailed network response structures
+      if (error.response?.data?.error?.message) {
+        return String(error.response.data.error.message);
+      }
+      if (error.response?.data?.message) {
+        return String(error.response.data.message);
+      }
+      if (error.error?.message) {
+        return String(error.error.message);
+      }
+      if (error.error && typeof error.error === 'string') {
+        return error.error;
+      }
+      // 2. Parse raw response text if is an error string
+      if (typeof error.response?.data === 'string') {
+        try {
+          const parsed = JSON.parse(error.response.data);
+          if (parsed?.error?.message) return parsed.error.message;
+          if (parsed?.message) return parsed.message;
+        } catch (_) {}
+        return error.response.data;
+      }
+      // 3. Stringified messages from custom errors (e.g. JSON returned)
+      if (typeof error.message === 'string') {
+        try {
+          const parsed = JSON.parse(error.message);
+          if (parsed?.error?.message) return parsed.error.message;
+          if (parsed?.message) return parsed.message;
+        } catch (_) {}
+        return error.message;
+      }
+    }
+  } catch (_) {}
+  
+  if (error instanceof Error) {
+    return error.message;
+  }
+  
+  try {
+    return JSON.stringify(error);
+  } catch (_) {
+    return String(error);
+  }
+}
+
 export const globalHandleError = (error: any, context: string, silent: boolean = false) => {
-  console.error(`[Error] ${context}:`, error);
+  const message = extractErrorMessage(error);
+  console.error(`[PhotoX Core Error] [${context}] Detailed Info:`, {
+    rawError: error,
+    message,
+    stack: error instanceof Error ? error.stack : (error?.stack || undefined),
+    timestamp: new Date().toISOString()
+  });
 
   // Capture in GlitchTip/ErrorMonitor safely
   try {
-    ErrorMonitor.captureException(error);
+    ErrorMonitor.captureException(error instanceof Error ? error : new Error(message));
   } catch (e) {
-    console.error('Error in error reporting:', e);
-  }
-
-  // Determine message safely
-  let message = '';
-  try {
-      if (typeof error === 'string') {
-          message = error;
-      } else if (error instanceof Error) {
-          message = error.message;
-      } else if (error && typeof error === 'object' && error.message) {
-          message = typeof error.message === 'string' ? error.message : JSON.stringify(error.message);
-      } else {
-          message = JSON.stringify(error);
-      }
-  } catch(e) {
-      message = '无法解析错误信息';
+    console.error('Error in error reporting service:', e);
   }
   
   // UI Toast Notification with Diagnostic Clipboard Copy
   if (!silent) {
     try {
         toast.dismiss();
-        toast.error(`${context}`, {
+        toast.error(`出错了 [${context}]`, {
           description: (
             typeof window !== 'undefined' ? (
               <div className="flex flex-col gap-1.5 mt-1">
-                <p className="text-[11px] text-slate-500 line-clamp-2">{message}</p>
+                <p className="text-[11px] text-red-700 font-mono break-all line-clamp-3 bg-red-50/50 p-1.5 rounded border border-red-100/50">{message}</p>
                 <button 
                   onClick={() => {
                     const errorReport = {
                       platform: 'PhotoX Core',
                       error: message,
                       context,
-                      stack: error instanceof Error ? error.stack : undefined,
+                      raw: typeof error === 'object' ? { ...error, stack: undefined } : String(error),
+                      stack: error instanceof Error ? error.stack : (error?.stack || undefined),
                       url: window.location.href,
                       ua: navigator.userAgent,
                       viewport: `${window.innerWidth}x${window.innerHeight}`,
                       timestamp: new Date().toISOString()
                     };
                     navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
-                      .then(() => toast.success('物理诊断报告已成功复制到剪贴板！'))
-                      .catch(() => {
-                        // fallback handled silently
-                      });
+                      .then(() => toast.success('详细诊断报告已复制，可提交给管理员！'))
+                      .catch(() => {});
                   }}
-                  className="self-start text-[9px] font-bold text-blue-600 border border-blue-200 bg-blue-50/50 hover:bg-blue-50 font-sans tracking-wide px-2 py-0.5 rounded-full mt-1 flex items-center gap-1 transition"
+                  className="self-start text-[9px] font-bold text-red-600 border border-red-200 bg-red-50/50 hover:bg-red-50 font-sans tracking-wide px-2 py-0.5 rounded-full mt-1 flex items-center gap-1 transition animate-pulse"
                   id="diag-btn"
                 >
-                  📋 一键复制诊断报告
+                  📋 复制详细错误诊断
                 </button>
               </div>
             ) : String(message)
           ),
-          duration: 7000
+          duration: 10000
         });
     } catch(e) {
         console.error('Error in toast notification:', e);
@@ -74,7 +114,7 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
   // Log to Supabase for Audit
   try {
       const errorObj = error instanceof Error ? error : new Error(message);
-      logErrorToSupabase(errorObj, {}, { context, silent, timestamp: new Date().toISOString() }).catch(err => {
+      logErrorToSupabase(errorObj, error, { context, silent, timestamp: new Date().toISOString() }).catch(err => {
         console.error('Failed to log error to Supabase:', err);
       });
   } catch(e) {

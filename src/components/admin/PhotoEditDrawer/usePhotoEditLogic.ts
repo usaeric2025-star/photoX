@@ -129,7 +129,7 @@ export const usePhotoEditLogic = (props: Props) => {
         id: editPhotoId || '', uri: data, image_url: data, 
         category_id: formState.category_id || undefined 
       } as Photo;
-      runTask('AI分析', () => analyzeSingle(p), { showSuccessToast: true }).catch(()=>{});
+      analyzeSingle(p).catch(()=>{});
     } else {
       showError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
     }
