@@ -57,7 +57,7 @@ if (container) {
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} swipeToDismiss={true} />
+        <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} />
         <TaskProvider>
           <App />
         </TaskProvider>

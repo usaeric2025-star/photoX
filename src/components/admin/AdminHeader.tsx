@@ -206,10 +206,10 @@ export const AdminHeader: React.FC<Props> = ({
                   <button 
                     onClick={handleBatchAiIdentifyTrigger}
                     className="h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl transition-all shadow-sm border text-brand-navy/60 hover:text-blue-600 bg-white border-brand-navy/10 active:scale-95"
-                    title={t.batchAiIdentify || "批量 AI 识别"}
+                    title={"批量 AI 识别"}
                   >
                     <Sparkles size={18} />
-                    <span className="hidden sm:inline text-[10px] font-bold whitespace-nowrap">{t.batchAiIdentify || "AI 识别"}</span>
+                    <span className="hidden sm:inline text-[10px] font-bold whitespace-nowrap">{"批量 AI 识别"}</span>
                   </button>
                 )}
 

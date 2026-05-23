@@ -98,7 +98,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     };
 }
 
-const PHOTO_SELECT_FIELDS = 'id, name, item_code, manual_code, model_number, image_hash, category_id, manufacturer_id, sub_category, description, image_url, thumb_url, thumb_hash, created_at, updated_at, group_id, is_group_cover, is_hidden, is_pinned, is_analyzing, user_id, price, description_translations, dimensions, photo_tags(tag_id)';
+const PHOTO_SELECT_FIELDS = 'id, name, item_code, manual_code, model_number, image_hash, category_id, manufacturer_id, sub_category, description, image_url, thumb_url, thumb_hash, created_at, updated_at, group_id, is_group_cover, is_hidden, is_pinned, is_analyzing, user_id, price, description_translations, dimensions, group_order, photo_tags(tag_id)';
 
 export const loadAllPhotosFromCloud = async (
     since?: string,
