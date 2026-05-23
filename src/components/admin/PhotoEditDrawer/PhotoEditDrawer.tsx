@@ -86,7 +86,12 @@ export const PhotoEditDrawer: React.FC = () => {
     saveNewPhoto: async () => {
       if (editPhotoId && onUpdatePhoto) {
         // Map formState to partial edit to update in cloud
-        await onUpdatePhoto(editPhotoId, formState as any);
+        const updates: any = { ...formState };
+        if (newPhotoData) {
+          updates.uri = newPhotoData;
+        }
+        await onUpdatePhoto(editPhotoId, updates);
+        setNewPhotoData(null); // Reset rotated image preview draft on success
         setEditPhotoId(null); // Close the drawer upon successful save
       }
     }
