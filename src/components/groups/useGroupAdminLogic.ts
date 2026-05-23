@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
@@ -13,6 +14,7 @@ export const useGroupAdminLogic = ({
   photos,
 }: { initialPhotoId?: string | null, photos: Photo[] }) => {
   const isAdminMode = useAdminMode();
+  const queryClient = useQueryClient();
   const { 
     activeGroupId, setActiveGroupId, appLang,
     setAlertDialog: contextSetAlertDialog, 
@@ -230,6 +232,7 @@ export const useGroupAdminLogic = ({
     
     try {
       await saveGroupToCloud(nextGroupData);
+      queryClient.invalidateQueries({ queryKey: ['group', activeGroupId] });
       sessionStorage.removeItem(`draft_group_${activeGroupId}`);
       
       if (updates.hasOwnProperty('is_hidden')) {

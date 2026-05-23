@@ -16,15 +16,14 @@ export const getTranslatedCategoryName = (
   
   const catIdStr = String(catId);
   const activeCat = categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr);
-  console.log('getTranslatedCategoryName: activeCat', activeCat, 'lang', lang);
   
   if (!activeCat) return t.uncategorized;
 
-  if (lang === 'zh') return (activeCat.zh || activeCat.name || t.uncategorized);
-  if (lang === 'en') return (activeCat.en || activeCat.name || activeCat.zh || t.uncategorized);
-  if (lang === 'ms') return (activeCat.ms || activeCat.name || activeCat.en || activeCat.zh || t.uncategorized);
-  
-  return (activeCat.name || t.uncategorized);
+  const name = lang === 'zh' ? (activeCat.zh || activeCat.name) : 
+               lang === 'en' ? (activeCat.en || activeCat.name || activeCat.zh) :
+               lang === 'ms' ? (activeCat.ms || activeCat.name || activeCat.en || activeCat.zh) : activeCat.name;
+
+  return name || catIdStr;
 };
 
 /**

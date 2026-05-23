@@ -178,7 +178,6 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
               .slice(0, 7) 
               .map(cat => {
                 const displayName = getTranslatedCategoryName(cat.id, categories, lang, t);
-                console.log('GalleryFilters: cat', cat, 'displayName', displayName);
                 const isActive = String(selectedCatCode) === String(cat.id) || String(selectedCatCode) === String(cat.code);
                 return (
                   <CategoryChip
