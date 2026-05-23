@@ -55,20 +55,28 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     }, []);
 
     // Only update if we have a valid common value (string or array)
+    // AND it differs from current formState to avoid infinite loop
     const updates: Partial<ProductFormData> = {};
-    if (commonCategory !== undefined) updates.category_id = commonCategory;
-    if (commonManufacturer !== undefined) updates.manufacturer_id = commonManufacturer;
-    // For tags, only set if it's the same set of tags and not empty? 
-    // Actually, intersection could be empty if they share NO tags.
-    // Let's set it if intersection is not empty
-    if (commonTags.length > 0) updates.tag_ids = commonTags;
+    if (commonCategory !== undefined && formState.category_id !== commonCategory) updates.category_id = commonCategory;
+    if (commonManufacturer !== undefined && formState.manufacturer_id !== commonManufacturer) updates.manufacturer_id = commonManufacturer;
+    
+    // For tags, simple check
+    if (commonTags.length > 0 && JSON.stringify(formState.tag_ids) !== JSON.stringify(commonTags)) updates.tag_ids = commonTags;
 
     if (Object.keys(updates).length > 0) {
       updateForm(updates);
     }
   }, [batchEditingIds, photos, updateForm]);
 
+  // 批量编辑 API 调用
+  const batchUpdatePhotos = useCallback(async (ids: string[], changes: any) => {
+    await runTask('批量编辑', async () => {
+      await batchUpdateMut({ ids, updates: changes });
+    }, { showSuccessToast: true });
+  }, [batchUpdateMut, runTask]);
+
   const deletePhoto = useCallback(async (idOrIds: string | string[]) => {
+
     const isStaff = isStaffMode || !!user;
     if (!isStaff) return;
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];

@@ -85,17 +85,26 @@ export const useAdminActions = (
     input.click();
   }, [checkSyncLock, importer, showError]);
 
-  const saveBatchEditWithSuccess = useCallback(async () => {
+  const saveBatchEditWithSuccess = useCallback(async (changes?: any) => {
     if (checkSyncLock()) return;
     try {
-      await edit.updatePhotosBulk(batchEditIds, edit.formState);
+      // 过滤掉 formState 中的空字符串字段，防止意外清空这些字段
+      const updates = changes || { ...edit.formState };
+      const fieldsToFilter = ['name', 'manual_code', 'model_number', 'price', 'description'];
+      fieldsToFilter.forEach(field => {
+        if (typeof (updates as any)[field] === 'string' && (updates as any)[field].trim() === '') {
+          delete (updates as any)[field];
+        }
+      });
+      
+      await edit.updatePhotosBulk(batchEditIds, updates);
       showSuccess('批量更新成功');
       setBatchEditIds([]);
     } catch (e) {
       showError(e, 'save-batch-edit');
       throw e;
     }
-  }, [checkSyncLock, batchEditIds, edit.formState, edit, showError, showSuccess, setBatchEditIds]);
+  }, [checkSyncLock, batchEditIds, edit, showError, showSuccess, setBatchEditIds]);
 
   const handleRefresh = useCallback(() => {
     if (checkSyncLock()) return;

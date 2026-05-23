@@ -150,6 +150,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
               index={index}
               showGroupsCollapsed={false}
               onLightboxOpen={onPhotoClick}
+              hideDetails={true}
               {...extraProps}
             />
           );

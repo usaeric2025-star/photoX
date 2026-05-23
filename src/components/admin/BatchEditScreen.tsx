@@ -41,14 +41,44 @@ export const BatchEditScreen = () => {
     resetForm();
   }, [resetForm]);
 
+// 1. 获取共有属性时，同时保存初始值
+  const [initialForm, setInitialForm] = useState<any>(null);
+
+  useEffect(() => {
+    // 假设 getCommonAttributes 是你用来计算初始共有的逻辑
+    // 需要根据现有的 logic 或 store 中的数据调整
+    if (!formState) return; 
+    setInitialForm(formState);
+  }, []);
+
   const handleSave = async () => {
     setIsLocalSaving(true);
     try {
-      await saveBatchEdit();
+      const changes: any = {};
+      Object.keys(formState).forEach(key => {
+        const currentValue = (formState as any)[key];
+        const initialValue = initialForm?.[key];
+        
+        // 比较当前值和初始值（简单比较，对于复杂对象需要JSON.stringify）
+        if (JSON.stringify(currentValue) !== JSON.stringify(initialValue)) {
+          changes[key] = currentValue;
+        }
+      });
+      
+      // 如果没有变化，直接返回
+      if (Object.keys(changes).length === 0) {
+        // 使用 AlertDialog 或 Toast 提示
+        setAlertDialog({ title: '提示', message: '没有检测到修改', confirmLabel: '确定', onConfirm: () => setAlertDialog(null) });
+        return;
+      }
+      
+      // 调用新的批量更新方法
+      await saveBatchEdit(changes);
     } finally {
       setIsLocalSaving(false);
     }
   };
+
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();

@@ -16,7 +16,11 @@ const mapToDb = (updates: Partial<Manufacturer> & Record<string, unknown>, isCre
     for (const key of ALLOWED_FIELDS) {
         if (key in updates && !NEVER_ALLOWED.includes(key)) {
             const dbKey = FIELD_MAP[key] || key;
-            dbUpdates[dbKey] = updates[key];
+            if (key === 'name' && typeof updates[key] === 'string') {
+              dbUpdates[dbKey] = (updates[key] as string).toUpperCase();
+            } else {
+              dbUpdates[dbKey] = updates[key];
+            }
         }
     }
 

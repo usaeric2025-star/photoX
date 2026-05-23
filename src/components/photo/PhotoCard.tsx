@@ -20,7 +20,7 @@ export interface PhotoCardProps {
   onLightboxOpen: (photo: Photo) => void;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
-  // shareSinglePhoto is now internal or from store
+  hideDetails?: boolean;
 }
 
 const PhotoStatusBadges: React.FC<{ photo: Photo; variant: PhotoCardVariant }> = React.memo(({ photo, variant }) => {
@@ -58,15 +58,16 @@ SelectionOverlay.displayName = 'SelectionOverlay';
 const PhotoInfoFooter: React.FC<{ 
   displayCatName: string; 
   isUncategorized: boolean; 
-  photoTags: string[] 
-}> = React.memo(({ displayCatName, isUncategorized, photoTags }) => (
+  photoTags: string[];
+  hideTags?: boolean;
+}> = React.memo(({ displayCatName, isUncategorized, photoTags, hideTags }) => (
   <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
      {!isUncategorized && displayCatName && (
       <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
         {displayCatName}
       </p>
     )}
-    {photoTags.length > 0 && (
+    {!hideTags && photoTags.length > 0 && (
       <div className="flex flex-nowrap gap-1 w-full overflow-x-auto pointer-events-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-0.5 pb-0.5 mt-auto">
         {photoTags.map((tag, i) => (
           <span 
@@ -91,7 +92,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   variant, photo, index, showGroupsCollapsed,
   onGroupClick, 
   onLightboxOpen, 
-  className = '', onClick
+  className = '', onClick,
+  hideDetails = false
 }) => {
   const isSelected = useGalleryStore(s => (s.selectedIds ?? []).includes(photo.id));
 
@@ -322,7 +324,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       <PhotoInfoFooter 
         displayCatName={displayCatName} 
         isUncategorized={isUncategorized} 
-        photoTags={photoTags} 
+        photoTags={photoTags}
+        hideTags={hideDetails}
       />
     </div>
   );

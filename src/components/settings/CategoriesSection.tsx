@@ -27,10 +27,10 @@ export const CategoriesSection: React.FC<CategoriesSectionProps> = ({
           >
             <div className="flex flex-col">
               <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight">
-                 {cat.name || 'Unnamed Category'}
+                 {cat.zh || cat.en || cat.ms || cat.name || 'Unnamed Category'}
               </span>
               <span className="text-[9px] font-bold text-brand-navy/30 uppercase tracking-tighter">
-                 {cat.zh || cat.en || cat.ms || 'No translation'}
+                 {cat.zh && cat.name ? cat.name : (cat.zh ? cat.zh : (cat.en ? cat.en : (cat.ms ? cat.ms : 'No translation')))}
               </span>
             </div>
           </div>
