@@ -55,25 +55,24 @@ export const useAdminActions = (
       confirmLabel: '分析全部',
       onConfirm: async () => {
          await ai.analyzeBatch(photosToProcess, true);
+         disable();
       },
       secondaryAction: {
          label: '跳过已完善',
-         onClick: () => { ai.analyzeBatch(photosToProcess, false); }
+         onClick: () => { 
+           ai.analyzeBatch(photosToProcess, false); 
+           disable();
+         }
       }
     });
   }, [checkSyncLock, tasks, ai, runTask, photos, setAlertDialog]);
 
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
-     try {
-         await edit.deletePhoto(id);
-         hapticFeedback.light();
-         if (typeof id === 'string') setEditPhotoId(null);
-         else edit.resetAddState();
-     } catch (error) {
-         hapticFeedback.error();
-         showError(error, 'delete-photo');
-     }
-  }, [edit, setEditPhotoId, showError]);
+     await edit.deletePhoto(id);
+     hapticFeedback.light();
+     if (typeof id === 'string') setEditPhotoId(null);
+     else edit.resetAddState();
+  }, [edit, setEditPhotoId]);
 
   const handleImport = useCallback(() => {
     if (checkSyncLock()) return;
@@ -98,13 +97,13 @@ export const useAdminActions = (
       });
       
       await edit.updatePhotosBulk(batchEditIds, updates);
-      showSuccess('批量更新成功');
       setBatchEditIds([]);
+      disable();
     } catch (e) {
-      showError(e, 'save-batch-edit');
+      // Error is handled inside updatePhotosBulk now, but re-throw if needed for caller
       throw e;
     }
-  }, [checkSyncLock, batchEditIds, edit, showError, showSuccess, setBatchEditIds]);
+  }, [checkSyncLock, batchEditIds, edit, setBatchEditIds, disable]);
 
   const handleRefresh = useCallback(() => {
     if (checkSyncLock()) return;
@@ -117,19 +116,28 @@ export const useAdminActions = (
   }, [checkSyncLock, filters, disable, showSuccess, queryClient, infinitePhotosQuery]);
 
   const performPullSync = useCallback(async () => {
-    await runTask('从云端恢复', async () => {
+    try {
+      showSuccess('正在拉取云端数据...');
       await infinitePhotosQuery.refetch(); 
-    }, { showSuccessToast: true });
-    return { success: true, data: null };
-  }, [infinitePhotosQuery, runTask]);
+      showSuccess('数据已更新');
+      return { success: true, data: null };
+    } catch (err: any) {
+      showError(err, '拉取失败');
+      return { success: false, data: null };
+    }
+  }, [infinitePhotosQuery, showSuccess, showError]);
 
   const performPushSync = useCallback(async () => {
-    await runTask('同步备份至云端', async () => {
-      // Logic for push usually involves a mutation, assuming sync.push exists or we define it
+    try {
+      showSuccess('正在同步备份至云端...');
       if (sync.performPush) await sync.performPush();
-    }, { showSuccessToast: true });
-    return { success: true, data: null };
-  }, [sync, runTask]);
+      showSuccess('备份完成');
+      return { success: true, data: null };
+    } catch (err: any) {
+      showError(err, '备份失败');
+      return { success: false, data: null };
+    }
+  }, [sync, showSuccess, showError]);
 
   const handleLoadMoreCallback = useCallback(() => {
     if (infinitePhotosQuery.hasNextPage && !infinitePhotosQuery.isFetchingNextPage) {

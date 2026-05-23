@@ -26,7 +26,7 @@ export const useSettingsLogic = ({
   const { 
     setSettings, setPromptDialog, setAlertDialog
   } = useGalleryStore();
-  const { handleError, showSuccess } = useFeedback();
+  const { handleError, showSuccess, showError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
 
@@ -55,88 +55,59 @@ export const useSettingsLogic = ({
       message: '系统将扫描云端数据库，保留最早上传的版本，删除重复的照片记录。此操作不可撤销。',
       confirmLabel: '执行排重',
       onConfirm: async () => {
-        await runTask('排重清理 / Deduplicate Photos', async ({ updateProgress }) => {
-          updateProgress(20, '扫描云端数据库中...');
+        try {
+          setAlertDialog(null);
+          showSuccess('正在扫描并清理重复记录...');
           const { removed } = await deduplicatePhotos(user.id);
-          updateProgress(70, '重置及拉取最新的数据库缓存...');
           if (removed > 0) {
             await performPullSync();
+            showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
+          } else {
+            showSuccess('未发现重复记录。');
           }
-          return removed;
-        }, {
-          onSuccess: (removed) => {
-            if (removed > 0) {
-              showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
-            } else {
-              showSuccess('未发现重复记录。');
-            }
-          },
-          onError: (err) => {
-            handleError(err, '排重失败');
-          },
-          showSuccessToast: false,
-          showErrorToast: true
-        });
+        } catch (err: any) {
+          handleError(err, '排重失败');
+        }
       }
     });
-  }, [user, setAlertDialog, runTask, performPullSync, handleError, showSuccess]);
+  }, [user, setAlertDialog, performPullSync, handleError, showSuccess]);
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
-    await runTask('一键健康检测 / Health Check', async ({ updateProgress }) => {
+    try {
+        showSuccess('正在启动系统健康诊断...');
         const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
         const { backfillThumbHashes } = await import('@/services/photo/backfillService');
         const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
 
-        updateProgress(10, '正在检测本地缓存一致性...');
         // 1. Check data consistency
         const broken = await scanAndRepairPhotoIds(allPhotos);
         if (broken.length > 0) {
-            throw new Error(`发现 ${broken.length} 个异常ID，建议刷新`);
+            showError(new Error(`发现 ${broken.length} 个异常ID`), '建议刷新页面');
         }
 
-        updateProgress(30, '正在检测云端数据库未生成缩略图项目...');
-        // 2. Check if there are any database photo records without thumb_hash
+        // 2. Check for missing hashes
         const missingHashes = await getPhotosWithoutThumbHash();
 
         if (!missingHashes || missingHashes.length === 0) {
-            updateProgress(100, '诊断完成：所有项目具备完整占位缩略图！');
-            // Under user requirements, skip completely as there are no issues.
-            return { backfilledCount: 0, skipped: true };
+            showSuccess('诊断完成：系统完全健康，无需修复！');
+            return;
         }
 
-        updateProgress(50, `正在修复回填 ${missingHashes.length} 张照片占位图...`);
+        showSuccess(`发现 ${missingHashes.length} 张照片占位图缺失，正在后台自动修复...`);
         // 3. Otherwise perform the auto-repair loop
         let backfilledCount = 0;
         await backfillThumbHashes((stats) => {
-            const progressPct = 50 + (stats.processed / stats.total) * 50;
-            updateProgress(
-                progressPct,
-                `自动修复中: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`
-            );
             backfilledCount = stats.success;
         });
 
         if (backfilledCount > 0) {
             invalidatePhotos();
+            showSuccess(`诊断修复完成，成功回填 ${backfilledCount} 张照片的占位图！`);
         }
-        return { backfilledCount, skipped: false };
-    }, {
-        onSuccess: (result) => {
-            if (result?.skipped) {
-                showSuccess('一键检测：系统完全健康，无需修复 (已自动略过已完善照片)');
-            } else if (result && result.backfilledCount > 0) {
-                showSuccess(`一键检测：诊断修复完成，成功回填 ${result.backfilledCount} 张照片的占位图！`);
-            } else {
-                showSuccess('一键检测：系统健康，所有照片均完全符合规范！');
-            }
-        },
-        onError: (err) => {
-            handleError(err, '诊断失败');
-        },
-        showSuccessToast: false,
-        showErrorToast: true
-    });
-  }, [runTask, handleError, invalidatePhotos]);
+    } catch (err: any) {
+        handleError(err, '诊断失败');
+    }
+  }, [handleError, showSuccess, invalidatePhotos]);
 
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinned_tags || [];
@@ -164,27 +135,23 @@ export const useSettingsLogic = ({
     if (!settings?.gemini_api_key) return;
     setTestResult({ loading: true });
     
-    await runTask('测试 AI 连接 / Test AI Connection', async () => {
+    try {
       const provider = (settings as any).ai_provider || 'google';
       const model = settings.custom_model || 'Gemini 2.5 Flash Lite Preview 09-2025';
       const ok = await testAiConnection(settings.gemini_api_key, provider, model);
       if (ok) {
         setTestResult({ success: true });
+        showSuccess('测试成功：AI 服务连接正常！');
       } else {
         setTestResult({ success: false, error: '连接失败' });
-        throw new Error('连接失败');
       }
-    }, {
-      onSuccess: () => {
-        showSuccess('测试成功：AI 服务连接正常！');
-      },
-      onError: (e) => {
-        setTestResult({ success: false, error: e.message });
-      },
-      showSuccessToast: false,
-      showErrorToast: false
-    });
-  }, [settings, runTask, showSuccess]);
+    } catch (e: any) {
+      setTestResult({ success: false, error: e.message });
+      handleError(e, '连接失败');
+    } finally {
+      setTestResult(prev => prev ? { ...prev, loading: false } : null);
+    }
+  }, [settings, showSuccess, handleError]);
 
   return {
     testResult, setTestResult,

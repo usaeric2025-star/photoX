@@ -18,7 +18,7 @@ export const BatchEditScreen = () => {
     formState, updateForm, batchIsHiddenApplied, setBatchIsHiddenApplied,
     showOtherFields, setShowOtherFields, handleDeletePhotos: onDelete,
     quickAddManufacturer: quickAddMfr, quickAddTag: quickAddT,
-    addTag, updateTag, deleteTag, resetForm
+    addTag, updateTag, deleteTag, resetForm, disableMultiSelect
   } = logic;
   
   const [isLocalSaving, setIsLocalSaving] = useState(false);
@@ -125,7 +125,7 @@ export const BatchEditScreen = () => {
             shadow-md ${(isLocalSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
             {(isLocalSaving || isSyncing) ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
           </button>
-          <button onClick={() => { resetAddState(); setBatchEditingIds(null); }}
+          <button onClick={() => { resetAddState(); setBatchEditingIds(null); disableMultiSelect(); }}
             className="w-10 h-10 bg-slate-100 text-slate-600 
             rounded-xl flex items-center justify-center 
             active:bg-slate-200"

@@ -5,7 +5,8 @@ import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoService';
-import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupPhotosQuery, useGroupDetailQuery } from '@/hooks';
+import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetailQuery } from '@/hooks';
+import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
 import { useGalleryStore, useShallow } from '@/store';
 
 
@@ -87,7 +88,7 @@ export const useGroupAdminLogic = ({
         if (b.group_order !== undefined) return 1;
         return (a.item_code || '').localeCompare(b.item_code || '');
       });
-  }, [activeGroupId, photos, dbGroupPhotos, isAdminMode]);
+  }, [activeGroupId, dbGroupPhotos, isAdminMode]);
 
   const groupCover = useMemo(() => activeGroupPhotos.find(p => p.is_group_cover) || activeGroupPhotos[0], [activeGroupPhotos]);
   

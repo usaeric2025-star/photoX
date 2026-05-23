@@ -4,7 +4,7 @@ import { useGalleryStore, useShallow } from '@/store';
 import { useTaskExecutor, useDeletePhotoMutation, useUpdatePhotoMutation, useBatchEditMutation, useGroupPhotosMutation, useUngroupMutation, useFeedback } from '@/hooks';
 import { loadPhotosByGroupId } from '@/services/photoService';
 
-export const useAdminEdit = (user: User | null, photos: Photo[]) => {
+export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: () => void) => {
   const { runTask } = useTaskExecutor();
   const { showSuccess, showError } = useFeedback();
   const { mutateAsync: deletePhotoMut } = useDeletePhotoMutation();
@@ -78,13 +78,16 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
 
   // 批量编辑 API 调用
   const batchUpdatePhotos = useCallback(async (ids: string[], changes: any) => {
-    await runTask('批量编辑', async () => {
+    try {
       await batchUpdateMut({ ids, updates: changes });
-    }, { showSuccessToast: true });
-  }, [batchUpdateMut, runTask]);
+      showSuccess('批量更新成功');
+      onComplete?.();
+    } catch (err: any) {
+      showError(err, '批量操作失败');
+    }
+  }, [batchUpdateMut, showSuccess, showError, onComplete]);
 
   const deletePhoto = useCallback(async (idOrIds: string | string[]) => {
-
     const isStaff = isStaffMode || !!user;
     if (!isStaff) return;
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
@@ -93,38 +96,40 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     
     const opUserId = user?.id || targetPhotos[0]?.user_id || 'default';
     
-    await runTask(ids.length > 1 ? `删除 ${ids.length} 张照片` : '删除照片', async () => {
-        await deletePhotoMut({ userId: opUserId, photos: targetPhotos });
-    }, { showSuccessToast: true });
-  }, [user, isStaffMode, deletePhotoMut, photos, runTask]);
+    try {
+      await deletePhotoMut({ userId: opUserId, photos: targetPhotos });
+      showSuccess(ids.length > 1 ? `已删除 ${ids.length} 张照片` : '照片已删除');
+      if (ids.length > 1) onComplete?.();
+    } catch (err: any) {
+      showError(err, '删除照片失败');
+    }
+  }, [user, isStaffMode, deletePhotoMut, photos, showSuccess, showError, onComplete]);
 
   const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, options?: { taskName?: string, skipToast?: boolean }) => {
     const isStaff = isStaffMode || !!user;
     if (ids.length === 0 || !isStaff) return;
     
-    // For single photo updates (saves, rotations, edits), apply directly and optimistically
-    // to bypass the heavy background task queue UI for a frictionless, ultra-responsive feel
-    if (ids.length === 1) {
-      try {
+    try {
+      if (ids.length === 1) {
         await updatePhotoMut({ id: ids[0], updates });
         if (!options?.skipToast) {
             showSuccess('保存成功');
         }
-      } catch (err: any) {
-        if (!options?.skipToast) {
-            showError(err, '保存失败');
-        } else {
-            throw err;
-        }
-      }
-      return;
-    }
-
-    await runTask(options?.taskName || `更新 ${ids.length} 张照片`, async ({ updateProgress }) => {
-        updateProgress(50, '正在应用批量更新...');
+      } else {
         await batchUpdateMut({ ids, updates });
-    }, { showSuccessToast: !options?.skipToast });
-  }, [user, isStaffMode, batchUpdateMut, updatePhotoMut, runTask, showSuccess, showError]);
+        if (!options?.skipToast) {
+            showSuccess(`已更新 ${ids.length} 张照片`);
+        }
+        onComplete?.();
+      }
+    } catch (err: any) {
+      if (!options?.skipToast) {
+          showError(err, '操作失败');
+      } else {
+          throw err;
+      }
+    }
+  }, [user, isStaffMode, batchUpdateMut, updatePhotoMut, showSuccess, showError, onComplete]);
 
   const updatePhoto = useCallback((id: string, updates: Partial<Photo>) => {
     return updatePhotosBulk([id], updates);
@@ -152,18 +157,21 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     const isStaff = isStaffMode || !!user;
     if (!isStaff) return;
 
-    await runTask('设置封面', async () => {
-        const oldCover = photos.find(p => p.group_id === groupId && p.is_group_cover);
-        
-        const updates = [];
-        if (oldCover && oldCover.id !== id) {
-            updates.push(updatePhotosBulk([oldCover.id], { is_group_cover: false }, { skipToast: true }));
-        }
-        updates.push(updatePhotosBulk([id], { is_group_cover: true }, { skipToast: true }));
-        
-        await Promise.all(updates);
-    }, { showSuccessToast: true });
-  }, [user, isStaffMode, photos, updatePhotosBulk, runTask]);
+    try {
+      const oldCover = photos.find(p => p.group_id === groupId && p.is_group_cover);
+      
+      const updates = [];
+      if (oldCover && oldCover.id !== id) {
+          updates.push(updatePhotosBulk([oldCover.id], { is_group_cover: false }, { skipToast: true }));
+      }
+      updates.push(updatePhotosBulk([id], { is_group_cover: true }, { skipToast: true }));
+      
+      await Promise.all(updates);
+      showSuccess('封面设置成功');
+    } catch (err: any) {
+      showError(err, '设置封面失败');
+    }
+  }, [user, isStaffMode, photos, updatePhotosBulk, showSuccess, showError]);
 
   const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
     console.log('[useAdminEdit] Grouping photos:', photoIds);
@@ -171,10 +179,14 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
       showError(new Error('请选择至少 2 张照片'), '操作无效');
       return;
     }
-    await runTask('分组照片', async () => {
+    try {
       await groupPhotosMut(photoIds);
-    }, { showSuccessToast: true });
-  }, [groupPhotosMut, runTask, showError]);
+      showSuccess('照片已合组');
+      onComplete?.();
+    } catch (err: any) {
+      showError(err, '合组失败');
+    }
+  }, [groupPhotosMut, showError, showSuccess, onComplete]);
 
   const handleBatchToggleHidden = useCallback(async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
@@ -184,16 +196,18 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     const allHidden = targetPhotos.every(p => p.is_hidden);
     const nextStatus = !allHidden;
 
-    await runTask(nextStatus ? '隐藏照片' : '显示照片', async () => {
-       await updatePhotosBulk(ids, { is_hidden: nextStatus });
-    }, { showSuccessToast: true });
-  }, [photos, updatePhotosBulk, runTask]);
+    await updatePhotosBulk(ids, { is_hidden: nextStatus });
+  }, [photos, updatePhotosBulk]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
-    await runTask('拆分群组', async () => {
+    try {
       await ungroupMut(groupId);
-    }, { showSuccessToast: true });
-  }, [ungroupMut, runTask]);
+      showSuccess('分组已拆分');
+      onComplete?.();
+    } catch (err: any) {
+      showError(err, '拆分失败');
+    }
+  }, [ungroupMut, showSuccess, showError, onComplete]);
 
   const resetAddState = useCallback(() => {
     setNewPhotoData(null);

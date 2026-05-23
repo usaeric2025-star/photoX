@@ -56,7 +56,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const { 
     onAddPhotoToGroup, onAiAnalyze, onCancelAnalyze, isAnalyzing,
   } = props;
-  const { showError } = useFeedback();
+  const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
   const adminLogic = useAdmin();
   const {
@@ -64,7 +64,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
      tagIdToNameMap, isStaffMode,
      setEditPhotoId,
      filterCatId, filterTagIds, debouncedSearchQuery, sortOrder,
-     analyzeGroupById
+     analyzeGroupById, groupPhotos
   } = adminLogic;
   
     const { onToggleHidden, onUpdatePhoto, onTogglePinned, onDeletePhoto, onBatchAiAnalyze, onBatchEdit, onUngroup, onEditPhoto: storeEditPhoto } = usePhotoActions();
@@ -222,19 +222,23 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
       message: `确定要将选中的 ${selectedPhotosToAdd.length} 张照片添加到当前分组吗？`,
       onConfirm: async () => {
         setAlertDialog(null);
-        await runTask('添加照片到合组 / Add Photos to Group', async () => {
+        try {
           await updatePhotosGroupInCloud(selectedPhotosToAdd, { group_id: activeGroupId });
           
           // Clear selections and close drawer
           setSelectedPhotosToAdd([]);
           setIsAddSheetOpen(false);
           
+          showSuccess('照片已添加到合组');
+
           // Invalidate queries to refresh the group photos and main gallery
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['groupPhotos', activeGroupId] }),
             queryClient.invalidateQueries({ queryKey: ['photos'] })
           ]);
-        }, { showSuccessToast: true });
+        } catch (err: any) {
+          showError(err, '添加失败');
+        }
       }
     });
   }, [selectedPhotosToAdd, activeGroupId, runTask, queryClient, setAlertDialog]);
