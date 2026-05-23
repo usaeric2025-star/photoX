@@ -135,58 +135,58 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   }
 
   return (
-    <div onTouchMove={(e) => e.stopPropagation()} className="h-full w-full">
+    <div onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} className="h-full w-full">
       <VirtuosoGrid
-      ref={virtuosoRef}
-      style={{ height: '100%', width: '100%' }}
-      data={gridPhotos}
-      computeItemKey={(index, item) => {
-        const p = item as Photo;
-        return p ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `loading-${index}`;
-      }}
-      endReached={loadMorePhotos}
-      overscan={VIRTUOSO_CONFIG.overscan(columns)}
-      increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
-      useWindowScroll={false}
-      itemClassName="virtuoso-grid-item"
-      listClassName={`grid gap-2 px-1.5 py-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
-      itemContent={(index, photo) => {
-        return (
-          <MemoizedPhotoCard
-            index={index}
-            photo={photo}
-            isAdminMode={isAdminMode}
-            showGroupsCollapsed={showGroupsCollapsed}
-            onGroupClick={handleGroupClick}
-            onLightboxOpen={handleLightboxOpen}
-          />
-        );
-      }}
-      components={{
-        Footer: () => {
-          if (isFetchingNextPage) {
-            return (
-              <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-                <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
-                <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
-                  {t.loading || '正在载入更多...'}
-                </span>
-              </div>
-            );
+        ref={virtuosoRef}
+        style={{ height: '100%', width: '100%' }}
+        data={gridPhotos}
+        computeItemKey={(index, item) => {
+          const p = item as Photo;
+          return p ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `loading-${index}`;
+        }}
+        endReached={loadMorePhotos}
+        overscan={VIRTUOSO_CONFIG.overscan(columns)}
+        increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
+        useWindowScroll={false}
+        itemClassName="virtuoso-grid-item"
+        listClassName={`grid gap-2 px-1.5 py-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
+        itemContent={(index, photo) => {
+          return (
+            <MemoizedPhotoCard
+              index={index}
+              photo={photo}
+              isAdminMode={isAdminMode}
+              showGroupsCollapsed={showGroupsCollapsed}
+              onGroupClick={handleGroupClick}
+              onLightboxOpen={handleLightboxOpen}
+            />
+          );
+        }}
+        components={{
+          Footer: () => {
+            if (isFetchingNextPage) {
+              return (
+                <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+                  <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+                  <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
+                    {t.loading || '正在载入更多...'}
+                  </span>
+                </div>
+              );
+            }
+            if (!isFetchingNextPage && !hasNextPage && displayPhotos.length > 0) {
+               return (
+                 <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+                   <span className="text-[10px] text-slate-400 font-medium tracking-tight">
+                     {t.endOfList || '已经到底啦'}
+                   </span>
+                 </div>
+               );
+             }
+            return null;
           }
-          if (!isFetchingNextPage && !hasNextPage && displayPhotos.length > 0) {
-             return (
-               <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-                 <span className="text-[10px] text-slate-400 font-medium tracking-tight">
-                   {t.endOfList || '已经到底啦'}
-                 </span>
-               </div>
-             );
-           }
-          return null;
-        }
-      }}
-    />
+        }}
+      />
     </div>
   );
 });

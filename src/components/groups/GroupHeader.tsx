@@ -22,6 +22,7 @@ interface GroupHeaderProps {
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
   onAddPhotoToGroup?: () => void;
+  onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void>;
 }
 
 export const GroupHeader: React.FC<GroupHeaderProps> = ({
@@ -32,6 +33,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   isGroupDataLoading,
   activeGroupPhotos,
   onAddPhotoToGroup,
+  onBatchAiAnalyzeByGroupId,
 }) => {
   const { setGroupSettingsOpen, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore(useShallow(s => ({
     setGroupSettingsOpen: s.setGroupSettingsOpen,
@@ -90,7 +92,13 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
            <div className="flex items-center gap-1.5 sm:gap-2">
               <button 
                 onClick={() => {
-                  if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);
+                  if (selectedIds.length > 0 && onBatchAiAnalyze) {
+                    onBatchAiAnalyze(activeGroupPhotos.filter(p => selectedIds.includes(p.id)));
+                  } else if (onBatchAiAnalyzeByGroupId && activeGroupId) {
+                    onBatchAiAnalyzeByGroupId(activeGroupId);
+                  } else if (onBatchAiAnalyze) {
+                    onBatchAiAnalyze(activeGroupPhotos);
+                  }
                 }}
                 className="hidden sm:flex px-3 h-10 items-center justify-center border border-[#7A00E6]/20 rounded-xl bg-[#F3E8FF] text-[#7A00E6] font-bold shadow-sm active:scale-95 transition-all gap-1.5"
                 title="AI 整組處理"
@@ -122,10 +130,13 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => {
-                      const photosToAnalyze = selectedIds.length > 0 
-                        ? activeGroupPhotos.filter(p => selectedIds.includes(p.id))
-                        : activeGroupPhotos;
-                      if (onBatchAiAnalyze) onBatchAiAnalyze(photosToAnalyze);
+                      if (selectedIds.length > 0 && onBatchAiAnalyze) {
+                          onBatchAiAnalyze(activeGroupPhotos.filter(p => selectedIds.includes(p.id)));
+                      } else if (onBatchAiAnalyzeByGroupId && activeGroupId) {
+                          onBatchAiAnalyzeByGroupId(activeGroupId);
+                      } else if (onBatchAiAnalyze) {
+                          onBatchAiAnalyze(activeGroupPhotos);
+                      }
                     }}
                     className="px-4 py-3 cursor-pointer flex items-center gap-2 hover:bg-slate-50 focus:bg-slate-50 outline-none"
                   >

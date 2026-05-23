@@ -3,6 +3,7 @@ import { Trash2, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGalleryStore } from '../../store';
 import { useClickOutside, useLongPress } from '../../hooks';
+import { normalizeManufacturerName } from '../../utils/stringHelper';
 
 import { Manufacturer } from '../../types';
 
@@ -61,7 +62,7 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
                   title: '编辑名称 (EN) / Edit (EN)',
                   message: '输入新的英文名称 / Enter new English name:',
                   placeholder: manufacturer.en || '',
-                  onSubmit: (name) => name !== undefined && onUpdate({ ...manufacturer, en: name.trim() })
+                  onSubmit: (name) => name !== undefined && onUpdate({ ...manufacturer, en: normalizeManufacturerName(name) })
                 });
                 setActiveMenuId(null);
               }}
@@ -76,7 +77,7 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
                   title: '编辑名称 (ZH) / Edit (ZH)',
                   message: '输入新的中文名称 / Enter new Chinese name:',
                   placeholder: manufacturer.zh || manufacturer.name,
-                  onSubmit: (name) => name && onUpdate({ ...manufacturer, zh: name.trim(), name: name.trim() })
+                  onSubmit: (name) => name && onUpdate({ ...manufacturer, zh: normalizeManufacturerName(name), name: normalizeManufacturerName(name) })
                 });
                 setActiveMenuId(null);
               }}

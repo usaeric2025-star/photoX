@@ -50,7 +50,8 @@ export const useAdminDataPrep = () => {
     setAlertDialog: s.setAlertDialog,
     setPromptDialog: s.setPromptDialog,
     setLightboxIndex: s.setLightboxIndex,
-    totalCount: s.totalCount
+    totalCount: s.totalCount,
+    isStaffMode: s.isStaffMode
   })));
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();

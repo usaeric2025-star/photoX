@@ -32,6 +32,7 @@ import { PhotoImageContainer } from '../photo/PhotoImageContainer';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 
 import { useAdminMode } from '@/hooks';
+import { useAdmin } from '@/contexts/AdminContext';
 
 import { useGalleryStore, useShallow } from '../../store';
 import { useFeedback, useTaskExecutor } from '../../hooks';
@@ -57,23 +58,14 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   } = props;
   const { showError } = useFeedback();
   const isAdminMode = useAdminMode();
+  const adminLogic = useAdmin();
   const {
      activeGroupId, setActiveGroupId, appLang,
      tagIdToNameMap, isStaffMode,
      setEditPhotoId,
-     filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
-  } = useGalleryStore(useShallow(s => ({
-     activeGroupId: s.activeGroupId,
-     setActiveGroupId: s.setActiveGroupId,
-     appLang: s.appLang,
-     tagIdToNameMap: s.tagIdToNameMap,
-     isStaffMode: s.isStaffMode,
-     setEditPhotoId: s.setEditPhotoId,
-     filterCatId: s.filterCatId,
-     filterTagIds: s.filterTagIds,
-     debouncedSearchQuery: s.debouncedSearchQuery,
-     sortOrder: s.sortOrder
-    })));
+     filterCatId, filterTagIds, debouncedSearchQuery, sortOrder,
+     analyzeGroupById
+  } = adminLogic;
   
     const { onToggleHidden, onUpdatePhoto, onTogglePinned, onDeletePhoto, onBatchAiAnalyze, onBatchEdit, onUngroup, onEditPhoto: storeEditPhoto } = usePhotoActions();
 
@@ -262,6 +254,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
              isGroupDataLoading={isGroupDataLoading}
              activeGroupPhotos={activeGroupPhotos}
              onAddPhotoToGroup={onAddPhotoToGroup}
+             onBatchAiAnalyzeByGroupId={analyzeGroupById}
            />
 
            <GroupGridView 

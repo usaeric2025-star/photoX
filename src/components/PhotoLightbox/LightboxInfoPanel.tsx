@@ -57,6 +57,24 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [photo.id]);
 
+  const [isInternalAnalyzing, setIsInternalAnalyzing] = React.useState(false);
+
+  const handleAiAnalyze = React.useCallback(async () => {
+    if (isInternalAnalyzing) return;
+    setIsInternalAnalyzing(true);
+    try {
+      if (onAiAnalyze) {
+          await onAiAnalyze(photo);
+      }
+      console.log('AI 分析完成');
+    } catch (error) {
+      console.error('AI 分析失败:', error);
+    } finally {
+      setIsInternalAnalyzing(false);
+    }
+  }, [isInternalAnalyzing, onAiAnalyze, photo]);
+
+
   return (
     <motion.div 
       initial={{ x: 300, opacity: 0 }}
@@ -86,10 +104,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
             {isAdminMode && canEdit && (
               <>
                 <button 
-                  onClick={() => {
-                    if (isAnalyzing && onCancelAnalyze) onCancelAnalyze();
-                    else if (!isAnalyzing) onAiAnalyze?.(photo);
-                  }}
+                  onClick={handleAiAnalyze}
                   className={`w-9 h-9 flex items-center justify-center rounded-xl border border-blue-100 transition-all ${isAnalyzing ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-blue-50 text-blue-600'}`}
                 >
                   {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}
