@@ -62,7 +62,6 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
         cloudCount={cloudCount}
         loadingType={loadingType}
         lang={lang}
-        batchProgress={batchProgress}
         handleBatchAiIdentifyTrigger={() => {
             if (onBatchAiAnalyze) onBatchAiAnalyze(photos);
         }}

@@ -11,7 +11,6 @@ interface AdminToolbarProps {
   cloudCount: number;
   lang: string;
   loadingType: string;
-  batchProgress: any;
 }
 
 export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
@@ -27,7 +26,6 @@ export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
       cloudCount={props.cloudCount}
       appLang={props.lang as any}
       isAnalyzing={props.loadingType === 'analyzing'}
-      batchProgress={props.batchProgress}
     />
   );
 };

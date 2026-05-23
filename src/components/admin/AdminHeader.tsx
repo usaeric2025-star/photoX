@@ -4,7 +4,7 @@ import { Skeleton } from '../ui/Skeleton';
 
 import { translations, LanguageCode } from '../../lib/translations';
 import { useGalleryStore, useShallow } from '../../store';
-import { useFeedback, useMultiSelect } from '../../hooks';
+import { useFeedback, useMultiSelect, useTasks } from '../../hooks';
 
 import { Photo, AppSettings } from '../../types';
 import { RefreshMenu } from './AdminHeader/RefreshMenu';
@@ -24,7 +24,6 @@ interface Props {
   cloudCount?: number | null;
   appLang?: string;
   isAnalyzing: boolean;
-  batchProgress: { current: number; total: number };
   settings?: AppSettings | null;
 }
 
@@ -33,8 +32,9 @@ export const AdminHeader: React.FC<Props> = ({
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
   appLang = 'en',
-  isAnalyzing, batchProgress, settings: propSettings
+  isAnalyzing, settings: propSettings
 }) => {
+  const { tasks } = useTasks();
   const { 
     settings: storeSettings, user, viewMode, setViewMode, isSyncing, 
     activeScreen, setActiveScreen,
@@ -147,7 +147,7 @@ export const AdminHeader: React.FC<Props> = ({
           )}
           
           {photosCount !== undefined && (
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-inner ${batchProgress && batchProgress.total > 0 ? 'bg-indigo-50 border-indigo-200' : 'bg-brand-navy/5 border-brand-navy/10'}`}>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner">
               <div className="flex items-center gap-1 font-mono text-[11px]">
                 <span className="font-bold text-brand-navy/80">{photosCount}</span>
                 <span className="text-brand-navy/30">/</span>
@@ -159,14 +159,6 @@ export const AdminHeader: React.FC<Props> = ({
                   )}
                 </span>
               </div>
-              {batchProgress && batchProgress.total > 0 && (
-                <div className="flex items-center gap-1.5 pl-2 border-l border-indigo-200">
-                   <div className="text-[10px] font-bold text-indigo-600">{Math.round((batchProgress.current / batchProgress.total) * 100)}%</div>
-                   <div className="w-12 h-1 bg-indigo-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-600 transition-all duration-300" style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }} />
-                   </div>
-                </div>
-              )}
             </div>
           )}
 

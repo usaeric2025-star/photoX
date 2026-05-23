@@ -153,7 +153,6 @@ export const useAdminPhotos = (
     analyzeGroup: aiHook.analyzeGroup,
     aiDebugInfo: aiHook.aiDebugInfo,
     setAiDebugInfo: aiHook.setAiDebugInfo,
-    batchProgress: aiHook.batchProgress,
     abortAnalysis: aiHook.abortAnalysis,
     handleTranslate,
 

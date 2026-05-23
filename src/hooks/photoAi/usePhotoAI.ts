@@ -4,6 +4,7 @@ import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { useInvalidatePhotos } from '../queries/useInvalidatePhotos';
 import { useTasks } from '../useTasks';
 import { useFeedback } from '../uiFeedback';
+import { useTaskExecutor } from '../useTaskExecutor';
 import { AI_CONFIG } from '../../constants/config';
 import { QUERY_KEYS } from '../queries/keys';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '../../services/geminiService';
@@ -124,10 +125,9 @@ export const usePhotoAI = (
   const queryClient = useQueryClient();
   const invalidatePhotos = useInvalidatePhotos();
   const { showSuccess, handleError } = useFeedback();
-  const { runTask } = useTaskExecutor(); // Use task executor
+  const { runTask } = useTaskExecutor();
   
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
-  const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
   const isAnalyzingRef = useRef(false);
   const currentControllers = useRef<Map<string, { controller: AbortController, timeoutId: NodeJS.Timeout }>>(new Map());
   const activeTaskIds = useRef<Set<string>>(new Set());
@@ -150,7 +150,6 @@ export const usePhotoAI = (
       controller.abort();
     });
     currentControllers.current.clear();
-    setBatchProgress({ current: 0, total: 0 });
     invalidatePhotos();
     
     if (taskId) {
@@ -363,7 +362,6 @@ export const usePhotoAI = (
         });
 
         const cur = Math.min(i + AI_CONFIG.CONCURRENCY, unProcessed.length);
-        setBatchProgress({ current: cur, total: unProcessed.length });
         updateTask(taskId, { progress: (cur / unProcessed.length) * 100, message: `已处理 ${cur}/${unProcessed.length}...` });
       }
       updateTask(taskId, { status: 'completed', progress: 100, message: `成功 ${completedCount} 张${duplicateCount>0?` (跳过重复 ${duplicateCount})`:''}` });
@@ -373,7 +371,6 @@ export const usePhotoAI = (
     } finally {
       activeTaskIds.current.delete(taskId);
       isAnalyzingRef.current = false;
-      setBatchProgress({ current: 0, total: 0 });
     }
   }, [
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, 
@@ -427,5 +424,5 @@ export const usePhotoAI = (
     tagNameToIdMap, addTask, updateTask, abortAnalysis, queryClient
   ]);
 
-  return { analyzeSingle, analyzeBatch, analyzeGroup, aiDebugInfo, setAiDebugInfo, batchProgress, abortAnalysis };
+  return { analyzeSingle, analyzeBatch, analyzeGroup, aiDebugInfo, setAiDebugInfo, abortAnalysis };
 };
