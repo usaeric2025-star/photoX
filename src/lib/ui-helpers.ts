@@ -20,11 +20,11 @@ export const getTranslatedCategoryName = (
   
   if (!activeCat) return t.uncategorized;
 
-  if (lang === 'zh') return activeCat.zh || activeCat.name;
-  if (lang === 'en') return activeCat.en || activeCat.name || activeCat.zh;
-  if (lang === 'ms') return activeCat.ms || activeCat.name || activeCat.en || activeCat.zh;
+  if (lang === 'zh') return (activeCat.zh || activeCat.name || t.uncategorized);
+  if (lang === 'en') return (activeCat.en || activeCat.name || activeCat.zh || t.uncategorized);
+  if (lang === 'ms') return (activeCat.ms || activeCat.name || activeCat.en || activeCat.zh || t.uncategorized);
   
-  return activeCat.name;
+  return (activeCat.name || t.uncategorized);
 };
 
 /**

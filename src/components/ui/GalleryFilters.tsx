@@ -169,7 +169,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
 
         <div className="grid grid-cols-4 gap-1">
             <CategoryChip 
-                name={t.allCats.toUpperCase()} 
+                name={(t.allCats || 'ALL').toUpperCase()} 
                 selected={!selectedCatCode && (!selectedTagIds || selectedTagIds.length === 0)} 
                 onClick={() => { setSelectedCatCode(null); setFilterSubId(null); setSelectedTagIds([]); onScrollToTop(); }} 
             />
