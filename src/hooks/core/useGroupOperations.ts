@@ -15,6 +15,7 @@ export const useGroupPhotosMutation = () => {
 
   return useMutation({
     mutationFn: async (photoIds: string[]) => {
+      console.log('useGroupPhotosMutation mutationFn called with photoIds:', photoIds);
       const newGroupId = crypto.randomUUID();
       await groupPhotos(photoIds, newGroupId);
       return { photoIds, newGroupId };

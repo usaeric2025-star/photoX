@@ -122,12 +122,29 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [setIsMultiSelect, setSelectedIds, photo.id]);
 
   const toggle = useCallback(() => {
-    const current = (useGalleryStore.getState().selectedIds) ?? [];
-    const next = current.includes(photo.id) 
-      ? current.filter((i: string) => i !== photo.id) 
-      : [...current, photo.id];
+    const store = useGalleryStore.getState();
+    const current = store.selectedIds ?? [];
+    const isCurrentlySelected = current.includes(photo.id);
+    
+    // If showGroupsCollapsed is true and we're dealing with a group, we should select all group members
+    let idsToToggle = [photo.id];
+    if (showGroupsCollapsed && photo.group_id) {
+      idsToToggle = store.photos
+        .filter(p => p.group_id === photo.group_id)
+        .map(p => p.id);
+    }
+
+    let next: string[];
+    if (isCurrentlySelected) {
+      // Remove all ids in the group
+      next = current.filter((id: string) => !idsToToggle.includes(id));
+    } else {
+      // Add all ids in the group, ensuring uniqueness
+      next = Array.from(new Set([...current, ...idsToToggle]));
+    }
+    
     setSelectedIds(next);
-  }, [setSelectedIds, photo.id]);
+  }, [setSelectedIds, photo.id, photo.group_id, showGroupsCollapsed]);
 
   const handleOpenLightbox = useCallback(() => {
     onLightboxOpen(photo);

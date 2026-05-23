@@ -120,7 +120,9 @@ export const MainAdminScreen: React.FC = React.memo(() => {
               }
           }}
           onToggleVisibility={() => {
-              // Usually the store has a batch toggle or we need one
+              if (selectedIds.length > 0) {
+                logic.handleBatchToggleHidden(selectedIds);
+              }
           }}
         />
       </div>

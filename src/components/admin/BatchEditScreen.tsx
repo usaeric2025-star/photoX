@@ -33,47 +33,40 @@ export const BatchEditScreen = () => {
     setAlertDialog: s.setAlertDialog,
     isSyncing: s.isSyncing,
     appLang: s.appLang,
-    setBatchEditingIds: s.setBatchEditingIds,
-    resetForm: s.resetForm
+    setBatchEditingIds: s.setBatchEditingIds
   })));
 
   useEffect(() => {
     resetForm();
   }, [resetForm]);
 
-// 1. 获取共有属性时，同时保存初始值
-  const [initialForm, setInitialForm] = useState<any>(null);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    // 假设 getCommonAttributes 是你用来计算初始共有的逻辑
-    // 需要根据现有的 logic 或 store 中的数据调整
-    if (!formState) return; 
-    setInitialForm(formState);
-  }, []);
+  const handleUpdateForm = useCallback((updates: any) => {
+    updateForm(updates);
+    const keys = Object.keys(updates);
+    setTouchedFields(prev => {
+        const next = new Set(prev);
+        keys.forEach(k => next.add(k));
+        return next;
+    });
+  }, [updateForm]);
 
   const handleSave = async () => {
     setIsLocalSaving(true);
     try {
       const changes: any = {};
-      Object.keys(formState).forEach(key => {
-        const currentValue = (formState as any)[key];
-        const initialValue = initialForm?.[key];
-        
-        // 比较当前值和初始值（简单比较，对于复杂对象需要JSON.stringify）
-        if (JSON.stringify(currentValue) !== JSON.stringify(initialValue)) {
-          changes[key] = currentValue;
-        }
+      touchedFields.forEach(key => {
+        changes[key] = (formState as any)[key];
       });
       
-      // 如果没有变化，直接返回
       if (Object.keys(changes).length === 0) {
-        // 使用 AlertDialog 或 Toast 提示
         setAlertDialog({ title: '提示', message: '没有检测到修改', confirmLabel: '确定', onConfirm: () => setAlertDialog(null) });
         return;
       }
       
-      // 调用新的批量更新方法
       await saveBatchEdit(changes);
+      setBatchEditingIds(null);
     } finally {
       setIsLocalSaving(false);
     }
@@ -158,7 +151,7 @@ export const BatchEditScreen = () => {
               placeholder="输入统一产品名称..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
               value={formState.name}
-              onChange={(e) => updateForm({ name: e.target.value })}
+              onChange={(e) => handleUpdateForm({ name: e.target.value })}
             />
         </section>
 
@@ -169,7 +162,7 @@ export const BatchEditScreen = () => {
               placeholder="输入统一编号 (如: SK-2024)..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
               value={formState.manual_code}
-              onChange={(e) => updateForm({ manual_code: e.target.value })}
+              onChange={(e) => handleUpdateForm({ manual_code: e.target.value })}
             />
         </section>
 
@@ -180,7 +173,7 @@ export const BatchEditScreen = () => {
               placeholder="输入统一型号编号 (如: MOD-123)..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300"
               value={formState.model_number}
-              onChange={(e) => updateForm({ model_number: e.target.value })}
+              onChange={(e) => handleUpdateForm({ model_number: e.target.value })}
             />
         </section>
 
@@ -191,7 +184,7 @@ export const BatchEditScreen = () => {
               placeholder="输入统一价格..."
               className="w-full bg-white border border-slate-200 p-5 rounded-3xl text-sm outline-none focus:border-blue-500 shadow-sm font-bold placeholder:text-slate-300 text-blue-600"
               value={formState.price}
-              onChange={(e) => updateForm({ price: e.target.value })}
+              onChange={(e) => handleUpdateForm({ price: e.target.value })}
             />
         </section>
 
@@ -202,7 +195,7 @@ export const BatchEditScreen = () => {
                 type="button"
                 onClick={() => {
                   setBatchIsHiddenApplied(true);
-                  updateForm({ is_hidden: false });
+                  handleUpdateForm({ is_hidden: false });
                 }}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && !formState.is_hidden ? 'bg-green-50 border-green-500 text-green-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
               >
@@ -213,7 +206,7 @@ export const BatchEditScreen = () => {
                 type="button"
                 onClick={() => {
                   setBatchIsHiddenApplied(true);
-                  updateForm({ is_hidden: true });
+                  handleUpdateForm({ is_hidden: true });
                 }}
                 className={`flex-1 flex flex-col items-center justify-center gap-1 p-4 rounded-2xl border-2 transition-all ${batchIsHiddenApplied && formState.is_hidden ? 'bg-orange-50 border-orange-500 text-orange-700' : 'bg-white border-slate-50 text-slate-400 border-slate-100'}`}
               >
@@ -236,7 +229,7 @@ export const BatchEditScreen = () => {
           <CategoryGrid 
             categories={categories}
             selectedId={formState.category_id}
-            onSelect={(id) => updateForm({ category_id: id })}
+            onSelect={(id) => handleUpdateForm({ category_id: id })}
             appLang={appLang}
           />
         </section>
@@ -250,7 +243,7 @@ export const BatchEditScreen = () => {
           <ManufacturerList 
             manufacturers={manufacturers}
             selectedId={formState?.manufacturer_id}
-            onSelect={(id) => updateForm({ manufacturer_id: id })}
+            onSelect={(id) => handleUpdateForm({ manufacturer_id: id })}
           />
         </section>
 
@@ -258,7 +251,7 @@ export const BatchEditScreen = () => {
           <PhotoTagSelector 
             tags={tags}
             selectedTagIds={safeArray<string>(formState.tag_ids)}
-            onChange={(newIds) => updateForm({ tag_ids: newIds })}
+            onChange={(newIds) => handleUpdateForm({ tag_ids: newIds })}
             addTag={addTag}
             updateTag={updateTag}
             deleteTag={deleteTag}

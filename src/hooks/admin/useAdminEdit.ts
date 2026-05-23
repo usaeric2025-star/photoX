@@ -31,8 +31,17 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
   // ... (Consolidate PhotoManagement logic here...)
   
   // Calculate common attributes for batch editing
+  const lastBatchIds = useRef<string[] | null>(null);
+
   useEffect(() => {
-    if (!batchEditingIds || batchEditingIds.length === 0) return;
+    if (!batchEditingIds || batchEditingIds.length === 0) {
+        lastBatchIds.current = null;
+        return;
+    }
+    
+    // Only run initialization if batchEditingIds changed
+    if (JSON.stringify(lastBatchIds.current) === JSON.stringify(batchEditingIds)) return;
+    lastBatchIds.current = batchEditingIds;
     
     const selectedPhotos = photos.filter(p => batchEditingIds.includes(p.id));
     if (selectedPhotos.length === 0) return;
@@ -56,16 +65,16 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
 
     // Only update if we have a valid common value (string or array)
     const updates: Partial<ProductFormData> = {};
-    if (commonCategory !== undefined && formState.category_id !== commonCategory) updates.category_id = commonCategory;
-    if (commonManufacturer !== undefined && formState.manufacturer_id !== commonManufacturer) updates.manufacturer_id = commonManufacturer;
+    if (commonCategory !== undefined) updates.category_id = commonCategory;
+    if (commonManufacturer !== undefined) updates.manufacturer_id = commonManufacturer;
     
     // For tags, simple check
-    if (commonTags.length > 0 && JSON.stringify(formState.tag_ids) !== JSON.stringify(commonTags)) updates.tag_ids = commonTags;
+    if (commonTags.length > 0) updates.tag_ids = commonTags;
 
     if (Object.keys(updates).length > 0) {
       updateForm(updates);
     }
-  }, [batchEditingIds, photos, updateForm, formState.category_id, formState.manufacturer_id, formState.tag_ids]);
+  }, [batchEditingIds, photos, updateForm]);
 
   // 批量编辑 API 调用
   const batchUpdatePhotos = useCallback(async (ids: string[], changes: any) => {
@@ -157,10 +166,28 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
   }, [user, isStaffMode, photos, updatePhotosBulk, runTask]);
 
   const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
+    console.log('[useAdminEdit] Grouping photos:', photoIds);
+    if (!photoIds || photoIds.length < 2) {
+      showError(new Error('请选择至少 2 张照片'), '操作无效');
+      return;
+    }
     await runTask('分组照片', async () => {
       await groupPhotosMut(photoIds);
     }, { showSuccessToast: true });
-  }, [groupPhotosMut, runTask]);
+  }, [groupPhotosMut, runTask, showError]);
+
+  const handleBatchToggleHidden = useCallback(async (ids: string[]) => {
+    if (!ids || ids.length === 0) return;
+    
+    // Find if the majority or any are visible to decide target state
+    const targetPhotos = photos.filter(p => ids.includes(p.id));
+    const allHidden = targetPhotos.every(p => p.is_hidden);
+    const nextStatus = !allHidden;
+
+    await runTask(nextStatus ? '隐藏照片' : '显示照片', async () => {
+       await updatePhotosBulk(ids, { is_hidden: nextStatus });
+    }, { showSuccessToast: true });
+  }, [photos, updatePhotosBulk, runTask]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
     await runTask('拆分群组', async () => {
@@ -176,6 +203,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
 
   return { 
     deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos, handleUngroup,
+    handleBatchToggleHidden,
     togglePinned, setGroupCover,
     formState, updateForm, newPhotoData, setNewPhotoData, 
     showOtherFields, setShowOtherFields, resetAddState 
