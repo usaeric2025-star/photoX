@@ -86,6 +86,16 @@ export const useAdminPhotos = (
     saveData('product_photos', photos);
   }, [photos]);
 
+  // 1. Initialize Photo AI Hook
+  const aiHook = usePhotoAI(
+    user, geminiApiKey, aiProvider, customModel, 
+    categories, tags, manufacturers, 
+    tagNameToIdMap, 
+    addTask, updateTask, removeTask,
+    photosRef,
+    showError
+  );
+  
   // Handle AI Resume
   const isProcessingRef = useRef(false);
   useEffect(() => {
@@ -101,16 +111,6 @@ export const useAdminPhotos = (
       }
     }
   }, [safeArray(photos).length]);
-
-  // 1. Initialize Photo AI Hook
-  const aiHook = usePhotoAI(
-    user, geminiApiKey, aiProvider, customModel, 
-    categories, tags, manufacturers, 
-    tagNameToIdMap, 
-    addTask, updateTask, removeTask,
-    photosRef,
-    showError
-  );
 
   // 2. Initialize Photo Import Hook
   const importHook = usePhotoImport(

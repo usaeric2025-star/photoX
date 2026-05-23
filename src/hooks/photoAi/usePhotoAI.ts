@@ -115,15 +115,16 @@ export const usePhotoAI = (
   tags: Tag[],
   manufacturers: Manufacturer[],
   tagNameToIdMap: Map<string, string>,
-  addTask: (task: Omit<Task, 'id'>) => string,
-  updateTask: (id: string, updates: Partial<Task>) => void,
-  removeTask: (id: string) => void,
+  addTask: any, // kept for backward compatibility if needed, but should be replaced
+  updateTask: any,
+  removeTask: any,
   photosRef: React.MutableRefObject<Photo[]>,
   showError: (error: unknown, context?: string) => void
 ) => {
   const queryClient = useQueryClient();
   const invalidatePhotos = useInvalidatePhotos();
   const { showSuccess, handleError } = useFeedback();
+  const { runTask } = useTaskExecutor(); // Use task executor
   
   const [aiDebugInfo, setAiDebugInfo] = useState<{ step: string; message: string; error?: string } | null>(null);
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });

@@ -6,7 +6,11 @@
 export function extractJsonObject(text: string): any {
   if (!text) return null;
   
+  // Strip ```json or ``` blocks
   let cleanText = text.trim();
+  cleanText = cleanText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '');
+  cleanText = cleanText.replace(/```\s*$/i, '');
+  
   const startIndex = cleanText.indexOf('{');
   if (startIndex === -1) return null;
 
