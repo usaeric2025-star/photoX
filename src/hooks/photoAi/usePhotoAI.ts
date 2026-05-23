@@ -308,7 +308,7 @@ export const usePhotoAI = (
     
     const processPhoto = async (photo: Photo) => {
       const controller = new AbortController();
-      currentControllers.current.set(taskId, { controller, timeoutId: setTimeout(() => controller.abort(), 60000) });
+      currentControllers.current.set(photo.id, { controller, timeoutId: setTimeout(() => controller.abort(), 60000) });
       
       try {
         const resRaw = await analyzeProductPhoto(photo.uri || photo.image_url!, categories, tags, manufacturers, geminiApiKey, aiProvider, customModel, photo.category_id, photo.name, controller.signal);
@@ -342,23 +342,40 @@ export const usePhotoAI = (
           return { ...old, pages: old.pages.map((page: any) => ({ ...page, photos: page.photos.map((p: Photo) => p.id === photo.id ? updated : p) })) };
         });
         queryClient.setQueriesData({ queryKey: ['photos', 'group'] }, (old: any) => Array.isArray(old) ? old.map(p => p.id === photo.id ? updated : p) : old);
-        return false;
+        return { success: true };
       } catch (err: any) {
-        if (err.name === 'DuplicatePhotoError') return true;
-        if (err.name !== 'AbortError') throw err;
+        if (err.name === 'DuplicatePhotoError') return { success: true, duplicate: true };
+        console.error(`Error processing photo ${photo.id}:`, err);
+        return { success: false, error: err };
+      } finally {
+        currentControllers.current.delete(photo.id);
       }
     };
 
     try {
+      let lastProgressAt = Date.now();
+      const STALL_TIMEOUT = 90000; // 90 seconds stall timeout
+
       for (let i = 0; i < unProcessed.length; i += AI_CONFIG.CONCURRENCY) {
         if (currentControllers.current.get(taskId)?.controller.signal.aborted) break;
-        const batch = unProcessed.slice(i, i + AI_CONFIG.CONCURRENCY);
         
-        const batchResults = await Promise.allSettled(batch.map(processPhoto));
+        // Stalled detection check
+        if (Date.now() - lastProgressAt > STALL_TIMEOUT) {
+          throw new Error('任务长时间无进度，已自动中止');
+        }
+
+        const batch = unProcessed.slice(i, i + AI_CONFIG.CONCURRENCY);
+        const batchResults = await Promise.all(batch.map(processPhoto));
+        
+        lastProgressAt = Date.now(); // Reset stall timer
+
         batchResults.forEach(result => {
-           if (result.status === 'fulfilled' && result.value) duplicateCount++;
-           else if (result.status === 'fulfilled') completedCount++;
-           else if (result.status === 'rejected' && result.reason?.name !== 'AbortError') throw result.reason;
+           if (result.success && result.duplicate) duplicateCount++;
+           else if (result.success) completedCount++;
+           else {
+             handleError(result.error, '批量 AI 识别 - 单项失败');
+             throw result.error;
+           }
         });
 
         const cur = Math.min(i + AI_CONFIG.CONCURRENCY, unProcessed.length);
@@ -366,8 +383,9 @@ export const usePhotoAI = (
       }
       updateTask(taskId, { status: 'completed', progress: 100, message: `成功 ${completedCount} 张${duplicateCount>0?` (跳过重复 ${duplicateCount})`:''}` });
     } catch (err) {
-      showError(err, '批量 AI 识别');
-      updateTask(taskId, { status: 'error', message: '错误' });
+      handleError(err, '批量 AI 识别');
+      updateTask(taskId, { status: 'error', message: `错误: ${err instanceof Error ? err.message : '未知'}` });
+      throw err; // Re-throw to caller if needed
     } finally {
       activeTaskIds.current.delete(taskId);
       isAnalyzingRef.current = false;

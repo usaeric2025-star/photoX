@@ -184,7 +184,7 @@ export const useAdminDataPrep = () => {
   const { mutateAsync: saveSettings } = useSettingsMutation();
 
   const { 
-    batchProgress, analyzeSingle, handleTranslate, analyzeBatch, analyzeGroup, 
+    analyzeSingle, handleTranslate, analyzeBatch, analyzeGroup, 
     handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos,
     importProgress, importTotal, abortAnalysis, aiDebugInfo, setAiDebugInfo
   } = useAdminPhotos(
@@ -642,7 +642,7 @@ export const useAdminDataPrep = () => {
     // Original states
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    loadingType, setLoadingType, withLoading, batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis,
+    loadingType, setLoadingType, withLoading, aiDebugInfo, setAiDebugInfo, abortAnalysis,
     isAnalyzing: loadingType === 'analyzing', cloudCount, setCloudCount,
     
     settings, adminPreviewMode, setAdminPreviewMode,
@@ -687,7 +687,7 @@ export const useAdminDataPrep = () => {
     user, authChecked, logout, navigate, infinitePhotosQuery, t, lang, onRefresh,
     activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
     alertDialog, setAlertDialog, promptDialog, setPromptDialog, loadingType, setLoadingType, withLoading,
-    batchProgress, aiDebugInfo, setAiDebugInfo, abortAnalysis, cloudCount, setCloudCount, settings,
+    aiDebugInfo, setAiDebugInfo, abortAnalysis, cloudCount, setCloudCount, settings,
     adminPreviewMode, setAdminPreviewMode, photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
     analyzeSingle, analyzeGroup, handlePhotoImport, importProgress, importTotal, handleBatchAiIdentifyTrigger, handleDeletePhoto,
     formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,

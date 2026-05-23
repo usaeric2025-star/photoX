@@ -165,7 +165,7 @@ export const useAdminPhotos = (
     photos, currentLoadingState, cloudCount, setCloudCount,
     importHook.handlePhotoImport, importHook.importProgress, importHook.importTotal,
     aiHook.analyzeSingle, aiHook.analyzeBatch, aiHook.analyzeGroup,
-    aiHook.aiDebugInfo, aiHook.setAiDebugInfo, aiHook.batchProgress, aiHook.abortAnalysis,
+    aiHook.aiDebugInfo, aiHook.setAiDebugInfo, aiHook.abortAnalysis,
     handleTranslate, groupPhotosMutation, mutationHook.deletePhoto, 
     mutationHook.updatePhoto, mutationHook.updatePhotosBulk
   ]);
