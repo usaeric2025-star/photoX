@@ -1,5 +1,6 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { User } from './types';
 import { useAuth, useRouteGuard } from '@/hooks';
 import { clearExpiredCaches } from './utils/indexedDB';
@@ -83,6 +84,7 @@ function AnimatedRoutes({ user }: { user: User | null }) {
 
 export default function AppRoutes() {
   const { user, isLoading } = useAuth();
+  const queryClient = useQueryClient();
   
   // If loading inside a popup, detect auth credentials, wait for Supabase to persist them, send success postMessage, and close.
   useEffect(() => {
@@ -112,7 +114,8 @@ export default function AppRoutes() {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        // Force reload the application to grab the session from localStorage
+        // Force invalidate user query and reload the application to grab the session from localStorage
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
         window.location.reload();
       }
     };

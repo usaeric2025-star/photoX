@@ -38,13 +38,8 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
     >
       <div className="flex flex-col">
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
-          {manufacturer.zh || manufacturer.name}
+          {manufacturer.name}
         </span>
-        {manufacturer.en && (
-          <span className="text-[8px] font-bold text-brand-navy/30 uppercase tracking-tighter select-none">
-            {manufacturer.en}
-          </span>
-        )}
       </div>
 
       <AnimatePresence>
@@ -59,31 +54,21 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
               onClick={(e) => {
                 e.stopPropagation();
                 useGalleryStore.getState().setPromptDialog({
-                  title: '编辑名称 (EN) / Edit (EN)',
-                  message: '输入新的英文名称 / Enter new English name:',
-                  placeholder: manufacturer.en || '',
-                  onSubmit: (name) => name !== undefined && onUpdate({ ...manufacturer, en: normalizeManufacturerName(name) })
+                  title: '编辑厂商名称 / Edit Manufacturer',
+                  message: '输入新的名称 / Enter new name:',
+                  placeholder: manufacturer.name,
+                  onSubmit: (name) => {
+                    if (name) {
+                      const normalized = normalizeManufacturerName(name);
+                      onUpdate({ ...manufacturer, name: normalized });
+                    }
+                  }
                 });
                 setActiveMenuId(null);
               }}
               className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
             >
-              <Pencil size={12} /> 编辑 (EN)
-            </button>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                useGalleryStore.getState().setPromptDialog({
-                  title: '编辑名称 (ZH) / Edit (ZH)',
-                  message: '输入新的中文名称 / Enter new Chinese name:',
-                  placeholder: manufacturer.zh || manufacturer.name,
-                  onSubmit: (name) => name && onUpdate({ ...manufacturer, zh: normalizeManufacturerName(name), name: normalizeManufacturerName(name) })
-                });
-                setActiveMenuId(null);
-              }}
-              className="px-3 py-2 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 rounded-lg flex items-center gap-2"
-            >
-              <Pencil size={12} /> 编辑 (ZH)
+              <Pencil size={12} /> 编辑名称
             </button>
             <button 
               onClick={(e) => {

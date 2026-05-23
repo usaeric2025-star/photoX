@@ -24,8 +24,8 @@ export const sortTagsByPopularity = (tags: Tag[]): Tag[] => {
     if (countA !== countB) return countB - countA;
 
     // 3. 确定性降级（字母序）
-    const nameA = a.zh || a.name || '';
-    const nameB = b.zh || b.name || '';
+    const nameA = a.name || '';
+    const nameB = b.name || '';
     return nameA.localeCompare(nameB, 'zh-CN');
   });
 };
@@ -70,11 +70,10 @@ export const resolveTagIdsBatch = async (
     // 3. Lookup via cache / map
     let id = tagNameToIdMap.get(uppercaseName);
     
-    // 4. Lookup via existing list by Name / zh
+    // 4. Lookup via existing list by Name
     if (!id) {
       const found = existingTags.find(t => 
-        (t.name || '').toUpperCase() === uppercaseName || 
-        (t.zh || '').toUpperCase() === uppercaseName
+        (t.name || '').toUpperCase() === uppercaseName
       );
       if (found) id = found.id;
     }

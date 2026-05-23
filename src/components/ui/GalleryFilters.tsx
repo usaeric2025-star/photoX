@@ -177,7 +177,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
             {categories
               .slice(0, 7) 
               .map(cat => {
-                const rawName = lang === 'zh' ? (cat.zh || cat.name) : lang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
+                const rawName = cat.name;
                 const displayName = lang === 'zh' ? rawName : rawName.toUpperCase();
                 const isActive = String(selectedCatCode) === String(cat.id) || String(selectedCatCode) === String(cat.code);
                 return (
@@ -238,7 +238,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                 return (
                   <FilterChip
                     key={strTagId}
-                    label={lang === 'zh' ? (tag.zh || tag.name) : (tag.zh || tag.name).toUpperCase()}
+                    label={tag.name.toUpperCase()}
                     selected={isSelected}
                     pinned={isPinned}
                     hot={isHot}

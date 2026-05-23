@@ -191,7 +191,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
             </div>
             
             {/* Series Story Section */}
-            {(isGroupDataLoading || (groupData?.description_translations?.[lang as 'zh'|'en'|'ms'] || groupData?.description)) && (
+            {(isGroupDataLoading || groupData?.description) && (
               <div className="px-5 py-4 bg-white border-b border-slate-100">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-3 bg-blue-600 rounded-full" />
@@ -204,7 +204,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                   </div>
                 ) : (
                   <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
-                    {groupData?.description_translations?.[lang as 'zh'|'en'|'ms'] || groupData?.description}
+                    {groupData?.description}
                   </p>
                 )}
               </div>

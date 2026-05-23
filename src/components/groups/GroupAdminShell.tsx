@@ -112,23 +112,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     );
   }, [ungroupedPhotos, addSearchKeyword]);
 
-  const handleConfirmAddPhotos = useCallback(async () => {
-    if (selectedPhotosToAdd.length === 0) return;
-    await runTask('添加照片到合组 / Add Photos to Group', async () => {
-      await updatePhotosGroupInCloud(selectedPhotosToAdd, { group_id: activeGroupId });
-      
-      // Clear selections and close drawer
-      setSelectedPhotosToAdd([]);
-      setIsAddSheetOpen(false);
-      
-      // Invalidate queries to refresh the group photos and main gallery
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['groupPhotos', activeGroupId] }),
-        queryClient.invalidateQueries({ queryKey: ['photos'] })
-      ]);
-    }, { showSuccessToast: true });
-  }, [selectedPhotosToAdd, activeGroupId, runTask, queryClient]);
-
   const { 
     tagIdToNameMap: tagMap
   } = useGalleryStore(useShallow(s => ({
@@ -230,6 +213,31 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     const newStatus = !p.is_hidden;
     persistPhotoChange(p.id, { is_hidden: newStatus });
   }, [persistPhotoChange]);
+
+  const handleConfirmAddPhotos = useCallback(async () => {
+    if (selectedPhotosToAdd.length === 0) return;
+    
+    setAlertDialog({
+      title: '确认添加照片',
+      message: `确定要将选中的 ${selectedPhotosToAdd.length} 张照片添加到当前分组吗？`,
+      onConfirm: async () => {
+        setAlertDialog(null);
+        await runTask('添加照片到合组 / Add Photos to Group', async () => {
+          await updatePhotosGroupInCloud(selectedPhotosToAdd, { group_id: activeGroupId });
+          
+          // Clear selections and close drawer
+          setSelectedPhotosToAdd([]);
+          setIsAddSheetOpen(false);
+          
+          // Invalidate queries to refresh the group photos and main gallery
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['groupPhotos', activeGroupId] }),
+            queryClient.invalidateQueries({ queryKey: ['photos'] })
+          ]);
+        }, { showSuccessToast: true });
+      }
+    });
+  }, [selectedPhotosToAdd, activeGroupId, runTask, queryClient, setAlertDialog]);
 
   return (
     <>

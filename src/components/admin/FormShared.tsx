@@ -40,7 +40,7 @@ export const CategoryGrid: React.FC<CategorySelectorProps> = ({ categories, sele
   <div className="grid grid-cols-4 gap-1.5 px-0.5">
     {categories.filter(cat => cat && cat.id).map((cat) => {
       const isSelected = String(selectedId || '') === String(cat.id || '');
-      const displayName = appLang === 'zh' ? (cat.zh || cat.name) : appLang === 'ms' ? (cat.ms || cat.name) : (cat.en || cat.name);
+        const displayName = cat.name;
       return (
         <button 
           key={cat.id}

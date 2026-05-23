@@ -24,7 +24,7 @@ export function useTagsDisplay(tags: Tag[], settings?: AppSettings) {
     const sorted = [...candidates].sort((a, b) => {
       const diff = (b.hot_score || 0) - (a.hot_score || 0);
       if (diff !== 0) return diff;
-      return (a.zh || a.name || '').localeCompare(b.zh || b.name || '', 'zh-CN');
+      return (a.name || '').localeCompare(b.name || '', 'zh-CN');
     });
 
     const hot = sorted.slice(0, hotTagsCount);
@@ -45,7 +45,7 @@ export function useTagsDisplay(tags: Tag[], settings?: AppSettings) {
       
       const countA = a.hot_score || 0;
       const countB = b.hot_score || 0;
-      return countB - countA || (a.zh || a.name || '').localeCompare(b.zh || b.name || '', 'zh-CN');
+      return countB - countA || (a.name || '').localeCompare(b.name || '', 'zh-CN');
     });
   }, [tags, hotIds, pinnedIds]);
 

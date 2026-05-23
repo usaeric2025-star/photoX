@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings2, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks';
+import { useGalleryStore } from '@/store';
 
 interface ToolsMenuProps {
   show: boolean;
@@ -58,9 +59,16 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
           
           {user ? (
             <button 
-              onClick={async () => {
-                await logout();
-                window.location.reload();
+              onClick={() => {
+                useGalleryStore.getState().setAlertDialog({
+                    title: '确认登出 / Confirm Logout',
+                    message: '确定要登出管理员模式吗？ / Are you sure you want to log out?',
+                    onConfirm: async () => {
+                        await logout();
+                        window.location.reload();
+                    },
+                    type: 'danger'
+                });
               }}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 text-red-650 transition-colors text-left"
             >
@@ -83,7 +91,16 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
 
           {isStaff && (
             <button 
-              onClick={handleExitStaffMode}
+              onClick={() => {
+                useGalleryStore.getState().setAlertDialog({
+                    title: '确认退出员工模式 / Confirm Exit Staff Mode',
+                    message: '确定要退出员工模式吗？ / Are you sure you want to exit staff mode?',
+                    onConfirm: () => {
+                        if (handleExitStaffMode) handleExitStaffMode();
+                    },
+                    type: 'danger'
+                });
+              }}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-left text-red-600 border-t border-slate-100"
             >
               <LogIn size={16} /> <span className="text-xs font-bold uppercase">{t.exitStaffMode}</span>
