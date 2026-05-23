@@ -150,7 +150,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     handleBulkAction: hookHandleBulkAction
   } = useGroupAdminLogic({
     initialPhotoId: props.initialPhotoId,
-    photos // MUST pass photos here since we pulled it via hook
+    photos: groupPhotos // Use the independent groupPhotos list instead of the filtered main photos
   });
 
   const t = translations[appLang as keyof typeof translations] || translations.en;
@@ -320,14 +320,15 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
             {/* Add Photos to Group Dialog / Sheet */}
             <Sheet open={isAddSheetOpen} onOpenChange={setIsAddSheetOpen}>
-              <SheetContent side="right" className="w-[450px] max-w-full sm:w-[540px] bg-white p-0 flex flex-col h-full border-l border-slate-100 shadow-2xl z-[250]">
-                <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <SheetContent side="right" className="w-[92%] sm:w-[450px] bg-white p-0 flex flex-col h-full border-l border-slate-100 shadow-2xl z-[250] rounded-l-3xl overflow-hidden">
+                <div className="px-5 py-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                   <SheetTitle className="text-lg font-black text-slate-800 tracking-tight">
-                    添加照片到合组 / Add Photos to Group
+                    添加照片到合组
+                    <span className="block text-[10px] font-medium text-slate-400 mt-1 uppercase tracking-widest">Add Photos to Group</span>
                   </SheetTitle>
                   <button 
                     onClick={() => setIsAddSheetOpen(false)}
-                    className="p-1 rounded-lg hover:bg-slate-150 text-slate-450 transition-colors"
+                    className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 active:scale-95 transition-all"
                   >
                     <X size={18} />
                   </button>

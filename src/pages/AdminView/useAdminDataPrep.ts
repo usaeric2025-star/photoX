@@ -75,18 +75,25 @@ export const useAdminDataPrep = () => {
 
   // Auto-disband single-photo groups
   useEffect(() => {
-    if (store.activeGroupId && groupPhotosQuery.isSuccess && groupPhotos.length === 1) {
+    // Only disband if we are definitely in the group view and the query has finished
+    if (store.activeGroupId && groupPhotosQuery.isSuccess && groupPhotos.length === 1 && !groupPhotosQuery.isFetching) {
       console.log(`[Maintenance] Auto-disbanding group because it only has one photo:`, store.activeGroupId);
       const gid = store.activeGroupId;
-      // We don't use 'edit.handleUngroup' directly here to avoid potential dependency loops 
-      // instead we use a simple async call or wait one tick
-      setTimeout(() => {
+      
+      // Use a small delay to ensure UI transitions don't conflict
+      const timer = setTimeout(async () => {
         if (store.activeGroupId === gid) {
-           edit.handleUngroup(gid).then(() => store.setActiveGroupId(null));
+           try {
+             await edit.handleUngroup(gid);
+             store.setActiveGroupId(null);
+           } catch (err) {
+             console.error('Failed to auto-disband group:', err);
+           }
         }
-      }, 500);
+      }, 800);
+      return () => clearTimeout(timer);
     }
-  }, [store.activeGroupId, groupPhotos, groupPhotosQuery.isSuccess, edit.handleUngroup, store.setActiveGroupId]);
+  }, [store.activeGroupId, groupPhotos, groupPhotosQuery.isSuccess, groupPhotosQuery.isFetching, edit.handleUngroup, store.setActiveGroupId]);
 
   const { settings, setSettings, refreshCloudData } = useSyncEngine();
   const { settings: fetchedSettings } = useSettings();
