@@ -56,20 +56,36 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button 
             onClick={onRefresh}
             disabled={isRefreshing}
-            className={`w-9 h-9 flex items-center justify-center rounded-full transition-all border border-[#ECECEC] ${isRefreshing ? 'bg-[#0051BA] text-white animate-spin' : 'bg-[#F1F3F4] text-[#555555] active:scale-95'}`}
+            className={`w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl transition-all border border-[#ECECEC] ${isRefreshing ? 'bg-[#0051BA] text-white animate-spin' : 'bg-[#F1F3F4] text-[#555555] active:scale-95'}`}
           >
             <RefreshCcw size={16} />
           </button>
 
           <LanguageSwitcher variant="public" />
 
+          {/* Earth/Globe button for easy toggling back to Admin mode */}
+          {isAdminMode && onExit && (
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                onExit();
+              }}
+              type="button"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all bg-green-600 text-white shadow-lg ring-4 ring-green-400/30"
+              title="返回管理端"
+              id="exit-preview-globe"
+            >
+              <Globe size={18} />
+            </button>
+          )}
+
           <button
              onClick={onLogin}
-             className="w-9 h-9 bg-white border border-[#ECECEC] text-[#555555] rounded-full flex items-center justify-center hover:bg-[#F1F3F4] active:scale-95 transition-all shadow-none"
+             className="w-9 h-9 sm:w-10 sm:h-10 bg-white border border-[#ECECEC] text-[#555555] rounded-xl flex items-center justify-center hover:bg-[#F1F3F4] active:scale-95 transition-all shadow-none"
              title={t.login}
           >
              <LogIn size={16} />
