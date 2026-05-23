@@ -42,7 +42,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     }, { showSuccessToast: true });
   }, [user, isStaffMode, deletePhotoMut, photos, runTask]);
 
-  const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, taskName?: string) => {
+  const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, options?: { taskName?: string, skipToast?: boolean }) => {
     const isStaff = isStaffMode || !!user;
     if (ids.length === 0 || !isStaff) return;
     
@@ -51,17 +51,23 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     if (ids.length === 1) {
       try {
         await updatePhotoMut({ id: ids[0], updates });
-        showSuccess('保存成功');
+        if (!options?.skipToast) {
+            showSuccess('保存成功');
+        }
       } catch (err: any) {
-        showError(err, '保存失败');
+        if (!options?.skipToast) {
+            showError(err, '保存失败');
+        } else {
+            throw err;
+        }
       }
       return;
     }
 
-    await runTask(taskName || `更新 ${ids.length} 张照片`, async ({ updateProgress }) => {
+    await runTask(options?.taskName || `更新 ${ids.length} 张照片`, async ({ updateProgress }) => {
         updateProgress(50, '正在应用批量更新...');
         await batchUpdateMut({ ids, updates });
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: !options?.skipToast });
   }, [user, isStaffMode, batchUpdateMut, updatePhotoMut, runTask, showSuccess, showError]);
 
   const updatePhoto = useCallback((id: string, updates: Partial<Photo>) => {
@@ -91,9 +97,10 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     if (!isStaff) return;
     const groupPhotosList = photos.filter(p => p.group_id === groupId);
     await Promise.all(
-       groupPhotosList.map(p => updatePhoto(p.id, { is_group_cover: p.id === id }))
+       groupPhotosList.map(p => updatePhotosBulk([p.id], { is_group_cover: p.id === id }, { skipToast: true }))
     );
-  }, [user, isStaffMode, photos, updatePhoto]);
+    showSuccess('设置封面成功');
+  }, [user, isStaffMode, photos, updatePhotosBulk, showSuccess]);
 
   const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
     await runTask('分组照片', async () => {

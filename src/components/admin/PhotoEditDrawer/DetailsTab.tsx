@@ -63,6 +63,7 @@ export const DetailsTab: React.FC<Props> = ({
             />
           </div>
 
+
           <div className="space-y-1.5">
             <span className="text-[9px] font-black text-slate-400 uppercase px-1">Bahasa Melayu</span>
             <textarea 

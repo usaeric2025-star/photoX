@@ -88,7 +88,6 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
       <div className="flex items-center gap-2">
          {isAdminMode && (
            <div className="flex items-center gap-1.5 sm:gap-2">
-              <LanguageSwitcher variant="admin" />
               <button 
                 onClick={() => {
                   if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);

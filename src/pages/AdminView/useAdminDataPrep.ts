@@ -197,6 +197,7 @@ export const useAdminDataPrep = () => {
       actions.handleDeletePhoto(ids).then(disable);
     },
     handleUpdatePhoto: edit.updatePhoto,
+    handleUpdatePhotosBulk: edit.updatePhotosBulk,
     handleAiAnalyze: ai.analyzeSingle,
     cloudCount: store.totalCount,
     batchEditIds: store.batchEditingIds,

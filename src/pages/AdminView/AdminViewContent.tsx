@@ -111,6 +111,7 @@ export const AdminViewContent: React.FC = () => {
     onTogglePinned: logic.togglePinned,
     onDeletePhoto: logic.handleDeletePhoto,
     onUpdatePhoto: logic.handleUpdatePhoto,
+    onUpdatePhotosBulk: logic.handleUpdatePhotosBulk,
     onToggleHidden: logic.handleToggleHidden,
     onGroupPhotos: logic.handleGroupPhotos,
     onUngroup: logic.handleUngroup,

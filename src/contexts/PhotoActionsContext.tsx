@@ -5,6 +5,7 @@ export interface PhotoActions {
   onTogglePinned?: (photo: Photo) => Promise<void>;
   onDeletePhoto?: (id: string | string[]) => Promise<void>;
   onUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
+  onUpdatePhotosBulk?: (ids: string[], updates: Partial<Photo>, taskName?: string) => Promise<void>;
   onToggleHidden?: (photo: Photo) => Promise<void>;
   onGroupPhotos?: (ids: string[]) => Promise<void>;
   onUngroup?: (groupId: string) => Promise<void>;

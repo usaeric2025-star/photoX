@@ -1,5 +1,6 @@
 import { Photo, User } from '@/types';
 import { checkImageHashExists } from '@/services/photoService';
+import { useGalleryStore } from '@/store';
 
 export const useDuplicateCheck = (
   photosRef: React.MutableRefObject<Photo[]>,
@@ -15,7 +16,8 @@ export const useDuplicateCheck = (
     if (sessionHashes.has(hash)) return true;
 
     // Check in cloud database
-    const isStaff = !!user || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('isStaffMode') === 'true');
+    const isStaffMode = useGalleryStore.getState().isStaffMode;
+    const isStaff = !!user || isStaffMode;
     if (isStaff) {
       const existsInCloud = await checkImageHashExists(hash);
       if (existsInCloud) return true;

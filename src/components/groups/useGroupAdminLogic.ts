@@ -38,7 +38,7 @@ export const useGroupAdminLogic = ({
   })));
 
   const {
-    onTogglePinned, onDeletePhoto, onUpdatePhoto, onToggleHidden,
+    onTogglePinned, onDeletePhoto, onUpdatePhoto, onUpdatePhotosBulk, onToggleHidden,
     onGroupPhotos, onUngroup, onBatchAiAnalyze, onBatchEdit
   } = usePhotoActions();
   
@@ -247,7 +247,7 @@ export const useGroupAdminLogic = ({
       showError(err, '更新群组资料失败');
       throw err;
     }
-  }, [activeGroupId, groupData, showError, onUpdatePhoto, photos, dbGroupPhotos]);
+  }, [activeGroupId, groupData, showError, onUpdatePhoto, onUpdatePhotosBulk, photos, dbGroupPhotos]);
 
   const handleToggleTag = useCallback((photo: Photo, tagId: string) => {
     const currentTags = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
@@ -266,7 +266,9 @@ export const useGroupAdminLogic = ({
       message: `确定要将群组内所有 ${activeGroupPhotos.length} 张照片的尺寸更新为当前设置吗？此操作不可撤销。`,
       onConfirm: async () => {
         try {
-          if (onUpdatePhoto) {
+          if (onUpdatePhotosBulk) {
+            await onUpdatePhotosBulk(activeGroupPhotos.map(p => p.id), { dimensions: newDims }, '批量更新尺寸');
+          } else if (onUpdatePhoto) {
             await Promise.all(
               activeGroupPhotos.map(p => onUpdatePhoto(p.id, { dimensions: newDims }))
             );
@@ -283,7 +285,7 @@ export const useGroupAdminLogic = ({
         setAlertDialog(null);
       }
     });
-  }, [activeGroupId, activeGroupPhotos, showError, onUpdatePhoto, setAlertDialog]);
+  }, [activeGroupId, activeGroupPhotos, showError, onUpdatePhoto, onUpdatePhotosBulk, setAlertDialog]);
 
   const handleReorder = useCallback(async (draggedId: string, targetId: string) => {
     if (draggedId === targetId) return;

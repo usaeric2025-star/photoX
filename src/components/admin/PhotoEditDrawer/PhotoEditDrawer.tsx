@@ -54,6 +54,39 @@ export const PhotoEditDrawer: React.FC = () => {
     return cleanPhotos(allPhotos);
   }, [infinitePhotosQuery.data]);
 
+  const lastInitializedIdRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    if (!editPhotoId) {
+      lastInitializedIdRef.current = null;
+      return;
+    }
+    if (editPhotoId !== lastInitializedIdRef.current) {
+      const photo = photos.find((p: Photo) => p.id === editPhotoId);
+      if (photo) {
+        lastInitializedIdRef.current = editPhotoId;
+        updateForm({
+          name: photo.name || '',
+          category_id: photo.category_id || '',
+          tag_ids: Array.isArray(photo.tag_ids) ? photo.tag_ids : [],
+          manufacturer_id: photo.manufacturer_id || '',
+          model_number: photo.model_number || '',
+          manual_code: photo.manual_code || '',
+          description: photo.description || '',
+          description_translations: {
+            zh: photo.description_translations?.zh || '',
+            en: photo.description_translations?.en || '',
+            ms: photo.description_translations?.ms || '',
+          },
+          dimensions: Array.isArray(photo.dimensions) ? photo.dimensions : [],
+          is_hidden: photo.is_hidden || false,
+          price: photo.price || '',
+          is_group_cover: photo.is_group_cover || false
+        });
+      }
+    }
+  }, [editPhotoId, photos, updateForm]);
+
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
   // Helper from useAdminDataPrep logic usually

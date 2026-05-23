@@ -113,7 +113,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="absolute inset-0 z-10 bg-brand-bg relative"
+        className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto"
       >
         <GallerySkeleton columns={columns} count={skeletonCount} />
       </motion.div>
