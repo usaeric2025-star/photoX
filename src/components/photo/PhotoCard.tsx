@@ -275,7 +275,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const containerClasses = useMemo(() => {
     const base = "aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group";
     const bg = variant === 'admin' ? 'bg-slate-50 rounded-lg' : 'bg-slate-100 rounded-xl';
-    const border = variant === 'admin' && is_hidden ? 'ring-[3px] ring-orange-500 shadow-md' : '';
+    const border = variant === 'admin' && is_hidden ? 'ring-[3px] ring-yellow-500 shadow-md' : '';
     return `${base} ${bg} ${cardSelectedClasses} ${border} ${className}`;
   }, [variant, is_hidden, cardSelectedClasses, className]);
 

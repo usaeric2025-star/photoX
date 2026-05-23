@@ -84,7 +84,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
     contextTags,
     {
       showGroupsCollapsed,
-      isAdminModeOverride: true // PhotoBoard is used in both, but filter behavior should respect internal switches
+      isAdminModeOverride: isAdminMode
     }
   );
 
@@ -135,7 +135,8 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   }
 
   return (
-    <VirtuosoGrid
+    <div onTouchMove={(e) => e.stopPropagation()} className="h-full w-full">
+      <VirtuosoGrid
       ref={virtuosoRef}
       style={{ height: '100%', width: '100%' }}
       data={gridPhotos}
@@ -186,6 +187,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
         }
       }}
     />
+    </div>
   );
 });
 
