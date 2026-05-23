@@ -294,7 +294,7 @@ export const usePhotoAI = (
       return;
     }
     
-    setBatchProgress({ current: 0, total: unProcessed.length });
+
     const taskId = existingTaskId || addTask({
       name: `批量识别 (${unProcessed.length} 张)`,
       status: 'running',
