@@ -135,7 +135,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   }
 
   return (
-    <div onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()} className="h-full w-full">
+    <div className="h-full w-full overscroll-y-contain">
       <VirtuosoGrid
         ref={virtuosoRef}
         style={{ height: '100%', width: '100%' }}
