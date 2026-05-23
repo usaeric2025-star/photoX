@@ -46,31 +46,29 @@ export const GroupSettingsContent: React.FC<{
           </div>
 
           <div className="space-y-4">
-            {['zh', 'en', 'ms'].map(lang => (
-              <div className="space-y-2" key={lang}>
-                <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{lang === 'zh' ? '系列共同故事 (中文)' : lang === 'en' ? 'Series Story (English)' : 'Cerita Siri (Malay)'}</label>
-                <textarea 
-                  value={(groupData?.description_translations as any)?.[lang] || (lang === 'zh' ? groupData?.description || '' : '')}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setGroupData(prev => prev ? { 
-                      ...prev, 
-                      ...(lang === 'zh' ? { description: val } : {}),
-                      description_translations: { ...prev.description_translations, [lang]: val } 
-                    } : null);
-                  }}
-                  onBlur={(e) => {
-                    const val = e.target.value;
-                    if (groupData) handleUpdateGroupData({ 
-                      ...(lang === 'zh' ? { description: val } : {}),
-                      description_translations: { ...groupData.description_translations, [lang]: val } 
-                    });
-                  }}
-                  className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
-                  placeholder={lang === 'zh' ? '描述這個系列的設計理念...' : lang === 'en' ? 'Describe design concept...' : 'Terangkan konsep...'}
-                />
-              </div>
-            ))}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">系列故事 (中文)</label>
+              <textarea 
+                value={groupData?.description || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setGroupData(prev => prev ? { 
+                    ...prev, 
+                    description: val,
+                    description_translations: { ...prev.description_translations, zh: val } 
+                  } : null);
+                }}
+                onBlur={(e) => {
+                  const val = e.target.value;
+                  if (groupData) handleUpdateGroupData({ 
+                    description: val,
+                    description_translations: { ...groupData.description_translations, zh: val } 
+                  });
+                }}
+                className="w-full bg-white border-2 border-slate-100 rounded-xl p-3 text-sm font-bold text-slate-600 outline-none focus:border-indigo-500 transition-all shadow-sm h-24 resize-none"
+                placeholder="描述這個系列的設計理念..."
+              />
+            </div>
           </div>
         </div>
       </section>

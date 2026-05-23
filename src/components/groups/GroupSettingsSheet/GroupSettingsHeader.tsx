@@ -23,7 +23,7 @@ export const GroupSettingsHeader: React.FC<{
     <SheetHeader className="p-6 border-b border-slate-50 bg-indigo-600 text-white space-y-0 flex-row items-center justify-between">
       <div className="flex items-center gap-3">
         <Settings2 size={20} />
-        <SheetTitle className="font-black text-lg tracking-tight text-white m-0">群组数据库 / DB</SheetTitle>
+        <SheetTitle className="font-black text-lg tracking-tight text-white m-0">合组设置</SheetTitle>
       </div>
       <div className="flex items-center gap-2">
          <button 
