@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Photo, Category, Tag } from '../types';
-import { useGalleryStore } from '../store';
+import { useGalleryStore, useShallow } from '../store';
 import { filterPhotos, groupPhotos } from '../lib/filters';
 import { isValidPhoto } from '../lib/typeGuard';
 import { useAdminMode } from './useAdminMode';
@@ -18,13 +18,18 @@ export function usePhotoFilters(
     isAdminModeOverride?: boolean;
   } = {}
 ) {
-  const searchQuery = useGalleryStore(s => s.searchQuery);
-  const filterCatId = useGalleryStore(s => s.filterCatId);
-  const filterSubId = useGalleryStore(s => s.filterSubId);
-  const filterTagIds = useGalleryStore(s => s.filterTagIds);
-  const sortOrder = useGalleryStore(s => s.sortOrder);
-  const isStaffMode = useGalleryStore(s => s.isStaffMode);
-  const storeShowGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
+  const { 
+    searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, 
+    isStaffMode, showGroupsCollapsed: storeShowGroupsCollapsed 
+  } = useGalleryStore(useShallow(s => ({
+    searchQuery: s.searchQuery,
+    filterCatId: s.filterCatId,
+    filterSubId: s.filterSubId,
+    filterTagIds: s.filterTagIds,
+    sortOrder: s.sortOrder,
+    isStaffMode: s.isStaffMode,
+    showGroupsCollapsed: s.showGroupsCollapsed
+  })));
 
   const hookIsAdminMode = useAdminMode();
   const effectiveIsAdminMode = options.isAdminModeOverride !== undefined 

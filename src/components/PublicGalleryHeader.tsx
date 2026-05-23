@@ -8,6 +8,7 @@ import { filterPhotosByMode } from '../utils/photoVisibility';
 
 import { useSettings, useGalleryStore } from '../hooks';
 import { translations } from '../lib/translations';
+import { LanguageSwitcher } from './ui/LanguageSwitcher';
 
 interface PublicGalleryHeaderProps {
   photos: Photo[];
@@ -63,6 +64,8 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
           >
             <RefreshCcw size={16} />
           </button>
+
+          <LanguageSwitcher variant="public" />
 
           <button
              onClick={onLogin}

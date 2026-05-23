@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ProductFormData, Tag, ApiResponse, Photo } from '../../types';
 import { PhotoTagSelector } from './edit/PhotoTagSelector';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from './FormShared';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { safeArray } from '../../lib/utils';
 import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../../hooks';
 
@@ -48,7 +48,12 @@ export const BatchEditScreen = ({
     setAlertDialog,
     isSyncing,
     appLang
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+    setPromptDialog: s.setPromptDialog,
+    setAlertDialog: s.setAlertDialog,
+    isSyncing: s.isSyncing,
+    appLang: s.appLang
+  })));
 
   const handleSave = async () => {
     setIsLocalSaving(true);

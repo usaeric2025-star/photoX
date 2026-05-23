@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { translations, LanguageCode } from '../../lib/translations';
@@ -39,7 +39,8 @@ export const useAdminDataPrep = () => {
     editPhotoId, setEditPhotoId, batchEditingIds: batchEditIds, setBatchEditingIds: setBatchEditIds,
     activeGroupId, setActiveGroupId, columns, setColumns,
     adminPreviewMode, setAdminPreviewMode, setIsSyncing, isSyncing,
-    lightboxIndex, setLightboxIndex
+    lightboxIndex, setLightboxIndex,
+    setPhotos, setTotalCount, setIsFetching, setIsFetchingNextPage, setHasNextPage, setLoadMorePhotos
   } = useGalleryStore(useShallow(s => ({
     filterCatId: s.filterCatId,
     filterTagIds: s.filterTagIds,
@@ -67,7 +68,13 @@ export const useAdminDataPrep = () => {
     setIsSyncing: s.setIsSyncing,
     isSyncing: s.isSyncing,
     lightboxIndex: s.lightboxIndex,
-    setLightboxIndex: s.setLightboxIndex
+    setLightboxIndex: s.setLightboxIndex,
+    setPhotos: s.setPhotos,
+    setTotalCount: s.setTotalCount,
+    setIsFetching: s.setIsFetching,
+    setIsFetchingNextPage: s.setIsFetchingNextPage,
+    setHasNextPage: s.setHasNextPage,
+    setLoadMorePhotos: s.setLoadMorePhotos
   })));
 
   const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
@@ -92,8 +99,26 @@ export const useAdminDataPrep = () => {
   }, [infinitePhotosQuery.data]);
 
   useEffect(() => {
+    setPhotos(photos);
+  }, [photos, setPhotos]);
+
+  useEffect(() => {
+    setTotalCount(cloudCountData || 0);
     setCloudCount(cloudCountData);
-  }, [cloudCountData]);
+  }, [cloudCountData, setTotalCount, setCloudCount]);
+
+  useEffect(() => {
+    setIsFetching(infinitePhotosQuery.isFetching);
+    setIsFetchingNextPage(infinitePhotosQuery.isFetchingNextPage);
+    setHasNextPage(!!infinitePhotosQuery.hasNextPage);
+  }, [
+    infinitePhotosQuery.isFetching, 
+    infinitePhotosQuery.isFetchingNextPage, 
+    infinitePhotosQuery.hasNextPage,
+    setIsFetching,
+    setIsFetchingNextPage,
+    setHasNextPage
+  ]);
 
   const { reset: resetMultiSelect, disable } = useMultiSelect();
 
@@ -101,11 +126,23 @@ export const useAdminDataPrep = () => {
     resetMultiSelect();
   }, [resetMultiSelect]);
 
+  const fetchNextPage = infinitePhotosQuery.fetchNextPage;
+  const hasNextPage = infinitePhotosQuery.hasNextPage;
+  const isFetchingNextPage = infinitePhotosQuery.isFetchingNextPage;
+
+  const fetchStateRef = useRef({ hasNextPage, isFetchingNextPage, fetchNextPage });
+  fetchStateRef.current = { hasNextPage, isFetchingNextPage, fetchNextPage };
+
   const handleLoadMoreAdmin = useCallback(() => {
-    if (infinitePhotosQuery.hasNextPage && !infinitePhotosQuery.isFetchingNextPage) {
-      infinitePhotosQuery.fetchNextPage();
+    const { hasNextPage, isFetchingNextPage, fetchNextPage } = fetchStateRef.current;
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  }, [infinitePhotosQuery]);
+  }, []);
+
+  useEffect(() => {
+    setLoadMorePhotos(handleLoadMoreAdmin);
+  }, [handleLoadMoreAdmin, setLoadMorePhotos]);
 
   const { settings, setSettings, refreshCloudData } = useSyncEngine(withLoading);
 

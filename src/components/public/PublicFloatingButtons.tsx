@@ -4,10 +4,10 @@ import { buttonStyles } from '../../styles/buttonStyles';
 
 interface PublicFloatingButtonsProps {
   scrollToTop: () => void;
-  setShowWhatsAppChoice: (show: boolean) => void;
+  contactWhatsApp: () => void;
 }
 
-export const PublicFloatingButtons: React.FC<PublicFloatingButtonsProps> = ({ scrollToTop, setShowWhatsAppChoice }) => {
+export const PublicFloatingButtons: React.FC<PublicFloatingButtonsProps> = ({ scrollToTop, contactWhatsApp }) => {
   return (
     <div className={buttonStyles.container}>
       <button 
@@ -17,7 +17,7 @@ export const PublicFloatingButtons: React.FC<PublicFloatingButtonsProps> = ({ sc
         <ArrowUpToLine size={20} />
       </button>
       <button 
-        onClick={() => setShowWhatsAppChoice(true)} 
+        onClick={contactWhatsApp} 
         className={`${buttonStyles.button} bg-[#25D366]`}
       >
         <MessageCircle size={20} />

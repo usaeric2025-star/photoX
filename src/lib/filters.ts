@@ -148,7 +148,7 @@ export function filterPhotos(
     });
   }
 
-  // 3. Category / SubId / Tag Filter (OR relation as requested)
+  // 3. Category / SubId / Tag Filter (AND relation as independent filters)
   if (filterCatId || filterSubId || filterTagIds.length > 0) {
     const tagFallbackMap = new Map<string, string>();
     if (filterTagIds.length > 0) {
@@ -160,10 +160,10 @@ export function filterPhotos(
 
     result = result.filter(p => {
       // 3.1 Category Match
-      if (filterCatId && String(p.category_id) === String(filterCatId)) return true;
+      if (filterCatId && String(p.category_id) !== String(filterCatId)) return false;
       
       // 3.2 SubCategory/Manufacturer Match
-      if (filterSubId && p.manufacturer_id === filterSubId) return true;
+      if (filterSubId && p.manufacturer_id !== filterSubId) return false;
 
       // 3.3 Tag Match
       if (filterTagIds.length > 0) {
@@ -178,10 +178,10 @@ export function filterPhotos(
           }
           return false;
         });
-        if (matchesAllTagsSelected) return true;
+        if (!matchesAllTagsSelected) return false;
       }
 
-      return false;
+      return true;
     });
   }
 

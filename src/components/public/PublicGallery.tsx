@@ -255,36 +255,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
         <AnimatePresence>
-          {(() => {
-            const isInitialLoad = isSyncing && gridPhotos.length === 0;
-            return (
-              <motion.div
-                key="grid"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="h-full"
-              >
-                <ErrorBoundary>
-                  <PhotoBoard
-                    virtuosoRef={virtuosoRef}
-                    gridPhotos={gridPhotos}
-                    displayPhotos={displayPhotos}
-                    virtuosoComponents={virtuosoComponents}
-                    virtuosoContext={virtuosoContext}
-                    handleLoadMore={handleLoadMore}
-                    isInitialLoad={isInitialLoad}
-                    totalCount={props.totalCount}
-                  />
-                </ErrorBoundary>
-              </motion.div>
-            );
-          })()}
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="h-full"
+          >
+            <ErrorBoundary>
+              <PhotoBoard virtuosoRef={virtuosoRef} />
+            </ErrorBoundary>
+          </motion.div>
         </AnimatePresence>
       </div>
 
       {lightboxIndex === null && (
-        <PublicFloatingButtons scrollToTop={scrollToTop} setShowWhatsAppChoice={setShowWhatsAppChoice} />
+        <PublicFloatingButtons scrollToTop={scrollToTop} contactWhatsApp={() => handleContactWhatsApp(undefined as any)} />
       )}
 
 
@@ -300,7 +286,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         setLightboxIndex={setLightboxIndex}
         isStaffMode={isStaffMode}
         shareGroup={shareGroup}
-        contactWhatsApp={() => setShowWhatsAppChoice(true)}
+        contactWhatsApp={handleContactWhatsApp}
       />
 
       <GalleryDialogs 
@@ -317,6 +303,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         showWhatsAppChoice={showWhatsAppChoice}
         setShowWhatsAppChoice={setShowWhatsAppChoice}
         openWhatsApp={openWhatsApp}
+        settings={settings}
       />
 
       <AnimatePresence>

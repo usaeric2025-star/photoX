@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react';
 import { 
   useUpdateTagMutation, useDeleteTagMutation, 
   useUpdateCategoryMutation, useDeleteCategoryMutation,
@@ -34,43 +35,43 @@ export const useAdminCategory = (adminUI: {
   const updateManufacturerMutation = useUpdateManufacturerMutation();
   const deleteManufacturerMutation = useDeleteManufacturerMutation();
 
-  const addTag = async (name: string) => {
+  const addTag = useCallback(async (name: string) => {
     return addTagMutation.mutateAsync(name);
-  };
+  }, [addTagMutation]);
 
-  const updateTag = async (tagId: string, updates: Partial<Tag>) => {
+  const updateTag = useCallback(async (tagId: string, updates: Partial<Tag>) => {
     return updateTagMutation.mutateAsync({ id: tagId, updates });
-  };
+  }, [updateTagMutation]);
 
-  const deleteTag = async (id: string | number) => {
+  const deleteTag = useCallback(async (id: string | number) => {
     return deleteTagMutation.mutateAsync(String(id));
-  };
+  }, [deleteTagMutation]);
 
-  const addCategory = async (name: string) => {
+  const addCategory = useCallback(async (name: string) => {
     return addCategoryMutation.mutateAsync(name);
-  };
+  }, [addCategoryMutation]);
 
-  const updateCategory = async (id: string, updates: Partial<Category>) => {
+  const updateCategory = useCallback(async (id: string, updates: Partial<Category>) => {
     return updateCategoryMutation.mutateAsync({ id, updates });
-  };
+  }, [updateCategoryMutation]);
 
-  const deleteCategory = async (id: string) => {
+  const deleteCategory = useCallback(async (id: string) => {
     return deleteCategoryMutation.mutateAsync(id);
-  };
+  }, [deleteCategoryMutation]);
 
-  const addManufacturer = async (name: string) => {
+  const addManufacturer = useCallback(async (name: string) => {
     return addManufacturerMutation.mutateAsync(name);
-  };
+  }, [addManufacturerMutation]);
 
-  const updateManufacturer = async (id: string | number, updates: Partial<Manufacturer>) => {
+  const updateManufacturer = useCallback(async (id: string | number, updates: Partial<Manufacturer>) => {
     return updateManufacturerMutation.mutateAsync({ id: String(id), updates });
-  };
+  }, [updateManufacturerMutation]);
 
-  const deleteManufacturer = async (id: string | number) => {
+  const deleteManufacturer = useCallback(async (id: string | number) => {
     return deleteManufacturerMutation.mutateAsync(String(id));
-  };
+  }, [deleteManufacturerMutation]);
 
-  const removeTagFromPhoto = async (photoId: string, tagId: string) => {
+  const removeTagFromPhoto = useCallback(async (photoId: string, tagId: string) => {
     try {
       const { removeTagFromPhotoFromDB } = await import('../services/tagService');
       
@@ -96,7 +97,7 @@ export const useAdminCategory = (adminUI: {
       handleError(err, '从照片移除标签失败');
       throw err;
     }
-  };
+  }, [queryClient, handleError]);
 
   return {
     categories,

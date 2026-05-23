@@ -7,7 +7,7 @@ import { useFeedback } from '@/hooks';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
-  useGalleryStore 
+  useGalleryStore, useShallow
 } from '@/store';
 import { 
   useCategoriesQuery, useTagsQuery, useManufacturersQuery, useInfinitePhotos,
@@ -49,7 +49,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
     setAlertDialog,
     loadingType
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+    settings: s.settings,
+    geminiApiKey: s.geminiApiKey,
+    customModel: s.customModel,
+    accessPasscode: s.accessPasscode,
+    setGeminiApiKey: s.setGeminiApiKey,
+    setCustomModel: s.setCustomModel,
+    setAccessPasscode: s.setAccessPasscode,
+    setSettings: s.setSettings,
+    setAlertDialog: s.setAlertDialog,
+    loadingType: s.loadingType
+  })));
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();

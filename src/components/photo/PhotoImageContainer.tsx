@@ -44,12 +44,11 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
     return cacheKey ? loadedImagesCache.has(cacheKey) : false;
   }, [cacheKey]);
 
-  const [shouldLoad, setShouldLoad] = useState(isInitiallyLoaded || loading === 'eager');
+  const [shouldLoad, setShouldLoad] = useState(true);
   const [isImageLoaded, setIsImageLoaded] = useState(isInitiallyLoaded);
   const [isImageError, setIsImageError] = useState(false);
 
   const [prevKey, setPrevKey] = useState(cacheKey);
-  const lastSuccessfulBaseUrlRef = useRef<string>(src ? getBaseUrl(src) : '');
 
   // Synchronously reset state during render when the item is recycled to a new image
   if (cacheKey !== prevKey) {
@@ -57,8 +56,6 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
     const currentlyCached = cacheKey ? loadedImagesCache.has(cacheKey) : false;
     setIsImageLoaded(currentlyCached);
     setIsImageError(false);
-    setShouldLoad(currentlyCached || loading === 'eager');
-    lastSuccessfulBaseUrlRef.current = src ? getBaseUrl(src) : '';
   }
 
   // Handle dynamic source changes smoothly without flashing placeholder when only params like timestamp alter
@@ -66,45 +63,15 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
     if (!src) return;
     const newCacheKey = photoId || src || '';
     const isCached = loadedImagesCache.has(newCacheKey);
-    const newBaseUrl = getBaseUrl(src);
-
+    
     if (isCached) {
       setIsImageLoaded(true);
       setIsImageError(false);
-      setShouldLoad(true);
-      lastSuccessfulBaseUrlRef.current = newBaseUrl;
     } else {
-      // If the core image URL is matching the already present one, keep it loaded as transition
-      if (lastSuccessfulBaseUrlRef.current && lastSuccessfulBaseUrlRef.current === newBaseUrl) {
-        setShouldLoad(true);
-      } else {
-        // Genuine new photo, fall back to blur-hash placeholder to fetch freshly
-        setIsImageLoaded(false);
-        setIsImageError(false);
-        if (loading === 'eager') {
-          setShouldLoad(true);
-        }
-      }
+      setIsImageLoaded(false);
+      setIsImageError(false);
     }
   }, [src, photoId, loading]);
-
-  useEffect(() => {
-    if (loading === 'eager' || isInitiallyLoaded) {
-      setShouldLoad(true);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '400px' }
-    );
-    if (containerRef.current) observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [loading, isInitiallyLoaded]);
 
   const placeholderDataUrl = useMemo(() => {
     if (!thumbHash) return null;
@@ -168,9 +135,6 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
               loadedImagesCache.add(cacheKey);
             }
             setIsImageLoaded(true);
-            if (src) {
-              lastSuccessfulBaseUrlRef.current = getBaseUrl(src);
-            }
           }}
           onError={() => {
             setIsImageLoaded(true);

@@ -127,24 +127,6 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
           </div>
           
           <div className="flex gap-1 shrink-0">
-            {variant === 'public' && onSetLang && (
-              <div className="flex items-center bg-[#F7F7F7] p-0.5 rounded-full border border-[#ECECEC] h-9 mr-1">
-                {[
-                  { code: 'zh', label: '中文' },
-                  { code: 'en', label: 'EN' },
-                  { code: 'ms', label: 'BM' }
-                ].map(l => (
-                  <button 
-                    key={l.code} 
-                    onClick={() => onSetLang(l.code)} 
-                    className={`px-2 h-7 flex items-center justify-center rounded-full text-[11px] font-bold transition-all ${lang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888]'}`}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {variant === 'admin' && onBatchAiIdentify && (
                 <button 
                   onClick={onBatchAiIdentify}
@@ -165,7 +147,11 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                 </button>
             )}
 
-            <SortButton onClick={toggleSortOrder} label={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest} />
+            <SortButton 
+              onClick={toggleSortOrder} 
+              label={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest} 
+              selected={sortOrder === 'oldest'} 
+            />
             
             <LayoutButton 
               isGrid={columns !== 2} 
@@ -184,8 +170,8 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
         <div className="grid grid-cols-4 gap-1">
             <CategoryChip 
                 name={t.allCats.toUpperCase()} 
-                selected={!selectedCatCode} 
-                onClick={() => { setSelectedCatCode(null); setFilterSubId(null); onScrollToTop(); }} 
+                selected={!selectedCatCode && (!selectedTagIds || selectedTagIds.length === 0)} 
+                onClick={() => { setSelectedCatCode(null); setFilterSubId(null); setSelectedTagIds([]); onScrollToTop(); }} 
             />
             
             {categories
@@ -202,6 +188,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                     onClick={() => { 
                       setSelectedCatCode(cat.id); 
                       setFilterSubId(null);
+                      setSelectedTagIds([]);
                       onScrollToTop();
                     }}
                   />
@@ -256,10 +243,9 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                     pinned={isPinned}
                     hot={isHot}
                     onClick={() => { 
-                      const nextTags = isSelected
-                        ? (selectedTagIds || []).filter(id => id !== strTagId)
-                        : [...(selectedTagIds || []), strTagId];
-                      setSelectedTagIds(nextTags);
+                      setSelectedCatCode(null);
+                      setFilterSubId(null);
+                      setSelectedTagIds([strTagId]);
                       onScrollToTop();
                     }}
                   />

@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoService';
 import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
 import { useRemoveFromGroupMutation } from '../../hooks/mutations/useGroupOperations';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { useAdminMode } from '../../hooks/useAdminMode';
 import { useFeedback } from '../../hooks/uiFeedback';
 import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
@@ -19,15 +20,32 @@ export const useGroupAdminLogic = ({
   const isAdminMode = useAdminMode();
   const { 
     activeGroupId, setActiveGroupId, appLang,
-    onTogglePinned, onDeletePhoto, onUpdatePhoto, onToggleHidden, onGroupPhotos, onUngroup: hookOnUngroup,
     setAlertDialog: contextSetAlertDialog, 
     setPromptDialog,
     isMultiSelect, setIsMultiSelect,
     selectedIds, setSelectedIds,
     groupSettingsOpen, setGroupSettingsOpen,
     batchEditingIds, setBatchEditingIds,
-    onBatchAiAnalyze, onBatchEdit
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+    activeGroupId: s.activeGroupId,
+    setActiveGroupId: s.setActiveGroupId,
+    appLang: s.appLang,
+    setAlertDialog: s.setAlertDialog,
+    setPromptDialog: s.setPromptDialog,
+    isMultiSelect: s.isMultiSelect,
+    setIsMultiSelect: s.setIsMultiSelect,
+    selectedIds: s.selectedIds,
+    setSelectedIds: s.setSelectedIds,
+    groupSettingsOpen: s.groupSettingsOpen,
+    setGroupSettingsOpen: s.setGroupSettingsOpen,
+    batchEditingIds: s.batchEditingIds,
+    setBatchEditingIds: s.setBatchEditingIds
+  })));
+
+  const {
+    onTogglePinned, onDeletePhoto, onUpdatePhoto, onToggleHidden,
+    onGroupPhotos, onUngroup, onBatchAiAnalyze, onBatchEdit
+  } = usePhotoActions();
   
   const setAlertDialog = contextSetAlertDialog;
   const { showError, showSuccess } = useFeedback();

@@ -16,12 +16,13 @@ import {
 } from '../../../hooks';
 import { cleanPhotos } from '../../../lib/filters';
 import { PAGINATION } from '../../../constants/config';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 
 export const PhotoEditDrawer: React.FC = () => {
   const { 
     editPhotoId, formState, updateForm, newPhotoData, setNewPhotoData, 
     appLang, filterCatId, filterTagIds, debouncedSearchQuery, sortOrder,
-    onDeletePhoto, abortAnalysis, setBatchEditingIds, setEditPhotoId
+    abortAnalysis, setBatchEditingIds, setEditPhotoId
   } = useGalleryStore(useShallow(s => ({
     editPhotoId: s.editPhotoId,
     formState: s.formState,
@@ -33,11 +34,12 @@ export const PhotoEditDrawer: React.FC = () => {
     filterTagIds: s.filterTagIds,
     debouncedSearchQuery: s.debouncedSearchQuery,
     sortOrder: s.sortOrder,
-    onDeletePhoto: s.onDeletePhoto,
     abortAnalysis: s.abortAnalysis,
     setBatchEditingIds: s.setBatchEditingIds,
     setEditPhotoId: s.setEditPhotoId
   })));
+
+  const { onDeletePhoto } = usePhotoActions();
 
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: filterCatId,

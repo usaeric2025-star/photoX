@@ -14,8 +14,9 @@ import { DB_CONFIG } from '../constants/config';
 
 import { useAdminMode } from '../hooks/useAdminMode';
 import { useFeedback, useGroupDetailQuery } from '../hooks';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useInfiniteGroupPhotosQuery } from '../hooks/queries/usePhotos';
-import { useGalleryStore } from '../store';
+import { useGalleryStore, useShallow } from '../store';
 import { translations } from '../lib/translations';
 
 
@@ -42,9 +43,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const lang = useGalleryStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.zh;
   
-  const {
-      onEditPhoto, onToggleHidden, onAiAnalyze, onCancelAnalyze, isAnalyzing
-  } = useGalleryStore();
+  const { isAnalyzing } = useGalleryStore(useShallow(s => ({
+      isAnalyzing: s.isAnalyzing
+  })));
+  
+  const { onEditPhoto, onToggleHidden, onAiAnalyze, onCancelAnalyze } = usePhotoActions();
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
@@ -217,15 +220,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
              virtuosoRef={virtuosoRef}
              photos={activeGroupPhotos} 
              isLoading={isLoading}
+             isFetchingNextPage={isFetchingNextPage}
+             hasNextPage={hasNextPage}
              highlightId={currentHighlightId}
              onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
            />
-
-           {isFetchingNextPage && (
-             <div className="py-4 flex items-center justify-center bg-brand-bg shrink-0">
-               <span className="w-6 h-6 border-2 border-slate-200 border-t-blue-600 rounded-full animate-spin inline-block" />
-             </div>
-           )}
 
            {/* Unified Photo Lightbox */}
            <AnimatePresence>

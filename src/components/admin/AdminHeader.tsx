@@ -10,6 +10,8 @@ import { Photo, AppSettings } from '../../types';
 import { RefreshMenu } from './AdminHeader/RefreshMenu';
 import { ToolsMenu } from './AdminHeader/ToolsMenu';
 
+import { LanguageSwitcher } from '../ui/LanguageSwitcher';
+
 interface Props {
   filteredPhotos: Photo[];
   handleBatchAiIdentifyTrigger: () => void;
@@ -227,6 +229,8 @@ export const AdminHeader: React.FC<Props> = ({
                     <span className="hidden md:inline text-[10px] font-black tracking-widest uppercase whitespace-nowrap">{t.exitStaffMode}</span>
                   </button>
                 )}
+
+                <LanguageSwitcher variant="admin" />
 
                 {/* More Menu Dropdown */}
                 <div className="relative" ref={toolsRef}>

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Photo, User, Task } from '../types';
 import { formatDate } from '../utils/dateFormat';
 import { useQueryClient } from '@tanstack/react-query';
@@ -21,7 +22,7 @@ export const usePhotoMutations = (
   const { mutateAsync: updatePhotoMut } = useUpdatePhotoMutation();
   const { mutateAsync: batchUpdateMut } = useBatchUpdatePhotosMutation();
 
-  const deletePhoto = async (idOrIds: string | string[]) => {
+  const deletePhoto = useCallback(async (idOrIds: string | string[]) => {
     if (!user) return;
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
     const targetPhotos = photosRef.current.filter(p => ids.includes(p.id));
@@ -53,9 +54,9 @@ export const usePhotoMutations = (
         showError(e, "删除照片失败");
       }
     }
-  };
+  }, [user, deletePhotoMut, photosRef, addTask, updateTask, removeTask, showError]);
 
-  const updatePhotosBulk = async (ids: string[], updates: Partial<Photo>, taskName?: string) => {
+  const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, taskName?: string) => {
     if (ids.length === 0 || !user) return;
     
     const updatedAt = formatDate(new Date());
@@ -100,11 +101,11 @@ export const usePhotoMutations = (
         }
       }
     }
-  };
+  }, [user, batchUpdateMut, updatePhotoMut, addTask, updateTask, removeTask, showError]);
 
-  const updatePhoto = (id: string, updates: Partial<Photo>) => {
+  const updatePhoto = useCallback((id: string, updates: Partial<Photo>) => {
     return updatePhotosBulk([id], updates);
-  };
+  }, [updatePhotosBulk]);
 
   return { deletePhoto, updatePhoto, updatePhotosBulk };
 };

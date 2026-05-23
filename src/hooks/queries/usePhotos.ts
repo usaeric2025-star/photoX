@@ -23,7 +23,8 @@ export const useInfinitePhotos = (filters: {
         filters.tag_id,
         filters.searchQuery,
         filters.isAdminMode || false,
-        signal
+        signal,
+        filters.sortOrder
       );
 
       // Cache the first page for offline access safely (don't interfere with main fetch state)

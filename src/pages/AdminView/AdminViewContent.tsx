@@ -13,7 +13,8 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { MainAdminScreen } from './MainAdminScreen';
 import { PublicGallery } from '@/components/public/PublicGallery';
-import { useGalleryStore } from '@/store';
+import { PhotoActionsContext } from '@/contexts/PhotoActionsContext';
+import { useGalleryStore, useShallow } from '@/store';
 import { useAdminDataPrep } from './useAdminDataPrep';
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 import { User, Photo } from '@/types';
@@ -32,11 +33,16 @@ export const AdminViewContent: React.FC = () => {
 
   const isLoading = infinitePhotosQuery.isLoading;
 
-  console.log('AdminView render', { isLoading });
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
   const { runTask } = useTaskExecutor();
-  const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
+  const { setAlertDialog, hasLoadedOnce, isStaffMode, setAbortAnalysis, setTagIdToNameMap } = useGalleryStore(useShallow(s => ({
+    setAlertDialog: s.setAlertDialog,
+    hasLoadedOnce: s.hasLoadedOnce,
+    isStaffMode: s.isStaffMode,
+    setAbortAnalysis: s.setAbortAnalysis,
+    setTagIdToNameMap: s.setTagIdToNameMap
+  })));
 
   const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
   const [showImmediateLoading, setShowImmediateLoading] = useState(true);
@@ -125,12 +131,6 @@ export const AdminViewContent: React.FC = () => {
   }, [logic]);
 
   const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
-  const hasLoadedOnce = useGalleryStore((s) => s.hasLoadedOnce);
-
-  const isStaffMode = useGalleryStore((s) => s.isStaffMode);
-  const setActions = useGalleryStore((s) => s.setActions);
-  const setAbortAnalysis = useGalleryStore((s) => s.setAbortAnalysis);
-  const setTagIdToNameMap = useGalleryStore((s) => s.setTagIdToNameMap);
 
   useEffect(() => {
     if (logic.tagIdToNameMap) {
@@ -144,27 +144,27 @@ export const AdminViewContent: React.FC = () => {
     onEditPhotoById, handleAiAnalyze, setGroupCover, abortAnalysis
   } = logic;
 
+  const logicRef = React.useRef(logic);
+  logicRef.current = logic;
+
   useEffect(() => {
-    setActions({
-      onTogglePinned: togglePinned,
-      onDeletePhoto: handleDeletePhoto,
-      onUpdatePhoto: handleUpdatePhoto,
-      onToggleHidden: handleToggleHidden,
-      onGroupPhotos: handleGroupPhotos,
-      onUngroup: handleUngroup,
-      onBatchAiAnalyze: handleBatchAiIdentifyTrigger,
-      onBatchEdit: handleBatchEdit,
-      onEditPhoto: onEditPhotoById,
-      onAiAnalyze: handleAiAnalyze,
-      onSetGroupCover: setGroupCover,
-      onCancelAnalyze: abortAnalysis
-    });
-    setAbortAnalysis(abortAnalysis);
-  }, [
-    setActions, setAbortAnalysis, togglePinned, handleDeletePhoto, handleUpdatePhoto,
-    handleToggleHidden, handleGroupPhotos, handleUngroup, handleBatchAiIdentifyTrigger,
-    handleBatchEdit, onEditPhotoById, handleAiAnalyze, setGroupCover, abortAnalysis
-  ]);
+    setAbortAnalysis(() => logicRef.current.abortAnalysis());
+  }, [setAbortAnalysis]);
+  
+  const photoActions = React.useMemo(() => ({
+    onTogglePinned: logic.togglePinned,
+    onDeletePhoto: logic.handleDeletePhoto,
+    onUpdatePhoto: logic.handleUpdatePhoto,
+    onToggleHidden: logic.handleToggleHidden,
+    onGroupPhotos: logic.handleGroupPhotos,
+    onUngroup: logic.handleUngroup,
+    onBatchAiAnalyze: logic.handleBatchAiIdentifyTrigger,
+    onBatchEdit: logic.handleBatchEdit,
+    onEditPhoto: logic.onEditPhotoById,
+    onAiAnalyze: logic.handleAiAnalyze,
+    onSetGroupCover: logic.setGroupCover,
+    onCancelAnalyze: logic.abortAnalysis
+  }), [logic]);
 
   if (authChecked && !user && !isStaffMode) {
     return <LoginScreen loginWithGoogle={async () => { await logic.loginWithGoogle(); }} isLoading={(loadingType as string) === 'auth'} />;
@@ -172,12 +172,13 @@ export const AdminViewContent: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <DataLoadingContainer
-        isLoading={!!isLoading}
-        hasData={!!logic.photos && logic.photos.length > 0}
-        showImmediateLoading={showImmediateLoading}
-      >
-        <AdminGlobalModals />
+      <PhotoActionsContext.Provider value={photoActions}>
+        <DataLoadingContainer
+          isLoading={!!isLoading}
+          hasData={!!logic.photos && logic.photos.length > 0}
+          showImmediateLoading={showImmediateLoading}
+        >
+          <AdminGlobalModals />
       
       <div className="flex h-[100dvh] overflow-hidden bg-brand-bg">
         {/* Desktop Sidebar */}
@@ -262,6 +263,7 @@ export const AdminViewContent: React.FC = () => {
         </div>
       </div>
       </DataLoadingContainer>
+      </PhotoActionsContext.Provider>
     </ErrorBoundary>
   );
 };

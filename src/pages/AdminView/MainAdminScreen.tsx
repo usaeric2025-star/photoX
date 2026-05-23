@@ -23,6 +23,7 @@ interface Props {
 import { useMultiSelect } from '@/hooks/useMultiSelect';
 
 import { useGalleryStore, useShallow } from '@/store';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { translations } from '@/lib/translations';
 import { useTaskExecutor } from '@/hooks';
 
@@ -34,26 +35,19 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
   } = props;
 
   const { selectedIds, clear } = useMultiSelect();
-  const lang = useGalleryStore(s => s.appLang);
+  const { lang, columns, setColumns } = useGalleryStore(useShallow(s => ({
+    lang: s.appLang,
+    columns: s.columns,
+    setColumns: s.setColumns
+  })));
+  
   const t = translations[lang as keyof typeof translations] || translations.zh;
-  const columns = useGalleryStore(s => s.columns);
-  const setColumns = useGalleryStore(s => s.setColumns);
   
   const {
     onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, 
     onSetGroupCover, onBatchAiAnalyze, onGroupPhotos, onBatchEdit, 
     onDeletePhoto
-  } = useGalleryStore(useShallow(s => ({
-    onEditPhoto: s.onEditPhoto,
-    onToggleHidden: s.onToggleHidden,
-    onTogglePinned: s.onTogglePinned,
-    onAiAnalyze: s.onAiAnalyze,
-    onSetGroupCover: s.onSetGroupCover,
-    onBatchAiAnalyze: s.onBatchAiAnalyze,
-    onGroupPhotos: s.onGroupPhotos,
-    onBatchEdit: s.onBatchEdit,
-    onDeletePhoto: s.onDeletePhoto
-  })));
+  } = usePhotoActions();
 
   const isAnalyzing = loadingType === 'analyzing';
   const batchProgress = props.isAdmin ? (props as any).batchProgress : null;

@@ -2,6 +2,7 @@ import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User } from '../../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { GalleryFilters } from '../ui/GalleryFilters';
 import PhotoBoard from '@/components/photo/PhotoGrid';
@@ -45,7 +46,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
     activeGroupId, setActiveGroupId,
     activePhotoId, setActivePhotoId,
     sortOrder, setSortOrder,
-    onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze, isAnalyzing
+    isAnalyzing
   } = useGalleryStore(useShallow(s => ({
     showGroupsCollapsed: s.showGroupsCollapsed,
     appLang: s.appLang,
@@ -58,14 +59,10 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
     setActivePhotoId: s.setActivePhotoId,
     sortOrder: s.sortOrder,
     setSortOrder: s.setSortOrder,
-    onEditPhoto: s.onEditPhoto,
-    onToggleHidden: s.onToggleHidden,
-    onTogglePinned: s.onTogglePinned,
-    onAiAnalyze: s.onAiAnalyze,
-    onSetGroupCover: s.onSetGroupCover,
-    onCancelAnalyze: s.onCancelAnalyze,
     isAnalyzing: (s.loadingType as string) === 'analyzing'
   })));
+
+  const { onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze } = usePhotoActions();
 
   const lang = langStore || 'zh';
   const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
@@ -123,19 +120,12 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
 
   const isSyncing = !!props.isRefreshing;
 
-  const virtuosoContext = useMemo(() => ({
-    hasMore: props.hasMore,
-    isSyncing,
-    isFetchingNextPage: props.isFetchingNextPage,
-    safePhotosLength: gridPhotos.length,
-    textLoadMore: t.loadMore,
-    textEndOfList: t.endOfList,
-    textLoading: t.loading
-  }), [props.hasMore, isSyncing, props.isFetchingNextPage, gridPhotos.length, t]);
-
   const handleSetLightboxIndex = useCallback((index: number) => {
     setLightboxIndex(index);
   }, [setLightboxIndex]);
+
+  // Stable empty handlers
+  const noop = useCallback(() => {}, []);
 
   const handleEditPhotoProp = useCallback((id: string) => {
     if (typeof onEditPhoto === 'function') {
@@ -143,9 +133,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
       if (photo) onEditPhoto(photo);
     }
   }, [onEditPhoto, props.photos]);
-
-  // Stable empty handlers to prevent unnecessary re-renders of all PhotoCards
-  const noop = useCallback(() => {}, []);
 
   return (
     <motion.div 
@@ -163,32 +150,17 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
 
       <div className="flex-1 overflow-hidden bg-brand-bg relative">
         <AnimatePresence>
-          {(() => {
-            const isInitialLoad = (isSyncing || props.isRefreshing) && gridPhotos.length === 0;
-            return (
-              <motion.div
-                key="grid"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-                className="h-full"
-              >
-                <ErrorBoundary>
-                  <PhotoBoard
-                    virtuosoRef={virtuosoRef}
-                    gridPhotos={gridPhotos}
-                    displayPhotos={displayPhotos}
-                    virtuosoComponents={virtuosoComponents}
-                    virtuosoContext={virtuosoContext}
-                    handleLoadMore={handleLoadMore}
-                    onEditPhoto={handleEditPhotoProp}
-                    isInitialLoad={isInitialLoad}
-                    totalCount={props.totalCount}
-                  />
-                </ErrorBoundary>
-              </motion.div>
-            );
-          })()}
+          <motion.div
+            key="grid"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="h-full"
+          >
+            <ErrorBoundary>
+              <PhotoBoard virtuosoRef={virtuosoRef} />
+            </ErrorBoundary>
+          </motion.div>
         </AnimatePresence>
       </div>
 

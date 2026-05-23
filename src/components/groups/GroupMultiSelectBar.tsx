@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, Sparkles, Pencil, Layers, X } from 'lucide-react';
 import { Photo } from '../../types';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 
 interface GroupMultiSelectBarProps {
   activeGroupPhotos: Photo[];
@@ -13,7 +13,12 @@ export const GroupMultiSelectBar: React.FC<GroupMultiSelectBarProps> = ({
   activeGroupPhotos,
   handleBulkAction,
 }) => {
-  const { isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore();
+  const { isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore(useShallow(s => ({
+    isMultiSelect: s.isMultiSelect,
+    setIsMultiSelect: s.setIsMultiSelect,
+    selectedIds: s.selectedIds,
+    setSelectedIds: s.setSelectedIds
+  })));
 
   return (
     <AnimatePresence>

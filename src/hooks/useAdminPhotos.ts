@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useErrorHandler } from '../utils/errorHandler';
 import { useDelete } from './useDelete';
 import { Photo, User, Manufacturer, Category, Tag } from '../types';
@@ -125,6 +125,12 @@ export const useAdminPhotos = (
 
   const { mutateAsync: groupPhotosMutation } = useGroupPhotosMutation();
 
+  const handleTranslate = useCallback(async (zhText: string) => {
+    const apiKey = geminiApiKey;
+    if (!apiKey) throw new Error('请先在设置中设定 AI 密钥');
+    return await translateDescription(zhText, apiKey, customModel);
+  }, [geminiApiKey, customModel]);
+
   return useMemo(() => ({
     // Photos & Basic State
     photos,
@@ -144,11 +150,7 @@ export const useAdminPhotos = (
     setAiDebugInfo: aiHook.setAiDebugInfo,
     batchProgress: aiHook.batchProgress,
     abortAnalysis: aiHook.abortAnalysis,
-    handleTranslate: async (zhText: string) => {
-      const apiKey = geminiApiKey;
-      if (!apiKey) throw new Error('请先在设置中设定 AI 密钥');
-      return await translateDescription(zhText, apiKey, customModel);
-    },
+    handleTranslate,
 
     // Mutation Hook
     handleGroupPhotos: groupPhotosMutation,
@@ -160,7 +162,7 @@ export const useAdminPhotos = (
     importHook.handlePhotoImport, importHook.importProgress, importHook.importTotal,
     aiHook.analyzeSingle, aiHook.analyzeBatch, aiHook.analyzeGroup,
     aiHook.aiDebugInfo, aiHook.setAiDebugInfo, aiHook.batchProgress, aiHook.abortAnalysis,
-    geminiApiKey, customModel, groupPhotosMutation, mutationHook.deletePhoto, 
+    handleTranslate, groupPhotosMutation, mutationHook.deletePhoto, 
     mutationHook.updatePhoto, mutationHook.updatePhotosBulk
   ]);
 };

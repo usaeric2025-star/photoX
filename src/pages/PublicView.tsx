@@ -6,7 +6,7 @@ import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback, useTagsQuery, useScrollRestoration, useDebouncedSearch } from '../hooks';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
-import { useStore } from '../store';
+import { useGalleryStore, useShallow } from '../store';
 import { PAGINATION, ROUTES, UI } from '../config/constants';
 import { Photo, Tag } from '../types';
 import { safeArray } from '../lib/utils';
@@ -36,22 +36,34 @@ export default function PublicView() {
   const { mutateAsync: updatePhotoMutation } = useUpdatePhotoMutation();
   
   // Store
-  const filterCatId = useStore(s => s.filterCatId);
-  const filterTagIds = useStore(s => s.filterTagIds);
-  const sortOrder = useStore(s => s.sortOrder);
-  const setFilterCatId = useStore(s => s.setFilterCatId);
-  const setFilterTagIds = useStore(s => s.setFilterTagIds);
-  const setStoreSearchQuery = useStore(s => s.setSearchQuery);
-  const hasLoadedOnce = useStore(s => s.hasLoadedOnce);
-  const setHasLoadedOnce = useStore(s => s.setHasLoadedOnce);
-  const searchQuery = useStore(s => s.searchQuery);
-  const setSearchQuery = useStore(s => s.setSearchQuery);
-  const debouncedSearchQuery = useStore(s => s.debouncedSearchQuery);
-  const setDebouncedSearchQuery = useStore(s => s.setDebouncedSearchQuery);
-  const hasInitialLoaded = useStore(s => s.hasInitialLoaded);
-  const setHasInitialLoaded = useStore(s => s.setHasInitialLoaded);
+  const filterCatId = useGalleryStore(s => s.filterCatId);
+  const filterTagIds = useGalleryStore(s => s.filterTagIds);
+  const sortOrder = useGalleryStore(s => s.sortOrder);
+  const setFilterCatId = useGalleryStore(s => s.setFilterCatId);
+  const setFilterTagIds = useGalleryStore(s => s.setFilterTagIds);
+  const setStoreSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const hasLoadedOnce = useGalleryStore(s => s.hasLoadedOnce);
+  const setHasLoadedOnce = useGalleryStore(s => s.setHasLoadedOnce);
+  const searchQuery = useGalleryStore(s => s.searchQuery);
+  const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const debouncedSearchQuery = useGalleryStore(s => s.debouncedSearchQuery);
+  const setDebouncedSearchQuery = useGalleryStore(s => s.setDebouncedSearchQuery);
+  const hasInitialLoaded = useGalleryStore(s => s.hasInitialLoaded);
+  const setHasInitialLoaded = useGalleryStore(s => s.setHasInitialLoaded);
   
-  const resetFiltersAndRefresh = useStore(s => s.resetFiltersAndRefresh);
+  const { 
+    setPhotos, setTotalCount, setIsFetching, setIsFetchingNextPage, 
+    setHasNextPage, setLoadMorePhotos 
+  } = useGalleryStore(useShallow(s => ({
+    setPhotos: s.setPhotos,
+    setTotalCount: s.setTotalCount,
+    setIsFetching: s.setIsFetching,
+    setIsFetchingNextPage: s.setIsFetchingNextPage,
+    setHasNextPage: s.setHasNextPage,
+    setLoadMorePhotos: s.setLoadMorePhotos
+  })));
+
+  const resetFiltersAndRefresh = useGalleryStore(s => s.resetFiltersAndRefresh);
   
   // 查询
   const infiniteQuery = useInfinitePhotos({
@@ -139,6 +151,42 @@ export default function PublicView() {
       return [];
     }
   }, [infiniteQuery.data]);
+
+  useEffect(() => {
+    setPhotos(photos);
+  }, [photos, setPhotos]);
+
+  useEffect(() => {
+    setTotalCount(countData || 0);
+  }, [countData, setTotalCount]);
+
+  useEffect(() => {
+    setIsFetching(infiniteQuery.isLoading || infiniteQuery.isFetching);
+    setIsFetchingNextPage(infiniteQuery.isFetchingNextPage);
+    setHasNextPage(!!infiniteQuery.hasNextPage);
+  }, [
+    infiniteQuery.isLoading,
+    infiniteQuery.isFetching,
+    infiniteQuery.isFetchingNextPage,
+    infiniteQuery.hasNextPage,
+    setIsFetching,
+    setIsFetchingNextPage,
+    setHasNextPage
+  ]);
+
+  const fetchNextPage = infiniteQuery.fetchNextPage;
+  const hasNextPage = infiniteQuery.hasNextPage;
+  const isFetchingNextPage = infiniteQuery.isFetchingNextPage;
+
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  useEffect(() => {
+    setLoadMorePhotos(handleLoadMore);
+  }, [handleLoadMore, setLoadMorePhotos]);
   
   const categoriesData = useMemo(() => {
     return categoriesQuery?.data ?? [];
@@ -168,12 +216,6 @@ export default function PublicView() {
       showError(e, '刷新产品照片失败');
     }
   }, [resetFiltersAndRefresh, reset, queryClient, infiniteQuery, showSuccess, showError]);
-  
-  const handleLoadMore = useCallback(() => {
-    if (infiniteQuery.hasNextPage && !infiniteQuery.isFetchingNextPage) {
-      infiniteQuery.fetchNextPage();
-    }
-  }, [infiniteQuery]);
   
   // ========== 7. 错误处理/加载状态（条件 return）==========
   if (infiniteQuery.error) {

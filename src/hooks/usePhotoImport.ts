@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { User, Photo, Category, Tag, Manufacturer } from '@/types';
 import { 
   savePhotoToCloud
@@ -49,7 +49,7 @@ export const usePhotoImport = (
   const { setIsSyncing = () => {} } = adminSession || {};
   const { setActiveScreen = () => {} } = adminUI || {};
 
-  const handlePhotoImport = async (
+  const handlePhotoImport = useCallback(async (
     e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList | null } },
     useAi: boolean
   ) => {
@@ -198,7 +198,12 @@ export const usePhotoImport = (
         showSuccess(msg);
       }
     });
-  };
+  }, [
+    user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, 
+    setCloudCount, addManufacturer, runWithLoading, addTask, updateTask, abortAnalysis, 
+    tagNameToIdMap, photosRef, showError, queryClient, invalidatePhotos, showSuccess,
+    setIsSyncing, setActiveScreen, getHashAndDataUrl, isDuplicate, sessionHashes
+  ]);
 
   return { handlePhotoImport, importProgress, importTotal };
 };

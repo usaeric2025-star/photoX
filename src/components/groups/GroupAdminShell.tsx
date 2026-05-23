@@ -31,13 +31,12 @@ import { GroupGridView } from './GroupGridView';
 
 import { useAdminMode } from '../../hooks/useAdminMode';
 
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { useFeedback } from '../../hooks';
 import { translations } from '../../lib/translations';
 
-import { 
-  useInfinitePhotos, useCategoriesQuery, useManufacturersQuery 
-} from '../../hooks';
+import { useInfinitePhotos, useCategoriesQuery, useManufacturersQuery } from '../../hooks';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { cleanPhotos } from '../../lib/filters';
 import { PAGINATION } from '../../constants/config';
 
@@ -58,11 +57,24 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const {
      activeGroupId, setActiveGroupId, appLang,
      tagIdToNameMap, isStaffMode,
-     onToggleHidden: storeToggleHidden, onUpdatePhoto, onTogglePinned, onDeletePhoto,
      adminPreviewMode,
      setEditPhotoId,
      filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+     activeGroupId: s.activeGroupId,
+     setActiveGroupId: s.setActiveGroupId,
+     appLang: s.appLang,
+     tagIdToNameMap: s.tagIdToNameMap,
+     isStaffMode: s.isStaffMode,
+     adminPreviewMode: s.adminPreviewMode,
+     setEditPhotoId: s.setEditPhotoId,
+     filterCatId: s.filterCatId,
+     filterTagIds: s.filterTagIds,
+     debouncedSearchQuery: s.debouncedSearchQuery,
+     sortOrder: s.sortOrder
+    })));
+  
+    const { onToggleHidden, onUpdatePhoto, onTogglePinned, onDeletePhoto, onBatchAiAnalyze, onBatchEdit, onUngroup, onEditPhoto: storeEditPhoto } = usePhotoActions();
 
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: filterCatId,
@@ -81,10 +93,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const { data: manufacturers = [] } = useManufacturersQuery();
 
   const { 
-    onBatchAiAnalyze, onBatchEdit, onUngroup, 
-    onTogglePinned: storeTogglePinned, tagIdToNameMap: tagMap,
-    onEditPhoto: storeEditPhoto
-  } = useGalleryStore();
+    tagIdToNameMap: tagMap
+  } = useGalleryStore(useShallow(s => ({
+    tagIdToNameMap: s.tagIdToNameMap
+  })));
 
   const contactWhatsApp = (photo: Photo) => {
     // Placeholder or implement if needed

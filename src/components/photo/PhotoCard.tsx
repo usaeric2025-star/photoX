@@ -5,6 +5,7 @@ import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCac
 import { safeArray } from '../../utils/safeAccess';
 import { useGalleryStore, useShallow } from '../../store';
 import { PhotoImageContainer } from './PhotoImageContainer';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useCategoriesQuery, useManufacturersQuery } from '../../hooks';
 import { translations } from '../../lib/translations';
 
@@ -15,7 +16,6 @@ export interface PhotoCardProps {
   photo: Photo;
   index: number;
   showGroupsCollapsed: boolean;
-  onEditPhoto?: (id: string) => void;
   onGroupClick?: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (photo: Photo) => void;
   className?: string;
@@ -93,21 +93,21 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   onLightboxOpen, 
   className = '', onClick
 }) => {
+  const isSelected = useGalleryStore(s => (s.selectedIds ?? []).includes(photo.id));
+
   const { 
-    isMultiSelect, selectedIds, setIsMultiSelect, setSelectedIds,
-    appLang: lang, onTogglePinned, onToggleHidden, tagIdToNameMap: tagMap
+    isMultiSelect, setIsMultiSelect, setSelectedIds,
+    appLang: lang, tagIdToNameMap: tagMap
   } = useGalleryStore(useShallow(s => ({
     isMultiSelect: s.isMultiSelect,
-    selectedIds: s.selectedIds,
     setIsMultiSelect: s.setIsMultiSelect,
     setSelectedIds: s.setSelectedIds,
     appLang: s.appLang,
-    onTogglePinned: s.onTogglePinned,
-    onToggleHidden: s.onToggleHidden,
     tagIdToNameMap: s.tagIdToNameMap
   })));
 
-  const isSelected = (selectedIds ?? []).includes(photo.id);
+  const { onTogglePinned, onToggleHidden } = usePhotoActions();
+
   const t = translations[lang as keyof typeof translations] || translations.zh;
 
   const { data: categories = [] } = useCategoriesQuery();

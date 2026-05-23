@@ -76,7 +76,7 @@ export const usePhotoManagement = (
     ui.setBatchEditIds(null);
   }, [ui, setNewPhotoData]);
 
-  const saveNewPhoto = async () => {
+  const saveNewPhoto = useCallback(async () => {
     if (ui.editPhotoId) {
       await updatePhotoFn({ 
         id: ui.editPhotoId, 
@@ -87,9 +87,9 @@ export const usePhotoManagement = (
       });
       resetAddState();
     }
-  };
+  }, [ui, updatePhotoFn, formState, newPhotoData, resetAddState]);
 
-  const saveBatchEdit = async () => {
+  const saveBatchEdit = useCallback(async () => {
     if (ui.batchEditIds && ui.batchEditIds.length > 0) {
       await updateBatchFn({
         userId: user?.id || '',
@@ -98,7 +98,7 @@ export const usePhotoManagement = (
       });
       ui.setBatchEditIds(null);
     }
-  };
+  }, [ui, updateBatchFn, user, formState]);
 
   return {
     newPhotoData,

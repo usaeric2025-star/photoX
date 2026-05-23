@@ -11,6 +11,8 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useGalleryStore, useShallow } from '../../store';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 interface GroupHeaderProps {
   activeGroupId: string | null;
@@ -31,15 +33,15 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   activeGroupPhotos,
   onAddPhotoToGroup,
 }) => {
-  const { setGroupSettingsOpen, onBatchEdit, onBatchAiAnalyze, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore(useShallow(s => ({
+  const { setGroupSettingsOpen, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore(useShallow(s => ({
     setGroupSettingsOpen: s.setGroupSettingsOpen,
-    onBatchEdit: s.onBatchEdit,
-    onBatchAiAnalyze: s.onBatchAiAnalyze,
     isMultiSelect: s.isMultiSelect,
     setIsMultiSelect: s.setIsMultiSelect,
     selectedIds: s.selectedIds,
     setSelectedIds: s.setSelectedIds
   })));
+  
+  const { onBatchEdit, onBatchAiAnalyze } = usePhotoActions();
   
   return (
     <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
@@ -86,6 +88,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
       <div className="flex items-center gap-2">
          {isAdminMode && (
            <div className="flex items-center gap-1.5 sm:gap-2">
+              <LanguageSwitcher variant="admin" />
               <button 
                 onClick={() => {
                   if (onBatchAiAnalyze) onBatchAiAnalyze(activeGroupPhotos);

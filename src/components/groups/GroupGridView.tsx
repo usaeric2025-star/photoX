@@ -4,8 +4,9 @@ import { Star, Sparkles, Check, Info, Palette, Layers, Quote } from 'lucide-reac
 import { Skeleton } from '../ui/Skeleton';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { VIRTUOSO_CONFIG } from '@/config/virtuoso.config';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
+import { translations } from '../../lib/translations';
 
 interface GroupGridViewProps {
   photos: Photo[];
@@ -17,17 +18,20 @@ interface GroupGridViewProps {
   getPhotoProps?: (photo: Photo) => React.HTMLAttributes<HTMLDivElement>;
   highlightId?: string | null;
   onEndReached?: () => void;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
 }
 
-const PhotoItem = React.memo(({ photo, isSelected, isMultiSelectMode, isHighlighted, extraProps, onPhotoClick, onPhotoContextMenu }: {
+const PhotoItem = React.memo(({ photo, isHighlighted, extraProps, onPhotoClick, onPhotoContextMenu }: {
   photo: Photo;
-  isSelected: boolean;
-  isMultiSelectMode: boolean;
   isHighlighted?: boolean;
   extraProps: React.HTMLAttributes<HTMLDivElement>;
   onPhotoClick: (photo: Photo) => void;
   onPhotoContextMenu?: (e: React.MouseEvent, photo: Photo) => void;
 }) => {
+  const isSelected = useGalleryStore(s => (s.selectedIds ?? []).includes(photo.id));
+  const isMultiSelectMode = useGalleryStore(s => s.isMultiSelect);
+
   const [isLoaded, setIsLoaded] = React.useState(false);
   const longPressTimer = React.useRef<NodeJS.Timeout | null>(null);
   const touchStartPos = React.useRef<{x: number, y: number} | null>(null);
@@ -145,10 +149,13 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   virtuosoRef,
   highlightId,
   onEndReached,
-  isLoading = false
+  isLoading = false,
+  isFetchingNextPage,
+  hasNextPage
 }) => {
-  const { isMultiSelect, selectedIds } = useGalleryStore();
-  
+  const lang = useGalleryStore(s => s.appLang);
+  const t = useMemo(() => translations[lang as keyof typeof translations] || translations.zh, [lang]);
+
   const header = useMemo(() => {
     if (!groupData || (!groupData.description && (!groupData.colors || groupData.colors.length === 0) && (!groupData.materials || groupData.materials.length === 0))) {
       return null;
@@ -212,7 +219,28 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         endReached={onEndReached}
         components={{
           Header: () => <div className="p-3 sm:p-6 pb-0">{header}</div>,
-          Footer: () => <div className="h-40" />
+          Footer: () => {
+             if (isFetchingNextPage) {
+               return (
+                 <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+                   <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+                   <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
+                     {t.loading || '正在载入更多...'}
+                   </span>
+                 </div>
+               );
+             }
+             if (!isFetchingNextPage && hasNextPage === false && photos.length > 0) {
+               return (
+                 <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+                   <span className="text-[10px] text-slate-400 font-medium tracking-tight">
+                     {t.endOfList || '已经到底啦'}
+                   </span>
+                 </div>
+               );
+             }
+             return <div className="h-40" />;
+          }
         }}
         listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-6 p-3 sm:p-6"
         itemContent={(index) => {
@@ -230,7 +258,6 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
           const photo = photos[index];
           if (!photo) return null;
           
-          const isSelected = selectedIds.includes(photo.id);
           const isHighlighted = highlightId === photo.id;
           const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
           
@@ -238,8 +265,6 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
             <PhotoItem 
               key={photo.id}
               photo={photo}
-              isSelected={isSelected}
-              isMultiSelectMode={isMultiSelect}
               isHighlighted={isHighlighted}
               extraProps={extraProps}
               onPhotoClick={onPhotoClick}

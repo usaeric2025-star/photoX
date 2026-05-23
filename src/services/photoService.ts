@@ -108,7 +108,8 @@ export const loadAllPhotosFromCloud = async (
     tagId?: string | null,
     searchQuery?: string | null,
     isAdminMode: boolean = false,
-    signal?: AbortSignal
+    signal?: AbortSignal,
+    sortOrder?: 'asc' | 'desc' | 'newest' | 'oldest' | 'name' | string | null
 ): Promise<Photo[]> => {
     const selectQuery = PHOTO_SELECT_FIELDS;
 
@@ -128,24 +129,19 @@ export const loadAllPhotosFromCloud = async (
     query = query.gt('updated_at', since);
   }
 
-  let filterSegments: string[] = [];
   if (categoryId) {
-    filterSegments.push(`category_id.eq.${categoryId}`);
+    query = query.eq('category_id', categoryId);
   }
 
   if (tagId) {
     const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
     const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
     if (photoIdsWithTag.length > 0) {
-      filterSegments.push(`id.in.(${photoIdsWithTag.join(',')})`);
-    } else if (!categoryId) {
-      // If no matching tag and no category, result is empty
+      query = query.in('id', photoIdsWithTag);
+    } else {
+      // If no matching tag, result is empty
       return [];
     }
-  }
-
-  if (filterSegments.length > 0) {
-    query = query.or(filterSegments.join(','));
   }
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');
@@ -194,10 +190,20 @@ export const loadAllPhotosFromCloud = async (
   if (isAdminMode) {
     query = query.order('is_hidden', { ascending: true, nullsFirst: true });
   }
-    const { data, error } = await query
-        .order('created_at', { ascending: false })
-        .order('id', { ascending: false })
-        .range(from, to);
+  
+  if (sortOrder === 'oldest' || sortOrder === 'asc') {
+    query = query.order('created_at', { ascending: true })
+                 .order('id', { ascending: true });
+  } else if (sortOrder === 'name') {
+    query = query.order('name', { ascending: true, nullsFirst: true })
+                 .order('created_at', { ascending: false });
+  } else {
+    // Default: newest
+    query = query.order('created_at', { ascending: false })
+                 .order('id', { ascending: false });
+  }
+
+  const { data, error } = await query.range(from, to);
 
     if (error) {
         globalHandleError(error, "Supabase Fetch (loadAllPhotosFromCloud)", true);
@@ -323,23 +329,18 @@ export const getPhotoCount = async (
     query = query.or(VISIBILITY_OR_QUERY);
   }
 
-  let filterSegments: string[] = [];
   if (categoryId) {
-    filterSegments.push(`category_id.eq.${categoryId}`);
+    query = query.eq('category_id', categoryId);
   }
 
   if (tagId) {
     const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
     const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
     if (photoIdsWithTag.length > 0) {
-      filterSegments.push(`id.in.(${photoIdsWithTag.join(',')})`);
-    } else if (!categoryId) {
+      query = query.in('id', photoIdsWithTag);
+    } else {
       return 0;
     }
-  }
-  
-  if (filterSegments.length > 0) {
-    query = query.or(filterSegments.join(','));
   }
 
   const normSearchQuery = normalizeSearchQuery(searchQuery || '');

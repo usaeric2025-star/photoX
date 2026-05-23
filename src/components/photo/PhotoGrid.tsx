@@ -2,42 +2,27 @@ import React, { useCallback, useMemo } from 'react';
 import { VirtuosoGrid, VirtuosoGridHandle, VirtuosoGridProps as BaseVirtuosoGridProps } from 'react-virtuoso';
 import { motion, AnimatePresence } from 'motion/react';
 import { VIRTUOSO_CONFIG } from '../../config/virtuoso.config';
-import { Photo, Category, Manufacturer } from '../../types';
+import { Photo } from '../../types';
 import { PhotoCard } from '../photo/PhotoCard';
-import { TranslationType } from '../../lib/ui-helpers';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
-
-interface PhotoGridProps {
-  virtuosoRef: React.RefObject<VirtuosoGridHandle | null>;
-  gridPhotos: Photo[];
-  displayPhotos: Photo[];
-  virtuosoComponents?: BaseVirtuosoGridProps<Photo, any>['components'];
-  virtuosoContext?: any;
-  handleLoadMore: () => void;
-  onEditPhoto?: (id: string) => void;
-  isInitialLoad?: boolean;
-  totalCount?: number;
-}
+import { useCategoriesQuery, useTagsQuery, usePhotoFilters } from '../../hooks';
 
 interface MemoizedPhotoCardProps {
   index: number;
   photo: Photo;
-  onEditPhoto?: (id: string) => void;
+  isAdminMode: boolean;
+  showGroupsCollapsed: boolean;
   onGroupClick: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (photo: Photo) => void;
 }
 
 const MemoizedPhotoCard = React.memo(({ 
-  index, photo, onEditPhoto, onGroupClick, 
+  index, photo, isAdminMode, showGroupsCollapsed, onGroupClick, 
   onLightboxOpen
 }: MemoizedPhotoCardProps) => {
-  const isStaffMode = useGalleryStore(s => s.isStaffMode);
-  const viewMode = useGalleryStore(s => s.viewMode);
-  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
-  const isAdminMode = viewMode === 'admin' || isStaffMode;
 
   const handleGroupClickInternal = useCallback((gid: string) => {
     onGroupClick(gid, photo.id);
@@ -49,7 +34,6 @@ const MemoizedPhotoCard = React.memo(({
       photo={photo}
       index={index}
       showGroupsCollapsed={showGroupsCollapsed}
-      onEditPhoto={onEditPhoto}
       onGroupClick={handleGroupClickInternal}
       onLightboxOpen={onLightboxOpen}
     />
@@ -62,16 +46,45 @@ function getSkeletonCount(total: number = 0, columns: number): number {
   return columns * 3;
 }
 
-console.log('PhotoGrid module loading');
+export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo(({ virtuosoRef }) => {
+  const { 
+    columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
+    photos, totalCount, isFetching, isFetchingNextPage, hasNextPage, loadMorePhotos,
+    isStaffMode, viewMode
+  } = useGalleryStore(useShallow(s => ({
+    columns: s.columns,
+    setActiveGroupId: s.setActiveGroupId,
+    setActivePhotoId: s.setActivePhotoId,
+    setLightboxIndex: s.setLightboxIndex,
+    appLang: s.appLang,
+    photos: s.photos,
+    totalCount: s.totalCount,
+    isFetching: s.isFetching,
+    isFetchingNextPage: s.isFetchingNextPage,
+    hasNextPage: s.hasNextPage,
+    loadMorePhotos: s.loadMorePhotos,
+    isStaffMode: s.isStaffMode,
+    viewMode: s.viewMode
+  })));
+  
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: contextTags = [] } = useTagsQuery();
+  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
 
-export const PhotoBoard: React.FC<PhotoGridProps> = (props) => {
-  console.log('Rendering PhotoBoard');
-  const columns = useGalleryStore(s => s.columns);
-  const setActiveGroupId = useGalleryStore(s => s.setActiveGroupId);
-  const setActivePhotoId = useGalleryStore(s => s.setActivePhotoId);
-  const setLightboxIndex = useGalleryStore(s => s.setLightboxIndex);
-  const lang = useGalleryStore(s => s.appLang);
+  const isAdminMode = viewMode === 'admin' || isStaffMode;
+
+  const lang = appLang;
   const t = translations[lang] || translations['zh'];
+
+  const { displayPhotos, gridPhotos } = usePhotoFilters(
+    photos,
+    categories,
+    contextTags,
+    {
+      showGroupsCollapsed,
+      isAdminModeOverride: true // PhotoBoard is used in both, but filter behavior should respect internal switches
+    }
+  );
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
      setActiveGroupId(gid);
@@ -80,23 +93,17 @@ export const PhotoBoard: React.FC<PhotoGridProps> = (props) => {
      }
   }, [setActiveGroupId, setActivePhotoId]);
 
-  const handleLoadMore = useCallback(() => {
-    props.handleLoadMore();
-  }, [props.handleLoadMore]);
-
-  const handleEditPhoto = useCallback((id: string) => {
-    props.onEditPhoto?.(id);
-  }, [props.onEditPhoto]);
-
   const handleLightboxOpen = useCallback((photo: Photo) => {
-    const realIndex = props.displayPhotos.findIndex(p => p?.id === photo.id);
+    const realIndex = displayPhotos.findIndex(p => p?.id === photo.id);
     if (realIndex !== -1) {
       setLightboxIndex(realIndex);
     }
-  }, [props.displayPhotos, setLightboxIndex]);
+  }, [displayPhotos, setLightboxIndex]);
 
-  if (props.isInitialLoad) {
-    const skeletonCount = getSkeletonCount(props.totalCount, columns);
+  const isInitialLoad = (isFetching) && gridPhotos.length === 0;
+
+  if (isInitialLoad) {
+    const skeletonCount = getSkeletonCount(totalCount, columns);
     return (
       <motion.div 
         key="skeleton"
@@ -111,7 +118,7 @@ export const PhotoBoard: React.FC<PhotoGridProps> = (props) => {
     );
   }
 
-  if (props.gridPhotos.length === 0) {
+  if (gridPhotos.length === 0) {
     return (
       <motion.div
          key="empty"
@@ -127,16 +134,14 @@ export const PhotoBoard: React.FC<PhotoGridProps> = (props) => {
 
   return (
     <VirtuosoGrid
-      ref={props.virtuosoRef}
+      ref={virtuosoRef}
       style={{ height: '100%', width: '100%' }}
-      data={props.gridPhotos}
+      data={gridPhotos}
       computeItemKey={(index, item) => {
         const p = item as Photo;
         return p ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `loading-${index}`;
       }}
-      components={props.virtuosoComponents}
-      context={props.virtuosoContext}
-      endReached={handleLoadMore}
+      endReached={loadMorePhotos}
       overscan={VIRTUOSO_CONFIG.overscan(columns)}
       increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
       useWindowScroll={false}
@@ -147,14 +152,39 @@ export const PhotoBoard: React.FC<PhotoGridProps> = (props) => {
           <MemoizedPhotoCard
             index={index}
             photo={photo}
-            onEditPhoto={handleEditPhoto}
+            isAdminMode={isAdminMode}
+            showGroupsCollapsed={showGroupsCollapsed}
             onGroupClick={handleGroupClick}
             onLightboxOpen={handleLightboxOpen}
           />
         );
       }}
+      components={{
+        Footer: () => {
+          if (isFetchingNextPage) {
+            return (
+              <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+                <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+                <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
+                  {t.loading || '正在载入更多...'}
+                </span>
+              </div>
+            );
+          }
+          if (!isFetchingNextPage && !hasNextPage && displayPhotos.length > 0) {
+             return (
+               <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+                 <span className="text-[10px] text-slate-400 font-medium tracking-tight">
+                   {t.endOfList || '已经到底啦'}
+                 </span>
+               </div>
+             );
+           }
+          return null;
+        }
+      }}
     />
   );
-};
+});
 
 export default PhotoBoard;

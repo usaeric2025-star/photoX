@@ -43,6 +43,18 @@ interface StoreState {
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   isStaffMode: boolean;
   setIsStaffMode: (is: boolean) => void;
+  photos: Photo[];
+  setPhotos: (photos: Photo[]) => void;
+  totalCount: number;
+  setTotalCount: (count: number) => void;
+  isFetching: boolean;
+  setIsFetching: (fetching: boolean) => void;
+  isFetchingNextPage: boolean;
+  setIsFetchingNextPage: (fetching: boolean) => void;
+  hasNextPage: boolean;
+  setHasNextPage: (has: boolean) => void;
+  loadMorePhotos: () => void;
+  setLoadMorePhotos: (fn: () => void) => void;
   hasLoadedOnce: boolean;
   setHasLoadedOnce: (hasLoaded: boolean) => void;
   hasInitialLoaded: boolean;
@@ -104,35 +116,6 @@ interface StoreState {
   setNewPhotoData: (data: string | null) => void;
   showOtherFields: boolean;
   setShowOtherFields: (show: boolean) => void;
-
-  // Action fallbacks to prevent prop drilling
-  onTogglePinned?: (photo: Photo) => Promise<void>;
-  onDeletePhoto?: (id: string | string[]) => Promise<void>;
-  onUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
-  onToggleHidden?: (photo: Photo) => Promise<void>;
-  onGroupPhotos?: (ids: string[]) => Promise<void>;
-  onUngroup?: (groupId: string) => Promise<void>;
-  onBatchAiAnalyze?: (photos: Photo[]) => void;
-  onBatchEdit?: (ids: string[]) => void;
-  onEditPhoto?: (p: Photo) => void;
-  onAiAnalyze?: (photo: Photo) => Promise<any>;
-  onSetGroupCover?: (id: string, gid: string) => Promise<void>;
-  onCancelAnalyze?: () => void;
-  
-  setActions: (actions: {
-    onTogglePinned?: (photo: Photo) => Promise<void>;
-    onDeletePhoto?: (id: string | string[]) => Promise<void>;
-    onUpdatePhoto?: (id: string, updates: Partial<Photo>) => Promise<void>;
-    onToggleHidden?: (photo: Photo) => Promise<void>;
-    onGroupPhotos?: (ids: string[]) => Promise<void>;
-    onUngroup?: (groupId: string) => Promise<void>;
-    onBatchAiAnalyze?: (photos: Photo[]) => void;
-    onBatchEdit?: (ids: string[]) => void;
-    onEditPhoto?: (p: Photo) => void;
-    onAiAnalyze?: (photo: Photo) => Promise<any>;
-    onSetGroupCover?: (id: string, gid: string) => Promise<void>;
-    onCancelAnalyze?: () => void;
-  }) => void;
 }
 
 export { useShallow };
@@ -179,6 +162,18 @@ export const useGalleryStore = create<StoreState>()((set) => ({
     sessionStorage.setItem('isStaffMode', String(isStaffMode));
     set({ isStaffMode });
   },
+  photos: [],
+  setPhotos: (photos) => set({ photos }),
+  totalCount: 0,
+  setTotalCount: (totalCount) => set({ totalCount }),
+  isFetching: false,
+  setIsFetching: (isFetching) => set({ isFetching }),
+  isFetchingNextPage: false,
+  setIsFetchingNextPage: (isFetchingNextPage) => set({ isFetchingNextPage }),
+  hasNextPage: false,
+  setHasNextPage: (hasNextPage) => set({ hasNextPage }),
+  loadMorePhotos: () => {},
+  setLoadMorePhotos: (loadMorePhotos) => set({ loadMorePhotos }),
   hasLoadedOnce: false,
   setHasLoadedOnce: (hasLoadedOnce) => set({ hasLoadedOnce }),
   hasInitialLoaded: false,
@@ -253,7 +248,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setNewPhotoData: (newPhotoData) => set({ newPhotoData }),
   showOtherFields: false,
   setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
-  setActions: (actions) => set({ ...actions }),
 }));
 
 export const useStore = useGalleryStore;

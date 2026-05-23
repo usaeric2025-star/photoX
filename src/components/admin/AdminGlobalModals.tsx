@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 import { PromptDialog } from './PromptDialog';
 import {
   AlertDialog,
@@ -15,7 +15,12 @@ import {
 } from "../ui/alert-dialog";
 
 export const AdminGlobalModals: React.FC = () => {
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useGalleryStore();
+  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useGalleryStore(useShallow(s => ({
+    alertDialog: s.alertDialog,
+    setAlertDialog: s.setAlertDialog,
+    promptDialog: s.promptDialog,
+    setPromptDialog: s.setPromptDialog
+  })));
 
   return (
     <>

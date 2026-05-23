@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, Category, Tag, Manufacturer, User, Task } from '../../types';
 import { useInvalidatePhotos } from '../queries/useInvalidatePhotos';
@@ -133,7 +133,7 @@ export const usePhotoAI = (
   
   const { cancelTask } = useTasks();
 
-  const abortAnalysis = (taskId?: string) => {
+  const abortAnalysis = useCallback((taskId?: string) => {
     if (!taskId) {
       if (activeTaskIds.current.size > 0) {
         const idsToCancel = Array.from(activeTaskIds.current);
@@ -159,9 +159,9 @@ export const usePhotoAI = (
     }
     setAiDebugInfo({ step: '已取消', message: '用户中断了 AI 识别任务' });
     setTimeout(() => setAiDebugInfo(null), 3000);
-  };
+  }, [cancelTask, invalidatePhotos, updateTask, removeTask]);
 
-  const analyzeSingle = async (photo: Photo) => {
+  const analyzeSingle = useCallback(async (photo: Photo) => {
     const imageData = photo.uri || photo.image_url;
     if (!imageData) return;
     setAiDebugInfo(null);
@@ -269,9 +269,13 @@ export const usePhotoAI = (
       const task = currentControllers.current.get(taskId);
       if (task) { clearTimeout(task.timeoutId); currentControllers.current.delete(taskId); }
     }
-  };
+  }, [
+    user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, 
+    tagNameToIdMap, addTask, updateTask, removeTask, photosRef, abortAnalysis, 
+    queryClient, invalidatePhotos, showSuccess, handleError
+  ]);
 
-  const analyzeBatch = async (photos: Photo[], existingTaskId?: string, forceAll = false) => {
+  const analyzeBatch = useCallback(async (photos: Photo[], existingTaskId?: string, forceAll = false) => {
     setAiDebugInfo(null);
     if (!geminiApiKey) return;
     
@@ -370,9 +374,13 @@ export const usePhotoAI = (
       isAnalyzingRef.current = false;
       setBatchProgress({ current: 0, total: 0 });
     }
-  };
+  }, [
+    user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, 
+    tagNameToIdMap, addTask, updateTask, removeTask, abortAnalysis, queryClient, 
+    showError, showSuccess
+  ]);
 
-  const analyzeGroup = async (photos: Photo[], forceAll = false) => {
+  const analyzeGroup = useCallback(async (photos: Photo[], forceAll = false) => {
     if (photos.length === 0 || !geminiApiKey) return;
     const taskId = addTask({
       name: `群组识别 (${photos.length} 张)`,
@@ -413,7 +421,10 @@ export const usePhotoAI = (
     } finally {
        activeTaskIds.current.delete(taskId);
     }
-  };
+  }, [
+    user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, 
+    tagNameToIdMap, addTask, updateTask, abortAnalysis, queryClient
+  ]);
 
   return { analyzeSingle, analyzeBatch, analyzeGroup, aiDebugInfo, setAiDebugInfo, batchProgress, abortAnalysis };
 };
