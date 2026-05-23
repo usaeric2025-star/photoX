@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { getTranslatedCategoryName } from '../../lib/ui-helpers';
+import { translations, LanguageCode } from '../../lib/translations';
 import { Category, Manufacturer } from '../../types';
 import { useLongPress } from '@/hooks';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -40,7 +41,8 @@ export const CategoryGrid: React.FC<CategorySelectorProps> = ({ categories, sele
   <div className="grid grid-cols-4 gap-1.5 px-0.5">
     {categories.filter(cat => cat && cat.id).map((cat) => {
       const isSelected = String(selectedId || '') === String(cat.id || '');
-        const displayName = cat.name;
+      const t = translations[appLang as LanguageCode] || translations.en;
+      const displayName = getTranslatedCategoryName(cat.id, categories, appLang, t);
       return (
         <button 
           key={cat.id}
