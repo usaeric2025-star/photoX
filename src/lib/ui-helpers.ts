@@ -86,7 +86,7 @@ export const getManufacturerName = (
 ): string => {
   if (!mfrId) return '';
   const activeMfr = manufacturers.find(m => String(m.id) === String(mfrId));
-  return activeMfr ? activeMfr.name : '';
+  return activeMfr ? activeMfr.name.toUpperCase() : '';
 };
 
 /**
