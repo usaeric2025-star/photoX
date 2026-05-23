@@ -16,6 +16,7 @@ export const getTranslatedCategoryName = (
   
   const catIdStr = String(catId);
   const activeCat = categories.find(c => String(c.id) === catIdStr || (c as any).code === catIdStr);
+  console.log('getTranslatedCategoryName: activeCat', activeCat, 'lang', lang);
   
   if (!activeCat) return t.uncategorized;
 

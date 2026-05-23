@@ -114,7 +114,6 @@ const defaultForm: ProductFormData = {
   manual_code: '',
   description: '',
   is_hidden: false,
-  description_translations: { en: '', ms: '' },
   dimensions: [],
   price: '',
   is_group_cover: false

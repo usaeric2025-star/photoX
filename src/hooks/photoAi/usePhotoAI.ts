@@ -72,7 +72,6 @@ export const processSinglePhoto = async (
         category_id: result.category_id || initialPhoto.category_id,
         tag_ids: finalTagIds.slice(0, 3),
         description: (result.description && (!initialPhoto.description || !initialPhoto.description.trim())) ? result.description : initialPhoto.description,
-        description_translations: result.description_translations || initialPhoto.description_translations,
         model_number: initialPhoto.model_number || result.model_number || '',
         dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : initialPhoto.dimensions
       };
@@ -192,8 +191,7 @@ export const usePhotoAI = (
         
         if (result.description) {
           try {
-            const translations = await translateDescription(result.description, geminiApiKey, customModel, signal);
-            result.description_translations = { zh: result.description, en: translations.en, ms: translations.ms };
+            await translateDescription(result.description, geminiApiKey, customModel, signal);
           } catch (e) {}
         }
         
@@ -207,7 +205,6 @@ export const usePhotoAI = (
           tag_ids: Array.from(new Set([...safeArray(existingPhoto.tag_ids), ...resolvedTags])).slice(0, 3),
           name: shouldUpdateName(existingPhoto.name) ? (aiName || existingPhoto.name) : existingPhoto.name,
           description: (result.description && (!existingPhoto.description || !existingPhoto.description.trim())) ? result.description : existingPhoto.description,
-          description_translations: result.description_translations || existingPhoto.description_translations,
           model_number: (result.modelNumber && (!existingPhoto.model_number || !existingPhoto.model_number.trim())) ? result.modelNumber : existingPhoto.model_number,
           dimensions: (safeArray(result.dimensions).length > 0) ? result.dimensions : existingPhoto.dimensions,
           updated_at: formatDate(new Date()),

@@ -224,16 +224,35 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
           </div>
         )}
 
-        {(photo.description || (groupData && groupData.description)) && (
+        {(photo.description || (groupData && (groupData.description || groupData.description_translations))) && (
           <div className="space-y-4">
-             {photo.description && (
+             <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+                 {['zh', 'en', 'ms'].map(l => (
+                   <button
+                     key={l}
+                     onClick={() => setActiveLang(l)}
+                     className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${
+                       activeLang === l ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                     }`}
+                   >
+                     {l === 'zh' ? '中文' : l === 'en' ? 'EN' : 'BM'}
+                   </button>
+                 ))}
+             </div>
+
+             {(photo.description_translations?.[activeLang as keyof NonNullable<Photo['description_translations']>] || (activeLang === 'zh' && photo.description)) && (
                <div className="space-y-1.5">
                  <div className="flex items-center gap-1.5">
                    <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.description || 'Description'}</h3>
+                   {photo.description_translations?.[activeLang as keyof NonNullable<Photo['description_translations']>] && (
+                     <div className="flex items-center gap-1 bg-purple-50 text-purple-500 px-1.5 py-0.5 rounded uppercase text-[8px] font-black tracking-wider">
+                       <Sparkles size={8} /> AI
+                     </div>
+                   )}
                  </div>
                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm min-h-[60px]">
                    <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap">
-                     {photo.description}
+                     {photo.description_translations?.[activeLang as keyof NonNullable<Photo['description_translations']>] || (activeLang === 'zh' ? photo.description : '')}
                    </p>
                  </div>
                </div>
@@ -250,10 +269,10 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                      <Skeleton className="h-4 w-full" />
                      <Skeleton className="h-4 w-5/6" />
                    </div>
-                 ) : groupData && groupData.description && (
+                 ) : groupData && (groupData.description_translations?.[activeLang as keyof NonNullable<ProductGroup['description_translations']>] || (activeLang === 'zh' && groupData.description)) && (
                    <div className="bg-white p-4 rounded-xl border-l-[3px] border-blue-500 shadow-md">
                      <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-wrap italic opacity-80">
-                       {groupData.description}
+                       {groupData.description_translations?.[activeLang as keyof NonNullable<ProductGroup['description_translations']>] || (activeLang === 'zh' ? groupData.description : '')}
                      </p>
                    </div>
                  )}

@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useGalleryStore } from '../../store';
 import { Category, Tag, AppSettings } from '../../types';
 import { cn } from '../../lib/utils';
-import { toTitleCase } from '../../lib/ui-helpers';
+import { toTitleCase, getTranslatedCategoryName } from '../../lib/ui-helpers';
 import { useTagsDisplay } from '@/hooks';
 
 import { translations } from '../../lib/translations';
@@ -177,8 +177,8 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
             {categories
               .slice(0, 7) 
               .map(cat => {
-                const rawName = cat.name;
-                const displayName = lang === 'zh' ? rawName : rawName.toUpperCase();
+                const displayName = getTranslatedCategoryName(cat.id, categories, lang, t);
+                console.log('GalleryFilters: cat', cat, 'displayName', displayName);
                 const isActive = String(selectedCatCode) === String(cat.id) || String(selectedCatCode) === String(cat.code);
                 return (
                   <CategoryChip
@@ -238,7 +238,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                 return (
                   <FilterChip
                     key={strTagId}
-                    label={tag.name.toUpperCase()}
+                    label={(tag.name || '').toUpperCase()}
                     selected={isSelected}
                     pinned={isPinned}
                     hot={isHot}

@@ -52,7 +52,7 @@ export function usePhotoFilters(
     
     const cMap = new Map<string, string[]>();
     categories.forEach(c => {
-      const terms = [(c.zh || c.name || '').toLowerCase()];
+      const terms = [(c.name || '').toLowerCase()];
       if (Array.isArray(c.aliases)) {
         c.aliases.forEach(a => terms.push(a.toLowerCase()));
       }

@@ -38,11 +38,11 @@ export const analyzeProductPhoto = async (
 
   const categoriesJson = (categories || []).map(c => ({
     id: c.id, 
-    name: c.zh || c.name || ''
+    name: c.name || ''
   }));
   const tagsJson = JSON.stringify((tags || []).map(t => ({ id: t.id, name: t.name })));
   const categoryContext = targetCategoryId
-    ? `【强制要求】系统已预设分类为: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.zh || (categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})`
+    ? `【强制要求】系统已预设分类为: ${(categories || []).find(c => String(c.id) === String(targetCategoryId))?.name} (id: ${targetCategoryId})`
     : "请从清单选择最合适的分类. 已有分类列表: " + JSON.stringify(categoriesJson);
 
   const promptText = AI_PROMPTS.ANALYZE_PRODUCT(categoryContext, tagsJson);
@@ -166,9 +166,7 @@ export const analyzeProductPhoto = async (
       dataToProcess.model_number = dataToProcess.modelNumber;
     }
     
-    const zh = dataToProcess.description || '';
-    dataToProcess.description_translations = { zh, en: '', ms: '' };
-    dataToProcess.description = zh;
+    dataToProcess.description = dataToProcess.description || '';
     dataToProcess.manual_code = null;
 
     let safeDims: Dimension[] = [];
@@ -187,20 +185,15 @@ export const analyzeProductPhoto = async (
       // 1. Exact or case-insensitive match
       let match = (categories || []).find(c => 
         String(c.id) === catIdToCheck || 
-        String(c.name || '').toLowerCase() === catIdToCheck.toLowerCase() ||
-        String(c.zh || '').toLowerCase() === catIdToCheck.toLowerCase()
+        String(c.name || '').toLowerCase() === catIdToCheck.toLowerCase()
       );
       
       // 2. Fuzzy match: check if the AI output contains the category name or vice versa
       if (!match) {
         match = (categories || []).find(c => {
           const name = String(c.name || '').toLowerCase().trim();
-          const zh = String(c.zh || '').toLowerCase().trim();
           const checkNormalized = catIdToCheck.toLowerCase();
-          return (
-            (name && (checkNormalized.includes(name) || name.includes(checkNormalized))) ||
-            (zh && (checkNormalized.includes(zh) || zh.includes(checkNormalized)))
-          );
+          return (name && (checkNormalized.includes(name) || name.includes(checkNormalized)));
         });
       }
       
@@ -221,7 +214,7 @@ export const analyzeProductPhoto = async (
     const activeCat = (categories || []).find(c => String(c.id) === String(resolvedCategoryId));
     const catWords = new Set<string>();
     if (activeCat) {
-      [activeCat.name, activeCat.zh, activeCat.en, activeCat.ms, activeCat.code]
+      [activeCat.name, activeCat.code]
         .filter(Boolean)
         .forEach(val => {
           catWords.add(String(val).toLowerCase().trim());

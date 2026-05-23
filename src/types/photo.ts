@@ -25,6 +25,11 @@ export interface Photo {
   exif_data?: Record<string, unknown> | null;
   created_at: string;
   updated_at?: string;
+  description_translations?: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  };
   group_id?: string | null;
   is_group_cover?: boolean;
   is_pinned?: boolean; 
@@ -54,6 +59,9 @@ export interface SubCategory {
 export interface Category {
   id: string;
   name: string;
+  zh?: string;
+  en?: string;
+  ms?: string;
   aliases: string[];
   subcategories: SubCategory[];
   user_id?: string;
@@ -80,6 +88,11 @@ export interface ProductGroup {
   id: string;
   name: string;
   description: string | null;
+  description_translations?: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  };
   colors: string[];
   materials: string[];
   dimensions?: Dimension[] | null;
@@ -96,6 +109,11 @@ export interface ProductFormData {
   manufacturer_id: string | null;
   tag_ids: string[];
   description: string;
+  description_translations?: {
+    zh?: string;
+    en?: string;
+    ms?: string;
+  };
   manual_code: string;
   model_number: string;
   dimensions: Dimension[];

@@ -73,11 +73,6 @@ export const PhotoEditDrawer: React.FC = () => {
           model_number: photo.model_number || '',
           manual_code: photo.manual_code || '',
           description: photo.description || '',
-          description_translations: {
-            zh: photo.description_translations?.zh || '',
-            en: photo.description_translations?.en || '',
-            ms: photo.description_translations?.ms || '',
-          },
           dimensions: Array.isArray(photo.dimensions) ? photo.dimensions : [],
           is_hidden: photo.is_hidden || false,
           price: photo.price || '',
