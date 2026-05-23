@@ -54,11 +54,11 @@ export const useAdminActions = (
       message: `选择识别模式 (${photosToProcess.length} 张)：`,
       confirmLabel: '分析全部',
       onConfirm: async () => {
-         await runTask(`批量 AI 识别`, () => ai.analyzeBatch(photosToProcess, true), { showSuccessToast: true });
+         await ai.analyzeBatch(photosToProcess, true);
       },
       secondaryAction: {
          label: '跳过已完善',
-         onClick: () => runTask(`批量 AI 识别`, () => ai.analyzeBatch(photosToProcess, false), { showSuccessToast: true })
+         onClick: () => { ai.analyzeBatch(photosToProcess, false); }
       }
     });
   }, [checkSyncLock, tasks, ai, runTask, photos, setAlertDialog]);

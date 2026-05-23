@@ -55,6 +55,7 @@ async function startServer() {
 
       if (!response.ok) {
         const err = await response.text();
+        console.error(`[AI Proxy HTTP Error] Status ${response.status}:`, err);
         return res.status(response.status).json({ error: err });
       }
 
@@ -89,6 +90,7 @@ async function startServer() {
 
       if (!response.ok) {
         const err = await response.text();
+        console.error(`[AI Translate HTTP Error] Status ${response.status}:`, err);
         return res.status(response.status).json({ error: err });
       }
 

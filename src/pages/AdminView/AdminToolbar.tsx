@@ -11,6 +11,8 @@ interface AdminToolbarProps {
   cloudCount: number;
   lang: string;
   isSyncing: boolean;
+  adminPreviewMode: 'private' | 'public';
+  setAdminPreviewMode: (m: 'private' | 'public') => void;
 }
 
 export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
@@ -26,6 +28,8 @@ export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
       cloudCount={props.cloudCount}
       appLang={props.lang as any}
       isAnalyzing={props.isSyncing}
+      adminPreviewMode={props.adminPreviewMode}
+      setAdminPreviewMode={props.setAdminPreviewMode}
     />
   );
 };

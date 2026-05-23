@@ -10,7 +10,8 @@ import { Photo, AppSettings } from '../../types';
 import { RefreshMenu } from './AdminHeader/RefreshMenu';
 import { ToolsMenu } from './AdminHeader/ToolsMenu';
 
-import { LanguageSwitcher } from '../ui/LanguageSwitcher';
+
+// Removed unused LanguageSwitcher import
 
 interface Props {
   filteredPhotos: Photo[];
@@ -25,6 +26,8 @@ interface Props {
   appLang?: string;
   isAnalyzing: boolean;
   settings?: AppSettings | null;
+  adminPreviewMode?: 'private' | 'public';
+  setAdminPreviewMode?: (m: 'private' | 'public') => void;
 }
 
 export const AdminHeader: React.FC<Props> = ({ 
@@ -32,7 +35,9 @@ export const AdminHeader: React.FC<Props> = ({
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
   appLang = 'en',
-  isAnalyzing, settings: propSettings
+  isAnalyzing, settings: propSettings,
+  adminPreviewMode: propAdminPreviewMode,
+  setAdminPreviewMode: propSetAdminPreviewMode
 }) => {
   const { tasks } = useTasks();
   const { 
@@ -53,7 +58,9 @@ export const AdminHeader: React.FC<Props> = ({
     isStaffMode: s.isStaffMode
   })));
   
-  const [adminPreviewMode, setAdminPreviewMode] = useState<'private' | 'public'>('private');
+  const [localAdminPreviewMode, localSetAdminPreviewMode] = useState<'private' | 'public'>('private');
+  const adminPreviewMode = propAdminPreviewMode !== undefined ? propAdminPreviewMode : localAdminPreviewMode;
+  const setAdminPreviewMode = propSetAdminPreviewMode !== undefined ? propSetAdminPreviewMode : localSetAdminPreviewMode;
   
   const { isMultiSelect, disable, enable } = useMultiSelect();
   const { showError, showSuccess } = useFeedback();
@@ -229,7 +236,8 @@ export const AdminHeader: React.FC<Props> = ({
                   </button>
                 )}
 
-                <LanguageSwitcher variant="admin" />
+
+                {/* Removed duplicate LanguageSwitcher from header */}
 
                 {/* More Menu Dropdown */}
                 <div className="relative" ref={toolsRef}>

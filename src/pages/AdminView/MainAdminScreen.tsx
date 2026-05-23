@@ -48,6 +48,8 @@ export const MainAdminScreen: React.FC = React.memo(() => {
         cloudCount={cloudCount}
         isSyncing={isSyncing}
         lang={lang}
+        adminPreviewMode={logic.adminPreviewMode}
+        setAdminPreviewMode={logic.setAdminPreviewMode}
         handleBatchAiIdentifyTrigger={() => {
             if (onBatchAiAnalyze) onBatchAiAnalyze(photos);
         }}
