@@ -123,38 +123,56 @@ export const analyzeProductPhoto = async (
     if (!parsedData) {
       throw new Error('回传格式错误，找不到有效的 JSON 对象');
     }
+
+    // --- Added compatibility handling for multi-item response ---
+    let finalProcessedData = parsedData;
+    if (parsedData.items && Array.isArray(parsedData.items) && parsedData.items.length > 0) {
+        // Take the first item as the main product
+        finalProcessedData = parsedData.items[0];
+        
+        // If there are other items, append their model number/dimension info into the main product to avoid losing info
+        if (parsedData.items.length > 1) {
+            const extraInfo = parsedData.items.slice(1).map((item: any, index: number) => {
+                return `【其他型号${index + 1}】型号: ${item.modelNumber || item.model || 'N/A'}, 尺寸: ${item.dimensions ? JSON.stringify(item.dimensions) : 'N/A'}`;
+            }).join('\n');
+            
+            finalProcessedData.description = `${finalProcessedData.description || ''}\n\n附加信息:\n${extraInfo}`;
+        }
+    }
+    const dataToProcess = finalProcessedData;
+    // -------------------------------------------------------------
     
     // Normalize camelCase properties from AI to snake_case
-    if (parsedData.categoryId && !parsedData.category_id) {
-      parsedData.category_id = parsedData.categoryId;
+    if (dataToProcess.categoryId && !dataToProcess.category_id) {
+      dataToProcess.category_id = dataToProcess.categoryId;
     }
-    if (parsedData.tagIds && !parsedData.tag_ids) {
-      parsedData.tag_ids = parsedData.tagIds;
+    if (dataToProcess.tagIds && !dataToProcess.tag_ids) {
+      dataToProcess.tag_ids = dataToProcess.tagIds;
     }
-    if (parsedData.newTags && !parsedData.new_tags) {
-      parsedData.new_tags = parsedData.newTags;
+    if (dataToProcess.newTags && !dataToProcess.new_tags) {
+      dataToProcess.new_tags = dataToProcess.newTags;
     }
-    if (parsedData.modelNumber && !parsedData.model_number) {
-      parsedData.model_number = parsedData.modelNumber;
+    if (dataToProcess.modelNumber && !dataToProcess.model_number) {
+      dataToProcess.model_number = dataToProcess.modelNumber;
     }
     
-    const zh = parsedData.description || '';
-    parsedData.description_translations = { zh, en: '', ms: '' };
-    parsedData.description = zh;
-    parsedData.manual_code = null;
+    const zh = dataToProcess.description || '';
+    dataToProcess.description_translations = { zh, en: '', ms: '' };
+    dataToProcess.description = zh;
+    dataToProcess.manual_code = null;
 
     let safeDims: Dimension[] = [];
-    if (Array.isArray(parsedData.dimensions)) {
-      safeDims = parsedData.dimensions as Dimension[];
-    } else if (parsedData.dimensions && typeof parsedData.dimensions === 'object') {
-      safeDims = [parsedData.dimensions] as unknown as Dimension[];
+    if (Array.isArray(dataToProcess.dimensions)) {
+      safeDims = dataToProcess.dimensions as Dimension[];
+    } else if (dataToProcess.dimensions && typeof dataToProcess.dimensions === 'object') {
+      safeDims = [dataToProcess.dimensions] as unknown as Dimension[];
     }
     
-    parsedData.dimensions = normalizeDimensions(safeDims);
-    parsedData.tag_ids = normalizeTagIds(parsedData.tag_ids || parsedData.tagIds, tags || []);
+    dataToProcess.dimensions = normalizeDimensions(safeDims);
+    dataToProcess.tag_ids = normalizeTagIds(dataToProcess.tag_ids || dataToProcess.tagIds, tags || []);
 
     let resolvedCategoryId: string | null = null;
-    const catIdToCheck = String(parsedData.category_id || '').trim();
+    const catIdToCheck = String(dataToProcess.category_id || '').trim();
     if (catIdToCheck) {
       // 1. Exact or case-insensitive match
       let match = (categories || []).find(c => 
@@ -187,7 +205,7 @@ export const analyzeProductPhoto = async (
         resolvedCategoryId = match.id;
       }
     }
-    parsedData.category_id = resolvedCategoryId;
+    dataToProcess.category_id = resolvedCategoryId;
 
     // Get active category for checking redundancies
     const activeCat = (categories || []).find(c => String(c.id) === String(resolvedCategoryId));
@@ -224,21 +242,17 @@ export const analyzeProductPhoto = async (
     };
 
     let newTagList: string[] = [];
-    if (Array.isArray(parsedData.new_tags)) {
-      newTagList = parsedData.new_tags
+    if (Array.isArray(dataToProcess.new_tags)) {
+      newTagList = dataToProcess.new_tags
         .map(s => String(s).trim())
         .filter(s => s && !containsChinese(s));
     }
 
     // Filter redundant tagIds (existing tags) and new tags
-    let currentTagIds = (parsedData.tagIds || []).filter((tid: string) => {
+    let currentTagIds = (dataToProcess.tagIds || []).filter((tid: string) => {
       const tObj = (tags || []).find(t => String(t.id) === String(tid));
       if (!tObj) return true;
       if (isRedundantTag(tObj.name)) return false;
-      if (tObj.zh && containsChinese(tObj.zh)) {
-        // Since tags are English or Malay only, if the tag's localized name is Chinese, let's skip or filter it out.
-        // Actually, checking tObj.name for general correctness is safer.
-      }
       if (Array.isArray(tObj.aliases)) {
         if (tObj.aliases.some(alias => isRedundantTag(alias))) {
           return false;
@@ -261,10 +275,11 @@ export const analyzeProductPhoto = async (
       }
     }
     
-    parsedData.tag_ids = currentTagIds;
-    parsedData.new_tags = Array.from(new Set(newTagList));
-    parsedData._aiModelUsed = modelName;
-    return parsedData;
+    dataToProcess.tag_ids = currentTagIds;
+    dataToProcess.new_tags = Array.from(new Set(newTagList));
+    dataToProcess._aiModelUsed = modelName;
+    return dataToProcess;
+
   } catch (error: unknown) {
     if ((error as Error).name === 'AbortError') throw error;
     console.error("GeminiService API Error:", error);
