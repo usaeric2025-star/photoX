@@ -69,6 +69,25 @@ export const useAdminDataPrep = () => {
   const { data: cloudCountData } = usePhotoCountQuery({}, true);
   const photos = useMemo(() => cleanPhotos(infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || []), [infinitePhotosQuery.data]);
 
+  // Group Photos: Fetch independently so they aren't affected by filters (Category/Search)
+  const groupPhotosQuery = useGroupPhotosQuery(store.activeGroupId || '', true);
+  const groupPhotos = useMemo(() => cleanPhotos(groupPhotosQuery.data || []), [groupPhotosQuery.data]);
+
+  // Auto-disband single-photo groups
+  useEffect(() => {
+    if (store.activeGroupId && groupPhotosQuery.isSuccess && groupPhotos.length === 1) {
+      console.log(`[Maintenance] Auto-disbanding group because it only has one photo:`, store.activeGroupId);
+      const gid = store.activeGroupId;
+      // We don't use 'edit.handleUngroup' directly here to avoid potential dependency loops 
+      // instead we use a simple async call or wait one tick
+      setTimeout(() => {
+        if (store.activeGroupId === gid) {
+           edit.handleUngroup(gid).then(() => store.setActiveGroupId(null));
+        }
+      }, 500);
+    }
+  }, [store.activeGroupId, groupPhotos, groupPhotosQuery.isSuccess, edit.handleUngroup, store.setActiveGroupId]);
+
   const { settings, setSettings, refreshCloudData } = useSyncEngine();
   const { settings: fetchedSettings } = useSettings();
   const { mutateAsync: saveSettingsMut } = useSettingsMutation();
@@ -172,7 +191,7 @@ export const useAdminDataPrep = () => {
     user, authChecked: true, logout, navigate, infinitePhotosQuery, t: translations[store.appLang as LanguageCode] || translations.en, lang: store.appLang, onRefresh: () => refreshCloudData(user, () => {}),
     ...store, ...filters, ...importer, ...sync, ...ai, ...edit, ...categoryOps, ...actions,
     photos, categories, tags, manufacturers, tagIdToNameMap: tags.reduce((acc, tag) => ({ ...acc, [tag.id]: tag.name }), {}),
-    groupPhotos: store.activeGroupId ? photos.filter(p => p.group_id === store.activeGroupId) : [],
+    groupPhotos,
     initialPhotoId, setInitialPhotoId, checkSyncLock, loginWithGoogle, showError, onEditPhotoById, handleLogoUpload,
     isMaintenanceRunning, onRunMaintenance: handleRunMaintenance,
     handleManageClick: () => store.setActiveScreen('manage'),
@@ -214,5 +233,5 @@ export const useAdminDataPrep = () => {
     updateTag: (id: string, name: string) => categoryOps.updateTag(id, { name }),
     updateCategory: (id: string, name: string) => categoryOps.updateCategory(id, { name }),
     updateManufacturer: (id: string, name: string) => categoryOps.updateManufacturer(id, { name }),
-  }), [user, logout, navigate, infinitePhotosQuery, store, filters, importer, sync, ai, edit, categoryOps, actions, photos, categories, tags, manufacturers, initialPhotoId, checkSyncLock, showError, onEditPhotoById, handleLogoUpload, showSuccess, disable, batchIsHiddenApplied, saveSettingsMut]);
+  }), [user, logout, navigate, infinitePhotosQuery, store, filters, importer, sync, ai, edit, categoryOps, actions, photos, groupPhotos, categories, tags, manufacturers, initialPhotoId, checkSyncLock, showError, onEditPhotoById, handleLogoUpload, showSuccess, disable, batchIsHiddenApplied, saveSettingsMut]);
 };

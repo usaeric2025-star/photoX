@@ -103,7 +103,7 @@ export const ManufacturerList: React.FC<ManufacturerSelectorProps> = ({ manufact
                 onClick={() => onSelect(isSelected ? null : String(mfr.id))}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? 'bg-slate-800 text-white border-slate-800 shadow-lg' : 'bg-white border-slate-200 text-slate-600 active:bg-slate-50'}`}
                 >
-                {mfr.name}
+                {(mfr.name || '').toUpperCase()}
                 </button>
             );
             })}
