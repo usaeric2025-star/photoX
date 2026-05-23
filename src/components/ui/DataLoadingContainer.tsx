@@ -52,19 +52,18 @@ export const DataLoadingContainer: React.FC<DataLoadingContainerProps> = ({
         )}
       </AnimatePresence>
 
-      <AnimatePresence mode="wait">
-        {showLoader ? (
+      <AnimatePresence>
+        {showLoader && (
           <FullPageLoading key="global-loader" />
-        ) : (
-          <motion.div
+        )}
+        <motion.div
             key="content-frame"
-            initial={{ opacity: 0.98 }}
+            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="w-full h-full"
           >
             {children}
           </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );

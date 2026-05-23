@@ -43,10 +43,10 @@ ErrorMonitor.init({
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 30, // 30 minutes
+      staleTime: 5 * 60 * 1000,   // 5 分钟内不重新请求
+      refetchOnMount: false,       // 组件挂载时不自动刷新
+      refetchOnWindowFocus: false, // 切换 tab 不刷新
       retry: 1,
-      refetchOnWindowFocus: false,
     },
   },
 });

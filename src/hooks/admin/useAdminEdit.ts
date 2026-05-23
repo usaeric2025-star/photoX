@@ -95,12 +95,19 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
   const setGroupCover = useCallback(async (id: string, groupId: string) => {
     const isStaff = isStaffMode || !!user;
     if (!isStaff) return;
-    const groupPhotosList = photos.filter(p => p.group_id === groupId);
-    await Promise.all(
-       groupPhotosList.map(p => updatePhotosBulk([p.id], { is_group_cover: p.id === id }, { skipToast: true }))
-    );
-    showSuccess('设置封面成功');
-  }, [user, isStaffMode, photos, updatePhotosBulk, showSuccess]);
+
+    await runTask('设置封面', async () => {
+        const oldCover = photos.find(p => p.group_id === groupId && p.is_group_cover);
+        
+        const updates = [];
+        if (oldCover && oldCover.id !== id) {
+            updates.push(updatePhotosBulk([oldCover.id], { is_group_cover: false }, { skipToast: true }));
+        }
+        updates.push(updatePhotosBulk([id], { is_group_cover: true }, { skipToast: true }));
+        
+        await Promise.all(updates);
+    }, { showSuccessToast: true });
+  }, [user, isStaffMode, photos, updatePhotosBulk, runTask]);
 
   const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
     await runTask('分组照片', async () => {

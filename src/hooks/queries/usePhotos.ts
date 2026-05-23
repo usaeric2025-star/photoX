@@ -11,7 +11,14 @@ export const useInfinitePhotos = (filters: {
   isAdminMode?: boolean 
 }, limit: number = PAGINATION.DEFAULT_PAGE_SIZE) => {
   return useInfiniteQuery({
-    queryKey: QUERY_KEYS.infinitePhotos({ ...filters, limit }),
+    queryKey: QUERY_KEYS.infinitePhotos({ 
+      category_id: filters.category_id ?? null,
+      tag_id: filters.tag_id ?? null,
+      searchQuery: filters.searchQuery ?? null,
+      sortOrder: filters.sortOrder ?? null,
+      isAdminMode: filters.isAdminMode ?? false,
+      limit 
+    }),
     queryFn: async ({ pageParam = 1, signal }) => {
       const pageSize = limit;
 
@@ -49,7 +56,12 @@ export const useInfinitePhotos = (filters: {
 
 export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_id?: string | null; searchQuery?: string | null }, isAdminMode: boolean = false) => {
   return useQuery({
-    queryKey: QUERY_KEYS.photoCount({ ...filters, isAdminMode }),
+    queryKey: QUERY_KEYS.photoCount({ 
+      category_id: filters.category_id ?? null,
+      tag_id: filters.tag_id ?? null,
+      searchQuery: filters.searchQuery ?? null,
+      isAdminMode 
+    }),
     queryFn: () => getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode),
     refetchOnWindowFocus: false,
     placeholderData: keepPreviousData,
