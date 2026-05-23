@@ -74,7 +74,12 @@ export const MainAdminScreen: React.FC = React.memo(() => {
           onAdd={onImport}
           onClearSelection={clear}
           onBatchAiIdentify={() => {
-              if (onBatchAiAnalyze) onBatchAiAnalyze(photos.filter(p => selectedIds.includes(p.id)));
+              if (onBatchAiAnalyze) {
+                  const selectedPhotos = photos.filter(p => 
+                    selectedIds.includes(p.id) || (p.group_id && selectedIds.includes(p.group_id))
+                  );
+                  onBatchAiAnalyze(selectedPhotos);
+              }
           }}
           onBatchEdit={() => {
               if (onBatchEdit) onBatchEdit(selectedIds);

@@ -28,6 +28,8 @@ import { GroupHeader } from './GroupHeader';
 import { GroupMultiSelectBar } from './GroupMultiSelectBar';
 import { useGroupAdminLogic } from './useGroupAdminLogic';
 import { GroupGridView } from './GroupGridView';
+import { PhotoImageContainer } from '../photo/PhotoImageContainer';
+import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 
 import { useAdminMode } from '@/hooks';
 
@@ -384,10 +386,12 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
                                 : 'border-slate-100 hover:border-slate-200'
                             }`}
                           >
-                            <img 
-                              src={photo.thumb_url || photo.uri || photo.image_url} 
-                              alt="Item" 
-                              className="w-full h-full object-cover"
+                            <PhotoImageContainer 
+                              src={getCacheBustedImageUrl(photo, 'thumb')}
+                              thumbHash={photo.thumb_hash}
+                              alt="Item"
+                              className="w-full h-full"
+                              imgClassName="w-full h-full object-cover"
                               loading="lazy"
                             />
                             {photo.item_code && (
