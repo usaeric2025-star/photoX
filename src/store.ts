@@ -103,6 +103,7 @@ interface StoreState {
   setNewPhotoData: (data: string | null) => void;
   showOtherFields: boolean;
   setShowOtherFields: (show: boolean) => void;
+  resetForm: () => void;
 }
 
 const defaultForm: ProductFormData = {
@@ -304,6 +305,10 @@ export const useGalleryStore = create<StoreState>()((set) => ({
     sessionStorage.setItem('photo_edit_form_draft', JSON.stringify(nextFormState));
     return { formState: nextFormState };
   }),
+  resetForm: () => {
+    sessionStorage.removeItem('photo_edit_form_draft');
+    set({ formState: defaultForm });
+  },
   newPhotoData: null,
   setNewPhotoData: (newPhotoData) => set({ newPhotoData }),
   showOtherFields: false,

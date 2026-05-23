@@ -15,7 +15,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
 
   const { 
     formState, updateForm, newPhotoData, setNewPhotoData, 
-    showOtherFields, setShowOtherFields, isStaffMode 
+    showOtherFields, setShowOtherFields, resetForm, isStaffMode 
   } = useGalleryStore(useShallow(s => ({
     formState: s.formState,
     updateForm: s.updateForm,
@@ -23,6 +23,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
     setNewPhotoData: s.setNewPhotoData,
     showOtherFields: s.showOtherFields,
     setShowOtherFields: s.setShowOtherFields,
+    resetForm: s.resetForm,
     isStaffMode: s.isStaffMode
   })));
 
@@ -124,7 +125,8 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
   const resetAddState = useCallback(() => {
     setNewPhotoData(null);
     setShowOtherFields(false);
-  }, [setNewPhotoData, setShowOtherFields]);
+    resetForm();
+  }, [setNewPhotoData, setShowOtherFields, resetForm]);
 
   return { 
     deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos, handleUngroup,
