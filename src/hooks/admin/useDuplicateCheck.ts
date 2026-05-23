@@ -15,7 +15,8 @@ export const useDuplicateCheck = (
     if (sessionHashes.has(hash)) return true;
 
     // Check in cloud database
-    if (user) {
+    const isStaff = !!user || (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('isStaffMode') === 'true');
+    if (isStaff) {
       const existsInCloud = await checkImageHashExists(hash);
       if (existsInCloud) return true;
     }

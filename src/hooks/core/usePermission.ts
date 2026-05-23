@@ -16,16 +16,13 @@ export function usePermission() {
     // Staff mode unlocked or logged in admin is staff
     const isStaff = isStaffMode || isAdmin;
 
-    // Staff mode with no logged in user is read-only staff
-    const isReadOnlyStaff = isStaffMode && !user;
-
     return {
       isAdmin,
       isStaff,
-      canEdit: isAdmin && !isReadOnlyStaff,
-      canDelete: isAdmin && !isReadOnlyStaff,
-      canBatchEdit: isAdmin && !isReadOnlyStaff,
-      canManageSystem: isAdmin && !isReadOnlyStaff,
+      canEdit: isStaff,
+      canDelete: isStaff,
+      canBatchEdit: isStaff,
+      canManageSystem: isStaff,
       userId: user?.id
     };
   }, [user, isStaffMode]);

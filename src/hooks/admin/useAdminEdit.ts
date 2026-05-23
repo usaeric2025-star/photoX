@@ -15,30 +15,36 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
 
   const { 
     formState, updateForm, newPhotoData, setNewPhotoData, 
-    showOtherFields, setShowOtherFields 
+    showOtherFields, setShowOtherFields, isStaffMode 
   } = useGalleryStore(useShallow(s => ({
     formState: s.formState,
     updateForm: s.updateForm,
     newPhotoData: s.newPhotoData,
     setNewPhotoData: s.setNewPhotoData,
     showOtherFields: s.showOtherFields,
-    setShowOtherFields: s.setShowOtherFields
+    setShowOtherFields: s.setShowOtherFields,
+    isStaffMode: s.isStaffMode
   })));
 
   // ... (Consolidate PhotoManagement logic here...)
   
   const deletePhoto = useCallback(async (idOrIds: string | string[]) => {
-    if (!user) return;
+    const isStaff = isStaffMode || !!user;
+    if (!isStaff) return;
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
     const targetPhotos = photos.filter(p => ids.includes(p.id));
+    if (targetPhotos.length === 0) return;
+    
+    const opUserId = user?.id || targetPhotos[0]?.user_id || 'default';
     
     await runTask(ids.length > 1 ? `删除 ${ids.length} 张照片` : '删除照片', async () => {
-        await deletePhotoMut({ userId: user.id, photos: targetPhotos });
+        await deletePhotoMut({ userId: opUserId, photos: targetPhotos });
     }, { showSuccessToast: true });
-  }, [user, deletePhotoMut, photos, runTask]);
+  }, [user, isStaffMode, deletePhotoMut, photos, runTask]);
 
   const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, taskName?: string) => {
-    if (ids.length === 0 || !user) return;
+    const isStaff = isStaffMode || !!user;
+    if (ids.length === 0 || !isStaff) return;
     
     // For single photo updates (saves, rotations, edits), apply directly and optimistically
     // to bypass the heavy background task queue UI for a frictionless, ultra-responsive feel
@@ -56,14 +62,15 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
         updateProgress(50, '正在应用批量更新...');
         await batchUpdateMut({ ids, updates });
     }, { showSuccessToast: true });
-  }, [user, batchUpdateMut, updatePhotoMut, runTask, showSuccess, showError]);
+  }, [user, isStaffMode, batchUpdateMut, updatePhotoMut, runTask, showSuccess, showError]);
 
   const updatePhoto = useCallback((id: string, updates: Partial<Photo>) => {
     return updatePhotosBulk([id], updates);
   }, [updatePhotosBulk]);
 
   const togglePinned = useCallback(async (photo: Photo) => {
-    if (!user) return;
+    const isStaff = isStaffMode || !!user;
+    if (!isStaff) return;
     const newStatus = !photo.is_pinned;
     let affectedIds = [photo.id];
     if (photo.group_id) {
@@ -77,15 +84,16 @@ export const useAdminEdit = (user: User | null, photos: Photo[]) => {
       }
     }
     await updatePhotosBulk(affectedIds, { is_pinned: newStatus });
-  }, [user, photos, updatePhotosBulk]);
+  }, [user, isStaffMode, photos, updatePhotosBulk]);
 
   const setGroupCover = useCallback(async (id: string, groupId: string) => {
-    if (!user) return;
+    const isStaff = isStaffMode || !!user;
+    if (!isStaff) return;
     const groupPhotosList = photos.filter(p => p.group_id === groupId);
     await Promise.all(
        groupPhotosList.map(p => updatePhoto(p.id, { is_group_cover: p.id === id }))
     );
-  }, [user, photos, updatePhoto]);
+  }, [user, isStaffMode, photos, updatePhoto]);
 
   const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
     await runTask('分组照片', async () => {
