@@ -4,13 +4,8 @@ import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoService';
-import { useGroupCoverMutation } from '../../hooks/mutations/useGroupCoverMutation';
-import { useRemoveFromGroupMutation } from '../../hooks/mutations/useGroupOperations';
-import { useGalleryStore, useShallow } from '../../store';
-import { useAdminMode } from '../../hooks/useAdminMode';
-import { useFeedback } from '../../hooks/uiFeedback';
-import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
-import { useGroupDetailQuery } from '../../hooks';
+import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupPhotosQuery, useGroupDetailQuery } from '@/hooks';
+import { useGalleryStore, useShallow } from '@/store';
 
 
 export const useGroupAdminLogic = ({

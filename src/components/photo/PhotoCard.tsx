@@ -235,7 +235,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       handleLongPress();
     } else {
       // share logic moved inside or use feedback hook
-      console.log('Context menu on photo', photo.id);
     }
     if ('vibrate' in navigator) navigator.vibrate(50);
   }, [variant, handleLongPress, photo.id]);

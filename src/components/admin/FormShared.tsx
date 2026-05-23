@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Category, Manufacturer } from '../../types';
-import { useLongPress } from '../../hooks/useLongPress';
+import { useLongPress } from '@/hooks';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useGalleryStore } from '../../store';
 

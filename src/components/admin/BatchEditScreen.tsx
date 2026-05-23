@@ -9,39 +9,18 @@ import { useGalleryStore, useShallow } from '../../store';
 import { safeArray } from '../../lib/utils';
 import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '../../hooks';
 
-export const BatchEditScreen = ({
-  resetAddState,
-  saveBatchEdit,
-  batchEditIds,
-  formState,
-  updateForm,
-  batchIsHiddenApplied,
-  setBatchIsHiddenApplied,
-  showOtherFields,
-  setShowOtherFields,
-  onDelete,
-  quickAddManufacturer: quickAddMfr,
-  quickAddTag: quickAddT,
-  addTag,
-  updateTag,
-  deleteTag
-}: {
-  resetAddState: () => void;
-  saveBatchEdit: (batchIsHiddenApplied: boolean) => Promise<void>;
-  batchEditIds: string[] | null;
-  formState: ProductFormData;
-  updateForm: (updates: Partial<ProductFormData>) => void;
-  batchIsHiddenApplied: boolean;
-  setBatchIsHiddenApplied: (a: boolean) => void;
-  showOtherFields: boolean;
-  setShowOtherFields: (s: boolean) => void;
-  onDelete?: (ids: string[]) => void;
-  quickAddManufacturer: () => void;
-  quickAddTag: () => void;
-  addTag: (name: string) => Promise<any>;
-  updateTag: (id: string, name: string) => Promise<any>;
-  deleteTag: (id: string) => Promise<any>;
-}) => {
+import { useAdmin } from '../../contexts/AdminContext';
+
+export const BatchEditScreen = () => {
+  const logic = useAdmin();
+  const {
+    resetAddState, saveBatchEditWithSuccess: saveBatchEdit, batchEditIds,
+    formState, updateForm, batchIsHiddenApplied, setBatchIsHiddenApplied,
+    showOtherFields, setShowOtherFields, handleDeletePhoto: onDelete,
+    quickAddManufacturer: quickAddMfr, quickAddTag: quickAddT,
+    addTag, updateTag, deleteTag
+  } = logic;
+  
   const [isLocalSaving, setIsLocalSaving] = useState(false);
   const { 
     setPromptDialog, 
@@ -58,7 +37,7 @@ export const BatchEditScreen = ({
   const handleSave = async () => {
     setIsLocalSaving(true);
     try {
-      await saveBatchEdit(batchIsHiddenApplied);
+      await saveBatchEdit();
     } finally {
       setIsLocalSaving(false);
     }

@@ -55,10 +55,6 @@ interface StoreState {
   setHasNextPage: (has: boolean) => void;
   loadMorePhotos: () => void;
   setLoadMorePhotos: (fn: () => void) => void;
-  hasLoadedOnce: boolean;
-  setHasLoadedOnce: (hasLoaded: boolean) => void;
-  hasInitialLoaded: boolean;
-  setHasInitialLoaded: (value: boolean) => void;
   alertDialog: DialogData | null;
   setAlertDialog: (dialog: DialogData | null) => void;
   promptDialog: DialogData | null;
@@ -70,8 +66,7 @@ interface StoreState {
   setDraggedPhotoId: (id: string | null) => void;
   focusedGroupPhotoId: string | null;
   setFocusedGroupPhotoId: (id: string | null) => void;
-
-  // Missing properties from lint errors
+  // Metadata and Settings
   settings: any;
   setSettings: (s: any) => void;
   geminiApiKey: string | null;
@@ -80,8 +75,6 @@ interface StoreState {
   setCustomModel: (model: string | null) => void;
   accessPasscode: string | null;
   setAccessPasscode: (code: string | null) => void;
-  loadingType: string | null;
-  setLoadingType: (type: string | null) => void;
   user: User | null;
   setUser: (user: User | null) => void;
   viewMode: 'admin' | 'public';
@@ -92,19 +85,13 @@ interface StoreState {
   setActiveScreen: (screen: string) => void;
   isInfiniteMode: boolean;
   setIsInfiniteMode: (mode: boolean) => void;
-  adminPreviewMode: 'private' | 'public';
-  setAdminPreviewMode: (mode: 'private' | 'public') => void;
   setLanguage: (lang: 'zh' | 'en' | 'ms') => void;
-  errors: any[];
-  clearErrors: () => void;
   setDebouncedSearchQuery: (q: string) => void;
   debouncedSearchQuery: string;
   isAnalyzing: boolean;
   aiDebugInfo: any;
-  withLoading: <T>(fn: () => Promise<T>) => Promise<T>;
   resetUI: () => void;
   resetFilters: () => void;
-  resetFiltersAndRefresh: () => void;
   showWhatsAppChoice: boolean;
   setShowWhatsAppChoice: (show: boolean) => void;
   tagIdToNameMap: Record<string, string>;
@@ -174,10 +161,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setHasNextPage: (hasNextPage) => set({ hasNextPage }),
   loadMorePhotos: () => {},
   setLoadMorePhotos: (loadMorePhotos) => set({ loadMorePhotos }),
-  hasLoadedOnce: false,
-  setHasLoadedOnce: (hasLoadedOnce) => set({ hasLoadedOnce }),
-  hasInitialLoaded: false,
-  setHasInitialLoaded: (hasInitialLoaded) => set({ hasInitialLoaded }),
   alertDialog: null,
   setAlertDialog: (alertDialog) => set({ alertDialog }),
   promptDialog: null,
@@ -189,7 +172,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setDraggedPhotoId: (draggedPhotoId) => set({ draggedPhotoId }),
   focusedGroupPhotoId: null,
   setFocusedGroupPhotoId: (focusedGroupPhotoId) => set({ focusedGroupPhotoId }),
-  // Implement missing fields
+  // Metadata and Settings
   settings: {},
   setSettings: (settings) => set({ settings }),
   geminiApiKey: null,
@@ -198,8 +181,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setCustomModel: (customModel) => set({ customModel }),
   accessPasscode: null,
   setAccessPasscode: (accessPasscode) => set({ accessPasscode }),
-  loadingType: null,
-  setLoadingType: (loadingType) => set({ loadingType }),
   user: null,
   setUser: (user) => set({ user }),
   viewMode: 'public',
@@ -210,19 +191,27 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setActiveScreen: (activeScreen) => set({ activeScreen }),
   isInfiniteMode: false,
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
-  adminPreviewMode: 'private',
-  setAdminPreviewMode: (adminPreviewMode) => set({ adminPreviewMode }),
   setLanguage: (appLang: 'zh' | 'en' | 'ms') => set({ appLang }),
-  errors: [],
-  clearErrors: () => set({ errors: [] }),
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
   debouncedSearchQuery: '',
   isAnalyzing: false,
   aiDebugInfo: null,
-  withLoading: async (fn) => await fn(),
-  resetUI: () => set({}),
-  resetFilters: () => set({}),
-  resetFiltersAndRefresh: () => set({}),
+  resetUI: () => set({
+    filterCatId: null,
+    filterTagIds: [],
+    searchQuery: '',
+    selectedIds: [],
+    isMultiSelect: false,
+    editPhotoId: null,
+    activeGroupId: null,
+    batchEditingIds: null
+  }),
+  resetFilters: () => set({
+    filterCatId: null,
+    filterTagIds: [],
+    searchQuery: '',
+    debouncedSearchQuery: ''
+  }),
   showWhatsAppChoice: false,
   setShowWhatsAppChoice: (showWhatsAppChoice) => set({ showWhatsAppChoice }),
   tagIdToNameMap: {},
@@ -249,5 +238,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   showOtherFields: false,
   setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
 }));
+
 
 export const useStore = useGalleryStore;

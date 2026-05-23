@@ -12,10 +12,9 @@ import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell'
 import { mapSupabasePhoto } from '../services/photoService';
 import { DB_CONFIG } from '../constants/config';
 
-import { useAdminMode } from '../hooks/useAdminMode';
-import { useFeedback, useGroupDetailQuery } from '../hooks';
+import { useAdminMode, useFeedback, useGroupDetailQuery } from '@/hooks';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
-import { useInfiniteGroupPhotosQuery } from '../hooks/queries/usePhotos';
+import { useInfiniteGroupPhotosQuery } from '@/hooks';
 import { useGalleryStore, useShallow } from '../store';
 import { translations } from '../lib/translations';
 

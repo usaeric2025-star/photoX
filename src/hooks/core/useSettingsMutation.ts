@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useFeedback } from '../uiFeedback';
-import { saveSettings } from '../../services/settingService';
-import { QUERY_KEYS } from '../queries/keys';
+import { useFeedback } from '@/hooks';
+import { saveSettings } from '@/services/settingService';
+import { QUERY_KEYS } from '@/hooks/queries/keys';
 
 export const useSettingsMutation = () => {
   const queryClient = useQueryClient();

@@ -1,4 +1,4 @@
-import { useGalleryStore } from '../store';
+import { useGalleryStore } from '@/store';
 import { useCallback } from 'react';
 
 export const useMultiSelect = () => {

@@ -1,0 +1,106 @@
+import { useCallback, useEffect, useRef } from 'react';
+import { User, Photo, ProductFormData } from '@/types';
+import { useGalleryStore, useShallow } from '@/store';
+import { useTaskExecutor, useDeletePhotoMutation, useUpdatePhotoMutation, useBatchEditMutation, useGroupPhotosMutation, useUngroupMutation } from '@/hooks';
+import { loadPhotosByGroupId } from '@/services/photoService';
+
+export const useAdminEdit = (user: User | null, photos: Photo[]) => {
+  const { runTask } = useTaskExecutor();
+  const { mutateAsync: deletePhotoMut } = useDeletePhotoMutation();
+  const { mutateAsync: updatePhotoMut } = useUpdatePhotoMutation();
+  const { mutateAsync: batchUpdateMut } = useBatchEditMutation(user?.id || '');
+  const { mutateAsync: groupPhotosMut } = useGroupPhotosMutation();
+  const { mutateAsync: ungroupMut } = useUngroupMutation();
+
+  const { 
+    formState, updateForm, newPhotoData, setNewPhotoData, 
+    showOtherFields, setShowOtherFields 
+  } = useGalleryStore(useShallow(s => ({
+    formState: s.formState,
+    updateForm: s.updateForm,
+    newPhotoData: s.newPhotoData,
+    setNewPhotoData: s.setNewPhotoData,
+    showOtherFields: s.showOtherFields,
+    setShowOtherFields: s.setShowOtherFields
+  })));
+
+  // ... (Consolidate PhotoManagement logic here...)
+  
+  const deletePhoto = useCallback(async (idOrIds: string | string[]) => {
+    if (!user) return;
+    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+    const targetPhotos = photos.filter(p => ids.includes(p.id));
+    
+    await runTask(ids.length > 1 ? `删除 ${ids.length} 张照片` : '删除照片', async () => {
+        await deletePhotoMut({ userId: user.id, photos: targetPhotos });
+    }, { showSuccessToast: true });
+  }, [user, deletePhotoMut, photos, runTask]);
+
+  const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, taskName?: string) => {
+    if (ids.length === 0 || !user) return;
+    
+    await runTask(taskName || `更新 ${ids.length} 张照片`, async ({ updateProgress }) => {
+        if (ids.length > 1) {
+            updateProgress(50, '正在应用批量更新...');
+            await batchUpdateMut({ ids, updates });
+        } else {
+            for (const id of ids) {
+                await updatePhotoMut({ id, updates });
+            }
+        }
+    }, { showSuccessToast: true });
+  }, [user, batchUpdateMut, updatePhotoMut, runTask]);
+
+  const updatePhoto = useCallback((id: string, updates: Partial<Photo>) => {
+    return updatePhotosBulk([id], updates);
+  }, [updatePhotosBulk]);
+
+  const togglePinned = useCallback(async (photo: Photo) => {
+    if (!user) return;
+    const newStatus = !photo.is_pinned;
+    let affectedIds = [photo.id];
+    if (photo.group_id) {
+      try {
+        const dbGroupPhotos = await loadPhotosByGroupId(photo.group_id, true);
+        affectedIds = dbGroupPhotos.length > 0
+          ? dbGroupPhotos.map((p: Photo) => p.id)
+          : photos.filter(p => p.group_id === photo.group_id).map(p => p.id);
+      } catch (e) {
+        affectedIds = photos.filter(p => p.group_id === photo.group_id).map(p => p.id);
+      }
+    }
+    await updatePhotosBulk(affectedIds, { is_pinned: newStatus });
+  }, [user, photos, updatePhotosBulk]);
+
+  const setGroupCover = useCallback(async (id: string, groupId: string) => {
+    if (!user) return;
+    const groupPhotosList = photos.filter(p => p.group_id === groupId);
+    await Promise.all(
+       groupPhotosList.map(p => updatePhoto(p.id, { is_group_cover: p.id === id }))
+    );
+  }, [user, photos, updatePhoto]);
+
+  const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
+    await runTask('分组照片', async () => {
+      await groupPhotosMut(photoIds);
+    }, { showSuccessToast: true });
+  }, [groupPhotosMut, runTask]);
+
+  const handleUngroup = useCallback(async (groupId: string) => {
+    await runTask('拆分群组', async () => {
+      await ungroupMut(groupId);
+    }, { showSuccessToast: true });
+  }, [ungroupMut, runTask]);
+
+  const resetAddState = useCallback(() => {
+    setNewPhotoData(null);
+    setShowOtherFields(false);
+  }, [setNewPhotoData, setShowOtherFields]);
+
+  return { 
+    deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos, handleUngroup,
+    togglePinned, setGroupCover,
+    formState, updateForm, newPhotoData, setNewPhotoData, 
+    showOtherFields, setShowOtherFields, resetAddState 
+  };
+};

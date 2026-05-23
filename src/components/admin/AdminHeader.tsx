@@ -39,22 +39,21 @@ export const AdminHeader: React.FC<Props> = ({
     settings: storeSettings, user, viewMode, setViewMode, isSyncing, 
     activeScreen, setActiveScreen,
     isInfiniteMode, setIsInfiniteMode,
-    adminPreviewMode, setAdminPreviewMode,
     isStaffMode
   } = useGalleryStore(useShallow(s => ({
     settings: s.settings,
     user: s.user,
     viewMode: s.viewMode,
     setViewMode: s.setViewMode,
-    isSyncing: (s.loadingType as string) === 'sync-pull' || (s.loadingType as string) === 'sync-push',
+    isSyncing: s.isSyncing,
     activeScreen: s.activeScreen,
     setActiveScreen: s.setActiveScreen,
     isInfiniteMode: s.isInfiniteMode,
     setIsInfiniteMode: s.setIsInfiniteMode,
-    adminPreviewMode: s.adminPreviewMode,
-    setAdminPreviewMode: s.setAdminPreviewMode,
     isStaffMode: s.isStaffMode
   })));
+  
+  const [adminPreviewMode, setAdminPreviewMode] = useState<'private' | 'public'>('private');
   
   const { isMultiSelect, disable, enable } = useMultiSelect();
   const { showError, showSuccess } = useFeedback();

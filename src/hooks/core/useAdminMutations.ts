@@ -4,7 +4,7 @@ import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tagServic
 import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/categoryService';
 import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturerService';
 import { QUERY_KEYS } from '@/hooks/queries/keys';
-import { useFeedback } from '@/hooks/uiFeedback';
+import { useFeedback } from '@/hooks';
 
 export const useAddTagMutation = () => {
   const queryClient = useQueryClient();

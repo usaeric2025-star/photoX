@@ -14,7 +14,6 @@ interface SyncSectionProps {
   performPullSync: () => Promise<ApiResponse>;
   refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
   cloudCount: number | null;
-  lastSyncTime: number | null;
   isSyncing: boolean;
   setAlertDialog: (d: DialogData | null) => void;
 }
@@ -27,7 +26,6 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
   performPullSync,
   refreshCloudData,
   cloudCount,
-  lastSyncTime,
   isSyncing,
   setAlertDialog
 }) => {
@@ -100,8 +98,7 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
 
           <div className="text-center p-2 bg-black/20 rounded-xl border border-white/5">
             <p className="text-[10px] text-white/40 uppercase tracking-widest leading-loose">
-              云端 / Cloud: <span className="text-white font-black">{cloudCount !== null ? cloudCount : '---'} Pcs</span> | 
-              最近 / Last Sync: <span className="text-white font-black">{lastSyncTime ? new Date(lastSyncTime).toLocaleString('zh-CN', { hour12: false }) : 'N/A'}</span>
+              云端 / Cloud: <span className="text-white font-black">{cloudCount !== null ? cloudCount : '---'} Pcs</span>
             </p>
           </div>
 
@@ -117,7 +114,6 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
                   title: '确认清空 / Reset Cache',
                   message: '确定要清空本地数据缓存并从云端完整拉取吗？ / Reset local cache and re-sync from cloud?',
                   onConfirm: async () => {
-                    localStorage.removeItem('lastSyncTime');
                     localStorage.removeItem('uuid_v2_cleanup_done');
                     await refreshCloudData(user, true);
                     showSuccess('本地缓存已重置 / Cache reset');

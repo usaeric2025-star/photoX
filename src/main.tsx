@@ -4,7 +4,7 @@ import * as ErrorMonitor from "@sentry/react";
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
-import { TaskProvider } from './hooks/useTasks';
+import { TaskProvider } from '@/hooks';
 import { setupGlobalErrorHandling } from './lib/errorHandling';
 import { ErrorReporter } from './lib/errorReporter';
 import { setupDevErrorHelper } from './lib/devErrorHelper';

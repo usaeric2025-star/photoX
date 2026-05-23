@@ -1,12 +1,10 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Pencil, Trash2, Heart, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useLongPress } from '../../hooks/useLongPress';
-import { saveSettings } from '../../services/settingService';
-import { useGalleryStore } from '../../store';
-import { Tag } from '../../types';
-import { useFeedback } from '../../hooks';
-import { useTagsDisplay } from '../../hooks/useTagsDisplay';
+import { useLongPress, useFeedback, useTagsDisplay } from '@/hooks';
+import { saveSettings } from '@/services/settingService';
+import { useGalleryStore } from '@/store';
+import { Tag } from '@/types';
 import { SearchInput } from '@/components/ui/SearchInput';
 
 interface TagEditorProps {

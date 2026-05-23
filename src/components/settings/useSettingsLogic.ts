@@ -24,7 +24,7 @@ export const useSettingsLogic = ({
   performPullSync
 }: UseSettingsLogicProps) => {
   const { 
-    setSettings, setPromptDialog, setAlertDialog, withLoading 
+    setSettings, setPromptDialog, setAlertDialog
   } = useGalleryStore();
   const { handleError, showSuccess } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();

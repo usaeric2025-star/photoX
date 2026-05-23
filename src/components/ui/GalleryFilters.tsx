@@ -12,7 +12,7 @@ import { useGalleryStore } from '../../store';
 import { Category, Tag, AppSettings } from '../../types';
 import { cn } from '../../lib/utils';
 import { toTitleCase } from '../../lib/ui-helpers';
-import { useTagsDisplay } from '../../hooks/useTagsDisplay';
+import { useTagsDisplay } from '@/hooks';
 
 import { translations } from '../../lib/translations';
 

@@ -1,3 +1,33 @@
+// Core Hooks
+export * from './core/useAuth';
+export * from './core/useSettings';
+export * from './core/useTaskExecutor';
+export * from './core/useTasks';
+export * from './core/usePermission';
+export * from './core/useRouteGuard';
+export * from './core/useSyncEngine';
+export * from './core/useAdminMode';
+
+// Shared Hooks
+export * from './shared/uiFeedback';
+export * from './shared/useMultiSelect';
+export * from './shared/useDebouncedSearch';
+export * from './shared/useMediaQuery';
+export * from './shared/useTagsDisplay';
+export * from './shared/useClickOutside';
+export * from './shared/useLongPress';
+export * from './shared/useScrollRestoration';
+export * from './shared/useFormValidation';
+export * from './shared/usePhotoFilters';
+export * from './shared/useImageHash';
+
+// Admin Hooks
+export * from './admin';
+export * from './admin/useAdminDialogs';
+export * from './admin/useAdminCategory';
+export * from './admin/useAdminCore';
+export * from './admin/useDuplicateCheck';
+
 // Queries
 export * from './queries/usePhotos';
 export * from './queries/useCategories';
@@ -7,39 +37,17 @@ export * from './queries/useGroups';
 export * from './queries/useInvalidatePhotos';
 
 // Mutations
-export * from './mutations/useDeletePhoto';
-export * from './mutations/useUpdatePhoto';
-export * from './mutations/useGroupOperations';
-export * from './mutations/useAdminMutations';
-export * from './mutations/useGroupCoverMutation';
-export * from './mutations/useSettingsMutation';
-export * from './useSettings';
-export * from './mutations/useBatchEditMutation';
-export * from './mutations/useSyncMutation';
+export * from './core/useDeletePhoto';
+export * from './core/useUpdatePhoto';
+export * from './core/useGroupOperations';
+export * from './core/useAdminMutations';
+export * from './core/useGroupCoverMutation';
+export * from './core/useSettingsMutation';
+export * from './core/useBatchEditMutation';
+export * from './core/useSyncMutation';
 
-// Admin Hooks
-// Context exports removed
-export * from './useAdminDialogs';
-export * from './useSyncEngine';
-export * from './useAdminCore';
-export * from './usePhotoManagement';
-export * from '../utils/errorHandler';
-export * from './useLoading';
-export * from './useAdminPhotos';
-export * from './useAdminCategory';
-export * from './useAuth';
-export * from './usePhotoImport';
-export * from './usePhotoMutations';
-export * from './useFormValidation';
-export * from './usePermission';
-export * from './useAdminMode';
-export * from './uiFeedback';
-export * from './usePhotoFilters';
-export * from './useDebouncedSearch';
-export * from './useTasks';
-export * from './useMultiSelect';
-export * from './useClickOutside';
-export * from './useLongPress';
-export * from './useScrollRestoration';
-export { useTaskExecutor } from './useTaskExecutor';
+// AI Hooks
+export * from './photoAi';
+
+// Utils
 export { useGalleryStore, useStore, useShallow } from '../store';

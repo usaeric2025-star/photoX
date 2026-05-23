@@ -6,7 +6,7 @@ import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { Skeleton } from '../ui/Skeleton';
-import { usePermission } from '../../hooks/usePermission';
+import { usePermission } from '@/hooks';
 
 interface LightboxInfoPanelProps {
   photo: Photo;

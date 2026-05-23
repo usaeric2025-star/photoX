@@ -4,10 +4,10 @@ import {
   useCategoriesQuery, useTagsQuery, useManufacturersQuery,
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
-  useFeedback
+  useFeedback, useTaskExecutor
 } from '../../../hooks';
 import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
-import { useFormValidation } from '../../../hooks/useFormValidation';
+import { useFormValidation } from '@/hooks';
 
 interface Props {
   editPhotoId: string | null;
@@ -25,9 +25,9 @@ export const usePhotoEditLogic = (props: Props) => {
   const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, analyzeSingle, saveNewPhoto } = props;
   const isAnalyzing = useGalleryStore(s => s.isAnalyzing);
   const aiDebugInfo = useGalleryStore(s => s.aiDebugInfo);
+  const { runTask } = useTaskExecutor();
   const setPromptDialog = useGalleryStore(s => s.setPromptDialog);
   const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
-  const withLoading = useGalleryStore(s => s.withLoading);
   const appLang = useGalleryStore(s => s.appLang);
   const sessionSyncing = useGalleryStore(s => s.isSyncing);
   const { showError, showSuccess } = useFeedback();
@@ -129,7 +129,7 @@ export const usePhotoEditLogic = (props: Props) => {
         id: editPhotoId || '', uri: data, image_url: data, 
         category_id: formState.category_id || undefined 
       } as Photo;
-      withLoading(() => analyzeSingle(p)).catch(()=>{});
+      runTask('AI分析', () => analyzeSingle(p), { showSuccessToast: true }).catch(()=>{});
     } else {
       showError(new Error('AI识别上下文缺失'), 'AI识别配置错误');
     }
@@ -142,6 +142,6 @@ export const usePhotoEditLogic = (props: Props) => {
     isProcessingImage, rotatePhoto,
     handleSave, toggleHidden, triggerAiAnalyze,
     isAnalyzing, aiDebugInfo, isPartOfGroup, sessionSyncing,
-    setPromptDialog, setAlertDialog, withLoading, appLang, showError
+    setPromptDialog, setAlertDialog, appLang, showError
   };
 };

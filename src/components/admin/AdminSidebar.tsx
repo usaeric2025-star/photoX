@@ -13,7 +13,7 @@ import {
   LogIn
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
-import { AppSettings } from '../../types';
+import { useAdmin } from '../../contexts/AdminContext';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -48,20 +48,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, on
   </button>
 );
 
-interface Props {
-  settings: AppSettings | null;
-  activeScreen: string;
-  setActiveScreen: (s: any) => void;
-  cloudCount: number | null;
-  onRefresh: () => void;
-}
-
-export const AdminSidebar: React.FC<Props> = ({ 
-  settings, activeScreen, setActiveScreen, cloudCount, onRefresh 
-}) => {
-  const { adminPreviewMode, setAdminPreviewMode, isStaffMode, appLang } = useGalleryStore(useShallow(s => ({
-    adminPreviewMode: s.adminPreviewMode,
-    setAdminPreviewMode: s.setAdminPreviewMode,
+export const AdminSidebar: React.FC = () => {
+  const { 
+    settings, activeScreen, setActiveScreen, cloudCount, onRefresh 
+  } = useAdmin();
+  
+  const { isStaffMode, appLang } = useGalleryStore(useShallow(s => ({
     isStaffMode: s.isStaffMode,
     appLang: s.appLang
   })));
@@ -94,19 +86,9 @@ export const AdminSidebar: React.FC<Props> = ({
           <SidebarItem 
             icon={Home} 
             label="照片库" 
-            active={activeScreen === 'home' && adminPreviewMode === 'private'} 
+            active={activeScreen === 'home'} 
             onClick={() => {
               setActiveScreen('home');
-              setAdminPreviewMode('private');
-            }} 
-          />
-          <SidebarItem 
-            icon={Monitor} 
-            label="访客预览" 
-            active={activeScreen === 'home' && adminPreviewMode === 'public'} 
-            onClick={() => {
-              setActiveScreen('home');
-              setAdminPreviewMode('public');
             }} 
           />
         </div>

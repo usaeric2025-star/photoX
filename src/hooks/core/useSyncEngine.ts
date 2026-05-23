@@ -1,11 +1,11 @@
 import { useCallback, useEffect } from 'react';
-import { useGalleryStore, useShallow } from '../store';
-import { User } from '../types';
-import { fetchSettings } from '../services/settingService';
-import { getPhotoCount } from '../services/photoService';
+import { useGalleryStore, useShallow } from '@/store';
+import { User } from '@/types';
+import { fetchSettings } from '@/services/settingService';
+import { getPhotoCount } from '@/services/photoService';
 import { useQueryClient } from '@tanstack/react-query';
-import { useInvalidatePhotos, useAuth, useTaskExecutor } from './';
-import { setupOfflineSyncListener } from '../utils/offlineSync';
+import { useInvalidatePhotos, useAuth, useTaskExecutor } from '@/hooks';
+import { setupOfflineSyncListener } from '@/utils/offlineSync';
 
 export const useSyncEngine = () => {
   const { user } = useAuth();
@@ -15,15 +15,12 @@ export const useSyncEngine = () => {
   
   const { 
     isSyncing, setIsSyncing, 
-    settings, setSettings,
-    adminPreviewMode, setAdminPreviewMode 
+    settings, setSettings
   } = useGalleryStore(useShallow(s => ({
-    isSyncing: (s.loadingType as string) === 'sync-pull' || (s.loadingType as string) === 'sync-push',
+    isSyncing: s.isSyncing,
     setIsSyncing: s.setIsSyncing,
     settings: s.settings,
-    setSettings: s.setSettings,
-    adminPreviewMode: s.adminPreviewMode,
-    setAdminPreviewMode: s.setAdminPreviewMode
+    setSettings: s.setSettings
   })));
 
   useEffect(() => {
@@ -58,8 +55,6 @@ export const useSyncEngine = () => {
   }, [setSettings, queryClient, invalidatePhotos, runTask, setIsSyncing]);
 
   return {
-    adminPreviewMode,
-    setAdminPreviewMode,
     settings,
     setSettings,
     refreshCloudData,

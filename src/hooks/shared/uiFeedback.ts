@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { useErrorHandler } from '../utils/errorHandler';
+import { useErrorHandler } from '../../utils/errorHandler';
 
 /**
  * Unified feedback hook for the entire project.

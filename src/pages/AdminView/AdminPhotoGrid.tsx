@@ -5,7 +5,7 @@ import { useGalleryStore } from '@/store';
 
 interface AdminPhotoGridProps {
   photos: Photo[];
-  loadingType: string;
+  isSyncing: boolean;
   onRefresh: () => void;
   cloudCount: number;
   onLoadMore: () => void;
@@ -18,7 +18,7 @@ export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
   return (
     <AdminGallery 
       photos={props.photos}
-      isRefreshing={props.loadingType === 'sync-pull' || props.loadingType === 'sync-push' || props.isLoading}
+      isRefreshing={props.isSyncing || props.isLoading}
       onRefresh={props.onRefresh}
       totalCount={props.cloudCount}
       onLoadMore={props.onLoadMore}

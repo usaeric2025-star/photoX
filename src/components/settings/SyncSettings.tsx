@@ -12,7 +12,6 @@ interface SyncSettingsProps {
   performPullSync: () => Promise<ApiResponse>;
   refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
   cloudCount: number | null;
-  lastSyncTime: number | null;
   isSyncing: boolean;
   photos: Photo[];
   categories: Category[];
@@ -35,7 +34,6 @@ export const SyncSettings: React.FC<SyncSettingsProps> = (props) => {
         performPullSync={props.performPullSync}
         refreshCloudData={props.refreshCloudData}
         cloudCount={props.cloudCount}
-        lastSyncTime={props.lastSyncTime}
         isSyncing={props.isSyncing}
         setAlertDialog={setAlertDialog}
       />

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useGalleryStore } from '../store';
-import { User } from '../types';
+import { useGalleryStore } from '@/store';
+import { User } from '@/types';
 
 export const useAdminCore = (user: User | null) => {
   const settings = useGalleryStore(state => state.settings);

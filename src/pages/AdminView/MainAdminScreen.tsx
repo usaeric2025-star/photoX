@@ -5,74 +5,60 @@ import { AdminToolbar } from './AdminToolbar';
 import { AdminPhotoGrid } from './AdminPhotoGrid';
 import { AdminEmptyState } from './AdminEmptyState';
 
-interface Props {
-  photos: Photo[];
-  onManageClick: () => void;
-  onRefresh: () => void;
-  cloudCount: number;
-  loadingType: string;
-  onLoadMore: () => void;
-  hasNextPage: boolean;
-  onImport: () => void;
-  loginWithGoogle: () => Promise<any>;
-  isFetchingNextPage?: boolean;
-  isLoading?: boolean;
-  isAdmin?: boolean;
-}
-
-import { useMultiSelect } from '@/hooks/useMultiSelect';
-
-import { useGalleryStore, useShallow } from '@/store';
+import { useAdmin } from '@/contexts/AdminContext';
+import { useMultiSelect } from '@/hooks';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { useGalleryStore, useShallow } from '@/store';
 import { translations } from '@/lib/translations';
-import { useTaskExecutor } from '@/hooks';
 
-export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
+export const MainAdminScreen: React.FC = React.memo(() => {
+  const logic = useAdmin();
   const {
-    photos, onManageClick, onRefresh, cloudCount,
-    loadingType, onLoadMore, hasNextPage, onImport, loginWithGoogle,
-    isFetchingNextPage, isLoading
-  } = props;
+    photos, onRefresh, cloudCount,
+    isSyncing, loginWithGoogle,
+    infinitePhotosQuery,
+    handleManageClick: onManageClick,
+    handleLoadMoreCallback: onLoadMore,
+    handleImport: onImport,
+  } = logic;
+
+  const hasNextPage = !!infinitePhotosQuery?.hasNextPage;
+  const isFetchingNextPage = !!infinitePhotosQuery?.isFetchingNextPage;
+  const isLoading = !!infinitePhotosQuery?.isLoading;
 
   const { selectedIds, clear } = useMultiSelect();
-  const { lang, columns, setColumns } = useGalleryStore(useShallow(s => ({
-    lang: s.appLang,
-    columns: s.columns,
-    setColumns: s.setColumns
+  const { lang } = useGalleryStore(useShallow(s => ({
+    lang: s.appLang
   })));
   
-  const t = translations[lang as keyof typeof translations] || translations.zh;
+  const t = translations[lang] || translations.zh;
   
   const {
-    onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, 
-    onSetGroupCover, onBatchAiAnalyze, onGroupPhotos, onBatchEdit, 
+    onBatchAiAnalyze, onGroupPhotos, onBatchEdit, 
     onDeletePhoto
   } = usePhotoActions();
 
-  const isAnalyzing = loadingType === 'analyzing';
-  const batchProgress = props.isAdmin ? (props as any).batchProgress : null;
-
   return (
-    <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden">
+    <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden" id="main-admin-screen">
       <AdminToolbar 
         photos={photos}
         onManageClick={onManageClick}
         loginWithGoogle={loginWithGoogle}
         onRefresh={onRefresh}
         cloudCount={cloudCount}
-        loadingType={loadingType}
+        isSyncing={isSyncing}
         lang={lang}
         handleBatchAiIdentifyTrigger={() => {
             if (onBatchAiAnalyze) onBatchAiAnalyze(photos);
         }}
       />
       <div className="flex-1 min-h-0 relative">
-        {photos.length === 0 && loadingType !== 'sync-pull' && !isLoading ? (
+        {photos.length === 0 && !isSyncing && !isLoading ? (
           <AdminEmptyState t={t} />
         ) : (
           <AdminPhotoGrid 
             photos={photos}
-            loadingType={loadingType}
+            isSyncing={isSyncing}
             onRefresh={onRefresh}
             cloudCount={cloudCount}
             onLoadMore={onLoadMore}
@@ -106,10 +92,4 @@ export const MainAdminScreen: React.FC<Props> = React.memo((props) => {
       </div>
     </div>
   );
-}, (prevProps, nextProps) => {
-  return prevProps.photos === nextProps.photos &&
-         prevProps.cloudCount === nextProps.cloudCount &&
-         prevProps.loadingType === nextProps.loadingType &&
-         prevProps.hasNextPage === nextProps.hasNextPage &&
-         prevProps.isFetchingNextPage === nextProps.isFetchingNextPage;
 });

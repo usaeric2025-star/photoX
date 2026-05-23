@@ -1,699 +1,179 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
 import { translations, LanguageCode } from '../../lib/translations';
+import { useAdminFilters, useAdminImport, useAdminSync, useAdminAI, useAdminEdit } from '../../hooks/admin';
 import { 
-  useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
-  useAddCategoryMutation, useUpdateCategoryMutation, useDeleteCategoryMutation,
-  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
-  useUpdatePhotoMutation, useBatchEditMutation, useDeletePhotoMutation, useGroupPhotosMutation, useUngroupMutation,
-  useSettingsMutation, useSyncMutation, useSettings,
-  useAdminDialogs, useLoading, useInfinitePhotos, usePhotoCountQuery, useCategoriesQuery, useTagsQuery, useManufacturersQuery,
-  useSyncEngine, usePhotoManagement, useAdminCategory, useAdminPhotos, useFeedback, useMultiSelect
-} from '../../hooks';
+  useAuth, useFeedback, useTaskExecutor, useTasks, useAdminCategory, useMultiSelect, 
+  useSyncEngine, useSettings, useCategoriesQuery, useTagsQuery, useManufacturersQuery, 
+  useInfinitePhotos, usePhotoCountQuery, useSettingsMutation 
+} from '@/hooks';
+import { useGallerySync } from '@/hooks';
 import { useGalleryStore, useShallow } from '../../store';
+import { useAdminActions } from './useAdminActions';
 import { PAGINATION } from '../../constants/config';
-import { ProductFormData, Photo, AppSettings } from '../../types';
+import { Photo, AppSettings } from '../../types';
 import { cleanPhotos } from '../../lib/filters';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../../hooks/queries/keys';
-import { loadPhotosByGroupId } from '../../services/photoService';
 import { hapticFeedback } from '../../utils/haptics';
-import { uploadLogo } from '../../services/settingService';
 import { loginWithGoogle } from '../../services/supabaseService';
+import { uploadLogo } from '../../services/settingService';
 
 export const useAdminDataPrep = () => {
   const { user, logout } = useAuth();
-  const authChecked = true;
   const { showError, showSuccess } = useFeedback();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { runTask } = useTaskExecutor();
+  const { tasks } = useTasks();
 
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useAdminDialogs();
-  const { loadingState: loadingType, setLoadingState: setLoadingType, withLoading } = useLoading();
-  const [cloudCount, setCloudCount] = useState<number | null>(null);
-
-  const { 
-    filterCatId, filterTagIds, debouncedSearchQuery, sortOrder, appLang, activeScreen, setActiveScreen,
-    geminiApiKey, setGeminiApiKey, accessPasscode, setAccessPasscode, customModel, setCustomModel,
-    editPhotoId, setEditPhotoId, batchEditingIds: batchEditIds, setBatchEditingIds: setBatchEditIds,
-    activeGroupId, setActiveGroupId, columns, setColumns,
-    adminPreviewMode, setAdminPreviewMode, setIsSyncing, isSyncing,
-    lightboxIndex, setLightboxIndex,
-    setPhotos, setTotalCount, setIsFetching, setIsFetchingNextPage, setHasNextPage, setLoadMorePhotos
-  } = useGalleryStore(useShallow(s => ({
-    filterCatId: s.filterCatId,
-    filterTagIds: s.filterTagIds,
-    debouncedSearchQuery: s.debouncedSearchQuery,
-    sortOrder: s.sortOrder,
-    appLang: s.appLang,
-    activeScreen: s.activeScreen,
-    setActiveScreen: s.setActiveScreen,
-    geminiApiKey: s.geminiApiKey,
-    setGeminiApiKey: s.setGeminiApiKey,
-    accessPasscode: s.accessPasscode,
-    setAccessPasscode: s.setAccessPasscode,
-    customModel: s.customModel,
-    setCustomModel: s.setCustomModel,
-    editPhotoId: s.editPhotoId,
-    setEditPhotoId: s.setEditPhotoId,
-    batchEditingIds: s.batchEditingIds,
-    setBatchEditingIds: s.setBatchEditingIds,
-    activeGroupId: s.activeGroupId,
-    setActiveGroupId: s.setActiveGroupId,
-    columns: s.columns,
-    setColumns: s.setColumns,
-    adminPreviewMode: s.adminPreviewMode,
-    setAdminPreviewMode: s.setAdminPreviewMode,
-    setIsSyncing: s.setIsSyncing,
-    isSyncing: s.isSyncing,
-    lightboxIndex: s.lightboxIndex,
-    setLightboxIndex: s.setLightboxIndex,
-    setPhotos: s.setPhotos,
-    setTotalCount: s.setTotalCount,
-    setIsFetching: s.setIsFetching,
-    setIsFetchingNextPage: s.setIsFetchingNextPage,
-    setHasNextPage: s.setHasNextPage,
-    setLoadMorePhotos: s.setLoadMorePhotos
-  })));
-
-  const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
-
+  const store = useGalleryStore(useShallow(s => s));
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
 
   const infinitePhotosQuery = useInfinitePhotos({
-    category_id: filterCatId,
-    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
-    searchQuery: debouncedSearchQuery,
-    sortOrder: sortOrder,
+    category_id: store.filterCatId,
+    tag_id: Array.isArray(store.filterTagIds) && store.filterTagIds.length > 0 ? store.filterTagIds[0] : null,
+    searchQuery: store.debouncedSearchQuery,
+    sortOrder: store.sortOrder,
     isAdminMode: true
   }, PAGINATION.ADMIN_BATCH_SIZE);
 
   const { data: cloudCountData } = usePhotoCountQuery({}, true);
-
-  const photos = useMemo(() => {
-    const allPhotos = infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
-    return cleanPhotos(allPhotos);
-  }, [infinitePhotosQuery.data]);
-
-  useEffect(() => {
-    setPhotos(photos);
-  }, [photos, setPhotos]);
-
-  useEffect(() => {
-    setTotalCount(cloudCountData || 0);
-    setCloudCount(cloudCountData);
-  }, [cloudCountData, setTotalCount, setCloudCount]);
-
-  useEffect(() => {
-    setIsFetching(infinitePhotosQuery.isFetching);
-    setIsFetchingNextPage(infinitePhotosQuery.isFetchingNextPage);
-    setHasNextPage(!!infinitePhotosQuery.hasNextPage);
-  }, [
-    infinitePhotosQuery.isFetching, 
-    infinitePhotosQuery.isFetchingNextPage, 
-    infinitePhotosQuery.hasNextPage,
-    setIsFetching,
-    setIsFetchingNextPage,
-    setHasNextPage
-  ]);
-
-  const { reset: resetMultiSelect, disable } = useMultiSelect();
-
-  useEffect(() => {
-    resetMultiSelect();
-  }, [resetMultiSelect]);
-
-  const fetchNextPage = infinitePhotosQuery.fetchNextPage;
-  const hasNextPage = infinitePhotosQuery.hasNextPage;
-  const isFetchingNextPage = infinitePhotosQuery.isFetchingNextPage;
-
-  const fetchStateRef = useRef({ hasNextPage, isFetchingNextPage, fetchNextPage });
-  fetchStateRef.current = { hasNextPage, isFetchingNextPage, fetchNextPage };
-
-  const handleLoadMoreAdmin = useCallback(() => {
-    const { hasNextPage, isFetchingNextPage, fetchNextPage } = fetchStateRef.current;
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, []);
-
-  useEffect(() => {
-    setLoadMorePhotos(handleLoadMoreAdmin);
-  }, [handleLoadMoreAdmin, setLoadMorePhotos]);
+  const photos = useMemo(() => cleanPhotos(infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || []), [infinitePhotosQuery.data]);
 
   const { settings, setSettings, refreshCloudData } = useSyncEngine();
-
   const { settings: fetchedSettings } = useSettings();
-  useEffect(() => {
-    if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
-      setSettings(fetchedSettings as AppSettings);
-      if (fetchedSettings.gemini_api_key) setGeminiApiKey(fetchedSettings.gemini_api_key);
-      if (fetchedSettings.custom_model) setCustomModel(fetchedSettings.custom_model);
-      if (fetchedSettings.access_passcode) setAccessPasscode(fetchedSettings.access_passcode);
-    }
-  }, [fetchedSettings, setSettings, setGeminiApiKey, setCustomModel, setAccessPasscode]);
+  const { mutateAsync: saveSettingsMut } = useSettingsMutation();
 
-  const uiBasicValue = useMemo(() => ({ 
-    setAlertDialog, setPromptDialog, setLoadingType, loadingType, withLoading, setCloudCount,
-    cloudCount, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
-    setActiveScreen: (s: 'home' | 'manage' | 'login') => setActiveScreen(s),
-    abortAnalysis: () => {}
-  }), [setAlertDialog, setPromptDialog, setLoadingType, loadingType, withLoading, cloudCount, editPhotoId, batchEditIds, setActiveScreen, setBatchEditIds, setEditPhotoId]);
+  // Initialize new admin hooks
+  const filters = useAdminFilters(photos, categories, tags);
+  const importer = useAdminImport(user, { setActiveScreen: store.setActiveScreen }, { setIsSyncing: store.setIsSyncing }, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), useRef(photos));
+  const sync = useAdminSync();
+  const ai = useAdminAI(user, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), useRef(photos));
+  const edit = useAdminEdit(user, photos);
 
-  const sessionBasicValue = useMemo(() => ({ settings, setSettings, setIsSyncing }), [settings, setSettings, setIsSyncing]);
-
-  const {
-    addCategory, updateCategory, deleteCategory,
-    addManufacturer, updateManufacturer, deleteManufacturer,
-    addTag, updateTag, deleteTag, removeTagFromPhoto
-  } = useAdminCategory(uiBasicValue);
-
-  const { mutateAsync: performPushSync } = useSyncMutation();
-  const performPullSync = useCallback((loadNext?: boolean | number | string) => {
-    if (loadNext === 1 || loadNext === true) { 
-      handleLoadMoreAdmin(); 
-      return Promise.resolve();
-    }
-    return infinitePhotosQuery.refetch();
-  }, [handleLoadMoreAdmin, infinitePhotosQuery]);
-
-  const { mutateAsync: handleUngroup } = useUngroupMutation();
-  const { mutateAsync: saveSettings } = useSettingsMutation();
-
-  const { 
-    analyzeSingle, handleTranslate, analyzeBatch, analyzeGroup, 
-    handlePhotoImport, deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos,
-    importProgress, importTotal, abortAnalysis, aiDebugInfo, setAiDebugInfo
-  } = useAdminPhotos(
-    user, settings?.gemini_api_key, settings?.provider || 'openrouter', settings?.custom_model || '', 
-    { photos, categories, tags, manufacturers }, uiBasicValue, sessionBasicValue, addManufacturer
-  );
-
-  const photoManagement = usePhotoManagement(
-    user, uiBasicValue, sessionBasicValue, photos, 
-    (params: { id: string; updates: Partial<Photo> }) => updatePhoto(params.id, params.updates),
-    (params: { userId: string; ids: string[]; updates: Partial<Photo> }) => updatePhotosBulk(params.ids, params.updates)
-  );
-
-  const {
-    newPhotoData, setNewPhotoData, formState, updateForm,
-    showOtherFields, setShowOtherFields, resetAddState,
-    saveNewPhoto, saveBatchEdit
-  } = photoManagement;
-
-  const quickAddTag = useCallback(() => {
-    setPromptDialog({
-      title: '自定义标签 / Custom Tag',
-      placeholder: '输入新标签名称 (例如: 清货)',
-      onSubmit: async (val: string) => {
-        const normalized = val.trim();
-        if (!normalized) return;
-        const existing = tags.find(t => t.name.toUpperCase() === normalized.toUpperCase());
-        if (existing) {
-          updateForm((prev: ProductFormData) => ({ ...prev, tag_ids: [...new Set([...(prev.tag_ids || []), String(existing.id)])] }));
-          showError(new Error(`标签 "${normalized}" 已存在`), '新增标签');
-          return;
-        }
-        try {
-          const saved = await addTag(normalized);
-          if (saved) {
-             updateForm((prev: ProductFormData) => ({ ...prev, tag_ids: [...new Set([...(prev.tag_ids || []), String(saved.id)])] }));
-          }
-        } catch (e: unknown) {
-          showError(e, '新增标签失败');
-        }
-      }
-    });
-  }, [setPromptDialog, tags, addTag, updateForm, showError]);
-
-  const quickAddManufacturer = useCallback(() => {
-    setPromptDialog({
-      title: '新增厂商 / New Manufacturer',
-      placeholder: '输入新厂商名称',
-      onSubmit: async (val: string) => {
-        const trimmed = val.trim();
-        if (!trimmed) return;
-         try {
-           const saved = await addManufacturer(trimmed);
-           if (saved) {
-              updateForm((prev: ProductFormData) => ({ ...prev, manufacturer_id: saved.id }));
-           }
-         } catch (e: unknown) {
-           showError(e, '新增厂商失败');
-         }
-      }
-    });
-  }, [setPromptDialog, addManufacturer, updateForm, showError]);
-
-  const onRefresh = useCallback(() => refreshCloudData(user, setCloudCount), [user, refreshCloudData]);
-
-  const lang = appLang as LanguageCode;
-  const t = translations[lang] || translations.en;
-
-  // Sync maps
-  const tagIdToNameMap = useMemo(() => {
-    return tags.reduce((acc, tag) => {
-      acc[tag.id] = tag.name;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [tags]);
-
-  // Action Lock Checks
-  const checkSyncLock = useCallback(() => {
-    if (loadingType === 'sync-pull' || loadingType === 'sync-push') {
-       return true;
-    }
-    return false;
-  }, [loadingType]);
-
+  const checkSyncLock = useCallback(() => store.isSyncing, [store.isSyncing]);
+  const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
+  const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
+  const [adminPreviewMode, setAdminPreviewMode] = useState<'private' | 'public'>('private');
 
-  // CORE ACTIONS FROM useAdminViewLogic & useAdminActions
-  const handleBatchAiIdentifyTrigger = useCallback(async (targetPhotos?: Photo[]) => {
-    if (checkSyncLock()) return;
-    if (loadingType === 'analyzing') {
-      abortAnalysis();
-      return;
-    }
-    const photosToProcess = targetPhotos || photos;
-    if (photosToProcess.length === 0) return;
+  // Sync logic to store
+  useGallerySync(
+    photos, cloudCountData, infinitePhotosQuery.isFetching, infinitePhotosQuery.isFetchingNextPage, 
+    !!infinitePhotosQuery.hasNextPage, () => !infinitePhotosQuery.isFetchingNextPage && infinitePhotosQuery.hasNextPage && infinitePhotosQuery.fetchNextPage(),
+    fetchedSettings as AppSettings, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode
+  );
 
-    setAlertDialog({
-      title: 'AI 批量智能识别 / Batch AI Identify',
-      message: `请选择对这 ${photosToProcess.length} 张照片批量识别的模式：\n\n•「跳过已完善」：仅 analysis 未完成或缺属性（如名称、标签、英文翻译）的照片，省时省额度（推荐）\n•「分析全部」：重新分析所有选择的照片，重写/更新现有属性`,
-      cancelLabel: '取消 / Cancel',
-      confirmLabel: '分析全部 / Analyze All',
-      onConfirm: async () => {
-         await runTask(`识别 ${photosToProcess.length} 张照片`, async ({ updateProgress }) => {
-            updateProgress(10, '准备分析...');
-            await analyzeBatch(photosToProcess, undefined, true);
-         }, { showSuccessToast: true });
-      },
-      secondaryAction: {
-         label: '跳过已完善 / Skip Completed',
-         onClick: async () => {
-             await runTask(`识别 ${photosToProcess.length} 张照片`, async ({ updateProgress }) => {
-                updateProgress(10, '准备分析...');
-                await analyzeBatch(photosToProcess, undefined, false);
-             }, { showSuccessToast: true });
-         }
-      }
-    });
-  }, [checkSyncLock, loadingType, abortAnalysis, runTask, analyzeBatch, photos, setAlertDialog]);
-
-  const handleDeletePhoto = useCallback(async (id: string | string[]) => {
-     try {
-         await deletePhoto(id);
-         hapticFeedback.light();
-         if (typeof id === 'string') setEditPhotoId(null);
-         else resetAddState();
-     } catch (error) {
-         hapticFeedback.error();
-         showError(error, 'delete-photo');
-     }
-  }, [deletePhoto, setEditPhotoId, resetAddState, showError]);
-
-  const togglePinned = useCallback(async (photo: Photo) => {
-    if (checkSyncLock()) return;
-    const newStatus = !photo.is_pinned;
-    let affectedIds = [photo.id];
-    if (photo.group_id) {
-      try {
-        const dbGroupPhotos = await loadPhotosByGroupId(photo.group_id, true);
-        affectedIds = dbGroupPhotos.length > 0
-          ? dbGroupPhotos.map((p: Photo) => p.id)
-          : photos.filter((p: Photo) => p.group_id === photo.group_id).map((p: Photo) => p.id);
-      } catch (e) {
-        affectedIds = photos.filter((p: Photo) => p.group_id === photo.group_id).map((p: Photo) => p.id);
-      }
-    }
-    try {
-      await updatePhotosBulk(affectedIds, { is_pinned: newStatus });
-    } catch (e: unknown) {
-      showError(e, 'toggle-pinned');
-      throw e;
-    }
-  }, [checkSyncLock, photos, updatePhotosBulk, showError]);
-
-  const toggleHidden = useCallback(async (photo: Photo) => {
-    if (checkSyncLock()) return;
-    const nextValue = !photo.is_hidden;
-    
-    try {
-      await updatePhoto(photo.id, { is_hidden: nextValue });
-    } catch (e: unknown) {
-      showError(e, 'toggle-hidden');
-      throw e;
-    }
-  }, [checkSyncLock, updatePhoto, showError]);
-
-  const setGroupCover = useCallback(async (id: string, groupId: string) => {
-    if (checkSyncLock()) return;
-    let groupPhotosList = [];
-    try {
-      groupPhotosList = await loadPhotosByGroupId(groupId, true);
-    } catch (e) {
-      // Fallback
-    }
-    if (groupPhotosList.length === 0) {
-      groupPhotosList = photos.filter((p: Photo) => p.group_id === groupId);
-    }
-    try {
-      await Promise.all(
-         groupPhotosList.map((p: Photo) => updatePhoto(p.id, { is_group_cover: p.id === id }))
-      );
-    } catch (e: unknown) {
-      showError(e, 'set-group-cover');
-      throw e;
-    }
-  }, [checkSyncLock, photos, updatePhoto, showError]);
-
-  const saveBatchEditWithSuccess = useCallback(async (batchIsHiddenApplied: boolean) => {
-    if (checkSyncLock()) return;
-    try {
-      await saveBatchEdit();
-      showSuccess('批量更新成功');
-    } catch (e) {
-      showError(e, 'save-batch-edit');
-      throw e;
-    }
-  }, [checkSyncLock, saveBatchEdit, showError, showSuccess]);
-
-  const onLongPressStart = useCallback((id: string) => {
-    hapticFeedback.medium();
-  }, []);
-
-  const onLongPressEnd = useCallback(() => {}, []);
-
-  const groupPhotos = useMemo(() => {
-    if (!activeGroupId) return [];
-    return photos.filter((p: Photo) => p.group_id === activeGroupId);
-  }, [photos, activeGroupId]);
+  const { reset: resetMultiSelect, disable } = useMultiSelect();
+  const uiBasicValue = useMemo(() => ({ setAlertDialog: store.setAlertDialog, setPromptDialog: store.setPromptDialog, setCloudCount: () => {}, cloudCount: cloudCountData || 0, editPhotoId: store.editPhotoId, setEditPhotoId: store.setEditPhotoId, batchEditIds: store.batchEditingIds, setBatchEditIds: store.setBatchEditingIds, setActiveScreen: store.setActiveScreen, abortAnalysis: () => {} }), [store, cloudCountData]);
+  const categoryOps = useAdminCategory(uiBasicValue);
 
   const onEditPhotoById = useCallback((pOrId: Photo | string) => {
-    const photo = typeof pOrId === 'string' 
-      ? photos.find((p: Photo) => p.id === pOrId) 
-      : pOrId;
-    
+    const photo = typeof pOrId === 'string' ? photos.find(p => p.id === pOrId) : pOrId;
     if (!photo) return;
-    
-    if (photo.group_id) {
-      setInitialPhotoId(photo.id);
-      setActiveGroupId(photo.group_id);
-    }
-    setEditPhotoId(photo.id);
-  }, [photos, setEditPhotoId, setActiveGroupId, setInitialPhotoId]);
+    if (photo.group_id) { setInitialPhotoId(photo.id); store.setActiveGroupId(photo.group_id); }
+    store.setEditPhotoId(photo.id);
+  }, [photos, store]);
 
-  // FROM useAdminActions
-  const handleLoadMoreCallback = useCallback(() => {
-    if (infinitePhotosQuery.hasNextPage && !infinitePhotosQuery.isFetchingNextPage) {
-       performPullSync(true);
-    }
-  }, [infinitePhotosQuery, performPullSync]);
-
-  const handleManageClick = useCallback(() => setActiveScreen('manage'), [setActiveScreen]);
-  
-  const handleRefresh = useCallback(() => {
-    if (checkSyncLock()) return;
-    
-    useGalleryStore.getState().setSearchQuery('');
-    useGalleryStore.getState().setDebouncedSearchQuery('');
-    useGalleryStore.getState().setFilterCatId(null);
-    useGalleryStore.getState().setFilterTagIds([]);
-    disable();
-    
-    sessionStorage.removeItem('photo-filters');
-    localStorage.removeItem('photo-filters');
-    
-    queryClient.resetQueries({ queryKey: ['photos'] });
-    queryClient.resetQueries({ queryKey: ['photos', 'infinite'] });
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    performPullSync(true);
-    showSuccess('已重置所有筛选');
-  }, [checkSyncLock, performPullSync, showSuccess, queryClient, disable]);
-
-  const handleToggleHidden = useCallback(async (photo: Photo) => {
-    if (checkSyncLock()) {
-      showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
-      return;
-    }
-    try {
-      await toggleHidden(photo);
-      showSuccess('已更新隐藏状态');
-    } catch (e) {
-      showError(e, '更新失败');
-    }
-  }, [checkSyncLock, toggleHidden, showSuccess, showError]);
-
-  const handleBatchToggleHidden = useCallback(async (ids: string[]) => {
-    if (checkSyncLock()) {
-      showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
-      return;
-    }
-    const targetPhotos = photos.filter((p: Photo) => ids.includes(p.id));
-    const allHidden = targetPhotos.every((p: Photo) => p.is_hidden);
-    await updatePhotosBulk(ids, { is_hidden: !allHidden }, '批量更新隐藏状态');
-    disable();
-  }, [checkSyncLock, photos, updatePhotosBulk, disable, showError]);
-
-  const handleEditPhoto = useCallback((id: string) => onEditPhotoById(id), [onEditPhotoById]);
-
-  const handleDeletePhotos = useCallback((ids: string[]) => {
-      if (checkSyncLock()) {
-        showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
-        return;
-      }
-      handleDeletePhoto(ids);
-      disable();
-  }, [checkSyncLock, handleDeletePhoto, disable, showError]);
-
-  const handleGroupPhotosCallback = useCallback(async (ids: string[]) => {
-      if (checkSyncLock()) {
-        showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
-        return;
-      }
-      try {
-        await handleGroupPhotos(ids);
-        disable();
-      } catch (e: unknown) {
-        showError(e, '合组失败');
-      }
-  }, [checkSyncLock, handleGroupPhotos, showError, disable]);
-
-  const handleBatchEdit = useCallback((ids: string[]) => {
-      if (checkSyncLock()) {
-        showError(new Error('系统正在同步，请稍后再操作'), '系统忙碌');
-        return;
-      }
-      setBatchEditIds(ids);
-  }, [checkSyncLock, setBatchEditIds, showError]);
-
-  const handleUngroupCallback = useCallback(async (groupId: string) => { 
-    if (checkSyncLock()) return;
-    try {
-      await handleUngroup(groupId); 
-    } catch (e: unknown) {
-      showError(e, '拆组失败');
-    }
-  }, [checkSyncLock, handleUngroup, showError]);
-
-  const handleBatchAiAnalyze = useCallback((photosToAnalyze: Photo[]) => {
-    setAlertDialog({
-      title: 'AI 群组智能识别 / Group AI Identify',
-      message: `请选择对这 ${photosToAnalyze.length} 张照片进行群组识别的模式：\n\n•「跳过已完善」：仅分析未完成或缺属性的照片，避免重复工作和额外额度开销（推荐）\n•「分析全部」：重新分析并同步特征至该群组的所有照片`,
-      cancelLabel: '取消 / Cancel',
-      confirmLabel: '分析全部 / Analyze All',
-      onConfirm: async () => {
-         await runTask(`识别群组 ${photosToAnalyze.length} 张照片`, async ({ updateProgress }) => {
-            updateProgress(10, '准备分析...');
-            await analyzeGroup(photosToAnalyze, true);
-         }, { showSuccessToast: true });
-      },
-      secondaryAction: {
-         label: '跳过已完善 / Skip Completed',
-         onClick: async () => {
-             await runTask(`识别群组 ${photosToAnalyze.length} 张照片`, async ({ updateProgress }) => {
-                updateProgress(10, '准备分析...');
-                await analyzeGroup(photosToAnalyze, false);
-             }, { showSuccessToast: true });
-         }
-      }
-    });
-  }, [setAlertDialog, runTask, analyzeGroup]);
-
-  const handleAiAnalyze = useCallback((p: Photo) => {
-    return analyzeSingle(p).catch((e: Error) => showError(e, '识别失败'));
-  }, [analyzeSingle, showError]);
-
-  const handleUpdatePhoto = useCallback(async (id: string, updates: Partial<Photo>) => {
-    if (checkSyncLock()) return;
-    try {
-      await updatePhoto(id, updates);
-    } catch (e: unknown) {
-      showError(e, '更新照片属性失败');
-    }
-  }, [checkSyncLock, updatePhoto, showError]);
+  const actions = useAdminActions(photos, tasks, ai, edit, importer, sync, filters, categoryOps, {
+    checkSyncLock, showError, showSuccess, setAlertDialog: store.setAlertDialog, setPromptDialog: store.setPromptDialog, setEditPhotoId: store.setEditPhotoId, setBatchEditIds: store.setBatchEditingIds, setActiveScreen: store.setActiveScreen, setActiveGroupId: store.setActiveGroupId, setInitialPhotoId, runTask, queryClient, infinitePhotosQuery, disable, batchEditIds: store.batchEditingIds || [], onEditPhotoById, tags
+  });
 
   const handleLogoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (checkSyncLock()) return;
     const file = e.target.files?.[0];
     if (!file) return;
-
-    await withLoading('saving', async () => {
-      try {
+    await runTask('上传 Logo', async () => {
         const url = await uploadLogo(file);
-        if (url && settings) {
-          const newSettings = { ...settings, logo_url: url };
-          await saveSettings(newSettings);
-          showSuccess('Logo 更新成功！');
+        if (url && settings) await saveSettingsMut({ ...settings, logo_url: url });
+    }, { showSuccessToast: true });
+  }, [checkSyncLock, settings, saveSettingsMut, runTask]);
+
+  const handleRunMaintenance = useCallback(async () => {
+    if (isMaintenanceRunning) return;
+    setIsMaintenanceRunning(true);
+    await runTask('自动修复缩略图 / Auto Repair ThumbHashes', async ({ updateProgress }) => {
+        const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
+        const { backfillThumbHashes } = await import('@/services/photo/backfillService');
+        updateProgress(15, '正在 analysis 未生成缩略图占位项目的数量...');
+        const missingHashes = await getPhotosWithoutThumbHash();
+        
+        if (!missingHashes || missingHashes.length === 0) {
+            updateProgress(100, '完美分析完成，没有缺失占位图的照片。');
+            return { skipped: true };
         }
-      } catch (err: unknown) {
-        showError(err, 'Logo 上传失败');
-      }
+
+        updateProgress(40, `正在为 ${missingHashes.length} 项商品自动回填修复...`);
+        await backfillThumbHashes((stats) => {
+            const progressPct = 40 + (stats.processed / stats.total) * 60;
+            updateProgress(
+                progressPct,
+                `正在修复: ${stats.processed}/${stats.total} (成功: ${stats.success}, 失败: ${stats.failed})`
+            );
+        });
+        return { skipped: false };
+    }, {
+        onSuccess: (res) => {
+            if (res?.skipped) {
+                showSuccess('诊断完成：所有照片缩略图高度一致，无需修复！ (已跳过已完善项目)');
+            } else {
+                showSuccess('缩略图自动修复完成');
+            }
+        },
+        onError: (e) => {
+            showError(e, '修复失败，已停止');
+        },
+        showSuccessToast: false,
+        showErrorToast: true
     });
-  }, [checkSyncLock, settings, saveSettings, withLoading, showSuccess, showError]);
-
-  const handlePerformPushSync = useCallback(async () => { 
-    try {
-      await withLoading('sync-push', async () => { 
-        await performPushSync('push'); 
-      }); 
-      showSuccess('成功备份至云端！');
-      return { success: true, data: null }; 
-    } catch (err: unknown) {
-      showError(err, '同步备份失败');
-      throw err;
-    }
-  }, [performPushSync, withLoading, showSuccess, showError]);
-
-  const handlePerformPullSync = useCallback(async () => { 
-    try {
-      await performPullSync('pull'); 
-      showSuccess('成功自云端恢复！');
-      return { success: true, data: null }; 
-    } catch (err: unknown) {
-      showError(err, '云端恢复失败');
-      throw err;
-    }
-  }, [performPullSync, showSuccess, showError]);
-
-  const handleSaveNewPhoto = useCallback(async () => {
-    if (checkSyncLock()) return;
-    try {
-      await saveNewPhoto();
-      showSuccess('照片已保存');
-    } catch (e) {
-      showError(e, '保存照片失败');
-    }
-  }, [checkSyncLock, saveNewPhoto, showSuccess, showError]);
-
-  const handleImport = useCallback(() => {
-    if (checkSyncLock()) return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.multiple = true;
-    input.onchange = (e) => handlePhotoImport(e as unknown as React.ChangeEvent<HTMLInputElement>, false).catch((err: Error) => showError(err, '导入图片失败'));
-    input.click();
-  }, [checkSyncLock, handlePhotoImport, showError]);
-
-  // Typescript interface adapters
-  const updateTagWrapper = useCallback((id: string, name: string) => {
-    return updateTag(id, { name });
-  }, [updateTag]);
-
-  const updateCategoryWrapper = useCallback((id: string, name: string) => {
-    return updateCategory(id, { name });
-  }, [updateCategory]);
-
-  const updateManufacturerWrapper = useCallback((id: string, name: string) => {
-    return updateManufacturer(id, { name });
-  }, [updateManufacturer]);
-
-  const handleSaveSettingsWrapper = useCallback(async (newSettings: Partial<AppSettings>) => {
-    const res = await saveSettings(newSettings);
-    return { success: !!res, data: res as unknown as AppSettings };
-  }, [saveSettings]);
-
-  const handleTranslateWrapper = useCallback(async (text: string, currentLang: string, targetLang: string) => {
-    try {
-      const res = await handleTranslate(text);
-      if (targetLang === 'en') return res.en;
-      if (targetLang === 'ms') return res.ms;
-      return text;
-    } catch {
-      return text;
-    }
-  }, [handleTranslate]);
+    setIsMaintenanceRunning(false);
+  }, [runTask, showError, showSuccess, isMaintenanceRunning]);
 
   return useMemo(() => ({
-    user, authChecked, logout, navigate,
-    infinitePhotosQuery, t, lang, onRefresh,
-    
-    // Original states
-    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
-    alertDialog, setAlertDialog, promptDialog, setPromptDialog,
-    loadingType, setLoadingType, withLoading, aiDebugInfo, setAiDebugInfo, abortAnalysis,
-    isAnalyzing: loadingType === 'analyzing', cloudCount, setCloudCount,
-    
-    settings, adminPreviewMode, setAdminPreviewMode,
-    photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
-    analyzeSingle, analyzeGroup, handlePhotoImport, importProgress, importTotal,
-    handleBatchAiIdentifyTrigger, handleDeletePhoto,
-    formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
-    activeGroupId, setActiveGroupId, initialPhotoId, setInitialPhotoId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
-    checkSyncLock, togglePinned, toggleHidden, setGroupCover,
-    loginWithGoogle, showError,
-    onEditPhotoById, hasNextPage: infinitePhotosQuery.hasNextPage, isFetchingNextPage: infinitePhotosQuery.isFetchingNextPage,
-
-    // Adaptive Wrappers
-    updateTag: updateTagWrapper,
-    updateCategory: updateCategoryWrapper,
-    updateManufacturer: updateManufacturerWrapper,
-    saveSettings: handleSaveSettingsWrapper,
-    handleTranslate: handleTranslateWrapper,
-    handleGroupPhotos: handleGroupPhotosCallback,
-    handleUngroup: handleUngroupCallback,
-    performPushSync: handlePerformPushSync,
-    performPullSync: handlePerformPullSync,
-
-    // Actions implementations
-    handleLoadMoreCallback, handleManageClick, handleRefresh, handleToggleHidden,
-    handleBatchToggleHidden, handleEditPhoto, handleDeletePhotos,
-    handleBatchEdit, handleBatchAiAnalyze, handleAiAnalyze,
-    handleUpdatePhoto, handleLogoUpload,
-    handleSaveNewPhoto, handleImport,
-    lightboxIndex, setLightboxIndex,
-
-    // Added missing bindings
-    saveBatchEditWithSuccess,
-    quickAddManufacturer,
-    quickAddTag,
-    deleteTag,
-    addTag,
-    onLongPressStart,
-    onLongPressEnd,
-    // (Note: duplicate handlePerformPushSync/PullSync removed from direct return, they are already above)
-  }), [
-    user, authChecked, logout, navigate, infinitePhotosQuery, t, lang, onRefresh,
-    activeScreen, setActiveScreen, editPhotoId, setEditPhotoId, batchEditIds, setBatchEditIds,
-    alertDialog, setAlertDialog, promptDialog, setPromptDialog, loadingType, setLoadingType, withLoading,
-    aiDebugInfo, setAiDebugInfo, abortAnalysis, cloudCount, setCloudCount, settings,
-    adminPreviewMode, setAdminPreviewMode, photos, categories, tags, manufacturers, tagIdToNameMap, groupPhotos,
-    analyzeSingle, analyzeGroup, handlePhotoImport, importProgress, importTotal, handleBatchAiIdentifyTrigger, handleDeletePhoto,
-    formState, updateForm, showOtherFields, setShowOtherFields, resetAddState, newPhotoData, setNewPhotoData,
-    activeGroupId, setActiveGroupId, initialPhotoId, setInitialPhotoId, columns, setColumns, batchIsHiddenApplied, setBatchIsHiddenApplied,
-    checkSyncLock, togglePinned, toggleHidden, setGroupCover, loginWithGoogle, showError, onEditPhotoById,
-    updateTagWrapper, updateCategoryWrapper, updateManufacturerWrapper, handleSaveSettingsWrapper,
-    handleTranslateWrapper, handleGroupPhotosCallback, handleUngroupCallback, handlePerformPushSync, handlePerformPullSync,
-    handleLoadMoreCallback, handleManageClick, handleRefresh, handleToggleHidden, handleBatchToggleHidden, handleEditPhoto,
-    handleDeletePhotos, handleBatchEdit, handleBatchAiAnalyze, handleAiAnalyze, handleUpdatePhoto, handleLogoUpload,
-    handleSaveNewPhoto, handleImport, lightboxIndex, setLightboxIndex, saveBatchEditWithSuccess,
-    quickAddManufacturer, quickAddTag, deleteTag, addTag, onLongPressStart, onLongPressEnd
-  ]);
+    user, authChecked: true, logout, navigate, infinitePhotosQuery, t: translations[store.appLang as LanguageCode] || translations.en, lang: store.appLang, onRefresh: () => refreshCloudData(user, () => {}),
+    ...store, ...filters, ...importer, ...sync, ...ai, ...edit, ...categoryOps, ...actions,
+    photos, categories, tags, manufacturers, tagIdToNameMap: tags.reduce((acc, tag) => ({ ...acc, [tag.id]: tag.name }), {}),
+    groupPhotos: store.activeGroupId ? photos.filter(p => p.group_id === store.activeGroupId) : [],
+    initialPhotoId, setInitialPhotoId, checkSyncLock, loginWithGoogle, showError, onEditPhotoById, handleLogoUpload,
+    isMaintenanceRunning, onRunMaintenance: handleRunMaintenance,
+    handleManageClick: () => store.setActiveScreen('manage'),
+    handleToggleHidden: (p: Photo) => {
+      if (checkSyncLock()) {
+        showError(new Error('系统忙碌'), '系统忙碌');
+        return Promise.resolve();
+      }
+      return edit.updatePhoto(p.id, { is_hidden: !p.is_hidden }).then(() => showSuccess('已更新'));
+    },
+    handleBatchToggleHidden: (ids: string[]) => {
+       if (checkSyncLock()) {
+         showError(new Error('系统忙碌'), '系统忙碌');
+         return Promise.resolve();
+       }
+       return edit.updatePhotosBulk(ids, { is_hidden: !photos.filter(p => ids.includes(p.id)).every(p => p.is_hidden) }).then(disable);
+    },
+    handleBatchEdit: (ids: string[]) => {
+       if (checkSyncLock()) { showError(new Error('系统忙碌'), '系统忙碌'); return; }
+       store.setBatchEditingIds(ids);
+    },
+    handleDeletePhotos: (ids: string[]) => {
+      if (checkSyncLock()) { showError(new Error('系统忙碌'), '系统忙碌'); return; }
+      actions.handleDeletePhoto(ids).then(disable);
+    },
+    handleUpdatePhoto: edit.updatePhoto,
+    handleAiAnalyze: ai.analyzeSingle,
+    cloudCount: store.totalCount,
+    batchEditIds: store.batchEditingIds,
+    batchIsHiddenApplied, setBatchIsHiddenApplied,
+    adminPreviewMode, setAdminPreviewMode,
+    quickAddManufacturer: actions.quickAddManufacturer,
+    quickAddTag: actions.quickAddTag,
+    onLongPressStart: (id: string) => hapticFeedback.medium(),
+    onLongPressEnd: () => {},
+    saveSettings: (s: any) => saveSettingsMut(s).then(res => ({ success: !!res, data: res })),
+    updateTag: (id: string, name: string) => categoryOps.updateTag(id, { name }),
+    updateCategory: (id: string, name: string) => categoryOps.updateCategory(id, { name }),
+    updateManufacturer: (id: string, name: string) => categoryOps.updateManufacturer(id, { name }),
+  }), [user, logout, navigate, infinitePhotosQuery, store, filters, importer, sync, ai, edit, categoryOps, actions, photos, categories, tags, manufacturers, initialPhotoId, checkSyncLock, showError, onEditPhotoById, handleLogoUpload, showSuccess, disable, batchIsHiddenApplied, saveSettingsMut]);
 };

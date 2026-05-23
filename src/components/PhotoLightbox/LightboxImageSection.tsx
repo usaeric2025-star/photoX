@@ -5,7 +5,7 @@ import "yet-another-react-lightbox/styles.css";
 import { X, Maximize, ChevronLeft, ChevronRight, Download, Edit3, Image as ImageIcon } from 'lucide-react';
 import { Photo, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { useAdminMode } from '../../hooks/useAdminMode';
+import { useAdminMode } from '@/hooks';
 import { thumbHashToDataURL } from '../../utils/thumbHash';
 
 interface LightboxImageSectionProps {

@@ -59,7 +59,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
     setActivePhotoId: s.setActivePhotoId,
     sortOrder: s.sortOrder,
     setSortOrder: s.setSortOrder,
-    isAnalyzing: (s.loadingType as string) === 'analyzing'
+    isAnalyzing: s.isAnalyzing
   })));
 
   const { onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze } = usePhotoActions();

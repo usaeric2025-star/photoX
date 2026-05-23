@@ -3,28 +3,29 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
-import { useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, useFeedback, useTagsQuery, useScrollRestoration, useDebouncedSearch } from '../hooks';
-import { useAuth } from '../hooks/useAuth';
-import { useSettings } from '../hooks/useSettings';
-import { useGalleryStore, useShallow } from '../store';
-import { PAGINATION, ROUTES, UI } from '../config/constants';
-import { Photo, Tag } from '../types';
-import { safeArray } from '../lib/utils';
+import { 
+  useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, 
+  useFeedback, useTagsQuery, useScrollRestoration, useDebouncedSearch,
+  useAuth, useSettings, useMultiSelect
+} from '@/hooks';
+import { useGalleryStore, useShallow } from '@/store';
+import { PAGINATION, ROUTES, UI } from '@/config/constants';
+import { Photo, Tag } from '@/types';
+import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../hooks/queries/keys';
-import { useMultiSelect } from '../hooks/useMultiSelect';
-import { DataLoadingContainer } from '../components/ui/DataLoadingContainer';
-import { saveData, syncCache } from '../utils/indexedDB';
-import { PublicGallery } from '../components/public/PublicGallery';
+import { QUERY_KEYS } from '@/hooks/queries/keys';
+import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
+import { saveData, syncCache } from '@/utils/indexedDB';
+import { PublicGallery } from '@/components/public/PublicGallery';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { loginWithGoogle } from '../services/supabaseService';
+import { loginWithGoogle } from '@/services/supabaseService';
 
 /* Removed ErrorFallback component */
 
 const EMPTY_TAGS: Tag[] = [];
 
 export default function PublicView() {
-  console.log('PublicView render', { isLoading: false });
+  // removed render log
   // ========== 1. 所有 Hooks 先调用（按顺序，无条件）==========
   const queryClient = useQueryClient();
   const { showError, showSuccess } = useFeedback();
@@ -42,14 +43,10 @@ export default function PublicView() {
   const setFilterCatId = useGalleryStore(s => s.setFilterCatId);
   const setFilterTagIds = useGalleryStore(s => s.setFilterTagIds);
   const setStoreSearchQuery = useGalleryStore(s => s.setSearchQuery);
-  const hasLoadedOnce = useGalleryStore(s => s.hasLoadedOnce);
-  const setHasLoadedOnce = useGalleryStore(s => s.setHasLoadedOnce);
   const searchQuery = useGalleryStore(s => s.searchQuery);
   const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
   const debouncedSearchQuery = useGalleryStore(s => s.debouncedSearchQuery);
   const setDebouncedSearchQuery = useGalleryStore(s => s.setDebouncedSearchQuery);
-  const hasInitialLoaded = useGalleryStore(s => s.hasInitialLoaded);
-  const setHasInitialLoaded = useGalleryStore(s => s.setHasInitialLoaded);
   
   const { 
     setPhotos, setTotalCount, setIsFetching, setIsFetchingNextPage, 
@@ -63,7 +60,7 @@ export default function PublicView() {
     setLoadMorePhotos: s.setLoadMorePhotos
   })));
 
-  const resetFiltersAndRefresh = useGalleryStore(s => s.resetFiltersAndRefresh);
+  const resetFilters = useGalleryStore(s => s.resetFilters);
   
   // 查询
   const infiniteQuery = useInfinitePhotos({
@@ -89,11 +86,6 @@ export default function PublicView() {
   
   // ========== 4. 计算状态 (移至此处) ==========
   const isInitialLoading = isSettingsLoading || !minTimeElapsed;
-
-  const handleMarkLoaded = useCallback(() => {
-    setHasInitialLoaded(true);
-    setHasLoadedOnce(true);
-  }, [setHasInitialLoaded, setHasLoadedOnce]);
 
   // ========== 2. useEffect & Callbacks ==========
   // 滚动恢复
@@ -131,14 +123,6 @@ export default function PublicView() {
       }
     })();
   }, [queryClient]);
-  
-  // 首次加载完成标记
-  useEffect(() => {
-    if (!isInitialLoading && !hasInitialLoaded) {
-      setHasInitialLoaded(true);
-      setHasLoadedOnce(true);
-    }
-  }, [isInitialLoading, hasInitialLoaded, setHasInitialLoaded, setHasLoadedOnce]);
   
   // ========== 3. useMemo ==========
   const photos = useMemo(() => {
@@ -203,7 +187,7 @@ export default function PublicView() {
   // ========== 6. 回调函数 ==========
   const handleRefresh = useCallback(async () => {
     try {
-      await resetFiltersAndRefresh();
+      await resetFilters();
       reset();
       sessionStorage.removeItem('photo-filters');
       localStorage.removeItem('photo-filters');
@@ -215,7 +199,7 @@ export default function PublicView() {
     } catch (e) {
       showError(e, '刷新产品照片失败');
     }
-  }, [resetFiltersAndRefresh, reset, queryClient, infiniteQuery, showSuccess, showError]);
+  }, [resetFilters, reset, queryClient, infiniteQuery, showSuccess, showError]);
   
   // ========== 7. 错误处理/加载状态（条件 return）==========
   if (infiniteQuery.error) {
@@ -224,7 +208,7 @@ export default function PublicView() {
   
   // ========== 8. 正常渲染 ==========
   return (
-    <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden">
+    <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden" id="public-view">
       <DataLoadingContainer
         isLoading={infiniteQuery.isLoading || isSettingsLoading || !settings}
         hasData={!!photos && photos.length > 0}

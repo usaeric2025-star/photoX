@@ -1,4 +1,4 @@
-import { useGalleryStore } from '../store';
+import { useGalleryStore } from '@/store';
 
 export const useAdminDialogs = () => {
   const alertDialog = useGalleryStore(state => state.alertDialog);

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchSettings, saveSettings } from '../services/settingService'
+import { fetchSettings, saveSettings } from '../../services/settingService'
 import { syncCache } from '@/utils/indexedDB'
 
 export const useSettings = () => {

@@ -1,19 +1,15 @@
 import { useState, useRef, useMemo, useCallback } from 'react';
 import { User, Photo, Category, Tag, Manufacturer } from '@/types';
-import { 
-  savePhotoToCloud
-} from '@/services/photoService';
+import { savePhotoToCloud } from '@/services/photoService';
 import { generateItemCode } from '@/services/utils';
 import { formatDate } from '@/utils/dateFormat';
 import { saveData } from '@/utils/indexedDB';
 import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
-import { useInvalidatePhotos, useFeedback, useTaskExecutor } from '@/hooks';
-import { useImageHash } from '@/hooks/useImageHash';
-import { useDuplicateCheck } from '@/hooks/useDuplicateCheck';
+import { useInvalidatePhotos, useFeedback, useTaskExecutor, useImageHash, useDuplicateCheck } from '@/hooks';
 import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/usePhotoAI';
 
-export const usePhotoImport = (
+export const useAdminImport = (
   user: User | null,
   adminUI: { setActiveScreen: (s: 'home' | 'manage' | 'login') => void } | null,
   adminSession: { setIsSyncing: (v: boolean) => void } | null,
@@ -23,15 +19,8 @@ export const usePhotoImport = (
   categories: Category[],
   tags: Tag[],
   manufacturers: Manufacturer[],
-  setCloudCount: (c: number | null) => void,
-  addManufacturer: (name: string) => Promise<Manufacturer>,
-  runWithLoading: <T>(state: string, fn: () => Promise<T>) => Promise<T>,
-  addTask: (task: Omit<import('../types').Task, 'id'>) => string,
-  updateTask: (id: string, updates: Partial<import('../types').Task>) => void,
-  abortAnalysis: () => void,
   tagNameToIdMap: Map<string, string>,
-  photosRef: React.MutableRefObject<Photo[]>,
-  showError: (error: unknown, context?: string) => void
+  photosRef: React.MutableRefObject<Photo[]>
 ) => {
   const queryClient = useQueryClient();
   const invalidatePhotos = useInvalidatePhotos();
@@ -63,7 +52,6 @@ export const usePhotoImport = (
       showSuccess('检测到 HEIC 照片，建议转换后再上传');
     }
 
-    // Wrap the entire import process in runTask for consistency and robustness
     await runTask(`导入 ${sFileArray.length} 张照片`, async ({ updateProgress }) => {
         importCancelledRef.current = false;
         abortControllerRef.current = new AbortController();
@@ -78,7 +66,7 @@ export const usePhotoImport = (
         const failedFiles: string[] = [];
 
         let lastProgressAt = Date.now();
-        const STALL_TIMEOUT = 90000; // 90 seconds stall timeout
+        const STALL_TIMEOUT = 90000;
 
         const workflowProps = {
             user, geminiApiKey, aiProvider, customModel, categories, 
@@ -88,7 +76,6 @@ export const usePhotoImport = (
         for (let i = 0; i < sFileArray.length; i++) {
             if (importCancelledRef.current || signal.aborted) break;
             
-            // Stalled detection check
             if (Date.now() - lastProgressAt > STALL_TIMEOUT) {
                 throw new Error('导入长时间无进度，已自动中止');
             }
@@ -100,7 +87,7 @@ export const usePhotoImport = (
 
                 if (await isDuplicate(hash)) {
                     duplicateCount++;
-                    lastProgressAt = Date.now(); // Update progress
+                    lastProgressAt = Date.now();
                 } else {
                     sessionHashes.add(hash);
                     const newPhoto = {
@@ -142,7 +129,7 @@ export const usePhotoImport = (
                           }
                         }
                     }
-                    lastProgressAt = Date.now(); // Update progress
+                    lastProgressAt = Date.now();
                 }
             } catch (err) {
                 if (importCancelledRef.current || signal.aborted) break;

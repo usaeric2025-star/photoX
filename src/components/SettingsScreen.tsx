@@ -21,19 +21,7 @@ import { TagsManager } from './settings/TagsManager';
 import { CategoriesManager } from './settings/CategoriesManager';
 import { MaintenanceSection } from './settings/MaintenanceSection';
 
-interface SettingsScreenProps {
-  setActiveScreen: (screen: 'home' | 'manage' | 'login') => void;
-  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: any[], tags: any[], manufacturers: any[]) => Promise<void>;
-  performPushSync: () => Promise<ApiResponse>;
-  performPullSync: () => Promise<ApiResponse>;
-  refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
-  saveSettings: (s: AppSettings) => Promise<ApiResponse>;
-  cloudCount: number | null;
-  lastSyncTime: number | null;
-  isSyncing: boolean;
-  onRunMaintenance: () => Promise<void>;
-  isMaintenanceRunning: boolean;
-}
+import { useAdmin } from '@/contexts/AdminContext';
 
 const BUTTON_STYLES = {
   primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
@@ -41,14 +29,21 @@ const BUTTON_STYLES = {
   accent: "px-5 py-2.5 bg-brand-gold hover:bg-brand-gold/90 text-white rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
 };
 
-export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
+export const SettingsScreen: React.FC = () => {
+  const logic = useAdmin();
+  const { 
+    setActiveScreen, handleLogoUpload, performPushSync, performPullSync, 
+    onRefresh: refreshCloudData, cloudCount, saveSettings, 
+    isSyncing, t, photos, categories, tags, manufacturers,
+    isMaintenanceRunning, onRunMaintenance
+  } = logic;
+
   const { showSuccess } = useFeedback();
   const { user, loginWithGoogle, logout } = useAuth();
   const { 
     settings, geminiApiKey, customModel, accessPasscode,
     setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
-    setAlertDialog,
-    loadingType
+    setAlertDialog
   } = useGalleryStore(useShallow(s => ({
     settings: s.settings,
     geminiApiKey: s.geminiApiKey,
@@ -58,19 +53,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
     setCustomModel: s.setCustomModel,
     setAccessPasscode: s.setAccessPasscode,
     setSettings: s.setSettings,
-    setAlertDialog: s.setAlertDialog,
-    loadingType: s.loadingType
+    setAlertDialog: s.setAlertDialog
   })));
-
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: tags = [] } = useTagsQuery();
-  const { data: manufacturers = [] } = useManufacturersQuery();
-  
-  const { data: infiniteData } = useInfinitePhotos({}, 100);
-  const allPhotos = infiniteData?.pages.flatMap(p => p.photos) || [];
-  const photos = Array.from(new Map(allPhotos.map(p => [p.id, p])).values());
-
-  const { setActiveScreen, handleLogoUpload, performPushSync, performPullSync, refreshCloudData, cloudCount, lastSyncTime, saveSettings, isSyncing } = props;
 
   const {
       updateTag, deleteTag, updateCategory, deleteCategory, addCategory, 
@@ -136,7 +120,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
             performPullSync={performPullSync}
             refreshCloudData={refreshCloudData}
             cloudCount={cloudCount}
-            lastSyncTime={lastSyncTime}
             isSyncing={isSyncing}
             photos={photos}
             categories={categories}
@@ -207,9 +190,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = (props) => {
           <MaintenanceSection 
             photos={photos}
             onHealthCheck={() => handleHealthCheck(photos)}
-            onRunMaintenance={props.onRunMaintenance}
-            isChecking={loadingType === 'global'}
-            isMaintenanceRunning={props.isMaintenanceRunning}
+            onRunMaintenance={onRunMaintenance}
+            isChecking={isMaintenanceRunning}
+            isMaintenanceRunning={isMaintenanceRunning}
             cardClass={cardClass}
             buttonStyles={BUTTON_STYLES}
           />

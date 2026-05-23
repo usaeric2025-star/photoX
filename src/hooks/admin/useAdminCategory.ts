@@ -4,7 +4,7 @@ import {
   useUpdateCategoryMutation, useDeleteCategoryMutation,
   useAddTagMutation, useAddCategoryMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
-} from '@/hooks/mutations/useAdminMutations';
+} from '@/hooks/core/useAdminMutations';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGalleryStore } from '@/store';
 import { safeArray } from '@/lib/utils';
@@ -73,7 +73,7 @@ export const useAdminCategory = (adminUI: {
 
   const removeTagFromPhoto = useCallback(async (photoId: string, tagId: string) => {
     try {
-      const { removeTagFromPhotoFromDB } = await import('../services/tagService');
+      const { removeTagFromPhotoFromDB } = await import('@/services/tagService');
       
       // Optimistic update
       queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {

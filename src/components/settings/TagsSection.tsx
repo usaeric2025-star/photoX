@@ -5,7 +5,7 @@ import { TagItem } from './TagItem';
 import { useGalleryStore } from '../../store';
 import { useFeedback } from '../../hooks';
 import { normalizeTagName } from '../../utils/stringHelper';
-import { useTaskExecutor } from '../../hooks/useTaskExecutor';
+import { useTaskExecutor } from '@/hooks';
 import { triggerRefreshTagHotScores } from '../../services/tagsMutationService';
 import { useQueryClient } from '@tanstack/react-query';
 

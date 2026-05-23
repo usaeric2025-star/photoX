@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
-import { updatePhotosGroupInCloud, setPhotoAsGroupCoverInCloud } from '../../services/photoService';
-import { useFeedback, useInvalidatePhotos } from '../';
-import { Photo } from '../../types/photo';
+import { updatePhotosGroupInCloud, setPhotoAsGroupCoverInCloud } from '@/services/photoService';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { Photo } from '@/types';
 import { reportError } from '@/lib/errorReporter';
 
 export const useGroupCoverMutation = () => {

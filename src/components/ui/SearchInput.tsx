@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Search, X } from 'lucide-react';
-import { useDebouncedSearch } from '@/hooks/useDebouncedSearch';
+import { useDebouncedSearch } from '@/hooks';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
 

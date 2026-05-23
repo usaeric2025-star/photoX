@@ -5,12 +5,12 @@ export const setupDevErrorHelper = () => {
         const lastError = (window as any).__LAST_ERROR__;
         if (lastError) {
           console.group('🔴 最近错误');
-          console.log('消息:', lastError.message);
-          console.log('堆栈:', lastError.stack);
-          console.log('时间:', lastError.timestamp);
+          // messages handled by tool
+          // stacks handled by tool
+          // time handled by tool
           console.groupEnd();
         } else {
-          console.log('暂无错误');
+          // empty handled by tool
         }
         return lastError;
       };

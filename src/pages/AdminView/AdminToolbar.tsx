@@ -10,7 +10,7 @@ interface AdminToolbarProps {
   onRefresh: () => void;
   cloudCount: number;
   lang: string;
-  loadingType: string;
+  isSyncing: boolean;
 }
 
 export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
@@ -25,7 +25,7 @@ export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
       totalPhotosCount={props.photos.length}
       cloudCount={props.cloudCount}
       appLang={props.lang as any}
-      isAnalyzing={props.loadingType === 'analyzing'}
+      isAnalyzing={props.isSyncing}
     />
   );
 };

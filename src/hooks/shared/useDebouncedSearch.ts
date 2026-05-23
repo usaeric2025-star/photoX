@@ -1,5 +1,5 @@
 import { useDebouncedCallback } from 'use-debounce';
-import { UI } from '../config/constants';
+import { UI } from '@/config/constants';
 
 /**
  * Standard debounced search hook for the application.

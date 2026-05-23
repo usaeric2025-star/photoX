@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
-import { updatePhotosBatch } from '../../services/photoService';
-import { useFeedback, useInvalidatePhotos } from '../../hooks';
-import { Photo } from '../../types';
+import { updatePhotosBatch } from '@/services/photoService';
+import { useFeedback, useInvalidatePhotos } from '@/hooks';
+import { Photo } from '@/types';
 
 interface InfinitePhotosData {
   photos: Photo[];

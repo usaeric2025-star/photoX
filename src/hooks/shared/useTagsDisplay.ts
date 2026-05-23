@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { Tag, AppSettings } from '../types';
-import { useGalleryStore } from '../store';
+import { Tag, AppSettings } from '@/types';
+import { useGalleryStore } from '@/store';
 
 export function useTagsDisplay(tags: Tag[], settings?: AppSettings) {
   

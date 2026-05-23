@@ -29,7 +29,7 @@ import { GroupMultiSelectBar } from './GroupMultiSelectBar';
 import { useGroupAdminLogic } from './useGroupAdminLogic';
 import { GroupGridView } from './GroupGridView';
 
-import { useAdminMode } from '../../hooks/useAdminMode';
+import { useAdminMode } from '@/hooks';
 
 import { useGalleryStore, useShallow } from '../../store';
 import { useFeedback } from '../../hooks';
@@ -57,7 +57,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
   const {
      activeGroupId, setActiveGroupId, appLang,
      tagIdToNameMap, isStaffMode,
-     adminPreviewMode,
      setEditPhotoId,
      filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
   } = useGalleryStore(useShallow(s => ({
@@ -66,7 +65,6 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
      appLang: s.appLang,
      tagIdToNameMap: s.tagIdToNameMap,
      isStaffMode: s.isStaffMode,
-     adminPreviewMode: s.adminPreviewMode,
      setEditPhotoId: s.setEditPhotoId,
      filterCatId: s.filterCatId,
      filterTagIds: s.filterTagIds,

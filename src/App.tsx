@@ -1,8 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { User } from './types';
-import { useAuth } from './hooks/useAuth';
-import { useRouteGuard } from './hooks/useRouteGuard';
+import { useAuth, useRouteGuard } from '@/hooks';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';

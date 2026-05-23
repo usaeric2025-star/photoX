@@ -1,15 +1,15 @@
-import { useMemo } from 'react';
-import { Photo, Category, Tag } from '../types';
-import { useGalleryStore, useShallow } from '../store';
-import { filterPhotos, groupPhotos } from '../lib/filters';
-import { isValidPhoto } from '../lib/typeGuard';
-import { useAdminMode } from './useAdminMode';
+import { useMemo, useCallback } from 'react';
+import { Photo, Category, Tag } from '@/types';
+import { useGalleryStore, useShallow } from '@/store';
+import { filterPhotos, groupPhotos } from '@/lib/filters';
+import { isValidPhoto } from '@/lib/typeGuard';
+import { useAdminMode } from '@/hooks';
 
 /**
  * Unified hook for filtering and grouping photos.
- * Used by both PublicGallery and AdminView.
+ * Replaces usePhotoFilters.
  */
-export function usePhotoFilters(
+export function useAdminFilters(
   incomingPhotos: Photo[],
   categories: Category[],
   tags: Tag[],
@@ -19,10 +19,11 @@ export function usePhotoFilters(
   } = {}
 ) {
   const { 
-    searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, 
+    searchQuery, debouncedSearchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, 
     isStaffMode, showGroupsCollapsed: storeShowGroupsCollapsed 
   } = useGalleryStore(useShallow(s => ({
     searchQuery: s.searchQuery,
+    debouncedSearchQuery: s.debouncedSearchQuery,
     filterCatId: s.filterCatId,
     filterSubId: s.filterSubId,
     filterTagIds: s.filterTagIds,
@@ -92,5 +93,26 @@ export function usePhotoFilters(
     searchMaps
   ]);
 
-  return { displayPhotos, gridPhotos };
+  const handleRefresh = useCallback(() => {
+    // If we need checkSyncLock we can pass it or accept it
+    useGalleryStore.getState().setSearchQuery('');
+    useGalleryStore.getState().setDebouncedSearchQuery('');
+    useGalleryStore.getState().setFilterCatId(null);
+    useGalleryStore.getState().setFilterTagIds([]);
+    
+    sessionStorage.removeItem('photo-filters');
+    localStorage.removeItem('photo-filters');
+  }, []);
+
+  return { 
+    displayPhotos, 
+    gridPhotos, 
+    handleRefresh,
+    searchQuery,
+    debouncedSearchQuery,
+    filterCatId,
+    filterSubId,
+    filterTagIds,
+    sortOrder
+  };
 }

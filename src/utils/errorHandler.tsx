@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import { useGalleryStore } from '../store';
 import { toast } from 'sonner';
 import { logErrorToSupabase } from '../services/logService';
 import * as ErrorMonitor from '@sentry/react';
@@ -30,24 +29,6 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
       message = '无法解析错误信息';
   }
   
-  // Store Error for Local Audit & Diagnostic Dashboard
-  try {
-      const state = useGalleryStore.getState();
-      const currentErrors = state.errors || [];
-      const newErr = { 
-        id: Math.random().toString(36).substring(2, 11),
-        message, 
-        stack: error instanceof Error ? error.stack : undefined,
-        context, 
-        timestamp: Date.now() 
-      };
-      useGalleryStore.setState({ 
-        errors: [newErr, ...currentErrors].slice(0, 20) 
-      });
-  } catch(e) {
-      console.error('Error in storing error log:', e);
-  }
-
   // UI Toast Notification with Diagnostic Clipboard Copy
   if (!silent) {
     try {
@@ -67,13 +48,12 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
                       url: window.location.href,
                       ua: navigator.userAgent,
                       viewport: `${window.innerWidth}x${window.innerHeight}`,
-                      timestamp: new Date().toISOString(),
-                      errorsInSession: useGalleryStore.getState().errors || [],
+                      timestamp: new Date().toISOString()
                     };
                     navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
                       .then(() => toast.success('物理诊断报告已成功复制到剪贴板！'))
                       .catch(() => {
-                        console.log('Clipboard copy failed, fallback to alert trace.');
+                        // fallback handled silently
                       });
                   }}
                   className="self-start text-[9px] font-bold text-blue-600 border border-blue-200 bg-blue-50/50 hover:bg-blue-50 font-sans tracking-wide px-2 py-0.5 rounded-full mt-1 flex items-center gap-1 transition"

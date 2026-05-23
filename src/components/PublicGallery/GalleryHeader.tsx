@@ -2,9 +2,8 @@ import React from 'react';
 import { PublicGalleryHeader } from '../PublicGalleryHeader';
 import { User, AppSettings, Photo } from '../../types';
 
-import { useAdminMode } from '../../hooks/useAdminMode';
-
-import { useGalleryStore } from '../../store';
+import { useAdminMode } from '@/hooks';
+import { useGalleryStore } from '@/store';
 import { translations } from '../../lib/translations';
 
 interface GalleryHeaderProps {

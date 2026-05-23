@@ -1,5 +1,5 @@
 
-import { ProductFormData } from '../types';
+import { ProductFormData } from '@/types';
 
 export function useFormValidation() {
   const validatePhotoForm = (form: Partial<ProductFormData>, options: { isBatch?: boolean } = {}): { valid: boolean; errors: string[] } => {
