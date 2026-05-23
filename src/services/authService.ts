@@ -1,7 +1,6 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
-import { globalHandleError } from '../utils/errorHandler';
 
 let wasAuthenticated = false;
 
@@ -9,7 +8,7 @@ let wasAuthenticated = false;
 supabase.auth.getSession().then(({ data: { session } }) => {
   wasAuthenticated = !!session;
 }).catch((error) => {
-  globalHandleError(error, "Auth initialization check failed");
+  console.error("Auth initialization check failed:", error);
 });
 
 export const loginWithGoogle = async () => {
@@ -35,7 +34,6 @@ export const loginWithGoogle = async () => {
     if (error) throw error;
     return data;
   } catch (err: unknown) {
-    globalHandleError(err, "Login Exception");
     throw err;
   }
 };
@@ -46,8 +44,7 @@ export const logout = async () => {
     const res = await supabase.auth.signOut();
     return res;
   } catch (err) {
-    globalHandleError(err, "登出失败(Logout failed)");
-    return { error: err };
+    throw err;
   }
 };
 
@@ -55,7 +52,7 @@ export const onAuthChange = (callback: (user: User | null) => void) => {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT') {
       if (wasAuthenticated) {
-        globalHandleError(new Error('请重新登录'), '登录已过期');
+        console.warn('Authentication token expired or user signed out.');
       }
       wasAuthenticated = false;
     } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {

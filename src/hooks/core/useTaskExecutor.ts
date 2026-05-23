@@ -32,9 +32,6 @@ export function useTaskExecutor() {
     } catch (error) {
       updateTask(taskId, { status: 'error', progress: 100, message: `${name} 失败: ${(error as Error).message || '未知错误'}` });
       reportError(error as Error, name);
-      if (options?.showErrorToast !== false) {
-        toast.error(`${name} 失败`);
-      }
       options?.onError?.(error as Error);
       return null;
     }

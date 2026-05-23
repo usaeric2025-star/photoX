@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Photo, Category, Tag, Manufacturer, AppSettings } from '../../types';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '../../store';
 
 /**
  * Syncs external data and query results into the global Gallery Store.
@@ -20,7 +20,14 @@ export const useGallerySync = (
   const { 
     setPhotos, setTotalCount, setIsFetching, setIsFetchingNextPage, 
     setHasNextPage, setLoadMorePhotos 
-  } = useGalleryStore();
+  } = useGalleryStore(useShallow(s => ({
+    setPhotos: s.setPhotos,
+    setTotalCount: s.setTotalCount,
+    setIsFetching: s.setIsFetching,
+    setIsFetchingNextPage: s.setIsFetchingNextPage,
+    setHasNextPage: s.setHasNextPage,
+    setLoadMorePhotos: s.setLoadMorePhotos
+  })));
 
   useEffect(() => {
     setPhotos(photos);

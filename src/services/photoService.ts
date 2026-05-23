@@ -206,8 +206,7 @@ export const loadAllPhotosFromCloud = async (
   const { data, error } = await query.range(from, to);
 
     if (error) {
-        globalHandleError(error, "Supabase Fetch (loadAllPhotosFromCloud)", true);
-        return [];
+        throw error;
     }
 
     return (data || []).map(item => mapSupabasePhoto(item));
@@ -247,8 +246,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     const { data, error } = await query;
 
     if (error) {
-        globalHandleError(error, "loadPhotosByGroupId", true);
-        return [];
+        throw error;
     }
 
     return (data || []).map(item => mapSupabasePhoto(item));
@@ -307,8 +305,7 @@ export const loadPhotosByGroupIdPaginated = async (
   ]);
 
   if (queryRes.error) {
-    globalHandleError(queryRes.error, "loadPhotosByGroupIdPaginated", true);
-    return { photos: [], total: 0 };
+    throw queryRes.error;
   }
 
   const mapped = (queryRes.data || []).map(item => mapSupabasePhoto(item));
@@ -385,8 +382,7 @@ export const getPhotoCount = async (
   const { count, error } = await query;
   
   if (error) {
-    globalHandleError(error, "getPhotoCount", true);
-    return 0;
+    throw error;
   }
 
   return count || 0;

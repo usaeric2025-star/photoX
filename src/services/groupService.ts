@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { supabasePublic } from '../lib/supabase-public';
 import { ProductGroup } from '../types';
-import { globalHandleError } from '../utils/errorHandler';
 
 export const TABLE_NAME = 'groups';
 
@@ -50,8 +49,7 @@ export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[
       console.warn("Table 'groups' does not exist in DB yet.");
       return [];
     }
-    globalHandleError(error, "Fetch Groups", true);
-    return [];
+    throw error;
   }
 
   return (data || []).map(item => ({
@@ -77,7 +75,6 @@ export const updateGroup = async (groupId: string, updates: Partial<ProductGroup
         .eq('id', groupId);
 
     if (error) {
-        globalHandleError(error, "Update Group", true);
         throw new Error(`Update Group Fail: ${error.message}`);
     }
 };
@@ -90,7 +87,6 @@ export const upsertGroup = async (group: Partial<ProductGroup> & { id: string })
         .upsert(dbUpdates, { onConflict: 'id' });
 
     if (error) {
-        globalHandleError(error, "Upsert Group", true);
         throw new Error(`Upsert Group Fail: ${error.message}`);
     }
 };
@@ -109,7 +105,6 @@ export const createGroup = async (groupData: ProductGroup) => {
         .single();
 
     if (error) {
-        globalHandleError(error, "Create Group", true);
         throw new Error(`Create Group Fail: ${error.message}`);
     }
     return data;
@@ -149,7 +144,6 @@ export const deleteGroup = async (id: string, userId?: string) => {
     }
     const { error } = await query;
     if (error) {
-        globalHandleError(error, `Delete Group ${id}`, true);
         throw new Error(`Delete Group Fail: ${error.message}`);
     }
 };

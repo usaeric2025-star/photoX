@@ -26,7 +26,32 @@ export const useAdminDataPrep = () => {
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
 
-  const store = useGalleryStore(useShallow(s => s));
+  const store = useGalleryStore(useShallow(s => ({
+    filterCatId: s.filterCatId,
+    filterTagIds: s.filterTagIds,
+    debouncedSearchQuery: s.debouncedSearchQuery,
+    sortOrder: s.sortOrder,
+    appLang: s.appLang,
+    editPhotoId: s.editPhotoId,
+    setEditPhotoId: s.setEditPhotoId,
+    batchEditingIds: s.batchEditingIds,
+    setBatchEditingIds: s.setBatchEditingIds,
+    setActiveScreen: s.setActiveScreen,
+    activeScreen: s.activeScreen,
+    setActiveGroupId: s.setActiveGroupId,
+    activeGroupId: s.activeGroupId,
+    isSyncing: s.isSyncing,
+    setIsSyncing: s.setIsSyncing,
+    geminiApiKey: s.geminiApiKey,
+    setGeminiApiKey: s.setGeminiApiKey,
+    customModel: s.customModel,
+    setCustomModel: s.setCustomModel,
+    setAccessPasscode: s.setAccessPasscode,
+    setAlertDialog: s.setAlertDialog,
+    setPromptDialog: s.setPromptDialog,
+    setLightboxIndex: s.setLightboxIndex,
+    totalCount: s.totalCount
+  })));
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
@@ -59,10 +84,20 @@ export const useAdminDataPrep = () => {
   const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
   const [adminPreviewMode, setAdminPreviewMode] = useState<'private' | 'public'>('private');
 
+  const infiniteQueryRef = useRef(infinitePhotosQuery);
+  infiniteQueryRef.current = infinitePhotosQuery;
+
+  const handleLoadMore = useCallback(() => {
+    const q = infiniteQueryRef.current;
+    if (!q.isFetchingNextPage && q.hasNextPage) {
+      q.fetchNextPage();
+    }
+  }, []);
+
   // Sync logic to store
   useGallerySync(
     photos, cloudCountData, infinitePhotosQuery.isFetching, infinitePhotosQuery.isFetchingNextPage, 
-    !!infinitePhotosQuery.hasNextPage, () => !infinitePhotosQuery.isFetchingNextPage && infinitePhotosQuery.hasNextPage && infinitePhotosQuery.fetchNextPage(),
+    !!infinitePhotosQuery.hasNextPage, handleLoadMore,
     fetchedSettings as AppSettings, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode
   );
 
