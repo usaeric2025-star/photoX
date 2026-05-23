@@ -8,7 +8,7 @@ import { formatDate } from '@/utils/dateFormat';
 import { saveData } from '@/utils/indexedDB';
 import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
-import { useInvalidatePhotos, useFeedback } from '@/hooks';
+import { useInvalidatePhotos, useFeedback, useTaskExecutor } from '@/hooks';
 import { useImageHash } from '@/hooks/useImageHash';
 import { useDuplicateCheck } from '@/hooks/useDuplicateCheck';
 import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/usePhotoAI';
@@ -36,6 +36,7 @@ export const usePhotoImport = (
   const queryClient = useQueryClient();
   const invalidatePhotos = useInvalidatePhotos();
   const { showSuccess } = useFeedback();
+  const { runTask } = useTaskExecutor();
   const [importProgress, setImportProgress] = useState(0);
   const [importTotal, setImportTotal] = useState(0);
 
@@ -62,147 +63,110 @@ export const usePhotoImport = (
       showSuccess('检测到 HEIC 照片，建议转换后再上传');
     }
 
-    importCancelledRef.current = false;
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-    
-    return runWithLoading('importing', async () => {
-      setIsSyncing(true);
-      setImportTotal(sFileArray.length);
-      setImportProgress(0);
-      setActiveScreen('home');
-
-      let successCount = 0;
-      let duplicateCount = 0;
-      let failCount = 0;
-      const failedFiles: string[] = [];
-
-      const handleCancelImport = () => {
-        importCancelledRef.current = true;
-        abortControllerRef.current?.abort();
-        abortAnalysis();
-        [uploadTaskId, aiTaskId].filter(Boolean).forEach(id => {
-          updateTask(id, { status: 'cancelled', message: '用户已取消', finished_at: Date.now() });
-        });
-      };
-
-      const uploadTaskId = addTask({
-        name: `上传照片 (${sFileArray.length} 张)`,
-        status: 'running',
-        progress: 0,
-        onCancel: handleCancelImport
-      });
-
-      const aiTaskId = useAi ? addTask({
-        name: `AI 识别 (${sFileArray.length} 张)`,
-        status: 'running',
-        onCancel: handleCancelImport
-      }) : '';
-
-      let processedCount = 0;
-      const onProgressUpdate = () => {
-        if (importCancelledRef.current) return;
-        processedCount++;
-        const progress = (processedCount / sFileArray.length) * 100;
-        const msg = `${processedCount}/${sFileArray.length}...`;
+    // Wrap the entire import process in runTask for consistency and robustness
+    await runTask(`导入 ${sFileArray.length} 张照片`, async ({ updateProgress }) => {
+        importCancelledRef.current = false;
+        abortControllerRef.current = new AbortController();
+        const signal = abortControllerRef.current.signal;
         
-        if (uploadTaskId) updateTask(uploadTaskId, { progress, message: `正在上传 ${msg}`, status: processedCount === sFileArray.length ? 'completed' : 'running' });
-        if (aiTaskId) updateTask(aiTaskId, { progress, message: `正在识别 ${msg}`, status: processedCount === sFileArray.length ? 'completed' : 'running' });
-      };
+        setIsSyncing(true);
+        setActiveScreen('home');
 
-      const workflowProps = {
-        user, geminiApiKey, aiProvider, customModel, categories, 
-        tags, manufacturers, tagNameToIdMap, photosRef, queryClient
-      };
+        let successCount = 0;
+        let duplicateCount = 0;
+        let failCount = 0;
+        const failedFiles: string[] = [];
 
-      const tasks: Promise<void>[] = [];
+        let lastProgressAt = Date.now();
+        const STALL_TIMEOUT = 90000; // 90 seconds stall timeout
 
-      for (const file of sFileArray) {
-        if (importCancelledRef.current || signal.aborted) break;
+        const workflowProps = {
+            user, geminiApiKey, aiProvider, customModel, categories, 
+            tags, manufacturers, tagNameToIdMap, photosRef, queryClient
+        };
+
+        for (let i = 0; i < sFileArray.length; i++) {
+            if (importCancelledRef.current || signal.aborted) break;
+            
+            // Stalled detection check
+            if (Date.now() - lastProgressAt > STALL_TIMEOUT) {
+                throw new Error('导入长时间无进度，已自动中止');
+            }
+
+            const file = sFileArray[i];
+            try {
+                const { hash, dataUrl } = await getHashAndDataUrl(file);
+                if (importCancelledRef.current || signal.aborted) break;
+
+                if (await isDuplicate(hash)) {
+                    duplicateCount++;
+                    lastProgressAt = Date.now(); // Update progress
+                } else {
+                    sessionHashes.add(hash);
+                    const newPhoto = {
+                        id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                        storage_id: hash, 
+                        item_code: generateItemCode(),
+                        manual_code: '',
+                        image_hash: hash,
+                        name: file.name.split('.')[0] || '未命名产品',
+                        description: '',
+                        image_url: '',
+                        uri: dataUrl,
+                        category_id: null,
+                        manufacturer_id: null,
+                        tag_ids: [],
+                        created_at: formatDate(new Date()),
+                        group_id: null,
+                        is_analyzing: useAi,
+                        is_hidden: false,
+                        _fileName: file.name,
+                        _fileSize: file.size,
+                        _lastModified: file.lastModified
+                    } as any;
+                    
+                    successCount++;
+                    photosRef.current.push(newPhoto);
+
+                    if (useAi) {
+                        try {
+                            await processAiAnalysis(newPhoto, workflowProps, signal, true, () => {}, invalidatePhotos);
+                        } catch (err: any) {
+                          if (err.name === 'DuplicatePhotoError') {
+                            const idx = photosRef.current.findIndex(p => p.id === newPhoto.id);
+                            if (idx !== -1) photosRef.current.splice(idx, 1);
+                            duplicateCount++;
+                            successCount--;
+                          } else {
+                            throw err;
+                          }
+                        }
+                    }
+                    lastProgressAt = Date.now(); // Update progress
+                }
+            } catch (err) {
+                if (importCancelledRef.current || signal.aborted) break;
+                console.error(`导入单项失败: ${file.name}`, err);
+                failCount++;
+                failedFiles.push(file.name);
+            }
+            
+            const pct = Math.floor(((i + 1) / sFileArray.length) * 100);
+            updateProgress(pct, `处理中 ${i + 1}/${sFileArray.length}`);
+        }
         
-        try {
-          const { hash, dataUrl } = await getHashAndDataUrl(file);
-          if (importCancelledRef.current || signal.aborted) break;
-
-          if (await isDuplicate(hash)) {
-            duplicateCount++;
-            onProgressUpdate();
-            continue;
-          }
-
-          sessionHashes.add(hash);
-          const newPhoto = {
-            id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            storage_id: hash, 
-            item_code: generateItemCode(),
-            manual_code: '',
-            image_hash: hash,
-            name: file.name.split('.')[0] || '未命名产品',
-            description: '',
-            image_url: '',
-            uri: dataUrl,
-            category_id: null,
-            manufacturer_id: null,
-            tag_ids: [],
-            created_at: formatDate(new Date()),
-            group_id: null,
-            is_analyzing: useAi,
-            is_hidden: false,
-            _fileName: file.name,
-            _fileSize: file.size,
-            _lastModified: file.lastModified
-          } as any;
-          
-          successCount++;
-          photosRef.current.push(newPhoto);
-
-          tasks.push(processAiAnalysis(newPhoto, workflowProps, signal, useAi, onProgressUpdate, invalidatePhotos)
-            .catch(err => {
-              if (err.name === 'DuplicatePhotoError') {
-                const idx = photosRef.current.findIndex(p => p.id === newPhoto.id);
-                if (idx !== -1) photosRef.current.splice(idx, 1);
-                duplicateCount++;
-                successCount--;
-                return;
-              }
-              throw err;
-            })
-          );
-        } catch (err) {
-          if (importCancelledRef.current || signal.aborted) break;
-          showError(err, `处理失败: ${file.name}`);
-          failCount++;
-          failedFiles.push(file.name);
-          onProgressUpdate();
+        invalidatePhotos();
+        saveData('product_photos', photosRef.current).catch(e => console.error('存入本地失败', e));
+        setIsSyncing(false);
+        
+        if (failCount > 0) {
+            throw new Error(`导入完成：成功 ${successCount - failCount}，跳过 ${duplicateCount}，失败 ${failCount}: ${failedFiles.slice(0, 3).join(', ')}`);
         }
-      } 
-      
-      const results = await Promise.allSettled(tasks);
-      invalidatePhotos();
-
-      results.forEach((res, idx) => {
-        if (res.status === 'rejected') {
-          failCount++;
-          showError(res.reason, `后台任务 ${idx + 1} 执行失败`);
-          failedFiles.push(`后台任务 ${idx + 1}`);
-        }
-      });
-
-      saveData('product_photos', photosRef.current).catch(e => showError(e, '存入本地失败'));
-      setIsSyncing(false);
-      
-      const msg = `上传完成：成功 ${successCount - failCount}，跳过 ${duplicateCount}`;
-      if (failCount > 0) {
-        showError(new Error(`失败详情: ${failedFiles.slice(0, 3).join(', ')}`), msg);
-      } else {
-        showSuccess(msg);
-      }
-    });
+    }, { showSuccessToast: true });
   }, [
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, 
-    setCloudCount, addManufacturer, runWithLoading, addTask, updateTask, abortAnalysis, 
-    tagNameToIdMap, photosRef, showError, queryClient, invalidatePhotos, showSuccess,
-    setIsSyncing, setActiveScreen, getHashAndDataUrl, isDuplicate, sessionHashes
+    tagNameToIdMap, photosRef, queryClient, invalidatePhotos, showSuccess,
+    setIsSyncing, setActiveScreen, getHashAndDataUrl, isDuplicate, sessionHashes, runTask
   ]);
 
   return { handlePhotoImport, importProgress, importTotal };
