@@ -1,17 +1,17 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useGalleryStore, useShallow } from '../store';
-import { User, AppSettings } from '../types';
+import { User } from '../types';
 import { fetchSettings } from '../services/settingService';
 import { getPhotoCount } from '../services/photoService';
 import { useQueryClient } from '@tanstack/react-query';
-import { useFeedback, useInvalidatePhotos, useAuth } from './';
+import { useInvalidatePhotos, useAuth, useTaskExecutor } from './';
 import { setupOfflineSyncListener } from '../utils/offlineSync';
 
-export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T>) => Promise<T>) => {
+export const useSyncEngine = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { showError: handleError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
+  const { runTask } = useTaskExecutor();
   
   const { 
     isSyncing, setIsSyncing, 
@@ -33,11 +33,11 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
     }
   }, [user?.id]);
 
-  const refreshCloudData = useCallback(async (userAccount: User | null, force: boolean, setCloudCount: (c: number | null) => void) => {
+  const refreshCloudData = useCallback(async (userAccount: User | null, setCloudCount: (c: number | null) => void) => {
     if (!userAccount) return;
     
-    await withLoading('sync-pull', async () => {
-      try {
+    await runTask('同步云端数据', async () => {
+        setIsSyncing(true);
         const [newSettings, count] = await Promise.all([
           fetchSettings(),
           getPhotoCount()
@@ -46,7 +46,6 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
         if (newSettings) setSettings(newSettings as any);
         setCloudCount(count);
         
-        // Invalidate queries to refresh UI
         invalidatePhotos();
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ['categories'] }),
@@ -54,11 +53,9 @@ export const useSyncEngine = (withLoading: <T>(type: string, fn: () => Promise<T
           queryClient.invalidateQueries({ queryKey: ['manufacturers'] }),
           queryClient.invalidateQueries({ queryKey: ['settings'] }),
         ]);
-      } catch (err) {
-        handleError(err, '同步失败');
-      }
-    });
-  }, [withLoading, setSettings, queryClient, handleError, invalidatePhotos]);
+        setIsSyncing(false);
+    }, { showSuccessToast: true });
+  }, [setSettings, queryClient, invalidatePhotos, runTask, setIsSyncing]);
 
   return {
     adminPreviewMode,

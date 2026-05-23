@@ -144,7 +144,7 @@ export const useAdminDataPrep = () => {
     setLoadMorePhotos(handleLoadMoreAdmin);
   }, [handleLoadMoreAdmin, setLoadMorePhotos]);
 
-  const { settings, setSettings, refreshCloudData } = useSyncEngine(withLoading);
+  const { settings, setSettings, refreshCloudData } = useSyncEngine();
 
   const { settings: fetchedSettings } = useSettings();
   useEffect(() => {
@@ -248,7 +248,7 @@ export const useAdminDataPrep = () => {
     });
   }, [setPromptDialog, addManufacturer, updateForm, showError]);
 
-  const onRefresh = useCallback(() => refreshCloudData(user, true, setCloudCount), [user, refreshCloudData]);
+  const onRefresh = useCallback(() => refreshCloudData(user, setCloudCount), [user, refreshCloudData]);
 
   const lang = appLang as LanguageCode;
   const t = translations[lang] || translations.en;
@@ -287,24 +287,22 @@ export const useAdminDataPrep = () => {
       cancelLabel: '取消 / Cancel',
       confirmLabel: '分析全部 / Analyze All',
       onConfirm: async () => {
-          try {
-           await withLoading('analyzing', () => analyzeBatch(photosToProcess, undefined, true));
-         } catch (err) {
-           showError(err, 'ai-analyze');
-         }
+         await runTask(`识别 ${photosToProcess.length} 张照片`, async ({ updateProgress }) => {
+            updateProgress(10, '准备分析...');
+            await analyzeBatch(photosToProcess, undefined, true);
+         }, { showSuccessToast: true });
       },
       secondaryAction: {
          label: '跳过已完善 / Skip Completed',
          onClick: async () => {
-            try {
-              await withLoading('analyzing', () => analyzeBatch(photosToProcess, undefined, false));
-            } catch (err) {
-              showError(err, 'ai-analyze');
-            }
+             await runTask(`识别 ${photosToProcess.length} 张照片`, async ({ updateProgress }) => {
+                updateProgress(10, '准备分析...');
+                await analyzeBatch(photosToProcess, undefined, false);
+             }, { showSuccessToast: true });
          }
       }
     });
-  }, [checkSyncLock, loadingType, abortAnalysis, withLoading, analyzeBatch, photos, setAlertDialog, showError]);
+  }, [checkSyncLock, loadingType, abortAnalysis, runTask, analyzeBatch, photos, setAlertDialog]);
 
   const handleDeletePhoto = useCallback(async (id: string | string[]) => {
      try {
@@ -511,24 +509,22 @@ export const useAdminDataPrep = () => {
       cancelLabel: '取消 / Cancel',
       confirmLabel: '分析全部 / Analyze All',
       onConfirm: async () => {
-         try {
-           await withLoading('analyzing', () => analyzeGroup(photosToAnalyze, true));
-         } catch (e: unknown) {
-           showError(e, '识别失败');
-         }
+         await runTask(`识别群组 ${photosToAnalyze.length} 张照片`, async ({ updateProgress }) => {
+            updateProgress(10, '准备分析...');
+            await analyzeGroup(photosToAnalyze, true);
+         }, { showSuccessToast: true });
       },
       secondaryAction: {
          label: '跳过已完善 / Skip Completed',
          onClick: async () => {
-            try {
-              await withLoading('analyzing', () => analyzeGroup(photosToAnalyze, false));
-            } catch (e: unknown) {
-              showError(e, '识别失败');
-            }
+             await runTask(`识别群组 ${photosToAnalyze.length} 张照片`, async ({ updateProgress }) => {
+                updateProgress(10, '准备分析...');
+                await analyzeGroup(photosToAnalyze, false);
+             }, { showSuccessToast: true });
          }
       }
     });
-  }, [setAlertDialog, withLoading, analyzeGroup, showError]);
+  }, [setAlertDialog, runTask, analyzeGroup]);
 
   const handleAiAnalyze = useCallback((p: Photo) => {
     return analyzeSingle(p).catch((e: Error) => showError(e, '识别失败'));

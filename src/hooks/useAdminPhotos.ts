@@ -124,8 +124,7 @@ export const useAdminPhotos = (
 
   // 3. Initialize Photo Mutations Hook
   const mutationHook = usePhotoMutations(
-    user, showError, deletePhotos, photosRef,
-    addTask, updateTask, removeTask
+    user, photosRef
   );
 
   const { mutateAsync: groupPhotosMutation } = useGroupPhotosMutation();
