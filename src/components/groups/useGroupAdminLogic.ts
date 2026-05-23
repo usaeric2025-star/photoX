@@ -130,6 +130,18 @@ export const useGroupAdminLogic = ({
   };
   
   useEffect(() => {
+    if (activeGroupId) {
+      const draft = sessionStorage.getItem(`draft_group_${activeGroupId}`);
+      if (draft) {
+        try {
+          setGroupData(JSON.parse(draft));
+          return;
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
     if (queriedGroupData) {
       setGroupData(queriedGroupData);
     } else if (activeGroupId && !isGroupDataLoading) {
@@ -140,7 +152,7 @@ export const useGroupAdminLogic = ({
         colors: [],
         materials: [],
         cover_photo_id: null,
-        user_id: 'default',
+        user_id: useGalleryStore.getState().user?.id || '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
@@ -148,6 +160,12 @@ export const useGroupAdminLogic = ({
       setGroupData(null);
     }
   }, [queriedGroupData, activeGroupId, isGroupDataLoading]);
+
+  useEffect(() => {
+    if (activeGroupId && groupData) {
+      sessionStorage.setItem(`draft_group_${activeGroupId}`, JSON.stringify(groupData));
+    }
+  }, [groupData, activeGroupId]);
 
   useEffect(() => {
     if (isMultiSelect && selectedIds.length === 0) {
@@ -176,10 +194,11 @@ export const useGroupAdminLogic = ({
           if (activeGroupId) {
              const targetIds = isDissolving ? allGroupPhotos.map(p => p.id) : ids;
              await removePhotosBatch({ photoIds: targetIds, groupId: activeGroupId });
+             sessionStorage.removeItem(`draft_group_${activeGroupId}`);
              
-             if (isDissolving) {
-               setActiveGroupId?.(null);
-             }
+              if (isDissolving) {
+                setActiveGroupId?.(null);
+              }
           }
         } catch (err: any) {
           showError(err, '操作失败');
@@ -207,9 +226,11 @@ export const useGroupAdminLogic = ({
 
     const nextGroupData = { ...groupData, ...updates };
     setGroupData(nextGroupData);
+    sessionStorage.setItem(`draft_group_${activeGroupId}`, JSON.stringify(nextGroupData));
     
     try {
       await saveGroupToCloud(nextGroupData);
+      sessionStorage.removeItem(`draft_group_${activeGroupId}`);
       
       if (updates.hasOwnProperty('is_hidden')) {
         const is_hidden = updates.is_hidden;
@@ -218,7 +239,7 @@ export const useGroupAdminLogic = ({
           : photos.filter(p => p && p.group_id === activeGroupId);
         if (groupPhotos.length > 0 && onUpdatePhoto) {
            await Promise.all(
-             groupPhotos.map(p => onUpdatePhoto(p.id, { is_hidden }))
+              groupPhotos.map(p => onUpdatePhoto(p.id, { is_hidden }))
            );
         }
       }

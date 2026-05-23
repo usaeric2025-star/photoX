@@ -16,7 +16,7 @@ export const BatchEditScreen = () => {
   const {
     resetAddState, saveBatchEditWithSuccess: saveBatchEdit, batchEditIds,
     formState, updateForm, batchIsHiddenApplied, setBatchIsHiddenApplied,
-    showOtherFields, setShowOtherFields, handleDeletePhoto: onDelete,
+    showOtherFields, setShowOtherFields, handleDeletePhotos: onDelete,
     quickAddManufacturer: quickAddMfr, quickAddTag: quickAddT,
     addTag, updateTag, deleteTag
   } = logic;
@@ -26,12 +26,14 @@ export const BatchEditScreen = () => {
     setPromptDialog, 
     setAlertDialog,
     isSyncing,
-    appLang
+    appLang,
+    setBatchEditingIds
   } = useGalleryStore(useShallow(s => ({
     setPromptDialog: s.setPromptDialog,
     setAlertDialog: s.setAlertDialog,
     isSyncing: s.isSyncing,
-    appLang: s.appLang
+    appLang: s.appLang,
+    setBatchEditingIds: s.setBatchEditingIds
   })));
 
   const handleSave = async () => {
@@ -95,10 +97,12 @@ export const BatchEditScreen = () => {
             shadow-md ${(isLocalSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
             {(isLocalSaving || isSyncing) ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
           </button>
-          <button onClick={resetAddState}
+          <button onClick={() => { resetAddState(); setBatchEditingIds(null); }}
             className="w-10 h-10 bg-slate-100 text-slate-600 
             rounded-xl flex items-center justify-center 
-            active:bg-slate-200">
+            active:bg-slate-200"
+            title="关闭批量修改"
+          >
             <CloseIcon size={18} />
           </button>
         </div>

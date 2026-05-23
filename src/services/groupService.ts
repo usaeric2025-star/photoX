@@ -15,7 +15,11 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, isCre
     // Filter
     for (const key of ALLOWED_FIELDS) {
         if (key in updates) {
-            dbUpdates[key] = updates[key];
+            const val = updates[key];
+            if (key === 'user_id' && (val === '' || val === 'default' || !val)) {
+                continue;
+            }
+            dbUpdates[key] = val;
         }
     }
 
@@ -26,7 +30,7 @@ const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, isCre
     }
     
     // Explicitly set user_id if provided and not already set
-    if (userId && !dbUpdates.user_id) {
+    if (userId && (!dbUpdates.user_id || dbUpdates.user_id === 'default' || dbUpdates.user_id === '')) {
         dbUpdates.user_id = userId;
     }
 

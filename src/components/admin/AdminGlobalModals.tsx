@@ -53,7 +53,7 @@ export const AdminGlobalModals: React.FC = () => {
                    <AlertDialogAction 
                      className={alertDialog.secondaryAction.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
                      onClick={async () => {
-                        await alertDialog.secondaryAction!.onClick();
+                        { const clickFn = alertDialog.secondaryAction!.onClick; setAlertDialog(null); if (clickFn) clickFn(); }
                         // Usually secondary action handles its own closing if needed, but we close by default
                         setAlertDialog(null);
                      }}
@@ -67,7 +67,7 @@ export const AdminGlobalModals: React.FC = () => {
                     className={alertDialog.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
                     onClick={async () => {
                       if (alertDialog.onConfirm) {
-                        await alertDialog.onConfirm();
+                        { const confirmFn = alertDialog.onConfirm; setAlertDialog(null); if (confirmFn) confirmFn(); }
                       }
                       setAlertDialog(null);
                     }}

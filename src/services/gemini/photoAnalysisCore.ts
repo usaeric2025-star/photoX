@@ -130,7 +130,8 @@ export const analyzeProductPhoto = async (
 
     const parsedData = extractJsonObject(textOutput);
     if (!parsedData) {
-      throw new Error('回传格式错误，找不到有效的 JSON 对象');
+      console.error("AI parse failed. Content:", textOutput);
+      throw new Error(`回传格式错误，找不到有效的 JSON 对象。AI 回传前120字: "${textOutput.slice(0, 120)}..."`);
     }
 
     // --- Added compatibility handling for multi-item response ---

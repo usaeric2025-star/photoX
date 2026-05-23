@@ -16,12 +16,12 @@ Task: Extract structured metadata from furniture product images with high precis
 - Multi-Item Handling: If the image lists multiple sizes or models, generate a separate object for EACH distinct variant.
 - IMPORTANT: Even if there are no explicit dimension numbers written in the image, YOU MUST VISUALLY ESTIMATE/GUESS typical furniture sizes (Length, Width, Height) in centimeters based on standard furniture sizes (e.g., standard chair, standard cabinet) and set "isAIEstimated": true. NEVER leave the dimensions array empty or zero if you can guess or visual estimate standard sizes!
 - Fields per object:
-  - "label": Descriptive English label (e.g., "Small Bed", "1.5m Table", "Model A").
+  - "label": Descriptive English label. DO NOT use generic or lazy terms like "Overall", "Overall Size", or "overall" as labels. Instead, ALWAYS use a descriptive name of the item or its component (e.g., "Dining Table", "Office Chair", "Desk", "Armchair", "3-Seater Sofa", "Model M1").
   - "length"/"width"/"height": Numeric values only. Standard order is Length x Width x Height.
   - "unit": "cm" (default), "mm", or "inch".
   - "isAIEstimated": 
     - Set to false if measurements are explicitly written in text on the image. 
-    - Set to true if you must visually estimate/guess typical sizes. If true, append " (AI)" to the "label" (e.g., "Overall (AI)").
+    - Set to true if you must visually estimate/guess typical sizes. If true, append " (AI)" to the "label" (e.g., "Table (AI)", "Chair (AI)").
 
 【CONSTRAINTS】
 - Output raw JSON only. NO Markdown code blocks (\`\`\`json).

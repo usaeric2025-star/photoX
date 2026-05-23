@@ -105,6 +105,21 @@ interface StoreState {
   setShowOtherFields: (show: boolean) => void;
 }
 
+const defaultForm: ProductFormData = {
+  name: '',
+  category_id: '',
+  tag_ids: [],
+  manufacturer_id: '',
+  model_number: '',
+  manual_code: '',
+  description: '',
+  is_hidden: false,
+  description_translations: { en: '', ms: '' },
+  dimensions: [],
+  price: '',
+  is_group_cover: false
+};
+
 export { useShallow };
 export const useGalleryStore = create<StoreState>()((set) => ({
   setAbortAnalysis: (abortAnalysis) => set({ abortAnalysis }),
@@ -122,22 +137,67 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setSortOrder: (sortOrder) => set({ sortOrder }),
   showGroupsCollapsed: true,
   setShowGroupsCollapsed: (showGroupsCollapsed) => set({ showGroupsCollapsed }),
-  appLang: 'en',
-  setAppLang: (appLang) => set({ appLang }),
-  columns: 3,
-  setColumns: (columns) => set({ columns }),
+  appLang: (localStorage.getItem('photo_appLang') as any) || 'en',
+  setAppLang: (appLang) => {
+    localStorage.setItem('photo_appLang', appLang);
+    set({ appLang });
+  },
+  columns: Number(localStorage.getItem('photo_columns') || 3) as 2 | 3 | 5,
+  setColumns: (columns) => {
+    localStorage.setItem('photo_columns', String(columns));
+    set({ columns });
+  },
   lightboxIndex: null,
   setLightboxIndex: (lightboxIndex) => set({ lightboxIndex }),
-  activeGroupId: null,
-  setActiveGroupId: (activeGroupId) => set({ activeGroupId }),
-  activePhotoId: null,
-  setActivePhotoId: (activePhotoId) => set({ activePhotoId }),
-  editPhotoId: null,
-  setEditPhotoId: (editPhotoId) => set({ editPhotoId }),
-  batchEditingIds: null,
-  setBatchEditingIds: (batchEditingIds) => set({ batchEditingIds }),
-  groupSettingsOpen: false,
-  setGroupSettingsOpen: (groupSettingsOpen) => set({ groupSettingsOpen }),
+  activeGroupId: sessionStorage.getItem('photo_activeGroupId') || null,
+  setActiveGroupId: (activeGroupId) => {
+    if (activeGroupId === null) {
+      sessionStorage.removeItem('photo_activeGroupId');
+    } else {
+      sessionStorage.setItem('photo_activeGroupId', activeGroupId);
+    }
+    set({ activeGroupId });
+  },
+  activePhotoId: sessionStorage.getItem('photo_activePhotoId') || null,
+  setActivePhotoId: (activePhotoId) => {
+    if (activePhotoId === null) {
+      sessionStorage.removeItem('photo_activePhotoId');
+    } else {
+      sessionStorage.setItem('photo_activePhotoId', activePhotoId);
+    }
+    set({ activePhotoId });
+  },
+  editPhotoId: sessionStorage.getItem('photo_editPhotoId') || null,
+  setEditPhotoId: (editPhotoId) => {
+    if (editPhotoId === null) {
+      sessionStorage.removeItem('photo_editPhotoId');
+      sessionStorage.removeItem('photo_edit_form_draft');
+    } else {
+      sessionStorage.setItem('photo_editPhotoId', editPhotoId);
+    }
+    set({ editPhotoId });
+  },
+  batchEditingIds: (() => {
+    try {
+      const saved = sessionStorage.getItem('photo_batchEditingIds');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  })(),
+  setBatchEditingIds: (batchEditingIds) => {
+    if (batchEditingIds === null) {
+      sessionStorage.removeItem('photo_batchEditingIds');
+    } else {
+      sessionStorage.setItem('photo_batchEditingIds', JSON.stringify(batchEditingIds));
+    }
+    set({ batchEditingIds });
+  },
+  groupSettingsOpen: sessionStorage.getItem('photo_groupSettingsOpen') === 'true',
+  setGroupSettingsOpen: (groupSettingsOpen) => {
+    sessionStorage.setItem('photo_groupSettingsOpen', String(groupSettingsOpen));
+    set({ groupSettingsOpen });
+  },
   isMultiSelect: false,
   setIsMultiSelect: (isMultiSelect) => set({ isMultiSelect }),
   selectedIds: [],
@@ -183,29 +243,45 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setAccessPasscode: (accessPasscode) => set({ accessPasscode }),
   user: null,
   setUser: (user) => set({ user }),
-  viewMode: 'public',
-  setViewMode: (viewMode) => set({ viewMode }),
+  viewMode: (localStorage.getItem('photo_viewMode') as any) || 'public',
+  setViewMode: (viewMode) => {
+    localStorage.setItem('photo_viewMode', viewMode);
+    set({ viewMode });
+  },
   isSyncing: false,
   setIsSyncing: (isSyncing) => set({ isSyncing }),
-  activeScreen: 'gallery',
-  setActiveScreen: (activeScreen) => set({ activeScreen }),
+  activeScreen: sessionStorage.getItem('photo_activeScreen') || 'gallery',
+  setActiveScreen: (activeScreen) => {
+    sessionStorage.setItem('photo_activeScreen', activeScreen);
+    set({ activeScreen });
+  },
   isInfiniteMode: false,
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
-  setLanguage: (appLang: 'zh' | 'en' | 'ms') => set({ appLang }),
+  setLanguage: (appLang: 'zh' | 'en' | 'ms') => {
+    localStorage.setItem('photo_appLang', appLang);
+    set({ appLang });
+  },
   setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
   debouncedSearchQuery: '',
   isAnalyzing: false,
   aiDebugInfo: null,
-  resetUI: () => set({
-    filterCatId: null,
-    filterTagIds: [],
-    searchQuery: '',
-    selectedIds: [],
-    isMultiSelect: false,
-    editPhotoId: null,
-    activeGroupId: null,
-    batchEditingIds: null
-  }),
+  resetUI: () => {
+    sessionStorage.removeItem('photo_edit_form_draft');
+    sessionStorage.removeItem('photo_editPhotoId');
+    sessionStorage.removeItem('photo_batchEditingIds');
+    sessionStorage.removeItem('photo_activeGroupId');
+    set({
+      filterCatId: null,
+      filterTagIds: [],
+      searchQuery: '',
+      selectedIds: [],
+      isMultiSelect: false,
+      editPhotoId: null,
+      activeGroupId: null,
+      batchEditingIds: null,
+      formState: defaultForm
+    });
+  },
   resetFilters: () => set({
     filterCatId: null,
     filterTagIds: [],
@@ -216,23 +292,19 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setShowWhatsAppChoice: (showWhatsAppChoice) => set({ showWhatsAppChoice }),
   tagIdToNameMap: {},
   setTagIdToNameMap: (tagIdToNameMap) => set({ tagIdToNameMap }),
-  formState: {
-    name: '',
-    category_id: '',
-    tag_ids: [],
-    manufacturer_id: '',
-    model_number: '',
-    manual_code: '',
-    description: '',
-    is_hidden: false,
-    description_translations: { en: '', ms: '' },
-    dimensions: [],
-    price: '',
-    is_group_cover: false
-  },
-  updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => set((state) => ({ 
-    formState: typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates } 
-  })),
+  formState: (() => {
+    try {
+      const saved = sessionStorage.getItem('photo_edit_form_draft');
+      return saved ? JSON.parse(saved) : defaultForm;
+    } catch {
+      return defaultForm;
+    }
+  })(),
+  updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => set((state) => {
+    const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
+    sessionStorage.setItem('photo_edit_form_draft', JSON.stringify(nextFormState));
+    return { formState: nextFormState };
+  }),
   newPhotoData: null,
   setNewPhotoData: (newPhotoData) => set({ newPhotoData }),
   showOtherFields: false,
