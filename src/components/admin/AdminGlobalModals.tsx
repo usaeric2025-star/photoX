@@ -36,9 +36,9 @@ export const AdminGlobalModals: React.FC = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
-            <AlertDialogDescription>
+            <div className="text-sm leading-relaxed text-slate-500 text-left w-full mt-2">
               {alertDialog?.message}
-            </AlertDialogDescription>
+            </div>
           </AlertDialogHeader>
           <AlertDialogFooter>
             {alertDialog?.onConfirm || alertDialog?.secondaryAction ? (
@@ -63,22 +63,22 @@ export const AdminGlobalModals: React.FC = () => {
                 )}
 
                 {alertDialog.onConfirm && (
-                  <AlertDialogAction 
-                    className={alertDialog.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
-                    onClick={async () => {
-                      if (alertDialog.onConfirm) {
-                        { const confirmFn = alertDialog.onConfirm; setAlertDialog(null); if (confirmFn) confirmFn(); }
-                      }
-                      setAlertDialog(null);
-                    }}
-                  >
-                    {alertDialog.confirmLabel || '确定 / OK'}
-                  </AlertDialogAction>
+                   <AlertDialogAction 
+                     className={alertDialog.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
+                     onClick={async () => {
+                       if (alertDialog.onConfirm) {
+                         { const confirmFn = alertDialog.onConfirm; setAlertDialog(null); if (confirmFn) confirmFn(); }
+                       }
+                       setAlertDialog(null);
+                     }}
+                   >
+                     {alertDialog.confirmLabel || '确定 / OK'}
+                   </AlertDialogAction>
                 )}
               </>
             ) : (
               <AlertDialogAction onClick={() => setAlertDialog(null)}>
-                确定 / OK
+                {alertDialog?.confirmLabel || '确定 / OK'}
               </AlertDialogAction>
             )}
           </AlertDialogFooter>

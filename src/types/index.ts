@@ -54,7 +54,7 @@ export interface AppError {
 
 export interface DialogData {
   title: string;
-  message?: string;
+  message?: string | React.ReactNode;
   onConfirm?: () => void | Promise<void>;
   onCancel?: () => void;
   confirmLabel?: string;

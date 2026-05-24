@@ -4,6 +4,7 @@ import { Settings2, LogIn, LogOut, Database } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { reportError } from '@/lib/errorReporter';
 import { useGalleryStore } from '@/store';
+import { triggerR2Migration } from '@/utils/migrateHelper';
 
 interface ToolsMenuProps {
   show: boolean;
@@ -21,54 +22,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
   const { user, loginWithGoogle, logout } = useAuth();
   
   const handleMigrate = () => {
-    let logs = '';
-    
-    useGalleryStore.getState().setAlertDialog({
-      title: 'R2 迁移进度',
-      message: (
-        <div className="h-64 overflow-y-auto bg-black text-green-400 p-2 font-mono text-xs whitespace-pre-wrap">
-          等待开始...
-        </div>
-      ),
-      confirmLabel: '关闭',
-      showCancel: false,
-    });
-
-    const appendToDialog = (msg: string) => {
-      logs += msg + '\n';
-      useGalleryStore.getState().setAlertDialog({
-        title: 'R2 迁移进度',
-        message: (
-          <div className="h-64 overflow-y-auto bg-black text-green-400 p-2 font-mono text-xs whitespace-pre-wrap">
-            {logs}
-          </div>
-        ),
-        confirmLabel: '关闭',
-        showCancel: false,
-      });
-    };
-
-    const eventSource = new EventSource('/api/migrate-r2');
-  
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      
-      if (data.type === 'info') {
-        appendToDialog(data.message);
-      } else if (data.type === 'success') {
-        appendToDialog(`✅ ${data.message}`);
-      } else if (data.type === 'error') {
-        appendToDialog(`❌ ${data.message}`);
-      } else if (data.type === 'done') {
-        appendToDialog(`\n========== 迁移完成 ========== \n成功: ${data.success}, 失败: ${data.fail}`);
-        eventSource.close();
-      }
-    };
-    
-    eventSource.onerror = () => {
-      appendToDialog('❌ 迁移连接中断');
-      eventSource.close();
-    };
+    triggerR2Migration();
   };
 
   return (

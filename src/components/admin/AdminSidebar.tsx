@@ -17,6 +17,7 @@ import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useAuth } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
+import { triggerR2Migration } from '@/utils/migrateHelper';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -159,32 +160,8 @@ export const AdminSidebar: React.FC = () => {
             badge={cloudCount || 0}
           />
           <button 
-            onClick={async () => {
-               try {
-                 const confirmed = window.confirm('该操作将执行后台 R2 迁移脚本和数据库 URL 更新脚本。是否继续？\n过程中需要保持后端的执行状态，并可在终端查看进度。');
-                 if (!confirmed) return;
-                 const { toast } = await import('sonner');
-                 const toastId = toast.loading('正在执行 R2 迁移 (步骤 1和2)...');
-                 const res = await fetch('/api/migrate-r2', { method: 'POST' });
-                 if (res.ok) {
-                    const result = await res.json();
-                    console.log("Migration Success Log:", result);
-                    toast.success('迁移执行完成', { description: '成功，详细日志已输出到控制台。', id: toastId, duration: 10000 });
-                 }
-                 else {
-                    let errStr = await res.text();
-                    try {
-                        const errJson = JSON.parse(errStr);
-                        errStr = `Error: ${errJson.message}\n\nSTDOUT:\n${errJson.stdout || ''}\n\nSTDERR:\n${errJson.stderr || ''}`;
-                    } catch(e) {}
-                    console.error("Migration Failed:", errStr);
-                    window.alert('迁移执行失败，完整日志请查看控制台 (F12) 的 Console 面板。\n\n部分日志:\n' + errStr.substring(0, 500) + (errStr.length > 500 ? '...' : ''));
-                    toast.error('迁移执行失败', { description: '请查看控制台日志', id: toastId, duration: 10000 });
-                 }
-               } catch (err: any) {
-                 const { toast } = await import('sonner');
-                 toast.error('请求网络报错', { description: err.message });
-               }
+            onClick={() => {
+              triggerR2Migration();
             }}
             className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-4"
           >

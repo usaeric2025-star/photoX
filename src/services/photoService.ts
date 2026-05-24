@@ -211,11 +211,41 @@ export const loadAllPhotosFromCloud = async (
 
   const { data, error } = await query.range(from, to);
 
-    if (error) {
-        throw error;
-    }
+  if (error) {
+    throw error;
+  }
 
-    return (data || []).map(item => mapSupabasePhoto(item));
+  const fetched = (data || []).map(item => mapSupabasePhoto(item));
+
+  // Fast group-cover sync to prevent group cover flashing on initial loads
+  const groupIds = Array.from(new Set(fetched.map(p => p.group_id).filter(Boolean))) as string[];
+  const missingGroupCovers: string[] = [];
+  
+  for (const gid of groupIds) {
+    const hasCover = fetched.some(p => p.group_id === gid && p.is_group_cover);
+    if (!hasCover) {
+      missingGroupCovers.push(gid);
+    }
+  }
+
+  if (missingGroupCovers.length > 0) {
+    try {
+      const { data: coverData, error: coverError } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select(PHOTO_SELECT_FIELDS)
+        .in('group_id', missingGroupCovers)
+        .eq('is_group_cover', true);
+
+      if (!coverError && coverData && coverData.length > 0) {
+        const covers = coverData.map(item => mapSupabasePhoto(item));
+        fetched.push(...covers);
+      }
+    } catch (e) {
+      console.warn('[loadAllPhotosFromCloud] Failed to fetch missing group covers', e);
+    }
+  }
+
+  return fetched;
 };
 
 export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {

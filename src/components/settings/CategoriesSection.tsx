@@ -10,7 +10,7 @@ interface CategoriesSectionProps {
 export const CategoriesSection: React.FC<CategoriesSectionProps> = ({ 
   categories, cardClass 
 }) => {
-  const { appLang } = useGalleryStore(s => ({ appLang: s.appLang }));
+  const appLang = useGalleryStore(s => s.appLang);
 
   return (
     <section className={cardClass} id="section-categories">
