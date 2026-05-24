@@ -276,9 +276,15 @@ export const useAdminDataPrep = () => {
         return new Promise<void>((resolve) => {
           triggerR2Migration({
             isSilent: true,
-            onProgress: (p) => {
-              const progress = p.total > 0 ? (p.success / p.total) * 100 : 0;
-              updateProgress(progress, `已迁移: ${p.success}/${p.total}${p.skipped ? ` (跳过 ${p.skipped})` : ''} - ${p.message}`);
+            onProgress: (p: any) => {
+              const total = p.total || 0;
+              const pending = p.pending || 0;
+              const migrated = total - pending;
+              const progress = total > 0 ? (migrated / total) * 100 : 0;
+              
+              const statusMsg = p.isDone ? '迁移任务已完成' : `剩余待迁移: ${pending} / 已完成: ${migrated} (库藏总数: ${total})`;
+              updateProgress(progress, statusMsg);
+              
               if (p.isDone) resolve();
             }
           });

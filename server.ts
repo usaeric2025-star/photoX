@@ -99,6 +99,58 @@ app.use(express.json({ limit: '50mb' }));
     res.json(statusResult);
   });
 
+  app.get("/api/migration-stats", async (req, res) => {
+    try {
+      const supabase = await getSupabaseAdmin();
+      const { data: all, error: err1 } = await supabase.from('furniture_items').select('image_url');
+      if (err1) throw err1;
+
+      const stats = {
+        total: all.length,
+        supabase: 0,
+        r2: 0,
+        others: 0
+      };
+
+      all.forEach((item: any) => {
+        const url = item.image_url || '';
+        if (url.includes('supabase.co')) stats.supabase++;
+        else if (url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com')) stats.r2++;
+        else stats.others++;
+      });
+
+      res.json({ status: 'ok', stats });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/r2-inventory", async (req, res) => {
+    try {
+      const s3Client = await getR2Client();
+      let totalCount = 0;
+      let continuationToken: string | undefined;
+      
+      do {
+        const response: any = await s3Client.send(new ListObjectsV2Command({
+          Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
+          Prefix: 'photox/public/',
+          ContinuationToken: continuationToken,
+        }));
+        
+        if (response.Contents) {
+          totalCount += response.Contents.length;
+        }
+        continuationToken = response.NextContinuationToken;
+      } while (continuationToken);
+
+      res.json({ status: 'ok', count: totalCount, prefix: 'photox/public/' });
+    } catch (err: any) {
+      console.error("R2 Inventory Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // Migration Endpoint (SSE)
   app.get("/api/migrate-r2", async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
@@ -381,40 +433,124 @@ async function getSupabaseAdmin() {
   const { createClient } = await import("@supabase/supabase-js");
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-  if (!supabaseUrl || !supabaseKey) throw new Error("Supabase credentials missing");
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Supabase credentials missing (SUPABASE_URL/SUPABASE_SERVICE_KEY)");
+  }
   return createClient(supabaseUrl, supabaseKey);
 }
 
-async function migrateSinglePhoto(id: string) {
-  const supabase = await getSupabaseAdmin();
-  const { data: photo, error } = await supabase.from('furniture_items').select('*').eq('id', id).single();
-  if (error || !photo) return { status: 'error', message: 'Photo not found' };
-
-  // 如果已经是 R2 的 URL，则跳过
-  const isR2Url = (url: string) => url && (url.includes('r2.cloudflarestorage.com') || url.includes('/storage/v1/object/public/'));
-  if (isR2Url(photo.image_url) && isR2Url(photo.thumb_url)) {
-    return { status: 'skipped' };
+async function getR2Client() {
+  const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
+  let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+  let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+  
+  if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+    const temp = r2AccessKeyId;
+    r2AccessKeyId = r2SecretAccessKey;
+    r2SecretAccessKey = temp;
   }
 
-  // 迁移逻辑... (简化版，实际复用上传逻辑)
-  // 这里可以调用你现有的 S3 转换逻辑，为了演示和确保安全，如果不满足迁移条件则标记为跳过
-  return { status: 'success' };
+  if (!r2AccessKeyId || !r2SecretAccessKey) {
+    throw new Error("R2 credentials missing (R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY)");
+  }
+
+  return new S3Client({
+    region: 'auto',
+    endpoint: r2Endpoint,
+    credentials: {
+      accessKeyId: r2AccessKeyId,
+      secretAccessKey: r2SecretAccessKey,
+    },
+    forcePathStyle: true,
+  });
+}
+
+async function migratePhotoCore(photoId: string, s3Client: S3Client, supabase: any) {
+  const { data: photo, error } = await supabase.from('furniture_items').select('*').eq('id', photoId).single();
+  if (error || !photo) return { status: 'error', message: 'Photo not found' };
+
+  if (!photo.image_url) return { status: 'skipped', message: 'No image URL' };
+
+  const isR2Url = (url: string) => url && (url.includes('r2.cloudflarestorage.com') || url.includes('/storage/v1/object/public/'));
+  
+  // 如果已经是 R2 的 URL，通常不需要重新上传，但如果文件名特殊可能需要检查
+  // 这里的逻辑是：如果包含 supabase.co 或者是本地相对路径，则需要上传
+  const needsMigration = (url: string) => url && (url.includes('supabase.co') || !url.startsWith('http'));
+
+  if (!needsMigration(photo.image_url) && (!photo.thumb_url || !needsMigration(photo.thumb_url))) {
+    return { status: 'skipped', message: 'Already migrated' };
+  }
+
+  try {
+    const filename = photo.image_url.split('/').pop() || `${photo.id}.webp`;
+    const objectKey = `photox/public/${filename}`;
+
+    // 1. Migrate Main Image
+    const response = await fetch(photo.image_url);
+    if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+    const imageBuffer = Buffer.from(await response.arrayBuffer());
+
+    await s3Client.send(new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
+      Key: objectKey,
+      Body: imageBuffer,
+      ContentType: 'image/webp',
+    }));
+
+    const r2PublicPrefix = process.env.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
+    const newImageUrl = `${r2PublicPrefix}/${objectKey}`;
+    const updates: any = { image_url: newImageUrl };
+
+    // 2. Migrate Thumb if exists
+    if (photo.thumb_url && needsMigration(photo.thumb_url)) {
+      const thumbResponse = await fetch(photo.thumb_url);
+      if (thumbResponse.ok) {
+        const thumbBuffer = Buffer.from(await thumbResponse.arrayBuffer());
+        const thumbFilename = photo.thumb_url.split('/').pop() || `${photo.id}_thumb.webp`;
+        const thumbKey = `photox/public/${thumbFilename}`;
+        
+        await s3Client.send(new PutObjectCommand({
+          Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
+          Key: thumbKey,
+          Body: thumbBuffer,
+          ContentType: 'image/webp',
+        }));
+        updates.thumb_url = `${r2PublicPrefix}/${thumbKey}`;
+      }
+    }
+
+    // 3. Update Supabase with new R2 URLs
+    const { error: updateErr } = await supabase.from('furniture_items').update(updates).eq('id', photoId);
+    if (updateErr) throw updateErr;
+
+    return { status: 'success', message: 'Migrated to R2' };
+  } catch (e: any) {
+    return { status: 'error', message: e.message };
+  }
 }
 
 // --- Serverless Friendly Batch Migration ---
 app.get("/api/migrate-r2-batch", async (req, res) => {
   try {
     const batchSize = 5; 
-    const stats = { success: 0, fail: 0, skipped: 0, total: 0 };
+    const stats = { success: 0, fail: 0, skipped: 0, total: 0, pending: 0 };
 
     const supabase = await getSupabaseAdmin();
-    const { count, error: countErr } = await supabase.from('furniture_items').select('id', { count: 'exact', head: true });
-    stats.total = count || 0;
+    const s3Client = await getR2Client();
 
-    // 找到前 N 张需要迁移的照片 ( image_url 包含 supabase 则认为需要迁移 )
+    // 统计总数和待处理数
+    const { count: totalCount } = await supabase.from('furniture_items').select('id', { count: 'exact', head: true });
+    const { count: pendingCount } = await supabase.from('furniture_items')
+      .select('id', { count: 'exact', head: true })
+      .or('image_url.is.null,image_url.ilike.%supabase.co%');
+
+    stats.total = totalCount || 0;
+    stats.pending = pendingCount || 0;
+
+    // 找到待迁移的照片
     const { data: photos, error: fetchErr } = await supabase
       .from('furniture_items')
-      .select('id, image_url, thumb_url')
+      .select('id')
       .or('image_url.is.null,image_url.ilike.%supabase.co%')
       .limit(batchSize);
 
@@ -426,10 +562,17 @@ app.get("/api/migrate-r2-batch", async (req, res) => {
 
     const logs: string[] = [];
     for (const photo of photos) {
-      // 执行具体的迁移对账逻辑
-      // 此处调用真正的迁移逻辑...
-      stats.success++; 
-      logs.push(`✅ 对账完成: ${photo.id}`);
+      const result = await migratePhotoCore(photo.id, s3Client, supabase);
+      if (result.status === 'success') {
+        stats.success++;
+        logs.push(`✅ 成功: ${photo.id}`);
+      } else if (result.status === 'skipped') {
+        stats.skipped++;
+        logs.push(`⏭️ 跳过: ${photo.id}`);
+      } else {
+        stats.fail++;
+        logs.push(`❌ 失败: ${photo.id} (${result.message})`);
+      }
     }
 
     return res.json({ 
@@ -439,6 +582,7 @@ app.get("/api/migrate-r2-batch", async (req, res) => {
       logs: logs.join('\n')
     });
   } catch (err: any) {
+    console.error("Migration batch error:", err);
     res.status(500).json({ error: err.message });
   }
 });

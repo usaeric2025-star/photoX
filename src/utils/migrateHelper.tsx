@@ -48,14 +48,57 @@ export async function triggerR2Migration(options?: {
     if (isSilent) return; // 静默模式下不弹出也不更新 Dialog
 
     const renderUpdate = () => {
+      const stats = data || {};
+      const total = stats.total || 0;
+      const pending = stats.pending || 0;
+      const success = stats.success || 0;
+      const fail = stats.fail || 0;
+      const skipped = stats.skipped || 0;
+      const migrated = total > 0 ? (total - pending) : 0;
+      const progressPercent = total > 0 ? Math.round((migrated / total) * 100) : 0;
+
       setAlertDialog({
         title: 'R2 迁移实时进度 / R2 Migration Progress',
         message: (
-          <div className="space-y-2 mt-2">
-            <p className="text-xs text-slate-500 font-medium">智能防超时系统：正在安全分批推进。R2 bucket: photox-storage</p>
+          <div className="space-y-4 mt-2">
+            {/* Progress Stats Header */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">库藏总数</span>
+                <span className="text-lg font-black text-brand-navy">{total}</span>
+              </div>
+              <div className="bg-emerald-50 p-2 rounded-xl border border-emerald-100 flex flex-col items-center">
+                <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">已迁移</span>
+                <span className="text-lg font-black text-emerald-700">{migrated}</span>
+              </div>
+              <div className="bg-blue-50 p-2 rounded-xl border border-blue-100 flex flex-col items-center">
+                <span className="text-[10px] text-blue-600 font-bold uppercase tracking-tight">待对账</span>
+                <span className="text-lg font-black text-blue-700">{pending}</span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="relative h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+              <div 
+                className="absolute top-0 left-0 h-full bg-gradient-to-r from-emerald-400 to-blue-500 transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+
+            <div className="flex justify-between items-center px-1">
+              <p className="text-[10px] text-slate-400 font-bold">
+                {stats.isDone ? '🎉 迁移全部完成' : `⚡️ 正在分批执行迁移对账... (${progressPercent}%)`}
+              </p>
+              <div className="flex gap-2 text-[10px] font-mono font-bold">
+                <span className="text-emerald-600">Success: {success}</span>
+                <span className="text-amber-500">Skip: {skipped}</span>
+                <span className="text-red-500">Fail: {fail}</span>
+              </div>
+            </div>
+
             <div 
               id="migration-log-container"
-              className="h-80 overflow-y-auto bg-[#0a0f1d] text-green-400 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap rounded-xl border border-slate-800 shadow-inner"
+              className="h-60 overflow-y-auto bg-[#0a0f1d] text-green-400 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap rounded-xl border border-slate-800 shadow-inner"
             >
               {globalMigrationLogs}
             </div>
@@ -134,7 +177,8 @@ export async function triggerR2Migration(options?: {
             success: accumulatedSuccess,
             fail: accumulatedFail,
             skipped: accumulatedSkipped,
-            total: data.total
+            total: data.total,
+            pending: data.pending
           });
 
           if (data.status === 'continue') {
@@ -146,9 +190,10 @@ export async function triggerR2Migration(options?: {
               success: accumulatedSuccess,
               fail: accumulatedFail,
               skipped: accumulatedSkipped,
-              total: data.total
+              total: data.total,
+              pending: 0
             });
-            broadcastProgress('迁移完成', true, { success: accumulatedSuccess, total: data.total });
+            broadcastProgress('迁移完成', true, { success: accumulatedSuccess, total: data.total, pending: 0 });
           }
         } catch (err: any) {
           isReenteringInstance = false;
@@ -337,7 +382,121 @@ export async function testR2ConnectionStatus() {
           </p>
         </div>
       ),
-      confirmLabel: '关闭窗口',
+    });
+  }
+}
+
+export async function checkR2Inventory() {
+  const setAlertDialog = useGalleryStore.getState().setAlertDialog;
+  
+  setAlertDialog({
+    title: 'R2 存储资产盘点中...',
+    message: (
+      <div className="flex flex-col items-center justify-center py-8 space-y-3">
+        <div className="w-10 h-10 border-4 border-t-blue-500 border-slate-100 rounded-full animate-spin"></div>
+        <p className="text-xs text-slate-500 font-semibold">正在深度扫描 R2 存储桶 (prefix: photox/public/)，请稍候...</p>
+      </div>
+    ),
+    confirmLabel: '扫描中...',
+  });
+
+  try {
+    const res = await fetch('/api/r2-inventory');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    setAlertDialog({
+      title: '📦 R2 存储资产清单 (Inventory)',
+      message: (
+        <div className="space-y-4 py-2">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center gap-2">
+            <span className="text-[32px] font-black text-brand-navy">{data.count}</span>
+            <span className="text-xs font-bold text-slate-500">云端 R2 物理对象总数</span>
+          </div>
+          
+          <div className="text-[11px] text-slate-500 space-y-1 font-medium bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
+            <p>• 扫描路径: <span className="font-mono">{data.prefix}</span></p>
+            <p>• 包含介质: 主图原始 WebP + 缩略图 WebP</p>
+            <p>• 说明: 如果该数值接近数据库总数 × 2，则说明迁移对账已基本完备。</p>
+          </div>
+        </div>
+      ),
+      confirmLabel: '完成盘点',
+    });
+  } catch (err: any) {
+    setAlertDialog({
+      title: '❌ 盘点故障',
+      message: <p className="text-sm p-4 text-red-600 font-bold">{err.message}</p>,
+      confirmLabel: '关闭',
+    });
+  }
+}
+
+export async function checkMigrationStats() {
+  const setAlertDialog = useGalleryStore.getState().setAlertDialog;
+  
+  setAlertDialog({
+    title: '深度对账中...',
+    message: (
+      <div className="flex flex-col items-center justify-center py-8 space-y-3">
+        <div className="w-10 h-10 border-4 border-t-emerald-500 border-slate-100 rounded-full animate-spin"></div>
+        <p className="text-xs text-slate-500 font-semibold">正在计算 Supabase 与 R2 的分布占比...</p>
+      </div>
+    ),
+    confirmLabel: '计算中...',
+  });
+
+  try {
+    const res = await fetch('/api/migration-stats');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { stats } = await res.json();
+
+    const supabasePercent = stats.total > 0 ? Math.round((stats.supabase / stats.total) * 100) : 0;
+    const r2Percent = stats.total > 0 ? Math.round((stats.r2 / stats.total) * 100) : 0;
+
+    setAlertDialog({
+      title: '📊 迁移对账报告 (Database Analysis)',
+      message: (
+        <div className="space-y-4 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-red-50 rounded-2xl border border-red-100 flex flex-col items-center">
+              <span className="text-2xl font-black text-red-600">{stats.supabase}</span>
+              <span className="text-[10px] font-bold text-red-400 uppercase">Supabase 遗留</span>
+            </div>
+            <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col items-center">
+              <span className="text-2xl font-black text-emerald-600">{stats.r2}</span>
+              <span className="text-[10px] font-bold text-emerald-400 uppercase">R2 已接管</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+             <div className="flex justify-between text-[10px] font-bold px-1">
+                <span className="text-slate-400">目前迁移总进度</span>
+                <span className={r2Percent === 100 ? "text-emerald-500" : "text-brand-gold"}>{r2Percent}%</span>
+             </div>
+             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${r2Percent}%` }} />
+             </div>
+          </div>
+          
+          <div className="text-[11px] text-slate-500 space-y-1 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <p>• 库藏总记录: <span className="font-bold text-slate-700">{stats.total}</span></p>
+            <p>• 其他/未知: <span className="font-bold text-slate-700">{stats.others}</span></p>
+            <p className="pt-2 text-[10px] text-slate-400 leading-tight">
+              {stats.supabase === 0 
+                ? "🎉 恭喜！数据库中所有图片的 URL 已成功指向 Cloudflare R2。" 
+                : "⚠️ 注意：仍有部分数据指向 Supabase，请继续运行后台迁移。"}
+            </p>
+          </div>
+        </div>
+      ),
+      confirmLabel: '关闭报告',
+    });
+  } catch (err: any) {
+    setAlertDialog({
+      title: '❌ 对账失败',
+      message: <p className="text-sm p-4 text-red-600 font-bold">{err.message}</p>,
+      confirmLabel: '关闭',
     });
   }
 }

@@ -17,7 +17,7 @@ import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useAuth } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
-import { triggerR2Migration, testR2ConnectionStatus } from '@/utils/migrateHelper';
+import { triggerR2Migration, testR2ConnectionStatus, checkR2Inventory, checkMigrationStats } from '@/utils/migrateHelper';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -182,6 +182,22 @@ export const AdminSidebar: React.FC = () => {
             className="w-full py-2 px-3 bg-brand-gold hover:bg-brand-gold/90 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
           >
             ☁️ R2 后台静默迁移 (Task 模式)
+          </button>
+          <button 
+            onClick={() => {
+              checkMigrationStats();
+            }}
+            className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
+          >
+            📊 迁移对账报告 (DB vs R2)
+          </button>
+          <button 
+            onClick={() => {
+              checkR2Inventory();
+            }}
+            className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
+          >
+            📦 R2 资产盘点 (探测物理数)
           </button>
         </div>
       </div>

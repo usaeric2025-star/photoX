@@ -2,7 +2,7 @@ import React from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ShieldCheck } from 'lucide-react';
 import { Photo } from '../../types';
-import { triggerR2Migration, testR2ConnectionStatus } from '@/utils/migrateHelper';
+import { triggerR2Migration, testR2ConnectionStatus, checkR2Inventory, checkMigrationStats } from '@/utils/migrateHelper';
 
 interface Props {
   photos: Photo[];
@@ -72,6 +72,24 @@ export const MaintenanceSection: React.FC<Props> = ({
           className={buttonStyles.secondary + " w-full text-brand-gold border-brand-gold/20 hover:bg-brand-gold/5"}
         >
           ☁️ R2 静默后台迁移 (任务面板模式)
+        </button>
+
+        <button 
+          onClick={() => {
+            checkMigrationStats();
+          }}
+          className={buttonStyles.secondary + " w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50 font-bold"}
+        >
+          📊 迁移对账报告 (数据接管分析)
+        </button>
+
+        <button 
+          onClick={() => {
+            checkR2Inventory();
+          }}
+          className={buttonStyles.secondary + " w-full text-blue-600 border-blue-200 hover:bg-blue-50 font-bold"}
+        >
+          📦 R2 云端资产盘点 (检测物理数量)
         </button>
       </div>
     </div>
