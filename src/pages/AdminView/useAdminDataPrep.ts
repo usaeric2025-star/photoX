@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { translations, LanguageCode } from '../../lib/translations';
-import { useAdminImport, useAdminSync, useAdminAI, useAdminEdit } from '../../hooks/admin';
+import { useAdminImport, useAdminAI, useAdminEdit } from '../../hooks/admin';
 import { 
   useAuth, useFeedback, useTaskExecutor, useTasks, useAdminCategory, useMultiSelect, 
   useSyncEngine, useSettings, useCategoriesQuery, useTagsQuery, useManufacturersQuery, 
@@ -83,7 +83,7 @@ export const useAdminDataPrep = () => {
     photosRef.current = photos;
   }, [photos]);
 
-  const { settings, setSettings, refreshCloudData } = useSyncEngine();
+  const { settings, setSettings, refreshCloudData, performPush } = useSyncEngine();
   const { settings: fetchedSettings } = useSettings();
   const { mutateAsync: saveSettingsMut } = useSettingsMutation();
 
@@ -117,11 +117,15 @@ export const useAdminDataPrep = () => {
   }), [photos, handleRefreshFilters, store.searchQuery, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder]);
 
   const importerResult = useAdminImport(user, { setActiveScreen: store.setActiveScreen }, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), photosRef);
-  const syncResult = useAdminSync();
   const aiResult = useAdminAI(user, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), photosRef);
 
   const importer = useMemo(() => importerResult, [importerResult]);
-  const sync = useMemo(() => syncResult, [syncResult]);
+  const sync = useMemo(() => ({
+    settings,
+    setSettings,
+    refreshCloudData,
+    performPush
+  }), [settings, setSettings, refreshCloudData, performPush]);
   const ai = useMemo(() => aiResult, [aiResult]);
 
   // Group Photos: Fetch independently so they aren't affected by filters (Category/Search)

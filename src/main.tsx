@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import * as ErrorMonitor from "@sentry/react";
 import { Toaster } from 'sonner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { TaskProvider } from '@/hooks';
 import { setupGlobalErrorHandling } from './lib/errorHandling';
@@ -60,6 +61,7 @@ if (container) {
         <Toaster position="bottom-center" richColors closeButton expand={false} visibleToasts={2} />
         <TaskProvider>
           <App />
+          <Analytics />
         </TaskProvider>
       </QueryClientProvider>
     </StrictMode>

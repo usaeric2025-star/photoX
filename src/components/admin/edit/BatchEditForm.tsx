@@ -12,9 +12,9 @@ interface BatchEditFormProps {
   batchIsHiddenApplied: boolean;
   setBatchIsHiddenApplied: (v: boolean) => void;
   quickAddMfr: () => void;
-  addTag: (name: string) => void;
-  updateTag: (id: string, name: string) => void;
-  deleteTag: (id: string) => void;
+  addTag: (name: string) => Promise<any>;
+  updateTag: (id: string, name: string) => Promise<any>;
+  deleteTag: (id: string) => Promise<any>;
 }
 
 export const BatchEditForm: React.FC<BatchEditFormProps> = ({

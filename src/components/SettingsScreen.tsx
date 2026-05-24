@@ -14,6 +14,7 @@ import {
   useAdminCategory, useAuth
 } from '@/hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
+import { SettingsTabs } from './settings/SettingsTabs';
 import { GeneralSettings } from './settings/GeneralSettings';
 import { AISettings } from './settings/AISettings';
 import { SyncSettings } from './settings/SyncSettings';
@@ -82,6 +83,7 @@ export const SettingsScreen: React.FC = () => {
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
+  const [activeTab, setActiveTab] = React.useState('cloud');
 
   return (
     <div className="fixed inset-0 z-[500] bg-brand-bg flex flex-col pt-safe">
@@ -111,93 +113,103 @@ export const SettingsScreen: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar pb-32">
+        <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        
         <div className="space-y-6">
-          <SyncSettings 
-            user={user}
-            loginWithGoogle={loginWithGoogle}
-            logout={logout}
-            performPushSync={performPushSync}
-            performPullSync={performPullSync}
-            refreshCloudData={refreshCloudData}
-            cloudCount={cloudCount}
-            isSyncing={isSyncing}
-            photos={photos}
-            categories={categories}
-            tags={tags}
-            manufacturers={manufacturers}
-            handleDeduplicate={handleDeduplicate}
-            cardClass={cardClass}
-            buttonStyles={BUTTON_STYLES}
-          />
+          {activeTab === 'cloud' && (
+            <>
+              <SyncSettings 
+                user={user}
+                loginWithGoogle={loginWithGoogle}
+                logout={logout}
+                performPushSync={performPushSync}
+                performPullSync={performPullSync}
+                refreshCloudData={refreshCloudData}
+                cloudCount={cloudCount}
+                isSyncing={isSyncing}
+                photos={photos}
+                categories={categories}
+                tags={tags}
+                manufacturers={manufacturers}
+                handleDeduplicate={handleDeduplicate}
+                cardClass={cardClass}
+                buttonStyles={BUTTON_STYLES}
+              />
+              <MaintenanceSection 
+                photos={photos}
+                onHealthCheck={() => handleHealthCheck(photos)}
+                onRunMaintenance={onRunMaintenance}
+                isChecking={isMaintenanceRunning}
+                isMaintenanceRunning={isMaintenanceRunning}
+                cardClass={cardClass}
+                buttonStyles={BUTTON_STYLES}
+              />
+              <ErrorLogViewer />
+            </>
+          )}
 
-          <GeneralSettings 
-            settings={settings}
-            handleLogoUpload={handleLogoUpload}
-            categories={categories}
-            tags={tags}
-            manufacturers={manufacturers}
-            photos={photos}
-            onHealthCheck={handleHealthCheck}
-            setSettingField={setSettingField}
-            cardClass={cardClass}
-            inputClass={inputClass}
-            buttonStyles={BUTTON_STYLES}
-          />
+          {activeTab === 'app' && (
+            <>
+              <GeneralSettings 
+                settings={settings}
+                handleLogoUpload={handleLogoUpload}
+                categories={categories}
+                tags={tags}
+                manufacturers={manufacturers}
+                photos={photos}
+                onHealthCheck={handleHealthCheck}
+                setSettingField={setSettingField}
+                cardClass={cardClass}
+                inputClass={inputClass}
+                buttonStyles={BUTTON_STYLES}
+              />
+              <AISettings 
+                geminiApiKey={geminiApiKey}
+                setGeminiApiKey={setGeminiApiKey}
+                customModel={customModel}
+                setCustomModel={setCustomModel}
+                testConnection={testConnection}
+                testResult={testResult}
+                accessPasscode={accessPasscode}
+                setAccessPasscode={setAccessPasscode}
+                setSettingField={setSettingField}
+                cardClass={cardClass}
+                inputClass={inputClass}
+              />
+            </>
+          )}
 
-          <AISettings 
-            geminiApiKey={geminiApiKey}
-            setGeminiApiKey={setGeminiApiKey}
-            customModel={customModel}
-            setCustomModel={setCustomModel}
-            testConnection={testConnection}
-            testResult={testResult}
-            accessPasscode={accessPasscode}
-            setAccessPasscode={setAccessPasscode}
-            setSettingField={setSettingField}
-            cardClass={cardClass}
-            inputClass={inputClass}
-          />
-
-          <CategoriesManager 
-            categories={categories}
-            deleteCategory={deleteCategory}
-            updateCategory={updateCategory}
-            addCategory={addCategory}
-            manufacturers={manufacturers}
-            addManufacturer={addManufacturer}
-            updateManufacturer={updateManufacturer}
-            deleteManufacturer={deleteManufacturer}
-            cardClass={cardClass}
-            buttonStyles={BUTTON_STYLES}
-          />
-
-          <TagsManager 
-            tags={tags}
-            settings={settings}
-            addTag={addTag}
-            updateTag={updateTag}
-            activeTagMenuId={activeTagMenuId}
-            setActiveTagMenuId={setActiveTagMenuId}
-            deleteTag={deleteTag}
-            togglePin={togglePin}
-            setSettings={setSettings}
-            setHasChanges={setHasChanges}
-            debouncedSave={debouncedSave}
-            cardClass={cardClass}
-            buttonStyles={BUTTON_STYLES}
-          />
-
-          <MaintenanceSection 
-            photos={photos}
-            onHealthCheck={() => handleHealthCheck(photos)}
-            onRunMaintenance={onRunMaintenance}
-            isChecking={isMaintenanceRunning}
-            isMaintenanceRunning={isMaintenanceRunning}
-            cardClass={cardClass}
-            buttonStyles={BUTTON_STYLES}
-          />
-
-          <ErrorLogViewer />
+          {activeTab === 'content' && (
+            <>
+              <CategoriesManager 
+                categories={categories}
+                deleteCategory={deleteCategory}
+                updateCategory={updateCategory}
+                addCategory={addCategory}
+                manufacturers={manufacturers}
+                addManufacturer={addManufacturer}
+                updateManufacturer={updateManufacturer}
+                deleteManufacturer={deleteManufacturer}
+                cardClass={cardClass}
+                buttonStyles={BUTTON_STYLES}
+              />
+              <TagsManager 
+                tags={tags}
+                settings={settings}
+                addTag={addTag}
+                updateTag={updateTag}
+                activeTagMenuId={activeTagMenuId}
+                setActiveTagMenuId={setActiveTagMenuId}
+                deleteTag={deleteTag}
+                togglePin={togglePin}
+                setSettings={setSettings}
+                setHasChanges={setHasChanges}
+                debouncedSave={debouncedSave}
+                cardClass={cardClass}
+                buttonStyles={BUTTON_STYLES}
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -13,6 +13,13 @@ module.exports = {
       { allowConstantExport: true },
     ],
     'react-hooks/rules-of-hooks': 'error',
-    'react-hooks/exhaustive-deps': 'warn'
+    'react-hooks/exhaustive-deps': 'warn',
+    'no-restricted-syntax': [
+      'error',
+      {
+        'selector': "VariableDeclarator[init.callee.name='useStore'][init.arguments.length=0]",
+        'message': '禁止解构 useStore，请使用精确订阅：useStore(s => s.xxx)'
+      }
+    ]
   },
 };

@@ -12,7 +12,6 @@ export * from './core/useAdminMode';
 export * from './shared/uiFeedback';
 export * from './shared/useMultiSelect';
 export * from './shared/useDebouncedSearch';
-export * from './shared/useMediaQuery';
 export * from './shared/useTagsDisplay';
 export * from './shared/useClickOutside';
 export * from './shared/useLongPress';
@@ -23,8 +22,6 @@ export * from './shared/useImageHash';
 
 // Admin Hooks
 export * from './admin';
-export * from './admin/useAdminCategory';
-export * from './admin/useDuplicateCheck';
 
 // Queries
 export * from './queries/usePhotos';

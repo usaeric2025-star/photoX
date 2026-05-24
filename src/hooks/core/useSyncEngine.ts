@@ -4,7 +4,7 @@ import { User } from '@/types';
 import { fetchSettings } from '@/services/settingService';
 import { getPhotoCount } from '@/services/photoService';
 import { useQueryClient } from '@tanstack/react-query';
-import { useInvalidatePhotos, useAuth, useTaskExecutor } from '@/hooks';
+import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation } from '@/hooks';
 import { setupOfflineSyncListener } from '@/utils/offlineSync';
 
 export const useSyncEngine = () => {
@@ -13,12 +13,12 @@ export const useSyncEngine = () => {
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();
   
-  const { 
-    settings, setSettings
-  } = useGalleryStore(useShallow(s => ({
+  const { settings, setSettings } = useGalleryStore(useShallow(s => ({
     settings: s.settings,
     setSettings: s.setSettings
   })));
+
+  const { mutateAsync: syncMut } = useSyncMutation();
 
   useEffect(() => {
     if (user?.id) {
@@ -52,6 +52,7 @@ export const useSyncEngine = () => {
   return {
     settings,
     setSettings,
-    refreshCloudData
+    refreshCloudData,
+    performPush: () => syncMut('push')
   };
 };
