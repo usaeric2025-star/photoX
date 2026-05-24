@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Photo, ProductFormData } from '../../../types';
 import { usePhotoEditLogic } from './usePhotoEditLogic';
-import { useMountedRef } from '@/hooks/shared/useMountedRef';
 import { DrawerHeader } from './DrawerHeader';
 import { useGalleryStore, useShallow } from '../../../store';
 import { BasicInfoTab } from './BasicInfoTab';
@@ -39,7 +38,6 @@ export const PhotoEditDrawer: React.FC = () => {
     setEditPhotoId: s.setEditPhotoId
   })));
 
-  const isMounted = useMountedRef();
   const { onDeletePhoto, onUpdatePhoto, onAiAnalyze, onCancelAnalyze } = usePhotoActions();
 
   const infinitePhotosQuery = useInfinitePhotos({
@@ -107,7 +105,6 @@ export const PhotoEditDrawer: React.FC = () => {
     newPhotoData,
     editPhotoPreview,
     setNewPhotoData,
-    isMounted,
     analyzeSingle: async (p: Photo) => {
       if (onAiAnalyze) {
         return onAiAnalyze(p);
@@ -166,6 +163,7 @@ export const PhotoEditDrawer: React.FC = () => {
           const readableError = err.includes('|') ? err.split('|').slice(1).join(': ') : err;
           logic.showError(new Error(readableError), 'AI识别错误');
         }}
+        isRunning={logic.isRunning}
       />
 
       <div className="flex-1 overflow-hidden flex flex-col pt-2">
@@ -185,7 +183,7 @@ export const PhotoEditDrawer: React.FC = () => {
                 formState={formState}
                 updateForm={updateForm}
                 previewSrc={newPhotoData || editPhotoPreview}
-                isProcessingImage={logic.isProcessingImage}
+                isProcessingImage={logic.isRotating}
                 onRotate={logic.rotatePhoto}
               />
             </TabsContent>

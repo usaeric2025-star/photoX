@@ -28,25 +28,8 @@ export default function PublicView() {
   const { user } = useAuth();
   const { settings, isLoading: isSettingsLoading } = useSettings();
   
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
-  const [showImmediateLoading, setShowImmediateLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowImmediateLoading(false), 100);
-    return () => clearTimeout(timer);
-  }, []);
-  
   // 滚动恢复
   useScrollRestoration('public_view_scroll');
-
-  // 最小加载时间
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setMinTimeElapsed(true);
-    }, UI.MIN_LOADING_TIME_MS);
-    
-    return () => clearTimeout(timer);
-  }, []);
   
   const navigate = useNavigate();
   const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
@@ -55,9 +38,8 @@ export default function PublicView() {
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden" id="public-view">
       <DataLoadingContainer
-        isLoading={isSettingsLoading || !settings || !minTimeElapsed}
+        isLoading={isSettingsLoading || !settings}
         hasData={true} // Data will be handled inside PublicGallery
-        showImmediateLoading={showImmediateLoading}
       >
         <ErrorBoundary>
           <PublicGallery 

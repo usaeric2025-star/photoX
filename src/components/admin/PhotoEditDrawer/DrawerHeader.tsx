@@ -20,12 +20,13 @@ interface HeaderProps {
   onToggleHidden: () => void;
   onClose: () => void;
   onErrorClick: (err: string) => void;
+  isRunning?: boolean;
 }
 
 export const DrawerHeader: React.FC<HeaderProps> = ({
   editPhotoId, formState, updateForm, isAnalyzing, aiDebugInfo, 
   isPartOfGroup, isSyncing, onAbort, onAiAnalyze, onDelete, 
-  onSave, onToggleHidden, onClose, onErrorClick
+  onSave, onToggleHidden, onClose, onErrorClick, isRunning
 }) => {
   const { setAlertDialog } = useGalleryStore();
   return (
@@ -73,8 +74,8 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
             )}
             <button 
               onClick={onAiAnalyze}
-              disabled={isAnalyzing && !onAbort}
-              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200'}`}
+              disabled={(isAnalyzing && !onAbort) || isRunning}
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all disabled:opacity-50 ${isAnalyzing ? 'bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed' : 'bg-purple-50 text-purple-600 border-purple-100 active:bg-purple-200'}`}
             >
               {isAnalyzing ? <Spinner size="sm" className="text-current" /> : <Sparkles size={18} />}
             </button>
@@ -101,7 +102,8 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
                   onConfirm: () => onDelete()
                 });
               }}
-              className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold"
+              disabled={isRunning}
+              className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-red-50 text-red-500 border border-red-100 shadow-sm active:bg-red-100 transition-all font-bold disabled:opacity-50"
             >
               <Trash2 size={18} />
             </button>
@@ -109,10 +111,10 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
 
           <button 
             onClick={onSave}
-            disabled={isSyncing}
-            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all ${isSyncing ? 'bg-blue-400 text-white border-blue-400 cursor-wait' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700'}`}
+            disabled={isSyncing || isRunning}
+            className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl border shadow-sm transition-all disabled:opacity-50 ${isSyncing || isRunning ? 'bg-blue-400 text-white border-blue-400 cursor-wait' : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20 active:bg-blue-700'}`}
           >
-            {isSyncing ? <Spinner size="sm" className="text-current" /> : <Save size={18}/>}
+            {isSyncing || isRunning ? <Spinner size="sm" className="text-current" /> : <Save size={18}/>}
           </button>
           <button 
             onClick={onClose} 

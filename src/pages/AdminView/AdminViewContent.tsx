@@ -39,13 +39,6 @@ export const AdminViewContent: React.FC = () => {
     isStaffMode: s.isStaffMode
   })));
 
-  const [showImmediateLoading, setShowImmediateLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowImmediateLoading(false), 100);
-    return () => clearTimeout(timer);
-  }, []);
-  
   const { tasks, cancelTask } = useTasks();
   const { reset, clear } = useMultiSelect();
 
@@ -121,7 +114,6 @@ export const AdminViewContent: React.FC = () => {
         <DataLoadingContainer
           isLoading={!!isLoading}
           hasData={!!logic.photos && logic.photos.length > 0}
-          showImmediateLoading={showImmediateLoading}
         >
           <AdminGlobalModals />
       

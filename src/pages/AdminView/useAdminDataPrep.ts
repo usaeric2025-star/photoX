@@ -151,7 +151,7 @@ export const useAdminDataPrep = () => {
 
   const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
-  const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
+  const isMaintenanceRunning = useMemo(() => tasks.some(t => t.status === 'running' && t.name.includes('自动修复')), [tasks]);
   const [adminPreviewMode, setAdminPreviewMode] = useState<'private' | 'public'>('private');
 
   const infiniteQueryRef = useRef(infinitePhotosQuery);
@@ -222,7 +222,6 @@ export const useAdminDataPrep = () => {
 
   const handleRunMaintenance = useCallback(async () => {
     if (isMaintenanceRunning) return;
-    setIsMaintenanceRunning(true);
     await runTask('自动修复缩略图 / Auto Repair ThumbHashes', async ({ updateProgress }) => {
         const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
         const { backfillThumbHashes } = await import('@/services/photo/backfillService');
@@ -257,7 +256,6 @@ export const useAdminDataPrep = () => {
         showSuccessToast: false,
         showErrorToast: true
     });
-    setIsMaintenanceRunning(false);
   }, [runTask, showError, showSuccess, isMaintenanceRunning]);
 
   return useMemo(() => ({

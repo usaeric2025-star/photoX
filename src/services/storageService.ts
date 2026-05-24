@@ -1,5 +1,17 @@
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
+import { STORAGE_BUCKET, STORAGE_PATH, R2_PUBLIC_URL } from '../config/constants';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+
+// Setup R2 S3 Client
+const r2Client = new S3Client({
+  region: 'auto',
+  endpoint: import.meta.env.VITE_R2_ENDPOINT || '',
+  credentials: {
+    accessKeyId: import.meta.env.VITE_R2_ACCESS_KEY_ID || '',
+    secretAccessKey: import.meta.env.VITE_R2_SECRET_ACCESS_KEY || '',
+  },
+});
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -70,6 +82,8 @@ export const uploadImages = async (
     onStatus?.('uploading');
     const uploadFile = async (base64: string, fileName: string, isMain=false) => {
       // 1. Check if file already exists in storage
+      // [Deprecated] Supabase Logic:
+      /*
       const { data: existingFile } = await supabase.storage
         .from(DB_CONFIG.BUCKET_NAME)
         .list(fileName.split('/')[0], {
@@ -108,6 +122,34 @@ export const uploadImages = async (
         .getPublicUrl(fileName);
       
       return publicUrl;
+      */
+
+      // [New] Cloudflare R2 S3 API Logic:
+      // Note: R2 doesn't have a simple exists check without reading/listing which takes time.
+      // Since it's webp images with IDs, we can just upsert.
+      const res = await fetch(base64);
+      const blob = await res.blob();
+      const buffer = await blob.arrayBuffer();
+
+      // Ensure fileName does not start with a slash and is just an ID in the PATH
+      // Old filename was something like `public/{photoId}.webp`
+      // New should be `photox/public/{id}.webp`
+      // But the function call below passes `public/${photoId}.webp` 
+      // We will adjust it inside this function for R2
+      const objectKey = `${STORAGE_PATH}/${fileName.replace('public/', '')}`;
+
+      await r2Client.send(
+        new PutObjectCommand({
+          Bucket: STORAGE_BUCKET,
+          Key: objectKey,
+          Body: new Uint8Array(buffer),
+          ContentType: 'image/webp',
+        })
+      );
+
+      if (isMain && onProgress) onProgress(100);
+      
+      return `${R2_PUBLIC_URL}/${objectKey}`;
     };
 
     const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`, true);

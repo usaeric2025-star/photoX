@@ -22,9 +22,7 @@ interface GroupSettingsSheetProps {
 }
 
 export const GroupSettingsSheet: React.FC<GroupSettingsSheetProps> = (props) => {
-  const [isSaving, setIsSaving] = useState(false);
   const isAdminMode = useAdminMode();
-  const { showError } = useFeedback();
 
   const childProps = {
     ...props,
@@ -34,7 +32,7 @@ export const GroupSettingsSheet: React.FC<GroupSettingsSheetProps> = (props) => 
   return (
     <Sheet open={props.showGroupSettings} onOpenChange={props.setShowGroupSettings}>
       <SheetContent side="right" showCloseButton={false} className="w-full sm:max-w-[400px] p-0 border-l border-slate-100 bg-white">
-        <GroupSettingsHeader {...childProps} setIsSaving={setIsSaving} isSaving={isSaving} />
+        <GroupSettingsHeader {...childProps} />
         <GroupSettingsContent {...childProps} />
       </SheetContent>
     </Sheet>

@@ -5,7 +5,7 @@ import { TagItem } from './TagItem';
 import { useGalleryStore } from '../../store';
 import { useFeedback } from '../../hooks';
 import { normalizeTagName } from '../../utils/stringHelper';
-import { useTaskExecutor } from '@/hooks';
+import { useTaskExecutor, useTasks } from '@/hooks';
 import { triggerRefreshTagHotScores } from '../../services/tagsMutationService';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -43,16 +43,15 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
   const { setPromptDialog } = useGalleryStore();
   const { showSuccess, showError } = useFeedback();
   const { runTask } = useTaskExecutor();
+  const { tasks } = useTasks();
+  const isRunning = tasks.some(t => t.status === 'running');
   const queryClient = useQueryClient();
 
   const handleRefreshHotScores = async () => {
-    try {
+    await runTask('刷新热门标签', async () => {
       await triggerRefreshTagHotScores();
       await queryClient.invalidateQueries({ queryKey: ['tags'] });
-      showSuccess('标签热度分值已刷新');
-    } catch (err: any) {
-      showError(err, '刷新失败');
-    }
+    }, { showSuccessToast: true });
   };
 
   const handleAddTag = () => {
@@ -150,7 +149,8 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
            {/* Refresh Scores Button */}
            <button
              onClick={handleRefreshHotScores}
-             className="px-3 py-1.5 bg-brand-gold hover:bg-brand-gold/85 text-brand-navy font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1 cursor-pointer"
+             disabled={isRunning}
+             className="px-3 py-1.5 bg-brand-gold hover:bg-brand-gold/85 text-brand-navy font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-sm flex items-center gap-1 cursor-pointer disabled:opacity-50"
              title="重新计算所有标签的使用次数和热度分值"
            >
              <RefreshCw size={12} />

@@ -1,9 +1,8 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useGalleryStore, useShallow } from '@/store';
-import { useTasks } from '@/hooks';
+import { useTasks, useTaskExecutor } from '@/hooks';
 import { useAdmin } from '@/contexts/AdminContext';
 import { safeArray } from '@/lib/utils';
-import { useMountedRef } from '@/hooks/shared/useMountedRef';
 
 export const useBatchEdit = () => {
   const logic = useAdmin();
@@ -13,10 +12,10 @@ export const useBatchEdit = () => {
     handleDeletePhotos: onDelete, resetForm, disableMultiSelect
   } = logic;
   
-  const [isLocalSaving, setIsLocalSaving] = useState(false);
-  const isMounted = useMountedRef();
+  const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
   
+  const isSaving = useMemo(() => tasks.some(t => t.status === 'running' && t.name.includes('保存')), [tasks]);
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
 
   const { 
@@ -27,11 +26,11 @@ export const useBatchEdit = () => {
     setBatchEditingIds: s.setBatchEditingIds
   })));
 
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     resetForm();
   }, [resetForm]);
-
-  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
 
   const handleUpdateForm = useCallback((updates: any) => {
     updateForm(updates);
@@ -44,27 +43,20 @@ export const useBatchEdit = () => {
   }, [updateForm]);
 
   const handleSave = async () => {
-    setIsLocalSaving(true);
-    try {
-      const changes: any = {};
-      touchedFields.forEach(key => {
-        changes[key] = (formState as any)[key];
-      });
-      
-      if (Object.keys(changes).length === 0) {
-        setAlertDialog({ title: '提示', message: '没有检测到修改', confirmLabel: '确定', onConfirm: () => setAlertDialog(null) });
-        return;
-      }
-      
-      await saveBatchEdit(changes);
-      if (isMounted.current) {
-        setBatchEditingIds(null);
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsLocalSaving(false);
-      }
+    const changes: any = {};
+    touchedFields.forEach(key => {
+      changes[key] = (formState as any)[key];
+    });
+    
+    if (Object.keys(changes).length === 0) {
+      setAlertDialog({ title: '提示', message: '没有检测到修改', confirmLabel: '确定', onConfirm: () => setAlertDialog(null) });
+      return;
     }
+
+    await runTask('保存批量修改', async () => {
+      await saveBatchEdit(changes);
+      setBatchEditingIds(null);
+    }, { showSuccessToast: true });
   };
 
   const handleDelete = useCallback(() => {
@@ -76,13 +68,15 @@ export const useBatchEdit = () => {
       cancelLabel: '取消',
       type: 'danger',
       onConfirm: async () => {
-        await onDelete(batchEditIds);
-        setAlertDialog(null);
-        setBatchEditingIds(null);
-        disableMultiSelect();
+        await runTask('删除照片', async () => {
+          await onDelete(batchEditIds);
+          setAlertDialog(null);
+          setBatchEditingIds(null);
+          disableMultiSelect();
+        }, { showSuccessToast: true });
       }
     });
-  }, [batchEditIds, onDelete, setAlertDialog, setBatchEditingIds, disableMultiSelect]);
+  }, [batchEditIds, onDelete, setAlertDialog, setBatchEditingIds, disableMultiSelect, runTask]);
 
   const handleClose = useCallback(() => {
     resetAddState(); 
@@ -97,10 +91,10 @@ export const useBatchEdit = () => {
     handleSave,
     handleDelete,
     handleClose,
-    isLocalSaving,
+    isLocalSaving: isSaving,
     isSyncing,
     batchIsHiddenApplied,
     setBatchIsHiddenApplied,
-    logic // pass through for other props if needed
+    logic
   };
 };

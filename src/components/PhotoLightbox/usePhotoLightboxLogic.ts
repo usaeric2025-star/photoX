@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { useFeedback } from '../../hooks';
+import { useFeedback, useTaskExecutor, useTasks } from '../../hooks';
 
 interface UsePhotoLightboxLogicProps {
   photo: Photo | null;
@@ -23,13 +23,15 @@ export const usePhotoLightboxLogic = ({
   onClose
 }: UsePhotoLightboxLogicProps) => {
   const { showError } = useFeedback();
+  const { runTask } = useTaskExecutor();
+  const { tasks } = useTasks();
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'en');
   const [isCopied, setIsCopied] = useState(false);
-  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+  const isGroupDataLoading = useMemo(() => tasks.some(t => t.status === 'running' && t.name === '获取产品组数据'), [tasks]);
   
   // Swipe support
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -48,27 +50,15 @@ export const usePhotoLightboxLogic = ({
     setIsImageError(false);
     
     if (photo?.group_id) {
-      // Only set loading if it's a different group than what we currently have
-      if (!groupData || groupData.id !== photo.group_id) {
-        setIsGroupDataLoading(true);
-      }
-      import('../../services/groupService').then(m => {
-        m.getGroupById(photo.group_id!).then(data => {
-          setGroupData(data);
-          setIsGroupDataLoading(false);
-        }).catch(err => {
-          showError(err, '获取产品组数据失败');
-          setIsGroupDataLoading(false);
-        });
-      }).catch(err => {
-        showError(err, '动态载入产品组服务失败');
-        setIsGroupDataLoading(false);
-      });
+      runTask('获取产品组数据', async () => {
+         const m = await import('../../services/groupService');
+         const data = await m.getGroupById(photo.group_id!);
+         setGroupData(data);
+      }, { showSuccessToast: false });
     } else {
       setGroupData(null);
-      setIsGroupDataLoading(false);
     }
-  }, [photo?.id, photo?.group_id]);
+  }, [photo?.id, photo?.group_id, runTask]);
 
   const slides = useMemo(() => {
     return (displayPhotos || [])

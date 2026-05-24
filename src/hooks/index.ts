@@ -9,7 +9,7 @@ export * from './core/useSyncEngine';
 export * from './core/useAdminMode';
 
 // Shared Hooks
-export * from './shared/uiFeedback';
+export * from './shared/useFeedback';
 export * from './shared/useMultiSelect';
 export * from './shared/useDebouncedSearch';
 export * from './shared/useTagsDisplay';

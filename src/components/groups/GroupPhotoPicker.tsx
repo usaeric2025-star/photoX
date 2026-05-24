@@ -6,7 +6,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '../ui/dialog';
 import { Photo } from '../../types';
-import { useMountedRef, useInfinitePhotos, useFeedback, useTaskExecutor } from '@/hooks';
+import { useInfinitePhotos, useTaskExecutor, useTasks } from '@/hooks';
 import { useAdmin } from '@/contexts/AdminContext';
 import { PAGINATION } from '../../constants/config';
 import { GroupGridView } from './GroupGridView';
@@ -27,12 +27,11 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const isMounted = useMountedRef();
   const { handlePhotoImport } = useAdmin();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
-  const { showError } = useFeedback();
+  const { tasks } = useTasks();
+  const isRunning = tasks.some(t => t.status === 'running');
 
   const queryParams = useMemo(() => ({
     searchQuery: search,
@@ -65,24 +64,12 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    setIsUploading(true);
-    
     // Use the global handler but pre-assign groupId
     if (handlePhotoImport) {
-        try {
+        await runTask('上传照片', async () => {
             await handlePhotoImport(e, true, groupId);
-            if (isMounted.current) {
-                onClose();
-            }
-        } catch (err) {
-            if (isMounted.current) {
-                showError(err, '上传图片失败');
-            }
-        } finally {
-            if (isMounted.current) {
-                setIsUploading(false);
-            }
-        }
+            onClose();
+        }, { showSuccessToast: true });
     }
   };
 
@@ -131,7 +118,8 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
             />
             <button 
               onClick={handleUploadClick}
-              className="flex items-center gap-2 px-4 py-2 bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 rounded-xl transition-all font-black text-xs uppercase tracking-tight"
+              disabled={isRunning}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 rounded-xl transition-all font-black text-xs uppercase tracking-tight disabled:opacity-50"
             >
               <Upload size={14} />
               <div className="flex flex-col items-start leading-none">
@@ -155,7 +143,8 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
               <p className="italic">现有库找不到符合条件的照片 / Library is empty</p>
               <button 
                 onClick={handleUploadClick}
-                className="flex items-center gap-2 px-8 py-4 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all font-black"
+                disabled={isRunning}
+                className="flex items-center gap-2 px-8 py-4 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all font-black disabled:opacity-50"
               >
                 <Plus size={24} />
                 还是直接从电脑上传吧 / Upload from computer
@@ -194,10 +183,10 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
             </button>
             <button 
               onClick={handleConfirm}
-              disabled={selectedIds.length === 0}
+              disabled={selectedIds.length === 0 || isRunning}
               className={cn(
                 "px-6 py-2 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center gap-2",
-                selectedIds.length > 0 
+                selectedIds.length > 0 && !isRunning
                   ? "bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 shadow-emerald-500/20" 
                   : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
               )}

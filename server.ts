@@ -14,6 +14,29 @@ async function startServer() {
   });
 
   // AI Proxy Endpoint
+  app.post("/api/migrate-r2", async (req, res) => {
+    try {
+      const { exec } = await import("child_process");
+      const util = await import("util");
+      const execPromise = util.promisify(exec);
+      
+      console.log("Starting R2 Migration...");
+      const { stdout: out1, stderr: err1 } = await execPromise("npx tsx scripts/migrateToR2.ts");
+      console.log("MigrateToR2 Output:", out1);
+      if (err1) console.error("MigrateToR2 Errors:", err1);
+
+      console.log("Starting URL Update...");
+      const { stdout: out2, stderr: err2 } = await execPromise("npx tsx scripts/updatePhotoUrls.ts");
+      console.log("UpdateUrls Output:", out2);
+      if (err2) console.error("UpdateUrls Errors:", err2);
+      
+      res.json({ message: "全部脚本执行完毕。\n1) 文件上传执行情况请查看服务端日志。\n2) URL更新执行情况请查看服务端日志。", log1: out1, log2: out2 });
+    } catch (e: any) {
+      console.error("Migration Failed Context:", e);
+      res.status(500).send(`Exception executing scripts: ${e.message}\n\nSTDOUT: ${e.stdout}\nSTDERR: ${e.stderr}`);
+    }
+  });
+
   app.post("/api/ai/analyze", async (req, res) => {
     try {
       const { base64Image, categories, tags, manufacturers, customModel, targetCategoryId, originalName } = req.body;

@@ -21,3 +21,7 @@ export const ROUTES = {
 }
 
 export const DEFAULT_MODEL = 'Gemini 2.5 Flash Lite Preview 09-2025';
+
+export const STORAGE_BUCKET = 'photox-storage';
+export const STORAGE_PATH = 'photox/public';
+export const R2_PUBLIC_URL = 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';

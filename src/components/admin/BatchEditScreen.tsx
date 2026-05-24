@@ -32,9 +32,10 @@ export const BatchEditScreen = () => {
           {logic.handleDeletePhotos && (
             <button 
               onClick={handleDelete}
+              disabled={isLocalSaving || isSyncing}
               className="w-10 h-10 bg-red-50 text-red-500 
               rounded-xl flex items-center justify-center 
-              active:bg-red-100 transition-colors"
+              active:bg-red-100 transition-colors disabled:opacity-50"
               title="批量删除"
             >
               <Trash2 size={18} />
@@ -42,10 +43,12 @@ export const BatchEditScreen = () => {
           )}
 
           <button onClick={handleSave}
-            className={`w-10 h-10 bg-blue-600 text-white 
-            rounded-xl flex items-center justify-center 
-            shadow-md ${(isLocalSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
-            {(isLocalSaving || isSyncing) ? <RefreshCcw size={18} className="animate-spin" /> : <Save size={18} />}
+            disabled={isLocalSaving || isSyncing}
+            className={`px-3 h-10 bg-blue-600 text-white 
+            rounded-xl flex items-center justify-center gap-1.5
+            shadow-md text-sm font-bold transition-all ${(isLocalSaving || isSyncing) ? 'opacity-50 pointer-events-none' : 'active:bg-blue-700'}`}>
+            {(isLocalSaving || isSyncing) ? <RefreshCcw size={16} className="animate-spin" /> : <Save size={16} />}
+            {(isLocalSaving || isSyncing) ? '保存中...' : '保存'}
           </button>
           
           <button onClick={handleClose}

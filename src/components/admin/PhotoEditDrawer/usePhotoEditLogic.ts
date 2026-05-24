@@ -17,16 +17,17 @@ interface Props {
   newPhotoData?: string | null;
   editPhotoPreview?: string | null;
   setNewPhotoData?: (data: string | null) => void;
-  isMounted: { current: boolean };
   analyzeSingle: (photo: Photo) => Promise<any>;
   saveNewPhoto: () => Promise<void>;
 }
 
 export const usePhotoEditLogic = (props: Props) => {
-  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, isMounted, analyzeSingle, saveNewPhoto } = props;
+  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, analyzeSingle, saveNewPhoto } = props;
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
+  const isRotating = useMemo(() => tasks.some(t => t.status === 'running' && t.name === '旋转图片'), [tasks]);
+  const isRunning = useMemo(() => tasks.some(t => t.status === 'running'), [tasks]);
   const aiDebugInfo = null;
 
   const { runTask } = useTaskExecutor();
@@ -47,7 +48,6 @@ export const usePhotoEditLogic = (props: Props) => {
   const { mutateAsync: updateManMut } = useUpdateManufacturerMutation();
   const { mutateAsync: deleteManMut } = useDeleteManufacturerMutation();
 
-  const [isProcessingImage, setIsProcessingImage] = useState(false);
 
   const addTag = async (name: string) => { const tag = await addTagMut(name); return tag.id; };
   const updateTag = async (id: string, updates: Partial<Tag>) => { await updateTagMut({ id, updates }); return true; };
@@ -66,8 +66,7 @@ export const usePhotoEditLogic = (props: Props) => {
     const src = newPhotoData || editPhotoPreview;
     if (!src) return;
 
-    setIsProcessingImage(true);
-    try {
+    await runTask('旋转图片', async () => {
       const img = new Image();
       if (src.startsWith('http')) img.crossOrigin = 'Anonymous';
       img.src = src;
@@ -84,18 +83,10 @@ export const usePhotoEditLogic = (props: Props) => {
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
 
       const newData = canvas.toDataURL('image/jpeg', 0.95);
-      if (setNewPhotoData && isMounted.current) {
+      if (setNewPhotoData) {
         setNewPhotoData(newData);
       }
-    } catch (err) {
-      if (isMounted.current) {
-        showError(err, '图像旋转处理失败');
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsProcessingImage(false);
-      }
-    }
+    }, { showSuccessToast: true });
   };
 
   const handleSave = async () => {
@@ -104,7 +95,9 @@ export const usePhotoEditLogic = (props: Props) => {
       showError(new Error(errors[0]), '表單驗證失敗');
       return;
     }
-    await saveNewPhoto();
+    await runTask('保存修改', async () => {
+      await saveNewPhoto();
+    }, { showSuccessToast: true });
   };
 
   const toggleHidden = async () => {
@@ -112,15 +105,10 @@ export const usePhotoEditLogic = (props: Props) => {
     updateForm({ is_hidden: nextValue }); // optimistic
     
     if (editPhotoId && !editPhotoId.startsWith('temp-')) {
-        try {
+        await runTask('更新可见性', async () => {
             const m = await import('../../../services/photoService');
             await m.updatePhotoHidden(editPhotoId, nextValue);
-            showSuccess(`照片已${nextValue ? '隐藏' : '显示'}`);
-        } catch (e) {
-            showError(e, '自动保存可见性失败');
-            // Rollback on failure
-            updateForm({ is_hidden: !nextValue });
-        }
+        }, { showSuccessToast: true });
     } else {
         console.warn('Cannot toggle hidden: invalid photoId', editPhotoId);
     }
@@ -146,9 +134,9 @@ export const usePhotoEditLogic = (props: Props) => {
     categories, tags, manufacturers,
     addTag, updateTag, deleteTag,
     addManufacturer, updateManufacturer, deleteManufacturer,
-    isProcessingImage, rotatePhoto,
+    rotatePhoto,
     handleSave, toggleHidden, triggerAiAnalyze,
-    isAnalyzing, aiDebugInfo, isPartOfGroup, isSyncing,
+    isAnalyzing, aiDebugInfo, isPartOfGroup, isSyncing, isRotating, isRunning,
     setPromptDialog, setAlertDialog, appLang, showError
   };
 };

@@ -140,6 +140,31 @@ export const AdminSidebar: React.FC = () => {
             onClick={() => {}}
             badge={cloudCount || 0}
           />
+          <button 
+            onClick={async () => {
+               try {
+                 const confirmed = window.confirm('该操作将执行后台 R2 迁移脚本和数据库 URL 更新脚本。是否继续？\n过程中需要保持后端的执行状态，并可在终端查看进度。');
+                 if (!confirmed) return;
+                 const { toast } = await import('sonner');
+                 const toastId = toast.loading('正在执行 R2 迁移 (步骤 1和2)...');
+                 const res = await fetch('/api/migrate-r2', { method: 'POST' });
+                 if (res.ok) {
+                    const result = await res.json();
+                    toast.success('迁移执行完成', { description: result.message, id: toastId, duration: 10000 });
+                 }
+                 else {
+                    const err = await res.text();
+                    toast.error('迁移执行失败', { description: err, id: toastId, duration: 10000 });
+                 }
+               } catch (err: any) {
+                 const { toast } = await import('sonner');
+                 toast.error('请求网络报错', { description: err.message });
+               }
+            }}
+            className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-4"
+          >
+            🚨 临时 R2 数据与URL迁移
+          </button>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { Skeleton } from '../ui/Skeleton';
-import { usePermission } from '@/hooks';
+import { usePermission, useFeedback, useTaskExecutor, useTasks } from '@/hooks';
 
 interface LightboxInfoPanelProps {
   photo: Photo;
@@ -43,6 +43,9 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   const catName = getTranslatedCategoryName(photo.category_id, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturer_id, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
+  
+  const { tasks } = useTasks();
+  const isRunning = tasks.some(t => t.status === 'running');
 
   const displayTags = React.useMemo(() => {
     const rawIds = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
@@ -57,22 +60,16 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [photo.id]);
 
-  const [isInternalAnalyzing, setIsInternalAnalyzing] = React.useState(false);
+  const { showError: handleError } = useFeedback();
+  const { runTask } = useTaskExecutor();
 
   const handleAiAnalyze = React.useCallback(async () => {
-    if (isInternalAnalyzing) return;
-    setIsInternalAnalyzing(true);
-    try {
-      if (onAiAnalyze) {
+    await runTask('AI 分析', async () => {
+        if (onAiAnalyze) {
           await onAiAnalyze(photo);
-      }
-      // AI 分析完成
-    } catch (error) {
-      console.error('AI 分析失败:', error);
-    } finally {
-      setIsInternalAnalyzing(false);
-    }
-  }, [isInternalAnalyzing, onAiAnalyze, photo]);
+        }
+      }, { showSuccessToast: true });
+  }, [runTask, onAiAnalyze, photo]);
 
 
   return (
@@ -105,7 +102,8 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
               <>
                 <button 
                   onClick={handleAiAnalyze}
-                  className={`w-9 h-9 flex items-center justify-center rounded-xl border border-blue-100 transition-all ${isAnalyzing ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-blue-50 text-blue-600'}`}
+                  disabled={isRunning}
+                  className={`w-9 h-9 flex items-center justify-center rounded-xl border border-blue-100 transition-all disabled:opacity-50 ${isAnalyzing ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' : 'bg-blue-50 text-blue-600'}`}
                 >
                   {isAnalyzing ? <X size={16} /> : <Sparkles size={16} />}
                 </button>
