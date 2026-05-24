@@ -17,13 +17,19 @@ async function migrate() {
   }
 
   const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
-  const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID;
-  const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+  let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
   const r2BucketName = process.env.R2_BUCKET_NAME || 'photox-storage';
 
   if (!r2Endpoint || !r2AccessKeyId || !r2SecretAccessKey || !r2BucketName) {
     console.error('Missing R2 environment variables in .env.migration');
     process.exit(1);
+  }
+
+  if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+    const temp = r2AccessKeyId;
+    r2AccessKeyId = r2SecretAccessKey;
+    r2SecretAccessKey = temp;
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);

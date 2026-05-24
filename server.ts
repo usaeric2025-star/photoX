@@ -16,12 +16,20 @@ async function startServer() {
       const { fileName, contentType } = req.body;
       if (!fileName) return res.status(400).json({ error: "fileName required" });
 
+      let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+      let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+      if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+        const temp = r2AccessKeyId;
+        r2AccessKeyId = r2SecretAccessKey;
+        r2SecretAccessKey = temp;
+      }
+
       const s3Client = new S3Client({
         region: 'auto',
         endpoint: process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com',
         credentials: {
-          accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+          accessKeyId: r2AccessKeyId,
+          secretAccessKey: r2SecretAccessKey,
         },
       });
 

@@ -24,14 +24,13 @@ export const usePhotoLightboxLogic = ({
 }: UsePhotoLightboxLogicProps) => {
   const { showError } = useFeedback();
   const { runTask } = useTaskExecutor();
-  const { tasks } = useTasks();
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'en');
   const [isCopied, setIsCopied] = useState(false);
-  const isGroupDataLoading = useMemo(() => tasks.some(t => t.status === 'running' && t.name === '获取产品组数据'), [tasks]);
+  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
   
   // Swipe support
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -50,13 +49,17 @@ export const usePhotoLightboxLogic = ({
     setIsImageError(false);
     
     if (photo?.group_id) {
+      setIsGroupDataLoading(true);
       runTask('获取产品组数据', async () => {
          const m = await import('../../services/groupService');
          const data = await m.getGroupById(photo.group_id!);
          setGroupData(data);
-      }, { showSuccessToast: false });
+      }, { showSuccessToast: false, silent: true }).finally(() => {
+         setIsGroupDataLoading(false);
+      });
     } else {
       setGroupData(null);
+      setIsGroupDataLoading(false);
     }
   }, [photo?.id, photo?.group_id, runTask]);
 
