@@ -17,7 +17,7 @@ import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useAuth } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
-import { triggerR2Migration } from '@/utils/migrateHelper';
+import { triggerR2Migration, testR2ConnectionStatus } from '@/utils/migrateHelper';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -161,9 +161,17 @@ export const AdminSidebar: React.FC = () => {
           />
           <button 
             onClick={() => {
+              testR2ConnectionStatus();
+            }}
+            className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-4"
+          >
+            🔍 R2 存储状态诊断
+          </button>
+          <button 
+            onClick={() => {
               triggerR2Migration();
             }}
-            className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-4"
+            className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
           >
             🚨 临时 R2 数据与URL迁移
           </button>

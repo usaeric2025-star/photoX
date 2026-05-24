@@ -2,7 +2,7 @@ import React from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ShieldCheck } from 'lucide-react';
 import { Photo } from '../../types';
-import { triggerR2Migration } from '@/utils/migrateHelper';
+import { triggerR2Migration, testR2ConnectionStatus } from '@/utils/migrateHelper';
 
 interface Props {
   photos: Photo[];
@@ -44,6 +44,15 @@ export const MaintenanceSection: React.FC<Props> = ({
         >
           {isMaintenanceRunning ? <Spinner size="sm" className="text-current" /> : <ShieldCheck size={16} />}
           {isMaintenanceRunning ? '修复中...' : '修复缩略图 / Repair Thumbnails'}
+        </button>
+
+        <button 
+          onClick={() => {
+            testR2ConnectionStatus();
+          }}
+          className={buttonStyles.secondary + " w-full text-blue-600 border-blue-200 hover:bg-blue-50"}
+        >
+          🔍 检测 R2 存储连接状态 / Test R2 Status
         </button>
 
         <button 

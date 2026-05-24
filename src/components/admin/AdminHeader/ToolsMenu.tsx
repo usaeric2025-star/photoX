@@ -4,7 +4,7 @@ import { Settings2, LogIn, LogOut, Database } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { reportError } from '@/lib/errorReporter';
 import { useGalleryStore } from '@/store';
-import { triggerR2Migration } from '@/utils/migrateHelper';
+import { triggerR2Migration, testR2ConnectionStatus } from '@/utils/migrateHelper';
 
 interface ToolsMenuProps {
   show: boolean;
@@ -62,6 +62,17 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
           >
             <Settings2 size={16} /> <span className="text-xs font-bold uppercase">{t.systemSettings}</span>
           </button>
+
+          {isStaff && (
+            <button 
+              onClick={() => {
+                testR2ConnectionStatus();
+              }}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left text-blue-600"
+            >
+              <Database size={16} /> <span className="text-xs font-bold uppercase">R2 诊断 / DIAGNOSTIC</span>
+            </button>
+          )}
 
           {isStaff && (
             <button 

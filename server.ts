@@ -1,6 +1,6 @@
 import express from "express";
 import path from "path";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 async function startServer() {
@@ -50,6 +50,130 @@ async function startServer() {
   // Health check
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
+  });
+
+  // Detailed R2 & Supabase connection diagnostics
+  app.get("/api/health-r2", async (req, res) => {
+    const statusResult: any = {
+      status: "ok",
+      timestamp: Date.now(),
+      supabase: {
+        urlConfigured: false,
+        keyConfigured: false,
+        connectionOk: false,
+        photoCount: 0,
+        error: null
+      },
+      r2: {
+        endpointConfigured: false,
+        endpoint: null,
+        accessKeyConfigured: false,
+        accessKeyLength: 0,
+        secretAccessKeyConfigured: false,
+        secretAccessKeyLength: 0,
+        keysSwappedBySafeguard: false,
+        bucketName: 'photox-storage',
+        connectionOk: false,
+        testedWithListCommand: false,
+        foundObjectsCount: 0,
+        error: null,
+        diagnosticAdvice: null
+      }
+    };
+
+    // 1. Diagnose Supabase
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+
+    statusResult.supabase.urlConfigured = !!supabaseUrl;
+    statusResult.supabase.keyConfigured = !!supabaseKey;
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        const { count, error } = await supabase
+          .from('furniture_items')
+          .select('id', { count: 'exact', head: true });
+
+        if (error) {
+          throw error;
+        }
+        statusResult.supabase.connectionOk = true;
+        statusResult.supabase.photoCount = count || 0;
+      } catch (err: any) {
+        statusResult.supabase.error = err.message || String(err);
+        statusResult.status = "error";
+      }
+    } else {
+      statusResult.supabase.error = "SUPABASE_URL 或 SUPABASE_SERVICE_KEY 缺失";
+      statusResult.status = "error";
+    }
+
+    // 2. Diagnose R2 Cloudflare
+    const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
+    let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+    let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+
+    statusResult.r2.endpointConfigured = !!process.env.R2_ENDPOINT;
+    statusResult.r2.endpoint = r2Endpoint;
+    statusResult.r2.accessKeyConfigured = !!r2AccessKeyId;
+    statusResult.r2.accessKeyLength = r2AccessKeyId.length;
+    statusResult.r2.secretAccessKeyConfigured = !!r2SecretAccessKey;
+    statusResult.r2.secretAccessKeyLength = r2SecretAccessKey.length;
+
+    if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+      statusResult.r2.keysSwappedBySafeguard = true;
+      const temp = r2AccessKeyId;
+      r2AccessKeyId = r2SecretAccessKey;
+      r2SecretAccessKey = temp;
+    }
+
+    if (r2AccessKeyId && r2SecretAccessKey && r2Endpoint) {
+      try {
+        const s3Client = new S3Client({
+          region: 'auto',
+          endpoint: r2Endpoint,
+          credentials: {
+            accessKeyId: r2AccessKeyId,
+            secretAccessKey: r2SecretAccessKey,
+          },
+        });
+
+        // Test list command to verify config, bucket, credentials
+        const listCommand = new ListObjectsV2Command({
+          Bucket: 'photox-storage',
+          MaxKeys: 1,
+        });
+
+        const s3Response = await s3Client.send(listCommand);
+        statusResult.r2.connectionOk = true;
+        statusResult.r2.testedWithListCommand = true;
+        statusResult.r2.foundObjectsCount = s3Response.KeyCount || 0;
+      } catch (err: any) {
+        statusResult.r2.error = err.message || String(err);
+        statusResult.status = "error";
+
+        // Give precise user advice
+        const errMsg = (err.message || "").toLowerCase();
+
+        if (errMsg.includes("signature") || errMsg.includes("403") || errMsg.includes("forbidden") || errMsg.includes("accessdenied")) {
+          statusResult.r2.diagnosticAdvice = "R2 凭证（Access Key / Secret Key）拒绝访问。常见原因：1. 创建的可擦写 R2 API Token 并非 S3 兼容凭证，或者没有主存储桶写的读写权限。2. Key 配置处发生了混淆，或包含首尾空格乱码。请到 Cloudflare 'R2' -> 'Manage R2 API Tokens' 获取正确的 Access Key ID (32位精简字符) 与 Secret Access Key (64位精简字符)。";
+        } else if (errMsg.includes("notfound") || errMsg.includes("address") || errMsg.includes("getaddrinfo")) {
+          statusResult.r2.diagnosticAdvice = "无法连接至主 R2 Endpoint 的物理服务器（网络不通/DNS解析不成功）。常见原因：1. R2_ENDPOINT 端点被不小心错填为存储桶专属的公网访问 URL。请使用不包含 bucket 拼接后缀的统一主域名（如：https://<account-id>.r2.cloudflarestorage.com）。2. 虚拟机容器没有外网连接。";
+        } else if (errMsg.includes("nosuchbucket") || errMsg.includes("404")) {
+          statusResult.r2.diagnosticAdvice = "连接虽然成功，但指定的云端存储桶 'photox-storage' 似乎在您 Cloudflare 账户中不存在。请查看 R2 仪表盘并确认存储桶名字拼写是否为全小写。";
+        } else {
+          statusResult.r2.diagnosticAdvice = `未知的 AWS S3 故障码或接口出错。报错信息: ${err.message || err}。请确保您当前使用的后端并不是纯前端静态托管（如 Vercel 静态环境无法读取后端 Node.js 密匙，需要真正的 AI Studio 物理容器）。`;
+        }
+      }
+    } else {
+      statusResult.r2.error = "Cloudflare R2 模块所需 credentials 配置缺失，读取到了空值";
+      statusResult.status = "error";
+      statusResult.r2.diagnosticAdvice = "请在项目的 .env 配置文件、或 AI Studio 开发控制台的环境变量 Settings 板块中，精确配置 R2_ACCESS_KEY_ID、R2_SECRET_ACCESS_KEY、R2_ENDPOINT 的具体参数值。";
+    }
+
+    res.json(statusResult);
   });
 
   // Migration Endpoint (SSE)
