@@ -209,7 +209,7 @@ export const useAdminDataPrep = () => {
     await runTask('上传 Logo', async () => {
         const url = await uploadLogo(file);
         if (url && settings) await saveSettingsMut({ ...settings, logo_url: url });
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: true, silent: true });
   }, [checkSyncLock, settings, saveSettingsMut, runTask]);
 
   const handleRunMaintenance = useCallback(async () => {
@@ -221,7 +221,7 @@ export const useAdminDataPrep = () => {
         const missingHashes = await getPhotosWithoutThumbHash();
         
         if (!missingHashes || missingHashes.length === 0) {
-            updateProgress(100, '完美分析完成，没有缺失占位图的照片。');
+            updateProgress(100, '完美 analysis 完成，没有缺失占位图的照片。');
             return { skipped: true };
         }
 
@@ -246,7 +246,8 @@ export const useAdminDataPrep = () => {
             showError(e, '修复失败，已停止');
         },
         showSuccessToast: false,
-        showErrorToast: true
+        showErrorToast: true,
+        silent: true
     });
   }, [runTask, showError, showSuccess, isMaintenanceRunning]);
 

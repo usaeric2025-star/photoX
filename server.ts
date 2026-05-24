@@ -52,31 +52,101 @@ async function startServer() {
     res.json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
   });
 
-  // AI Proxy Endpoint
-  app.post("/api/migrate-r2", async (req, res) => {
-    try {
-      const { exec } = await import("child_process");
-      const util = await import("util");
-      const execPromise = util.promisify(exec);
-      
-      console.log("Starting R2 Migration...");
-      const { stdout: out1, stderr: err1 } = await execPromise("npx tsx scripts/migrateToR2.ts", { maxBuffer: 1024 * 1024 * 50 });
-      console.log("MigrateToR2 Output:", out1);
-      if (err1) console.error("MigrateToR2 Errors:", err1);
+  // Migration Endpoint (SSE)
+  app.get("/api/migrate-r2", async (req, res) => {
+    // 设置 SSE 响应头（让前端实时接收进度）
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
 
-      console.log("Starting URL Update...");
-      const { stdout: out2, stderr: err2 } = await execPromise("npx tsx scripts/updatePhotoUrls.ts", { maxBuffer: 1024 * 1024 * 50 });
-      console.log("UpdateUrls Output:", out2);
-      if (err2) console.error("UpdateUrls Errors:", err2);
+    const sendLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
+      res.write(`data: ${JSON.stringify({ type, message })}\n\n`);
+    };
+
+    try {
+      sendLog('开始 R2 迁移...', 'info');
+
+      // Setup Supabase
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+      if (!supabaseUrl || !supabaseKey) {
+        sendLog('SUPABASE 配置缺失', 'error');
+        res.end();
+        return;
+      }
+      const supabase = createClient(supabaseUrl, supabaseKey);
       
-      res.json({ message: "全部脚本执行完毕。\n1) 文件上传执行情况请查看服务端日志。\n2) URL更新执行情况请查看服务端日志。", log1: out1, log2: out2 });
-    } catch (e: any) {
-      console.error("Migration Failed Context:", e);
-      res.status(500).json({
-        message: e.message || "Unknown execution error",
-        stdout: e.stdout || "",
-        stderr: e.stderr || ""
+      // 1. 获取照片列表
+      sendLog('正在获取照片列表...', 'info');
+      const { data: photos, error: supabaseError } = await supabase.from('furniture_items').select('id, image_url, thumb_url');
+      if (supabaseError) throw supabaseError;
+      
+      sendLog(`共 ${photos?.length || 0} 张照片`, 'info');
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
+      let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+      let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+      if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+        const temp = r2AccessKeyId;
+        r2AccessKeyId = r2SecretAccessKey;
+        r2SecretAccessKey = temp;
+      }
+
+      const s3Client = new S3Client({
+        region: 'auto',
+        endpoint: r2Endpoint,
+        credentials: {
+          accessKeyId: r2AccessKeyId,
+          secretAccessKey: r2SecretAccessKey,
+        },
       });
+
+      for (let i = 0; i < photos!.length; i++) {
+        const photo = photos![i];
+        sendLog(`[${i + 1}/${photos!.length}] 处理照片 ${photo.id}...`, 'info');
+        
+        try {
+          if (!photo.image_url) throw new Error('No image_url');
+
+          // Download
+          const response = await fetch(photo.image_url);
+          if (!response.ok) throw new Error('Download failed');
+          const imageBuffer = Buffer.from(await response.arrayBuffer());
+          
+          // Upload
+          const filename = photo.image_url.split('/').pop();
+          const objectKey = `photox/public/${filename}`;
+          
+          await s3Client.send(new PutObjectCommand({
+            Bucket: 'photox-storage',
+            Key: objectKey,
+            Body: imageBuffer,
+            ContentType: 'image/webp',
+          }));
+          
+          successCount++;
+          sendLog(`  ✅ ${photo.id} 迁移成功`, 'success');
+          
+        } catch (err: any) {
+          failCount++;
+          sendLog(`  ❌ ${photo.id} 迁移失败: ${err.message}`, 'error');
+        }
+      }
+      
+      sendLog(`========== 迁移完成 ==========`, 'success');
+      sendLog(`成功: ${successCount}, 失败: ${failCount}`, 'info');
+      
+      res.write(`data: ${JSON.stringify({ type: "done", success: successCount, fail: failCount })}\n\n`);
+      res.end();
+      
+    } catch (error: any) {
+      sendLog(`迁移失败: ${error.message}`, 'error');
+      res.end();
     }
   });
 

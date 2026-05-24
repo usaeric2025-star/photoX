@@ -51,7 +51,7 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
     await runTask('刷新热门标签', async () => {
       await triggerRefreshTagHotScores();
       await queryClient.invalidateQueries({ queryKey: ['tags'] });
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: true, silent: true });
   };
 
   const handleAddTag = () => {

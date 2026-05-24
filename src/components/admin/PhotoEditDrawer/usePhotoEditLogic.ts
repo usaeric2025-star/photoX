@@ -86,7 +86,7 @@ export const usePhotoEditLogic = (props: Props) => {
       if (setNewPhotoData) {
         setNewPhotoData(newData);
       }
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: true, silent: true });
   };
 
   const handleSave = async () => {
@@ -97,7 +97,7 @@ export const usePhotoEditLogic = (props: Props) => {
     }
     await runTask('保存修改', async () => {
       await saveNewPhoto();
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: true, silent: true });
   };
 
   const toggleHidden = async () => {
@@ -108,7 +108,7 @@ export const usePhotoEditLogic = (props: Props) => {
         await runTask('更新可见性', async () => {
             const m = await import('../../../services/photoService');
             await m.updatePhotoHidden(editPhotoId, nextValue);
-        }, { showSuccessToast: true });
+        }, { showSuccessToast: true, silent: true });
     } else {
         console.warn('Cannot toggle hidden: invalid photoId', editPhotoId);
     }

@@ -61,15 +61,16 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   }, [photo.id]);
 
   const { showError: handleError } = useFeedback();
-  const { runTask } = useTaskExecutor();
 
   const handleAiAnalyze = React.useCallback(async () => {
-    await runTask('AI 分析', async () => {
-        if (onAiAnalyze) {
-          await onAiAnalyze(photo);
-        }
-      }, { showSuccessToast: true });
-  }, [runTask, onAiAnalyze, photo]);
+    try {
+      if (onAiAnalyze) {
+        await onAiAnalyze(photo);
+      }
+    } catch (err) {
+      handleError(err as Error, 'AI分析失败');
+    }
+  }, [onAiAnalyze, photo, handleError]);
 
 
   return (

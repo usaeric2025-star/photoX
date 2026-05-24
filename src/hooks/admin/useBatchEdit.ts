@@ -56,7 +56,7 @@ export const useBatchEdit = () => {
     await runTask('保存批量修改', async () => {
       await saveBatchEdit(changes);
       setBatchEditingIds(null);
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: true, silent: true });
   };
 
   const handleDelete = useCallback(() => {
@@ -73,7 +73,7 @@ export const useBatchEdit = () => {
           setAlertDialog(null);
           setBatchEditingIds(null);
           disableMultiSelect();
-        }, { showSuccessToast: true });
+        }, { showSuccessToast: true, silent: true });
       }
     });
   }, [batchEditIds, onDelete, setAlertDialog, setBatchEditingIds, disableMultiSelect, runTask]);

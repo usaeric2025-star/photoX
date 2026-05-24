@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { useFeedback, useTaskExecutor, useTasks } from '../../hooks';
+import { useFeedback, useTasks } from '../../hooks';
 
 interface UsePhotoLightboxLogicProps {
   photo: Photo | null;
@@ -23,7 +23,6 @@ export const usePhotoLightboxLogic = ({
   onClose
 }: UsePhotoLightboxLogicProps) => {
   const { showError } = useFeedback();
-  const { runTask } = useTaskExecutor();
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
@@ -50,18 +49,22 @@ export const usePhotoLightboxLogic = ({
     
     if (photo?.group_id) {
       setIsGroupDataLoading(true);
-      runTask('获取产品组数据', async () => {
-         const m = await import('../../services/groupService');
-         const data = await m.getGroupById(photo.group_id!);
-         setGroupData(data);
-      }, { showSuccessToast: false, silent: true }).finally(() => {
-         setIsGroupDataLoading(false);
-      });
+      (async () => {
+        try {
+          const m = await import('../../services/groupService');
+          const data = await m.getGroupById(photo.group_id!);
+          setGroupData(data);
+        } catch (err) {
+          showError(err as Error, '获取产品组数据失败');
+        } finally {
+          setIsGroupDataLoading(false);
+        }
+      })();
     } else {
       setGroupData(null);
       setIsGroupDataLoading(false);
     }
-  }, [photo?.id, photo?.group_id, runTask]);
+  }, [photo?.id, photo?.group_id, showError]);
 
   const slides = useMemo(() => {
     return (displayPhotos || [])

@@ -46,7 +46,7 @@ export const GroupSettingsHeader: React.FC<{
                        setShowGroupSettings(false);
                      }
                      setAlertDialog(null);
-                   }, { showSuccessToast: true });
+                   }, { showSuccessToast: true, silent: true });
                  }
                });
              }
@@ -64,7 +64,7 @@ export const GroupSettingsHeader: React.FC<{
                await runTask('保存群组', async () => {
                  await saveGroupToCloud(groupData);
                  setShowGroupSettings(false);
-               }, { showSuccessToast: true });
+               }, { showSuccessToast: true, silent: true });
              } else {
                setShowGroupSettings(false);
              }

@@ -80,7 +80,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
       await onAdd(selectedIds);
       onClose();
       setSelectedIds([]);
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: true, silent: true });
   };
 
   return (

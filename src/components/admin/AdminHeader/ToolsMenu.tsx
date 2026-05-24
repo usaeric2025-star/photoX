@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings2, LogIn, LogOut } from 'lucide-react';
+import { Settings2, LogIn, LogOut, Database } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { reportError } from '@/lib/errorReporter';
 import { useGalleryStore } from '@/store';
@@ -19,6 +19,57 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
   show, t, handleOpenSettings, handleExitStaffMode, isStaff, currentLang, onSetLang 
 }) => {
   const { user, loginWithGoogle, logout } = useAuth();
+  
+  const handleMigrate = () => {
+    let logs = '';
+    
+    useGalleryStore.getState().setAlertDialog({
+      title: 'R2 迁移进度',
+      message: (
+        <div className="h-64 overflow-y-auto bg-black text-green-400 p-2 font-mono text-xs whitespace-pre-wrap">
+          等待开始...
+        </div>
+      ),
+      confirmLabel: '关闭',
+      showCancel: false,
+    });
+
+    const appendToDialog = (msg: string) => {
+      logs += msg + '\n';
+      useGalleryStore.getState().setAlertDialog({
+        title: 'R2 迁移进度',
+        message: (
+          <div className="h-64 overflow-y-auto bg-black text-green-400 p-2 font-mono text-xs whitespace-pre-wrap">
+            {logs}
+          </div>
+        ),
+        confirmLabel: '关闭',
+        showCancel: false,
+      });
+    };
+
+    const eventSource = new EventSource('/api/migrate-r2');
+  
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      
+      if (data.type === 'info') {
+        appendToDialog(data.message);
+      } else if (data.type === 'success') {
+        appendToDialog(`✅ ${data.message}`);
+      } else if (data.type === 'error') {
+        appendToDialog(`❌ ${data.message}`);
+      } else if (data.type === 'done') {
+        appendToDialog(`\n========== 迁移完成 ========== \n成功: ${data.success}, 失败: ${data.fail}`);
+        eventSource.close();
+      }
+    };
+    
+    eventSource.onerror = () => {
+      appendToDialog('❌ 迁移连接中断');
+      eventSource.close();
+    };
+  };
 
   return (
     <AnimatePresence>
@@ -57,6 +108,15 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
           >
             <Settings2 size={16} /> <span className="text-xs font-bold uppercase">{t.systemSettings}</span>
           </button>
+
+          {isStaff && (
+            <button 
+              onClick={handleMigrate}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left text-blue-600"
+            >
+              <Database size={16} /> <span className="text-xs font-bold uppercase">R2 迁移</span>
+            </button>
+          )}
           
           {user ? (
             <button 

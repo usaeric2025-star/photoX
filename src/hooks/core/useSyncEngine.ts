@@ -46,7 +46,7 @@ export const useSyncEngine = () => {
           queryClient.invalidateQueries({ queryKey: ['manufacturers'] }),
           queryClient.invalidateQueries({ queryKey: ['settings'] }),
         ]);
-    }, { showSuccessToast: true });
+    }, { showSuccessToast: true, silent: true });
   }, [setSettings, queryClient, invalidatePhotos, runTask]);
 
   return {
