@@ -3,6 +3,7 @@ import { useGalleryStore } from '../store';
 
 let globalMigrationLogs = '正在建立迁移连接...\n';
 let isReenteringInstance = false; 
+let updateTimeout: any = null;
 
 export async function triggerR2Migration() {
   const setAlertDialog = useGalleryStore.getState().setAlertDialog;
@@ -11,28 +12,46 @@ export async function triggerR2Migration() {
     globalMigrationLogs = '🚀 启动全自动云端增量 R2 迁移对账引擎...\n正在建立迁移连接...\n';
   }
 
-  const appendToDialog = (msg: string) => {
+  const appendToDialog = (msg: string, isImmediate = false) => {
     globalMigrationLogs += msg + '\n';
-    setAlertDialog({
-      title: 'R2 迁移实时进度 / R2 Migration Progress',
-      message: (
-        <div className="space-y-2 mt-2">
-          <p className="text-xs text-slate-500 font-medium">智能防超时系统：正在安全分批推进。R2 bucket: photox-storage</p>
-          <div 
-            id="migration-log-container"
-            className="h-80 overflow-y-auto bg-[#0a0f1d] text-green-400 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap rounded-xl border border-slate-800 shadow-inner"
-          >
-            {globalMigrationLogs}
-          </div>
-        </div>
-      ),
-      confirmLabel: '关闭窗口',
-    });
 
-    setTimeout(() => {
-      const container = document.getElementById('migration-log-container');
-      if (container) container.scrollTop = container.scrollHeight;
-    }, 16);
+    const renderUpdate = () => {
+      setAlertDialog({
+        title: 'R2 迁移实时进度 / R2 Migration Progress',
+        message: (
+          <div className="space-y-2 mt-2">
+            <p className="text-xs text-slate-500 font-medium">智能防超时系统：正在安全分批推进。R2 bucket: photox-storage</p>
+            <div 
+              id="migration-log-container"
+              className="h-80 overflow-y-auto bg-[#0a0f1d] text-green-400 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap rounded-xl border border-slate-800 shadow-inner"
+            >
+              {globalMigrationLogs}
+            </div>
+          </div>
+        ),
+        confirmLabel: '关闭窗口',
+      });
+
+      setTimeout(() => {
+        const container = document.getElementById('migration-log-container');
+        if (container) container.scrollTop = container.scrollHeight;
+      }, 16);
+    };
+
+    if (isImmediate) {
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+        updateTimeout = null;
+      }
+      renderUpdate();
+    } else {
+      if (!updateTimeout) {
+        updateTimeout = setTimeout(() => {
+          updateTimeout = null;
+          renderUpdate();
+        }, 200);
+      }
+    }
   };
 
   try {
@@ -88,18 +107,18 @@ export async function triggerR2Migration() {
             const skippedTxt = data.skipped !== undefined ? `, 自动跳过: ${data.skipped}` : '';
             const totalTxt = data.total !== undefined ? `, 库藏总数: ${data.total}` : '';
             if (data.isPartial) {
-              appendToDialog(`\n⏳ ---------- [时限保底安全滑脱] ---------- \n已平滑跑完当前 42 秒安全周期。\n本次成功处理: ${data.success} 张${skippedTxt}${totalTxt}\n⚡️ 智能接力系统：3 秒后将自动无缝启动下一批次，请勿关闭本窗口...`);
+              appendToDialog(`\n⏳ ---------- [时限保底安全滑脱] ---------- \n已平滑跑完当前 42 秒安全周期。\n本次成功处理: ${data.success} 张${skippedTxt}${totalTxt}\n⚡️ 智能接力系统：3 秒后将自动无缝启动下一批次，请勿关闭本窗口...`, true);
               isReenteringInstance = true;
               setTimeout(() => { triggerR2Migration(); }, 3000);
             } else {
               isReenteringInstance = false;
-              appendToDialog(`\n🎉 ========== 100% 迁移全部大功告成 ========== \n总计新成功: ${data.success}, 失败: ${data.fail}${skippedTxt}${totalTxt}`);
+              appendToDialog(`\n🎉 ========== 100% 迁移全部大功告成 ========== \n总计新成功: ${data.success}, 失败: ${data.fail}${skippedTxt}${totalTxt}`, true);
             }
           }
         } catch (e) {}
       }
     }
-  } catch (err: any) { isReenteringInstance = false; appendToDialog(`❌ 迁移连接故障: ${err.message}`); }
+  } catch (err: any) { isReenteringInstance = false; appendToDialog(`❌ 迁移连接故障: ${err.message}`, true); }
 }
 
 export async function testR2ConnectionStatus() {
