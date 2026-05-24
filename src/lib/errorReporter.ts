@@ -1,3 +1,4 @@
+import * as ErrorMonitor from "@sentry/react";
 import { globalHandleError } from '@/utils/errorHandler';
 
 export type ErrorLevel = 'info' | 'warn' | 'error' | 'critical';
@@ -32,34 +33,35 @@ const saveToLocalLog = (entry: LogEntry) => {
 };
 
 export const ErrorReporter = {
-  report: (error: any, context: string, level: ErrorLevel = 'error', silent: boolean = false) => {
+  report: (error: Error | string, context: string, level: ErrorLevel = 'error', silent: boolean = false) => {
+    const route = window.location.pathname;
+    const message = typeof error === 'string' ? error : error.message;
+    const enrichedError = new Error(`[${context}] @ ${route}: ${message}`);
+    
     // 1. Console group for Dev
     if (import.meta.env.DEV) {
       const color = level === 'critical' ? '#ef4444' : level === 'error' ? '#f97316' : level === 'warn' ? '#eab308' : '#3b82f6';
       console.group(`%c🔴 [${level.toUpperCase()}] ${context}`, `color: ${color}; font-weight: bold;`);
-      console.error(error);
+      console.error(enrichedError);
       console.groupEnd();
     }
 
     // 2. Save to Local Logs
-    const message = error instanceof Error ? error.message : String(error);
     const stack = error instanceof Error ? error.stack : undefined;
     saveToLocalLog({
       id: Math.random().toString(36).substring(7),
       time: new Date().toISOString(),
       level,
       context,
-      message,
+      message: enrichedError.message,
       stack
     });
 
-    // 3. Optional: Production Report (Placeholder for GlitchTip)
-    // if (import.meta.env.PROD) {
-    //    ErrorMonitor.captureException(error, { tags: { context, level } });
-    // }
+    // 3. Optional: Production Report (GlitchTip)
+    ErrorMonitor.captureException(enrichedError);
 
     // 4. Global Handle (Toast etc)
-    globalHandleError(error, context, silent || level === 'info' || level === 'warn');
+    globalHandleError(enrichedError, context, silent || level === 'info' || level === 'warn');
   },
 
   getLogs: (): LogEntry[] => {

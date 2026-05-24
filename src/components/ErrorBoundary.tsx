@@ -40,9 +40,16 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      // 开发/预览环境：直接抛出
-      if (isDev || isPreview) {
-        throw this.state.error;
+      if (isDev) {
+        return (
+          <div className="p-4 bg-red-50">
+            <h3 className="text-red-700">错误: {this.state.error?.message}</h3>
+            <details>
+              <summary>堆栈信息</summary>
+              <pre className="mt-2 text-xs overflow-auto">{this.state.error?.stack}</pre>
+            </details>
+          </div>
+        );
       }
       
       // 生产环境：友好提示

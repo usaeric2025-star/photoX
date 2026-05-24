@@ -27,6 +27,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const { handlePhotoImport } = useAdmin();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
@@ -63,12 +64,19 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // Close picker when starting upload to group
-    onClose();
+    setIsUploading(true);
     
     // Use the global handler but pre-assign groupId
     if (handlePhotoImport) {
-      await handlePhotoImport(e, true, groupId);
+        try {
+            await handlePhotoImport(e, true, groupId);
+            // Close picker only after upload finishes
+            onClose();
+        } catch (err) {
+            showError(err, '上传图片失败');
+        } finally {
+            setIsUploading(false);
+        }
     }
   };
 
