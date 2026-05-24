@@ -5,11 +5,10 @@ import fs from "fs";
 import { S3Client, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-async function startServer() {
-  const app = express();
-  const PORT = process.env.NODE_ENV === "production" ? (Number(process.env.PORT) || 3000) : 3000;
+const app = express();
+export { app };
 
-  app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 
   app.post("/api/storage/presign", async (req, res) => {
     try {
@@ -377,6 +376,9 @@ async function startServer() {
     }
   });
 
+async function startServer() {
+  const PORT = process.env.NODE_ENV === "production" ? (Number(process.env.PORT) || 3000) : 3000;
+
   if (process.env.NODE_ENV !== "production") {
     console.log("Starting server in DEVELOPMENT mode...");
     const { createServer: createViteServer } = await import("vite");
@@ -417,7 +419,10 @@ async function startServer() {
   });
 }
 
-startServer().catch((err) => {
-  console.error("CRITICAL ERROR: Server failed to start", err);
-  process.exit(1);
-});
+const isVercel = process.env.VERCEL === "1";
+if (!isVercel) {
+  startServer().catch((err) => {
+    console.error("CRITICAL ERROR: Server failed to start", err);
+    process.exit(1);
+  });
+}
