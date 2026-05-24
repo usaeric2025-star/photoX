@@ -150,11 +150,18 @@ export const AdminSidebar: React.FC = () => {
                  const res = await fetch('/api/migrate-r2', { method: 'POST' });
                  if (res.ok) {
                     const result = await res.json();
-                    toast.success('迁移执行完成', { description: result.message, id: toastId, duration: 10000 });
+                    console.log("Migration Success Log:", result);
+                    toast.success('迁移执行完成', { description: '成功，详细日志已输出到控制台。', id: toastId, duration: 10000 });
                  }
                  else {
-                    const err = await res.text();
-                    toast.error('迁移执行失败', { description: err, id: toastId, duration: 10000 });
+                    let errStr = await res.text();
+                    try {
+                        const errJson = JSON.parse(errStr);
+                        errStr = `Error: ${errJson.message}\n\nSTDOUT:\n${errJson.stdout || ''}\n\nSTDERR:\n${errJson.stderr || ''}`;
+                    } catch(e) {}
+                    console.error("Migration Failed:", errStr);
+                    window.alert('迁移执行失败，完整日志请查看控制台 (F12) 的 Console 面板。\n\n部分日志:\n' + errStr.substring(0, 500) + (errStr.length > 500 ? '...' : ''));
+                    toast.error('迁移执行失败', { description: '请查看控制台日志', id: toastId, duration: 10000 });
                  }
                } catch (err: any) {
                  const { toast } = await import('sonner');

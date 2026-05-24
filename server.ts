@@ -21,19 +21,23 @@ async function startServer() {
       const execPromise = util.promisify(exec);
       
       console.log("Starting R2 Migration...");
-      const { stdout: out1, stderr: err1 } = await execPromise("npx tsx scripts/migrateToR2.ts");
+      const { stdout: out1, stderr: err1 } = await execPromise("npx tsx scripts/migrateToR2.ts", { maxBuffer: 1024 * 1024 * 50 });
       console.log("MigrateToR2 Output:", out1);
       if (err1) console.error("MigrateToR2 Errors:", err1);
 
       console.log("Starting URL Update...");
-      const { stdout: out2, stderr: err2 } = await execPromise("npx tsx scripts/updatePhotoUrls.ts");
+      const { stdout: out2, stderr: err2 } = await execPromise("npx tsx scripts/updatePhotoUrls.ts", { maxBuffer: 1024 * 1024 * 50 });
       console.log("UpdateUrls Output:", out2);
       if (err2) console.error("UpdateUrls Errors:", err2);
       
       res.json({ message: "全部脚本执行完毕。\n1) 文件上传执行情况请查看服务端日志。\n2) URL更新执行情况请查看服务端日志。", log1: out1, log2: out2 });
     } catch (e: any) {
       console.error("Migration Failed Context:", e);
-      res.status(500).send(`Exception executing scripts: ${e.message}\n\nSTDOUT: ${e.stdout}\nSTDERR: ${e.stderr}`);
+      res.status(500).json({
+        message: e.message || "Unknown execution error",
+        stdout: e.stdout || "",
+        stderr: e.stderr || ""
+      });
     }
   });
 

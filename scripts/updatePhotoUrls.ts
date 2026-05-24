@@ -26,7 +26,7 @@ async function updateUrls() {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   console.log('Fetching photos to update...');
-  const { data: photos, error } = await supabase.from('photos').select('id, image_url, thumb_url');
+  const { data: photos, error } = await supabase.from('furniture_items').select('id, image_url, thumb_url');
 
   if (error) {
     console.error('Failed to fetch photos:', error);
@@ -55,7 +55,7 @@ async function updateUrls() {
 
     if (Object.keys(updates).length > 0) {
       const { error: updateError } = await supabase
-        .from('photos')
+        .from('furniture_items')
         .update(updates)
         .eq('id', photo.id);
 

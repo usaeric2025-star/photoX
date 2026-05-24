@@ -55,7 +55,7 @@ async function migrate() {
   }
 
   console.log('Fetching photos from Supabase...');
-  const { data: photos, error } = await supabase.from('photos').select('id, image_url');
+  const { data: photos, error } = await supabase.from('furniture_items').select('id, image_url, thumb_url');
 
   if (error) {
     console.error('Failed to fetch photos:', error);
@@ -79,18 +79,26 @@ async function migrate() {
     }
 
     try {
-      const sourceUrl = `${supabaseUrl}/storage/v1/object/public/furniture_images/public/${photo.id}.webp`;
-      console.log(`Downloading ${sourceUrl}...`);
+      const sourceUrl = photo.image_url;
+      const thumbSourceUrl = photo.thumb_url;
+
+      if (!sourceUrl) {
+         console.log(`No image_url for ${photo.id}, skipping download.`);
+         continue;
+      }
+
+      console.log(`Downloading main image ${sourceUrl}...`);
       
       const response = await fetch(sourceUrl);
       if (!response.ok) {
-        throw new Error(`Failed to download: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to download main image: ${response.status} ${response.statusText}`);
       }
 
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      const objectKey = `photox/public/${photo.id}.webp`;
+      const filename = sourceUrl.split('/').pop();
+      const objectKey = `photox/public/${filename}`;
       console.log(`Uploading to R2: ${objectKey}...`);
 
       await s3.send(
@@ -101,6 +109,32 @@ async function migrate() {
           ContentType: 'image/webp',
         })
       );
+
+      // Try migrating thumbnail as well
+      if (thumbSourceUrl) {
+         try {
+           console.log(`Downloading thumbnail ${thumbSourceUrl}...`);
+           const thumbRes = await fetch(thumbSourceUrl);
+           if (thumbRes.ok) {
+             const thumbBuffer = Buffer.from(await thumbRes.arrayBuffer());
+             const thumbFilename = thumbSourceUrl.split('/').pop();
+             const thumbKey = `photox/public/${thumbFilename}`;
+             await s3.send(
+               new PutObjectCommand({
+                 Bucket: r2BucketName,
+                 Key: thumbKey,
+                 Body: thumbBuffer,
+                 ContentType: 'image/webp',
+               })
+             );
+             console.log(`Uploaded thumbnail to R2: ${thumbKey}`);
+           } else {
+             console.log(`Thumbnail not found or could not download (Status: ${thumbRes.status}), skipping...`);
+           }
+         } catch (thumbErr) {
+           console.log(`Error processing thumbnail for ${photo.id}, skipping.`, thumbErr);
+         }
+      }
 
       migrated.push(photo.id);
       successCount++;
