@@ -34,11 +34,9 @@ export const AdminViewContent: React.FC = () => {
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
   const { runTask } = useTaskExecutor();
-  const { setAlertDialog, isStaffMode, setAbortAnalysis, setTagIdToNameMap } = useGalleryStore(useShallow(s => ({
+  const { setAlertDialog, isStaffMode } = useGalleryStore(useShallow(s => ({
     setAlertDialog: s.setAlertDialog,
-    isStaffMode: s.isStaffMode,
-    setAbortAnalysis: s.setAbortAnalysis,
-    setTagIdToNameMap: s.setTagIdToNameMap
+    isStaffMode: s.isStaffMode
   })));
 
   const [showImmediateLoading, setShowImmediateLoading] = useState(true);
@@ -88,12 +86,6 @@ export const AdminViewContent: React.FC = () => {
 
   const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
 
-  useEffect(() => {
-    if (logic.tagIdToNameMap) {
-      setTagIdToNameMap(logic.tagIdToNameMap);
-    }
-  }, [logic.tagIdToNameMap, setTagIdToNameMap]);
-
   const {
     togglePinned, handleDeletePhoto, handleUpdatePhoto, handleToggleHidden,
     handleGroupPhotos, handleUngroup, handleBatchAiIdentifyTrigger, handleBatchEdit,
@@ -103,10 +95,6 @@ export const AdminViewContent: React.FC = () => {
   const logicRef = React.useRef(logic);
   logicRef.current = logic;
 
-  useEffect(() => {
-    setAbortAnalysis(() => logicRef.current.abortAnalysis());
-  }, [setAbortAnalysis]);
-  
   const photoActions = React.useMemo(() => ({
     onTogglePinned: logic.togglePinned,
     onDeletePhoto: logic.handleDeletePhoto,
@@ -150,7 +138,7 @@ export const AdminViewContent: React.FC = () => {
               
               <GroupDetailView
                 activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId}
-                photos={logic.photos} displayPhotos={logic.groupPhotos} initialPhotoId={logic.initialPhotoId}
+                initialPhotoId={logic.initialPhotoId}
                 setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
                 onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
               />
@@ -166,11 +154,9 @@ export const AdminViewContent: React.FC = () => {
                 <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <div className="flex flex-col h-full bg-brand-bg">
                     <PublicGallery 
-                      photos={logic.photos}
-                      isRefreshing={isSyncing} isFetchingNextPage={infinitePhotosQuery.isFetchingNextPage}
-                      onExit={handleExitPublic} showExit={true} onRefresh={handleRefreshPublic}
-                      totalCount={logic.cloudCount}
-                      user={user} loginWithGoogle={logic.loginWithGoogle} onLoadMore={logic.handleLoadMoreCallback} hasMore={infinitePhotosQuery.hasNextPage}
+                      isRefreshing={isSyncing}
+                      onExit={handleExitPublic} showExit={true}
+                      user={user} loginWithGoogle={logic.loginWithGoogle}
                     />
                   </div>
                 </div>

@@ -35,13 +35,13 @@ export const AdminHeader: React.FC<Props> = ({
   handleBatchAiIdentifyTrigger, handleManageClick, loginWithGoogle,
   onAddPhoto, onRefresh, photosCount, totalPhotosCount, cloudCount,
   appLang = 'en',
-  isAnalyzing, settings: propSettings,
+  isAnalyzing: propIsAnalyzing, settings: propSettings,
   adminPreviewMode: propAdminPreviewMode,
   setAdminPreviewMode: propSetAdminPreviewMode
 }) => {
   const { tasks } = useTasks();
   const { 
-    settings: storeSettings, user, viewMode, setViewMode, isSyncing, 
+    settings: storeSettings, user, viewMode, setViewMode,
     activeScreen, setActiveScreen,
     isInfiniteMode, setIsInfiniteMode,
     isStaffMode
@@ -50,13 +50,16 @@ export const AdminHeader: React.FC<Props> = ({
     user: s.user,
     viewMode: s.viewMode,
     setViewMode: s.setViewMode,
-    isSyncing: s.isSyncing,
     activeScreen: s.activeScreen,
     setActiveScreen: s.setActiveScreen,
     isInfiniteMode: s.isInfiniteMode,
     setIsInfiniteMode: s.setIsInfiniteMode,
     isStaffMode: s.isStaffMode
   })));
+
+  const isSyncing = React.useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
+  const isAnalyzingLocal = React.useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+  const finalIsAnalyzing = propIsAnalyzing || isAnalyzingLocal;
   
   const [localAdminPreviewMode, localSetAdminPreviewMode] = useState<'private' | 'public'>('private');
   const adminPreviewMode = propAdminPreviewMode !== undefined ? propAdminPreviewMode : localAdminPreviewMode;
@@ -265,7 +268,7 @@ export const AdminHeader: React.FC<Props> = ({
                     isStaff={isStaffMode}
                     handleExitStaffMode={handleExitStaffMode}
                     currentLang={currentLang}
-                    onSetLang={(l) => useGalleryStore.getState().setLanguage(l as 'zh' | 'en' | 'ms')}
+                    onSetLang={(l) => useGalleryStore.getState().setAppLang(l as 'zh' | 'en' | 'ms')}
                   />
                 </div>
               </div>

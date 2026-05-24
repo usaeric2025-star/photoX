@@ -23,9 +23,7 @@ export * from './shared/useImageHash';
 
 // Admin Hooks
 export * from './admin';
-export * from './admin/useAdminDialogs';
 export * from './admin/useAdminCategory';
-export * from './admin/useAdminCore';
 export * from './admin/useDuplicateCheck';
 
 // Queries

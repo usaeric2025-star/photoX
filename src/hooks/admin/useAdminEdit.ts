@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useMemo } from 'react';
 import { User, Photo, ProductFormData } from '@/types';
 import { useGalleryStore, useShallow } from '@/store';
 import { useTaskExecutor, useDeletePhotoMutation, useUpdatePhotoMutation, useBatchEditMutation, useGroupPhotosMutation, useUngroupMutation, useFeedback } from '@/hooks';
@@ -83,9 +83,9 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
       showSuccess('批量更新成功');
       onComplete?.();
     } catch (err: any) {
-      showError(err, '批量操作失败');
+      // Error handled by mutation
     }
-  }, [batchUpdateMut, showSuccess, showError, onComplete]);
+  }, [batchUpdateMut, showSuccess, onComplete]);
 
   const deletePhoto = useCallback(async (idOrIds: string | string[]) => {
     const isStaff = isStaffMode || !!user;
@@ -99,11 +99,11 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     try {
       await deletePhotoMut({ userId: opUserId, photos: targetPhotos });
       showSuccess(ids.length > 1 ? `已删除 ${ids.length} 张照片` : '照片已删除');
-      if (ids.length > 1) onComplete?.();
+      onComplete?.();
     } catch (err: any) {
-      showError(err, '删除照片失败');
+      // Error handled by mutation
     }
-  }, [user, isStaffMode, deletePhotoMut, photos, showSuccess, showError, onComplete]);
+  }, [user, isStaffMode, deletePhotoMut, photos, showSuccess, onComplete]);
 
   const updatePhotosBulk = useCallback(async (ids: string[], updates: Partial<Photo>, options?: { taskName?: string, skipToast?: boolean }) => {
     const isStaff = isStaffMode || !!user;
@@ -120,16 +120,13 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
         if (!options?.skipToast) {
             showSuccess(`已更新 ${ids.length} 张照片`);
         }
-        onComplete?.();
       }
+      onComplete?.();
     } catch (err: any) {
-      if (!options?.skipToast) {
-          showError(err, '操作失败');
-      } else {
-          throw err;
-      }
+      if (options?.skipToast) throw err;
+      // Error handled by mutation
     }
-  }, [user, isStaffMode, batchUpdateMut, updatePhotoMut, showSuccess, showError, onComplete]);
+  }, [user, isStaffMode, batchUpdateMut, updatePhotoMut, showSuccess, onComplete]);
 
   const updatePhoto = useCallback((id: string, updates: Partial<Photo>) => {
     return updatePhotosBulk([id], updates);
@@ -169,9 +166,9 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
       await Promise.all(updates);
       showSuccess('封面设置成功');
     } catch (err: any) {
-      showError(err, '设置封面失败');
+      // Error handled by mutation
     }
-  }, [user, isStaffMode, photos, updatePhotosBulk, showSuccess, showError]);
+  }, [user, isStaffMode, photos, updatePhotosBulk, showSuccess]);
 
   const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
     console.log('[useAdminEdit] Grouping photos:', photoIds);
@@ -180,13 +177,24 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
       return;
     }
     try {
-      await groupPhotosMut(photoIds);
+      await groupPhotosMut({ photoIds });
       showSuccess('照片已合组');
       onComplete?.();
     } catch (err: any) {
-      showError(err, '合组失败');
+      // Error handled by mutation
     }
-  }, [groupPhotosMut, showError, showSuccess, onComplete]);
+  }, [groupPhotosMut, showSuccess, onComplete]);
+
+  const handleAddToGroup = useCallback(async (photoIds: string[], groupId: string) => {
+    if (!photoIds || photoIds.length === 0) return;
+    try {
+      await groupPhotosMut({ photoIds, targetGroupId: groupId });
+      showSuccess('照片已加入群组');
+      onComplete?.();
+    } catch (err: any) {
+      // Error handled by mutation
+    }
+  }, [groupPhotosMut, showSuccess, onComplete]);
 
   const handleBatchToggleHidden = useCallback(async (ids: string[]) => {
     if (!ids || ids.length === 0) return;
@@ -205,9 +213,9 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
       showSuccess('分组已拆分');
       onComplete?.();
     } catch (err: any) {
-      showError(err, '拆分失败');
+      // Error handled by mutation
     }
-  }, [ungroupMut, showSuccess, showError, onComplete]);
+  }, [ungroupMut, showSuccess, onComplete]);
 
   const resetAddState = useCallback(() => {
     setNewPhotoData(null);
@@ -215,11 +223,19 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     resetForm();
   }, [setNewPhotoData, setShowOtherFields, resetForm]);
 
-  return { 
+  return useMemo(() => ({ 
     deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos, handleUngroup,
+    handleAddToGroup,
     handleBatchToggleHidden,
     togglePinned, setGroupCover,
     formState, updateForm, newPhotoData, setNewPhotoData, 
     showOtherFields, setShowOtherFields, resetAddState 
-  };
+  }), [
+    deletePhoto, updatePhoto, updatePhotosBulk, handleGroupPhotos, handleUngroup,
+    handleAddToGroup,
+    handleBatchToggleHidden,
+    togglePinned, setGroupCover,
+    formState, updateForm, newPhotoData, setNewPhotoData, 
+    showOtherFields, setShowOtherFields, resetAddState 
+  ]);
 };

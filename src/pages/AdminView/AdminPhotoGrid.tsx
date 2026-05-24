@@ -17,13 +17,8 @@ interface AdminPhotoGridProps {
 export const AdminPhotoGrid: React.FC<AdminPhotoGridProps> = (props) => {
   return (
     <AdminGallery 
-      photos={props.photos}
       isRefreshing={props.isSyncing || props.isLoading}
       onRefresh={props.onRefresh}
-      totalCount={props.cloudCount}
-      onLoadMore={props.onLoadMore}
-      hasMore={props.hasNextPage}
-      isFetchingNextPage={props.isFetchingNextPage}
       isStaffMode={true}
     />
   );

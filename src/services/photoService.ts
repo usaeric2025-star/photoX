@@ -109,7 +109,8 @@ export const loadAllPhotosFromCloud = async (
     searchQuery?: string | null,
     isAdminMode: boolean = false,
     signal?: AbortSignal,
-    sortOrder?: 'asc' | 'desc' | 'newest' | 'oldest' | 'name' | string | null
+    sortOrder?: 'asc' | 'desc' | 'newest' | 'oldest' | 'name' | string | null,
+    onlyUngrouped: boolean = false
 ): Promise<Photo[]> => {
     const selectQuery = PHOTO_SELECT_FIELDS;
 
@@ -119,6 +120,10 @@ export const loadAllPhotosFromCloud = async (
 
   if (signal) {
     query = query.abortSignal(signal);
+  }
+
+  if (onlyUngrouped) {
+    query = query.is('group_id', null);
   }
 
   if (!isAdminMode) {

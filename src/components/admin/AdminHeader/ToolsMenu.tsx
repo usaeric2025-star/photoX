@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings2, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks';
+import { reportError } from '@/lib/errorReporter';
 import { useGalleryStore } from '@/store';
 
 interface ToolsMenuProps {
@@ -80,7 +81,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
                 try {
                   await loginWithGoogle();
                 } catch (e) {
-                  console.error(e);
+                  reportError(e, '管理员登录', 'warn');
                 }
               }}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 text-blue-600 transition-colors text-left"

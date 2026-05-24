@@ -13,29 +13,24 @@ import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GalleryDialogs } from '../PublicGallery/GalleryDialogs';
 import { PublicFloatingButtons } from './PublicFloatingButtons';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
-import { useScrollRestoration, usePhotoFilters, useFeedback, useManufacturersQuery, useCategoriesQuery, useTagsQuery, useSettings } from '../../hooks';
+import { useScrollRestoration, usePhotoFilters, useFeedback, useManufacturersQuery, useCategoriesQuery, useTagsQuery, useSettings, useInfinitePhotos } from '../../hooks';
 import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
+import { PAGINATION } from '../../constants/config';
 import { useNavigate } from 'react-router-dom';
 import { getPhotoDisplayName } from '../../lib/ui-helpers';
 import { sortTagsByPopularity } from '../../utils/tagUtils';
 import { globalHandleError } from '../../utils/errorHandler';
 
 interface PublicGalleryProps {
-  photos: Photo[];
   onExit?: () => void;
   showExit?: boolean;
   onLogin?: () => void;
   loginWithGoogle?: () => Promise<any>;
   isRefreshing?: boolean;
-  isFetchingNextPage?: boolean;
-  onRefresh?: () => void;
   user?: User | null;
-  totalCount?: number;
   initialHash?: string;
   initialGroupId?: string;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
   searchQuery?: string;
   onSearchChange?: (val: string) => void;
 }
@@ -65,7 +60,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     activeGroupId, setActiveGroupId,
     activePhotoId, setActivePhotoId,
     isStaffMode, setIsStaffMode,
-    sortOrder, setSortOrder, setTagIdToNameMap
+    sortOrder, setSortOrder,
+    filterCatId, filterTagIds, debouncedSearchQuery
   } = useGalleryStore(useShallow(s => ({
     searchQuery: s.searchQuery,
     setSearchQuery: s.setSearchQuery,
@@ -83,16 +79,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     setIsStaffMode: s.setIsStaffMode,
     sortOrder: s.sortOrder,
     setSortOrder: s.setSortOrder,
-    setTagIdToNameMap: s.setTagIdToNameMap
+    filterCatId: s.filterCatId,
+    filterTagIds: s.filterTagIds,
+    debouncedSearchQuery: s.debouncedSearchQuery
   })));
 
-  useEffect(() => {
-    if (contextTags && contextTags.length > 0) {
-      const map: Record<string, string> = { };
-      contextTags.forEach(t => { map[String(t.id)] = t.name; });
-      setTagIdToNameMap(map);
-    }
-  }, [contextTags, setTagIdToNameMap]);
+  // Direct data fetch
+  const infiniteQuery = useInfinitePhotos({
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: debouncedSearchQuery,
+    sortOrder: sortOrder,
+    isAdminMode: false
+  }, PAGINATION.PUBLIC_PAGE_SIZE);
+
+  const photos = useMemo(() => infiniteQuery.data?.pages.flatMap(p => p.photos) || [], [infiniteQuery.data]);
+  const isFetchingNextPage = infiniteQuery.isFetchingNextPage;
 
   const searchQuery = props.searchQuery !== undefined ? props.searchQuery : _searchQuery;
   const setSearchQuery = props.onSearchChange || _setSearchQuery;
@@ -102,7 +104,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
 
   // Logic
   const { displayPhotos, gridPhotos } = usePhotoFilters(
-    props.photos,
+    photos,
     categories,
     contextTags,
     {
@@ -125,8 +127,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   }, [sortOrder, setSortOrder]);
 
   const handleLoadMore = useCallback(() => {
-    if (props.onLoadMore && props.hasMore && !props.isRefreshing) props.onLoadMore();
-  }, [props.onLoadMore, props.hasMore, props.isRefreshing]);
+    if (infiniteQuery.hasNextPage && !infiniteQuery.isFetching) infiniteQuery.fetchNextPage();
+  }, [infiniteQuery]);
 
   const getShareMessage = useCallback((p: Photo) => {
     const displayName = getPhotoDisplayName(p, categories, lang, t);
@@ -182,7 +184,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
 
   const virtuosoComponents = useMemo(() => ({
     Footer: () => {
-      if (props.isFetchingNextPage) {
+      if (isFetchingNextPage) {
         return (
           <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
             <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
@@ -201,19 +203,19 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
         </div>
       );
     }
-  }), [settings?.logo_url, settings?.app_name, props.isFetchingNextPage, t.loading]);
+  }), [settings?.logo_url, settings?.app_name, isFetchingNextPage, t.loading]);
 
   const isSyncing = !!props.isRefreshing;
 
   const virtuosoContext = useMemo(() => ({
-    hasMore: props.hasMore,
+    hasMore: infiniteQuery.hasNextPage,
     isSyncing,
-    isFetchingNextPage: props.isFetchingNextPage,
+    isFetchingNextPage: isFetchingNextPage,
     safePhotosLength: gridPhotos.length,
     textLoadMore: t.loadMore,
     textEndOfList: t.endOfList,
     textLoading: t.loading
-  }), [props.hasMore, isSyncing, props.isFetchingNextPage, gridPhotos.length, t]);
+  }), [infiniteQuery.hasNextPage, isSyncing, isFetchingNextPage, gridPhotos.length, t]);
 
   // Hash link handling
   useEffect(() => {
@@ -224,11 +226,11 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   }, [props.initialHash, lightboxIndex, displayPhotos, setLightboxIndex]);
 
   useEffect(() => {
-    if (props.initialGroupId && activeGroupId === null && props.photos.length > 0) {
-      const groupExists = props.photos.some(p => p.group_id === props.initialGroupId);
+    if (props.initialGroupId && activeGroupId === null && photos.length > 0) {
+      const groupExists = photos.some(p => p.group_id === props.initialGroupId);
       if (groupExists) setActiveGroupId(props.initialGroupId);
     }
-  }, [props.initialGroupId, activeGroupId, props.photos, setActiveGroupId]);
+  }, [props.initialGroupId, activeGroupId, photos, setActiveGroupId]);
 
   return (
     <motion.div 
@@ -238,11 +240,10 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     >
       {lightboxIndex === null && (
         <GalleryHeader 
-          totalCount={props.totalCount}
-          photos={props.photos}
+          photos={photos}
           isRefreshing={isSyncing}
           isMultiSelect={false}
-          onRefresh={props.onRefresh}
+          onRefresh={() => {}}
           onExit={props.onExit}
           onLogin={() => setShowPassPrompt(true)}
         />
@@ -281,7 +282,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
           if (gid === null) setActivePhotoId(null);
         }}
         initialPhotoId={activePhotoId}
-        photos={props.photos}
         displayPhotos={displayPhotos}
         setLightboxIndex={setLightboxIndex}
         isStaffMode={isStaffMode}

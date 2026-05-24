@@ -22,7 +22,7 @@ export const PhotoEditDrawer: React.FC = () => {
   const { 
     editPhotoId, formState, updateForm, newPhotoData, setNewPhotoData, 
     appLang, filterCatId, filterTagIds, debouncedSearchQuery, sortOrder,
-    abortAnalysis, setBatchEditingIds, setEditPhotoId
+    setBatchEditingIds, setEditPhotoId
   } = useGalleryStore(useShallow(s => ({
     editPhotoId: s.editPhotoId,
     formState: s.formState,
@@ -34,12 +34,11 @@ export const PhotoEditDrawer: React.FC = () => {
     filterTagIds: s.filterTagIds,
     debouncedSearchQuery: s.debouncedSearchQuery,
     sortOrder: s.sortOrder,
-    abortAnalysis: s.abortAnalysis,
     setBatchEditingIds: s.setBatchEditingIds,
     setEditPhotoId: s.setEditPhotoId
   })));
 
-  const { onDeletePhoto, onUpdatePhoto, onAiAnalyze } = usePhotoActions();
+  const { onDeletePhoto, onUpdatePhoto, onAiAnalyze, onCancelAnalyze } = usePhotoActions();
 
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: filterCatId,
@@ -142,8 +141,8 @@ export const PhotoEditDrawer: React.FC = () => {
         isAnalyzing={logic.isAnalyzing}
         aiDebugInfo={logic.aiDebugInfo}
         isPartOfGroup={logic.isPartOfGroup}
-        isSyncing={logic.sessionSyncing}
-        onAbort={abortAnalysis}
+        isSyncing={logic.isSyncing}
+        onAbort={onCancelAnalyze}
         onAiAnalyze={logic.triggerAiAnalyze}
         onDelete={onDeletePhoto ? () => {
           logic.setAlertDialog({

@@ -10,18 +10,14 @@ import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GroupDetailView } from '../GroupDetailView';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
-import { useScrollRestoration, usePhotoFilters, useManufacturersQuery, useTagsQuery, useCategoriesQuery, useSettings } from '../../hooks';
+import { useScrollRestoration, usePhotoFilters, useManufacturersQuery, useTagsQuery, useCategoriesQuery, useSettings, useInfinitePhotos, useAdminMode, useTasks } from '../../hooks';
 import { useGalleryStore, useShallow } from '../../store';
+import { PAGINATION } from '../../constants/config';
 import { translations } from '../../lib/translations';
 
 interface AdminGalleryProps {
-  photos: Photo[];
   isRefreshing?: boolean;
   onRefresh?: () => void;
-  totalCount?: number;
-  onLoadMore?: () => void;
-  hasMore?: boolean;
-  isFetchingNextPage?: boolean;
   isStaffMode?: boolean;
   isAnalyzing?: boolean;
   handleBatchAiIdentifyTrigger?: () => void;
@@ -39,14 +35,17 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
   const manufacturers = qManufacturers;
 
   const { 
-    showGroupsCollapsed,
-    appLang: langStore,
+    showGroupsCollapsed, 
+    appLang: langStore, 
     columns,
     lightboxIndex, setLightboxIndex,
     activeGroupId, setActiveGroupId,
     activePhotoId, setActivePhotoId,
     sortOrder, setSortOrder,
-    isAnalyzing
+    filterCatId,
+    filterTagIds,
+    searchQuery,
+    viewMode
   } = useGalleryStore(useShallow(s => ({
     showGroupsCollapsed: s.showGroupsCollapsed,
     appLang: s.appLang,
@@ -59,8 +58,28 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
     setActivePhotoId: s.setActivePhotoId,
     sortOrder: s.sortOrder,
     setSortOrder: s.setSortOrder,
-    isAnalyzing: s.isAnalyzing
+    filterCatId: s.filterCatId,
+    filterTagIds: s.filterTagIds,
+    searchQuery: s.searchQuery,
+    viewMode: s.viewMode
   })));
+
+  const { tasks } = useTasks();
+  const isAnalyzing = useMemo(() => props.isAnalyzing || tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [props.isAnalyzing, tasks]);
+
+  const isAdminMode = useAdminMode() || viewMode === 'admin';
+
+  // Direct data fetch (shared with PhotoBoard)
+  const infiniteQuery = useInfinitePhotos({
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: searchQuery,
+    sortOrder: sortOrder,
+    isAdminMode: true
+  }, PAGINATION.ADMIN_BATCH_SIZE);
+
+  const photos = useMemo(() => infiniteQuery.data?.pages.flatMap(p => p.photos) || [], [infiniteQuery.data]);
+  const isFetchingNextPage = infiniteQuery.isFetchingNextPage;
 
   const { onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze } = usePhotoActions();
 
@@ -69,7 +88,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
 
   // Logic
   const { displayPhotos, gridPhotos } = usePhotoFilters(
-    props.photos,
+    photos,
     categories,
     contextTags,
     {
@@ -92,12 +111,12 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
   }, [sortOrder, setSortOrder]);
 
   const handleLoadMore = useCallback(() => {
-    if (props.onLoadMore && props.hasMore && !props.isRefreshing) props.onLoadMore();
-  }, [props.onLoadMore, props.hasMore, props.isRefreshing]);
+    if (infiniteQuery.hasNextPage && !infiniteQuery.isFetching) infiniteQuery.fetchNextPage();
+  }, [infiniteQuery]);
 
   const virtuosoComponents = useMemo(() => ({
     Footer: () => {
-      if (props.isFetchingNextPage) {
+      if (isFetchingNextPage) {
         return (
           <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
             <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
@@ -116,7 +135,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
         </div>
       );
     }
-  }), [settings?.logo_url, settings?.app_name, props.isFetchingNextPage, t.loading]);
+  }), [settings?.logo_url, settings?.app_name, infiniteQuery.isFetchingNextPage, t.loading]);
 
   const isSyncing = !!props.isRefreshing;
 
@@ -129,10 +148,10 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
 
   const handleEditPhotoProp = useCallback((id: string) => {
     if (typeof onEditPhoto === 'function') {
-      const photo = props.photos.find(p => p.id === id);
+      const photo = photos.find(p => p.id === id);
       if (photo) onEditPhoto(photo);
     }
-  }, [onEditPhoto, props.photos]);
+  }, [onEditPhoto, photos]);
 
   return (
     <motion.div 
@@ -193,7 +212,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
             if (gid === null) setActivePhotoId(null);
           }}
           initialPhotoId={activePhotoId}
-          photos={props.photos}
           displayPhotos={displayPhotos}
           setLightboxIndex={setLightboxIndex}
           isStaffMode={!!props.isStaffMode}

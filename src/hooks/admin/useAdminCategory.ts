@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { 
   useUpdateTagMutation, useDeleteTagMutation, 
   useUpdateCategoryMutation, useDeleteCategoryMutation,
@@ -99,7 +99,7 @@ export const useAdminCategory = (adminUI: {
     }
   }, [queryClient, handleError]);
 
-  return {
+  return useMemo(() => ({
     categories,
     addCategory,
     updateCategory,
@@ -113,5 +113,9 @@ export const useAdminCategory = (adminUI: {
     addManufacturer,
     updateManufacturer,
     deleteManufacturer,
-  };
+  }), [
+    categories, addCategory, updateCategory, deleteCategory,
+    tags, addTag, updateTag, deleteTag, removeTagFromPhoto,
+    manufacturers, addManufacturer, updateManufacturer, deleteManufacturer
+  ]);
 };

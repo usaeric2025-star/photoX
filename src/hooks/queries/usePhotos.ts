@@ -8,7 +8,8 @@ export const useInfinitePhotos = (filters: {
   tag_id?: string | null; 
   searchQuery?: string | null; 
   sortOrder?: 'asc' | 'desc' | string | null;
-  isAdminMode?: boolean 
+  isAdminMode?: boolean;
+  onlyUngrouped?: boolean;
 }, limit: number = PAGINATION.DEFAULT_PAGE_SIZE) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ 
@@ -17,6 +18,7 @@ export const useInfinitePhotos = (filters: {
       searchQuery: filters.searchQuery ?? null,
       sortOrder: filters.sortOrder ?? null,
       isAdminMode: filters.isAdminMode ?? false,
+      onlyUngrouped: filters.onlyUngrouped ?? false,
       limit 
     }),
     queryFn: async ({ pageParam = 1, signal }) => {
@@ -31,7 +33,8 @@ export const useInfinitePhotos = (filters: {
         filters.searchQuery,
         filters.isAdminMode || false,
         signal,
-        filters.sortOrder
+        filters.sortOrder,
+        filters.onlyUngrouped || false
       );
 
       // Cache the first page for offline access safely (don't interfere with main fetch state)

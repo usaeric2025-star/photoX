@@ -57,13 +57,12 @@ export const useSettingsLogic = ({
       onConfirm: async () => {
         try {
           setAlertDialog(null);
-          showSuccess('正在扫描并清理重复记录...');
           const { removed } = await deduplicatePhotos(user.id);
           if (removed > 0) {
             await performPullSync();
             showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
           } else {
-            showSuccess('未发现重复记录。');
+            showSuccess('扫描完毕，未发现重复记录。');
           }
         } catch (err: any) {
           handleError(err, '排重失败');
@@ -74,7 +73,6 @@ export const useSettingsLogic = ({
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
     try {
-        showSuccess('正在启动系统健康诊断...');
         const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
         const { backfillThumbHashes } = await import('@/services/photo/backfillService');
         const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
@@ -89,11 +87,10 @@ export const useSettingsLogic = ({
         const missingHashes = await getPhotosWithoutThumbHash();
 
         if (!missingHashes || missingHashes.length === 0) {
-            showSuccess('诊断完成：系统完全健康，无需修复！');
+            showSuccess('系统诊断完成：所有照片健康度良好');
             return;
         }
 
-        showSuccess(`发现 ${missingHashes.length} 张照片占位图缺失，正在后台自动修复...`);
         // 3. Otherwise perform the auto-repair loop
         let backfilledCount = 0;
         await backfillThumbHashes((stats) => {
@@ -103,11 +100,13 @@ export const useSettingsLogic = ({
         if (backfilledCount > 0) {
             invalidatePhotos();
             showSuccess(`诊断修复完成，成功回填 ${backfilledCount} 张照片的占位图！`);
+        } else {
+            showSuccess('诊断完成：未发现需要修复的项目');
         }
     } catch (err: any) {
         handleError(err, '诊断失败');
     }
-  }, [handleError, showSuccess, invalidatePhotos]);
+  }, [handleError, showSuccess, invalidatePhotos, showError]);
 
   const togglePin = useCallback((tagId: string) => {
     const currentPinned = settings?.pinned_tags || [];

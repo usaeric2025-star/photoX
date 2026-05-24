@@ -3,6 +3,7 @@ import { User, Photo, Category, Tag, Manufacturer } from '@/types';
 import { savePhotoToCloud } from '@/services/photoService';
 import { generateItemCode } from '@/services/utils';
 import { formatDate } from '@/utils/dateFormat';
+import { reportError } from '@/lib/errorReporter';
 import { saveData } from '@/utils/indexedDB';
 import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
@@ -12,7 +13,6 @@ import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/usePhot
 export const useAdminImport = (
   user: User | null,
   adminUI: { setActiveScreen: (s: 'home' | 'manage' | 'login') => void } | null,
-  adminSession: { setIsSyncing: (v: boolean) => void } | null,
   geminiApiKey: string | undefined,
   aiProvider: string,
   customModel: string,
@@ -36,7 +36,6 @@ export const useAdminImport = (
   const { getHashAndDataUrl } = useImageHash();
   const { isDuplicate } = useDuplicateCheck(photosRef, sessionHashes, user);
 
-  const { setIsSyncing = () => {} } = adminSession || {};
   const { setActiveScreen = () => {} } = adminUI || {};
 
   const handlePhotoImport = useCallback(async (
@@ -57,7 +56,6 @@ export const useAdminImport = (
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
         
-        setIsSyncing(true);
         setActiveScreen('home');
 
         let successCount = 0;
@@ -133,7 +131,7 @@ export const useAdminImport = (
                 }
             } catch (err) {
                 if (importCancelledRef.current || signal.aborted) break;
-                console.error(`导入单项失败: ${file.name}`, err);
+                reportError(err, '导入单项', 'error');
                 failCount++;
                 failedFiles.push(file.name);
             }
@@ -144,7 +142,6 @@ export const useAdminImport = (
         
         invalidatePhotos();
         saveData('product_photos', photosRef.current).catch(e => console.error('存入本地失败', e));
-        setIsSyncing(false);
         
         if (failCount > 0) {
             throw new Error(`导入完成：成功 ${successCount - failCount}，跳过 ${duplicateCount}，失败 ${failCount}: ${failedFiles.slice(0, 3).join(', ')}`);
@@ -153,8 +150,8 @@ export const useAdminImport = (
   }, [
     user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, 
     tagNameToIdMap, photosRef, queryClient, invalidatePhotos, showSuccess,
-    setIsSyncing, setActiveScreen, getHashAndDataUrl, isDuplicate, sessionHashes, runTask
+    setActiveScreen, getHashAndDataUrl, isDuplicate, sessionHashes, runTask
   ]);
 
-  return { handlePhotoImport, importProgress, importTotal };
+  return useMemo(() => ({ handlePhotoImport, importProgress, importTotal }), [handlePhotoImport, importProgress, importTotal]);
 };

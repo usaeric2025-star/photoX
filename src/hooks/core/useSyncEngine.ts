@@ -14,11 +14,8 @@ export const useSyncEngine = () => {
   const { runTask } = useTaskExecutor();
   
   const { 
-    isSyncing, setIsSyncing, 
     settings, setSettings
   } = useGalleryStore(useShallow(s => ({
-    isSyncing: s.isSyncing,
-    setIsSyncing: s.setIsSyncing,
     settings: s.settings,
     setSettings: s.setSettings
   })));
@@ -34,7 +31,6 @@ export const useSyncEngine = () => {
     if (!userAccount) return;
     
     await runTask('同步云端数据', async () => {
-        setIsSyncing(true);
         const [newSettings, count] = await Promise.all([
           fetchSettings(),
           getPhotoCount()
@@ -50,15 +46,12 @@ export const useSyncEngine = () => {
           queryClient.invalidateQueries({ queryKey: ['manufacturers'] }),
           queryClient.invalidateQueries({ queryKey: ['settings'] }),
         ]);
-        setIsSyncing(false);
     }, { showSuccessToast: true });
-  }, [setSettings, queryClient, invalidatePhotos, runTask, setIsSyncing]);
+  }, [setSettings, queryClient, invalidatePhotos, runTask]);
 
   return {
     settings,
     setSettings,
-    refreshCloudData,
-    isSyncing,
-    setIsSyncing
+    refreshCloudData
   };
 };

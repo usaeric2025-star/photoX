@@ -12,8 +12,7 @@ import { useGalleryStore, useShallow } from '@/store';
 
 export const useGroupAdminLogic = ({
   initialPhotoId,
-  photos,
-}: { initialPhotoId?: string | null, photos: Photo[] }) => {
+}: { initialPhotoId?: string | null }) => {
   const isAdminMode = useAdminMode();
   const queryClient = useQueryClient();
   const { 
@@ -178,9 +177,7 @@ export const useGroupAdminLogic = ({
 
   const confirmBulkRemove = useCallback((ids: string[]) => {
     // Determine the true remaining count (including hidden photos)
-    const allGroupPhotos = dbGroupPhotos.length > 0
-      ? dbGroupPhotos
-      : photos.filter(p => p && p.group_id === activeGroupId);
+    const allGroupPhotos = dbGroupPhotos;
     const remainingCount = allGroupPhotos.length - ids.length;
     const isDissolving = remainingCount <= 1;
     
@@ -209,7 +206,7 @@ export const useGroupAdminLogic = ({
         setAlertDialog(null);
       }
     });
-  }, [showError, setAlertDialog, photos, dbGroupPhotos, activeGroupId, removePhotosBatch, setActiveGroupId]);
+  }, [showError, setAlertDialog, dbGroupPhotos, activeGroupId, removePhotosBatch, setActiveGroupId]);
 
   const persistPhotoChange = useCallback(async (photoId: string, updates: Partial<Photo>) => {
     try {
@@ -238,9 +235,7 @@ export const useGroupAdminLogic = ({
       
       if (updates.hasOwnProperty('is_hidden')) {
         const is_hidden = updates.is_hidden;
-        const groupPhotos = dbGroupPhotos.length > 0
-          ? dbGroupPhotos
-          : photos.filter(p => p && p.group_id === activeGroupId);
+        const groupPhotos = dbGroupPhotos;
         if (groupPhotos.length > 0 && onUpdatePhoto) {
            await Promise.all(
               groupPhotos.map(p => onUpdatePhoto(p.id, { is_hidden }))
@@ -248,10 +243,10 @@ export const useGroupAdminLogic = ({
         }
       }
     } catch (err: any) {
-      showError(err, '更新群组资料失败');
+      showError(err, '更新群組資料失敗');
       throw err;
     }
-  }, [activeGroupId, groupData, showError, onUpdatePhoto, onUpdatePhotosBulk, photos, dbGroupPhotos]);
+  }, [activeGroupId, groupData, showError, onUpdatePhoto, onUpdatePhotosBulk, dbGroupPhotos, queryClient]);
 
   const handleToggleTag = useCallback((photo: Photo, tagId: string) => {
     const currentTags = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];

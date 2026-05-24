@@ -4,7 +4,7 @@ import { useGalleryStore } from '../../store';
 
 export const LanguageSwitcher: React.FC<{ variant?: 'admin' | 'public' | 'ghost' }> = ({ variant = 'admin' }) => {
   const appLang = useGalleryStore(s => s.appLang);
-  const setLanguage = useGalleryStore(s => s.setLanguage);
+  const setAppLang = useGalleryStore(s => s.setAppLang);
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -42,7 +42,7 @@ export const LanguageSwitcher: React.FC<{ variant?: 'admin' | 'public' | 'ghost'
         ].map(l => (
           <button 
             key={l.code} 
-            onClick={() => setLanguage(l.code as any)} 
+            onClick={() => setAppLang(l.code as any)} 
             className={`px-3 h-8 flex items-center justify-center rounded-full text-[12px] font-bold transition-all ${appLang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888] hover:text-[#1A1A1A]'}`}
           >
             {l.label}
@@ -70,7 +70,7 @@ export const LanguageSwitcher: React.FC<{ variant?: 'admin' | 'public' | 'ghost'
             <button
               key={l.code}
               onClick={() => {
-                setLanguage(l.code as any);
+                setAppLang(l.code as any);
                 setIsOpen(false);
               }}
               className={`w-full text-left px-4 py-2 transition-colors flex items-center justify-between ${appLang === l.code ? 'text-white font-bold bg-[#1A1C3E]' : 'text-slate-600 font-medium hover:bg-slate-50'}`}

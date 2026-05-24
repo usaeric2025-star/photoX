@@ -12,7 +12,7 @@ import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell'
 import { mapSupabasePhoto } from '../services/photoService';
 import { DB_CONFIG } from '../constants/config';
 
-import { useAdminMode, useFeedback, useGroupDetailQuery } from '@/hooks';
+import { useAdminMode, useFeedback, useGroupDetailQuery, useTasks } from '@/hooks';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useInfiniteGroupPhotosQuery } from '@/hooks';
 import { useGalleryStore, useShallow } from '../store';
@@ -23,7 +23,6 @@ import { translations } from '../lib/translations';
 export interface GroupDetailViewProps extends GroupAdminShellProps {
   activeGroupId: string | null;
   setActiveGroupId: (id: string | null) => void;
-  photos: Photo[];
   displayPhotos?: Photo[];
   setLightboxIndex?: (idx: number) => void;
   onLongPressStart?: (photo: Photo) => void;
@@ -35,16 +34,15 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
-  const { activeGroupId, setActiveGroupId, photos, shareGroup, initialPhotoId } = props;
+  const { activeGroupId, setActiveGroupId, shareGroup, initialPhotoId } = props;
   const isAdminMode = useAdminMode();
   const { showError } = useFeedback();
 
   const lang = useGalleryStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.zh;
   
-  const { isAnalyzing } = useGalleryStore(useShallow(s => ({
-      isAnalyzing: s.isAnalyzing
-  })));
+  const { tasks } = useTasks();
+  const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
   
   const { onEditPhoto, onToggleHidden, onAiAnalyze, onCancelAnalyze } = usePhotoActions();
   

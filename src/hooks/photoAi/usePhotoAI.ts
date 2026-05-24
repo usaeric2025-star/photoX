@@ -6,6 +6,7 @@ import { AI_CONFIG } from '@/constants/config';
 import { QUERY_KEYS } from '@/hooks/queries/keys';
 import { analyzeProductPhoto, translateDescription, normalizeDimensions } from '@/services/geminiService';
 import { resolveTagIdsBatch } from '@/utils/tagUtils';
+import { reportError } from '@/lib/errorReporter';
 import { safeArray } from '@/lib/utils';
 import { cleanObject } from '@/services/utils';
 import { formatDate } from '@/utils/dateFormat';
@@ -132,7 +133,7 @@ export const usePhotoAI = (
         const idsToCancel = Array.from(activeTaskIds.current);
         activeTaskIds.current.clear();
         idsToCancel.forEach(id => {
-          try { cancelTask(id); } catch (e) { console.error('Failed to cancel task', e); }
+          try { cancelTask(id); } catch (e) { reportError(e, '取消任务', 'warn'); }
         });
         return;
       }
@@ -334,7 +335,7 @@ export const usePhotoAI = (
           return { success: true };
         } catch (err: any) {
           if (err.name === 'DuplicatePhotoError') return { success: true, duplicate: true };
-          console.error(`Error processing photo ${photo.id}:`, err);
+          reportError(err, '批量识别子任务', 'error');
           return { success: false, error: err };
         } finally {
           currentControllers.current.delete(photo.id);

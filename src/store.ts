@@ -2,13 +2,12 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User, DialogData, ProductFormData } from './types';
-import { translations } from './lib/translations';
 
 interface StoreState {
-  abortAnalysis?: () => void;
-  setAbortAnalysis: (fn: () => void) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
+  debouncedSearchQuery: string;
+  setDebouncedSearchQuery: (q: string) => void;
   filterCatId: string | null;
   setFilterCatId: (id: string | null) => void;
   filterSubId: string | null;
@@ -31,11 +30,15 @@ interface StoreState {
   setActivePhotoId: (id: string | null) => void;
   editPhotoId: string | null;
   setEditPhotoId: (id: string | null) => void;
-  // Batch Editing and Groups
+  
   batchEditingIds: string[] | null;
   setBatchEditingIds: (ids: string[] | null) => void;
   groupSettingsOpen: boolean;
   setGroupSettingsOpen: (open: boolean) => void;
+  isPhotoPickerOpen: boolean;
+  setIsPhotoPickerOpen: (open: boolean) => void;
+  photoPickerGroupId: string | null;
+  setPhotoPickerGroupId: (id: string | null) => void;
 
   isMultiSelect: boolean;
   setIsMultiSelect: (is: boolean) => void;
@@ -43,30 +46,18 @@ interface StoreState {
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
   isStaffMode: boolean;
   setIsStaffMode: (is: boolean) => void;
-  photos: Photo[];
-  setPhotos: (photos: Photo[]) => void;
-  totalCount: number;
-  setTotalCount: (count: number) => void;
-  isFetching: boolean;
-  setIsFetching: (fetching: boolean) => void;
-  isFetchingNextPage: boolean;
-  setIsFetchingNextPage: (fetching: boolean) => void;
-  hasNextPage: boolean;
-  setHasNextPage: (has: boolean) => void;
-  loadMorePhotos: () => void;
-  setLoadMorePhotos: (fn: () => void) => void;
   alertDialog: DialogData | null;
   setAlertDialog: (dialog: DialogData | null) => void;
   promptDialog: DialogData | null;
   setPromptDialog: (dialog: DialogData | null) => void;
-  // Multi-select and Drag-and-drop
+  
   isMultiSelectMode: boolean;
   setIsMultiSelectMode: (is: boolean) => void;
   draggedPhotoId: string | null;
   setDraggedPhotoId: (id: string | null) => void;
   focusedGroupPhotoId: string | null;
   setFocusedGroupPhotoId: (id: string | null) => void;
-  // Metadata and Settings
+
   settings: any;
   setSettings: (s: any) => void;
   geminiApiKey: string | null;
@@ -79,24 +70,16 @@ interface StoreState {
   setUser: (user: User | null) => void;
   viewMode: 'admin' | 'public';
   setViewMode: (mode: 'admin' | 'public') => void;
-  isSyncing: boolean;
-  setIsSyncing: (syncing: boolean) => void;
   activeScreen: string;
   setActiveScreen: (screen: string) => void;
   isInfiniteMode: boolean;
   setIsInfiniteMode: (mode: boolean) => void;
-  setLanguage: (lang: 'zh' | 'en' | 'ms') => void;
-  setDebouncedSearchQuery: (q: string) => void;
-  debouncedSearchQuery: string;
-  isAnalyzing: boolean;
-  aiDebugInfo: any;
+
   resetUI: () => void;
   resetFilters: () => void;
   showWhatsAppChoice: boolean;
   setShowWhatsAppChoice: (show: boolean) => void;
-  tagIdToNameMap: Record<string, string>;
-  setTagIdToNameMap: (map: Record<string, string>) => void;
-  // Photo Editing Form State
+  
   formState: ProductFormData;
   updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => void;
   newPhotoData: string | null;
@@ -122,9 +105,10 @@ const defaultForm: ProductFormData = {
 
 export { useShallow };
 export const useGalleryStore = create<StoreState>()((set) => ({
-  setAbortAnalysis: (abortAnalysis) => set({ abortAnalysis }),
   searchQuery: '',
   setSearchQuery: (searchQuery) => set({ searchQuery, debouncedSearchQuery: searchQuery }),
+  debouncedSearchQuery: '',
+  setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
   filterCatId: null,
   setFilterCatId: (filterCatId) => set({ filterCatId }),
   filterSubId: null,
@@ -198,6 +182,10 @@ export const useGalleryStore = create<StoreState>()((set) => ({
     sessionStorage.setItem('photo_groupSettingsOpen', String(groupSettingsOpen));
     set({ groupSettingsOpen });
   },
+  isPhotoPickerOpen: false,
+  setIsPhotoPickerOpen: (isPhotoPickerOpen) => set({ isPhotoPickerOpen }),
+  photoPickerGroupId: null,
+  setPhotoPickerGroupId: (photoPickerGroupId) => set({ photoPickerGroupId }),
   isMultiSelect: false,
   setIsMultiSelect: (isMultiSelect) => set({ isMultiSelect }),
   selectedIds: [],
@@ -209,30 +197,16 @@ export const useGalleryStore = create<StoreState>()((set) => ({
     sessionStorage.setItem('isStaffMode', String(isStaffMode));
     set({ isStaffMode });
   },
-  photos: [],
-  setPhotos: (photos) => set({ photos }),
-  totalCount: 0,
-  setTotalCount: (totalCount) => set({ totalCount }),
-  isFetching: false,
-  setIsFetching: (isFetching) => set({ isFetching }),
-  isFetchingNextPage: false,
-  setIsFetchingNextPage: (isFetchingNextPage) => set({ isFetchingNextPage }),
-  hasNextPage: false,
-  setHasNextPage: (hasNextPage) => set({ hasNextPage }),
-  loadMorePhotos: () => {},
-  setLoadMorePhotos: (loadMorePhotos) => set({ loadMorePhotos }),
   alertDialog: null,
   setAlertDialog: (alertDialog) => set({ alertDialog }),
   promptDialog: null,
   setPromptDialog: (promptDialog) => set({ promptDialog }),
-  // Multi-select and Drag-and-drop
   isMultiSelectMode: false,
   setIsMultiSelectMode: (isMultiSelectMode) => set({ isMultiSelectMode }),
   draggedPhotoId: null,
   setDraggedPhotoId: (draggedPhotoId) => set({ draggedPhotoId }),
   focusedGroupPhotoId: null,
   setFocusedGroupPhotoId: (focusedGroupPhotoId) => set({ focusedGroupPhotoId }),
-  // Metadata and Settings
   settings: {},
   setSettings: (settings) => set({ settings }),
   geminiApiKey: null,
@@ -248,8 +222,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
     localStorage.setItem('photo_viewMode', viewMode);
     set({ viewMode });
   },
-  isSyncing: false,
-  setIsSyncing: (isSyncing) => set({ isSyncing }),
   activeScreen: sessionStorage.getItem('photo_activeScreen') || 'gallery',
   setActiveScreen: (activeScreen) => {
     sessionStorage.setItem('photo_activeScreen', activeScreen);
@@ -257,14 +229,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   },
   isInfiniteMode: false,
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
-  setLanguage: (appLang: 'zh' | 'en' | 'ms') => {
-    localStorage.setItem('photo_appLang', appLang);
-    set({ appLang });
-  },
-  setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
-  debouncedSearchQuery: '',
-  isAnalyzing: false,
-  aiDebugInfo: null,
   resetUI: () => {
     sessionStorage.removeItem('photo_edit_form_draft');
     sessionStorage.removeItem('photo_editPhotoId');
@@ -290,8 +254,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   }),
   showWhatsAppChoice: false,
   setShowWhatsAppChoice: (showWhatsAppChoice) => set({ showWhatsAppChoice }),
-  tagIdToNameMap: {},
-  setTagIdToNameMap: (tagIdToNameMap) => set({ tagIdToNameMap }),
   formState: (() => {
     try {
       const saved = sessionStorage.getItem('photo_edit_form_draft');
@@ -314,6 +276,5 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   showOtherFields: false,
   setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
 }));
-
 
 export const useStore = useGalleryStore;

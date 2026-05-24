@@ -14,17 +14,21 @@ export const useGroupPhotosMutation = () => {
   const invalidatePhotos = useInvalidatePhotos();
 
   return useMutation({
-    mutationFn: async (photoIds: string[]) => {
-      console.log('useGroupPhotosMutation mutationFn called with photoIds:', photoIds);
-      const newGroupId = crypto.randomUUID();
-      await groupPhotos(photoIds, newGroupId);
-      return { photoIds, newGroupId };
+    mutationFn: async ({ photoIds, targetGroupId }: { photoIds: string[], targetGroupId?: string }) => {
+      console.log('useGroupPhotosMutation mutationFn called with photoIds:', photoIds, 'targetGroupId:', targetGroupId);
+      const finalGroupId = targetGroupId || crypto.randomUUID();
+      await groupPhotos(photoIds, finalGroupId);
+      return { photoIds, newGroupId: finalGroupId };
     },
-    onMutate: async (photoIds) => {
+    onMutate: async ({ photoIds, targetGroupId }) => {
       await queryClient.cancelQueries({ queryKey: ['photos'] });
       await queryClient.cancelQueries({ queryKey: ['groups'] });
+      if (targetGroupId) {
+        await queryClient.cancelQueries({ queryKey: ['group', targetGroupId] });
+        await queryClient.cancelQueries({ queryKey: ['group-photos', targetGroupId] });
+      }
 
-      const tempGroupId = crypto.randomUUID();
+      const tempGroupId = targetGroupId || crypto.randomUUID();
       const previousInfinite = queryClient.getQueriesData<InfiniteData<InfinitePhotosData>>({ queryKey: ['photos', 'infinite'] });
 
       const idSet = new Set(photoIds);
@@ -71,14 +75,18 @@ export const useGroupPhotosMutation = () => {
         };
       });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      if (variables.targetGroupId) {
+        queryClient.invalidateQueries({ queryKey: ['group', variables.targetGroupId] });
+        queryClient.invalidateQueries({ queryKey: ['group-photos', variables.targetGroupId] });
+      }
     },
-    onError: (error: unknown, photoIds, context) => {
+    onError: (error: unknown, variables, context) => {
       if (context?.previousInfinite) {
         context.previousInfinite.forEach(([queryKey, value]) => {
           queryClient.setQueryData(queryKey, value);
         });
       }
-      handleError(error, '群组创建失败');
+      handleError(error, '合组操作失败');
     }
   });
 };

@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Photo, ProductFormData } from '../../types';
 import { loadPhotosByGroupId } from '../../services/photoService';
 import { hapticFeedback } from '../../utils/haptics';
@@ -117,9 +117,8 @@ export const useAdminActions = (
 
   const performPullSync = useCallback(async () => {
     try {
-      showSuccess('正在拉取云端数据...');
       await infinitePhotosQuery.refetch(); 
-      showSuccess('数据已更新');
+      showSuccess('云端数据拉取成功');
       return { success: true, data: null };
     } catch (err: any) {
       showError(err, '拉取失败');
@@ -129,9 +128,8 @@ export const useAdminActions = (
 
   const performPushSync = useCallback(async () => {
     try {
-      showSuccess('正在同步备份至云端...');
       if (sync.performPush) await sync.performPush();
-      showSuccess('备份完成');
+      showSuccess('同步备份完成');
       return { success: true, data: null };
     } catch (err: any) {
       showError(err, '备份失败');
@@ -185,7 +183,7 @@ export const useAdminActions = (
     });
   }, [setPromptDialog, addManufacturer, edit, showError]);
 
-  return {
+  return useMemo(() => ({
     handleBatchAiIdentifyTrigger,
     handleDeletePhoto,
     handleImport,
@@ -196,5 +194,16 @@ export const useAdminActions = (
     handleLoadMoreCallback,
     quickAddTag,
     quickAddManufacturer
-  };
+  }), [
+    handleBatchAiIdentifyTrigger,
+    handleDeletePhoto,
+    handleImport,
+    saveBatchEditWithSuccess,
+    handleRefresh,
+    performPullSync,
+    performPushSync,
+    handleLoadMoreCallback,
+    quickAddTag,
+    quickAddManufacturer
+  ]);
 };

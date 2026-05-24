@@ -6,7 +6,7 @@ import { safeArray } from '../../utils/safeAccess';
 import { useGalleryStore, useShallow } from '../../store';
 import { PhotoImageContainer } from './PhotoImageContainer';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
-import { useCategoriesQuery, useManufacturersQuery, usePermission } from '../../hooks';
+import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
 import { translations } from '../../lib/translations';
 
 export type PhotoCardVariant = 'admin' | 'public';
@@ -99,13 +99,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const { 
     isMultiSelect, setIsMultiSelect, setSelectedIds,
-    appLang: lang, tagIdToNameMap: tagMap
+    appLang: lang
   } = useGalleryStore(useShallow(s => ({
     isMultiSelect: s.isMultiSelect,
     setIsMultiSelect: s.setIsMultiSelect,
     setSelectedIds: s.setSelectedIds,
-    appLang: s.appLang,
-    tagIdToNameMap: s.tagIdToNameMap
+    appLang: s.appLang
   })));
 
   const { onTogglePinned, onToggleHidden } = usePhotoActions();
@@ -113,7 +112,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const t = translations[lang as keyof typeof translations] || translations.zh;
 
   const { data: categories = [] } = useCategoriesQuery();
+  const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
+  
+  const tagMap = useMemo(() => 
+    tags.reduce((acc, t) => ({ ...acc, [t.id]: t.name }), {} as Record<string, string>),
+    [tags]
+  );
   const { canEdit } = usePermission();
 
   const enable = useCallback(() => {
@@ -126,14 +131,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     const current = store.selectedIds ?? [];
     const isCurrentlySelected = current.includes(photo.id);
     
-    // If showGroupsCollapsed is true and we're dealing with a group, we should select all group members
+    // If showGroupsCollapsed is true and we're dealing with a group, we should select by group members if we have the list
     let idsToToggle = [photo.id];
-    if (showGroupsCollapsed && photo.group_id) {
-      idsToToggle = store.photos
-        .filter(p => p.group_id === photo.group_id)
-        .map(p => p.id);
-    }
-
+    // Removed automatic group member selection because store.photos is no longer available in Zustand
+    // Future implementation: Provide current visible photo list via Context to PhotoCard
+    
     let next: string[];
     if (isCurrentlySelected) {
       // Remove all ids in the group

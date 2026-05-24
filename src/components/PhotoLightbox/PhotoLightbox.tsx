@@ -6,7 +6,7 @@ import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAdminMode, usePermission } from '../../hooks';
+import { useAdminMode, usePermission, useTasks } from '../../hooks';
 import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { useCategoriesQuery, useManufacturersQuery, useTagsQuery } from '../../hooks';
@@ -38,7 +38,8 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const displayPhotos = rawDisplayPhotos ?? [];
 
   const actions = usePhotoActions();
-  const storeIsAnalyzing = useGalleryStore(s => s.isAnalyzing);
+  const { tasks } = useTasks();
+  const storeIsAnalyzing = React.useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
 
   const onEditPhoto = props.onEditPhoto ?? actions.onEditPhoto;
   const onToggleHidden = props.onToggleHidden ?? actions.onToggleHidden;

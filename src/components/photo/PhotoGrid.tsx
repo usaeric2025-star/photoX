@@ -1,6 +1,6 @@
-import React, { useCallback, useMemo } from 'react';
-import { VirtuosoGrid, VirtuosoGridHandle, VirtuosoGridProps as BaseVirtuosoGridProps } from 'react-virtuoso';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useCallback, useMemo, useEffect, useRef } from 'react';
+import { VirtuosoGrid } from 'react-virtuoso';
+import { motion } from 'motion/react';
 import { VIRTUOSO_CONFIG } from '../../config/virtuoso.config';
 import { Photo } from '../../types';
 import { PhotoCard } from '../photo/PhotoCard';
@@ -8,7 +8,8 @@ import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
-import { useCategoriesQuery, useTagsQuery, usePhotoFilters, useAdminMode } from '../../hooks';
+import { useCategoriesQuery, useTagsQuery, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
+import { PAGINATION } from '../../constants/config';
 
 interface MemoizedPhotoCardProps {
   index: number;
@@ -49,31 +50,46 @@ function getSkeletonCount(total: number = 0, columns: number): number {
 export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo(({ virtuosoRef }) => {
   const { 
     columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
-    photos, totalCount, isFetching, isFetchingNextPage, hasNextPage, loadMorePhotos,
-    isStaffMode, viewMode
+    isStaffMode, viewMode, activeGroupId, activePhotoId,
+    filterCatId, filterTagIds, searchQuery, sortOrder
   } = useGalleryStore(useShallow(s => ({
     columns: s.columns,
     setActiveGroupId: s.setActiveGroupId,
     setActivePhotoId: s.setActivePhotoId,
     setLightboxIndex: s.setLightboxIndex,
     appLang: s.appLang,
-    photos: s.photos,
-    totalCount: s.totalCount,
-    isFetching: s.isFetching,
-    isFetchingNextPage: s.isFetchingNextPage,
-    hasNextPage: s.hasNextPage,
-    loadMorePhotos: s.loadMorePhotos,
     isStaffMode: s.isStaffMode,
-    viewMode: s.viewMode
+    viewMode: s.viewMode,
+    activeGroupId: s.activeGroupId,
+    activePhotoId: s.activePhotoId,
+    filterCatId: s.filterCatId,
+    filterTagIds: s.filterTagIds,
+    searchQuery: s.searchQuery,
+    sortOrder: s.sortOrder
   })));
+  
+  const isHookAdminMode = useAdminMode();
+  const isPageAdmin = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
+  const isAdminMode = isHookAdminMode || isPageAdmin || viewMode === 'admin' || isStaffMode;
+
+  // Real-time photo query based on store filters
+  const infinitePhotosQuery = useInfinitePhotos({
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: searchQuery,
+    sortOrder: sortOrder,
+    isAdminMode
+  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : 60);
+
+  const photos = React.useMemo(() => infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [], [infinitePhotosQuery.data]);
+  const isFetching = infinitePhotosQuery.isLoading;
+  const isFetchingNextPage = infinitePhotosQuery.isFetchingNextPage;
+  const hasNextPage = !!infinitePhotosQuery.hasNextPage;
+  const loadMorePhotos = infinitePhotosQuery.fetchNextPage;
   
   const { data: categories = [] } = useCategoriesQuery();
   const { data: contextTags = [] } = useTagsQuery();
   const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
-
-  const isHookAdminMode = useAdminMode();
-  const isPageAdmin = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
-  const isAdminMode = isHookAdminMode || isPageAdmin || viewMode === 'admin' || isStaffMode;
 
   const lang = appLang;
   const t = translations[lang] || translations['zh'];
@@ -102,10 +118,27 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
     }
   }, [displayPhotos, setLightboxIndex]);
 
-  const isInitialLoad = (isFetching) && gridPhotos.length === 0;
+  // Anchoring logic: when returning from a group detail view
+  const prevActiveGroupId = useRef<string | null>(null);
+  useEffect(() => {
+    if (activeGroupId === null && prevActiveGroupId.current !== null) {
+      const targetId = activePhotoId || prevActiveGroupId.current;
+      if (targetId) {
+        const index = gridPhotos.findIndex(p => p.id === targetId || p.group_id === targetId);
+        if (index !== -1) {
+          setTimeout(() => {
+            (virtuosoRef as any).current?.scrollToIndex({ index, align: 'center', behavior: 'auto' });
+          }, 100);
+        }
+      }
+    }
+    prevActiveGroupId.current = activeGroupId;
+  }, [activeGroupId, gridPhotos, activePhotoId, virtuosoRef]);
+
+  const isInitialLoad = infinitePhotosQuery.isLoading && photos.length === 0;
 
   if (isInitialLoad) {
-    const skeletonCount = getSkeletonCount(totalCount, columns);
+    const skeletonCount = getSkeletonCount(0, columns); // Will default appropriately
     return (
       <motion.div 
         key="skeleton"
@@ -120,7 +153,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
     );
   }
 
-  if (gridPhotos.length === 0) {
+  if (gridPhotos.length === 0 && !isFetching) {
     return (
       <motion.div
          key="empty"
@@ -144,7 +177,11 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
           const p = item as Photo;
           return p ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `loading-${index}`;
         }}
-        endReached={loadMorePhotos}
+        endReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            loadMorePhotos();
+          }
+        }}
         overscan={VIRTUOSO_CONFIG.overscan(columns)}
         increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
         useWindowScroll={false}
@@ -169,7 +206,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
                 <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
                   <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
                   <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
-                    {t.loading || '正在载入更多...'}
+                    {(t as any).loading || '正在载入更多...'}
                   </span>
                 </div>
               );
@@ -178,7 +215,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
                return (
                  <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
                    <span className="text-[10px] text-slate-400 font-medium tracking-tight">
-                     {t.endOfList || '已经到底啦'}
+                     {(t as any).endOfList || '已经到底啦'}
                    </span>
                  </div>
                );

@@ -15,6 +15,7 @@ import {
 import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useAuth } from '../../hooks';
+import { reportError } from '@/lib/errorReporter';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -205,7 +206,7 @@ export const AdminSidebar: React.FC = () => {
                 try {
                   await loginWithGoogle();
                 } catch (e) {
-                  console.error(e);
+                  reportError(e, '侧边栏登录', 'warn');
                 }
               }}
               className="w-full py-1.5 px-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.97] text-white font-bold text-[9px] uppercase tracking-wide rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/10"

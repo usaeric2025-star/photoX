@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  ChevronLeft, Pencil, Sparkles, Settings2, MoreVertical, Plus, X 
+  ChevronLeft, Pencil, Sparkles, Settings2, MoreVertical, X, Plus 
 } from 'lucide-react';
 import { Photo, ProductGroup } from '../../types';
 import { Skeleton } from '../ui/Skeleton';
@@ -21,7 +21,6 @@ interface GroupHeaderProps {
   groupData: ProductGroup | null;
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
-  onAddPhotoToGroup?: () => void;
   onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void>;
 }
 
@@ -32,15 +31,16 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   groupData,
   isGroupDataLoading,
   activeGroupPhotos,
-  onAddPhotoToGroup,
   onBatchAiAnalyzeByGroupId,
 }) => {
-  const { setGroupSettingsOpen, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore(useShallow(s => ({
+  const { setGroupSettingsOpen, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, setIsPhotoPickerOpen, setPhotoPickerGroupId } = useGalleryStore(useShallow(s => ({
     setGroupSettingsOpen: s.setGroupSettingsOpen,
     isMultiSelect: s.isMultiSelect,
     setIsMultiSelect: s.setIsMultiSelect,
     selectedIds: s.selectedIds,
-    setSelectedIds: s.setSelectedIds
+    setSelectedIds: s.setSelectedIds,
+    setIsPhotoPickerOpen: s.setIsPhotoPickerOpen,
+    setPhotoPickerGroupId: s.setPhotoPickerGroupId
   })));
   
   const { onBatchEdit, onBatchAiAnalyze } = usePhotoActions();
@@ -90,6 +90,19 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
       <div className="flex items-center gap-2">
          {isAdminMode && (
            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button 
+                onClick={() => {
+                  if (activeGroupId) {
+                    setPhotoPickerGroupId(activeGroupId);
+                    setIsPhotoPickerOpen(true);
+                  }
+                }}
+                className="w-10 h-10 flex-shrink-0 flex items-center justify-center border border-emerald-200 rounded-xl bg-emerald-50 text-emerald-600 shadow-sm active:scale-95 transition-all"
+                title="添加照片 / Add Photos"
+              >
+                <Plus size={20} />
+              </button>
+
               <button 
                 onClick={() => {
                   if (selectedIds.length > 0 && onBatchAiAnalyze) {

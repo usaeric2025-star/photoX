@@ -4,7 +4,7 @@ import {
   useCategoriesQuery, useTagsQuery, useManufacturersQuery,
   useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
-  useFeedback, useTaskExecutor
+  useFeedback, useTaskExecutor, useTasks
 } from '../../../hooks';
 import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
 import { useFormValidation } from '@/hooks';
@@ -23,13 +23,15 @@ interface Props {
 
 export const usePhotoEditLogic = (props: Props) => {
   const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, analyzeSingle, saveNewPhoto } = props;
-  const isAnalyzing = useGalleryStore(s => s.isAnalyzing);
-  const aiDebugInfo = useGalleryStore(s => s.aiDebugInfo);
+  const { tasks } = useTasks();
+  const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+  const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
+  const aiDebugInfo = null;
+
   const { runTask } = useTaskExecutor();
   const setPromptDialog = useGalleryStore(s => s.setPromptDialog);
   const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
   const appLang = useGalleryStore(s => s.appLang);
-  const sessionSyncing = useGalleryStore(s => s.isSyncing);
   const { showError, showSuccess } = useFeedback();
   const { validatePhotoForm } = useFormValidation();
 
@@ -141,7 +143,7 @@ export const usePhotoEditLogic = (props: Props) => {
     addManufacturer, updateManufacturer, deleteManufacturer,
     isProcessingImage, rotatePhoto,
     handleSave, toggleHidden, triggerAiAnalyze,
-    isAnalyzing, aiDebugInfo, isPartOfGroup, sessionSyncing,
+    isAnalyzing, aiDebugInfo, isPartOfGroup, isSyncing,
     setPromptDialog, setAlertDialog, appLang, showError
   };
 };

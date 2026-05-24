@@ -47,10 +47,9 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
 
   const handleRefreshHotScores = async () => {
     try {
-      showSuccess('正在统计标签热度分值...');
       await triggerRefreshTagHotScores();
       await queryClient.invalidateQueries({ queryKey: ['tags'] });
-      showSuccess('分值已刷新');
+      showSuccess('标签热度分值已刷新');
     } catch (err: any) {
       showError(err, '刷新失败');
     }

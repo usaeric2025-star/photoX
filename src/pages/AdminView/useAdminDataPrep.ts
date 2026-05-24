@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { translations, LanguageCode } from '../../lib/translations';
-import { useAdminFilters, useAdminImport, useAdminSync, useAdminAI, useAdminEdit } from '../../hooks/admin';
+import { useAdminImport, useAdminSync, useAdminAI, useAdminEdit } from '../../hooks/admin';
 import { 
   useAuth, useFeedback, useTaskExecutor, useTasks, useAdminCategory, useMultiSelect, 
   useSyncEngine, useSettings, useCategoriesQuery, useTagsQuery, useManufacturersQuery, 
   useInfinitePhotos, usePhotoCountQuery, useSettingsMutation
 } from '@/hooks';
 import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
-import { useGallerySync } from '@/hooks';
 import { useGalleryStore, useShallow } from '../../store';
 import { useAdminActions } from './useAdminActions';
 import { PAGINATION } from '../../constants/config';
@@ -28,8 +27,15 @@ export const useAdminDataPrep = () => {
   const { tasks } = useTasks();
 
   const store = useGalleryStore(useShallow(s => ({
+    searchQuery: s.searchQuery,
+    setSearchQuery: s.setSearchQuery,
+    setDebouncedSearchQuery: s.setDebouncedSearchQuery,
     filterCatId: s.filterCatId,
+    setFilterCatId: s.setFilterCatId,
+    filterSubId: s.filterSubId,
+    setFilterSubId: s.setFilterSubId,
     filterTagIds: s.filterTagIds,
+    setFilterTagIds: s.setFilterTagIds,
     debouncedSearchQuery: s.debouncedSearchQuery,
     sortOrder: s.sortOrder,
     appLang: s.appLang,
@@ -41,18 +47,20 @@ export const useAdminDataPrep = () => {
     activeScreen: s.activeScreen,
     setActiveGroupId: s.setActiveGroupId,
     activeGroupId: s.activeGroupId,
-    isSyncing: s.isSyncing,
-    setIsSyncing: s.setIsSyncing,
     geminiApiKey: s.geminiApiKey,
     setGeminiApiKey: s.setGeminiApiKey,
     customModel: s.customModel,
     setCustomModel: s.setCustomModel,
+    accessPasscode: s.accessPasscode,
     setAccessPasscode: s.setAccessPasscode,
     setAlertDialog: s.setAlertDialog,
     setPromptDialog: s.setPromptDialog,
     setLightboxIndex: s.setLightboxIndex,
-    totalCount: s.totalCount,
     isStaffMode: s.isStaffMode,
+    isPhotoPickerOpen: s.isPhotoPickerOpen,
+    setIsPhotoPickerOpen: s.setIsPhotoPickerOpen,
+    photoPickerGroupId: s.photoPickerGroupId,
+    setPhotoPickerGroupId: s.setPhotoPickerGroupId,
     resetForm: s.resetForm
   })));
   const { data: categories = [] } = useCategoriesQuery();
@@ -69,19 +77,52 @@ export const useAdminDataPrep = () => {
 
   const { data: cloudCountData } = usePhotoCountQuery({}, true);
   const photos = useMemo(() => cleanPhotos(infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || []), [infinitePhotosQuery.data]);
+  
+  const photosRef = useRef(photos);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
 
   const { settings, setSettings, refreshCloudData } = useSyncEngine();
   const { settings: fetchedSettings } = useSettings();
   const { mutateAsync: saveSettingsMut } = useSettingsMutation();
 
   const { reset: resetMultiSelect, disable } = useMultiSelect();
-  const edit = useAdminEdit(user, photos, disable);
+  const editResult = useAdminEdit(user, photos, disable);
+  const edit = useMemo(() => editResult, [editResult]);
 
-  // Initialize new admin hooks
-  const filters = useAdminFilters(photos, categories, tags);
-  const importer = useAdminImport(user, { setActiveScreen: store.setActiveScreen }, { setIsSyncing: store.setIsSyncing }, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), useRef(photos));
-  const sync = useAdminSync();
-  const ai = useAdminAI(user, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), useRef(photos));
+  const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
+  const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+
+  const checkSyncLock = useCallback(() => isSyncing, [isSyncing]);
+  
+  // Re-define handleRefresh locally since useAdminFilters is going away
+  const handleRefreshFilters = useCallback(() => {
+    store.setSearchQuery('');
+    store.setDebouncedSearchQuery('');
+    store.setFilterCatId(null);
+    store.setFilterTagIds([]);
+  }, [store.setSearchQuery, store.setDebouncedSearchQuery, store.setFilterCatId, store.setFilterTagIds]);
+
+  const filters = useMemo(() => ({ 
+    displayPhotos: photos, 
+    gridPhotos: photos, 
+    handleRefresh: handleRefreshFilters,
+    searchQuery: store.searchQuery,
+    debouncedSearchQuery: store.debouncedSearchQuery,
+    filterCatId: store.filterCatId,
+    filterSubId: store.filterSubId,
+    filterTagIds: store.filterTagIds,
+    sortOrder: store.sortOrder
+  }), [photos, handleRefreshFilters, store.searchQuery, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder]);
+
+  const importerResult = useAdminImport(user, { setActiveScreen: store.setActiveScreen }, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), photosRef);
+  const syncResult = useAdminSync();
+  const aiResult = useAdminAI(user, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), photosRef);
+
+  const importer = useMemo(() => importerResult, [importerResult]);
+  const sync = useMemo(() => syncResult, [syncResult]);
+  const ai = useMemo(() => aiResult, [aiResult]);
 
   // Group Photos: Fetch independently so they aren't affected by filters (Category/Search)
   const groupPhotosQuery = useGroupPhotosQuery(store.activeGroupId || '', true);
@@ -91,25 +132,19 @@ export const useAdminDataPrep = () => {
   useEffect(() => {
     // Only disband if we are definitely in the group view and the query has finished
     if (store.activeGroupId && groupPhotosQuery.isSuccess && groupPhotos.length === 1 && !groupPhotosQuery.isFetching) {
-      console.log(`[Maintenance] Auto-disbanding group because it only has one photo:`, store.activeGroupId);
       const gid = store.activeGroupId;
-      
-      // Use a small delay to ensure UI transitions don't conflict
       const timer = setTimeout(async () => {
         if (store.activeGroupId === gid) {
            try {
              await edit.handleUngroup(gid);
              store.setActiveGroupId(null);
-           } catch (err) {
-             console.error('Failed to auto-disband group:', err);
-           }
+           } catch (err) { }
         }
       }, 800);
       return () => clearTimeout(timer);
     }
   }, [store.activeGroupId, groupPhotos, groupPhotosQuery.isSuccess, groupPhotosQuery.isFetching, edit.handleUngroup, store.setActiveGroupId]);
 
-  const checkSyncLock = useCallback(() => store.isSyncing, [store.isSyncing]);
   const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   const [isMaintenanceRunning, setIsMaintenanceRunning] = useState(false);
@@ -125,26 +160,51 @@ export const useAdminDataPrep = () => {
     }
   }, []);
 
-  // Sync logic to store
-  useGallerySync(
-    photos, cloudCountData, infinitePhotosQuery.isFetching, infinitePhotosQuery.isFetchingNextPage, 
-    !!infinitePhotosQuery.hasNextPage, handleLoadMore,
-    fetchedSettings as AppSettings, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode
-  );
+  // Sync settings once if fetched
+  useEffect(() => {
+    if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
+      const s = fetchedSettings as AppSettings;
+      if (s.gemini_api_key && s.gemini_api_key !== store.geminiApiKey) {
+        store.setGeminiApiKey(s.gemini_api_key);
+      }
+      if (s.custom_model && s.custom_model !== store.customModel) {
+        store.setCustomModel(s.custom_model);
+      }
+      if (s.access_passcode && s.access_passcode !== store.accessPasscode) {
+        store.setAccessPasscode(s.access_passcode);
+      }
+    }
+  }, [fetchedSettings, store.geminiApiKey, store.customModel, store.accessPasscode, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode]);
 
-  const uiBasicValue = useMemo(() => ({ setAlertDialog: store.setAlertDialog, setPromptDialog: store.setPromptDialog, setCloudCount: () => {}, cloudCount: cloudCountData || 0, editPhotoId: store.editPhotoId, setEditPhotoId: store.setEditPhotoId, batchEditIds: store.batchEditingIds, setBatchEditIds: store.setBatchEditingIds, setActiveScreen: store.setActiveScreen, abortAnalysis: () => {} }), [store, cloudCountData]);
-  const categoryOps = useAdminCategory(uiBasicValue);
+  const uiBasicValue = useMemo(() => ({ 
+    setAlertDialog: store.setAlertDialog, 
+    setPromptDialog: store.setPromptDialog, 
+    setCloudCount: () => {}, 
+    cloudCount: cloudCountData || 0, 
+    editPhotoId: store.editPhotoId, 
+    setEditPhotoId: store.setEditPhotoId, 
+    batchEditIds: store.batchEditingIds, 
+    setBatchEditIds: store.setBatchEditingIds, 
+    setActiveScreen: store.setActiveScreen 
+  }), [store.setAlertDialog, store.setPromptDialog, cloudCountData, store.editPhotoId, store.setEditPhotoId, store.batchEditingIds, store.setBatchEditingIds, store.setActiveScreen]);
+  
+  const categoryOpsResult = useAdminCategory(uiBasicValue);
+  const categoryOps = useMemo(() => categoryOpsResult, [categoryOpsResult]);
 
   const onEditPhotoById = useCallback((pOrId: Photo | string) => {
     const photo = typeof pOrId === 'string' ? photos.find(p => p.id === pOrId) : pOrId;
     if (!photo) return;
-    if (photo.group_id) { setInitialPhotoId(photo.id); store.setActiveGroupId(photo.group_id); }
+    if (photo.group_id) { 
+      setInitialPhotoId(photo.id); 
+      store.setActiveGroupId(photo.group_id); 
+    }
     store.setEditPhotoId(photo.id);
-  }, [photos, store]);
+  }, [photos, store.setActiveGroupId, store.setEditPhotoId]);
 
-  const actions = useAdminActions(photos, tasks, ai, edit, importer, sync, filters, categoryOps, {
+  const actionsResult = useAdminActions(photos, tasks, ai, edit, importer, sync, filters, categoryOps, {
     checkSyncLock, showError, showSuccess, setAlertDialog: store.setAlertDialog, setPromptDialog: store.setPromptDialog, setEditPhotoId: store.setEditPhotoId, setBatchEditIds: store.setBatchEditingIds, setActiveScreen: store.setActiveScreen, setActiveGroupId: store.setActiveGroupId, setInitialPhotoId, runTask, queryClient, infinitePhotosQuery, disable, batchEditIds: store.batchEditingIds || [], onEditPhotoById, tags
   });
+  const actions = useMemo(() => actionsResult, [actionsResult]);
 
   const handleLogoUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (checkSyncLock()) return;
@@ -197,9 +257,21 @@ export const useAdminDataPrep = () => {
   }, [runTask, showError, showSuccess, isMaintenanceRunning]);
 
   return useMemo(() => ({
-    user, authChecked: true, logout, navigate, infinitePhotosQuery, t: translations[store.appLang as LanguageCode] || translations.en, lang: store.appLang, onRefresh: () => refreshCloudData(user, () => {}),
-    ...store, ...filters, ...importer, ...sync, ...ai, ...edit, ...categoryOps, ...actions,
-    photos, categories, tags, manufacturers, tagIdToNameMap: tags.reduce((acc, tag) => ({ ...acc, [tag.id]: tag.name }), {}),
+    user, authChecked: true, logout, navigate, infinitePhotosQuery, 
+    t: translations[store.appLang as LanguageCode] || translations.en, 
+    lang: store.appLang, 
+    onRefresh: () => refreshCloudData(user, () => {}),
+    ...store, 
+    ...filters, 
+    ...importer, 
+    ...sync, 
+    ...ai, 
+    ...edit, 
+    ...categoryOps, 
+    ...actions,
+    isSyncing,
+    isAnalyzing,
+    photos, categories, tags, manufacturers,
     groupPhotos,
     initialPhotoId, setInitialPhotoId, checkSyncLock, loginWithGoogle, showError, onEditPhotoById, handleLogoUpload,
     isMaintenanceRunning, onRunMaintenance: handleRunMaintenance,
@@ -231,7 +303,7 @@ export const useAdminDataPrep = () => {
     handleUpdatePhoto: edit.updatePhoto,
     handleUpdatePhotosBulk: edit.updatePhotosBulk,
     handleAiAnalyze: ai.analyzeSingle,
-    cloudCount: store.totalCount,
+    cloudCount: cloudCountData || 0,
     batchEditIds: store.batchEditingIds,
     batchIsHiddenApplied, setBatchIsHiddenApplied,
     adminPreviewMode, setAdminPreviewMode,
@@ -243,5 +315,11 @@ export const useAdminDataPrep = () => {
     updateTag: (id: string, name: string) => categoryOps.updateTag(id, { name }),
     updateCategory: (id: string, name: string) => categoryOps.updateCategory(id, { name }),
     updateManufacturer: (id: string, name: string) => categoryOps.updateManufacturer(id, { name }),
-  }), [user, logout, navigate, infinitePhotosQuery, store, filters, importer, sync, ai, edit, categoryOps, actions, photos, groupPhotos, categories, tags, manufacturers, initialPhotoId, checkSyncLock, showError, onEditPhotoById, handleLogoUpload, showSuccess, disable, batchIsHiddenApplied, saveSettingsMut]);
+  }), [
+    user, logout, navigate, infinitePhotosQuery, 
+    store, filters, importer, sync, ai, edit, categoryOps, actions, 
+    isSyncing, isAnalyzing, photos, categories, tags, manufacturers, groupPhotos, initialPhotoId, 
+    checkSyncLock, showError, onEditPhotoById, handleLogoUpload, showSuccess, disable, 
+    batchIsHiddenApplied, saveSettingsMut, cloudCountData, adminPreviewMode, handleRunMaintenance, isMaintenanceRunning
+  ]);
 };
