@@ -19,6 +19,7 @@ export * from './shared/useScrollRestoration';
 export * from './shared/useFormValidation';
 export * from './shared/usePhotoFilters';
 export * from './shared/useImageHash';
+export * from './shared/useMountedRef';
 
 // Admin Hooks
 export * from './admin';

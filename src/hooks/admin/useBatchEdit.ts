@@ -3,6 +3,7 @@ import { useGalleryStore, useShallow } from '@/store';
 import { useTasks } from '@/hooks';
 import { useAdmin } from '@/contexts/AdminContext';
 import { safeArray } from '@/lib/utils';
+import { useMountedRef } from '@/hooks/shared/useMountedRef';
 
 export const useBatchEdit = () => {
   const logic = useAdmin();
@@ -13,6 +14,7 @@ export const useBatchEdit = () => {
   } = logic;
   
   const [isLocalSaving, setIsLocalSaving] = useState(false);
+  const isMounted = useMountedRef();
   const { tasks } = useTasks();
   
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
@@ -55,9 +57,13 @@ export const useBatchEdit = () => {
       }
       
       await saveBatchEdit(changes);
-      setBatchEditingIds(null);
+      if (isMounted.current) {
+        setBatchEditingIds(null);
+      }
     } finally {
-      setIsLocalSaving(false);
+      if (isMounted.current) {
+        setIsLocalSaving(false);
+      }
     }
   };
 

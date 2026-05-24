@@ -17,12 +17,13 @@ interface Props {
   newPhotoData?: string | null;
   editPhotoPreview?: string | null;
   setNewPhotoData?: (data: string | null) => void;
+  isMounted: { current: boolean };
   analyzeSingle: (photo: Photo) => Promise<any>;
   saveNewPhoto: () => Promise<void>;
 }
 
 export const usePhotoEditLogic = (props: Props) => {
-  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, analyzeSingle, saveNewPhoto } = props;
+  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, isMounted, analyzeSingle, saveNewPhoto } = props;
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
@@ -83,13 +84,17 @@ export const usePhotoEditLogic = (props: Props) => {
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
 
       const newData = canvas.toDataURL('image/jpeg', 0.95);
-      if (setNewPhotoData) {
+      if (setNewPhotoData && isMounted.current) {
         setNewPhotoData(newData);
       }
     } catch (err) {
-      showError(err, '图像旋转处理失败');
+      if (isMounted.current) {
+        showError(err, '图像旋转处理失败');
+      }
     } finally {
-      setIsProcessingImage(false);
+      if (isMounted.current) {
+        setIsProcessingImage(false);
+      }
     }
   };
 

@@ -6,7 +6,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '../ui/dialog';
 import { Photo } from '../../types';
-import { useInfinitePhotos, useFeedback, useTaskExecutor } from '@/hooks';
+import { useMountedRef, useInfinitePhotos, useFeedback, useTaskExecutor } from '@/hooks';
 import { useAdmin } from '@/contexts/AdminContext';
 import { PAGINATION } from '../../constants/config';
 import { GroupGridView } from './GroupGridView';
@@ -28,6 +28,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const isMounted = useMountedRef();
   const { handlePhotoImport } = useAdmin();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
@@ -70,12 +71,17 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
     if (handlePhotoImport) {
         try {
             await handlePhotoImport(e, true, groupId);
-            // Close picker only after upload finishes
-            onClose();
+            if (isMounted.current) {
+                onClose();
+            }
         } catch (err) {
-            showError(err, '上传图片失败');
+            if (isMounted.current) {
+                showError(err, '上传图片失败');
+            }
         } finally {
-            setIsUploading(false);
+            if (isMounted.current) {
+                setIsUploading(false);
+            }
         }
     }
   };
