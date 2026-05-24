@@ -40,7 +40,8 @@ export const useAdminImport = (
 
   const handlePhotoImport = useCallback(async (
     e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList | null } },
-    useAi: boolean
+    useAi: boolean,
+    initialGroupId: string | null = null
   ) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -56,7 +57,10 @@ export const useAdminImport = (
         abortControllerRef.current = new AbortController();
         const signal = abortControllerRef.current.signal;
         
-        setActiveScreen('home');
+        // If we are importing directly to a group, we might want to stay in manage mode
+        if (!initialGroupId) {
+          setActiveScreen('home');
+        }
 
         let successCount = 0;
         let duplicateCount = 0;
@@ -102,7 +106,7 @@ export const useAdminImport = (
                         manufacturer_id: null,
                         tag_ids: [],
                         created_at: formatDate(new Date()),
-                        group_id: null,
+                        group_id: initialGroupId,
                         is_analyzing: useAi,
                         is_hidden: false,
                         _fileName: file.name,

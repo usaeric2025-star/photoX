@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { 
-  X, Check, Search, Plus
+  X, Check, Search, Plus, Upload, Sparkles
 } from 'lucide-react';
 import { 
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '../ui/dialog';
 import { Photo } from '../../types';
 import { useInfinitePhotos, useFeedback, useTaskExecutor } from '@/hooks';
+import { useAdmin } from '@/contexts/AdminContext';
 import { PAGINATION } from '../../constants/config';
 import { GroupGridView } from './GroupGridView';
-import { useGalleryStore, useShallow } from '@/store';
 import { cn } from '@/lib/utils';
 
 interface GroupPhotoPickerProps {
@@ -27,15 +27,11 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { handlePhotoImport } = useAdmin();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
   const { showError } = useFeedback();
 
-  // We want to fetch photos that are NOT in a group
-  // The current useInfinitePhotos might not support group_id filtering easily if it's not implemented in the service
-  // But usually we can filter them locally or the service supports it.
-  // Let's assume we fetch all and filter locally for now, or just show all and let them pick.
-  // Better: implementation in photoService typically allows filtering by group_id: null
-  
   const queryParams = useMemo(() => ({
     searchQuery: search,
     isAdminMode: true,
@@ -60,6 +56,22 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
     );
   }, []);
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    // Close picker when starting upload to group
+    onClose();
+    
+    // Use the global handler but pre-assign groupId
+    if (handlePhotoImport) {
+      await handlePhotoImport(e, true, groupId);
+    }
+  };
+
   const handleConfirm = async () => {
     if (selectedIds.length === 0) return;
     
@@ -82,16 +94,37 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
           </button>
         </DialogHeader>
 
-        <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100">
-          <div className="relative">
+        <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="搜索照片编号或名称... / Search photos..."
+              placeholder="从现有库中搜索照片... / Search existing..."
               className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all text-sm"
             />
+          </div>
+
+          <div className="flex shrink-0">
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              multiple 
+              onChange={onFileChange} 
+              className="hidden" 
+              accept="image/*"
+            />
+            <button 
+              onClick={handleUploadClick}
+              className="flex items-center gap-2 px-4 py-2 bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 rounded-xl transition-all font-black text-xs uppercase tracking-tight"
+            >
+              <Upload size={14} />
+              <div className="flex flex-col items-start leading-none">
+                <span>直接上传</span>
+                <span className="text-[8px] opacity-60">Upload New</span>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -104,8 +137,15 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
               </div>
             </div>
           ) : photos.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center text-slate-400">
-              <p>找不到符合条件的照片 / No photos found</p>
+            <div className="absolute inset-0 flex items-center justify-center text-slate-400 flex-col gap-4">
+              <p className="italic">现有库找不到符合条件的照片 / Library is empty</p>
+              <button 
+                onClick={handleUploadClick}
+                className="flex items-center gap-2 px-8 py-4 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all font-black"
+              >
+                <Plus size={24} />
+                还是直接从电脑上传吧 / Upload from computer
+              </button>
             </div>
           ) : (
             <GroupGridView 
@@ -115,7 +155,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
                 className: cn(
                   "cursor-pointer transition-all border-4 rounded-[1.5rem]",
                   selectedIds.includes(photo.id) 
-                    ? "border-emerald-500 scale-95" 
+                    ? "border-emerald-500 scale-95 shadow-lg shadow-emerald-500/20" 
                     : "border-transparent"
                 )
               })}
@@ -129,7 +169,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
 
         <DialogFooter className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between sm:justify-between">
           <div className="text-sm font-bold text-slate-500">
-            已选择 {selectedIds.length} 张照片
+            {selectedIds.length > 0 ? `已选择 ${selectedIds.length} 张现有照片` : '选择或直接上传新照片'}
           </div>
           <div className="flex gap-2">
             <button 
@@ -142,14 +182,14 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
               onClick={handleConfirm}
               disabled={selectedIds.length === 0}
               className={cn(
-                "px-6 py-2 rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2",
+                "px-6 py-2 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center gap-2",
                 selectedIds.length > 0 
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95" 
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 shadow-emerald-500/20" 
                   : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
               )}
             >
-              <Plus size={18} />
-              确认添加 / CONFIRM
+              <Check size={18} />
+              确认添加库中照片 / CONFIRM SELECTION
             </button>
           </div>
         </DialogFooter>
@@ -157,3 +197,4 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
     </Dialog>
   );
 };
+
