@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { S3Client, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -189,33 +190,70 @@ async function startServer() {
     };
 
     try {
-      sendLog('开始 R2 迁移...', 'info');
+      sendLog('🚀 启动物理链路增量 R2 迁移引擎...', 'info');
+
+      // Setup paths for checkpoint resume files
+      const scriptsDir = path.join(process.cwd(), 'scripts');
+      if (!fs.existsSync(scriptsDir)) {
+        fs.mkdirSync(scriptsDir, { recursive: true });
+      }
+
+      const migratedFile = path.join(scriptsDir, 'migrated.json');
+      const failedFile = path.join(scriptsDir, 'failed.json');
+
+      let migrated: string[] = [];
+      let failed: { id: string; error: string; timestamp: string }[] = [];
+
+      try {
+        if (fs.existsSync(migratedFile)) {
+          migrated = JSON.parse(fs.readFileSync(migratedFile, 'utf-8'));
+          sendLog(`📂 成功导入现有断点记录：已有 ${migrated.length} 张照片迁移过。`, 'info');
+        } else {
+          fs.writeFileSync(migratedFile, JSON.stringify([], null, 2));
+        }
+      } catch (err) {
+        sendLog('⚠️ 读取断点记录出错，将重设为新记录。', 'info');
+        migrated = [];
+      }
+
+      try {
+        if (fs.existsSync(failedFile)) {
+          failed = JSON.parse(fs.readFileSync(failedFile, 'utf-8'));
+        }
+      } catch (err) {
+        failed = [];
+      }
 
       // Setup Supabase
       const { createClient } = await import("@supabase/supabase-js");
       const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
       const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
       if (!supabaseUrl || !supabaseKey) {
-        sendLog('SUPABASE 配置缺失', 'error');
+        sendLog('SUPABASE 凭据缺失，请进入 Settings 配置。', 'error');
         res.end();
         return;
       }
       const supabase = createClient(supabaseUrl, supabaseKey);
       
       // 1. 获取照片列表
-      sendLog('正在获取照片列表...', 'info');
+      sendLog('正在连接 Supabase 拉取最新家具照片数据集...', 'info');
       const { data: photos, error: supabaseError } = await supabase.from('furniture_items').select('id, image_url, thumb_url');
-      if (supabaseError) throw supabaseError;
+      if (supabaseError) {
+        throw new Error(`Supabase 表读取失败: ${supabaseError.message}`);
+      }
       
-      sendLog(`共 ${photos?.length || 0} 张照片`, 'info');
+      const totalPhotos = photos?.length || 0;
+      sendLog(`📊 数据库库藏汇总：共检索到 ${totalPhotos} 张照片记录。`, 'info');
       
       let successCount = 0;
       let failCount = 0;
+      let skippedCount = 0;
       
       const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
       let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
       let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
       if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+        sendLog('🛡️ 检测物理密钥错配，已对换 client_id 与 secret_key。', 'info');
         const temp = r2AccessKeyId;
         r2AccessKeyId = r2SecretAccessKey;
         r2SecretAccessKey = temp;
@@ -230,21 +268,44 @@ async function startServer() {
         },
       });
 
-      for (let i = 0; i < photos!.length; i++) {
+      for (let i = 0; i < totalPhotos; i++) {
         const photo = photos![i];
-        sendLog(`[${i + 1}/${photos!.length}] 处理照片 ${photo.id}...`, 'info');
+
+        // Ensure we check connection closed to prevent stray tasks
+        if (req.closed || req.destroyed) {
+          console.warn('[R2 Migrate SSE] Request closed/aborted by browser client.');
+          break;
+        }
+
+        // Check if already migrated
+        if (migrated.includes(photo.id)) {
+          skippedCount++;
+          // Periodically log skipped items to avoid flooding but keep users informed
+          if (skippedCount === 1 || skippedCount % 5 === 0 || i === totalPhotos - 1) {
+            sendLog(`[断点检索] 已跳过第 ${i + 1}/${totalPhotos} 张照片 ${photo.id}（之前已被成功备份至 R2）`, 'info');
+          }
+          continue;
+        }
+        
+        sendLog(`[进行中 ${i + 1}/${totalPhotos}] 整理数据源：${photo.id}`, 'info');
         
         try {
-          if (!photo.image_url) throw new Error('No image_url');
+          if (!photo.image_url) {
+            throw new Error(`该行主图 image_url 为空。`);
+          }
 
-          // Download
+          // 1. Download Master Image
+          sendLog(`  -> 正在拉取主图：${photo.image_url}`, 'info');
           const response = await fetch(photo.image_url);
-          if (!response.ok) throw new Error('Download failed');
+          if (!response.ok) {
+            throw new Error(`主图网络拉取失败，HTTP StatusCode: ${response.status} ${response.statusText}`);
+          }
           const imageBuffer = Buffer.from(await response.arrayBuffer());
           
-          // Upload
-          const filename = photo.image_url.split('/').pop();
+          // 2. Upload Master Image
+          const filename = photo.image_url.split('/').pop() || `${photo.id}.webp`;
           const objectKey = `photox/public/${filename}`;
+          sendLog(`  -> 正在上传主图至云端 R2: ${objectKey}`, 'info');
           
           await s3Client.send(new PutObjectCommand({
             Bucket: 'photox-storage',
@@ -252,24 +313,72 @@ async function startServer() {
             Body: imageBuffer,
             ContentType: 'image/webp',
           }));
+
+          // 3. Optional Thumbnail Migration (MirroringmigrateToR2 CLI script)
+          if (photo.thumb_url) {
+            try {
+              sendLog(`  -> 正在拉取对应缩略图：${photo.thumb_url}`, 'info');
+              const thumbResponse = await fetch(photo.thumb_url);
+              if (thumbResponse.ok) {
+                const thumbBuffer = Buffer.from(await thumbResponse.arrayBuffer());
+                const thumbFilename = photo.thumb_url.split('/').pop() || `${photo.id}_thumb.webp`;
+                const thumbKey = `photox/public/${thumbFilename}`;
+                sendLog(`  -> 正在上传缩略图至 R2: ${thumbKey}`, 'info');
+                
+                await s3Client.send(new PutObjectCommand({
+                  Bucket: 'photox-storage',
+                  Key: thumbKey,
+                  Body: thumbBuffer,
+                  ContentType: 'image/webp',
+                }));
+              } else {
+                sendLog(`  ⚠️ 缩略图未能下载 (HTTP ${thumbResponse.status})，将保留原配置项。`, 'info');
+              }
+            } catch (thumbErr: any) {
+              sendLog(`  ⚠️ 缩略图迁移异常 [跳过该辅助文件]: ${thumbErr.message}`, 'info');
+            }
+          }
           
+          // Save progress
+          migrated.push(photo.id);
+          fs.writeFileSync(migratedFile, JSON.stringify(migrated, null, 2));
+
           successCount++;
-          sendLog(`  ✅ ${photo.id} 迁移成功`, 'success');
+          sendLog(`照片号 ${photo.id} 成功全迁移，断点已标记更新。`, 'success');
           
         } catch (err: any) {
           failCount++;
-          sendLog(`  ❌ ${photo.id} 迁移失败: ${err.message}`, 'error');
+          const errorMsg = err.message || String(err);
+          sendLog(`照片号 ${photo.id} 无法备份：${errorMsg}`, 'error');
+          
+          // Write down to failed array
+          failed.push({
+            id: photo.id,
+            error: errorMsg,
+            timestamp: new Date().toISOString()
+          });
+          fs.writeFileSync(failedFile, JSON.stringify(failed, null, 2));
         }
       }
       
-      sendLog(`========== 迁移完成 ==========`, 'success');
-      sendLog(`成功: ${successCount}, 失败: ${failCount}`, 'info');
+      sendLog(`========================================`, 'info');
+      sendLog(`🎉 迁移流式推送完毕 / Job Stream Finished`, 'success');
+      sendLog(`本次成功写入：${successCount} 张，物理断点已持久化`, 'info');
+      sendLog(`本次异常失败：${failCount} 张（已单独存储到 failed.json 以供排查）`, 'info');
+      sendLog(`由于已有历史标记而自动跳过：${skippedCount} 张`, 'info');
+      sendLog(`累计备份总进度：${migrated.length} / ${totalPhotos}`, 'success');
       
-      res.write(`data: ${JSON.stringify({ type: "done", success: successCount, fail: failCount })}\n\n`);
+      res.write(`data: ${JSON.stringify({ 
+        type: "done", 
+        success: successCount, 
+        fail: failCount, 
+        skipped: skippedCount, 
+        total: totalPhotos 
+      })}\n\n`);
       res.end();
       
     } catch (error: any) {
-      sendLog(`迁移失败: ${error.message}`, 'error');
+      sendLog(`增量迁移过程发生全局性未捕获异常: ${error.message || error}`, 'error');
       res.end();
     }
   });

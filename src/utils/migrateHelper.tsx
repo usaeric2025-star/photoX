@@ -115,7 +115,9 @@ export async function triggerR2Migration() {
             } else if (data.type === 'error') {
               appendToDialog(`❌ ${data.message}`);
             } else if (data.type === 'done') {
-              appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n成功: ${data.success}, 失败: ${data.fail}`);
+              const skippedTxt = data.skipped !== undefined ? `, 自动跳过(已完成): ${data.skipped}` : '';
+              const totalTxt = data.total !== undefined ? `, 库藏总数: ${data.total}` : '';
+              appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n本次新成功: ${data.success}, 本次失败: ${data.fail}${skippedTxt}${totalTxt}`);
             }
           } catch (e) {
             console.warn('[R2 Migrate Stream] JSON Parse error:', rawJson);
@@ -137,7 +139,9 @@ export async function triggerR2Migration() {
         } else if (data.type === 'error') {
           appendToDialog(`❌ ${data.message}`);
         } else if (data.type === 'done') {
-          appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n成功: ${data.success}, 失败: ${data.fail}`);
+          const skippedTxt = data.skipped !== undefined ? `, 自动跳过(已完成): ${data.skipped}` : '';
+          const totalTxt = data.total !== undefined ? `, 库藏总数: ${data.total}` : '';
+          appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n本次新成功: ${data.success}, 本次失败: ${data.fail}${skippedTxt}${totalTxt}`);
         }
       } catch (e) {}
     }
