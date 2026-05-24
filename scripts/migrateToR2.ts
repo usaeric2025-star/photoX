@@ -22,11 +22,13 @@ async function migrate() {
   const r2BucketName = process.env.R2_BUCKET_NAME || 'photox-storage';
 
   if (!r2Endpoint || !r2AccessKeyId || !r2SecretAccessKey || !r2BucketName) {
-    console.error('Missing R2 environment variables in .env.migration');
+    console.error('Missing R2 environment variables in environment');
     process.exit(1);
   }
 
+  // Swap check if keys are cross-placed (AccessKey is usually 32 and SecretKey is 64 in length)
   if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+    console.log('🛡️ Auto-swapped mismatched R2 access key and secret key (AccessKey got 64, should be 32)');
     const temp = r2AccessKeyId;
     r2AccessKeyId = r2SecretAccessKey;
     r2SecretAccessKey = temp;
@@ -41,6 +43,7 @@ async function migrate() {
       accessKeyId: r2AccessKeyId,
       secretAccessKey: r2SecretAccessKey,
     },
+    forcePathStyle: true,
   });
 
   const migratedFile = path.join(__dirname, 'migrated.json');

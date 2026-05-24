@@ -117,7 +117,14 @@ export async function triggerR2Migration() {
             } else if (data.type === 'done') {
               const skippedTxt = data.skipped !== undefined ? `, 自动跳过(已完成): ${data.skipped}` : '';
               const totalTxt = data.total !== undefined ? `, 库藏总数: ${data.total}` : '';
-              appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n本次新成功: ${data.success}, 本次失败: ${data.fail}${skippedTxt}${totalTxt}`);
+              if (data.isPartial) {
+                appendToDialog(`\n⏳ ---------- [限时保底自动分段] ---------- \n已跑完当前 42 秒安全批次。\n本次新增迁移: ${data.success} 张${skippedTxt}${totalTxt}\n⚡️ 智能防超时系统：3秒后将自动触发下一批次，请勿关闭本窗口...`);
+                setTimeout(() => {
+                  triggerR2Migration();
+                }, 3000);
+              } else {
+                appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n本次新成功: ${data.success}, 本次失败: ${data.fail}${skippedTxt}${totalTxt}`);
+              }
             }
           } catch (e) {
             console.warn('[R2 Migrate Stream] JSON Parse error:', rawJson);
@@ -141,7 +148,14 @@ export async function triggerR2Migration() {
         } else if (data.type === 'done') {
           const skippedTxt = data.skipped !== undefined ? `, 自动跳过(已完成): ${data.skipped}` : '';
           const totalTxt = data.total !== undefined ? `, 库藏总数: ${data.total}` : '';
-          appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n本次新成功: ${data.success}, 本次失败: ${data.fail}${skippedTxt}${totalTxt}`);
+          if (data.isPartial) {
+            appendToDialog(`\n⏳ ---------- [限时保底自动分段] ---------- \n已跑完当前 42 秒安全批次。\n本次新增迁移: ${data.success} 张${skippedTxt}${totalTxt}\n⚡️ 智能防超时系统：3秒后将自动触发下一批次，请勿关闭本窗口...`);
+            setTimeout(() => {
+              triggerR2Migration();
+            }, 3000);
+          } else {
+            appendToDialog(`\n🎉 ========== 备份/迁移全部完成 ========== \n本次新成功: ${data.success}, 本次失败: ${data.fail}${skippedTxt}${totalTxt}`);
+          }
         }
       } catch (e) {}
     }
