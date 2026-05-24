@@ -54,7 +54,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, on
 
 export const AdminSidebar: React.FC = () => {
   const { 
-    settings, activeScreen, setActiveScreen, cloudCount, onRefresh, handleImport 
+    settings, activeScreen, setActiveScreen, cloudCount, onRefresh, handleImport, onRunMigrationBackground 
   } = useAdmin();
   
   const { isStaffMode, appLang } = useGalleryStore(useShallow(s => ({
@@ -174,6 +174,14 @@ export const AdminSidebar: React.FC = () => {
             className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
           >
             🚨 临时 R2 数据与URL迁移
+          </button>
+          <button 
+            onClick={() => {
+              onRunMigrationBackground();
+            }}
+            className="w-full py-2 px-3 bg-brand-gold hover:bg-brand-gold/90 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
+          >
+            ☁️ R2 后台静默迁移 (Task 模式)
           </button>
         </div>
       </div>

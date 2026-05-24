@@ -8,6 +8,7 @@ interface Props {
   photos: Photo[];
   onHealthCheck: () => Promise<void>;
   onRunMaintenance: () => Promise<void>;
+  onRunMigrationBackground: () => Promise<void>;
   isChecking: boolean;
   isMaintenanceRunning: boolean;
   cardClass: string;
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export const MaintenanceSection: React.FC<Props> = ({ 
-  photos, onHealthCheck, onRunMaintenance, isChecking, isMaintenanceRunning, cardClass, buttonStyles
+  photos, onHealthCheck, onRunMaintenance, onRunMigrationBackground, isChecking, isMaintenanceRunning, cardClass, buttonStyles
 }) => {
   return (
     <div className={cardClass}>
@@ -59,9 +60,18 @@ export const MaintenanceSection: React.FC<Props> = ({
           onClick={() => {
             triggerR2Migration();
           }}
-          className={buttonStyles.secondary + " w-full text-red-600 border-red-200 hover:bg-red-50"}
+          className={buttonStyles.secondary + " w-full text-red-600 border-red-200 hover:bg-red-50 font-bold"}
         >
-          🚨 临时 R2 数据与URL迁移
+          🚨 R2 全量迁移 (前台交互)
+        </button>
+
+        <button 
+          onClick={() => {
+            onRunMigrationBackground();
+          }}
+          className={buttonStyles.secondary + " w-full text-brand-gold border-brand-gold/20 hover:bg-brand-gold/5"}
+        >
+          ☁️ R2 静默后台迁移 (任务面板模式)
         </button>
       </div>
     </div>

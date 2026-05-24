@@ -5,15 +5,47 @@ let globalMigrationLogs = '正在建立迁移连接...\n';
 let isReenteringInstance = false; 
 let updateTimeout: any = null;
 
-export async function triggerR2Migration() {
+export interface MigrationProgress {
+  success: number;
+  fail: number;
+  skipped: number;
+  total: number;
+  message: string;
+  isDone: boolean;
+  logs: string;
+}
+
+export async function triggerR2Migration(options?: { 
+  onProgress?: (p: MigrationProgress) => void;
+  isSilent?: boolean;
+}) {
   const setAlertDialog = useGalleryStore.getState().setAlertDialog;
+  const onProgress = options?.onProgress;
+  const isSilent = options?.isSilent;
 
   if (!isReenteringInstance) {
     globalMigrationLogs = '🚀 启动全自动云端增量 R2 迁移对账引擎...\n正在建立迁移连接...\n';
   }
 
-  const appendToDialog = (msg: string, isImmediate = false) => {
+  const broadcastProgress = (msg: string, isDone = false, data?: any) => {
+    if (onProgress) {
+      onProgress({
+        success: data?.success || 0,
+        fail: data?.fail || 0,
+        skipped: data?.skipped || 0,
+        total: data?.total || 0,
+        message: msg,
+        isDone,
+        logs: globalMigrationLogs
+      });
+    }
+  };
+
+  const appendToDialog = (msg: string, isImmediate = false, data?: any) => {
     globalMigrationLogs += msg + '\n';
+    broadcastProgress(msg, false, data);
+
+    if (isSilent) return; // 静默模式下不弹出也不更新 Dialog
 
     const renderUpdate = () => {
       setAlertDialog({
@@ -61,21 +93,23 @@ export async function triggerR2Migration() {
     if (!res.ok && !isJson && !isVercelEnv) throw new Error('Static host bypass');
   } catch (err) { console.warn('[Preflight] 检查略过，尝试连接端点...'); }
 
-  setAlertDialog({
-    title: 'R2 迁移实时进度 / R2 Migration Progress',
-    message: (
-      <div className="space-y-2 mt-2">
-        <p className="text-xs text-slate-500 font-medium">请保持此窗口打开以同步状态。R2 bucket: photox-storage</p>
-        <div 
-          id="migration-log-container"
-          className="h-80 overflow-y-auto bg-[#0a0f1d] text-green-400 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap rounded-xl border border-slate-800 shadow-inner"
-        >
-          {globalMigrationLogs}
+  if (!isSilent) {
+    setAlertDialog({
+      title: 'R2 迁移实时进度 / R2 Migration Progress',
+      message: (
+        <div className="space-y-2 mt-2">
+          <p className="text-xs text-slate-500 font-medium">请保持此窗口打开以同步状态。R2 bucket: photox-storage</p>
+          <div 
+            id="migration-log-container"
+            className="h-80 overflow-y-auto bg-[#0a0f1d] text-green-400 p-3 font-mono text-[11px] leading-relaxed whitespace-pre-wrap rounded-xl border border-slate-800 shadow-inner"
+          >
+            {globalMigrationLogs}
+          </div>
         </div>
-      </div>
-    ),
-    confirmLabel: '关闭窗口',
-  });
+      ),
+      confirmLabel: '关闭窗口',
+    });
+  }
 
   try {
     const response = await fetch('/api/migrate-r2', { method: 'GET' });
@@ -100,25 +134,30 @@ export async function triggerR2Migration() {
         const rawJson = trimmed.substring(5).trim();
         try {
           const data = JSON.parse(rawJson);
-          if (data.type === 'info') appendToDialog(data.message);
-          else if (data.type === 'success') appendToDialog(`✅ ${data.message}`);
-          else if (data.type === 'error') appendToDialog(`❌ ${data.message}`);
+          if (data.type === 'info') appendToDialog(data.message, false, data);
+          else if (data.type === 'success') appendToDialog(`✅ ${data.message}`, false, data);
+          else if (data.type === 'error') appendToDialog(`❌ ${data.message}`, false, data);
           else if (data.type === 'done') {
             const skippedTxt = data.skipped !== undefined ? `, 自动跳过: ${data.skipped}` : '';
             const totalTxt = data.total !== undefined ? `, 库藏总数: ${data.total}` : '';
             if (data.isPartial) {
-              appendToDialog(`\n⏳ ---------- [时限保底安全滑脱] ---------- \n已平滑跑完当前 42 秒安全周期。\n本次成功处理: ${data.success} 张${skippedTxt}${totalTxt}\n⚡️ 智能接力系统：3 秒后将自动无缝启动下一批次，请勿关闭本窗口...`, true);
+              appendToDialog(`\n⏳ ---------- [时限保底安全滑脱] ---------- \n已平滑跑完当前 42 秒安全周期。\n本次成功处理: ${data.success} 张${skippedTxt}${totalTxt}\n⚡️ 智能接力系统：3 秒后将自动无缝启动下一批次，请勿关闭本窗口...`, true, data);
               isReenteringInstance = true;
-              setTimeout(() => { triggerR2Migration(); }, 3000);
+              setTimeout(() => { triggerR2Migration(options); }, 3000);
             } else {
               isReenteringInstance = false;
-              appendToDialog(`\n🎉 ========== 100% 迁移全部大功告成 ========== \n总计新成功: ${data.success}, 失败: ${data.fail}${skippedTxt}${totalTxt}`, true);
+              appendToDialog(`\n🎉 ========== 100% 迁移全部大功告成 ========== \n总计新成功: ${data.success}, 失败: ${data.fail}${skippedTxt}${totalTxt}`, true, data);
+              broadcastProgress('迁移完成', true, data);
             }
           }
         } catch (e) {}
       }
     }
-  } catch (err: any) { isReenteringInstance = false; appendToDialog(`❌ 迁移连接故障: ${err.message}`, true); }
+  } catch (err: any) { 
+    isReenteringInstance = false; 
+    appendToDialog(`❌ 迁移连接故障: ${err.message}`, true); 
+    broadcastProgress(`错误: ${err.message}`, true);
+  }
 }
 
 export async function testR2ConnectionStatus() {

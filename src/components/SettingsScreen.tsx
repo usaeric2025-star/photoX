@@ -36,7 +36,7 @@ export const SettingsScreen: React.FC = () => {
     setActiveScreen, handleLogoUpload, performPushSync, performPullSync, 
     onRefresh: refreshCloudData, cloudCount, saveSettings, 
     isSyncing, t, photos, categories, tags, manufacturers,
-    isMaintenanceRunning, onRunMaintenance
+    isMaintenanceRunning, onRunMaintenance, onRunMigrationBackground
   } = logic;
 
   const { showSuccess } = useFeedback();
@@ -139,6 +139,7 @@ export const SettingsScreen: React.FC = () => {
                 photos={photos}
                 onHealthCheck={() => handleHealthCheck(photos)}
                 onRunMaintenance={onRunMaintenance}
+                onRunMigrationBackground={onRunMigrationBackground}
                 isChecking={isMaintenanceRunning}
                 isMaintenanceRunning={isMaintenanceRunning}
                 cardClass={cardClass}
