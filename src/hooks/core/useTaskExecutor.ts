@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useTasks } from './useTasks';
 import { reportError } from '@/lib/errorReporter';
 import { toast } from 'sonner';
@@ -5,7 +6,7 @@ import { toast } from 'sonner';
 export function useTaskExecutor() {
   const { addTask, updateTask } = useTasks();
 
-  const runTask = async <T>(
+  const runTask = useCallback(async <T,>(
     name: string,
     fn: (ctx: { updateProgress: (pct: number, msg?: string) => void }) => Promise<T>,
     options?: {
@@ -42,7 +43,7 @@ export function useTaskExecutor() {
       options?.onError?.(error as Error);
       return null;
     }
-  };
+  }, [addTask, updateTask]);
 
   return { runTask };
 }

@@ -10,7 +10,8 @@ import {
   Monitor,
   Sparkles,
   Wrench,
-  LogIn
+  LogIn,
+  Plus
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
@@ -52,7 +53,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, on
 
 export const AdminSidebar: React.FC = () => {
   const { 
-    settings, activeScreen, setActiveScreen, cloudCount, onRefresh 
+    settings, activeScreen, setActiveScreen, cloudCount, onRefresh, handleImport 
   } = useAdmin();
   
   const { isStaffMode, appLang } = useGalleryStore(useShallow(s => ({
@@ -70,12 +71,12 @@ export const AdminSidebar: React.FC = () => {
           <img 
             src={settings.logo_url} 
             alt="Logo" 
-            className="h-12 w-auto object-contain rounded-xl"
+            className="h-12 w-auto object-contain rounded-xl cursor-pointer"
             onClick={() => setActiveScreen('home')}
           />
         ) : (
           <h1 
-            className="text-xl font-black tracking-tighter text-brand-navy italic"
+            className="text-xl font-black tracking-tighter text-brand-navy italic cursor-pointer"
             onClick={() => setActiveScreen('home')}
           >
             PhotoX <span className="text-[10px] uppercase tracking-widest font-bold opacity-30 px-2 border border-brand-navy/10 rounded-full py-0.5 ml-1 not-italic">Admin</span>
@@ -84,7 +85,18 @@ export const AdminSidebar: React.FC = () => {
       </div>
 
       {/* Nav Section */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-8 no-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar">
+        {/* Primary Action */}
+        <div className="px-2">
+           <button 
+             onClick={handleImport}
+             className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-md transition-all active:scale-95"
+           >
+             <Plus size={18} />
+             <span className="text-sm font-bold tracking-wide">添加/导入照片</span>
+           </button>
+        </div>
+
         <div className="space-y-1">
           <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">主控台 / Dashboard</p>
           <SidebarItem 

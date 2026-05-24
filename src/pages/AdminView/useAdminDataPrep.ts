@@ -168,15 +168,7 @@ export const useAdminDataPrep = () => {
   useEffect(() => {
     if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
       const s = fetchedSettings as AppSettings;
-      if (s.gemini_api_key && s.gemini_api_key !== store.geminiApiKey) {
-        store.setGeminiApiKey(s.gemini_api_key);
-      }
-      if (s.custom_model && s.custom_model !== store.customModel) {
-        store.setCustomModel(s.custom_model);
-      }
-      if (s.access_passcode && s.access_passcode !== store.accessPasscode) {
-        store.setAccessPasscode(s.access_passcode);
-      }
+      // Removed automatic store updating here as it loops when rendering AdminView!
     }
   }, [fetchedSettings, store.geminiApiKey, store.customModel, store.accessPasscode, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode]);
 
