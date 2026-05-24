@@ -22,18 +22,15 @@ export const LogoSection: React.FC<LogoSectionProps> = ({
   buttonStyles
 }) => {
   return (
-    <details className="group [&_summary::-webkit-details-marker]:hidden bg-white rounded-[32px] shadow-sm border border-brand-navy/10" id="section-logo">
-      <summary className="flex items-center justify-between p-6 cursor-pointer select-none outline-none">
-        <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest flex items-center gap-2">
-          <div className="w-1.5 h-3.5 bg-brand-gold rounded-full shrink-0"></div>
+    <div className={cardClass} id="section-logo">
+      <div className="flex items-center gap-2">
+        <div className="w-1.5 h-3.5 bg-brand-gold rounded-full shrink-0"></div>
+        <h4 className="font-black text-brand-navy text-[10px] uppercase tracking-widest leading-none pt-0.5">
           Logo 设置 / Logo Settings
         </h4>
-        <span className="transition-transform duration-300 group-open:rotate-180 text-brand-navy/30">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </span>
-      </summary>
+      </div>
       
-      <div className="px-6 pb-6 pt-2 border-t border-brand-navy/5 flex items-center gap-5">
+      <div className="flex items-center gap-5 pt-2">
           <div className="relative group">
             {settings?.logo_url ? (
                 <img src={settings.logo_url} className="w-16 h-16 rounded-3xl object-cover shadow-md border-2 border-white p-1 bg-white" alt="Logo" />
@@ -59,6 +56,6 @@ export const LogoSection: React.FC<LogoSectionProps> = ({
             <p className="text-[9px] text-brand-navy/40 font-black uppercase tracking-tighter leading-relaxed px-1">推荐比例 1:1 / Ratio 1:1</p>
           </div>
       </div>
-    </details>
+    </div>
   );
 };

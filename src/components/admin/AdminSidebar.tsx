@@ -140,6 +140,12 @@ export const AdminSidebar: React.FC = () => {
         <div className="space-y-1">
           <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">系统 / System</p>
           <SidebarItem 
+            icon={Wrench} 
+            label="系统设置" 
+            active={activeScreen === 'settings'} 
+            onClick={() => setActiveScreen('settings')}
+          />
+          <SidebarItem 
             icon={Terminal} 
             label="系统日志" 
             active={activeScreen === 'logs'} 

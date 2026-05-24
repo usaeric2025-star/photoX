@@ -61,7 +61,9 @@ export const useAdminDataPrep = () => {
     setIsPhotoPickerOpen: s.setIsPhotoPickerOpen,
     photoPickerGroupId: s.photoPickerGroupId,
     setPhotoPickerGroupId: s.setPhotoPickerGroupId,
-    resetForm: s.resetForm
+    resetForm: s.resetForm,
+    settings: s.settings,
+    setSettings: s.setSettings
   })));
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
@@ -132,23 +134,6 @@ export const useAdminDataPrep = () => {
   const groupPhotosQuery = useGroupPhotosQuery(store.activeGroupId || '', true);
   const groupPhotos = useMemo(() => cleanPhotos(groupPhotosQuery.data || []), [groupPhotosQuery.data]);
 
-  // Auto-disband single-photo groups
-  useEffect(() => {
-    // Only disband if we are definitely in the group view and the query has finished
-    if (store.activeGroupId && groupPhotosQuery.isSuccess && groupPhotos.length === 1 && !groupPhotosQuery.isFetching) {
-      const gid = store.activeGroupId;
-      const timer = setTimeout(async () => {
-        if (store.activeGroupId === gid) {
-           try {
-             await edit.handleUngroup(gid);
-             store.setActiveGroupId(null);
-           } catch (err) { }
-        }
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [store.activeGroupId, groupPhotos, groupPhotosQuery.isSuccess, groupPhotosQuery.isFetching, edit.handleUngroup, store.setActiveGroupId]);
-
   const [initialPhotoId, setInitialPhotoId] = useState<string | null>(null);
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);
   const isMaintenanceRunning = useMemo(() => tasks.some(t => t.status === 'running' && t.name.includes('自动修复')), [tasks]);
@@ -165,12 +150,27 @@ export const useAdminDataPrep = () => {
   }, []);
 
   // Sync settings once if fetched
+  const lastFetchedSettingsRef = useRef<any>(null);
+
   useEffect(() => {
     if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
-      const s = fetchedSettings as AppSettings;
-      // Removed automatic store updating here as it loops when rendering AdminView!
+      if (lastFetchedSettingsRef.current !== fetchedSettings) {
+         lastFetchedSettingsRef.current = fetchedSettings;
+         const s = fetchedSettings as AppSettings;
+         setSettings(s);
+         
+         if (s.gemini_api_key && s.gemini_api_key !== store.geminiApiKey) {
+           store.setGeminiApiKey(s.gemini_api_key);
+         }
+         if (s.custom_model && s.custom_model !== store.customModel) {
+           store.setCustomModel(s.custom_model);
+         }
+         if (s.access_passcode && s.access_passcode !== store.accessPasscode) {
+           store.setAccessPasscode(s.access_passcode);
+         }
+      }
     }
-  }, [fetchedSettings, store.geminiApiKey, store.customModel, store.accessPasscode, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode]);
+  }, [fetchedSettings, store.geminiApiKey, store.customModel, store.accessPasscode, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode, setSettings]);
 
   const uiBasicValue = useMemo(() => ({ 
     setAlertDialog: store.setAlertDialog, 

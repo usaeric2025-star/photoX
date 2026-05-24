@@ -104,14 +104,13 @@ export const uploadLogo = async (file: File) => {
             .from(bucketName)
             .getPublicUrl(fileName);
 
-        // Update settings table with new logo_url
+        // Upsert settings table with new logo_url
         const { error: updateError } = await supabase
             .from('settings')
-            .update({ logo_url: publicUrl })
-            .eq('id', 1);
+            .upsert({ id: 1, logo_url: publicUrl }, { onConflict: 'id' });
 
         if (updateError) {
-            console.error("Failed to update logo url in settings:", updateError);
+            console.error("Failed to upsert logo url in settings:", updateError);
         }
 
         return publicUrl;
