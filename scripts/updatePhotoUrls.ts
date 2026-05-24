@@ -1,17 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import path from 'path';
-import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.join(__dirname, '../.env.migration') });
-
 async function updateUrls() {
-  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-  const r2PublicUrl = process.env.R2_PUBLIC_URL;
+  const r2PublicUrl = process.env.R2_PUBLIC_URL || process.env.VITE_R2_PUBLIC_URL || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
 
   if (!supabaseUrl || !supabaseKey || supabaseKey === 'YOUR_SUPABASE_SERVICE_KEY') {
     console.error('Please configure SUPABASE_URL and SUPABASE_SERVICE_KEY in .env.migration');

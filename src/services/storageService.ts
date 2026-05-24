@@ -1,17 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { DB_CONFIG } from '../constants/config';
 import { STORAGE_BUCKET, STORAGE_PATH, R2_PUBLIC_URL } from '../config/constants';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-
-// Setup R2 S3 Client
-const r2Client = new S3Client({
-  region: 'auto',
-  endpoint: import.meta.env.VITE_R2_ENDPOINT || '',
-  credentials: {
-    accessKeyId: import.meta.env.VITE_R2_ACCESS_KEY_ID || '',
-    secretAccessKey: import.meta.env.VITE_R2_SECRET_ACCESS_KEY || '',
-  },
-});
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -124,28 +113,36 @@ export const uploadImages = async (
       return publicUrl;
       */
 
-      // [New] Cloudflare R2 S3 API Logic:
-      // Note: R2 doesn't have a simple exists check without reading/listing which takes time.
-      // Since it's webp images with IDs, we can just upsert.
+      // [New] Cloudflare R2 S3 API Logic via Presigned URL
       const res = await fetch(base64);
       const blob = await res.blob();
       const buffer = await blob.arrayBuffer();
 
-      // Ensure fileName does not start with a slash and is just an ID in the PATH
-      // Old filename was something like `public/{photoId}.webp`
-      // New should be `photox/public/{id}.webp`
-      // But the function call below passes `public/${photoId}.webp` 
-      // We will adjust it inside this function for R2
       const objectKey = `${STORAGE_PATH}/${fileName.replace('public/', '')}`;
 
-      await r2Client.send(
-        new PutObjectCommand({
-          Bucket: STORAGE_BUCKET,
-          Key: objectKey,
-          Body: new Uint8Array(buffer),
-          ContentType: 'image/webp',
-        })
-      );
+      // Get presigned URL from backend
+      const presignRes = await fetch('/api/storage/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: objectKey, contentType: 'image/webp' })
+      });
+
+      if (!presignRes.ok) {
+        throw new Error('Failed to get presigned upload URL from backend');
+      }
+
+      const { uploadUrl } = await presignRes.json();
+
+      // Upload directly to R2 using the presigned URL
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'image/webp' },
+        body: new Uint8Array(buffer)
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error(`Upload to R2 failed: ${uploadRes.statusText}`);
+      }
 
       if (isMain && onProgress) onProgress(100);
       

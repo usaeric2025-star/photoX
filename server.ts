@@ -1,5 +1,7 @@
 import express from "express";
 import path from "path";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 async function startServer() {
   const app = express();
@@ -7,6 +9,35 @@ async function startServer() {
 
   // Basic middleware
   app.use(express.json({ limit: '50mb' }));
+
+  // Storage Presign Endpoint (R2)
+  app.post("/api/storage/presign", async (req, res) => {
+    try {
+      const { fileName, contentType } = req.body;
+      if (!fileName) return res.status(400).json({ error: "fileName required" });
+
+      const s3Client = new S3Client({
+        region: 'auto',
+        endpoint: process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com',
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+        },
+      });
+
+      const command = new PutObjectCommand({
+        Bucket: 'photox-storage',
+        Key: fileName,
+        ContentType: contentType || 'application/octet-stream',
+      });
+
+      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+      res.json({ uploadUrl });
+    } catch(e: any) {
+      console.error("Presign error:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
 
   // Health check
   app.get("/api/health", (req, res) => {

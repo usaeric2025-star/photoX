@@ -2,17 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import fs from 'fs';
 import path from 'path';
-import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env.migration explicitly
-dotenv.config({ path: path.join(__dirname, '../.env.migration') });
-
 async function migrate() {
-  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseKey || supabaseKey === 'YOUR_SUPABASE_SERVICE_KEY') {
@@ -20,10 +16,10 @@ async function migrate() {
     process.exit(1);
   }
 
-  const r2Endpoint = process.env.R2_ENDPOINT;
+  const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
   const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID;
   const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const r2BucketName = process.env.R2_BUCKET_NAME;
+  const r2BucketName = process.env.R2_BUCKET_NAME || 'photox-storage';
 
   if (!r2Endpoint || !r2AccessKeyId || !r2SecretAccessKey || !r2BucketName) {
     console.error('Missing R2 environment variables in .env.migration');
