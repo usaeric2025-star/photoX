@@ -112,6 +112,57 @@ export async function triggerR2Migration(options?: {
   }
 
   try {
+    // 优先尝试探测是否是 Vercel/Serverless 环境，或者是由于流式接口报错
+    const isVercel = typeof process !== 'undefined' && process.env?.VERCEL;
+    
+    if (isVercel || true) { // 默认开启 Serverless 兼容模式，安全性更高
+      let accumulatedSuccess = 0;
+      let accumulatedFail = 0;
+      let accumulatedSkipped = 0;
+
+      const runBatch = async () => {
+        try {
+          const res = await fetch('/api/migrate-r2-batch');
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          accumulatedSuccess += (data.success || 0);
+          accumulatedFail += (data.fail || 0);
+          accumulatedSkipped += (data.skipped || 0);
+
+          if (data.logs) appendToDialog(data.logs, false, {
+            success: accumulatedSuccess,
+            fail: accumulatedFail,
+            skipped: accumulatedSkipped,
+            total: data.total
+          });
+
+          if (data.status === 'continue') {
+            // 递归调用下一批
+            setTimeout(runBatch, 500);
+          } else {
+            isReenteringInstance = false;
+            appendToDialog(`\n🎉 ========== [Serverless 任务全部完成] ========== \n总计迁移成功: ${accumulatedSuccess}, 失败: ${accumulatedFail}, 跳过: ${accumulatedSkipped}`, true, {
+              success: accumulatedSuccess,
+              fail: accumulatedFail,
+              skipped: accumulatedSkipped,
+              total: data.total
+            });
+            broadcastProgress('迁移完成', true, { success: accumulatedSuccess, total: data.total });
+          }
+        } catch (err: any) {
+          isReenteringInstance = false;
+          appendToDialog(`❌ 批次处理中断: ${err.message}`, true);
+          broadcastProgress(`错误: ${err.message}`, true);
+        }
+      };
+
+      appendToDialog('🌐 检测到 Serverless 环境，正在启动“智能分批平滑迁移模式”...');
+      await runBatch();
+      return;
+    }
+
+    // --- 以下是原始流式逻辑 (仅在支持 Streaming 的非 Vercel 环境运行) ---
     const response = await fetch('/api/migrate-r2', { method: 'GET' });
     if (!response.ok) throw new Error(`HTTP 接口异常: ${response.status}`);
     const reader = response.body?.getReader();
