@@ -14,7 +14,7 @@ export const useSettings = () => {
       }
       return data || {}
     },
-    staleTime: 1000 * 60 * 10,       // Keep settings fresh in cache for 10 mins
+    staleTime: 1000 * 5,             // Keep settings fresh in cache for 5 seconds (allows rapid mounts, fetches on page entry)
     refetchOnWindowFocus: false,     // Disable automatic refetch when the browser window/iframe regains focus
     refetchOnReconnect: false        // Disable automatic refetch when reconnecting
   })
