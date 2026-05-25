@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Spinner } from '@/components/ui/Spinner';
-import { ShieldCheck, ChevronDown, ChevronUp, Database, PackageSearch, Activity } from 'lucide-react';
-import { Photo } from '../../types';
-import { triggerR2Migration, testR2ConnectionStatus, checkR2Inventory, checkMigrationStats, verifyPhysicalR2Files } from '@/utils/migrateHelper';
+import { ShieldCheck, PackageSearch, Trash2 } from 'lucide-react';
 import { useTaskExecutor } from '@/hooks/core/useTaskExecutor';
 import { useFeedback } from '@/hooks/shared/useFeedback';
 import { useGalleryStore } from '@/store';
@@ -18,7 +16,6 @@ export const MaintenanceSection: React.FC<Props> = ({
   onHealthCheck, isChecking, cardClass, buttonStyles
 }) => {
   const { runTask } = useTaskExecutor();
-  const { showError } = useFeedback();
   const { setAlertDialog } = useGalleryStore();
   const { showSuccess } = useFeedback();
 
@@ -48,58 +45,59 @@ export const MaintenanceSection: React.FC<Props> = ({
         </button>
 
         <button 
-          onClick={() => checkMigrationStats()}
-          className={buttonStyles.secondary + " w-full justify-start gap-3"}
-          >
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <Activity size={16} />
-          </div>
-          <div className="text-left">
-            <p className="text-[11px] font-bold text-slate-700">迁移状态对账</p>
-            <p className="text-[10px] text-slate-400 font-medium">查看当前与云端同步报告</p>
-          </div>
-        </button>
-
-        <button 
            onClick={async () => {
              await runTask('R2 存储对账', async () => {
                const response = await fetch('/api/storage/audit');
                const result = await response.json();
                if (result.missing > 0 || result.orphans > 0) {
                  setAlertDialog({
-                   title: '对账报告',
-                   message: `✅ 正常: ${result.healthy}\n❌ 缺失: ${result.missing}\n🗑️ 孤儿: ${result.orphans}`,
+                   title: '对账报告 / Audit Report',
+                   message: `✅ 正常/Healthy: ${result.healthy}\n❌ 缺失/Missing in R2: ${result.missing}\n🗑️ 孤儿/Orphans in R2: ${result.orphans}`,
                  });
                } else {
-                 showSuccess('存储对账完成，一切正常');
+                 showSuccess('存储对账完成，一致性完美匹配 / Storage consistency verified! All good.');
                }
              });
            }}
            className={buttonStyles.secondary + " w-full justify-start gap-3"}
          >
-           <div className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-600 flex items-center justify-center">
+           <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
              <PackageSearch size={16} />
            </div>
            <div className="text-left">
              <p className="text-[11px] font-bold text-slate-700">🔍 R2 存储对账</p>
-             <p className="text-[10px] text-slate-400 font-medium">检查数据库与R2文件一致性</p>
+             <p className="text-[10px] text-slate-400 font-medium">检查数据库记录与 R2 文件一致性</p>
            </div>
          </button>
 
         <button 
-          onClick={() => triggerR2Migration({ force: true })}
-          className={buttonStyles.accent + " w-full justify-start gap-3"}
-        >
-          <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-600 flex items-center justify-center">
-            <Database size={16} />
-          </div>
-          <div className="text-left">
-            <p className="text-[11px] font-bold text-slate-900">执行全量迁移修复</p>
-            <p className="text-[10px] text-slate-500 font-medium">强制对所有资产进行云端同步</p>
-          </div>
-        </button>
+           onClick={async () => {
+             await runTask('清理孤儿文件', async () => {
+               const response = await fetch('/api/storage/clean', { method: 'POST' });
+               const result = await response.json();
+               if (result.cleanedCount > 0) {
+                 setAlertDialog({
+                   title: '清理报告 / Cleanup Report',
+                   message: `🗑️ 成功清理了 ${result.cleanedCount} 个 R2 孤儿物理文件！\n\nSwiped clean ${result.cleanedCount} unused assets in R2 root directory.`,
+                 });
+               } else {
+                 showSuccess('未发现多余的 R2 孤儿文件，一切洁净！ / Storage is already 100% clean.');
+               }
+             });
+           }}
+           className={buttonStyles.secondary + " w-full justify-start gap-3"}
+         >
+           <div className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
+             <Trash2 size={16} />
+           </div>
+           <div className="text-left">
+             <p className="text-[11px] font-bold text-slate-700">🗑️ 清理 R2 孤儿文件</p>
+             <p className="text-[10px] text-slate-400 font-medium">物理擦除 R2 存储桶内无主垃圾资产</p>
+           </div>
+         </button>
       </div>
     </div>
   );
 };
+
 

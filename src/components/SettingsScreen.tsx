@@ -36,7 +36,7 @@ export const SettingsScreen: React.FC = () => {
     setActiveScreen, handleLogoUpload, performPushSync, performPullSync, 
     onRefresh: refreshCloudData, cloudCount, saveSettings, 
     isSyncing, t, photos, categories, tags, manufacturers,
-    isMaintenanceRunning, onRunMaintenance, onRunMigrationBackground
+    isMaintenanceRunning, onRunMaintenance
   } = logic;
 
   const { showSuccess } = useFeedback();

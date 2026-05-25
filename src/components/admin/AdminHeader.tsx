@@ -146,10 +146,11 @@ export const AdminHeader: React.FC<Props> = ({
   };
 
   const currentLang = appLang || 'en';
+  const isEffectiveStaffMode = isStaffMode && !user;
 
   const headerClass = adminPreviewMode === 'public' 
     ? "shrink-0 z-[110] bg-green-50 h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b border-green-200"
-    : isStaffMode 
+    : isEffectiveStaffMode 
     ? "shrink-0 z-[110] bg-amber-50 h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b border-amber-200"
     : "shrink-0 z-[110] bg-white h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#ECECEC]";
 
@@ -178,7 +179,7 @@ export const AdminHeader: React.FC<Props> = ({
             </div>
           )}
 
-          {isStaffMode && (
+          {isEffectiveStaffMode && (
             <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-900/5 text-amber-900 rounded-full text-[10px] font-black shrink-0">
                <Wrench size={10} />
                <span className="hidden sm:inline">
@@ -260,7 +261,7 @@ export const AdminHeader: React.FC<Props> = ({
                     show={showToolsMenu} 
                     t={t} 
                     handleOpenSettings={handleOpenSettings}
-                    isStaff={isStaffMode}
+                    isStaff={isEffectiveStaffMode}
                     handleExitStaffMode={handleExitStaffMode}
                     currentLang={currentLang}
                     onSetLang={(l) => useGalleryStore.getState().setAppLang(l as 'zh' | 'en' | 'ms')}

@@ -52,7 +52,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, on
 
 export const AdminSidebar: React.FC = () => {
   const { 
-    settings, activeScreen, setActiveScreen, cloudCount, onRefresh, handleImport, onRunMigrationBackground 
+    settings, activeScreen, setActiveScreen, cloudCount, onRefresh, handleImport 
   } = useAdmin();
   
   const { isStaffMode, appLang } = useGalleryStore(useShallow(s => ({
@@ -61,6 +61,7 @@ export const AdminSidebar: React.FC = () => {
   })));
 
   const { user, loginWithGoogle, logout } = useAuth();
+  const isEffectiveStaffMode = isStaffMode && !user;
 
   return (
     <aside className="w-72 bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden">
@@ -162,7 +163,7 @@ export const AdminSidebar: React.FC = () => {
 
       {/* Footer Info */}
       <div className="p-4 bg-brand-navy/5 border-t border-brand-navy/5 space-y-3 shrink-0">
-        {isStaffMode && (
+        {isEffectiveStaffMode && (
           <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-2">
             <div className="flex items-center gap-2 text-amber-900">
               <Wrench size={14} className="animate-pulse" />

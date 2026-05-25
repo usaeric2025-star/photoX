@@ -22,6 +22,51 @@ interface GroupGridViewProps {
   hasNextPage?: boolean;
 }
 
+interface GroupGridContext {
+  header: React.ReactNode;
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
+  hasPhotos: boolean;
+  textLoading: string;
+  textEndOfList: string;
+}
+
+const GroupGridHeader = React.memo(({ context }: { context?: GroupGridContext }) => {
+  return context?.header ? <div className="p-3 sm:p-6 pb-0">{context.header}</div> : null;
+});
+GroupGridHeader.displayName = 'GroupGridHeader';
+
+const GroupGridFooter = React.memo(({ context }: { context?: GroupGridContext }) => {
+  if (!context) return null;
+  const { isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList } = context;
+  if (isFetchingNextPage) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+        <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+        <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
+          {textLoading}
+        </span>
+      </div>
+    );
+  }
+  if (!isFetchingNextPage && hasNextPage === false && hasPhotos) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+        <span className="text-[10px] text-slate-400 font-medium tracking-tight">
+          {textEndOfList}
+        </span>
+      </div>
+    );
+  }
+  return <div className="h-40" />;
+});
+GroupGridFooter.displayName = 'GroupGridFooter';
+
+const GROUP_VIRTUOSO_COMPONENTS = {
+  Header: GroupGridHeader,
+  Footer: GroupGridFooter
+};
+
 export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.Ref<any>, isLoading?: boolean }> = ({
   photos,
   groupData,
@@ -89,6 +134,15 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
     );
   }, [groupData]);
 
+  const virtuosoContext = React.useMemo(() => ({
+    header,
+    isFetchingNextPage: !!isFetchingNextPage,
+    hasNextPage: !!hasNextPage,
+    hasPhotos: photos.length > 0,
+    textLoading: t.loading || '正在载入更多...',
+    textEndOfList: t.endOfList || '已经到底啦'
+  }), [header, isFetchingNextPage, hasNextPage, photos.length, t]);
+
   return (
     <div className={`flex-1 min-h-0 relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
       <VirtuosoGrid
@@ -99,31 +153,8 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
         useWindowScroll={false}
         endReached={onEndReached}
-        components={{
-          Header: () => <div className="p-3 sm:p-6 pb-0">{header}</div>,
-          Footer: () => {
-             if (isFetchingNextPage) {
-               return (
-                 <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-                   <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
-                   <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
-                     {t.loading || '正在载入更多...'}
-                   </span>
-                 </div>
-               );
-             }
-             if (!isFetchingNextPage && hasNextPage === false && photos.length > 0) {
-               return (
-                 <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-                   <span className="text-[10px] text-slate-400 font-medium tracking-tight">
-                     {t.endOfList || '已经到底啦'}
-                   </span>
-                 </div>
-               );
-             }
-             return <div className="h-40" />;
-          }
-        }}
+        context={virtuosoContext}
+        components={GROUP_VIRTUOSO_COMPONENTS}
         listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-6 p-3 sm:p-6"
         itemContent={(index) => {
           if (isLoading) {

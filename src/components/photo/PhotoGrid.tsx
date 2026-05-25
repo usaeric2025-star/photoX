@@ -47,6 +47,44 @@ function getSkeletonCount(total: number = 0, columns: number): number {
   return columns * 3;
 }
 
+interface VirtuosoGridContext {
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
+  hasPhotos: boolean;
+  textLoading: string;
+  textEndOfList: string;
+}
+
+const MemoizedFooter = React.memo(({ context }: { context?: VirtuosoGridContext }) => {
+  if (!context) return null;
+  const { isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList } = context;
+  if (isFetchingNextPage) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+        <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+        <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
+          {textLoading}
+        </span>
+      </div>
+    );
+  }
+  if (!isFetchingNextPage && !hasNextPage && hasPhotos) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+        <span className="text-[10px] text-slate-400 font-medium tracking-tight">
+          {textEndOfList}
+        </span>
+      </div>
+    );
+  }
+  return null;
+});
+MemoizedFooter.displayName = 'MemoizedFooter';
+
+const VIRTUOSO_COMPONENTS = {
+  Footer: MemoizedFooter
+};
+
 export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo(({ virtuosoRef }) => {
   const { 
     columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
@@ -103,6 +141,16 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
       isAdminModeOverride: isAdminMode
     }
   );
+
+  const isFilteringFetching = infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage;
+
+  const virtuosoContext = React.useMemo(() => ({
+    isFetchingNextPage,
+    hasNextPage,
+    hasPhotos: displayPhotos.length > 0,
+    textLoading: (t as any).loading || '正在载入更多...',
+    textEndOfList: (t as any).endOfList || '已经到底啦'
+  }), [isFetchingNextPage, hasNextPage, displayPhotos.length, t]);
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
      setActiveGroupId(gid);
@@ -168,11 +216,12 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   }
 
   return (
-    <div className="h-full w-full overscroll-y-contain">
-      <VirtuosoGrid
-        ref={virtuosoRef}
-        style={{ height: '100%', width: '100%' }}
-        data={gridPhotos}
+    <div className="h-full w-full overscroll-y-contain relative">
+      <div className={`h-full w-full transition-opacity duration-300 ${isFilteringFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+        <VirtuosoGrid
+          ref={virtuosoRef}
+          style={{ height: '100%', width: '100%' }}
+          data={gridPhotos}
         computeItemKey={(index, item) => {
           const p = item as Photo;
           return p ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `loading-${index}`;
@@ -199,31 +248,16 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
             />
           );
         }}
-        components={{
-          Footer: () => {
-            if (isFetchingNextPage) {
-              return (
-                <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-                  <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
-                  <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
-                    {(t as any).loading || '正在载入更多...'}
-                  </span>
-                </div>
-              );
-            }
-            if (!isFetchingNextPage && !hasNextPage && displayPhotos.length > 0) {
-               return (
-                 <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-                   <span className="text-[10px] text-slate-400 font-medium tracking-tight">
-                     {(t as any).endOfList || '已经到底啦'}
-                   </span>
-                 </div>
-               );
-             }
-            return null;
-          }
-        }}
+        context={virtuosoContext}
+        components={VIRTUOSO_COMPONENTS}
       />
+      </div>
+      {isFilteringFetching && (
+        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full shadow-lg border border-slate-110 flex items-center gap-1.5 z-50 animate-pulse">
+          <div className="w-1.5 h-1.5 bg-sky-500 rounded-full animate-ping" />
+          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Updating...</span>
+        </div>
+      )}
     </div>
   );
 });

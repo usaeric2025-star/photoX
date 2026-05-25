@@ -51,6 +51,7 @@ export const useInfinitePhotos = (filters: {
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
+    placeholderData: keepPreviousData,
     staleTime: 1000 * 60, // 1 分钟
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),

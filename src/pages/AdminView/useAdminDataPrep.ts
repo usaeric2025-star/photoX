@@ -17,7 +17,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { hapticFeedback } from '../../utils/haptics';
 import { loginWithGoogle } from '../../services/supabaseService';
 import { uploadLogo } from '../../services/settingService';
-import { triggerR2Migration } from '../../utils/migrateHelper';
 
 export const useAdminDataPrep = () => {
   const { user, logout } = useAuth();
@@ -273,26 +272,6 @@ export const useAdminDataPrep = () => {
     groupPhotos,
     initialPhotoId, setInitialPhotoId, checkSyncLock, loginWithGoogle, showError, onEditPhotoById, handleLogoUpload,
     isMaintenanceRunning, 
-    onRunMigrationBackground: async () => {
-      await runTask('R2 全量增量迁移 (后台)', async ({ updateProgress }) => {
-        return new Promise<void>((resolve) => {
-          triggerR2Migration({
-            isSilent: true,
-            onProgress: (p: any) => {
-              const total = p.total || 0;
-              const pending = p.pending || 0;
-              const migrated = total - pending;
-              const progress = total > 0 ? (migrated / total) * 100 : 0;
-              
-              const statusMsg = p.isDone ? '迁移任务已完成' : `剩余待迁移: ${pending} / 已完成: ${migrated} (库藏总数: ${total})`;
-              updateProgress(progress, statusMsg);
-              
-              if (p.isDone) resolve();
-            }
-          });
-        });
-      });
-    },
     onRunMaintenance: handleRunMaintenance,
     disableMultiSelect: disable,
     handleManageClick: () => store.setActiveScreen('manage'),

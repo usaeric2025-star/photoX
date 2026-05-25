@@ -47,6 +47,7 @@ export const AdminViewContent: React.FC = () => {
     setAlertDialog: s.setAlertDialog,
     isStaffMode: s.isStaffMode
   })));
+  const isEffectiveStaffMode = isStaffMode && !user;
 
   const { tasks, cancelTask } = useTasks();
   const { reset, clear } = useMultiSelect();
@@ -140,7 +141,7 @@ export const AdminViewContent: React.FC = () => {
               <GroupDetailView
                 activeGroupId={logic.activeGroupId} setActiveGroupId={logic.setActiveGroupId}
                 initialPhotoId={logic.initialPhotoId}
-                setLightboxIndex={logic.setLightboxIndex} isStaffMode={true}
+                setLightboxIndex={logic.setLightboxIndex} isStaffMode={isEffectiveStaffMode}
                 onLongPressStart={(p: Photo) => logic.onLongPressStart(p.id)} onLongPressEnd={logic.onLongPressEnd}
               />
             </React.Suspense>
@@ -177,7 +178,7 @@ export const AdminViewContent: React.FC = () => {
           </AnimatePresence>
 
           {/* Mobile Bottom Navigation */}
-          {!isStaffMode && (
+          {!isEffectiveStaffMode && logic.adminPreviewMode !== 'public' && (
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 z-[100] px-6 py-3 flex justify-between items-center safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
               <button 
                 onClick={() => logic.setActiveScreen('home')}

@@ -81,19 +81,20 @@ export const globalHandleError = (error: any, context: string, silent: boolean =
                 <p className="text-[11px] text-red-700 font-mono break-all line-clamp-3 bg-red-50/50 p-1.5 rounded border border-red-100/50">{message}</p>
                 <button 
                   onClick={() => {
-                    const errorReport = {
-                      platform: 'PhotoX Core',
-                      error: message,
-                      context,
-                      raw: typeof error === 'object' ? { ...error, stack: undefined } : String(error),
-                      stack: error instanceof Error ? error.stack : (error?.stack || undefined),
-                      url: window.location.href,
-                      ua: navigator.userAgent,
-                      viewport: `${window.innerWidth}x${window.innerHeight}`,
-                      timestamp: new Date().toISOString()
-                    };
-                    navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
-                      .then(() => toast.success('详细诊断报告已复制，可提交给管理员！'))
+                    const tv = typeof error === 'object' && error !== null;
+                    const truncatedStack = error instanceof Error && error.stack
+                      ? error.stack.split('\n').slice(0, 5).join('\n') // Keep top 5 frames for readability
+                      : (error?.stack ? String(error.stack).split('\n').slice(0, 5).join('\n') : '');
+                    
+                    const simpleReport = [
+                      `🚨 【错误信息 / Error】: ${message}`,
+                      `📌 【发生位置 / Context】: ${context} (${window.location.pathname})`,
+                      truncatedStack ? `🥞 【堆栈痕迹 / Stack Trace (Top 5)】:\n${truncatedStack}` : '',
+                      `🕒 【触发时间 / Time】: ${new Date().toLocaleString()}`
+                    ].filter(Boolean).join('\n\n');
+
+                    navigator.clipboard.writeText(simpleReport)
+                      .then(() => toast.success('诊断报告已复制，可提交给管理员！'))
                       .catch(() => {});
                   }}
                   className="self-start text-[9px] font-bold text-red-600 border border-red-200 bg-red-50/50 hover:bg-red-50 font-sans tracking-wide px-2 py-0.5 rounded-full mt-1 flex items-center gap-1 transition animate-pulse"
