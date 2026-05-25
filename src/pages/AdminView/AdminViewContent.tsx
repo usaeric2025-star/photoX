@@ -13,7 +13,8 @@ import { GroupDetailView } from '@/components/GroupDetailView';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { MainAdminScreen } from './MainAdminScreen';
-import { PublicGallery } from '@/components/public/PublicGallery';
+import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
+import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
 import { PhotoActionsContext } from '@/contexts/PhotoActionsContext';
 import { useGalleryStore, useShallow } from '@/store';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -155,10 +156,16 @@ export const AdminViewContent: React.FC = () => {
                 </div>
                 <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <div className="flex flex-col h-full bg-brand-bg">
-                    <PublicGallery 
+                    <UnifiedHeader 
+                      variant="public-showcase"
+                      onRefresh={handleRefreshPublic}
                       isRefreshing={isSyncing}
-                      onExit={handleExitPublic} showExit={true}
-                      user={user} loginWithGoogle={logic.loginWithGoogle}
+                      onExit={handleExitPublic}
+                    />
+                    <UnifiedGallery 
+                      variant="public-showcase"
+                      onExit={handleExitPublic} 
+                      loginWithGoogle={logic.loginWithGoogle}
                     />
                   </div>
                 </div>

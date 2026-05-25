@@ -13,6 +13,7 @@ interface UseSettingsLogicProps {
   customModel: string;
   saveSettings: (s: AppSettings) => Promise<any>;
   performPullSync: () => Promise<any>;
+  setSettings: (s: AppSettings) => void;
 }
 
 export const useSettingsLogic = ({
@@ -21,11 +22,10 @@ export const useSettingsLogic = ({
   geminiApiKey,
   customModel,
   saveSettings,
-  performPullSync
+  performPullSync,
+  setSettings
 }: UseSettingsLogicProps) => {
-  const { 
-    setSettings, setPromptDialog, setAlertDialog
-  } = useGalleryStore();
+  const { setPromptDialog, setAlertDialog } = useGalleryStore();
   const { handleError, showSuccess, showError } = useFeedback();
   const invalidatePhotos = useInvalidatePhotos();
   const { runTask } = useTaskExecutor();

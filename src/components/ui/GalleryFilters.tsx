@@ -10,6 +10,7 @@ import { GroupToggle } from '../../components/ui/GroupToggle';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGalleryStore } from '../../store';
 import { Category, Tag, AppSettings } from '../../types';
+import { GalleryVariant } from '@/types/variant';
 import { cn } from '../../lib/utils';
 import { toTitleCase, getTranslatedCategoryName } from '../../lib/ui-helpers';
 import { useTagsDisplay } from '@/hooks';
@@ -21,7 +22,7 @@ import { useCategoriesQuery, useTagsQuery, useSettings } from '../../hooks';
 interface GalleryFiltersProps {
   onScrollToTop: () => void;
   showHotEffects?: boolean;
-  variant?: 'admin' | 'public';
+  variant?: GalleryVariant;
   onBatchAiIdentify?: () => void;
   isAnalyzing?: boolean;
   batchProgress?: { current: number; total: number };
@@ -32,13 +33,15 @@ interface GalleryFiltersProps {
 export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   onScrollToTop,
   showHotEffects = true,
-  variant = 'public',
+  variant = 'public-showcase',
   onBatchAiIdentify,
   isAnalyzing,
   batchProgress,
   onSetLang,
   onShare
 }) => {
+  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  const isPublic = variant === 'public-showcase';
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { settings } = useSettings();
@@ -92,7 +95,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
     <div className="shrink-0 px-2 sm:px-3 pt-2 pb-1.5 z-40 bg-white border-b border-[#ECECEC]">
       <div className="space-y-1.5 pb-1">
         <div className="flex gap-1.5">
-          {variant === 'public' && onShare && (
+          {isPublic && onShare && (
              <button onClick={onShare} className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" title={t.share}>
                <Share size={16} />
              </button>
@@ -127,7 +130,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
           </div>
           
           <div className="flex gap-1 shrink-0">
-            {variant === 'admin' && onBatchAiIdentify && (
+            {isManagement && onBatchAiIdentify && (
                 <button 
                   onClick={onBatchAiIdentify}
                   disabled={isAnalyzing}

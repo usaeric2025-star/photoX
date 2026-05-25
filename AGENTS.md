@@ -1,64 +1,109 @@
-# PhotoX AI 行为准则 (AGENTS.md)
+---
+description: PhotoX 项目 AI 编码强制规范。所有代码生成、修改、审查必须严格遵守此文件。违反红线的代码将被拒绝。
+globs: ["src/**/*.{ts,tsx}"]
+alwaysApply: true
+version: "2.1"
+lastSynced: "2026-05-25"
+sourceOfTruth: "ARCHITECTURE.md"
+---
 
-> 快速检查清单，AI 助手在每次修改代码前必须对照此表。
+# PhotoX AI Coding Rules v2.1
 
-## 一、架构规范（2026-05-23 最终版）
+> ⚠️ 本文件是 `ARCHITECTURE.md` 的执行层精简版。详细设计原理请参阅原文档。
+> 🔄 更新 `ARCHITECTURE.md` 后，必须同步更新本文件，并在 commit 中标注 `[rules-sync]`。
 
-### 1. 目录结构
-```bash
-src/hooks/
-├── admin/           # 管理端专用 Hook (筛选、导入、同步、AI、编辑)
-├── core/            # 核心 Hook (认证、设置、任务执行器、通知)
-├── shared/          # 共享 Hook (多选、搜索、媒体查询、标签显示)
-└── queries/         # TanStack Query 查询 (照片、分类、标签等)
-```
+## 🔴 绝对红线（违反即阻断）
 
-### 2. 状态管理分层
+### 数据与命名
+- 数据库映射字段 **必须** `snake_case`（`is_hidden`, `group_id`, `category_id`）
+- **严禁** camelCase（`isHidden`, `groupId`）
+- 数据匹配/过滤 **仅允许** 使用 `id`，**严禁** 使用 `name`
 
-| 类型 | 方案 | 禁止 |
-|------|------|------|
-| UI 状态（筛选、多选、列数）| **Zustand** | ❌ 不用 props 传递 |
-| 服务端数据 | **TanStack Query** | ❌ 不用 Zustand 存业务数据 |
-| 稳定操作函数 | **Context** 或 自定义 Hook | ❌ 不用 Zustand 存储大型闭包函数 |
+### 异步与状态
+- 异步操作 **必须** `runTask('名称', asyncFn, options)`
+- **严禁** `useState(loading)` + `try/catch` + `toast/console.error` 手动组合
+- UI 状态用 Zustand（**必须** `useShallow`），**严禁** 存业务数据或函数
+- 业务数据 **必须** TanStack Query，**严禁** Zustand 存储
 
-### 3. 组件通信
-- ✅ **AdminContext**: 管理端所有页面（Sidebar、Main、Settings）统一从 `useAdmin()` 获取逻辑。
-- ✅ **PhotoActionsContext**: 普通组件（PhotoCard）通过此 Context 获取操作函数，避免逐级传递。
-- ❌ 禁止 props 传递超过 2 层的回调函数（如 `onDelete`、`onUpdate`）。
+### 写入与删除
+- 写操作 **仅允许** 通过 `photoMutationService` / `groupMutationService`
+- **严禁** 组件/Hook 中直接调用 `supabase.from(...)`
+- 删除确认 **必须** `<AlertDialog>`，输入弹窗 **必须** `<PromptDialog>`
+- **严禁** 原生 `confirm()` / `alert()` / `setConfirmDialog`
 
-## 二、技术底线与性能优化
+### 反馈与配置
+- 反馈 **必须** `useFeedback()` 导出的方法（`showSuccess` / `showError` / `handleError`）
+- **严禁** 直接调用 `toast.success()` / `toast.error()`
+- 用户可配置项 **必须** 从 settings/DB 读取，**严禁** 硬编码或设默认值
 
-- **任务管理**: 所有的异步操作必须统一使用 `useTaskExecutor` 中的 `runTask` 进行处理。禁止手动使用 `useState` 去管理 `loading` 加载状态。
-- **错误处理**: 一律通过 `useFeedback` 导出的 `showError` 或集成于 `runTask` 进行上报。
-- **防止冗余**: 严禁为 Admin 和 Public 编写两套独立 UI 组件，应使用 Variant 模式。
-- **文件体积**: 
-  - Hook 文件建议 < 150 行。
-  - 组件文件建议 < 250 行。
-  - `useAdminDataPrep.ts` 仅作为逻辑聚合层。
+### 渲染与布局
+- Virtuoso 内图片 **必须** `loading="eager" decoding="async"`，**严禁** `lazy`
+- 浮动工具栏/弹窗 **必须** `fixed bottom-0 left-0 right-0 flex justify-center` + z-index token
+- **严禁** `absolute inset-0`（Virtuoso 内会随滚动丢失）
+- **严禁** 使用 `transform: translateX(-50%)` 进行居中（避免层叠上下文与模糊问题）
+- Admin/Public 差异 **必须** variant prop，**严禁** 两套独立组件
+- Hook < 150 行，组件 < 250 行
 
-## 三、修改前必读清单
-1. 是否使用了 `snake_case` (如 `category_id`, `manufacturer_id`, `is_hidden`)？
-2. 是否所有异步任务都已接入 `runTask`？
-3. 业务数据是否仍然由 TanStack Query 管理而非 Zustand？
-4. 是否有无意义的 `invalidateQueries` 全量刷新？
-5. 所有弹窗是否使用了 `AlertDialog` (shadcn/ui)，严禁原生 `alert`？
+### 任务静默性分级与双模错误治理规范 🆕
+- **Light 任务行为规范**：非上传/批量 AI 识别等属于 Light 任务。
+  - ❌ 严禁弹出任务面板 / 进度条。
+  - ✅ 成功必须完全静默（无 Sonner、无 Toast，直接展现乐观更新）。
+  - ✅ 失败通过单条 Sonner + 详细原因回馈（直接从 backend 提取或映射字典，非模糊提示）。
+  - ✅ 所有操作结果全量写入后台日志（`logResult`, `logError`）。
+- **Heavy 任务行为规范**：上传、批量 AI 识别、管理员导入等属于 Heavy 任务。
+  - ✅ 保留任务面板与進度展示。
+  - ✅ 完成后使用单量 Sonner 面板汇总（e.g. "批量识别完成：成功 X 张，失败 Y 张"）。
+  - ✅ 全量结果均记录至后台。
 
-## 四、强制规范对比
+### AI 批量任务容错与降級规范 🆕
+- 必须实现**指数退避重试**：基础延迟 1s，最大重试 3 次，抖动 ±500ms。
+- 连续 429 超过 2 次时自动降级并发数（如由 Concurrency 3 降级为 2 → 1），保证有限网络下服务可用。
+- 单张重试耗尽后在后台标记 `ai_failed` 并保留错误提示，**绝不阻断整体批次**。
+- ❌ 严禁无限重试或固定硬编码延迟。
 
-```ts
-// ✅ 正确示范
-const { runTask } = useTaskExecutor();
-await runTask('保存', saveData, { showSuccessToast: true });
+### 图片尺寸分级规范（纯 R2 预生成）🆕
+- 照片墙：thumbnail_sm (w=300 WebP)
+- 合组/详情：thumbnail_md (w=800 WebP)
+- ✅ 必须通过 ResponsivePhoto 组件加载
+- ❌ 严禁使用 next/image / Vercel Image Optimization
+- ❌ 严禁缺失尺寸时回源原图或触发实时优化
+- 缺失中间档时直接 fallback 至小缩略图
 
-// ❌ 错误示范
-const [loading, setLoading] = useState(false);
-try {
-  setLoading(true);
-  await saveData();
-  toast.success('保存成功');
-} catch (e) {
-  console.error(e);
-} finally {
-  setLoading(false);
-}
-```
+## 🚨 常见错误 → 正确做法
+
+| ❌ 错误 | ✅ 正确 |
+| :--- | :--- |
+| `const { photos } = useStore()` | `const { photos } = useStore(useShallow(s => ({ photos: s.photos })))` |
+| `confirm('确定删除？')` | `<AlertDialog>...</AlertDialog>` |
+| `toast.success('完成')` | `const { showSuccess } = useFeedback(); showSuccess('完成')` |
+| `supabase.from('photos').update(...)` | `photoMutationService.update(...)` |
+| `loading="lazy"` | `loading="eager" decoding="async"` |
+| `position: absolute; inset: 0` (工具栏) | `className="fixed bottom-0 left-0 right-0 flex justify-center"` |
+| `left-1/2 -translate-x-1/2` (居中) | `left-0 right-0 flex justify-center` |
+| `catch (e) { console.error(e) }` | `catch (e) { handleError(e, '操作上下文') }` |
+
+## ✅ 修改前静默自检清单
+
+每次输出代码前，必须在内部验证以下事项（无需输出检查过程）：
+- [ ] 字段全部 snake_case？
+- [ ] 异步任务接入 runTask？无手动 loading？
+- [ ] 写操作经 MutationService？
+- [ ] 弹窗为 AlertDialog / PromptDialog？
+- [ ] 反馈经 useFeedback？
+- [ ] 浮动元素用 fixed + flex 居中？无 transform？
+- [ ] 配置项无硬编码？
+- [ ] 匹配仅用 id？
+- [ ] 文件体积合规？
+
+## 📎 核心文件索引
+
+| 用途 | 路径 |
+| :--- | :--- |
+| 查询 Hooks | `src/hooks/queries/usePhotos.ts` |
+| 变更 Service | `src/services/photoMutationService.ts` |
+| 删除 Hook | `src/hooks/useDelete.ts` |
+| 任务执行器 | `src/hooks/core/useTaskExecutor.ts` |
+| 反馈 Hook | `src/hooks/uiFeedback.ts` |
+| UI 状态 | `src/store.ts` |
+| 错误处理 | `src/utils/errorHandler.ts` |
+| Virtuoso 配置 | `src/config/virtuoso.config.ts` |

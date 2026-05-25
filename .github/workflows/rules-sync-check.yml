@@ -1,0 +1,30 @@
+name: Check AI Rules Sync
+
+on:
+  pull_request:
+    paths:
+      - 'ARCHITECTURE.md'
+      - 'AGENTS.md'
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Extract versions
+        id: versions
+        run: |
+          ARCH_VER=$(grep -m1 '版本：v' ARCHITECTURE.md | grep -oE '[0-9]+\.[0-9]+')
+          AGENTS_VER=$(grep -m1 'version:' AGENTS.md | grep -oE '[0-9]+\.[0-9]+')
+          echo "arch=$ARCH_VER" >> $GITHUB_OUTPUT
+          echo "agents=$AGENTS_VER" >> $GITHUB_OUTPUT
+          
+      - name: Validate version match
+        run: |
+          if [ "${{ steps.versions.outputs.arch }}" != "${{ steps.versions.outputs.agents }}" ]; then
+            echo "::error::❌ 版本不一致！ARCHITECTURE.md (${{ steps.versions.outputs.arch }}) ≠ AGENTS.md (${{ steps.versions.outputs.agents }})"
+            echo "请同步更新两个文件的 version 字段，并在 commit message 中标注 [rules-sync]"
+            exit 1
+          fi
+          echo "✅ 版本一致: v${{ steps.versions.outputs.arch }}"

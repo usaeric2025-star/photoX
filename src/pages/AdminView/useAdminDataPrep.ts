@@ -47,12 +47,6 @@ export const useAdminDataPrep = () => {
     activeScreen: s.activeScreen,
     setActiveGroupId: s.setActiveGroupId,
     activeGroupId: s.activeGroupId,
-    geminiApiKey: s.geminiApiKey,
-    setGeminiApiKey: s.setGeminiApiKey,
-    customModel: s.customModel,
-    setCustomModel: s.setCustomModel,
-    accessPasscode: s.accessPasscode,
-    setAccessPasscode: s.setAccessPasscode,
     setAlertDialog: s.setAlertDialog,
     setPromptDialog: s.setPromptDialog,
     setLightboxIndex: s.setLightboxIndex,
@@ -62,9 +56,13 @@ export const useAdminDataPrep = () => {
     photoPickerGroupId: s.photoPickerGroupId,
     setPhotoPickerGroupId: s.setPhotoPickerGroupId,
     resetForm: s.resetForm,
-    settings: s.settings,
-    setSettings: s.setSettings
   })));
+  
+  const { settings, updateSettings, isLoading: isSettingsLoading } = useSettings();
+  const geminiApiKey = settings?.gemini_api_key;
+  const customModel = settings?.custom_model;
+  const accessPasscode = settings?.access_passcode;
+
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
@@ -87,8 +85,7 @@ export const useAdminDataPrep = () => {
     photosRef.current = photos;
   }, [photos]);
 
-  const { settings, setSettings, refreshCloudData, performPush } = useSyncEngine();
-  const { settings: fetchedSettings } = useSettings();
+  const { refreshCloudData, performPush } = useSyncEngine();
   const { mutateAsync: saveSettingsMut } = useSettingsMutation();
 
   const { reset: resetMultiSelect, disable } = useMultiSelect();
@@ -120,16 +117,16 @@ export const useAdminDataPrep = () => {
     sortOrder: store.sortOrder
   }), [photos, handleRefreshFilters, store.searchQuery, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder]);
 
-  const importerResult = useAdminImport(user, { setActiveScreen: store.setActiveScreen }, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), photosRef);
-  const aiResult = useAdminAI(user, store.geminiApiKey, settings?.provider || 'openrouter', store.customModel, categories, tags, manufacturers, new Map(), photosRef);
+  const importerResult = useAdminImport(user, { setActiveScreen: store.setActiveScreen }, geminiApiKey, settings?.provider || 'openrouter', customModel || '', categories, tags, manufacturers, new Map(), photosRef);
+  const aiResult = useAdminAI(user, geminiApiKey, settings?.provider || 'openrouter', customModel || '', categories, tags, manufacturers, new Map(), photosRef);
 
   const importer = useMemo(() => importerResult, [importerResult]);
   const sync = useMemo(() => ({
     settings,
-    setSettings,
+    setSettings: updateSettings,
     refreshCloudData,
     performPush
-  }), [settings, setSettings, refreshCloudData, performPush]);
+  }), [settings, updateSettings, refreshCloudData, performPush]);
   const ai = useMemo(() => aiResult, [aiResult]);
 
   // Group Photos: Fetch independently so they aren't affected by filters (Category/Search)
@@ -155,24 +152,12 @@ export const useAdminDataPrep = () => {
   const lastFetchedSettingsRef = useRef<any>(null);
 
   useEffect(() => {
-    if (fetchedSettings && Object.keys(fetchedSettings).length > 0) {
-      if (lastFetchedSettingsRef.current !== fetchedSettings) {
-         lastFetchedSettingsRef.current = fetchedSettings;
-         const s = fetchedSettings as AppSettings;
-         setSettings(s);
-         
-         if (s.gemini_api_key && s.gemini_api_key !== store.geminiApiKey) {
-           store.setGeminiApiKey(s.gemini_api_key);
-         }
-         if (s.custom_model && s.custom_model !== store.customModel) {
-           store.setCustomModel(s.custom_model);
-         }
-         if (s.access_passcode && s.access_passcode !== store.accessPasscode) {
-           store.setAccessPasscode(s.access_passcode);
-         }
+    if (settings && Object.keys(settings).length > 0) {
+      if (lastFetchedSettingsRef.current !== settings) {
+         lastFetchedSettingsRef.current = settings;
       }
     }
-  }, [fetchedSettings, store.geminiApiKey, store.customModel, store.accessPasscode, store.setGeminiApiKey, store.setCustomModel, store.setAccessPasscode, setSettings]);
+  }, [settings]);
 
   const uiBasicValue = useMemo(() => ({ 
     setAlertDialog: store.setAlertDialog, 

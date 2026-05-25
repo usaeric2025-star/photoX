@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 import { useGalleryStore } from '../../store';
+import { GalleryVariant } from '@/types/variant';
 
-export const LanguageSwitcher: React.FC<{ variant?: 'admin' | 'public' | 'ghost' }> = ({ variant = 'admin' }) => {
+export const LanguageSwitcher: React.FC<{ variant?: GalleryVariant | 'ghost' }> = ({ variant = 'full-management' }) => {
   const appLang = useGalleryStore(s => s.appLang);
   const setAppLang = useGalleryStore(s => s.setAppLang);
   const [isOpen, setIsOpen] = useState(false);
@@ -23,7 +24,7 @@ export const LanguageSwitcher: React.FC<{ variant?: 'admin' | 'public' | 'ghost'
   ];
 
   const getButtonClass = () => {
-    if (variant === 'public') {
+    if (variant === 'public-showcase') {
       return "h-9 px-2.5 flex items-center gap-1.5 rounded-full border border-[#ECECEC] bg-white text-[#555555] shadow-none hover:bg-[#F1F3F4] transition-all";
     }
     if (variant === 'ghost') {
@@ -32,7 +33,7 @@ export const LanguageSwitcher: React.FC<{ variant?: 'admin' | 'public' | 'ghost'
     return "h-9 sm:h-10 px-2.5 sm:px-3 flex items-center gap-1.5 sm:gap-2 rounded-xl text-brand-navy/60 hover:text-brand-navy bg-white border border-brand-navy/10 shadow-sm transition-all";
   };
 
-  if (variant === 'public') {
+  if (variant === 'public-showcase') {
     return (
       <div className="flex items-center bg-[#F7F7F7] p-0.5 rounded-full border border-[#ECECEC] h-9">
         {[

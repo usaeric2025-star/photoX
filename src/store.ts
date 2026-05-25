@@ -58,16 +58,6 @@ interface StoreState {
   focusedGroupPhotoId: string | null;
   setFocusedGroupPhotoId: (id: string | null) => void;
 
-  settings: any;
-  setSettings: (s: any) => void;
-  geminiApiKey: string | null;
-  setGeminiApiKey: (key: string | null) => void;
-  customModel: string | null;
-  setCustomModel: (model: string | null) => void;
-  accessPasscode: string | null;
-  setAccessPasscode: (code: string | null) => void;
-  user: User | null;
-  setUser: (user: User | null) => void;
   viewMode: 'admin' | 'public';
   setViewMode: (mode: 'admin' | 'public') => void;
   activeScreen: string;
@@ -209,16 +199,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setDraggedPhotoId: (draggedPhotoId) => set({ draggedPhotoId }),
   focusedGroupPhotoId: null,
   setFocusedGroupPhotoId: (focusedGroupPhotoId) => set({ focusedGroupPhotoId }),
-  settings: {},
-  setSettings: (settings) => set({ settings }),
-  geminiApiKey: null,
-  setGeminiApiKey: (geminiApiKey) => set({ geminiApiKey }),
-  customModel: null,
-  setCustomModel: (customModel) => set({ customModel }),
-  accessPasscode: null,
-  setAccessPasscode: (accessPasscode) => set({ accessPasscode }),
-  user: null,
-  setUser: (user) => set({ user }),
   viewMode: (localStorage.getItem('photo_viewMode') as any) || 'public',
   setViewMode: (viewMode) => {
     localStorage.setItem('photo_viewMode', viewMode);

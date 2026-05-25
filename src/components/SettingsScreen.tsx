@@ -11,7 +11,7 @@ import {
 } from '@/store';
 import { 
   useCategoriesQuery, useTagsQuery, useManufacturersQuery, useInfinitePhotos,
-  useAdminCategory, useAuth
+  useAdminCategory, useAuth, useSettings
 } from '@/hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
 import { SettingsTabs } from './settings/SettingsTabs';
@@ -41,21 +41,17 @@ export const SettingsScreen: React.FC = () => {
 
   const { showSuccess } = useFeedback();
   const { user, loginWithGoogle, logout } = useAuth();
+  const { settings, geminiApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const { 
-    settings, geminiApiKey, customModel, accessPasscode,
-    setGeminiApiKey, setCustomModel, setAccessPasscode, setSettings,
     setAlertDialog
   } = useGalleryStore(useShallow(s => ({
-    settings: s.settings,
-    geminiApiKey: s.geminiApiKey,
-    customModel: s.customModel,
-    accessPasscode: s.accessPasscode,
-    setGeminiApiKey: s.setGeminiApiKey,
-    setCustomModel: s.setCustomModel,
-    setAccessPasscode: s.setAccessPasscode,
-    setSettings: s.setSettings,
     setAlertDialog: s.setAlertDialog
   })));
+
+  const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });
+  const setCustomModel = (model: string) => updateSettings({ ...settings, custom_model: model });
+  const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
+  const setSettings = updateSettings;
 
   const {
       updateTag, deleteTag, updateCategory, deleteCategory, addCategory, 
@@ -78,7 +74,8 @@ export const SettingsScreen: React.FC = () => {
     geminiApiKey,
     customModel,
     saveSettings,
-    performPullSync
+    performPullSync,
+    setSettings: (s) => { void updateSettings(s as any); }
   });
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";

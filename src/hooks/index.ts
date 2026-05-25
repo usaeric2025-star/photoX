@@ -1,12 +1,12 @@
 // Core Hooks
-export * from './core/useAuth';
-export * from './core/useSettings';
-export * from './core/useTaskExecutor';
-export * from './core/useTasks';
-export * from './core/usePermission';
-export * from './core/useRouteGuard';
-export * from './core/useSyncEngine';
-export * from './core/useAdminMode';
+export * from './core/auth/useAuth';
+export * from './core/infra/useSettings';
+export * from './core/infra/useTaskExecutor';
+export * from './core/infra/useTasks';
+export * from './core/auth/usePermission';
+export * from './core/auth/useRouteGuard';
+export * from './core/infra/useSyncEngine';
+export * from './core/auth/useAdminMode';
 
 // Shared Hooks
 export * from './shared/useFeedback';
@@ -33,14 +33,14 @@ export * from './queries/useGroups';
 export * from './queries/useInvalidatePhotos';
 
 // Mutations
-export * from './core/useDeletePhoto';
-export * from './core/useUpdatePhoto';
-export * from './core/useGroupOperations';
-export * from './core/useAdminMutations';
-export * from './core/useGroupCoverMutation';
-export * from './core/useSettingsMutation';
-export * from './core/useBatchEditMutation';
-export * from './core/useSyncMutation';
+export * from './core/mutations/useDeletePhoto';
+export * from './core/mutations/useUpdatePhoto';
+export * from './core/mutations/useGroupOperations';
+export * from './core/mutations/useAdminMutations';
+export * from './core/mutations/useGroupCoverMutation';
+export * from './core/mutations/useSettingsMutation';
+export * from './core/mutations/useBatchEditMutation';
+export * from './core/mutations/useSyncMutation';
 
 // AI Hooks
 export * from './photoAi';

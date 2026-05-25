@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
-import { useAuth } from '../../hooks';
+import { useAuth, usePermission } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
 
 interface SidebarItemProps {
@@ -59,6 +59,7 @@ export const AdminSidebar: React.FC = () => {
     settings, activeScreen, setActiveScreen, cloudCount, onRefresh, handleImport 
   } = useAdmin();
   
+  const { can } = usePermission();
   const { isStaffMode, appLang, isSidebarCollapsed, setIsSidebarCollapsed } = useGalleryStore(useShallow(s => ({
     isStaffMode: s.isStaffMode,
     appLang: s.appLang,
@@ -129,61 +130,71 @@ export const AdminSidebar: React.FC = () => {
 
         <div className="space-y-1">
           {!isSidebarCollapsed && <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">管理与优化 / Management</p>}
-          <SidebarItem 
-            icon={Cloud} 
-            label="云端存储管理" 
-            collapsed={isSidebarCollapsed}
-            active={activeScreen === 'manage'} 
-            onClick={() => setActiveScreen('manage')}
-          />
-          <SidebarItem 
-            icon={Sparkles} 
-            label="AI 智能配置" 
-            collapsed={isSidebarCollapsed}
-            active={activeScreen === 'ai_settings'} 
-            onClick={() => setActiveScreen('manage')} // For now direct to settings
-          />
-          <SidebarItem 
-            icon={Layers} 
-            label="分类 / 厂商管理" 
-            collapsed={isSidebarCollapsed}
-            active={activeScreen === 'structure'} 
-            onClick={() => setActiveScreen('manage')}
-          />
-          <SidebarItem 
-            icon={Tag} 
-            label="标签管理" 
-            collapsed={isSidebarCollapsed}
-            active={activeScreen === 'tags'} 
-            onClick={() => setActiveScreen('manage')}
-          />
+          {can('photo:edit') && (
+            <SidebarItem 
+              icon={Cloud} 
+              label="云端存储管理" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'manage'} 
+              onClick={() => setActiveScreen('manage')}
+            />
+          )}
+          {can('photo:edit') && (
+            <SidebarItem 
+              icon={Sparkles} 
+              label="AI 智能配置" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'ai_settings'} 
+              onClick={() => setActiveScreen('manage')} // For now direct to settings
+            />
+          )}
+          {can('photo:edit') && (
+            <SidebarItem 
+              icon={Layers} 
+              label="分类 / 厂商管理" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'structure'} 
+              onClick={() => setActiveScreen('manage')}
+            />
+          )}
+          {can('photo:edit') && (
+            <SidebarItem 
+              icon={Tag} 
+              label="标签管理" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'tags'} 
+              onClick={() => setActiveScreen('manage')}
+            />
+          )}
         </div>
 
-        <div className="space-y-1">
-          {!isSidebarCollapsed && <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">系统 / System</p>}
-          <SidebarItem 
-            icon={Wrench} 
-            label="系统设置与维护" 
-            collapsed={isSidebarCollapsed}
-            active={activeScreen === 'settings'} 
-            onClick={() => setActiveScreen('settings')}
-          />
-          <SidebarItem 
-            icon={Terminal} 
-            label="系统日志" 
-            collapsed={isSidebarCollapsed}
-            active={activeScreen === 'logs'} 
-            onClick={() => setActiveScreen('manage')}
-          />
-          <SidebarItem 
-            icon={BarChart3} 
-            label="云端统计" 
-            collapsed={isSidebarCollapsed}
-            active={false} 
-            onClick={() => {}}
-            badge={cloudCount || 0}
-          />
-        </div>
+        {can('admin:dashboard:access') && (
+          <div className="space-y-1">
+            {!isSidebarCollapsed && <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">系统 / System</p>}
+            <SidebarItem 
+              icon={Wrench} 
+              label="系统设置与维护" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'settings'} 
+              onClick={() => setActiveScreen('settings')}
+            />
+            <SidebarItem 
+              icon={Terminal} 
+              label="系统日志" 
+              collapsed={isSidebarCollapsed}
+              active={activeScreen === 'logs'} 
+              onClick={() => setActiveScreen('manage')}
+            />
+            <SidebarItem 
+              icon={BarChart3} 
+              label="云端统计" 
+              collapsed={isSidebarCollapsed}
+              active={false} 
+              onClick={() => {}}
+              badge={cloudCount || 0}
+            />
+          </div>
+        )}
       </div>
 
       {/* Footer Info */}

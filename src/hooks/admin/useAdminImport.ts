@@ -8,7 +8,7 @@ import { saveData } from '@/utils/indexedDB';
 import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useFeedback, useTaskExecutor, useImageHash, useDuplicateCheck } from '@/hooks';
-import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/usePhotoAI';
+import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/processSinglePhoto';
 
 export const useAdminImport = (
   user: User | null,

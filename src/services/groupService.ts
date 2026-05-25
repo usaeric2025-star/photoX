@@ -1,46 +1,14 @@
+import { 
+  updateGroupInCloud as updateGroup,
+  upsertGroupInCloud as upsertGroup,
+  createGroupInCloud as createGroup,
+  deleteGroupFromCloud as deleteGroup
+} from './groupMutationService';
 import { supabase } from '../lib/supabase';
 import { supabasePublic } from '../lib/supabase-public';
 import { ProductGroup } from '../types';
 
 export const TABLE_NAME = 'groups';
-
-const ALLOWED_FIELDS = [
-    'id', 'name', 'description', 'description_translations', 'colors', 'materials',
-    'is_hidden', 'cover_photo_id', 'user_id', 'created_at', 'updated_at'
-];
-
-const mapToDb = (updates: Partial<ProductGroup> & Record<string, unknown>, isCreate = false, userId?: string): Record<string, unknown> => {
-    const dbUpdates: Record<string, unknown> = {};
-
-    // Filter
-    for (const key of ALLOWED_FIELDS) {
-        if (key in updates) {
-            const val = updates[key];
-            if (key === 'user_id' && (val === '' || val === 'default' || !val)) {
-                continue;
-            }
-            dbUpdates[key] = val;
-        }
-    }
-
-    // Auto-timestamps
-    dbUpdates.updated_at = new Date().toISOString();
-    if (isCreate && !dbUpdates.created_at) {
-        dbUpdates.created_at = new Date().toISOString();
-    }
-    
-    // Explicitly set user_id if provided and not already set
-    if (userId && (!dbUpdates.user_id || dbUpdates.user_id === 'default' || dbUpdates.user_id === '')) {
-        dbUpdates.user_id = userId;
-    }
-
-    return dbUpdates;
-};
-
-const getCurrentUserId = async (): Promise<string | undefined> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    return user?.id;
-};
 
 export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[]> => {
   const { data, error } = await supabase
@@ -70,49 +38,8 @@ export const loadGroupsFromCloud = async (userId: string): Promise<ProductGroup[
   }));
 };
 
-export const updateGroup = async (groupId: string, updates: Partial<ProductGroup>) => {
-    const userId = await getCurrentUserId();
-    const dbUpdates = mapToDb(updates, false, userId);
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .update(dbUpdates)
-        .eq('id', groupId);
-
-    if (error) {
-        throw new Error(`Update Group Fail: ${error.message}`);
-    }
-};
-
-export const upsertGroup = async (group: Partial<ProductGroup> & { id: string }) => {
-    const userId = await getCurrentUserId();
-    const dbUpdates = mapToDb(group, false, userId);
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .upsert(dbUpdates, { onConflict: 'id' });
-
-    if (error) {
-        throw new Error(`Upsert Group Fail: ${error.message}`);
-    }
-};
-
 export const saveGroupToCloud = async (group: Partial<ProductGroup> & { id: string }) => {
-  // console.log('saveGroupToCloud group:', group);
   await upsertGroup(group);
-};
-
-export const createGroup = async (groupData: ProductGroup) => {
-    const userId = await getCurrentUserId();
-    const dbUpdates = mapToDb(groupData as unknown as Record<string, unknown>, true, userId);
-    const { error, data } = await supabase
-        .from(TABLE_NAME)
-        .insert(dbUpdates)
-        .select()
-        .single();
-
-    if (error) {
-        throw new Error(`Create Group Fail: ${error.message}`);
-    }
-    return data;
 };
 
 export const getGroupById = async (id: string): Promise<ProductGroup | null> => {
@@ -140,17 +67,6 @@ export const getGroupById = async (id: string): Promise<ProductGroup | null> => 
   };
   
   return result;
-};
-
-export const deleteGroup = async (id: string, userId?: string) => {
-    let query = supabase.from(TABLE_NAME).delete().eq('id', id);
-    if (userId) {
-        query = query.eq('user_id', userId);
-    }
-    const { error } = await query;
-    if (error) {
-        throw new Error(`Delete Group Fail: ${error.message}`);
-    }
 };
 
 export const deleteGroupFromCloud = async (id: string) => {

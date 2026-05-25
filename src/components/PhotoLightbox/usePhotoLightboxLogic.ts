@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { useFeedback, useTasks } from '../../hooks';
+import { useFeedback, useTasks, useTaskExecutor } from '../../hooks';
 
 interface UsePhotoLightboxLogicProps {
   photo: Photo | null;
@@ -29,7 +29,9 @@ export const usePhotoLightboxLogic = ({
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'en');
   const [isCopied, setIsCopied] = useState(false);
-  const [isGroupDataLoading, setIsGroupDataLoading] = useState(false);
+  const { runTask } = useTaskExecutor();
+  const { isTaskRunning } = useTasks();
+  const isGroupDataLoading = isTaskRunning('获取产品组数据');
   
   // Swipe support
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -48,23 +50,15 @@ export const usePhotoLightboxLogic = ({
     setIsImageError(false);
     
     if (photo?.group_id) {
-      setIsGroupDataLoading(true);
-      (async () => {
-        try {
-          const m = await import('../../services/groupService');
-          const data = await m.getGroupById(photo.group_id!);
-          setGroupData(data);
-        } catch (err) {
-          showError(err as Error, '获取产品组数据失败');
-        } finally {
-          setIsGroupDataLoading(false);
-        }
-      })();
+      runTask('获取产品组数据', async () => {
+        const m = await import('../../services/groupService');
+        const data = await m.getGroupById(photo.group_id!);
+        setGroupData(data);
+      }, { silent: true });
     } else {
       setGroupData(null);
-      setIsGroupDataLoading(false);
     }
-  }, [photo?.id, photo?.group_id, showError]);
+  }, [photo?.id, photo?.group_id, runTask]);
 
   const slides = useMemo(() => {
     return (displayPhotos || [])

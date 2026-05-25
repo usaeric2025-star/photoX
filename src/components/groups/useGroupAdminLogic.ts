@@ -5,7 +5,7 @@ import { filterPhotosByMode } from '../../utils/photoVisibility';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { saveGroupToCloud } from '../../services/groupService';
 import { updatePhotosGroupInCloud } from '../../services/photoService';
-import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetailQuery } from '@/hooks';
+import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetailQuery, useAuth } from '@/hooks';
 import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
 import { useGalleryStore, useShallow } from '@/store';
 
@@ -13,6 +13,7 @@ import { useGalleryStore, useShallow } from '@/store';
 export const useGroupAdminLogic = ({
   initialPhotoId,
 }: { initialPhotoId?: string | null }) => {
+  const { user } = useAuth();
   const isAdminMode = useAdminMode();
   const queryClient = useQueryClient();
   const { 
@@ -154,14 +155,14 @@ export const useGroupAdminLogic = ({
         colors: [],
         materials: [],
         cover_photo_id: null,
-        user_id: useGalleryStore.getState().user?.id || '',
+        user_id: user?.id || '',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
     } else {
       setGroupData(null);
     }
-  }, [queriedGroupData, activeGroupId, isGroupDataLoading]);
+  }, [queriedGroupData, activeGroupId, isGroupDataLoading, user]);
 
   useEffect(() => {
     if (activeGroupId && groupData) {

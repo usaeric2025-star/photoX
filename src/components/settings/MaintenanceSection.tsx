@@ -1,7 +1,7 @@
 import React from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ShieldCheck, PackageSearch, Trash2 } from 'lucide-react';
-import { useTaskExecutor } from '@/hooks/core/useTaskExecutor';
+import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
 import { useFeedback } from '@/hooks/shared/useFeedback';
 import { useGalleryStore } from '@/store';
 

@@ -1,9 +1,10 @@
 import React, { useRef, useMemo } from 'react';
 import { Photo, ProductGroup } from '../../types';
+import { GalleryVariant } from '@/types/variant';
 import { Star, Sparkles, Check, Info, Palette, Layers, Quote } from 'lucide-react';
 import { Skeleton } from '../ui/Skeleton';
 import { VirtuosoGrid } from 'react-virtuoso';
-import { VIRTUOSO_CONFIG } from '@/config/virtuoso.config';
+import { GROUP_LIST_CONFIG } from '@/config/virtuoso.config';
 import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { PhotoCard } from '../photo/PhotoCard';
@@ -20,6 +21,7 @@ interface GroupGridViewProps {
   onEndReached?: () => void;
   isFetchingNextPage?: boolean;
   hasNextPage?: boolean;
+  variant?: GalleryVariant;
 }
 
 interface GroupGridContext {
@@ -78,7 +80,8 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   onEndReached,
   isLoading = false,
   isFetchingNextPage,
-  hasNextPage
+  hasNextPage,
+  variant = 'public-showcase'
 }) => {
   const lang = useGalleryStore(s => s.appLang);
   const t = useMemo(() => translations[lang as keyof typeof translations] || translations.zh, [lang]);
@@ -149,8 +152,8 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         ref={virtuosoRef}
         style={{ height: '100%', width: '100%' }}
         totalCount={isLoading ? 12 : photos.length}
-        overscan={VIRTUOSO_CONFIG.overscan(4)}
-        increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
+        overscan={GROUP_LIST_CONFIG.overscan(4)}
+        increaseViewportBy={GROUP_LIST_CONFIG.increaseViewportBy}
         useWindowScroll={false}
         endReached={onEndReached}
         context={virtuosoContext}
@@ -176,7 +179,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
           
           return (
             <PhotoCard
-              variant="admin"
+              variant={variant}
               photo={photo}
               index={index}
               showGroupsCollapsed={false}

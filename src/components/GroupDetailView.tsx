@@ -2,9 +2,11 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight, X, ChevronDown, Share2 } from 'lucide-react';
 import { Photo, Tag, Category, ProductGroup, Manufacturer } from '../types';
+import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '../utils/photoVisibility';
+import { PhotoGridSkeleton } from './photo/PhotoGridSkeleton';
 import { PhotoLightbox } from './PhotoLightbox';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
@@ -31,11 +33,13 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
   initialPhotoId?: string | null;
   isStaffMode?: boolean;
   contactWhatsApp?: (photo: Photo) => void;
+  variant?: GalleryVariant;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
-  const { activeGroupId, setActiveGroupId, shareGroup, initialPhotoId } = props;
-  const isAdminMode = useAdminMode() && !!props.isStaffMode;
+  const { activeGroupId, setActiveGroupId, shareGroup, initialPhotoId, variant } = props;
+  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  const isAdminMode = isManagement;
   const { showError } = useFeedback();
 
   const lang = useGalleryStore(s => s.appLang);
@@ -208,20 +212,25 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
               </div>
             )}
 
-           <GroupGridView 
-             onEndReached={() => {
-               if (hasNextPage && !isFetchingNextPage) {
-                 fetchNextPage();
-               }
-             }}
-             virtuosoRef={virtuosoRef}
-             photos={activeGroupPhotos} 
-             isLoading={isLoading}
-             isFetchingNextPage={isFetchingNextPage}
-             hasNextPage={hasNextPage}
-             highlightId={currentHighlightId}
-             onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
-           />
+            {isLoading ? (
+              <PhotoGridSkeleton columns={3} count={9} />
+            ) : (
+              <GroupGridView 
+                variant={variant}
+                onEndReached={() => {
+                  if (hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                  }
+                }}
+                virtuosoRef={virtuosoRef}
+                photos={activeGroupPhotos} 
+                isLoading={isLoading}
+                isFetchingNextPage={isFetchingNextPage}
+                hasNextPage={hasNextPage}
+                highlightId={currentHighlightId}
+                onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
+              />
+            )}
 
            {/* Unified Photo Lightbox */}
            <AnimatePresence>

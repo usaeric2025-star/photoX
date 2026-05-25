@@ -51,7 +51,6 @@ export const AISecuritySection: React.FC<AISecuritySectionProps> = ({
               value={geminiApiKey}
               onChange={(e) => {
                 setGeminiApiKey(e.target.value);
-                localStorage.setItem('gemini_api_key', e.target.value);
               }}
               onBlur={(e) => {
                 setSettingField('gemini_api_key', e.target.value);
@@ -67,7 +66,6 @@ export const AISecuritySection: React.FC<AISecuritySectionProps> = ({
               value={customModel}
               onChange={(e) => {
                 setCustomModel(e.target.value);
-                localStorage.setItem('ai_custom_model', e.target.value);
               }}
               onBlur={(e) => {
                 setSettingField('custom_model', e.target.value);
@@ -111,7 +109,6 @@ export const AISecuritySection: React.FC<AISecuritySectionProps> = ({
             value={accessPasscode}
             onChange={(e) => {
               setAccessPasscode(e.target.value);
-              localStorage.setItem('access_passcode', e.target.value);
             }}
             onBlur={(e) => {
               setSettingField('access_passcode', e.target.value);

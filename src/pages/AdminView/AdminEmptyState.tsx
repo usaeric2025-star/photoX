@@ -1,5 +1,5 @@
 import React from 'react';
-import { GalleryEmpty } from '../../components/PublicGallery/GalleryEmpty';
+import { GalleryEmpty } from '../../components/shared/GalleryEmpty';
 
 interface AdminEmptyStateProps {
   t: any;

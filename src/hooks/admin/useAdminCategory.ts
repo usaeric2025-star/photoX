@@ -4,7 +4,7 @@ import {
   useUpdateCategoryMutation, useDeleteCategoryMutation,
   useAddTagMutation, useAddCategoryMutation,
   useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
-} from '@/hooks/core/useAdminMutations';
+} from '@/hooks/core/mutations/useAdminMutations';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGalleryStore } from '@/store';
 import { safeArray } from '@/lib/utils';

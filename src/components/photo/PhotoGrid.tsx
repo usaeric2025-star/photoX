@@ -1,27 +1,28 @@
 import React, { useCallback, useMemo, useEffect, useRef } from 'react';
 import { VirtuosoGrid } from 'react-virtuoso';
 import { motion } from 'motion/react';
-import { VIRTUOSO_CONFIG } from '../../config/virtuoso.config';
+import { PHOTO_GRID_CONFIG } from '../../config/virtuoso.config';
 import { Photo } from '../../types';
+import { GalleryVariant } from '@/types/variant';
 import { PhotoCard } from '../photo/PhotoCard';
 import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
-import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
-import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
+import { PhotoGridSkeleton } from './PhotoGridSkeleton';
+import { GalleryEmpty } from '../shared/GalleryEmpty';
 import { useCategoriesQuery, useTagsQuery, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
 import { PAGINATION } from '../../constants/config';
 
 interface MemoizedPhotoCardProps {
   index: number;
   photo: Photo;
-  isAdminMode: boolean;
+  variant: GalleryVariant;
   showGroupsCollapsed: boolean;
   onGroupClick: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (photo: Photo) => void;
 }
 
 const MemoizedPhotoCard = React.memo(({ 
-  index, photo, isAdminMode, showGroupsCollapsed, onGroupClick, 
+  index, photo, variant, showGroupsCollapsed, onGroupClick, 
   onLightboxOpen
 }: MemoizedPhotoCardProps) => {
 
@@ -31,7 +32,7 @@ const MemoizedPhotoCard = React.memo(({
 
   return (
     <PhotoCard 
-      variant={isAdminMode ? 'admin' : 'public'}
+      variant={variant}
       photo={photo}
       index={index}
       showGroupsCollapsed={showGroupsCollapsed}
@@ -85,7 +86,7 @@ const VIRTUOSO_COMPONENTS = {
   Footer: MemoizedFooter
 };
 
-export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo(({ virtuosoRef }) => {
+export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: GalleryVariant }> = React.memo(({ virtuosoRef, variant }) => {
   const { 
     columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
     isStaffMode, viewMode, activeGroupId, activePhotoId,
@@ -109,6 +110,8 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   const isHookAdminMode = useAdminMode();
   const isPageAdmin = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
   const isAdminMode = isHookAdminMode || isPageAdmin || viewMode === 'admin' || isStaffMode;
+
+  const effectiveVariant: GalleryVariant = variant || (isAdminMode ? 'full-management' : 'public-showcase');
 
   // Real-time photo query based on store filters
   const infinitePhotosQuery = useInfinitePhotos({
@@ -196,7 +199,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
         transition={{ duration: 0.2 }}
         className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto"
       >
-        <GallerySkeleton columns={columns} count={skeletonCount} />
+        <PhotoGridSkeleton columns={columns} count={skeletonCount} />
       </motion.div>
     );
   }
@@ -231,8 +234,8 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
             loadMorePhotos();
           }
         }}
-        overscan={VIRTUOSO_CONFIG.overscan(columns)}
-        increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
+        overscan={PHOTO_GRID_CONFIG.overscan(columns)}
+        increaseViewportBy={PHOTO_GRID_CONFIG.increaseViewportBy}
         useWindowScroll={false}
         itemClassName="virtuoso-grid-item"
         listClassName={`grid gap-2 px-1.5 py-2 pb-36 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
@@ -241,7 +244,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
             <MemoizedPhotoCard
               index={index}
               photo={photo}
-              isAdminMode={isAdminMode}
+              variant={effectiveVariant}
               showGroupsCollapsed={showGroupsCollapsed}
               onGroupClick={handleGroupClick}
               onLightboxOpen={handleLightboxOpen}

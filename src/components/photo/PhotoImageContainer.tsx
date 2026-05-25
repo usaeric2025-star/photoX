@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { thumbHashToDataURL } from '../../utils/thumbHash';
+import { ResponsivePhoto } from '../shared/ResponsivePhoto';
+import { Photo } from '@/types';
 
 // Shared set to keep track of loaded images to prevent flickering on re-renders
 export const loadedImagesCache = new Set<string>();
@@ -17,6 +19,7 @@ const getBaseUrl = (url?: string): string => {
 };
 
 export interface PhotoImageContainerProps {
+  photo: Photo;
   photoId?: string;
   src: string | undefined;
   thumbHash?: string | null;
@@ -28,6 +31,7 @@ export interface PhotoImageContainerProps {
 }
 
 export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
+  photo,
   photoId,
   src,
   thumbHash,
@@ -81,13 +85,13 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
   return (
     <div 
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full select-none overflow-hidden ${className}`}
+      className={`absolute top-0 left-0 w-full h-full select-none overflow-hidden ${className}`}
       onClick={onClick}
     >
       {/* 1. Pulse fallback if neither loaded nor having a thumbhash placeholder */}
       {!isImageError && !placeholderDataUrl && (
         <div 
-          className={`absolute inset-0 bg-slate-200 flex items-center justify-center transition-opacity duration-300 ${
+          className={`absolute top-0 left-0 w-full h-full bg-slate-200 flex items-center justify-center transition-opacity duration-300 ${
             isImageLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100 animate-pulse'
           }`}
         >
@@ -97,7 +101,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
 
       {/* 2. Image error state */}
       {isImageError && (
-        <div className="absolute inset-0 bg-slate-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
+        <div className="absolute top-0 left-0 w-full h-full bg-slate-100 flex flex-col items-center justify-center gap-2 p-4 text-center">
           <ImageIcon className="text-slate-300 w-8 h-8 opacity-50" />
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
             Load Failed
@@ -111,7 +115,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
           draggable={false}
           src={placeholderDataUrl} 
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none filter blur-sm scale-110 transition-opacity duration-350 ${
+          className={`absolute top-0 left-0 w-full h-full object-cover pointer-events-none filter blur-sm scale-110 transition-opacity duration-350 ${
             isInitiallyLoaded ? 'opacity-0 pointer-events-none' : isImageLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
         />
@@ -119,26 +123,12 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
 
       {/* 4. The actual loaded image */}
       {!isImageError && src && shouldLoad && (
-        <img 
-          draggable={false}
-          loading="eager"
-          decoding="async"
-          referrerPolicy="no-referrer"
-          src={src} 
-          alt={alt}
+        <ResponsivePhoto 
+          photo={photo}
+          variant="md"
           className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${
             isInitiallyLoaded ? 'opacity-100' : isImageLoaded ? 'opacity-100' : 'opacity-0'
           } ${imgClassName}`}
-          onLoad={() => {
-            if (cacheKey) {
-              loadedImagesCache.add(cacheKey);
-            }
-            setIsImageLoaded(true);
-          }}
-          onError={() => {
-            setIsImageLoaded(true);
-            setIsImageError(true);
-          }}
         />
       )}
     </div>

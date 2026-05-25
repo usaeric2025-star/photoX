@@ -1,11 +1,13 @@
-import { useGalleryStore } from '@/store';
+import { useGalleryStore, useShallow } from '@/store';
 import { useCallback } from 'react';
 
 export const useMultiSelect = () => {
-  const isMultiSelect = useGalleryStore((state) => state.isMultiSelect);
-  const selectedIds = useGalleryStore((state) => state.selectedIds) ?? [];
-  const setIsMultiSelect = useGalleryStore((state) => state.setIsMultiSelect);
-  const setSelectedIds = useGalleryStore((state) => state.setSelectedIds);
+  const { isMultiSelect, selectedIds, setIsMultiSelect, setSelectedIds } = useGalleryStore(useShallow((state) => ({
+    isMultiSelect: state.isMultiSelect,
+    selectedIds: state.selectedIds ?? [],
+    setIsMultiSelect: state.setIsMultiSelect,
+    setSelectedIds: state.setSelectedIds,
+  })));
 
   const enable = useCallback((initialId?: string) => {
     setIsMultiSelect(true);

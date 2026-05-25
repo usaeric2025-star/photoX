@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { Photo, Category, Manufacturer } from '../../types';
+import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
@@ -9,10 +10,8 @@ import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
 import { translations } from '../../lib/translations';
 
-export type PhotoCardVariant = 'admin' | 'public';
-
 export interface PhotoCardProps {
-  variant: PhotoCardVariant;
+  variant: GalleryVariant;
   photo: Photo;
   index: number;
   showGroupsCollapsed: boolean;
@@ -23,20 +22,21 @@ export interface PhotoCardProps {
   hideDetails?: boolean;
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo; variant: PhotoCardVariant }> = React.memo(({ photo, variant }) => {
+const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant }> = React.memo(({ photo, variant }) => {
+  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
       {photo.group_id && photo.member_count !== undefined && photo.member_count > 1 && (
         <div className={
-          variant === 'admin'
+          isManagement
             ? "bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none"
             : "bg-black/40 backdrop-blur-[4px] px-2 py-0.5 rounded-md text-[9px] text-white font-bold flex items-center gap-1 border border-white/10 pointer-events-none"
         }>
-          <Layers size={variant === 'admin' ? 10 : 9} strokeWidth={2.5} />
+          <Layers size={isManagement ? 10 : 9} strokeWidth={2.5} />
           {photo.member_count}
         </div>
       )}
-      {variant === 'admin' && photo.is_pinned && (
+      {isManagement && photo.is_pinned && (
         <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 shadow-sm pointer-events-none">
           <Heart size={8} className="fill-current" />
         </div>
@@ -47,7 +47,7 @@ const PhotoStatusBadges: React.FC<{ photo: Photo; variant: PhotoCardVariant }> =
 PhotoStatusBadges.displayName = 'PhotoStatusBadges';
 
 const SelectionOverlay: React.FC<{ isSelected: boolean }> = React.memo(({ isSelected }) => (
-  <div className={`absolute inset-0 transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10 ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
+  <div className={`absolute top-0 left-0 w-full h-full transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10 ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
      <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
         {isSelected && <Check size={16} className="text-white" />}
      </div>
@@ -119,7 +119,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     tags.reduce((acc, t) => ({ ...acc, [t.id]: t.name }), {} as Record<string, string>),
     [tags]
   );
-  const { canEdit } = usePermission();
+  const { can } = usePermission();
 
   const enable = useCallback(() => {
     setIsMultiSelect(true);
@@ -158,7 +158,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       return;
     }
 
-    if (variant === 'admin') {
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+    if (isManagement) {
       if (isMultiSelect && !e.shiftKey) {
         toggle();
       } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
@@ -176,13 +177,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [variant, isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox, showGroupsCollapsed, onClick]);
 
   const handleLongPress = useCallback(() => {
-    if (variant !== 'admin' || !canEdit) return;
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+    if (!isManagement || !can('photo:edit')) return;
     if (!isMultiSelect) {
       enable();
     } else {
       toggle();
     }
-  }, [variant, isMultiSelect, enable, toggle, canEdit]);
+  }, [variant, isMultiSelect, enable, toggle, can]);
 
   const displayCatName = useMemo(() => 
     getTranslatedCategoryName(photo.category_id, categories, lang, t),
@@ -209,8 +211,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   );
 
   const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
+  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
 
-  const cardSelectedClasses = variant === 'admin'
+  const cardSelectedClasses = isManagement
     ? (isMultiSelect && isSelected 
         ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
         : 'md:hover:scale-[1.02] active:scale-[0.95]')
@@ -221,7 +224,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const isTouchRef = useRef(false);
 
   const startPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (variant !== 'admin' || !canEdit) return;
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+    if (!isManagement || !can('photo:edit')) return;
     if (e.type === 'touchstart') {
       isTouchRef.current = true;
     } else if (isTouchRef.current && e.type === 'mousedown') {
@@ -242,7 +246,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [variant, handleLongPress]);
 
   const cancelPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (variant !== 'admin') return;
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+    if (!isManagement) return;
     if (pressTimerRef.current) {
       clearTimeout(pressTimerRef.current);
       pressTimerRef.current = null;
@@ -253,7 +258,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    if (variant === 'admin') {
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+    if (isManagement) {
       handleLongPress();
     } else {
       // share logic moved inside or use feedback hook
@@ -269,7 +275,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [onTogglePinned, photo]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    if (variant === 'admin') {
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+    if (isManagement) {
       if (pressTimerRef.current) {
         clearTimeout(pressTimerRef.current);
         pressTimerRef.current = null;
@@ -287,16 +294,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [variant, handleClick]);
 
   const imgClassName = useMemo(() => {
-    if (variant === 'admin') {
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+    if (isManagement) {
       return `${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''}`;
     }
     return '';
   }, [variant, isMultiSelect, isSelected, is_hidden]);
 
   const containerClasses = useMemo(() => {
+    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     const base = "aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group";
-    const bg = variant === 'admin' ? 'bg-slate-50 rounded-lg' : 'bg-slate-100 rounded-xl';
-    const border = variant === 'admin' && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : '';
+    const bg = isManagement ? 'bg-slate-50 rounded-lg' : 'bg-slate-100 rounded-xl';
+    const border = isManagement && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : '';
     return `${base} ${bg} ${cardSelectedClasses} ${border} ${className}`;
   }, [variant, is_hidden, cardSelectedClasses, className]);
 
@@ -314,16 +323,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       className={containerClasses}
     >
       <PhotoImageContainer
+        photo={photo}
         photoId={photo.id}
         src={thumbSrc}
         thumbHash={photo.thumb_hash}
         alt={photo.name || 'Photo'}
-        loading={shouldEagerLoad ? 'eager' : 'lazy'}
+        loading="eager"
         imgClassName={imgClassName}
       />
 
-      {variant === 'admin' && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
-      {variant === 'admin' && is_hidden && !isMultiSelect && (
+      {isManagement && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
+      {isManagement && is_hidden && !isMultiSelect && (
         <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
           <EyeOff size={24} className="text-white/60 drop-shadow" />
         </div>
@@ -331,7 +341,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       
       <PhotoStatusBadges photo={photo} variant={variant} />
 
-      {variant === 'admin' && canEdit && onTogglePinned && (
+      {isManagement && can('photo:toggle-pinned') && onTogglePinned && (
          <button 
            onClick={handleTogglePinnedClick}
            className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.is_pinned ? 'text-red-500' : ''} z-20 hover:scale-115 active:scale-95 transition-transform`}

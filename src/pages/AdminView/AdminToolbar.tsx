@@ -1,6 +1,7 @@
 import React from 'react';
-import { AdminHeader } from '@/components/admin/AdminHeader';
+import { GalleryVariant } from '@/types/variant';
 import { Photo } from '@/types';
+import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
 
 interface AdminToolbarProps {
   photos: Photo[];
@@ -9,25 +10,22 @@ interface AdminToolbarProps {
   loginWithGoogle: () => Promise<any>;
   onRefresh: () => void;
   cloudCount: number;
-  lang: string;
   isSyncing: boolean;
   adminPreviewMode: 'private' | 'public';
   setAdminPreviewMode: (m: 'private' | 'public') => void;
+  variant?: GalleryVariant;
 }
 
 export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
   return (
-    <AdminHeader 
-      filteredPhotos={props.photos}
+    <UnifiedHeader 
+      variant={props.variant || 'full-management'}
+      photos={props.photos}
       handleBatchAiIdentifyTrigger={props.handleBatchAiIdentifyTrigger}
       handleManageClick={props.onManageClick}
-      loginWithGoogle={props.loginWithGoogle}
       onRefresh={props.onRefresh}
-      photosCount={props.photos.length}
-      totalPhotosCount={props.photos.length}
       cloudCount={props.cloudCount}
-      appLang={props.lang as any}
-      isAnalyzing={props.isSyncing}
+      isRefreshing={props.isSyncing}
       adminPreviewMode={props.adminPreviewMode}
       setAdminPreviewMode={props.setAdminPreviewMode}
     />
