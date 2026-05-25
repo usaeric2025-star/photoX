@@ -95,6 +95,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   className = '', onClick,
   hideDetails = false
 }) => {
+  // --- Diagnostic Log ---
   const isSelected = useGalleryStore(s => (s.selectedIds ?? []).includes(photo.id));
 
   const { 

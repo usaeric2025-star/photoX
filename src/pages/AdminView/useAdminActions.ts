@@ -109,7 +109,7 @@ export const useAdminActions = (
     if (checkSyncLock()) return;
     filters.handleRefresh();
     disable();
-    queryClient.invalidateQueries({ queryKey: ['photos'] });
+    queryClient.invalidateQueries({ queryKey: ['photos', 'infinite'] });
     window.scrollTo({ top: 0, behavior: 'smooth' });
     infinitePhotosQuery.refetch();
     showSuccess('已重置所有筛选');

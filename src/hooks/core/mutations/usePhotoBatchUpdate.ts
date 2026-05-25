@@ -11,7 +11,7 @@ export const usePhotoBatchUpdate = createMutationHook({
   mutationFn: async (vars: { userId: string, ids: string[]; updates: Partial<Photo> }) => {
     return await batchUpdatePhotosInCloud(vars.userId, vars.ids, vars.updates);
   },
-  invalidateKeys: [['photos']],
+  invalidateKeys: [['photos', 'infinite'], ['photos', 'group']],
   onSuccessMessage: (data, vars) => `已成功更新 ${vars.ids.length} 张照片`,
   taskLevel: 'heavy',
 });

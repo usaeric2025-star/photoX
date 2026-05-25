@@ -72,7 +72,8 @@ export const useGroupAdminLogic = ({
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
   const virtuosoRef = useRef<any>(null);
 
-  const { data: dbGroupPhotos = [], isLoading: isGroupPhotosLoading } = useGroupPhotosQuery(activeGroupId || '', isAdminMode);
+  const { data: dbGroupPhotosData, isLoading: isGroupPhotosLoading } = useGroupPhotosQuery(activeGroupId || '', isAdminMode);
+  const dbGroupPhotos = useMemo(() => dbGroupPhotosData ?? [], [dbGroupPhotosData]);
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];

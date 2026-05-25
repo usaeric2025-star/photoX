@@ -28,6 +28,9 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     batchEditingIds: s.batchEditingIds
   })));
 
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
+  
   // ... (Consolidate PhotoManagement logic here...)
   
   // Calculate common attributes for batch editing
@@ -43,7 +46,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     if (JSON.stringify(lastBatchIds.current) === JSON.stringify(batchEditingIds)) return;
     lastBatchIds.current = batchEditingIds;
     
-    const selectedPhotos = photos.filter(p => batchEditingIds.includes(p.id));
+    const selectedPhotos = photosRef.current.filter(p => batchEditingIds.includes(p.id));
     if (selectedPhotos.length === 0) return;
 
     // Helper for simple fields
@@ -142,20 +145,20 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
         const dbGroupPhotos = await loadPhotosByGroupId(photo.group_id, true);
         affectedIds = dbGroupPhotos.length > 0
           ? dbGroupPhotos.map((p: Photo) => p.id)
-          : photos.filter(p => p.group_id === photo.group_id).map(p => p.id);
+          : photosRef.current.filter(p => p.group_id === photo.group_id).map(p => p.id);
       } catch (e) {
-        affectedIds = photos.filter(p => p.group_id === photo.group_id).map(p => p.id);
+        affectedIds = photosRef.current.filter(p => p.group_id === photo.group_id).map(p => p.id);
       }
     }
     await updatePhotosBulk(affectedIds, { is_pinned: newStatus });
-  }, [user, isStaffMode, photos, updatePhotosBulk]);
+  }, [user, isStaffMode, updatePhotosBulk]);
 
   const setGroupCover = useCallback(async (id: string, groupId: string) => {
     const isStaff = isStaffMode || !!user;
     if (!isStaff) return;
 
     try {
-      const oldCover = photos.find(p => p.group_id === groupId && p.is_group_cover);
+      const oldCover = photosRef.current.find(p => p.group_id === groupId && p.is_group_cover);
       
       const updates = [];
       if (oldCover && oldCover.id !== id) {
@@ -168,7 +171,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     } catch (err: any) {
       // Error handled by mutation
     }
-  }, [user, isStaffMode, photos, updatePhotosBulk, showSuccess]);
+  }, [user, isStaffMode, updatePhotosBulk, showSuccess]);
 
   const handleGroupPhotos = useCallback(async (photoIds: string[]) => {
     console.log('[useAdminEdit] Grouping photos:', photoIds);
@@ -200,12 +203,12 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     if (!ids || ids.length === 0) return;
     
     // Find if the majority or any are visible to decide target state
-    const targetPhotos = photos.filter(p => ids.includes(p.id));
+    const targetPhotos = photosRef.current.filter(p => ids.includes(p.id));
     const allHidden = targetPhotos.every(p => p.is_hidden);
     const nextStatus = !allHidden;
 
     await updatePhotosBulk(ids, { is_hidden: nextStatus });
-  }, [photos, updatePhotosBulk]);
+  }, [updatePhotosBulk]);
 
   const handleUngroup = useCallback(async (groupId: string) => {
     try {

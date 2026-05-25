@@ -92,10 +92,15 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     }
   }, [activeGroupId]);
 
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (activeGroupId) {
-      sessionStorage.setItem(`group_scroll_${activeGroupId}`, e.currentTarget.scrollTop.toString());
-    }
+    if (!activeGroupId) return;
+    const scrollTop = e.currentTarget.scrollTop;
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => {
+      sessionStorage.setItem(`group_scroll_${activeGroupId}`, scrollTop.toString());
+    }, 100);
   };
 
 
@@ -216,6 +221,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
               <PhotoGridSkeleton columns={3} count={9} />
             ) : (
               <GroupGridView 
+                key={activeGroupId}
                 variant={variant}
                 onEndReached={() => {
                   if (hasNextPage && !isFetchingNextPage) {

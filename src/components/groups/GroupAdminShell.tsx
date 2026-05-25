@@ -67,6 +67,25 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
+  const dragState = React.useRef({ draggedPhotoId, handleReorder, isAdminMode, isMultiSelect });
+  React.useEffect(() => {
+    dragState.current = { draggedPhotoId, handleReorder, isAdminMode, isMultiSelect };
+  }, [draggedPhotoId, handleReorder, isAdminMode, isMultiSelect]);
+
+  const stableGetPhotoProps = useCallback((photo: Photo) => ({
+    draggable: dragState.current.isAdminMode && !dragState.current.isMultiSelect,
+    onDragStart: () => setDraggedPhotoId(photo.id),
+    onDragOver: (e: React.DragEvent) => e.preventDefault(),
+    onDrop: (e: React.DragEvent) => {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      const currentDraggedId = dragState.current.draggedPhotoId;
+      if (currentDraggedId) {
+        dragState.current.handleReorder(currentDraggedId, photo.id);
+        setDraggedPhotoId(null);
+      }
+    }
+  }), [setDraggedPhotoId]);
+
   const handleEditPhoto = useCallback((p: Photo) => {
     if (storeEditPhoto) {
        storeEditPhoto(p);
@@ -144,24 +163,14 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
            />
 
            <GroupGridView 
+             key={activeGroupId}
              virtuosoRef={virtuosoRef}
              photos={activeGroupPhotos}
              isLoading={isGroupPhotosLoading}
                highlightId={currentHighlightId}
                onPhotoClick={handlePhotoClick}
                onPhotoContextMenu={handlePhotoContextMenu}
-               getPhotoProps={useCallback((photo) => ({
-                 draggable: isAdminMode && !isMultiSelect,
-                 onDragStart: () => setDraggedPhotoId(photo.id),
-                 onDragOver: (e: React.DragEvent) => e.preventDefault(),
-                 onDrop: (e: React.DragEvent) => {
-                   if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                   if (draggedPhotoId) {
-                     handleReorder(draggedPhotoId, photo.id);
-                     setDraggedPhotoId(null);
-                   }
-                 }
-               }), [isAdminMode, isMultiSelect, draggedPhotoId, handleReorder])}
+               getPhotoProps={stableGetPhotoProps}
              />
 
            {/* Multi-Select Floating Bar */}

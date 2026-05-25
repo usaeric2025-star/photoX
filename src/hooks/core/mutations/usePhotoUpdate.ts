@@ -11,6 +11,6 @@ export const usePhotoUpdate = createMutationHook({
   mutationFn: async (vars: { id: string; updates: Partial<Photo> }) => {
     return await updatePhotoInCloud(vars.id, vars.updates);
   },
-  invalidateKeys: [['photos']],
+  invalidateKeys: [['photos', 'infinite'], ['photos', 'group']],
   onSuccessMessage: '照片更新成功',
 });

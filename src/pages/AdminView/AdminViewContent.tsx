@@ -90,30 +90,26 @@ export const AdminViewContent: React.FC = () => {
 
   const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
 
-  const {
-    togglePinned, handleDeletePhoto, handleUpdatePhoto, handleToggleHidden,
-    handleGroupPhotos, handleUngroup, handleBatchAiIdentifyTrigger, handleBatchEdit,
-    onEditPhotoById, handleAiAnalyze, setGroupCover, abortAnalysis
-  } = logic;
-
   const logicRef = React.useRef(logic);
-  logicRef.current = logic;
+  useEffect(() => {
+    logicRef.current = logic;
+  }, [logic]);
 
   const photoActions = React.useMemo(() => ({
-    onTogglePinned: logic.togglePinned,
-    onDeletePhoto: logic.handleDeletePhoto,
-    onUpdatePhoto: logic.handleUpdatePhoto,
-    onUpdatePhotosBulk: (ids, updates, taskName) => logic.handleUpdatePhotosBulk(ids, updates, { taskName }),
-    onToggleHidden: logic.handleToggleHidden,
-    onGroupPhotos: logic.handleGroupPhotos,
-    onUngroup: logic.handleUngroup,
-    onBatchAiAnalyze: logic.handleBatchAiIdentifyTrigger,
-    onBatchEdit: logic.handleBatchEdit,
-    onEditPhoto: logic.onEditPhotoById,
-    onAiAnalyze: logic.handleAiAnalyze,
-    onSetGroupCover: logic.setGroupCover,
-    onCancelAnalyze: logic.abortAnalysis
-  }), [logic]);
+    onTogglePinned: (photo: Photo) => logicRef.current.togglePinned(photo),
+    onDeletePhoto: (id: string | string[]) => logicRef.current.handleDeletePhoto(id),
+    onUpdatePhoto: (id: string, updates: Partial<Photo>) => logicRef.current.handleUpdatePhoto(id, updates),
+    onUpdatePhotosBulk: (ids: string[], updates: Partial<Photo>, taskName?: string) => logicRef.current.handleUpdatePhotosBulk(ids, updates, { taskName }),
+    onToggleHidden: (photo: Photo) => logicRef.current.handleToggleHidden(photo),
+    onGroupPhotos: (ids: string[]) => logicRef.current.handleGroupPhotos(ids),
+    onUngroup: (groupId: string) => logicRef.current.handleUngroup(groupId),
+    onBatchAiAnalyze: (photos: Photo[]) => logicRef.current.handleBatchAiIdentifyTrigger(photos),
+    onBatchEdit: (ids: string[]) => logicRef.current.handleBatchEdit(ids),
+    onEditPhoto: (p: Photo | string) => logicRef.current.onEditPhotoById(p),
+    onAiAnalyze: (photo: Photo) => logicRef.current.handleAiAnalyze(photo),
+    onSetGroupCover: (id: string, gid: string) => logicRef.current.setGroupCover(id, gid),
+    onCancelAnalyze: () => logicRef.current.abortAnalysis()
+  }), []);
 
   if (authChecked && !user && !isStaffMode) {
     return <LoginScreen loginWithGoogle={async () => { await logic.loginWithGoogle(); }} isLoading={isSyncing} />;

@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useCallback } from 'react';
 import { Photo, ProductGroup } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Star, Sparkles, Check, Info, Palette, Layers, Quote } from 'lucide-react';
@@ -151,6 +151,11 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
       <VirtuosoGrid
         ref={virtuosoRef}
         style={{ height: '100%', width: '100%' }}
+        data={photos}
+        computeItemKey={(index, item) => {
+          const p = item as any;
+          return p ? `photo-${p.id}` : `loading-${index}`;
+        }}
         totalCount={isLoading ? 12 : photos.length}
         overscan={GROUP_LIST_CONFIG.overscan(4)}
         increaseViewportBy={GROUP_LIST_CONFIG.increaseViewportBy}
@@ -159,8 +164,8 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         context={virtuosoContext}
         components={GROUP_VIRTUOSO_COMPONENTS}
         listClassName="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-6 p-3 sm:p-6"
-        itemContent={(index) => {
-          if (isLoading) {
+        itemContent={useCallback((index: number, item: any) => {
+          if (isLoading || !item) {
             return (
               <div 
                 className="bg-white rounded-[1.25rem] border border-slate-100 p-1.5 flex flex-col h-full animate-pulse shadow-sm"
@@ -173,9 +178,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
               </div>
             );
           }
-          const photo = photos[index];
-          if (!photo) return null;
-          
+          const photo = item as any;
           const isHighlighted = highlightId === photo.id;
           const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
           
@@ -190,7 +193,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
               {...extraProps}
             />
           );
-        }}
+        }, [isLoading, highlightId, getPhotoProps, variant, onPhotoClick])}
       />
     </div>
   );
