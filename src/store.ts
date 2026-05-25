@@ -79,6 +79,8 @@ interface StoreState {
   resetForm: () => void;
   isSidebarCollapsed: boolean;
   setIsSidebarCollapsed: (is: boolean) => void;
+  showPassPrompt: boolean;
+  setShowPassPrompt: (show: boolean) => void;
 }
 
 const defaultForm: ProductFormData = {
@@ -262,6 +264,8 @@ export const useGalleryStore = create<StoreState>()((set) => ({
     localStorage.setItem('photo_isSidebarCollapsed', String(isSidebarCollapsed));
     set({ isSidebarCollapsed });
   },
+  showPassPrompt: false,
+  setShowPassPrompt: (showPassPrompt) => set({ showPassPrompt }),
 }));
 
 export const useStore = useGalleryStore;

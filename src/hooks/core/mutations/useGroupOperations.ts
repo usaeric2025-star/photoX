@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
-import { groupPhotos, ungroupPhotos, removePhotosFromGroup } from '@/services/photoService';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
 import { Photo } from '@/types';
 

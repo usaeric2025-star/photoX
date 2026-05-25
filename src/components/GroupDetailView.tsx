@@ -146,7 +146,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[200] bg-brand-bg overflow-y-auto pt-safe flex flex-col"
+          className="fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col"
         >
            {/* Top Header */}
            <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">

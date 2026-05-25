@@ -9,7 +9,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
   const { showSuccess, showError } = useFeedback();
   const { mutateAsync: deletePhotoMut } = useDeletePhotoMutation();
   const { mutateAsync: updatePhotoMut } = useUpdatePhotoMutation();
-  const { mutateAsync: batchUpdateMut } = useBatchEditMutation(user?.id || '');
+  const { mutateAsync: batchUpdateMut } = useBatchEditMutation(user?.id || '')();
   const { mutateAsync: groupPhotosMut } = useGroupPhotosMutation();
   const { mutateAsync: ungroupMut } = useUngroupMutation();
 

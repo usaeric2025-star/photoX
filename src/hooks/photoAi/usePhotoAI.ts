@@ -20,7 +20,7 @@ export const usePhotoAI = (
   
   const single = usePhotoAISingle(
     user, geminiApiKey, aiProvider, customModel, 
-    categories, tags, manufacturers, tagNameToIdMap, photosRef, base
+    categories, tags, manufacturers, base
   );
   
   const batch = usePhotoAIBatch(

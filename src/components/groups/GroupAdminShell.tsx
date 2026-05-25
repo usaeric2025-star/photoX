@@ -130,7 +130,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[200] bg-brand-bg overflow-y-auto pt-safe flex flex-col"
+            className="fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col"
           >
            {/* Top Header */}
            <GroupHeader 

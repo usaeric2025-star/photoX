@@ -4,7 +4,7 @@ export const VIRTUOSO_CONFIG = {
 };
 
 export const PHOTO_GRID_CONFIG = {
-  overscan: (columns: number) => 100, // Fixed default for grid
+  overscan: (columns: number) => 200,
   increaseViewportBy: 400,
 };
 

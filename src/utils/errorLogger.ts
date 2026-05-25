@@ -4,6 +4,16 @@ import { supabase } from '@/lib/supabase';
 // Helper to get app mode
 const getCurrentVariant = () => typeof window !== 'undefined' ? (window as any).__PHOTOX_MODE__ || 'public' : 'public';
 
+const handledErrors = new WeakSet<Error>();
+
+export function markErrorAsHandled(error: unknown): void {
+  if (error instanceof Error) handledErrors.add(error);
+}
+
+export function isErrorHandled(error: unknown): boolean {
+  return error instanceof Error && handledErrors.has(error);
+}
+
 export type LogLevel = 'error' | 'success';
 
 interface EventContext {

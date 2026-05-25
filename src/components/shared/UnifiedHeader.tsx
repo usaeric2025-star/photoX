@@ -9,6 +9,8 @@ import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { loginWithGoogle } from '@/services/supabaseService';
 import { RefreshMenu } from './RefreshMenu';
 import { ToolsMenu } from './ToolsMenu';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/config/constants';
 
 interface UnifiedHeaderProps {
   variant: GalleryVariant;
@@ -82,12 +84,16 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogin = async () => {
-    try {
-      await loginWithGoogle();
-    } catch(e) {
-      showError(e, '登录失败');
-    }
+  const navigate = useNavigate();
+  const handleLogin = () => {
+    useGalleryStore.getState().setShowPassPrompt(true);
+  };
+
+  const handleExitStaffMode = () => {
+    useGalleryStore.getState().setIsStaffMode(false);
+    sessionStorage.removeItem('isStaffMode');
+    localStorage.removeItem('isStaffMode');
+    window.location.reload();
   };
 
   const isEffectiveStaffMode = isStaffMode && !user;
@@ -109,11 +115,12 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
         {(totalCount !== undefined || cloudCount !== undefined) && (
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner">
-            <div className="flex items-center gap-1 font-mono text-[11px]">
-              <span className="font-bold text-brand-navy/80">{totalCount ?? photos.length}</span>
+            <div className="flex items-center gap-1 font-mono text-[12px] text-brand-navy/90">
+              <span className="font-bold">{totalCount ?? photos.length}</span>
+              <span className="text-[12px] font-sans font-medium text-brand-navy/80 ml-0.5">{t.photosUnit}</span>
               {isManagement && (
                 <>
-                  <span className="text-brand-navy/30">/</span>
+                  <span className="text-brand-navy/30 mx-1">/</span>
                   <span className="font-bold text-blue-600">{cloudCount ?? '?'}</span>
                 </>
               )}
@@ -174,25 +181,27 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </button>
           )}
 
-          <div className="relative" ref={toolsRef}>
-            <button 
-              onClick={() => setShowToolsMenu(!showToolsMenu)}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-brand-navy/10 text-brand-navy/60 flex items-center justify-center shadow-sm"
-            >
-              <Menu size={18} />
-            </button>
-            <ToolsMenu 
-              show={showToolsMenu} 
-              t={t} 
-              handleOpenSettings={handleManageClick}
-              isStaffMode={isEffectiveStaffMode}
-              handleExitStaffMode={() => {}}
-              currentLang={lang}
-              onSetLang={(l) => setAppLang(l as any)}
-              adminPreviewMode={adminPreviewMode}
-              toggleAdminPreviewMode={() => setAdminPreviewMode?.(adminPreviewMode === 'private' ? 'public' : 'private')}
-            />
-          </div>
+          {!isPublic && (
+            <div className="relative" ref={toolsRef}>
+              <button 
+                onClick={() => setShowToolsMenu(!showToolsMenu)}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-brand-navy/10 text-brand-navy/60 flex items-center justify-center shadow-sm"
+              >
+                <Menu size={18} />
+              </button>
+              <ToolsMenu 
+                show={showToolsMenu} 
+                t={t} 
+                handleOpenSettings={handleManageClick}
+                isStaffMode={isEffectiveStaffMode}
+                handleExitStaffMode={handleExitStaffMode}
+                currentLang={lang}
+                onSetLang={(l) => setAppLang(l as any)}
+                adminPreviewMode={adminPreviewMode}
+                toggleAdminPreviewMode={() => setAdminPreviewMode?.(adminPreviewMode === 'private' ? 'public' : 'private')}
+              />
+            </div>
+          )}
         </div>
 
         {isPublic && !user && (

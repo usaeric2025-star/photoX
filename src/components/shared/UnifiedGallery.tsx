@@ -65,7 +65,9 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
     debouncedSearchQuery: s.debouncedSearchQuery,
     isStaffMode: s.isStaffMode,
     setIsStaffMode: s.setIsStaffMode,
-    viewMode: s.viewMode
+    viewMode: s.viewMode,
+    showPassPrompt: s.showPassPrompt,
+    setShowPassPrompt: s.setShowPassPrompt
   })));
 
   // Core Data fetchers (handled differently per variant or shared)
@@ -121,12 +123,11 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
     return false;
   }, [isManagement, tasks]);
 
-  const { isStaffMode, setIsStaffMode } = store;
+  const { isStaffMode, setIsStaffMode, showPassPrompt, setShowPassPrompt } = store;
 
   const navigate = useNavigate();
 
   // State for login/WhatsApp logic (Public mode)
-  const [showPassPrompt, setShowPassPrompt] = useState(false);
   const [passInput, setPassInput] = useState('');
   const [passError, setPassError] = useState(false);
   const [showWhatsAppChoice, setShowWhatsAppChoice] = useState(false);

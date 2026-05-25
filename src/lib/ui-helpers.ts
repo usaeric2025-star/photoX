@@ -66,7 +66,7 @@ export const isUncategorizedName = (name: string, t: TranslationType, catId?: st
  * Gets a cache-busted image URL.
  */
 export const getCacheBustedImageUrl = (photo: Photo, type: 'image' | 'thumb' = 'image'): string => {
-  const url = type === 'thumb' ? (photo.thumb_url || photo.image_url || photo.uri) : (photo.image_url || photo.uri);
+  const url = type === 'thumb' ? (photo.thumbnail_sm_url || photo.image_url || photo.uri) : (photo.image_url || photo.uri);
   if (!url) return '';
   if (url.startsWith('data:')) return url;
   

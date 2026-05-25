@@ -19,6 +19,7 @@ export interface Photo {
   name: string; // AI generated name
   description?: string; // AI generated description
   image_url: string; // Public URL in Storage
+  thumb_url?: string; 
   thumbnail_sm_url?: string; // w=300
   thumbnail_md_url?: string; // w=800
   thumb_hash?: string; // ThumbHash placeholder
@@ -49,6 +50,8 @@ export interface Photo {
   _time?: number; 
   created_at_timestamp?: number; 
   member_count?: number;
+  ai_failed?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface SubCategory {
@@ -121,4 +124,12 @@ export interface ProductFormData {
   is_hidden: boolean;
   price: string;
   is_group_cover: boolean;
+}
+
+export interface PhotoAIResult {
+  id: string;
+  photo_id: string;
+  raw_result?: string;
+  parsed_data?: Record<string, any>;
+  created_at?: string;
 }

@@ -162,7 +162,9 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
         itemContent={(index) => {
           if (isLoading) {
             return (
-              <div className="bg-white rounded-[1.25rem] border border-slate-100 p-1.5 flex flex-col h-full animate-pulse shadow-sm">
+              <div 
+                className="bg-white rounded-[1.25rem] border border-slate-100 p-1.5 flex flex-col h-full animate-pulse shadow-sm"
+              >
                 <div className="aspect-square rounded-xl bg-slate-100/80 relative overflow-hidden" />
                 <div className="mt-2.5 px-1 pb-1 space-y-1.5">
                   <div className="h-3 w-2/3 bg-slate-100 rounded-lg" />

@@ -53,7 +53,7 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
 
         // Custom success callback
         if (options?.onSuccess) {
-          options.onSuccess(data, variables, context);
+          (options.onSuccess as any)(data, variables, context);
         }
       },
       onError: (err, variables, context) => {
@@ -67,7 +67,7 @@ export function createMutationHook<TData = void, TVariables = void, TContext = u
 
         // Custom error callback
         if (options?.onError) {
-          options.onError(err, variables, context);
+          (options.onError as any)(err, variables, context);
         }
       },
       ...options,

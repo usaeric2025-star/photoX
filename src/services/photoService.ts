@@ -83,6 +83,8 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       description: item.description as string | undefined,
       image_url: item.image_url as string | undefined,
       thumb_url: (item.thumb_url as string) || (item.image_url as string),
+      thumbnail_sm_url: (item.thumbnail_sm_url as string) || (item.thumb_url as string) || (item.image_url as string),
+      thumbnail_md_url: (item.thumbnail_md_url as string) || (item.thumb_url as string) || (item.image_url as string),
       thumb_hash: item.thumb_hash as string | undefined,
       exif_data: (item.exif_data as Record<string, unknown>) ?? null,
       created_at: created_at,

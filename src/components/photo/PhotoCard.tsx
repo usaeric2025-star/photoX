@@ -5,7 +5,7 @@ import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
 import { useGalleryStore, useShallow } from '../../store';
-import { PhotoImageContainer } from './PhotoImageContainer';
+import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
 import { translations } from '../../lib/translations';
@@ -207,7 +207,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const thumbSrc = useMemo(() => 
     getCacheBustedImageUrl(photo, 'thumb'),
-    [photo.thumb_url, photo.image_url, photo.uri, photo.updated_at, photo.created_at]
+    [photo.thumbnail_sm_url, photo.image_url, photo.uri, photo.updated_at, photo.created_at]
   );
 
   const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
@@ -322,13 +322,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onClick={handleCardClick}
       className={containerClasses}
     >
-      <PhotoImageContainer
+      <ResponsivePhoto
         photo={photo}
-        photoId={photo.id}
-        src={thumbSrc}
-        thumbHash={photo.thumb_hash}
-        alt={photo.name || 'Photo'}
-        loading="eager"
+        variant="sm"
+        aspectRatio={1}
         imgClassName={imgClassName}
       />
 

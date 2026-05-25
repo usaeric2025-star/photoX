@@ -32,12 +32,14 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
           className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-[120]"
         >
           
-          <button 
-            onClick={handleOpenSettings}
-            className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left"
-          >
-            <Settings2 size={16} /> <span className="text-xs font-bold uppercase">{t.systemSettings}</span>
-          </button>
+          {(user || isStaffMode) && (
+            <button 
+              onClick={handleOpenSettings}
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left font-semibold"
+            >
+              <Settings2 size={16} /> <span className="text-xs font-bold uppercase">{t.systemSettings}</span>
+            </button>
+          )}
 
           {user ? (
             <button 

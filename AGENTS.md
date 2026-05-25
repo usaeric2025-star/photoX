@@ -2,12 +2,12 @@
 description: PhotoX 项目 AI 编码强制规范。所有代码生成、修改、审查必须严格遵守此文件。违反红线的代码将被拒绝。
 globs: ["src/**/*.{ts,tsx}"]
 alwaysApply: true
-version: "2.1"
+version: "2.2"
 lastSynced: "2026-05-25"
 sourceOfTruth: "ARCHITECTURE.md"
 ---
 
-# PhotoX AI Coding Rules v2.1
+# PhotoX AI Coding Rules v2.2
 
 > ⚠️ 本文件是 `ARCHITECTURE.md` 的执行层精简版。详细设计原理请参阅原文档。
 > 🔄 更新 `ARCHITECTURE.md` 后，必须同步更新本文件，并在 commit 中标注 `[rules-sync]`。
@@ -68,6 +68,16 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ❌ 严禁使用 next/image / Vercel Image Optimization
 - ❌ 严禁缺失尺寸时回源原图或触发实时优化
 - 缺失中间档时直接 fallback 至小缩略图
+
+### Virtuoso 防死循環剛性契約（永久生效，v2.2 新增）
+- ✅ ResponsivePhoto 必須接收固定 width/height，渲染剛性容器
+- ✅ 圖片通過 CSS object-fit 自適應，嚴禁觸發佈局重排
+- ✅ Virtuoso 配置：單列 <Virtuoso> 可配置 skipAnimationFrameInResizeObserver；<VirtuosoGrid> 嚴禁使用此屬性
+- ❌ 嚴禁在 Virtuoso 子元素中使用 onLoad/onError 改變容器尺寸
+- ❌ 嚴禁在 Virtuoso 子元素中使用漸顯/過渡動畫改變佈局屬性
+- ❌ 嚴禁對 Virtuoso 子元素啟用 ResizeObserver 動態測量
+- ❌ 嚴禁圖片失敗時回退原圖或動態尺寸資源
+- 違反此契約即視為 P0 架構違規，PR 必須阻斷
 
 ## 🚨 常见错误 → 正确做法
 

@@ -129,9 +129,11 @@ export const AdminViewContent: React.FC = () => {
           <AdminGlobalModals />
       
         <div className="flex h-[100dvh] overflow-hidden bg-brand-bg">
-          <div className="hidden lg:block shrink-0">
-            <AdminSidebar />
-          </div>
+          {logic.adminPreviewMode !== 'public' && (
+            <div className="hidden lg:block shrink-0">
+              <AdminSidebar />
+            </div>
+          )}
 
           <div className="flex-1 flex flex-col min-w-0 relative h-full">
             <React.Suspense fallback={<div className="flex flex-col items-center justify-center h-screen bg-brand-bg gap-4"><div className="w-8 h-8 border-[1px] border-brand-navy/10 border-t-brand-gold rounded-full animate-spin" /><span className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-widest">Loading...</span></div>}>
