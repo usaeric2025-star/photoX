@@ -141,13 +141,20 @@ export const AdminHeader: React.FC<Props> = ({
   const handleExitStaffMode = () => {
     useGalleryStore.getState().setIsStaffMode(false);
     sessionStorage.removeItem('isStaffMode');
+    localStorage.removeItem('isStaffMode');
     window.location.reload();
   };
 
   const currentLang = appLang || 'en';
 
+  const headerClass = adminPreviewMode === 'public' 
+    ? "shrink-0 z-[110] bg-green-50 h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b border-green-200"
+    : isStaffMode 
+    ? "shrink-0 z-[110] bg-amber-50 h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b border-amber-200"
+    : "shrink-0 z-[110] bg-white h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#ECECEC]";
+
   return (
-    <header className="shrink-0 z-[110] bg-white h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b border-[#ECECEC]">
+    <header className={headerClass}>
         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
           {settings?.logo_url ? (
             <img src={settings.logo_url} alt="Logo" className="lg:hidden h-8 w-auto object-contain rounded-xl border border-[#ECECEC] p-0.5 bg-white shadow-sm shrink-0" loading="lazy" />
@@ -172,10 +179,10 @@ export const AdminHeader: React.FC<Props> = ({
           )}
 
           {isStaffMode && (
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 text-amber-700 border border-amber-500/10 rounded-full text-[11px] font-bold shadow-sm animate-pulse shrink-0">
-               <Wrench size={12} />
-               <span>
-                 {appLang === 'zh' ? '员工模式' : appLang === 'ms' ? 'Mod Staf' : 'Staff Mode'}
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-900/5 text-amber-900 rounded-full text-[10px] font-black shrink-0">
+               <Wrench size={10} />
+               <span className="hidden sm:inline">
+                 {appLang === 'zh' ? '员工' : appLang === 'ms' ? 'Staf' : 'Staff'}
                </span>
             </div>
           )}
@@ -239,18 +246,6 @@ export const AdminHeader: React.FC<Props> = ({
                   <Globe size={18} />
                 </button>
 
-                {isStaffMode && (
-                  <button 
-                    onClick={handleExitStaffMode}
-                    className="h-9 sm:h-10 px-3 flex items-center gap-1.5 rounded-xl text-red-600 hover:text-white hover:bg-red-600 border border-red-200 hover:border-red-600 bg-red-50/50 shadow-sm transition-all active:scale-95"
-                    title={t.exitStaffMode}
-                  >
-                    <LogIn size={16} className="rotate-180" />
-                    <span className="hidden md:inline text-[10px] font-black tracking-widest uppercase whitespace-nowrap">{t.exitStaffMode}</span>
-                  </button>
-                )}
-
-
                 {/* Removed duplicate LanguageSwitcher from header */}
 
                 {/* More Menu Dropdown */}
@@ -269,6 +264,8 @@ export const AdminHeader: React.FC<Props> = ({
                     handleExitStaffMode={handleExitStaffMode}
                     currentLang={currentLang}
                     onSetLang={(l) => useGalleryStore.getState().setAppLang(l as 'zh' | 'en' | 'ms')}
+                    adminPreviewMode={adminPreviewMode}
+                    toggleAdminPreviewMode={handleToggleViewMode}
                   />
                 </div>
               </div>

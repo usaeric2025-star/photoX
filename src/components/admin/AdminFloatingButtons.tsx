@@ -42,21 +42,6 @@ export const AdminFloatingButtons: React.FC<AdminFloatingButtonsProps> = ({
           <Plus size={28} />
         </button>
       )}
-
-      {isMultiSelect && selectedIds.length > 0 && (
-        <MultiSelectToolbar
-          selectedCount={selectedIds.length}
-          onClose={() => {
-            disable();
-            if (onClearSelection) onClearSelection();
-          }}
-          onBatchAiIdentify={onBatchAiIdentify}
-          onBatchEdit={onBatchEdit}
-          onGroup={onGroup}
-          onDelete={onDelete}
-          onToggleVisibility={onToggleVisibility}
-        />
-      )}
     </>
   );
 };

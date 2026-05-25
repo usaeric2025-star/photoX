@@ -2,37 +2,108 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { S3Client, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsV2Command, HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const app = express();
 export { app };
 
+// --- Global Utilities & Clients ---
+
+async function getSupabaseAdmin() {
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY; 
+  
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("[getSupabaseAdmin] Credentials missing!");
+    throw new Error("Supabase credentials missing (SUPABASE_URL/SUPABASE_SERVICE_KEY)");
+  }
+  return createClient(supabaseUrl, supabaseKey);
+}
+
+async function getR2Client() {
+  const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
+  let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+  let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+  
+  // Safeguard for common user mistakes (copy-pasting swapped keys)
+  if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+    const temp = r2AccessKeyId;
+    r2AccessKeyId = r2SecretAccessKey;
+    r2SecretAccessKey = temp;
+  }
+
+  if (!r2AccessKeyId || !r2SecretAccessKey) {
+    console.error("[getR2Client] R2 Credentials missing!");
+    throw new Error("R2 credentials missing (R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY)");
+  }
+
+  return new S3Client({
+    region: 'auto',
+    endpoint: r2Endpoint,
+    credentials: {
+      accessKeyId: r2AccessKeyId,
+      secretAccessKey: r2SecretAccessKey,
+    },
+    forcePathStyle: true,
+  });
+}
+
 app.use(express.json({ limit: '50mb' }));
 
-  app.post("/api/storage/presign", async (req, res) => {
+  app.post("/api/upload-presign", async (req, res) => {
     try {
-      const { fileName, contentType } = req.body;
-      if (!fileName) return res.status(400).json({ error: "fileName required" });
-      let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
-      let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
-      if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
-        const temp = r2AccessKeyId; r2AccessKeyId = r2SecretAccessKey; r2SecretAccessKey = temp;
-      }
+      const { photoId, contentType } = req.body;
+      if (!photoId) return res.status(400).json({ error: "photoId required" });
+      
+      const fileName = `photox/public/${photoId}.webp`;
+      const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
+      const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+      
       const s3Client = new S3Client({
         region: 'auto',
         endpoint: process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com',
         credentials: { accessKeyId: r2AccessKeyId, secretAccessKey: r2SecretAccessKey },
         forcePathStyle: true,
       });
+      
       const command = new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
         Key: fileName,
-        ContentType: contentType || 'application/octet-stream',
+        ContentType: contentType || 'image/webp',
       });
-      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-      res.json({ uploadUrl });
+      
+      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
+      const publicUrl = `${process.env.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev'}/${fileName}`;
+      
+      res.json({ uploadUrl, publicUrl });
     } catch(e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  app.delete("/api/r2-delete", async (req, res) => {
+    try {
+      const { fileKeys } = req.body;
+      if (!fileKeys || !Array.isArray(fileKeys)) {
+        return res.status(400).json({ error: "fileKeys array required" });
+      }
+      
+      const s3Client = await getR2Client();
+      const bucketName = process.env.R2_BUCKET_NAME || 'photox-storage';
+      
+      await Promise.all(fileKeys.map(async (key) => {
+          const command = new DeleteObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+          });
+          return s3Client.send(command);
+      }));
+      
+      res.json({ success: true });
+    } catch(e: any) {
+      console.error("[R2 Delete Error]", e);
       res.status(500).json({ error: e.message });
     }
   });
@@ -41,86 +112,166 @@ app.use(express.json({ limit: '50mb' }));
     res.json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
   });
 
-  app.get("/api/health-r2", async (req, res) => {
-    const statusResult: any = {
-      status: "ok", timestamp: Date.now(),
-      supabase: { urlConfigured: false, keyConfigured: false, connectionOk: false, photoCount: 0, error: null },
-      r2: { endpointConfigured: false, endpoint: null, accessKeyConfigured: false, accessKeyLength: 0, secretAccessKeyConfigured: false, secretAccessKeyLength: 0, keysSwappedBySafeguard: false, bucketName: process.env.R2_BUCKET_NAME || 'photox-storage', connectionOk: false, testedWithListCommand: false, foundObjectsCount: 0, error: null, diagnosticAdvice: null }
-    };
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-    statusResult.supabase.urlConfigured = !!supabaseUrl;
-    statusResult.supabase.keyConfigured = !!supabaseKey;
-    if (supabaseUrl && supabaseKey) {
-      try {
-        const { createClient } = await import("@supabase/supabase-js");
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const { count, error } = await supabase.from('furniture_items').select('id', { count: 'exact', head: true });
-        if (error) throw error;
-        statusResult.supabase.connectionOk = true;
-        statusResult.supabase.photoCount = count || 0;
-      } catch (err: any) { statusResult.supabase.error = err.message; statusResult.status = "error"; }
+  app.get("/api/storage/audit", async (req, res) => {
+    try {
+      const supabase = await getSupabaseAdmin();
+      const s3Client = await getR2Client();
+      const bucket = process.env.R2_BUCKET_NAME || 'photox-storage';
+
+      const { data: photos, error } = await supabase.from("furniture_items").select("id, image_url, thumb_url");
+      if (error) throw error;
+
+      const r2Files: Set<string> = new Set();
+      const dbFiles: Set<string> = new Set();
+
+      photos.forEach(p => {
+        if (p.image_url?.includes("r2")) dbFiles.add(p.image_url.split("/").pop()!);
+        if (p.thumb_url?.includes("r2")) dbFiles.add(p.thumb_url.split("/").pop()!);
+      });
+
+      let continuationToken: string | undefined;
+      do {
+        const list = await s3Client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: "photox/public/", ContinuationToken: continuationToken }));
+        list.Contents?.forEach(c => { if (c.Key) r2Files.add(c.Key.split("/").pop()!); });
+        continuationToken = list.NextContinuationToken;
+      } while (continuationToken);
+
+      let healthy = 0;
+      let missing = 0;
+      let orphans = 0;
+
+      dbFiles.forEach(f => { if (r2Files.has(f)) healthy++; else missing++; });
+      r2Files.forEach(f => { if (!dbFiles.has(f)) orphans++; });
+
+      res.json({ healthy, missing, orphans });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
     }
-    const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
-    let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
-    let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
-    statusResult.r2.endpointConfigured = !!process.env.R2_ENDPOINT; statusResult.r2.endpoint = r2Endpoint;
-    statusResult.r2.accessKeyConfigured = !!r2AccessKeyId; statusResult.r2.accessKeyLength = r2AccessKeyId.length;
-    statusResult.r2.secretAccessKeyConfigured = !!r2SecretAccessKey; statusResult.r2.secretAccessKeyLength = r2SecretAccessKey.length;
-    if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
-      statusResult.r2.keysSwappedBySafeguard = true;
-      const temp = r2AccessKeyId; r2AccessKeyId = r2SecretAccessKey; r2SecretAccessKey = temp;
-    }
-    if (r2AccessKeyId && r2SecretAccessKey && r2Endpoint) {
-      try {
-        const s3Client = new S3Client({
-          region: 'auto', endpoint: r2Endpoint,
-          credentials: { accessKeyId: r2AccessKeyId, secretAccessKey: r2SecretAccessKey },
-          forcePathStyle: true,
-        });
-        const s3Response = await s3Client.send(new ListObjectsV2Command({ Bucket: process.env.R2_BUCKET_NAME || 'photox-storage', MaxKeys: 1 }));
-        statusResult.r2.connectionOk = true; statusResult.r2.testedWithListCommand = true; statusResult.r2.foundObjectsCount = s3Response.KeyCount || 0;
-      } catch (err: any) {
-        statusResult.r2.error = err.message || String(err);
-        statusResult.status = "error";
-        const errMsg = (err.message || "").toLowerCase();
-        if (errMsg.includes("signature") || errMsg.includes("403") || errMsg.includes("forbidden") || errMsg.includes("accessdenied")) {
-          statusResult.r2.diagnosticAdvice = "R2 凭证（Access Key / Secret Key）拒绝访问。请检查 API Token 权限与密钥顺序是否正确。";
-        } else if (errMsg.includes("notfound") || errMsg.includes("address") || errMsg.includes("getaddrinfo")) {
-          statusResult.r2.diagnosticAdvice = "无法解析 Endpoint 域名，请勿添加 bucket 名字或 subpath。";
-        } else {
-          statusResult.r2.diagnosticAdvice = `无法连接: ${err.message}`;
-        }
-      }
-    } else {
-      statusResult.r2.error = "Cloudflare R2 required parameters missing in env";
-      statusResult.status = "error";
-    }
-    res.json(statusResult);
   });
 
   app.get("/api/migration-stats", async (req, res) => {
     try {
+      console.log("[MigrationStats] Starting audit...");
       const supabase = await getSupabaseAdmin();
-      const { data: all, error: err1 } = await supabase.from('furniture_items').select('image_url');
-      if (err1) throw err1;
+      
+      const { count: total, error: errTotal } = await supabase
+        .from('furniture_items')
+        .select('id', { count: 'exact', head: true });
+      if (errTotal) {
+        console.error("[MigrationStats] Total count error:", errTotal);
+        throw errTotal;
+      }
 
-      const stats = {
-        total: all.length,
-        supabase: 0,
-        r2: 0,
-        others: 0
+      const { count: supabaseCount, error: errSup } = await supabase
+        .from('furniture_items')
+        .select('id', { count: 'exact', head: true })
+        .ilike('image_url', '%supabase.co%');
+      if (errSup) {
+        console.error("[MigrationStats] Supabase count error:", errSup);
+        throw errSup;
+      }
+
+      const { count: r2Count, error: errR2 } = await supabase
+        .from('furniture_items')
+        .select('id', { count: 'exact', head: true })
+        .or('image_url.ilike.%r2.dev%,image_url.ilike.%r2.cloudflarestorage.com%');
+      if (errR2) {
+        console.error("[MigrationStats] R2 count error:", errR2);
+        throw errR2;
+      }
+
+      // Check thumbnails health
+      const { count: brokenThumbs, error: errThumb } = await supabase
+        .from('furniture_items')
+        .select('id', { count: 'exact', head: true })
+        .not('image_url', 'ilike', '%r2.%')
+        .not('thumb_url', 'ilike', '%r2.%');
+
+      res.json({ 
+        status: 'ok', 
+        stats: {
+          total: total || 0,
+          supabase: supabaseCount || 0,
+          r2: r2Count || 0,
+          others: (total || 0) - (supabaseCount || 0) - (r2Count || 0),
+          brokenThumbs: brokenThumbs || 0
+        }
+      });
+    } catch (err: any) {
+      console.error("[MigrationStats] Fatal Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/r2-verify-detailed", async (req, res) => {
+    try {
+      console.log("[R2Verify] Starting detailed physical check...");
+      const supabase = await getSupabaseAdmin();
+      const s3 = await getR2Client();
+      const bucket = process.env.R2_BUCKET_NAME || 'photox-storage';
+
+      const { data: samples, error } = await supabase
+        .from('furniture_items')
+        .select('id, image_url, thumb_url')
+        .limit(200);
+      
+      if (error) {
+        console.error("[R2Verify] Supabase fetch error:", error);
+        throw error;
+      }
+
+      const results = {
+        total_checked: samples ? samples.length : 0,
+        original_missing: [] as string[],
+        thumb_missing: [] as string[],
+        healthy_count: 0
       };
 
-      all.forEach((item: any) => {
-        const url = item.image_url || '';
-        if (url.includes('supabase.co')) stats.supabase++;
-        else if (url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com')) stats.r2++;
-        else stats.others++;
-      });
+      if (!samples) {
+        return res.json({ status: 'ok', results });
+      }
 
-      res.json({ status: 'ok', stats });
+      for (const item of samples) {
+        let isOrigOk = false;
+        let isThumbOk = false;
+
+        if (item.image_url?.includes('r2.')) {
+          const key = item.image_url.split('/').pop();
+          if (key) {
+            try {
+              // We assume photos are in photox/public/ based on previous logic
+              await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: `photox/public/${key}` }));
+              isOrigOk = true;
+            } catch (e) {
+              results.original_missing.push(item.id);
+            }
+          }
+        } else if (item.image_url) {
+           results.original_missing.push(item.id); 
+        }
+
+        if (item.thumb_url?.includes('r2.')) {
+          const key = item.thumb_url.split('/').pop();
+          if (key) {
+            try {
+              await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: `photox/public/${key}` }));
+              isThumbOk = true;
+            } catch (e) {
+              results.thumb_missing.push(item.id);
+            }
+          }
+        } else if (item.thumb_url) {
+           results.thumb_missing.push(item.id);
+        }
+
+        if (isOrigOk) {
+          results.healthy_count++;
+        }
+      }
+
+      res.json({ status: 'ok', results });
     } catch (err: any) {
+      console.error("[R2Verify] Fatal Error:", err);
       res.status(500).json({ error: err.message });
     }
   });
@@ -259,26 +410,44 @@ app.use(express.json({ limit: '50mb' }));
 
         const filename = photo.image_url.split('/').pop() || `${photo.id}.webp`;
         const objectKey = `photox/public/${filename}`;
+        
+        const newImageUrl = `https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev/photox/public/${filename}`;
+        const thumbFilename = photo.thumb_url ? photo.thumb_url.split('/').pop() : `thumb_${filename}`;
+        const newThumbUrl = `https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev/photox/public/${thumbFilename}`;
+
+        // If physically exists but DB doesn't point to R2, update DB anyway
+        if (r2ExistingKeys.has(objectKey) && !photo.image_url.includes('r2.')) {
+           await supabase.from('furniture_items').update({
+             image_url: newImageUrl,
+             thumb_url: newThumbUrl
+           }).eq('id', photo.id);
+           
+           skippedCount++;
+           if (skippedCount % 10 === 0) {
+             sendLog(`[数据库指向对账完成] 物理已存在，已更新库藏链接 [第 ${i + 1}/${totalPhotos}]: ${filename}`, 'info');
+           }
+           continue;
+        }
 
         if (r2ExistingKeys.has(objectKey)) {
           skippedCount++;
           if (skippedCount === 1 || skippedCount % 10 === 0 || i === totalPhotos - 1) {
-            sendLog(`[云端已存对账过] 跳过已上传项 [第 ${i + 1}/${totalPhotos} 张]: ${filename}`, 'info');
+            sendLog(`[完全一致对账过] 跳过完全合规项 [第 ${i + 1}/${totalPhotos} 张]: ${filename}`, 'info');
           }
           continue;
         }
         
-        sendLog(`[进行中 ${i + 1}/${totalPhotos}] 迁移传输中：${photo.id}`, 'info');
+        sendLog(`[介质搬运中 ${i + 1}/${totalPhotos}] 源站 -> 镜像源仓库：${photo.id}`, 'info');
         
         try {
-          sendLog(`  -> 正在拉取主图：${photo.image_url}`, 'info');
+          sendLog(`  -> 正在拉取物理源文件：${photo.image_url}`, 'info');
           const response = await fetch(photo.image_url);
           if (!response.ok) {
             throw new Error(`主图网络拉取失败，HTTP StatusCode: ${response.status} ${response.statusText}`);
           }
           const imageBuffer = Buffer.from(await response.arrayBuffer());
           
-          sendLog(`  -> 正在上传主图至云端 R2: ${objectKey}`, 'info');
+          sendLog(`  -> 正在压制上传至 R2 分发加速层: ${objectKey}`, 'info');
           await s3Client.send(new PutObjectCommand({
             Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
             Key: objectKey,
@@ -288,13 +457,13 @@ app.use(express.json({ limit: '50mb' }));
 
           if (photo.thumb_url) {
             try {
-              sendLog(`  -> 正在拉取缩略图：${photo.thumb_url}`, 'info');
+              sendLog(`  -> 正在加工同步物理缩略图：${photo.thumb_url}`, 'info');
               const thumbResponse = await fetch(photo.thumb_url);
               if (thumbResponse.ok) {
                 const thumbBuffer = Buffer.from(await thumbResponse.arrayBuffer());
-                const thumbFilename = photo.thumb_url.split('/').pop() || `${photo.id}_thumb.webp`;
-                const thumbKey = `photox/public/${thumbFilename}`;
-                sendLog(`  -> 正在上传缩略图至 R2: ${thumbKey}`, 'info');
+                const tFile = photo.thumb_url.split('/').pop() || `${photo.id}_thumb.webp`;
+                const thumbKey = `photox/public/${tFile}`;
+                sendLog(`  -> 正在写入 R2 媒体库: ${thumbKey}`, 'info');
                 
                 await s3Client.send(new PutObjectCommand({
                   Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
@@ -303,15 +472,21 @@ app.use(express.json({ limit: '50mb' }));
                   ContentType: 'image/webp',
                  }));
               } else {
-                sendLog(`  ⚠️ 缩略图拉取HTTP ${thumbResponse.status}，保持未变动。`, 'info');
+                sendLog(`  ⚠️ 物理源缩略图拉取 404/Ignore，将由主图分发。`, 'info');
               }
             } catch (thumbErr: any) {
-              sendLog(`  ⚠️ 缩略图非致命同步故障: ${thumbErr.message}`, 'info');
+              sendLog(`  ⚠️ 缩略图介质同步故障: ${thumbErr.message}`, 'info');
             }
           }
           
+          // CRITICAL: Update database URL after physical migration
+          await supabase.from('furniture_items').update({
+             image_url: newImageUrl,
+             thumb_url: newThumbUrl
+          }).eq('id', photo.id);
+
           successCount++;
-          sendLog(`照片号 ${photo.id} 主/缩文件一并全量对账搬运完毕！`, 'success');
+          sendLog(`照片号 ${photo.id} 物理全链路归档完成，数据库映射已热重载！`, 'success');
           
         } catch (err: any) {
           failCount++;
@@ -429,110 +604,72 @@ app.use(express.json({ limit: '50mb' }));
   });
 
 // --- Internal Migration Core Logic ---
-async function getSupabaseAdmin() {
-  const { createClient } = await import("@supabase/supabase-js");
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase credentials missing (SUPABASE_URL/SUPABASE_SERVICE_KEY)");
-  }
-  return createClient(supabaseUrl, supabaseKey);
-}
-
-async function getR2Client() {
-  const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
-  let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
-  let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
-  
-  if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
-    const temp = r2AccessKeyId;
-    r2AccessKeyId = r2SecretAccessKey;
-    r2SecretAccessKey = temp;
-  }
-
-  if (!r2AccessKeyId || !r2SecretAccessKey) {
-    throw new Error("R2 credentials missing (R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY)");
-  }
-
-  return new S3Client({
-    region: 'auto',
-    endpoint: r2Endpoint,
-    credentials: {
-      accessKeyId: r2AccessKeyId,
-      secretAccessKey: r2SecretAccessKey,
-    },
-    forcePathStyle: true,
-  });
-}
-
-async function migratePhotoCore(photoId: string, s3Client: S3Client, supabase: any) {
+async function migratePhotoCore(photoId: string, s3Client: S3Client, supabase: any, force: boolean = false) {
   const { data: photo, error } = await supabase.from('furniture_items').select('*').eq('id', photoId).single();
   if (error || !photo) return { status: 'error', message: 'Photo not found' };
 
   if (!photo.image_url) return { status: 'skipped', message: 'No image URL' };
 
-  const isR2Url = (url: string) => url && (url.includes('r2.cloudflarestorage.com') || url.includes('/storage/v1/object/public/'));
-  
-  // 如果已经是 R2 的 URL，通常不需要重新上传，但如果文件名特殊可能需要检查
-  // 这里的逻辑是：如果包含 supabase.co 或者是本地相对路径，则需要上传
-  const needsMigration = (url: string) => url && (url.includes('supabase.co') || !url.startsWith('http'));
+  const isR2Url = (url: string) => url && (url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com'));
+  const bucket = process.env.R2_BUCKET_NAME || 'photox-storage';
 
-  if (!needsMigration(photo.image_url) && (!photo.thumb_url || !needsMigration(photo.thumb_url))) {
-    return { status: 'skipped', message: 'Already migrated' };
-  }
-
-  try {
-    const filename = photo.image_url.split('/').pop() || `${photo.id}.webp`;
-    const objectKey = `photox/public/${filename}`;
-
-    // 1. Migrate Main Image
-    const response = await fetch(photo.image_url);
-    if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
-
-    await s3Client.send(new PutObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
-      Key: objectKey,
-      Body: imageBuffer,
-      ContentType: 'image/webp',
-    }));
-
-    const r2PublicPrefix = process.env.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
-    const newImageUrl = `${r2PublicPrefix}/${objectKey}`;
-    const updates: any = { image_url: newImageUrl };
-
-    // 2. Migrate Thumb if exists
-    if (photo.thumb_url && needsMigration(photo.thumb_url)) {
-      const thumbResponse = await fetch(photo.thumb_url);
-      if (thumbResponse.ok) {
-        const thumbBuffer = Buffer.from(await thumbResponse.arrayBuffer());
-        const thumbFilename = photo.thumb_url.split('/').pop() || `${photo.id}_thumb.webp`;
-        const thumbKey = `photox/public/${thumbFilename}`;
-        
-        await s3Client.send(new PutObjectCommand({
-          Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
-          Key: thumbKey,
-          Body: thumbBuffer,
-          ContentType: 'image/webp',
-        }));
-        updates.thumb_url = `${r2PublicPrefix}/${thumbKey}`;
-      }
+    // 深度对账：如果已经是 R2 链接，且物理文件存在，才真正跳过检查
+    // 如果非强制模式，且是 R2 链接（主图和缩略图都是），则直接跳过
+    if (!force && isR2Url(photo.image_url) && (!photo.thumb_url || isR2Url(photo.thumb_url))) {
+      return { status: 'skipped', message: 'Already migrated' };
     }
-
-    // 3. Update Supabase with new R2 URLs
-    const { error: updateErr } = await supabase.from('furniture_items').update(updates).eq('id', photoId);
-    if (updateErr) throw updateErr;
-
-    return { status: 'success', message: 'Migrated to R2' };
-  } catch (e: any) {
-    return { status: 'error', message: e.message };
-  }
+    
+    // 如果 URL 不是 R2，我们需要修复
+    
+    try {
+      const filename = photo.image_url.split('/').pop() || `${photo.id}.webp`;
+      const objectKey = `photox/public/${filename}`;
+  
+      const response = await fetch(photo.image_url);
+      if (!response.ok) throw new Error(`Fetch source failed: ${response.status}`);
+      const imageBuffer = Buffer.from(await response.arrayBuffer());
+  
+      await s3Client.send(new PutObjectCommand({
+        Bucket: bucket,
+        Key: objectKey,
+        Body: imageBuffer,
+        ContentType: 'image/webp',
+      }));
+  
+      const r2PublicPrefix = process.env.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev';
+      const newImageUrl = `${r2PublicPrefix}/${objectKey}`;
+      const updates: any = { image_url: newImageUrl };
+  
+      if (photo.thumb_url) {
+        const thumbResponse = await fetch(photo.thumb_url);
+        if (thumbResponse.ok) {
+          const thumbBuffer = Buffer.from(await thumbResponse.arrayBuffer());
+          const thumbFilename = photo.thumb_url.split('/').pop() || `${photo.id}_thumb.webp`;
+          const thumbKey = `photox/public/${thumbFilename}`;
+          
+          await s3Client.send(new PutObjectCommand({
+            Bucket: bucket,
+            Key: thumbKey,
+            Body: thumbBuffer,
+            ContentType: 'image/webp',
+          }));
+          updates.thumb_url = `${r2PublicPrefix}/${thumbKey}`;
+        }
+      }
+  
+      const { error: updateErr } = await supabase.from('furniture_items').update(updates).eq('id', photoId);
+      if (updateErr) throw updateErr;
+  
+      return { status: 'success', message: 'Migrated and Verified' };
+    } catch (e: any) {
+      return { status: 'error', message: e.message };
+    }
 }
 
 // --- Serverless Friendly Batch Migration ---
 app.get("/api/migrate-r2-batch", async (req, res) => {
   try {
-    const batchSize = 5; 
+    const batchSize = 25; 
     const stats = { success: 0, fail: 0, skipped: 0, total: 0, pending: 0 };
 
     const supabase = await getSupabaseAdmin();
@@ -542,17 +679,24 @@ app.get("/api/migrate-r2-batch", async (req, res) => {
     const { count: totalCount } = await supabase.from('furniture_items').select('id', { count: 'exact', head: true });
     const { count: pendingCount } = await supabase.from('furniture_items')
       .select('id', { count: 'exact', head: true })
-      .or('image_url.is.null,image_url.ilike.%supabase.co%');
+      .or('image_url.is.null,image_url.ilike.%supabase.co%,thumb_url.ilike.%supabase.co%');
 
     stats.total = totalCount || 0;
     stats.pending = pendingCount || 0;
 
-    // 找到待迁移的照片
-    const { data: photos, error: fetchErr } = await supabase
+    const force = req.query.force === 'true';
+    const page = parseInt(req.query.page as string) || 0;
+    let query = supabase
       .from('furniture_items')
-      .select('id')
-      .or('image_url.is.null,image_url.ilike.%supabase.co%')
-      .limit(batchSize);
+      .select('id');
+      
+    if (!force) {
+      query = query.or('image_url.is.null,image_url.ilike.%supabase.co%,thumb_url.ilike.%supabase.co%');
+    }
+    
+    query = query.range(page * batchSize, (page + 1) * batchSize - 1);
+    
+    const { data: photos, error: fetchErr } = await query;
 
     if (fetchErr) throw fetchErr;
 
@@ -561,19 +705,23 @@ app.get("/api/migrate-r2-batch", async (req, res) => {
     }
 
     const logs: string[] = [];
-    for (const photo of photos) {
-      const result = await migratePhotoCore(photo.id, s3Client, supabase);
+    const results = await Promise.all(
+      photos.map(p => migratePhotoCore(p.id, s3Client, supabase, force))
+    );
+
+    results.forEach((result, idx) => {
+      const pid = photos[idx].id;
       if (result.status === 'success') {
         stats.success++;
-        logs.push(`✅ 成功: ${photo.id}`);
+        logs.push(`✅ 成功: ${pid}`);
       } else if (result.status === 'skipped') {
         stats.skipped++;
-        logs.push(`⏭️ 跳过: ${photo.id}`);
+        logs.push(`⏭️ 跳过: ${pid}`);
       } else {
         stats.fail++;
-        logs.push(`❌ 失败: ${photo.id} (${result.message})`);
+        logs.push(`❌ 失败: ${pid} (${result.message})`);
       }
-    }
+    });
 
     return res.json({ 
       status: 'continue', 

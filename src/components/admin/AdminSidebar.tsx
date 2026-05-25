@@ -2,22 +2,20 @@ import React from 'react';
 import { 
   BarChart3, 
   Settings2, 
-  Cloud, 
   Tag, 
   Layers, 
   Terminal,
   Home,
-  Monitor,
   Sparkles,
   Wrench,
   LogIn,
-  Plus
+  Plus,
+  Cloud
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
 import { useAdmin } from '../../contexts/AdminContext';
 import { useAuth } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
-import { triggerR2Migration, testR2ConnectionStatus, checkR2Inventory, checkMigrationStats } from '@/utils/migrateHelper';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -142,7 +140,7 @@ export const AdminSidebar: React.FC = () => {
           <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">系统 / System</p>
           <SidebarItem 
             icon={Wrench} 
-            label="系统设置" 
+            label="系统设置与维护" 
             active={activeScreen === 'settings'} 
             onClick={() => setActiveScreen('settings')}
           />
@@ -159,46 +157,6 @@ export const AdminSidebar: React.FC = () => {
             onClick={() => {}}
             badge={cloudCount || 0}
           />
-          <button 
-            onClick={() => {
-              testR2ConnectionStatus();
-            }}
-            className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-4"
-          >
-            🔍 R2 存储状态诊断
-          </button>
-          <button 
-            onClick={() => {
-              triggerR2Migration();
-            }}
-            className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
-          >
-            🚨 临时 R2 数据与URL迁移
-          </button>
-          <button 
-            onClick={() => {
-              onRunMigrationBackground();
-            }}
-            className="w-full py-2 px-3 bg-brand-gold hover:bg-brand-gold/90 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
-          >
-            ☁️ R2 后台静默迁移 (Task 模式)
-          </button>
-          <button 
-            onClick={() => {
-              checkMigrationStats();
-            }}
-            className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
-          >
-            📊 迁移对账报告 (DB vs R2)
-          </button>
-          <button 
-            onClick={() => {
-              checkR2Inventory();
-            }}
-            className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black text-[10px] rounded-xl transition-all shadow-md mt-2"
-          >
-            📦 R2 资产盘点 (探测物理数)
-          </button>
         </div>
       </div>
 
@@ -216,6 +174,7 @@ export const AdminSidebar: React.FC = () => {
               onClick={() => {
                 useGalleryStore.getState().setIsStaffMode(false);
                 sessionStorage.removeItem('isStaffMode');
+                localStorage.removeItem('isStaffMode');
                 window.location.reload();
               }}
               className="w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-500/25"

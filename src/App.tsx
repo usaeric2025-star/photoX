@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { useQueryClient } from '@tanstack/react-query';
 import { User } from './types';
 import { useAuth, useRouteGuard } from '@/hooks';
+import { useGalleryStore } from './store';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
@@ -49,13 +50,14 @@ function AnimatedRoutes({ user }: { user: User | null }) {
   useRouteGuard(); // <--- 使用路由守卫
   const location = useLocation();
   const { hash, groupId } = location.state || {};
+  const isStaffMode = useGalleryStore((s) => s.isStaffMode);
 
 
   return (
     <AnimatePresence mode="sync">
       <Routes location={location} key={location.pathname}>
         <Route path={ROUTES.HOME} element={
-            user ? <Navigate to={ROUTES.ADMIN} replace /> : (
+            (user || isStaffMode) ? <Navigate to={ROUTES.ADMIN} replace /> : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
                  <PublicView />
               </motion.div>

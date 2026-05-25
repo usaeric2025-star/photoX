@@ -1,10 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings2, LogIn, LogOut, Database } from 'lucide-react';
+import { Settings2, LogIn, LogOut, Database, Globe } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { reportError } from '@/lib/errorReporter';
 import { useGalleryStore } from '@/store';
-import { triggerR2Migration, testR2ConnectionStatus } from '@/utils/migrateHelper';
 
 interface ToolsMenuProps {
   show: boolean;
@@ -14,17 +13,15 @@ interface ToolsMenuProps {
   isStaff: boolean;
   currentLang: string;
   onSetLang: (l: string) => void;
+  adminPreviewMode: 'private' | 'public';
+  toggleAdminPreviewMode: () => void;
 }
 
 export const ToolsMenu: React.FC<ToolsMenuProps> = ({ 
-  show, t, handleOpenSettings, handleExitStaffMode, isStaff, currentLang, onSetLang 
+  show, t, handleOpenSettings, handleExitStaffMode, isStaff, currentLang, onSetLang, adminPreviewMode, toggleAdminPreviewMode
 }) => {
   const { user, loginWithGoogle, logout } = useAuth();
   
-  const handleMigrate = () => {
-    triggerR2Migration();
-  };
-
   return (
     <AnimatePresence>
       {show && (
@@ -34,27 +31,6 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-[120]"
         >
-          <div className="p-3 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Language</span>
-             <div className="flex gap-1">
-                {['en', 'zh', 'ms'].map(l => (
-                  <button
-                    key={l}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSetLang(l);
-                    }}
-                    className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase transition-all ${
-                      currentLang === l 
-                        ? 'bg-slate-900 text-white shadow-sm' 
-                        : 'bg-white text-slate-400 hover:text-slate-900 border border-slate-200' 
-                    }`}
-                  >
-                    {l === 'en' ? 'EN' : l === 'zh' ? 'ZH' : 'MS'}
-                  </button>
-                ))}
-             </div>
-          </div>
           
           <button 
             onClick={handleOpenSettings}
@@ -63,26 +39,6 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             <Settings2 size={16} /> <span className="text-xs font-bold uppercase">{t.systemSettings}</span>
           </button>
 
-          {isStaff && (
-            <button 
-              onClick={() => {
-                testR2ConnectionStatus();
-              }}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left text-blue-600"
-            >
-              <Database size={16} /> <span className="text-xs font-bold uppercase">R2 诊断 / DIAGNOSTIC</span>
-            </button>
-          )}
-
-          {isStaff && (
-            <button 
-              onClick={handleMigrate}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-blue-50 transition-colors text-left text-blue-600"
-            >
-              <Database size={16} /> <span className="text-xs font-bold uppercase">R2 迁移</span>
-            </button>
-          )}
-          
           {user ? (
             <button 
               onClick={() => {

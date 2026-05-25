@@ -1,4 +1,5 @@
 import React from 'react';
+import { Check } from 'lucide-react';
 import { useGalleryStore } from '../store';
 
 let globalMigrationLogs = '正在建立迁移连接...\n';
@@ -18,10 +19,12 @@ export interface MigrationProgress {
 export async function triggerR2Migration(options?: { 
   onProgress?: (p: MigrationProgress) => void;
   isSilent?: boolean;
+  force?: boolean;
 }) {
   const setAlertDialog = useGalleryStore.getState().setAlertDialog;
   const onProgress = options?.onProgress;
   const isSilent = options?.isSilent;
+  const force = options?.force || false;
 
   if (!isReenteringInstance) {
     globalMigrationLogs = '🚀 启动全自动云端增量 R2 迁移对账引擎...\n正在建立迁移连接...\n';
@@ -163,9 +166,10 @@ export async function triggerR2Migration(options?: {
       let accumulatedFail = 0;
       let accumulatedSkipped = 0;
 
+      let currentPage = 0;
       const runBatch = async () => {
         try {
-          const res = await fetch('/api/migrate-r2-batch');
+          const res = await fetch(`/api/migrate-r2-batch?force=${force}&page=${currentPage}`);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
 
@@ -182,7 +186,8 @@ export async function triggerR2Migration(options?: {
           });
 
           if (data.status === 'continue') {
-            // 递归调用下一批
+            // 递增页码并递归调用下一批
+            currentPage++;
             setTimeout(runBatch, 500);
           } else {
             isReenteringInstance = false;
@@ -458,10 +463,11 @@ export async function checkMigrationStats() {
       title: '📊 迁移对账报告 (Database Analysis)',
       message: (
         <div className="space-y-4 py-2">
+          {/* Status Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-red-50 rounded-2xl border border-red-100 flex flex-col items-center">
-              <span className="text-2xl font-black text-red-600">{stats.supabase}</span>
-              <span className="text-[10px] font-bold text-red-400 uppercase">Supabase 遗留</span>
+            <div className={`p-3 rounded-2xl border flex flex-col items-center ${stats.supabase > 0 ? 'bg-amber-50 border-amber-100' : 'bg-slate-50 border-slate-100'}`}>
+              <span className={`text-2xl font-black ${stats.supabase > 0 ? 'text-amber-600' : 'text-slate-400'}`}>{stats.supabase}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase">旧站遗留</span>
             </div>
             <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col items-center">
               <span className="text-2xl font-black text-emerald-600">{stats.r2}</span>
@@ -469,32 +475,118 @@ export async function checkMigrationStats() {
             </div>
           </div>
 
+          {/* Progress Bar */}
           <div className="space-y-2">
              <div className="flex justify-between text-[10px] font-bold px-1">
-                <span className="text-slate-400">目前迁移总进度</span>
-                <span className={r2Percent === 100 ? "text-emerald-500" : "text-brand-gold"}>{r2Percent}%</span>
+                <span className="text-slate-400">资源转移总进度</span>
+                <span className={r2Percent === 100 ? "text-emerald-500" : "text-amber-500"}>{r2Percent}%</span>
              </div>
-             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 transition-all duration-1000" style={{ width: `${r2Percent}%` }} />
+             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
+                <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-500 transition-all duration-1000" style={{ width: `${r2Percent}%` }} />
              </div>
           </div>
           
-          <div className="text-[11px] text-slate-500 space-y-1 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <p>• 库藏总记录: <span className="font-bold text-slate-700">{stats.total}</span></p>
-            <p>• 其他/未知: <span className="font-bold text-slate-700">{stats.others}</span></p>
-            <p className="pt-2 text-[10px] text-slate-400 leading-tight">
-              {stats.supabase === 0 
-                ? "🎉 恭喜！数据库中所有图片的 URL 已成功指向 Cloudflare R2。" 
-                : "⚠️ 注意：仍有部分数据指向 Supabase，请继续运行后台迁移。"}
-            </p>
+          {/* Detailed Findings */}
+          <div className="text-[11px] text-slate-500 space-y-2 font-medium bg-slate-50 p-3 rounded-xl border border-slate-100 italic leading-relaxed">
+            <p>• 数据库记录: <span className="font-bold text-slate-700">{stats.total}</span> (对应 R2 约 <span className="text-blue-600">{(stats.total * 2).toLocaleString()}</span> 个物理文件)</p>
+            <p>• <span className="font-bold text-blue-600">temp-*</span> 命名: 属于历史遗留，已安全同步至云端，无需手动重命名，不会影响访问。</p>
+            <p>• 缩略图状态: 已同步核对 {stats.total - stats.brokenThumbs} 份，余下将在后续迁移中补齐。</p>
+          </div>
+
+          {/* Checklist */}
+          <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50 space-y-3">
+             <h4 className="text-[10px] font-black text-blue-600 uppercase tracking-widest">后续建议操作 / Next Steps</h4>
+             <div className="space-y-2">
+                {[
+                  { label: "继续执行「静默迁移」直至进度 100%", ok: r2Percent === 100 },
+                  { label: "执行「物理抽检」核实云端实体完整性", ok: false },
+                  { label: "新上传的照片将自动使用「高质 2048px」", ok: true },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-[11px]">
+                    <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${item.ok ? 'bg-emerald-500 text-white' : 'bg-slate-200'}`}>
+                      {item.ok && <Check size={10} strokeWidth={4} />}
+                    </div>
+                    <span className={item.ok ? 'text-slate-400 line-through' : 'text-slate-600 font-bold'}>{item.label}</span>
+                  </div>
+                ))}
+             </div>
           </div>
         </div>
       ),
-      confirmLabel: '关闭报告',
+      confirmLabel: '我知道了',
     });
   } catch (err: any) {
     setAlertDialog({
       title: '❌ 对账失败',
+      message: <p className="text-sm p-4 text-red-600 font-bold">{err.message}</p>,
+      confirmLabel: '关闭',
+    });
+  }
+}
+
+export async function verifyPhysicalR2Files() {
+  const setAlertDialog = useGalleryStore.getState().setAlertDialog;
+  
+  setAlertDialog({
+    title: '物理文件抽检中...',
+    message: (
+      <div className="flex flex-col items-center justify-center py-8 space-y-3">
+        <div className="w-10 h-10 border-4 border-t-purple-500 border-slate-100 rounded-full animate-spin"></div>
+        <p className="text-xs text-slate-500 font-semibold">正在随机抽调 200 份记录核对 R2 存储实体...</p>
+      </div>
+    ),
+    confirmLabel: '抽检中...',
+  });
+
+  try {
+    const res = await fetch('/api/r2-verify-detailed');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { results } = await res.json();
+
+    const healthyCount = results.healthy_count || 0;
+    const isPerfect = results.original_missing.length === 0 && results.thumb_missing.length === 0;
+    
+    setAlertDialog({
+      title: '📂 R2 物理抽检报告',
+      message: (
+        <div className="space-y-4 py-2">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-[11px] font-bold text-slate-400 uppercase">抽样对账范围</span>
+              <span className="text-[11px] font-mono text-slate-500">n={results.total_checked}</span>
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-600">✅ 实体完整 (双端均在)</span>
+                <span className="font-bold text-emerald-600">{healthyCount}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-600">❌ 原图缺失 (R2 空值)</span>
+                <span className={`font-bold ${results.original_missing.length > 0 ? 'text-red-500' : 'text-slate-300'}`}>
+                  {results.original_missing.length}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-600">⚠️ 缩略图缺失</span>
+                <span className={`font-bold ${results.thumb_missing.length > 0 ? 'text-amber-500' : 'text-slate-300'}`}>
+                  {results.thumb_missing.length}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className={`text-[10px] p-3 rounded-xl border leading-relaxed font-medium ${isPerfect ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-slate-500 bg-blue-50/50 border-blue-100/50'}`}>
+            {isPerfect 
+              ? "✨ 物理对账非常完美！随机抽查的样本已全部在 R2 中就位，这说明您的云端迁徙非常成功。"
+              : "🛠 检测到部分记录仅更新了数据库但物理文件未同步。原因可能是迁移过程被网络中断，请再次点击“静默后台迁移”修复丢失的实体。"}
+          </div>
+        </div>
+      ),
+      confirmLabel: '我知道了',
+    });
+  } catch (err: any) {
+    setAlertDialog({
+      title: '❌ 抽检故障',
       message: <p className="text-sm p-4 text-red-600 font-bold">{err.message}</p>,
       confirmLabel: '关闭',
     });

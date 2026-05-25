@@ -3,6 +3,8 @@ import { loadAllPhotosFromCloud, loadPhotosByGroupId, loadPhotosByGroupIdPaginat
 import { QUERY_KEYS } from './keys';
 import { syncCache } from '../../utils/indexedDB';
 
+import { PAGINATION } from '@/constants/config';
+
 export const useInfinitePhotos = (filters: { 
   category_id?: string | null; 
   tag_id?: string | null; 
@@ -10,7 +12,7 @@ export const useInfinitePhotos = (filters: {
   sortOrder?: 'asc' | 'desc' | string | null;
   isAdminMode?: boolean;
   onlyUngrouped?: boolean;
-}, limit: number = PAGINATION.DEFAULT_PAGE_SIZE) => {
+}, limit: number = PAGINATION.PUBLIC_PAGE_SIZE) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ 
       category_id: filters.category_id ?? null,
@@ -44,13 +46,12 @@ export const useInfinitePhotos = (filters: {
 
       return {
         photos: photos || [],
-        nextPage: (photos || []).length === pageSize ? (pageParam as number) + 1 : undefined
+        nextPage: (photos || []).length >= pageSize ? (pageParam as number) + 1 : undefined
       };
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     staleTime: 1000 * 60, // 1 分钟
-    placeholderData: keepPreviousData,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
@@ -78,9 +79,7 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
   });
 };
 
-import { PAGINATION } from '@/config/constants';
-// ...
-export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = PAGINATION.GROUP_PAGE_SIZE) => {
+export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
 
   return useInfiniteQuery({
     queryKey: ['photos', 'group', 'infinite', groupId, isAdminMode, pageSize],

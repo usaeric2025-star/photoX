@@ -22,7 +22,16 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
     () => setActiveMenuId(null)
   );
 
-  const longPressProps = useLongPress(
+  const { 
+    onMouseDown, 
+    onTouchStart, 
+    onMouseUp, 
+    onTouchEnd, 
+    onMouseLeave, 
+    onTouchMove, 
+    onTouchCancel, 
+    onContextMenu 
+  } = useLongPress(
     () => {
       setActiveMenuId(manufacturer.id);
     },
@@ -34,7 +43,14 @@ export const ManufacturerItem = ({ manufacturer, onUpdate, onDelete }: Manufactu
     <div 
       ref={menuRef}
       className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === manufacturer.id ? 'bg-brand-gold/10 border-brand-gold/30 scale-95' : ''}`}
-      {...longPressProps}
+      onMouseDown={onMouseDown}
+      onTouchStart={onTouchStart}
+      onMouseUp={onMouseUp}
+      onTouchEnd={onTouchEnd}
+      onMouseLeave={onMouseLeave}
+      onTouchMove={onTouchMove}
+      onTouchCancel={onTouchCancel}
+      onContextMenu={onContextMenu}
     >
       <div className="flex flex-col">
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">

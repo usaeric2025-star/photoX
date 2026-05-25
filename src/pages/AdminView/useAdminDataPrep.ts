@@ -70,13 +70,15 @@ export const useAdminDataPrep = () => {
   const { data: tags = [] } = useTagsQuery();
   const { data: manufacturers = [] } = useManufacturersQuery();
 
+  const isActualAdminPath = window.location.pathname.startsWith('/admin');
+
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: store.filterCatId,
     tag_id: Array.isArray(store.filterTagIds) && store.filterTagIds.length > 0 ? store.filterTagIds[0] : null,
     searchQuery: store.debouncedSearchQuery,
     sortOrder: store.sortOrder,
     isAdminMode: true
-  }, PAGINATION.ADMIN_BATCH_SIZE);
+  }, isActualAdminPath ? PAGINATION.ADMIN_BATCH_SIZE : 1); // Fetch minimal if not in admin path
 
   const { data: cloudCountData } = usePhotoCountQuery({}, true);
   const photos = useMemo(() => cleanPhotos(infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || []), [infinitePhotosQuery.data]);

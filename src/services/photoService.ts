@@ -559,6 +559,8 @@ export const updatePhotoHidden = async (photoId: string, is_hidden: boolean) => 
 
 export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promise<{ dissolvedGroupId?: string }> => {
   const groupId = photo.group_id;
+  const imageUrl = photo.image_url;
+  const storageId = photo.storage_id || photo.id;
   
   const { error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
@@ -567,6 +569,19 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
 
   if (error) {
     throw new Error(error.message || JSON.stringify(error));
+  }
+
+  // Physcial Cleanup
+  if (imageUrl) {
+     const { count } = await supabase
+        .from(DB_CONFIG.TABLE_NAME)
+        .select('id', { count: 'exact', head: true })
+        .eq('image_url', imageUrl);
+      
+     if (count === 0) {
+        const { cleanupPhysicalStorage } = await import('./storage/cleanupService');
+        await cleanupPhysicalStorage([storageId], [imageUrl]);
+     }
   }
   
   let dissolvedGroupId: string | undefined;
@@ -621,9 +636,11 @@ export const deletePhotosBatch = async (
     }
     
     const potentiallyDeletable = chunk.filter(p => !!p.image_url);
-    const filesToRemove: string[] = [];
+    const keysToRemove: string[] = [];
+    const urlsToRemove: string[] = [];
     
     for (const p of potentiallyDeletable) {
+      if (!p.image_url) continue;
       const { count } = await supabase
         .from(DB_CONFIG.TABLE_NAME)
         .select('*', { count: 'exact', head: true })
@@ -631,13 +648,14 @@ export const deletePhotosBatch = async (
       
       if (count === 0) {
         const filename = p.storage_id || p.id;
-        filesToRemove.push(`public/${filename}.webp`);
-        filesToRemove.push(`public/thumb_${filename}.webp`);
+        keysToRemove.push(filename);
+        urlsToRemove.push(p.image_url);
       }
     }
     
-    if (filesToRemove.length > 0) {
-        await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove(filesToRemove);
+    if (keysToRemove.length > 0) {
+        const { cleanupPhysicalStorage } = await import('./storage/cleanupService');
+        await cleanupPhysicalStorage(keysToRemove, urlsToRemove);
     }
     
     if (onProgress) onProgress(Math.min(i + BATCH_SIZE, total), total);

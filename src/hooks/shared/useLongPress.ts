@@ -20,12 +20,17 @@ export const useLongPress = <T = any>(
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressedRef = useRef(false);
   const isTouchRef = useRef(false);
+  const startCoordsRef = useRef<{ x: number; y: number } | null>(null);
 
   // New API: Start press triggering
   const start = useCallback(
     (event: React.MouseEvent | React.TouchEvent, item?: T) => {
       if (event.type === 'touchstart') {
         isTouchRef.current = true;
+        const touch = (event as React.TouchEvent).touches[0];
+        if (touch) {
+          startCoordsRef.current = { x: touch.clientX, y: touch.clientY };
+        }
       } else if (isTouchRef.current && event.type === 'mousedown') {
         return; // Ignore simulated mouse events on touch screens
       }
@@ -134,7 +139,18 @@ export const useLongPress = <T = any>(
     isLongPressedRef.current = false;
   }, []);
 
-  const handleTouchMove = useCallback(() => {
+  const handleTouchMove = useCallback((event: React.TouchEvent | any) => {
+    // Only cancel if touch has moved significantly (e.g. over 12px) to withstand natural finger tremors
+    if (startCoordsRef.current && event?.touches?.[0]) {
+      const touch = event.touches[0];
+      const dx = touch.clientX - startCoordsRef.current.x;
+      const dy = touch.clientY - startCoordsRef.current.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < 12) {
+        return; // Retain long press timer
+      }
+    }
+    
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;

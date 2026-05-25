@@ -192,9 +192,9 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setSelectedIds: (updater) => set((state) => ({ 
     selectedIds: typeof updater === 'function' ? updater(state.selectedIds) : updater 
   })),
-  isStaffMode: sessionStorage.getItem('isStaffMode') === 'true',
+  isStaffMode: localStorage.getItem('isStaffMode') === 'true',
   setIsStaffMode: (isStaffMode) => {
-    sessionStorage.setItem('isStaffMode', String(isStaffMode));
+    localStorage.setItem('isStaffMode', String(isStaffMode));
     set({ isStaffMode });
   },
   alertDialog: null,

@@ -158,9 +158,10 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
                     .select('*', { count: 'exact', head: true })
                     .eq('image_url', duplicate.image_url);
                 
-                if (count === 0) {
+                if (count === 0 && duplicate.image_url) {
                     const filename = duplicate.storage_id || duplicate.id;
-                    await supabase.storage.from(DB_CONFIG.BUCKET_NAME).remove([`public/${filename}.webp`]);
+                    const { cleanupPhysicalStorage } = await import('../storage/cleanupService');
+                    await cleanupPhysicalStorage([filename], [duplicate.image_url]);
                 }
             }
             // Check if the deleted duplicate was in a group and handle dissolving

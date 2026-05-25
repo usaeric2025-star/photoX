@@ -19,6 +19,7 @@ import { saveData, syncCache } from '@/utils/indexedDB';
 import { PublicGallery } from '@/components/public/PublicGallery';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { loginWithGoogle } from '@/services/supabaseService';
+import { AdminProvider } from '@/contexts/AdminContext';
 
 /* Removed ErrorFallback component */
 
@@ -41,16 +42,18 @@ export default function PublicView() {
         isLoading={isSettingsLoading || !settings}
         hasData={true} // Data will be handled inside PublicGallery
       >
-        <ErrorBoundary>
-          <PublicGallery 
-            onExit={() => navigate(ROUTES.ADMIN)}
-            onLogin={() => navigate(ROUTES.ADMIN)}
-            loginWithGoogle={loginWithGoogle}
-            user={user}
-            initialHash={hash}
-            initialGroupId={groupId}
-          />
-        </ErrorBoundary>
+        <AdminProvider>
+          <ErrorBoundary>
+            <PublicGallery 
+              onExit={() => navigate(ROUTES.ADMIN)}
+              onLogin={() => navigate(ROUTES.ADMIN)}
+              loginWithGoogle={loginWithGoogle}
+              user={user}
+              initialHash={hash}
+              initialGroupId={groupId}
+            />
+          </ErrorBoundary>
+        </AdminProvider>
       </DataLoadingContainer>
     </div>
   );

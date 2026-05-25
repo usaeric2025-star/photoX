@@ -11,7 +11,9 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "test": "vitest",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "storage:audit": "npx tsx scripts/storage/auditR2.ts",
+    "storage:clean": "npx tsx scripts/storage/cleanOrphans.ts"
   },
   "dependencies": {
     "@aws-sdk/s3-request-presigner": "^3.1053.0",

@@ -126,7 +126,6 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
           referrerPolicy="no-referrer"
           src={src} 
           alt={alt}
-          width={400}
           className={`w-full h-full object-cover pointer-events-none transition-opacity duration-300 ${
             isInitiallyLoaded ? 'opacity-100' : isImageLoaded ? 'opacity-100' : 'opacity-0'
           } ${imgClassName}`}

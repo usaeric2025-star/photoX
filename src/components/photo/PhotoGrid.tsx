@@ -79,7 +79,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
     searchQuery: searchQuery,
     sortOrder: sortOrder,
     isAdminMode
-  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : 60);
+  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE);
 
   const photos = React.useMemo(() => infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [], [infinitePhotosQuery.data]);
   const isFetching = infinitePhotosQuery.isLoading;
@@ -182,11 +182,11 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
             loadMorePhotos();
           }
         }}
-        overscan={VIRTUOSO_CONFIG.overscan(columns)}
-        increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
+        overscan={200}
+        increaseViewportBy={200}
         useWindowScroll={false}
         itemClassName="virtuoso-grid-item"
-        listClassName={`grid gap-2 px-1.5 py-2 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
+        listClassName={`grid gap-2 px-1.5 py-2 pb-36 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
         itemContent={(index, photo) => {
           return (
             <MemoizedPhotoCard

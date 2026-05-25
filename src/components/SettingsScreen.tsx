@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   ChevronLeft,
-  Settings2, Save
+  Settings2, Save, ChevronDown
 } from 'lucide-react';
 import { useFeedback } from '@/hooks';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
@@ -136,12 +136,8 @@ export const SettingsScreen: React.FC = () => {
                 buttonStyles={BUTTON_STYLES}
               />
               <MaintenanceSection 
-                photos={photos}
                 onHealthCheck={() => handleHealthCheck(photos)}
-                onRunMaintenance={onRunMaintenance}
-                onRunMigrationBackground={onRunMigrationBackground}
                 isChecking={isMaintenanceRunning}
-                isMaintenanceRunning={isMaintenanceRunning}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
               />

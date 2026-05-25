@@ -59,14 +59,14 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
 
   let { data: savedPhoto, error: dbError } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .upsert(payload, { onConflict: 'id' }) // Use upsert to handle both insert and ID-provided update
+    .upsert(payload, { onConflict: 'id' })
     .select('id')
     .maybeSingle();
 
   if (dbError && dbError.message.includes('furniture_items_item_code_key')) {
      console.warn("Item code constraint violation detected in savePhotoToCloud, regenerating code and retrying save...");
      payload.item_code = generateItemCode();
-     photo.item_code = payload.item_code as string; // Sync regenerated item_code back to reference
+     photo.item_code = payload.item_code as string;
      const retryResult = await supabase
         .from(DB_CONFIG.TABLE_NAME)
         .upsert(payload, { onConflict: 'id' })
@@ -77,6 +77,10 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   }
 
   if (dbError) {
+    if (photo.image_url) {
+      const { cleanupPhysicalStorage } = await import('../storage/cleanupService');
+      cleanupPhysicalStorage([photo.storage_id || photo.id], [photo.image_url]).catch(() => {});
+    }
     throw new Error(`数据库保存失败: ${dbError.message}`);
   }
 

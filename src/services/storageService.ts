@@ -56,10 +56,11 @@ export const uploadImages = async (
   try {
     // Generate versions with compression
     onStatus?.('compressing');
-    const originalBase64 = await compressImage(base64Data, 1200, 0.8);
+    // Increased quality and resolution for group photos
+    const originalBase64 = await compressImage(base64Data, 2048, 0.85); 
     let thumbBase64: string;
     try {
-        thumbBase64 = await compressImage(base64Data, 300, 0.5);
+        thumbBase64 = await compressImage(base64Data, 400, 0.6);
     } catch (e: unknown) {
         if ((e as Error).name === 'QuotaExceededError') {
              thumbBase64 = originalBase64;
@@ -118,20 +119,27 @@ export const uploadImages = async (
       const blob = await res.blob();
       const buffer = await blob.arrayBuffer();
 
-      const objectKey = `${STORAGE_PATH}/${fileName.replace('public/', '')}`;
+      // Clean up filename: avoid "temp-" in R2 names, use timestamped format if needed
+      let safeFileName = fileName.replace('public/', '');
+      if (safeFileName.startsWith('temp-')) {
+        const timestamp = new Date().toISOString().replace(/[-:T]/g, '').split('.')[0];
+        safeFileName = `upload_${timestamp}_${Math.random().toString(36).substring(7)}.webp`;
+      }
+
+      const objectKey = `${STORAGE_PATH}/${safeFileName}`;
 
       // Get presigned URL from backend
-      const presignRes = await fetch('/api/storage/presign', {
+      const presignRes = await fetch('/api/upload-presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: objectKey, contentType: 'image/webp' })
+        body: JSON.stringify({ photoId: photoId, contentType: 'image/webp' })
       });
 
       if (!presignRes.ok) {
         throw new Error('Failed to get presigned upload URL from backend');
       }
 
-      const { uploadUrl } = await presignRes.json();
+      const { uploadUrl, publicUrl } = await presignRes.json();
 
       // Upload directly to R2 using the presigned URL
       const uploadRes = await fetch(uploadUrl, {
@@ -146,7 +154,7 @@ export const uploadImages = async (
 
       if (isMain && onProgress) onProgress(100);
       
-      return `${R2_PUBLIC_URL}/${objectKey}`;
+      return publicUrl;
     };
 
     const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`, true);
