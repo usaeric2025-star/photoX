@@ -160,7 +160,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
                 
                 if (count === 0 && duplicate.image_url) {
                     const filename = duplicate.storage_id || duplicate.id;
-                    const { cleanupPhysicalStorage } = await import('../storage/cleanupService');
+                    const { cleanupPhysicalStorage } = await import('../storage/deleteService');
                     await cleanupPhysicalStorage([filename], [duplicate.image_url]);
                 }
             }

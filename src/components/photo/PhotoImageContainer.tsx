@@ -35,7 +35,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
   onClick,
   className = '',
   imgClassName = '',
-  loading = 'lazy'
+  loading = 'eager'
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cacheKey = photoId || src || '';
@@ -121,7 +121,7 @@ export const PhotoImageContainer: React.FC<PhotoImageContainerProps> = ({
       {!isImageError && src && shouldLoad && (
         <img 
           draggable={false}
-          loading={loading}
+          loading="eager"
           decoding="async"
           referrerPolicy="no-referrer"
           src={src} 

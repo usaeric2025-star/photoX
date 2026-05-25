@@ -1,6 +1,5 @@
-import { supabase } from '../lib/supabase';
-import { DB_CONFIG } from '../constants/config';
-import { STORAGE_BUCKET, STORAGE_PATH, R2_PUBLIC_URL } from '../config/constants';
+import { supabase } from '../../lib/supabase';
+import { STORAGE } from './storageConfig';
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -27,7 +26,6 @@ export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8
       ctx.drawImage(img, 0, 0, width, height);
       const result = canvas.toDataURL('image/webp', quality);
       
-      // Free memory
       canvas.width = 0;
       canvas.height = 0;
       img.src = '';
@@ -54,9 +52,7 @@ export const uploadImages = async (
   }
 
   try {
-    // Generate versions with compression
     onStatus?.('compressing');
-    // Increased quality and resolution for group photos
     const originalBase64 = await compressImage(base64Data, 2048, 0.85); 
     let thumbBase64: string;
     try {
@@ -71,64 +67,16 @@ export const uploadImages = async (
 
     onStatus?.('uploading');
     const uploadFile = async (base64: string, fileName: string, isMain=false) => {
-      // 1. Check if file already exists in storage
-      // [Deprecated] Supabase Logic:
-      /*
-      const { data: existingFile } = await supabase.storage
-        .from(DB_CONFIG.BUCKET_NAME)
-        .list(fileName.split('/')[0], {
-          search: fileName.split('/')[1]
-        });
-      
-      const fileExists = existingFile && existingFile.length > 0;
-      
-      if (!fileExists || force) {
-        const res = await fetch(base64);
-        const blob = await res.blob();
-        
-        const { error: storageError } = await supabase.storage
-          .from(DB_CONFIG.BUCKET_NAME)
-          .upload(fileName, blob, {
-            contentType: 'image/webp',
-            upsert: true,
-            // @ts-ignore
-            onUploadProgress: (progress: any) => {
-              if (isMain && onProgress) {
-                const percent = (progress.loaded / progress.total) * 100;
-                onProgress(percent);
-              }
-            }
-          } as any);
-
-        if (storageError) throw storageError;
-
-        if (isMain && onProgress) onProgress(100);
-      } else {
-        if (isMain && onProgress) onProgress(100);
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(DB_CONFIG.BUCKET_NAME)
-        .getPublicUrl(fileName);
-      
-      return publicUrl;
-      */
-
-      // [New] Cloudflare R2 S3 API Logic via Presigned URL
       const res = await fetch(base64);
       const blob = await res.blob();
       const buffer = await blob.arrayBuffer();
 
-      // Clean up filename: avoid "temp-" in R2 names, use timestamped format if needed
       let safeFileName = fileName.replace('public/', '');
       if (safeFileName.startsWith('temp-')) {
         const timestamp = new Date().toISOString().replace(/[-:T]/g, '').split('.')[0];
         safeFileName = `upload_${timestamp}_${Math.random().toString(36).substring(7)}.webp`;
       }
 
-      const objectKey = `${STORAGE_PATH}/${safeFileName}`;
-
-      // Get presigned URL from backend
       const presignRes = await fetch('/api/upload-presign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,9 +87,10 @@ export const uploadImages = async (
         throw new Error('Failed to get presigned upload URL from backend');
       }
 
-      const { uploadUrl, publicUrl } = await presignRes.json();
+      const result = await presignRes.json();
+      if (!result.success) throw new Error(result.error);
+      const { uploadUrl, publicUrl } = result.data;
 
-      // Upload directly to R2 using the presigned URL
       const uploadRes = await fetch(uploadUrl, {
         method: 'PUT',
         headers: { 'Content-Type': 'image/webp' },
@@ -163,7 +112,6 @@ export const uploadImages = async (
     return { imageUrl, thumbUrl };
   } catch (err: unknown) {
     console.error("Image processing or upload failed:", err);
-    
     let errorMessage = '请检查网络';
     if (err instanceof Error) {
         errorMessage = err.message;
@@ -172,7 +120,6 @@ export const uploadImages = async (
     } else if (err && typeof err === 'object' && 'message' in err) {
         errorMessage = String((err as any).message);
     }
-    
     throw new Error(`图片处理异常: ${errorMessage}`);
   }
 };

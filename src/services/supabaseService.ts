@@ -5,7 +5,7 @@ export * from './tagService';
 export * from './categoryService';
 export * from './manufacturerService';
 export * from './settingService';
-export * from './storageService';
+export * from './storage';
 export * from './utils';
 export * from './logService';
 export { supabase } from '../lib/supabase';

@@ -87,6 +87,8 @@ interface StoreState {
   showOtherFields: boolean;
   setShowOtherFields: (show: boolean) => void;
   resetForm: () => void;
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: (is: boolean) => void;
 }
 
 const defaultForm: ProductFormData = {
@@ -275,6 +277,11 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setNewPhotoData: (newPhotoData) => set({ newPhotoData }),
   showOtherFields: false,
   setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
+  isSidebarCollapsed: localStorage.getItem('photo_isSidebarCollapsed') === 'true',
+  setIsSidebarCollapsed: (isSidebarCollapsed) => {
+    localStorage.setItem('photo_isSidebarCollapsed', String(isSidebarCollapsed));
+    set({ isSidebarCollapsed });
+  },
 }));
 
 export const useStore = useGalleryStore;

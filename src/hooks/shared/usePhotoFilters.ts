@@ -92,5 +92,5 @@ export function usePhotoFilters(
     searchMaps
   ]);
 
-  return { displayPhotos, gridPhotos };
+  return useMemo(() => ({ displayPhotos, gridPhotos }), [displayPhotos, gridPhotos]);
 }

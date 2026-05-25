@@ -37,7 +37,7 @@ export const MainAdminScreen: React.FC = React.memo(() => {
   } = usePhotoActions();
 
   return (
-    <div className="flex flex-col fixed inset-0 bg-brand-bg overflow-hidden" id="main-admin-screen">
+    <div className="flex flex-col absolute inset-0 bg-brand-bg overflow-hidden" id="main-admin-screen">
       <AdminToolbar 
         photos={photos}
         onManageClick={onManageClick}

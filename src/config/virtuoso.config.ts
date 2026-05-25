@@ -1,4 +1,4 @@
 export const VIRTUOSO_CONFIG = {
-  overscan: (columns: number) => columns * 4, // Increase overscan to load images earlier
-  increaseViewportBy: 800, // Increase viewport buffer for smoother scrolling
+  overscan: (columns: number) => columns * 2, // 调低渲染行数
+  increaseViewportBy: 300, // 调低缓存视口，降低 DOM 数量
 };

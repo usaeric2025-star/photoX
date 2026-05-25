@@ -483,7 +483,7 @@ export const updatePhoto = async (
 
   // If a new base64 image (rotated/edited) is provided, upload it and update image URLs
   if (updates.uri && updates.uri.startsWith('data:image')) {
-    const { uploadImages } = await import('./storageService');
+    const { uploadImages } = await import('./storage');
     const { imageUrl, thumbUrl } = await uploadImages(session.user.id, photoId, updates.uri, undefined, undefined, true);
     updates.image_url = imageUrl;
     updates.thumb_url = thumbUrl;
@@ -579,7 +579,7 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
         .eq('image_url', imageUrl);
       
      if (count === 0) {
-        const { cleanupPhysicalStorage } = await import('./storage/cleanupService');
+        const { cleanupPhysicalStorage } = await import('./storage');
         await cleanupPhysicalStorage([storageId], [imageUrl]);
      }
   }
@@ -654,7 +654,7 @@ export const deletePhotosBatch = async (
     }
     
     if (keysToRemove.length > 0) {
-        const { cleanupPhysicalStorage } = await import('./storage/cleanupService');
+        const { cleanupPhysicalStorage } = await import('./storage');
         await cleanupPhysicalStorage(keysToRemove, urlsToRemove);
     }
     

@@ -231,8 +231,8 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
             loadMorePhotos();
           }
         }}
-        overscan={200}
-        increaseViewportBy={200}
+        overscan={VIRTUOSO_CONFIG.overscan(columns)}
+        increaseViewportBy={VIRTUOSO_CONFIG.increaseViewportBy}
         useWindowScroll={false}
         itemClassName="virtuoso-grid-item"
         listClassName={`grid gap-2 px-1.5 py-2 pb-36 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}

@@ -18,7 +18,7 @@ export const MultiSelectToolbar: React.FC<Props> = ({
   onBatchAiIdentify, onBatchEdit, onGroup, onDelete, onToggleVisibility
 }) => {
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] p-2 rounded-2xl bg-white shadow-2xl border border-slate-100 max-w-[calc(100vw-2rem)] w-auto flex-nowrap flex items-center gap-1">
+    <div className="p-2 rounded-2xl bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-slate-100 max-w-[calc(100vw-2rem)] w-auto flex-nowrap flex items-center gap-1">
       <button 
         onClick={onClose} 
         className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all flex-shrink-0" 

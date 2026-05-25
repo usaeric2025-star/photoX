@@ -1,4 +1,4 @@
-import { compressImage } from '../services/storageService';
+import { compressImage } from '../services/storage';
 import { calculateMD5FromFile, calculateMD5FromArrayBuffer } from '../services/utils';
 import { IMAGE_COMPRESS } from '../constants/config';
 import { generateThumbHash } from './thumbHash';

@@ -2,8 +2,9 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { S3Client, PutObjectCommand, ListObjectsV2Command, HeadObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getR2Client } from "./src/services/storage/client";
 
 const app = express();
 export { app };
@@ -22,34 +23,6 @@ async function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-async function getR2Client() {
-  const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
-  let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
-  let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
-  
-  // Safeguard for common user mistakes (copy-pasting swapped keys)
-  if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
-    const temp = r2AccessKeyId;
-    r2AccessKeyId = r2SecretAccessKey;
-    r2SecretAccessKey = temp;
-  }
-
-  if (!r2AccessKeyId || !r2SecretAccessKey) {
-    console.error("[getR2Client] R2 Credentials missing!");
-    throw new Error("R2 credentials missing (R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY)");
-  }
-
-  return new S3Client({
-    region: 'auto',
-    endpoint: r2Endpoint,
-    credentials: {
-      accessKeyId: r2AccessKeyId,
-      secretAccessKey: r2SecretAccessKey,
-    },
-    forcePathStyle: true,
-  });
-}
-
 app.use(express.json({ limit: '50mb' }));
 
   app.post("/api/upload-presign", async (req, res) => {
@@ -58,15 +31,7 @@ app.use(express.json({ limit: '50mb' }));
       if (!photoId) return res.status(400).json({ error: "photoId required" });
       
       const fileName = `photox/public/${photoId}.webp`;
-      const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
-      const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
-      
-      const s3Client = new S3Client({
-        region: 'auto',
-        endpoint: process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com',
-        credentials: { accessKeyId: r2AccessKeyId, secretAccessKey: r2SecretAccessKey },
-        forcePathStyle: true,
-      });
+      const s3Client = await getR2Client();
       
       const command = new PutObjectCommand({
         Bucket: process.env.R2_BUCKET_NAME || 'photox-storage',
@@ -77,9 +42,9 @@ app.use(express.json({ limit: '50mb' }));
       const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
       const publicUrl = `${process.env.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev'}/${fileName}`;
       
-      res.json({ uploadUrl, publicUrl });
+      res.json({ success: true, data: { uploadUrl, publicUrl } });
     } catch(e: any) {
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ success: false, error: e.message });
     }
   });
 
@@ -87,7 +52,7 @@ app.use(express.json({ limit: '50mb' }));
     try {
       const { fileKeys } = req.body;
       if (!fileKeys || !Array.isArray(fileKeys)) {
-        return res.status(400).json({ error: "fileKeys array required" });
+        return res.status(400).json({ success: false, error: "fileKeys array required" });
       }
       
       const s3Client = await getR2Client();
@@ -104,12 +69,12 @@ app.use(express.json({ limit: '50mb' }));
       res.json({ success: true });
     } catch(e: any) {
       console.error("[R2 Delete Error]", e);
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ success: false, error: e.message });
     }
   });
 
   app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
+    res.json({ success: true, data: { status: "ok", uptime: process.uptime(), timestamp: Date.now() } });
   });
 
   app.get("/api/storage/audit", async (req, res) => {
@@ -143,9 +108,9 @@ app.use(express.json({ limit: '50mb' }));
       dbFiles.forEach(f => { if (r2Files.has(f)) healthy++; else missing++; });
       r2Files.forEach(f => { if (!dbFiles.has(f)) orphans++; });
 
-      res.json({ healthy, missing, orphans });
+      res.json({ success: true, data: { healthy, missing, orphans } });
     } catch (e: any) {
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ success: false, error: e.message });
     }
   });
 
@@ -188,10 +153,10 @@ app.use(express.json({ limit: '50mb' }));
         }));
       }
 
-      res.json({ success: true, cleanedCount: r2FilesToClean.length, files: r2FilesToClean });
+      res.json({ success: true, data: { cleanedCount: r2FilesToClean.length, files: r2FilesToClean } });
     } catch (e: any) {
       console.error("[Storage Clean Error]", e);
-      res.status(500).json({ error: e.message });
+      res.status(500).json({ success: false, error: e.message });
     }
   });
 

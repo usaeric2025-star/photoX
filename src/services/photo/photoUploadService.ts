@@ -1,7 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG, PAGINATION } from '../../constants/config';
 import { Photo } from '../../types';
-import { uploadImages } from '../storageService';
+import { uploadImages } from '../storage';
 import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
 import { checkDuplicate, DuplicatePhotoError } from '../../utils/duplicateCheck';
@@ -78,7 +78,7 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
 
   if (dbError) {
     if (photo.image_url) {
-      const { cleanupPhysicalStorage } = await import('../storage/cleanupService');
+      const { cleanupPhysicalStorage } = await import('../storage/deleteService');
       cleanupPhysicalStorage([photo.storage_id || photo.id], [photo.image_url]).catch(() => {});
     }
     throw new Error(`数据库保存失败: ${dbError.message}`);
