@@ -13,7 +13,7 @@ import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GalleryDialogs } from '../PublicGallery/GalleryDialogs';
 import { PublicFloatingButtons } from './PublicFloatingButtons';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
-import { useScrollRestoration, usePhotoFilters, useFeedback, useManufacturersQuery, useCategoriesQuery, useTagsQuery, useSettings, useInfinitePhotos } from '../../hooks';
+import { useScrollRestoration, usePhotoFilters, useFeedback, useCategoriesQuery, useTagsQuery, useSettings, useInfinitePhotos, usePhotoCountQuery } from '../../hooks';
 import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { PAGINATION } from '../../constants/config';
@@ -43,7 +43,6 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
   // Queries
   const { data: categories = [] } = useCategoriesQuery();
   const { data: contextTags = [] } = useTagsQuery();
-  const { data: manufacturers = [] } = useManufacturersQuery();
   const { settings } = useSettings();
 
   // State for login
@@ -92,6 +91,12 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
     sortOrder: sortOrder,
     isAdminMode: false
   }, PAGINATION.PUBLIC_PAGE_SIZE);
+
+  const { data: totalPhotoCount } = usePhotoCountQuery({
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: debouncedSearchQuery
+  }, false);
 
   const photos = useMemo(() => infiniteQuery.data?.pages.flatMap(p => p.photos) || [], [infiniteQuery.data]);
   const isFetchingNextPage = infiniteQuery.isFetchingNextPage;
@@ -241,6 +246,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = (props) => {
       {lightboxIndex === null && (
         <GalleryHeader 
           photos={photos}
+          totalCount={totalPhotoCount}
           isRefreshing={isSyncing}
           isMultiSelect={false}
           onRefresh={() => {}}

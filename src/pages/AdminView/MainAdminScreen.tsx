@@ -2,7 +2,7 @@ import React from 'react';
 import { AdminFloatingButtons } from '@/components/admin/AdminFloatingButtons';
 import { Photo, Category, Tag, User, AppSettings } from '@/types';
 import { AdminToolbar } from './AdminToolbar';
-import { AdminPhotoGrid } from './AdminPhotoGrid';
+import { AdminGallery } from '@/components/admin/AdminGallery';
 import { AdminEmptyState } from './AdminEmptyState';
 
 import { useAdmin } from '@/contexts/AdminContext';
@@ -14,22 +14,20 @@ import { translations } from '@/lib/translations';
 export const MainAdminScreen: React.FC = React.memo(() => {
   const logic = useAdmin();
   const {
-    photos, onRefresh, cloudCount,
+    user, photos, onRefresh, cloudCount,
     isSyncing, loginWithGoogle,
-    infinitePhotosQuery,
+    isLoadingPhotos,
     handleManageClick: onManageClick,
-    handleLoadMoreCallback: onLoadMore,
     handleImport: onImport,
   } = logic;
 
-  const hasNextPage = !!infinitePhotosQuery?.hasNextPage;
-  const isFetchingNextPage = !!infinitePhotosQuery?.isFetchingNextPage;
-  const isLoading = !!infinitePhotosQuery?.isLoading;
-
   const { selectedIds, clear } = useMultiSelect();
-  const { lang } = useGalleryStore(useShallow(s => ({
-    lang: s.appLang
+  const { lang, isStaffMode } = useGalleryStore(useShallow(s => ({
+    lang: s.appLang,
+    isStaffMode: s.isStaffMode
   })));
+  
+  const isEffectiveStaffMode = isStaffMode && !user;
   
   const t = translations[lang] || translations.zh;
   
@@ -73,18 +71,13 @@ export const MainAdminScreen: React.FC = React.memo(() => {
         }}
       />
       <div className="flex-1 min-h-0 relative">
-        {photos.length === 0 && !isSyncing && !isLoading ? (
+        {photos.length === 0 && !isSyncing && !isLoadingPhotos ? (
           <AdminEmptyState t={t} />
         ) : (
-          <AdminPhotoGrid 
-            photos={photos}
-            isSyncing={isSyncing}
+          <AdminGallery 
+            isRefreshing={isSyncing || isLoadingPhotos}
             onRefresh={onRefresh}
-            cloudCount={cloudCount}
-            onLoadMore={onLoadMore}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            isLoading={isLoading}
+            isStaffMode={isEffectiveStaffMode}
           />
         )}
         <AdminFloatingButtons 

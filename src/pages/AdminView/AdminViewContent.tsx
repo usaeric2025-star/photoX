@@ -27,18 +27,18 @@ import { LanguageCode } from '@/lib/translations';
 export const AdminViewContent: React.FC = () => {
   const logic = useAdmin();
   const {
-    user, authChecked, t, lang, isSyncing, infinitePhotosQuery
+    user, authChecked, t, lang, isSyncing, isLoadingPhotos
   } = logic;
 
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   useEffect(() => {
-    if (infinitePhotosQuery && !infinitePhotosQuery.isLoading) {
+    if (isLoadingPhotos === false) {
       setHasLoadedOnce(true);
     }
-  }, [infinitePhotosQuery?.isLoading]);
+  }, [isLoadingPhotos]);
 
-  const isLoading = !hasLoadedOnce && infinitePhotosQuery?.isLoading;
+  const isLoading = !hasLoadedOnce && isLoadingPhotos;
 
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
@@ -146,7 +146,7 @@ export const AdminViewContent: React.FC = () => {
               />
             </React.Suspense>
 
-            <main className={`flex-1 relative overflow-hidden ${logic.activeScreen === 'home' || logic.activeScreen === 'manage' || logic.activeScreen === 'settings' ? 'pb-20 lg:pb-0' : ''}`}>
+            <main className="flex-1 relative overflow-hidden">
               <div 
                 className={`absolute inset-0 transition-opacity duration-200 ease-out ${logic.activeScreen === 'home' || logic.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
               >
@@ -176,46 +176,6 @@ export const AdminViewContent: React.FC = () => {
               <PhotoEditDrawer />
             )}
           </AnimatePresence>
-
-          {/* Mobile Bottom Navigation */}
-          {!isEffectiveStaffMode && logic.adminPreviewMode !== 'public' && (
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 z-[100] px-6 py-3 flex justify-between items-center safe-area-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-              <button 
-                onClick={() => logic.setActiveScreen('home')}
-                className={`p-2 flex flex-col items-center gap-1 transition-all active:scale-90 ${logic.activeScreen === 'home' ? 'text-blue-600' : 'text-slate-400'}`}
-              >
-                <Home size={20} />
-                <span className="text-[10px] font-bold">照片库</span>
-              </button>
-              <button 
-                onClick={() => logic.setActiveScreen('manage')}
-                className={`p-2 flex flex-col items-center gap-1 transition-all active:scale-90 ${logic.activeScreen === 'manage' ? 'text-blue-600' : 'text-slate-400'}`}
-              >
-                <Cloud size={20} />
-                <span className="text-[10px] font-bold">迁移/管理</span>
-              </button>
-              <button 
-                onClick={logic.handleImport}
-                className="mb-6 bg-blue-600 p-3 rounded-full text-white shadow-lg active:scale-90 transition-all border-4 border-white"
-              >
-                <Plus size={24} />
-              </button>
-              <button 
-                onClick={() => logic.setActiveScreen('manage')} // For mobile simplify jump to manage for now
-                className={`p-2 flex flex-col items-center gap-1 transition-all active:scale-90 ${logic.activeScreen === 'ai_settings' ? 'text-blue-600' : 'text-slate-400'}`}
-              >
-                <Terminal size={20} />
-                <span className="text-[10px] font-bold">控制台</span>
-              </button>
-              <button 
-                onClick={() => logic.setActiveScreen('settings')}
-                className={`p-2 flex flex-col items-center gap-1 transition-all active:scale-90 ${logic.activeScreen === 'settings' ? 'text-blue-600' : 'text-slate-400'}`}
-              >
-                <Settings2 size={20} />
-                <span className="text-[10px] font-bold">全局设置</span>
-              </button>
-            </div>
-          )}
         </div>
       </div>
       </DataLoadingContainer>

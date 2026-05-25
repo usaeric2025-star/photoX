@@ -89,7 +89,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   const { 
     columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
     isStaffMode, viewMode, activeGroupId, activePhotoId,
-    filterCatId, filterTagIds, searchQuery, sortOrder
+    filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
   } = useGalleryStore(useShallow(s => ({
     columns: s.columns,
     setActiveGroupId: s.setActiveGroupId,
@@ -102,7 +102,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
     activePhotoId: s.activePhotoId,
     filterCatId: s.filterCatId,
     filterTagIds: s.filterTagIds,
-    searchQuery: s.searchQuery,
+    debouncedSearchQuery: s.debouncedSearchQuery,
     sortOrder: s.sortOrder
   })));
   
@@ -114,7 +114,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any> }> = React.memo
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: filterCatId,
     tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
-    searchQuery: searchQuery,
+    searchQuery: debouncedSearchQuery,
     sortOrder: sortOrder,
     isAdminMode
   }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE);

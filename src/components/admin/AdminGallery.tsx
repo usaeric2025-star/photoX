@@ -10,10 +10,11 @@ import { GallerySkeleton } from '../PublicGallery/GallerySkeleton';
 import { GalleryEmpty } from '../PublicGallery/GalleryEmpty';
 import { GroupDetailView } from '../GroupDetailView';
 import { getSkeletonCount } from '../../utils/skeletonHelpers';
-import { useScrollRestoration, usePhotoFilters, useManufacturersQuery, useTagsQuery, useCategoriesQuery, useSettings, useInfinitePhotos, useAdminMode, useTasks } from '../../hooks';
+import { useScrollRestoration, usePhotoFilters, useAdminMode, useTasks, useInfinitePhotos } from '../../hooks';
 import { useGalleryStore, useShallow } from '../../store';
 import { PAGINATION } from '../../constants/config';
 import { translations } from '../../lib/translations';
+import { useAdmin } from '@/contexts/AdminContext';
 
 interface AdminGalleryProps {
   isRefreshing?: boolean;
@@ -27,12 +28,13 @@ interface AdminGalleryProps {
 export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
   useScrollRestoration('admin_gallery_scroll');
 
-  // Queries
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: contextTags = [] } = useTagsQuery();
-  const { data: qManufacturers = [] } = useManufacturersQuery();
-  const { settings } = useSettings();
-  const manufacturers = qManufacturers;
+  const {
+    photos,
+    categories,
+    tags: contextTags,
+    manufacturers,
+    settings,
+  } = useAdmin();
 
   const { 
     showGroupsCollapsed, 
@@ -44,7 +46,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
     sortOrder, setSortOrder,
     filterCatId,
     filterTagIds,
-    searchQuery,
+    debouncedSearchQuery,
     viewMode
   } = useGalleryStore(useShallow(s => ({
     showGroupsCollapsed: s.showGroupsCollapsed,
@@ -60,26 +62,24 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
     setSortOrder: s.setSortOrder,
     filterCatId: s.filterCatId,
     filterTagIds: s.filterTagIds,
-    searchQuery: s.searchQuery,
+    debouncedSearchQuery: s.debouncedSearchQuery,
     viewMode: s.viewMode
   })));
+
+  const infinitePhotosQuery = useInfinitePhotos({
+    category_id: filterCatId,
+    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
+    searchQuery: debouncedSearchQuery,
+    sortOrder: sortOrder,
+    isAdminMode: true
+  }, PAGINATION.ADMIN_BATCH_SIZE);
 
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => props.isAnalyzing || tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [props.isAnalyzing, tasks]);
 
   const isAdminMode = useAdminMode() || viewMode === 'admin';
 
-  // Direct data fetch (shared with PhotoBoard)
-  const infiniteQuery = useInfinitePhotos({
-    category_id: filterCatId,
-    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
-    searchQuery: searchQuery,
-    sortOrder: sortOrder,
-    isAdminMode: true
-  }, PAGINATION.ADMIN_BATCH_SIZE);
-
-  const photos = useMemo(() => infiniteQuery.data?.pages.flatMap(p => p.photos) || [], [infiniteQuery.data]);
-  const isFetchingNextPage = infiniteQuery.isFetchingNextPage;
+  const isFetchingNextPage = infinitePhotosQuery.isFetchingNextPage;
 
   const { onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze } = usePhotoActions();
 
@@ -111,8 +111,8 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
   }, [sortOrder, setSortOrder]);
 
   const handleLoadMore = useCallback(() => {
-    if (infiniteQuery.hasNextPage && !infiniteQuery.isFetching) infiniteQuery.fetchNextPage();
-  }, [infiniteQuery]);
+    if (infinitePhotosQuery.hasNextPage && !infinitePhotosQuery.isFetching) infinitePhotosQuery.fetchNextPage();
+  }, [infinitePhotosQuery]);
 
   const virtuosoComponents = useMemo(() => ({
     Footer: () => {
@@ -135,7 +135,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = React.memo((props) => {
         </div>
       );
     }
-  }), [settings?.logo_url, settings?.app_name, infiniteQuery.isFetchingNextPage, t.loading]);
+  }), [settings?.logo_url, settings?.app_name, infinitePhotosQuery.isFetchingNextPage, t.loading]);
 
   const isSyncing = !!props.isRefreshing;
 

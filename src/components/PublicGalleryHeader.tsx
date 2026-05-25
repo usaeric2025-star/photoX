@@ -50,8 +50,8 @@ export const PublicGalleryHeader: React.FC<PublicGalleryHeaderProps> = ({
         <div className="flex items-center bg-[#F1F3F4] px-2.5 py-1 rounded-full border border-[#ECECEC] shrink-0">
           <span className="text-[11px] font-bold text-[#5F6368] tracking-tight whitespace-nowrap">
             {totalCount !== undefined && totalCount !== null 
-              ? `${totalCount} photos` 
-              : `${photos?.length || 0} photos`}
+              ? `${totalCount} ${t.photosUnit}` 
+              : `... ${t.photosUnit}`}
           </span>
         </div>
       </div>

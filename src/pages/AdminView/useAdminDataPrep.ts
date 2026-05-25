@@ -254,7 +254,7 @@ export const useAdminDataPrep = () => {
   }, [runTask, showError, showSuccess, isMaintenanceRunning]);
 
   return useMemo(() => ({
-    user, authChecked: true, logout, navigate, infinitePhotosQuery, 
+    user, authChecked: true, logout, navigate, isLoadingPhotos: infinitePhotosQuery.isLoading, 
     t: translations[store.appLang as LanguageCode] || translations.en, 
     lang: store.appLang, 
     onRefresh: () => refreshCloudData(user, () => {}),
@@ -314,7 +314,7 @@ export const useAdminDataPrep = () => {
     updateCategory: (id: string, name: string) => categoryOps.updateCategory(id, { name }),
     updateManufacturer: (id: string, name: string) => categoryOps.updateManufacturer(id, { name }),
   }), [
-    user, logout, navigate, infinitePhotosQuery, 
+    user, logout, navigate, infinitePhotosQuery.isLoading, 
     store, filters, importer, sync, ai, edit, categoryOps, actions, 
     isSyncing, isAnalyzing, photos, categories, tags, manufacturers, groupPhotos, initialPhotoId, 
     checkSyncLock, showError, onEditPhotoById, handleLogoUpload, showSuccess, disable, 

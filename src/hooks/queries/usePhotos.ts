@@ -68,6 +68,7 @@ export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_i
     }),
     queryFn: () => getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode),
     placeholderData: keepPreviousData,
+    staleTime: 1000 * 60, // 1 分钟
   });
 };
 
