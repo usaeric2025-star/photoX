@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { flattenPhotoInfiniteQueryPages, normalizeAdminPhotos } from '@/lib/selectors/photos';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { GalleryFilters } from '../ui/GalleryFilters';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { GroupDetailView } from '../GroupDetailView';
@@ -33,7 +32,7 @@ interface UnifiedGalleryProps {
  * @remarks
  * 臨時降級開關，待 fd 根因修復後設為 false
  */
-const ADMIN_GALLERY_DISABLED = true;
+const ADMIN_GALLERY_DISABLED = false;
 
 export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   variant,
@@ -212,9 +211,7 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
             transition={{ duration: 0.3 }}
             className="h-full"
           >
-            <ErrorBoundary>
-              <PhotoBoard virtuosoRef={virtuosoRef} variant={variant} />
-            </ErrorBoundary>
+            <PhotoBoard virtuosoRef={virtuosoRef} variant={variant} />
           </motion.div>
         </AnimatePresence>
       </div>

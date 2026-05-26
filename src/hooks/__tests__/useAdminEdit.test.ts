@@ -7,7 +7,7 @@ vi.mock('@/hooks', () => ({
   useTaskExecutor: () => ({ runTask: vi.fn() }),
   useDeletePhotoMutation: () => ({ mutateAsync: vi.fn() }),
   useUpdatePhotoMutation: () => ({ mutateAsync: vi.fn() }),
-  useBatchEditMutation: () => ({ mutateAsync: vi.fn() }),
+  useBatchEditMutation: () => () => ({ mutateAsync: vi.fn() }),
   useGroupPhotosMutation: () => ({ mutateAsync: vi.fn() }),
   useUngroupMutation: () => ({ mutateAsync: vi.fn() }),
   useFeedback: () => ({ showError: vi.fn(), showSuccess: vi.fn() }),

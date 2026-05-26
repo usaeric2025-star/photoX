@@ -15,34 +15,42 @@ export type VirtualGridProps = Partial<Omit<VirtualizerOptions<HTMLDivElement, E
   renderItem: (index: number) => React.ReactNode;
   containerClassName?: string;
   onEndReached?: () => void;
+  header?: React.ReactNode;
   footer?: React.ReactNode;
 };
 
 export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const bridge = useInteractionBridge();
   const lanes = props.lanes || 1;
 
   // Track the actual container element's width
   const [containerWidth, setContainerWidth] = React.useState<number>(800);
+  const [headerHeight, setHeaderHeight] = React.useState<number>(0);
 
   React.useEffect(() => {
     if (!containerRef.current) return;
     
-    // Set initial width safely
     setContainerWidth(containerRef.current.clientWidth || 800);
 
     if (typeof window === 'undefined' || !window.ResizeObserver) return;
 
     const observer = new ResizeObserver((entries) => {
-      if (entries[0]) {
-        setContainerWidth(entries[0].contentRect.width || 800);
+      for (const entry of entries) {
+        if (entry.target === containerRef.current) {
+          setContainerWidth(entry.contentRect.width || 800);
+        } else if (entry.target === headerRef.current) {
+          setHeaderHeight(entry.contentRect.height || 0);
+        }
       }
     });
     
     observer.observe(containerRef.current);
+    if (headerRef.current) observer.observe(headerRef.current);
+
     return () => observer.disconnect();
-  }, []);
+  }, [props.header]);
 
   // Let's decide whether we are virtualizing rows or single items
   const isGridLayout = lanes > 1;
@@ -51,8 +59,6 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
   const estimateSize = React.useCallback(
     (index: number) => {
       if (isGridLayout) {
-        // Mathematically precise row height based on width of grid column cells
-        // paddingX = 12px (based on container padding style "px-1.5")
         const paddingX = 12;
         const availableWidth = Math.max(200, containerWidth - paddingX);
         const cellWidth = availableWidth / lanes;
@@ -69,12 +75,25 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
     estimateSize,
     overscan: props.overscan,
     measureElement: (el) => el.getBoundingClientRect().height,
+    scrollPaddingStart: headerHeight,
   });
 
-  // Force measurements rebuild when containerWidth or lanes changes
+  // Force measurements rebuild when containerWidth, lanes or headerHeight changes
   React.useEffect(() => {
     virtualizer.measure();
-  }, [containerWidth, lanes, virtualizer]);
+  }, [containerWidth, lanes, headerHeight, virtualizer]);
+
+  React.useImperativeHandle(ref, () => ({
+    scrollToIndex: (args: { index: number; align?: 'start' | 'center' | 'end' | 'auto'; behavior?: 'auto' | 'smooth' }) => {
+      const rowIndex = isGridLayout ? Math.floor(args.index / lanes) : args.index;
+      virtualizer.scrollToIndex(rowIndex, { align: args.align, behavior: args.behavior });
+    },
+    scrollTo: (args: { top?: number; behavior?: 'auto' | 'smooth' }) => {
+      if (containerRef.current) {
+        containerRef.current.scrollTo({ top: args.top, behavior: args.behavior });
+      }
+    }
+  }));
 
   const lastItemIndex = virtualizer.getVirtualItems().at(-1)?.index;
   React.useEffect(() => {
@@ -107,8 +126,14 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
       className={props.containerClassName || ''}
       style={{ overflowY: 'auto', height: '100%', width: '100%' }}
     >
+      {props.header && (
+        <div ref={headerRef} className="w-full">
+          {props.header}
+        </div>
+      )}
       <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative', width: '100%' }}>
         {virtualizer.getVirtualItems().map((virtualRow) => {
+          const itemOffset = virtualRow.start;
           if (!isGridLayout) {
             return (
               <div
@@ -120,7 +145,7 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
                   top: 0,
                   left: 0,
                   width: '100%',
-                  transform: `translate3d(0, ${virtualRow.start}px, 0)`,
+                  transform: `translate3d(0, ${itemOffset}px, 0)`,
                 }}
               >
                 {props.renderItem(virtualRow.index)}
@@ -139,7 +164,7 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
                 top: 0,
                 left: 0,
                 width: '100%',
-                transform: `translate3d(0, ${virtualRow.start}px, 0)`,
+                transform: `translate3d(0, ${itemOffset}px, 0)`,
                 display: 'grid',
                 gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))`,
               }}

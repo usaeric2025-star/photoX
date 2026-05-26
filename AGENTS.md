@@ -122,6 +122,7 @@ sourceOfTruth: "ARCHITECTURE.md"
 
 -   ✅ ErrorBoundary fallback 必須是純靜態 JSX，嚴禁任何動態內容
 -   ✅ componentDidCatch 嚴禁 setState / 副作用 / 組件渲染
+-   ✅ 同一渲染鏈路禁止多層 EB 嵌套
 -   ✅ 所有新增 ErrorBoundary 必須通過隔離測試驗收
 
 ## 🚨 常见错误 → 正确做法

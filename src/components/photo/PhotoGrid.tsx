@@ -3,6 +3,7 @@ import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { motion } from 'motion/react';
 import { PHOTO_GRID_CONFIG } from '../../config/virtuoso.config';
 import { Photo } from '../../types';
+import { interactionBus } from '@/lib/interactionBus';
 import { GalleryVariant } from '@/types/variant';
 import { PhotoCard } from '../photo/PhotoCard';
 import { useGalleryStore, useShallow } from '../../store';
@@ -49,7 +50,7 @@ function getSkeletonCount(total: number = 0, columns: number): number {
   return columns * 3;
 }
 
-interface VirtuosoGridContext {
+interface GridContext {
   isFetchingNextPage: boolean;
   hasNextPage: boolean;
   hasPhotos: boolean;
@@ -57,9 +58,9 @@ interface VirtuosoGridContext {
   textEndOfList: string;
 }
 
-const MemoizedFooter = React.memo(({ context }: { context?: VirtuosoGridContext }) => {
-  if (!context) return null;
-  const { isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList } = context;
+const MemoizedFooter = React.memo(({ 
+  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList 
+}: GridContext) => {
   if (isFetchingNextPage) {
     return (
       <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
@@ -82,10 +83,6 @@ const MemoizedFooter = React.memo(({ context }: { context?: VirtuosoGridContext 
   return null;
 });
 MemoizedFooter.displayName = 'MemoizedFooter';
-
-const VIRTUOSO_COMPONENTS = {
-  Footer: MemoizedFooter
-};
 
 export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: GalleryVariant }> = React.memo(({ virtuosoRef, variant }) => {
   const { 
@@ -163,14 +160,6 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
 
   const isFilteringFetching = infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage;
 
-  const virtuosoContext = React.useMemo(() => ({
-    isFetchingNextPage,
-    hasNextPage,
-    hasPhotos: displayPhotos.length > 0,
-    textLoading: (t as any).loading || '正在载入更多...',
-    textEndOfList: (t as any).endOfList || '已经到底啦'
-  }), [isFetchingNextPage, hasNextPage, displayPhotos.length, t]);
-
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
      setActiveGroupId(gid);
      if (photoId) {
@@ -201,6 +190,27 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     }
     prevActiveGroupId.current = activeGroupId;
   }, [activeGroupId, gridPhotos, activePhotoId, virtuosoRef]);
+
+  const { isInfiniteMode } = useGalleryStore(useShallow(s => ({ isInfiniteMode: s.isInfiniteMode })));
+
+  // [INTERACTION-BRIDGE-SYNC]
+  // Sync the high-performance Interaction Bus back to the Zustand Store
+  // specifically for the Batch Toolbar and global selection awareness.
+  const { setSelectedIds, setIsMultiSelectMode } = useGalleryStore(useShallow(s => ({
+    setSelectedIds: s.setSelectedIds,
+    setIsMultiSelectMode: s.setIsMultiSelectMode
+  })));
+
+  useEffect(() => {
+    const unsubscribe = interactionBus.subscribe((state) => {
+      // Use requestAnimationFrame to batch state updates and avoid render-loop interference
+      requestAnimationFrame(() => {
+        setIsMultiSelectMode(state.isMultiSelect);
+        setSelectedIds(Array.from(state.selectedIds));
+      });
+    });
+    return () => { unsubscribe(); };
+  }, [setIsMultiSelectMode, setSelectedIds]);
 
   const isInitialLoad = infinitePhotosQuery.isLoading && photos.length === 0;
 
@@ -265,7 +275,15 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
               </div>
             );
           }}
-          footer={<MemoizedFooter context={virtuosoContext} />}
+          footer={
+            <MemoizedFooter 
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              hasPhotos={displayPhotos.length > 0}
+              textLoading={(t as any).loading || '正在载入更多...'}
+              textEndOfList={(t as any).endOfList || '已经到底啦'}
+            />
+          }
         />
       </div>
       {isFilteringFetching && (

@@ -1,5 +1,4 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Photo, Category, Manufacturer } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
@@ -11,6 +10,7 @@ import { useStore, useShallow } from '../../store';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { translations } from '../../lib/translations';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
+import { interactionBus } from '@/lib/interactionBus';
 
 export interface PhotoCardProps {
   variant: GalleryVariant;
@@ -90,6 +90,12 @@ const toTitleCase = (str: string) => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 };
 
+/**
+ * @remarks
+ * 虛擬滾動容器內嚴禁 auto-animate ref，僅允許 CSS 過渡.
+ * Any animation requiring React state or refs that triggers setStates inside
+ * the virtualizer loop will cause infinite update depth loop.
+ */
 export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
   variant, photo, index, showGroupsCollapsed,
   onGroupClick, 
@@ -97,11 +103,33 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   className = '', onClick,
   hideDetails = false
 }) => {
-  const { state, setters } = useInteractionBridge();
-  const [parent] = useAutoAnimate();
+  const { setters } = useInteractionBridge();
+  const cardRef = useRef<HTMLDivElement>(null);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
-  const isSelected = state.selectedIds.has(photo.id);
-  const isMultiSelect = state.isMultiSelect;
+
+  // Initial values for the first render to avoid flicker
+  const initialIsSelected = interactionBus.current.selectedIds.has(photo.id);
+  const initialIsMultiSelect = interactionBus.current.isMultiSelect;
+
+  // Subscription for zero-re-render UI updates
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    const unsubscribe = interactionBus.subscribe((state) => {
+      if (!cardRef.current) return;
+      const isSelected = state.selectedIds.has(photo.id);
+      
+      // Update DOM directly to avoid React re-render overhead in the grid
+      if (cardRef.current.dataset.selected !== String(isSelected)) {
+        cardRef.current.dataset.selected = String(isSelected);
+      }
+      if (cardRef.current.dataset.multiselect !== String(state.isMultiSelect)) {
+        cardRef.current.dataset.multiselect = String(state.isMultiSelect);
+      }
+    });
+
+    return () => { unsubscribe(); };
+  }, [photo.id]);
 
   // Ensure consistent count access
   const photoCount = photo.member_count ?? 1;
@@ -121,10 +149,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   );
   const { can } = usePermission();
 
-  const toggle = useCallback(() => {
-    setters.toggleSelected(photo.id);
-  }, [photo.id, setters]);
-
   const handleOpenLightbox = useCallback(() => {
     onLightboxOpen(photo);
   }, [photo, onLightboxOpen]);
@@ -135,8 +159,10 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       return;
     }
 
+    const { isMultiSelect } = interactionBus.current;
+
     if (isManagement) {
-      if (state.isMultiSelect && !e.shiftKey) {
+      if (isMultiSelect && !e.shiftKey) {
         setters.toggleSelected(photo.id);
       } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
         onGroupClick(photo.group_id, photo.id);
@@ -150,17 +176,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         handleOpenLightbox();
       }
     }
-  }, [isManagement, state.isMultiSelect, setters, photo.id, showGroupsCollapsed, photo.group_id, onGroupClick, handleOpenLightbox, onClick]);
+  }, [isManagement, setters, photo.id, showGroupsCollapsed, photo.group_id, onGroupClick, handleOpenLightbox, onClick]);
 
   const handleLongPress = useCallback(() => {
     if (!isManagement || !can('photo:edit')) return;
+    const { isMultiSelect } = interactionBus.current;
     if (!isMultiSelect) {
       setters.setIsMultiSelect(true);
       setters.setSelectedIds(new Set([photo.id]));
     } else {
-      toggle();
+      setters.toggleSelected(photo.id);
     }
-  }, [isManagement, can, isMultiSelect, setters, photo.id, toggle]);
+  }, [isManagement, can, setters, photo.id]);
 
   const displayCatName = useMemo(() => 
     getTranslatedCategoryName(photo.category_id, categories, appLang, t),
@@ -187,12 +214,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   );
 
   const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
-
-  const cardSelectedClasses = isManagement
-    ? (isMultiSelect && isSelected 
-        ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' 
-        : 'md:hover:scale-[1.02] active:scale-[0.95]')
-    : 'active:scale-[0.95]'; // Public card: No zoom on hover as specified by the instructions
 
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressedRef = useRef(false);
@@ -262,28 +283,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     }
 
     handleClick(e);
-  }, [variant, handleClick]);
-
-  const imgClassName = useMemo(() => {
-    if (isManagement) {
-      return `${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''}`;
-    }
-    return '';
-  }, [variant, isMultiSelect, isSelected, is_hidden]);
-
-  const containerClasses = useMemo(() => {
-    const base = "aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group";
-    const bg = isManagement ? 'bg-slate-50 rounded-lg' : 'bg-slate-100 rounded-xl';
-    const border = isManagement && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : '';
-    return `${base} ${bg} ${cardSelectedClasses} ${border} ${className}`;
-  }, [isManagement, is_hidden, cardSelectedClasses, className]);
+  }, [isManagement, handleClick]);
 
   return (
     <div 
-      ref={parent}
+      ref={cardRef}
       data-photo-id={photo.id}
-      data-selected={isSelected}
-      data-multiselect={isMultiSelect}
+      data-selected={initialIsSelected}
+      data-multiselect={initialIsMultiSelect}
       onContextMenu={handleContextMenu}
       onMouseDown={startPress}
       onMouseUp={cancelPress}
@@ -295,22 +302,34 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onClick={handleCardClick}
       className={`
         aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group bg-slate-50 rounded-lg 
-        ${isManagement && isSelected ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' : 'md:hover:scale-[1.02] active:scale-[0.95]'}
+        data-[selected=true]:ring-[3px] data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.98] data-[selected=true]:shadow-lg data-[selected=true]:z-10
+        ${isManagement ? 'md:hover:scale-[1.02] active:scale-[0.95]' : 'active:scale-[0.95]'}
         ${isManagement && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : ''}
         ${className}
       `}
       style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}
     >
-      <ResponsivePhoto
-        photo={photo}
-        variant="sm"
-        aspectRatio={1}
-        imgClassName={`${imgClassName} w-full h-full object-cover aspect-square`}
-      />
+      <div className="w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]">
+        <ResponsivePhoto
+          photo={photo}
+          variant="sm"
+          aspectRatio={1}
+          imgClassName={`w-full h-full object-cover aspect-square ${is_hidden ? 'opacity-70' : ''}`}
+        />
+      </div>
 
-      {isManagement && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
-      {isManagement && is_hidden && !isMultiSelect && (
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
+      {isManagement && (
+        <div className="hidden group-data-[multiselect=true]:flex absolute top-0 left-0 w-full h-full transition-all duration-300 items-center justify-center p-3 sm:p-4 pointer-events-none z-10 group-data-[selected=true]:bg-blue-500/10">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100 group-data-[selected=true]:bg-blue-600 group-data-[selected=true]:border-white group-data-[selected=true]:shadow-xl group-data-[selected=true]:scale-110 group-data-[selected=true]:opacity-100">
+            <div className="hidden group-data-[selected=true]:block">
+              <Check size={16} className="text-white" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isManagement && is_hidden && (
+        <div className="group-data-[multiselect=true]:hidden absolute inset-0 bg-black/10 backdrop-blur-[0.5px] flex items-center justify-center pointer-events-none z-10">
           <EyeOff size={24} className="text-white/60 drop-shadow" />
         </div>
       )}
@@ -320,7 +339,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       {isManagement && can('photo:toggle-pinned') && onTogglePinned && (
          <button 
            onClick={handleTogglePinnedClick}
-           className={`absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white ${photo.is_pinned ? 'text-red-500' : ''} z-20 hover:scale-115 active:scale-95 transition-transform`}
+           className="absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white group-data-[pinned=true]:text-red-500 z-20 hover:scale-115 active:scale-95 transition-transform"
+           data-pinned={photo.is_pinned}
          >
            <Heart size={12} className={photo.is_pinned ? 'fill-current' : ''} />
          </button>

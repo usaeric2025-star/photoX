@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { logError, markErrorAsHandled, isErrorHandled } from '@/utils/errorLogger';
 
 interface Props {
   children: ReactNode;
@@ -15,6 +14,7 @@ interface State {
  * Agent v3.0 Intelligent ErrorBoundary.
  * Provides diagnosis logging and manual recovery mechanism.
  * fallback MUST be static JSX to prevent recursion.
+ * componentDidCatch 嚴禁任何副作用，僅允許 console.error
  */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
@@ -31,13 +31,9 @@ export class ErrorBoundary extends Component<Props, State> {
    */
   static report(error: Error, context: string) {
     console.error(`[EB-DIAG-REPORT] context: ${context} | error: ${error.message}`);
-    logError(error, { action: 'ManualReport', component: context });
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    if (isErrorHandled(error)) return;
-    markErrorAsHandled(error);
-
     // Structured diagnostic logging for Agent v3.0
     const source = (error.stack?.split('\n')[1] || 'unknown').trim();
     const trigger = error.message || 'unspecified error';
@@ -45,15 +41,6 @@ export class ErrorBoundary extends Component<Props, State> {
     
     console.error(`[EB-DIAG] source: ${source} | trigger: ${trigger} | boundary: ${boundary}`);
     console.error(`[EB-DIAG] stack: ${error.stack}`);
-
-    logError(error, { 
-      action: 'ErrorBoundary', 
-      component: 'ErrorBoundary', 
-      metadata: { 
-        componentStack: info?.componentStack,
-        diagnostic: { source, trigger, boundary }
-      } 
-    });
   }
 
   handleReset = () => {
