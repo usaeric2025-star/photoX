@@ -116,6 +116,7 @@ sourceOfTruth: "ARCHITECTURE.md"
 -   **QueryKey 工廠化**：所有資源 Key 必須通過 `src/lib/queryKeys.ts` 中的工廠函數生成，嚴禁裸字符串拼接。
 -   ** Selector 模組化**：Selector 必須是模塊級純函數（`src/lib/selectors/*.ts`），禁止在組件內定義或依賴組件狀態。
 -   **數據歸一化防線**：所有進入 VirtualGrid 的數據（如通過 `flattenPhotoInfiniteQueryPages`）必須進行去重與 ID 合法性校驗，嚴禁髒數據穿透。
+-   **數據歸一化路由契約** 🆕：分頁數據與扁平數據必須使用不同的歸一化函數（`flattenPhotoInfiniteQueryPages` vs `normalizeAdminPhotos`）。禁止將扁平數組傳入分頁歸一化函數。新增歸一化函數必須通過結構一致性測試。
 
 ### ⚠️ 全域 ErrorBoundary 安全契約
 

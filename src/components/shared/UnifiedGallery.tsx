@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
-import { flattenPhotoInfiniteQueryPages } from '@/lib/selectors/photos';
+import { flattenPhotoInfiniteQueryPages, normalizeAdminPhotos } from '@/lib/selectors/photos';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { GalleryFilters } from '../ui/GalleryFilters';
 import PhotoBoard from '@/components/photo/PhotoGrid';
@@ -94,7 +94,7 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   const categories = adminData?.categories || publicData?.categories || [];
   const tags = adminData?.tags || publicData?.tags || [];
   const settings = adminData?.settings || publicData?.settings;
-  const photosFromAdmin = useMemo(() => flattenPhotoInfiniteQueryPages([{ photos: adminData?.photos || [] }]), [adminData?.photos]);
+  const photosFromAdmin = useMemo(() => normalizeAdminPhotos(adminData?.photos || []), [adminData?.photos]);
 
   const pageSize = isManagement ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE;
   

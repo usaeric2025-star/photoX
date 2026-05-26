@@ -1,5 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { flattenPhotoInfiniteQueryPages } from '../photos';
+import { flattenPhotoInfiniteQueryPages, normalizeAdminPhotos } from '../photos';
+
+describe('Photo Normalization Consistency', () => {
+  const samplePhotos = [
+    { id: '1', name: 'A', member_count: 5 },
+    { id: '2', name: 'B', member_count: 10 }
+  ];
+
+  it('normalizeAdminPhotos should produce same structure as flattenPhotoInfiniteQueryPages', () => {
+    const adminResult = normalizeAdminPhotos(samplePhotos as any);
+    const publicResult = flattenPhotoInfiniteQueryPages([{ photos: samplePhotos }] as any);
+    
+    expect(adminResult).toEqual(publicResult);
+  });
+
+  it('normalizeAdminPhotos should handle duplicates by taking max member_count', () => {
+    const photos = [
+      { id: '1', name: 'A', member_count: 5 },
+      { id: '1', name: 'A (updated)', member_count: 8 }
+    ];
+    const result = normalizeAdminPhotos(photos as any);
+    expect(result).toHaveLength(1);
+    expect(result[0].member_count).toBe(8);
+  });
+});
 
 describe('flattenPhotoInfiniteQueryPages', () => {
   it('should filter out missing IDs and remove duplicates', () => {

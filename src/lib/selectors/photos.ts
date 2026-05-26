@@ -29,6 +29,35 @@ export const flattenPhotoInfiniteQueryPages = (pages: { photos: Photo[] }[]): Ph
   return Array.from(photoMap.values());
 };
 
+/**
+ * @remarks
+ * 專為管理頁扁平數組設計，嚴禁與分頁歸一化混用
+ */
+export const normalizeAdminPhotos = (photos: Photo[]): Photo[] => {
+  const photoMap = new Map<string, Photo>();
+  
+  photos.forEach(photo => {
+    if (!photo.id) {
+      console.warn('Attempted to normalize admin photo with missing ID', photo);
+      return;
+    }
+    
+    const existing = photoMap.get(photo.id);
+    if (!existing) {
+      photoMap.set(photo.id, photo);
+    } else {
+      // Aggregate counts or take max for consistency with shared logic
+      const updatedPhoto = {
+        ...existing,
+        member_count: Math.max(existing.member_count ?? 0, photo.member_count ?? 0)
+      };
+      photoMap.set(photo.id, updatedPhoto);
+    }
+  });
+  
+  return Array.from(photoMap.values());
+};
+
 export const filterPhotosByGroup = (photos: Photo[], groupId: string): Photo[] => {
   return photos.filter(p => p.group_id === groupId);
 };
