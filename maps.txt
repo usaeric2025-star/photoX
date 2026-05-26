@@ -1,0 +1,120 @@
+src/components/admin/FormShared.tsx:    {categories.filter(cat => cat && cat.id).map((cat) => {
+src/components/admin/FormShared.tsx:            {(manufacturers || []).map((mfr) => {
+src/components/admin/TagEditor.tsx:    const list = (Array.from(new Map(tags.map(t => [t.id, t])).values()) as Tag[]).filter((tag: Tag) => 
+src/components/admin/TagEditor.tsx:      const aSelected = selectedTagIds.map(String).includes(String(a.id));
+src/components/admin/TagEditor.tsx:      const bSelected = selectedTagIds.map(String).includes(String(b.id));
+src/components/admin/TagEditor.tsx:        {filteredTags.map((tag: Tag) => {
+src/components/admin/TagEditor.tsx:          const isSelected = selectedTagIds.map(String).includes(String(tag.id));
+src/components/admin/edit/PhotoTagSelector.tsx:        .map(id => String(id).trim())
+src/components/admin/edit/DimensionEditor.tsx:        {displayDims.map((dim, idx) => {
+src/components/admin/edit/DimensionEditor.tsx:                    {['cm', 'mm', 'inch'].map(u => (
+src/components/admin/ErrorLogViewer.tsx:            {logs.map(log => (
+src/components/settings/CategoriesSection.tsx:        {categories.map(cat => {
+src/components/settings/ManufacturersSection.tsx:        {(manufacturers || []).map(sub => (
+src/components/settings/SettingsTabs.tsx:      {tabs.map((tab) => {
+src/components/settings/TagsSection.tsx:        }).map((tag) => (
+src/components/ui/LanguageSwitcher.tsx:        ].map(l => (
+src/components/ui/LanguageSwitcher.tsx:          {langs.map(l => (
+src/components/ui/GalleryFilters.tsx:              .map(cat => {
+src/components/ui/GalleryFilters.tsx:                  return Array.from(new Map(subList.map((s: any) => [s.id, s])).values())
+src/components/ui/GalleryFilters.tsx:                    .map((sub: any) => (
+src/components/ui/GalleryFilters.tsx:              Array.from({ length: 8 }).map((_, i) => (
+src/components/ui/GalleryFilters.tsx:              tagsToRender.map((tag, idx) => {
+src/components/groups/GroupSettingsSheet/GroupSettingsContent.tsx:                {(groupData?.colors || []).map((color: string, idx: number) => (
+src/components/groups/GroupSettingsSheet/GroupSettingsContent.tsx:                {(groupData?.materials || []).map((material: string, idx: number) => (
+src/components/groups/useGroupAdminLogic.ts:             const targetIds = isDissolving ? allGroupPhotos.map(p => p.id) : ids;
+src/components/groups/useGroupAdminLogic.ts:              groupPhotos.map(p => onUpdatePhoto(p.id, { is_hidden }))
+src/components/groups/useGroupAdminLogic.ts:            await onUpdatePhotosBulk(activeGroupPhotos.map(p => p.id), { dimensions: newDims }, '批量更新尺寸');
+src/components/groups/useGroupAdminLogic.ts:              activeGroupPhotos.map(p => onUpdatePhoto(p.id, { dimensions: newDims }))
+src/components/groups/useGroupAdminLogic.ts:              activeGroupPhotos.map(p => serviceUpdatePhoto(p.id, { dimensions: newDims }))
+src/components/groups/useGroupAdminLogic.ts:    const updatedPhotosWithOrder = nextGroupPhotos.map((p, index) => ({
+src/components/groups/useGroupAdminLogic.ts:        updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { group_order: p.group_order }))
+src/components/groups/GroupGridView.tsx:                  {groupData.colors.map((c, i) => (
+src/components/groups/GroupHeader.tsx:                      const ids = selectedIds.length > 0 ? selectedIds : activeGroupPhotos.map(p => p.id);
+src/components/shared/UnifiedGallery.tsx:    const msg = validPhotos.map(p => p.name || 'Furniture').slice(0, 3).join(', ') + (validPhotos.length > 3 ? '...' : '');
+src/components/PhotoLightbox/usePhotoLightboxLogic.ts:      .map(p => ({ src: getCacheBustedImageUrl(p, 'image') }));
+src/components/PhotoLightbox/LightboxInfoPanel.tsx:      .map(tid => tagMap[String(tid)])
+src/components/PhotoLightbox/LightboxInfoPanel.tsx:             {displayTags.map((tagName: string, i: number) => (
+src/components/PhotoLightbox/LightboxInfoPanel.tsx:               {photo.dimensions.map((dim: Dimension, i: number) => {
+src/components/PhotoLightbox/LightboxInfoPanel.tsx:                 {['zh', 'en', 'ms'].map(l => (
+src/components/photo/PhotoGridSkeleton.tsx:      {Array.from({ length: count }).map((_, i) => (
+src/components/photo/PhotoCard.tsx:        {photoTags.map((tag, i) => (
+src/components/photo/PhotoCard.tsx:      .map(tid => tagMap[String(tid)])
+src/components/photo/PhotoCard.tsx:      .map(toTitleCase);
+src/components/virtualizer/VirtualGrid.tsx:        {virtualizer.getVirtualItems().map((virtualItem) => (
+src/hooks/core/mutations/useUpdatePhoto.ts:          pages: old.pages.map((page) => ({
+src/hooks/core/mutations/useUpdatePhoto.ts:            photos: page.photos.map((photo) =>
+src/hooks/core/mutations/useUpdatePhoto.ts:        return old.map((photo) => 
+src/hooks/core/mutations/useUpdatePhoto.ts:          pages: old.pages.map((page) => ({
+src/hooks/core/mutations/useUpdatePhoto.ts:            photos: page.photos.map((photo: Photo) =>
+src/hooks/core/mutations/useDeletePhoto.ts:      const photoIds = photos.map(p => p.id);
+src/hooks/core/mutations/useDeletePhoto.ts:          pages: old.pages.map((page) => ({
+src/hooks/core/mutations/useDeletePhoto.ts:            pages: old.pages.map((page) => ({
+src/hooks/core/mutations/useDeletePhoto.ts:              photos: page.photos.map(p => {
+src/hooks/core/mutations/useDeletePhoto.ts:          photoId: variables.photos.map(p => p.id)
+src/hooks/core/infra/useTasks.tsx:        return parsed.map((t: any) => ({
+src/hooks/core/infra/useTasks.tsx:    const serializable = newTasks.map(({ onCancel, ...t }) => t);
+src/hooks/core/infra/useTasks.tsx:      const updated = prev.map(t => {
+src/hooks/core/infra/useTasks.tsx:                tasks.map((task, index) => (
+src/hooks/admin/useAdminEdit.ts:          ? dbGroupPhotos.map((p: Photo) => p.id)
+src/hooks/admin/useAdminEdit.ts:          : photosRef.current.filter(p => p.group_id === photo.group_id).map(p => p.id);
+src/hooks/admin/useAdminEdit.ts:        affectedIds = photosRef.current.filter(p => p.group_id === photo.group_id).map(p => p.id);
+src/hooks/admin/useAdminAI.ts:      const groupPhotos = data.map(mapSupabasePhoto);
+src/hooks/admin/useAdminCategory.ts:          pages: old.pages.map((page: any) => ({
+src/hooks/admin/useAdminCategory.ts:            photos: page.photos.map((p: Photo) => {
+src/hooks/shared/useTagsDisplay.ts:    return (settings?.pinned_tags || []).map(id => String(id));
+src/hooks/shared/useTagsDisplay.ts:    const candidates = tags.map(tag => ({
+src/hooks/shared/useTagsDisplay.ts:    return new Set(hot.map(t => String(t.id)));
+src/hooks/photoAi/usePhotoAIGroup.ts:        const updatedPhotos = photos.map(p => ({
+src/hooks/photoAi/usePhotoAIBatch.ts:    const groupIds = Array.from(new Set(unProcessed.map(p => p.group_id)));
+src/services/groupService.ts:  return (data || []).map(item => ({
+src/services/gemini/dimensionNormalizer.ts:    .map(d => {
+src/services/gemini/photoAnalysisCore.ts:  const categoriesJson = (categories || []).map(c => ({
+src/services/gemini/photoAnalysisCore.ts:  const tagsJson = JSON.stringify((tags || []).map(t => ({ id: t.id, name: t.name })));
+src/services/gemini/photoAnalysisCore.ts:            const extraInfo = parsedData.items.slice(1).map((item: any, index: number) => {
+src/services/gemini/photoAnalysisCore.ts:        .map(s => String(s).trim())
+src/services/photo/photoUploadService.ts:        .map(tagId => ({
+src/services/photo/photoUploadService.ts:  const results: Photo[] = [...sPhotos.map(p => ({ ...p }))];
+src/services/photo/photoUploadService.ts:  const payloads = sPhotos.map(photo => {
+src/services/photo/photoUploadService.ts:    let AttemptChunk = chunk.map(p => ({ ...p }));
+src/services/photo/photoUploadService.ts:        AttemptChunk = AttemptChunk.map(p => ({
+src/services/photo/photoUploadService.ts:        AttemptChunk = AttemptChunk.map(p => {
+src/services/photo/photoUploadService.ts:  const photoIdsToUpdate = safeArray(results).map(p => p.id);
+src/services/photoMutationService.ts:    const associations = tagIds.map(tagId => ({
+src/services/tagService.ts:    const result = (data || []).map((t: any) => ({
+src/services/tagService.ts:    const data = await createBatchTags(names.map(name => ({ name: name.toUpperCase().trim() })));
+src/services/manufacturerService.ts:  const result = (data || []).map((m: any) => ({
+src/services/photoService.ts:        .map((pt: { tag_id?: string | number; tags?: { id: string | number }; id?: string | number }) => {
+src/services/photoService.ts:        .map((t: { id?: string | number } | string | number) => {
+src/services/photoService.ts:    const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
+src/services/photoService.ts:    const tagIds = (tagsRes.data || []).map(t => t.id);
+src/services/photoService.ts:    const catIds = (catsRes.data || []).map(c => c.id);
+src/services/photoService.ts:      if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
+src/services/photoService.ts:  const fetched = (data || []).map(item => mapSupabasePhoto(item));
+src/services/photoService.ts:  const groupIds = Array.from(new Set(fetched.map(p => p.group_id).filter(Boolean))) as string[];
+src/services/photoService.ts:        const covers = coverData.map(item => mapSupabasePhoto(item));
+src/services/photoService.ts:            let photos = rows.map((item: any) => mapSupabasePhoto(item));
+src/services/photoService.ts:    return (data || []).map(item => mapSupabasePhoto(item));
+src/services/photoService.ts:       let photos = rows.map((item: any) => mapSupabasePhoto(item));
+src/services/photoService.ts:  const mapped = (queryRes.data || []).map(item => mapSupabasePhoto(item));
+src/services/photoService.ts:    const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
+src/services/photoService.ts:    const tagIds = (tagsRes.data || []).map(t => t.id);
+src/services/photoService.ts:    const catIds = (catsRes.data || []).map(c => c.id);
+src/services/photoService.ts:      if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
+src/services/photoService.ts:        setPhotos(prev => prev.map(p => p.group_id === groupId ? { ...p, is_group_cover: false } : p));
+src/services/photoService.ts:  if (setPhotos) setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
+src/services/photoService.ts:          const tagAssociations = uTagIds.map(tagId => ({
+src/services/photoService.ts:    const ids = chunk.map(p => p.id).filter(id => id && !id.startsWith('temp-'));
+src/services/tagsMutationService.ts:    const dbUpdates = tags.map(tag => mapToDb(tag, true));
+src/utils/imageProcess.ts:      chunk.map(file => processImageFile(file))
+src/utils/safeAccess.ts:    return arr.split(',').map(s => s.trim()).filter(Boolean) as unknown as T[];
+src/utils/aiNormalizer.ts:    raw = input.split(',').map(s => s.trim()).filter(Boolean);
+src/utils/tagUtils.ts:  const uniqueNames = Array.from(new Set(names.map(n => String(n || '').trim()).filter(Boolean)));
+src/lib/filters.ts:    .map(p => {
+src/lib/filters.ts:        tag_ids: Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : [],
+src/lib/filters.ts:  let result = filteredPhotos.map(p => ({
+src/lib/filters.ts:        const pTagIds = Array.isArray(p.tag_ids) ? p.tag_ids.map(String) : (typeof p.tag_ids === 'string' ? [String(p.tag_ids)] : []);
+src/lib/selectors/__tests__/photos.test.ts:    expect(result.map(p => p.id)).toEqual(['1', '2']);
+src/pages/AdminView/MainAdminScreen.tsx:                const dbPhotos = (data || []).map(mapSupabasePhoto);
+src/pages/dev/VirtualizerBenchmark.tsx:  const groupedItems = useMemo(() => Array.from({ length: 80 }).map((_, i) => ({ id: `group-${i}`, type: 'group' })), []);
+src/pages/dev/VirtualizerBenchmark.tsx:  const gridItems = useMemo(() => Array.from({ length: 10000 }).map((_, i) => ({ id: `photo-${i}`, type: 'photo' })), []);

@@ -69,13 +69,15 @@ export const useAdminDataPrep = () => {
 
   const isActualAdminPath = window.location.pathname.startsWith('/admin');
 
+  // [STATE-BRIDGE-CONFLICT FIX] This is the single source of truth for photo queries in administration mode
+  // and is passed down via AdminContext to prevent multiple redundant fetches.
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: store.filterCatId,
     tag_id: Array.isArray(store.filterTagIds) && store.filterTagIds.length > 0 ? store.filterTagIds[0] : null,
     searchQuery: store.debouncedSearchQuery,
     sortOrder: store.sortOrder,
     isAdminMode: true
-  }, isActualAdminPath ? PAGINATION.ADMIN_BATCH_SIZE : 1); // Fetch minimal if not in admin path
+  }, isActualAdminPath ? PAGINATION.ADMIN_BATCH_SIZE : 1, true); // Always enabled when this prep is used
 
   const { data: cloudCountData } = usePhotoCountQuery({}, true);
   const photos = useMemo(() => cleanPhotos(infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || []), [infinitePhotosQuery.data]);

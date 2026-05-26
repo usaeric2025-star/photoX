@@ -116,19 +116,26 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
 
   const adminData = useOptionalAdmin();
 
+  // [STATE-BRIDGE-CONFLICT FIX] If adminData is present, we are in a managed view.
+  // We MUST NOT launch an independent useInfinitePhotos query here to avoid race conditions and recursion.
+  // Use a strictly exclusive condition for enabled flag.
+  const shouldEnableInternalQuery = !isAdminMode && !adminData;
+
   // Real-time photo query based on store filters
   const infinitePhotosQueryInternal = useInfinitePhotos({
     category_id: filterCatId,
     tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
     sortOrder: sortOrder,
-    isAdminMode
-  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE, !isAdminMode);
+    isAdminMode: false // Public grid query is never adminMode
+  }, PAGINATION.PUBLIC_PAGE_SIZE, shouldEnableInternalQuery);
 
   const infinitePhotosQuery = (isAdminMode && adminData) ? adminData.infinitePhotosQuery : infinitePhotosQueryInternal;
 
   const photos = React.useMemo(() => {
-    if (isAdminMode && adminData) return adminData.photos;
+    if (isAdminMode && adminData) {
+      return adminData.photos;
+    }
     return infinitePhotosQueryInternal.data?.pages.flatMap(p => p.photos) || [];
   }, [isAdminMode, adminData, infinitePhotosQueryInternal.data]);
 
