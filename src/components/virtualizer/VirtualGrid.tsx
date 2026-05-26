@@ -68,6 +68,7 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
     getScrollElement: () => containerRef.current!,
     estimateSize,
     overscan: props.overscan,
+    measureElement: (el) => el.getBoundingClientRect().height,
   });
 
   // Force measurements rebuild when containerWidth or lanes changes
@@ -112,12 +113,13 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
             return (
               <div
                 key={virtualRow.key}
+                ref={virtualizer.measureElement}
+                data-index={virtualRow.index}
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
                   width: '100%',
-                  height: `${virtualRow.size}px`,
                   transform: `translate3d(0, ${virtualRow.start}px, 0)`,
                 }}
               >
@@ -130,12 +132,13 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
           return (
             <div
               key={virtualRow.key}
+              ref={virtualizer.measureElement}
+              data-index={virtualRow.index}
               style={{
                 position: 'absolute',
                 top: 0,
                 left: 0,
                 width: '100%',
-                height: `${virtualRow.size}px`,
                 transform: `translate3d(0, ${virtualRow.start}px, 0)`,
                 display: 'grid',
                 gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))`,
