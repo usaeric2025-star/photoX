@@ -49,8 +49,9 @@ export const ResponsivePhoto: React.FC<ResponsivePhotoProps> = ({
           alt={photo.name || 'Photo'}
           className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${imgClassName}`}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          loading="eager"
+          loading="lazy"
           decoding="async"
+          fetchPriority="low"
         />
       )}
     </div>

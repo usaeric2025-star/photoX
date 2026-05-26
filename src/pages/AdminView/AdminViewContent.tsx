@@ -63,7 +63,9 @@ export const AdminViewContent: React.FC = () => {
   // 保存滚动位置
   useEffect(() => {
     const handleScroll = () => {
-      sessionStorage.setItem('scrollPosition', String(window.scrollY));
+      requestAnimationFrame(() => {
+        sessionStorage.setItem('scrollPosition', String(window.scrollY));
+      });
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);

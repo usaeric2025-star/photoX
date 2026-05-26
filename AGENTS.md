@@ -2,7 +2,7 @@
 description: PhotoX 项目 AI 编码强制规范。所有代码生成、修改、审查必须严格遵守此文件。违反红线的代码将被拒绝。
 globs: ["src/**/*.{ts,tsx}"]
 alwaysApply: true
-version: "2.3"
+version: "2.5"
 lastSynced: "2026-05-26"
 sourceOfTruth: "ARCHITECTURE.md"
 ---
@@ -102,6 +102,12 @@ sourceOfTruth: "ARCHITECTURE.md"
 -   **QueryKey 工廠化**：所有資源 Key 必須通過 `src/lib/queryKeys.ts` 中的工廠函數生成，嚴禁裸字符串拼接。
 -   ** Selector 模組化**：Selector 必須是模塊級純函數（`src/lib/selectors/*.ts`），禁止在組件內定義或依賴組件狀態。
 -   **數據歸一化防線**：所有進入 VirtualGrid 的數據（如通過 `flattenPhotoInfiniteQueryPages`）必須進行去重與 ID 合法性校驗，嚴禁髒數據穿透。
+
+### ⚠️ AdminView 結構安全契約
+
+-   ✅ scroll/resizes 監聽器必須用 rAF 節流，嚴禁同步寫入 storage 或觸發 setState
+-   ✅ 頂層 Context value 必須 Ref 單例化
+-   ✅ ErrorBoundary fallback 必須是純靜態 JSX，嚴禁條件渲染業務組件
 
 ## 🚨 常见错误 → 正确做法
 

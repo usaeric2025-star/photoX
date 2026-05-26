@@ -5,19 +5,28 @@ import { Photo } from '@/types';
  * Normalizes photo pages by removing duplicates and filtering out items without valid IDs.
  */
 export const flattenPhotoInfiniteQueryPages = (pages: { photos: Photo[] }[]): Photo[] => {
-  const seenIds = new Set<string>();
+  const photoMap = new Map<string, Photo>();
   
-  return pages.flatMap(page => page.photos).filter(photo => {
+  pages.flatMap(page => page.photos).forEach(photo => {
     if (!photo.id) {
       console.warn('Attempted to normalize photo with missing ID', photo);
-      return false;
+      return;
     }
-    if (seenIds.has(photo.id)) {
-      return false;
+    
+    const existing = photoMap.get(photo.id);
+    if (!existing) {
+      photoMap.set(photo.id, photo);
+    } else {
+      // Aggregate counts if needed - just take the maximum for now or sum? Let's take the max as per established logic
+      const updatedPhoto = {
+        ...existing,
+        member_count: Math.max(existing.member_count ?? 0, photo.member_count ?? 0)
+      };
+      photoMap.set(photo.id, updatedPhoto);
     }
-    seenIds.add(photo.id);
-    return true;
   });
+  
+  return Array.from(photoMap.values());
 };
 
 export const filterPhotosByGroup = (photos: Photo[], groupId: string): Photo[] => {

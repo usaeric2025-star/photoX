@@ -23,18 +23,18 @@ export interface PhotoCardProps {
   hideDetails?: boolean;
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant }> = React.memo(({ photo, variant }) => {
+const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; photoCount: number }> = React.memo(({ photo, variant, photoCount }) => {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
-      {photo.group_id && photo.member_count !== undefined && photo.member_count > 1 && (
+      {photo.group_id && photoCount > 1 && (
         <div className={
           isManagement
             ? "bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none"
             : "bg-black/40 backdrop-blur-[4px] px-2 py-0.5 rounded-md text-[9px] text-white font-bold flex items-center gap-1 border border-white/10 pointer-events-none"
         }>
           <Layers size={isManagement ? 10 : 9} strokeWidth={2.5} />
-          {photo.member_count}
+          {photoCount}
         </div>
       )}
       {isManagement && photo.is_pinned && (
@@ -102,6 +102,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const [parent] = useAutoAnimate();
   const isSelected = state.selectedIds.has(photo.id);
   const isMultiSelect = state.isMultiSelect;
+
+  // Ensure consistent count access
+  const photoCount = photo.member_count ?? 1;
 
   const { onTogglePinned } = usePhotoActions();
 
@@ -303,9 +306,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         variant="sm"
         aspectRatio={1}
         imgClassName={`${imgClassName} w-full h-full object-cover aspect-square`}
-        loading="lazy"
-        decoding="async"
-        fetchPriority="low"
       />
 
       {isManagement && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}
@@ -315,7 +315,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} variant={variant} />
+      <PhotoStatusBadges photo={photo} variant={variant} photoCount={photoCount} />
 
       {isManagement && can('photo:toggle-pinned') && onTogglePinned && (
          <button 

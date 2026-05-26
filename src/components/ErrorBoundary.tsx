@@ -57,7 +57,8 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ minHeight: '48px', width: '100%' }}>
+        <div className="flex items-center justify-center p-4 text-xs text-slate-400">
+          <p>渲染已中斷</p>
         </div>
       );
     }
