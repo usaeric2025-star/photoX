@@ -96,10 +96,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   className = '', onClick,
   hideDetails = false
 }) => {
-  // --- Diagnostic Log ---
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   const { state, setters } = useInteractionBridge();
   const [parent] = useAutoAnimate();
+  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   const isSelected = state.selectedIds.has(photo.id);
   const isMultiSelect = state.isMultiSelect;
 

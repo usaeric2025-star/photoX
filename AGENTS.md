@@ -2,15 +2,15 @@
 description: PhotoX 项目 AI 编码强制规范。所有代码生成、修改、审查必须严格遵守此文件。违反红线的代码将被拒绝。
 globs: ["src/**/*.{ts,tsx}"]
 alwaysApply: true
-version: "3.0-pre"
+version: "3.0"
 lastSynced: "2026-05-26"
 sourceOfTruth: "ARCHITECTURE.md"
 ---
 
-# PhotoX AI Coding Rules v3.0-pre
+# PhotoX AI Coding Rules v3.0
 
-> ⚠️ 本文件是 `ARCHITECTURE.md` 的执行层精简版。详细设计原理请参阅原文档。
-> 🔄 更新 `ARCHITECTURE.md` 后，必须同步更新本文件，并在 commit 中标注 `[rules-sync]`。
+> ⚠️ 本文件是 `ARCHITECTURE.md` 的執行層精簡版。詳細設計原理請參閱原文档。
+> 🔄 更新 `ARCHITECTURE.md` 後，必須同步更新本文件，并在 commit 中标注 `[rules-sync]`。
 
 ## 🔴 绝对红线（违反即阻断）
 
@@ -69,9 +69,9 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ❌ 严禁缺失尺寸时回源原图或触发实时优化
 - 缺失中间档时直接 fallback 至小缩略图
 
-### Virtuoso 防死循環剛性契約（永久生效，v3.0-pre 新增）
+### Virtuoso 防死循環剛性契約（永久生效，v3.0 升級）
 - ✅ **全员强制**：所有虚拟滚动必须使用 `@/components/virtualizer/VirtualGrid`。
-- ✅ **严禁** 直接 import `react-virtuoso`，ESLint 已配置强制拦截。
+- ✅ **嚴禁** 直接 import `react-virtuoso`，ESLint 已配置強制攔截。
 - ✅ ResponsivePhoto 必須接收固定 width/height，渲染剛性容器
 - ✅ 圖片通過 CSS object-fit 自適應，嚴禁觸發佈局重排
 - ✅ Virtuoso 配置：單列 <Virtuoso> 可配置 skipAnimationFrameInResizeObserver；<VirtuosoGrid> 嚴禁使用此屬性
@@ -80,6 +80,20 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ❌ 嚴禁對 Virtuoso 子元素啟用 ResizeObserver 動態測量
 - ❌ 嚴禁圖片失敗時回退原圖或動態尺寸資源
 - 違反此契約即視為 P0 架構違規，PR 必須阻斷
+
+### ErrorBoundary 智能診斷與自動恢復契約 (v3.0) 🆕
+- ✅ **智能診斷**：ErrorBoundary 必須結構化輸出 `[EB-DIAG]` 日誌，包含精確 source 與 trigger。
+- ✅ **自動恢復**：ErrorBoundary 必須提供「重試 / Retry」按鈕，支持組件級局部恢復。
+- ✅ **靜態 Fallback**：Fallback 必須是純靜態 JSX，嚴禁使用任何 Hook、Context 或業務組件。
+- ✅ **主動上報**：支持 `ErrorBoundary.report(error, context)` 靜態方法進行非組件異常上報。
+
+### AI 紀律與幻覺防禦契約 (v3.0) 🆕
+- ✅ **降級優先**：當人類下達「降級/隔離」指令時，AI 禁止任何形式的「修復嘗試」，必須優先執行物理隔離。
+- ✅ **自動隔離觸發**：連兩次違抗指令或修復失敗後，AI 必須主動提議或執行路由級/組件級物理隔離。
+- ✅ **恢復權限歸人類**：所有手動隔離措施（如 `ADMIN_GALLERY_DISABLED`）必須由人類明確解除，AI 無權自主恢復。
+- ✅ **幻覺防禦**：任何聲稱「修復完成」的輸出必須附帶人類可驗證的證據（如 [EB-DIAG] 日誌、tsc 通過截圖、邏輯映射）。
+- ✅ **人類錨點模式**：連續兩次修復失敗後，強制切換至「降級 + 人類錨點」模式，禁止自主診斷。
+- ❌ **嚴禁自主恢復**：在未提供驗證證據的情況下，禁止 AI 宣稱問題已解決。
 
 ### ⚠️ VirtualGrid 封裝純度與測試契約
 

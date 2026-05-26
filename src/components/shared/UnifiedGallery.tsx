@@ -29,6 +29,12 @@ interface UnifiedGalleryProps {
   batchProgress?: any;
 }
 
+/** 
+ * @remarks
+ * 臨時降級開關，待 fd 根因修復後設為 false
+ */
+const ADMIN_GALLERY_DISABLED = true;
+
 export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   variant,
   onExit,
@@ -38,6 +44,12 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   batchProgress
 }) => {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  
+  // Agent v3.0 Force Isolation
+  if (ADMIN_GALLERY_DISABLED && isManagement) {
+    return <div style={{ padding: 24, textAlign: 'center', color: '#666' }}>管理畫廊臨時維護中 / Admin Gallery Maintenance</div>;
+  }
+
   const scrollKey = isManagement ? 'admin_gallery_scroll' : 'public_gallery_scroll';
   useScrollRestoration(scrollKey);
   
