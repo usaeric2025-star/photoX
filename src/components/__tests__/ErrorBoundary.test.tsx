@@ -1,0 +1,32 @@
+import { describe, it, expect, vi } from 'vitest';
+import React from 'react';
+import { render } from '@testing-library/react';
+import { ErrorBoundary } from '../ErrorBoundary';
+
+describe('ErrorBoundary', () => {
+  it('should render children if no error', () => {
+    const { getByText } = render(
+      <ErrorBoundary>
+        <div>All good</div>
+      </ErrorBoundary>
+    );
+    expect(getByText('All good')).toBeInTheDocument();
+  });
+
+  it('should render fallback if error occurs', () => {
+    const ThrowError = () => {
+      throw new Error('Test error');
+    };
+
+    // Silence console.error for test
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { getByText } = render(
+      <ErrorBoundary>
+        <ThrowError />
+      </ErrorBoundary>
+    );
+    
+    expect(getByText('Something went wrong')).toBeInTheDocument();
+  });
+});

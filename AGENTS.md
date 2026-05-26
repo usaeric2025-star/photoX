@@ -2,12 +2,12 @@
 description: PhotoX 项目 AI 编码强制规范。所有代码生成、修改、审查必须严格遵守此文件。违反红线的代码将被拒绝。
 globs: ["src/**/*.{ts,tsx}"]
 alwaysApply: true
-version: "2.5"
+version: "3.0-pre"
 lastSynced: "2026-05-26"
 sourceOfTruth: "ARCHITECTURE.md"
 ---
 
-# PhotoX AI Coding Rules v2.3
+# PhotoX AI Coding Rules v3.0-pre
 
 > ⚠️ 本文件是 `ARCHITECTURE.md` 的执行层精简版。详细设计原理请参阅原文档。
 > 🔄 更新 `ARCHITECTURE.md` 后，必须同步更新本文件，并在 commit 中标注 `[rules-sync]`。
@@ -69,7 +69,7 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ❌ 严禁缺失尺寸时回源原图或触发实时优化
 - 缺失中间档时直接 fallback 至小缩略图
 
-### Virtuoso 防死循環剛性契約（永久生效，v2.3 新增）
+### Virtuoso 防死循環剛性契約（永久生效，v3.0-pre 新增）
 - ✅ **全员强制**：所有虚拟滚动必须使用 `@/components/virtualizer/VirtualGrid`。
 - ✅ **严禁** 直接 import `react-virtuoso`，ESLint 已配置强制拦截。
 - ✅ ResponsivePhoto 必須接收固定 width/height，渲染剛性容器
@@ -103,11 +103,11 @@ sourceOfTruth: "ARCHITECTURE.md"
 -   ** Selector 模組化**：Selector 必須是模塊級純函數（`src/lib/selectors/*.ts`），禁止在組件內定義或依賴組件狀態。
 -   **數據歸一化防線**：所有進入 VirtualGrid 的數據（如通過 `flattenPhotoInfiniteQueryPages`）必須進行去重與 ID 合法性校驗，嚴禁髒數據穿透。
 
-### ⚠️ AdminView 結構安全契約
+### ⚠️ 全域 ErrorBoundary 安全契約
 
--   ✅ scroll/resizes 監聽器必須用 rAF 節流，嚴禁同步寫入 storage 或觸發 setState
--   ✅ 頂層 Context value 必須 Ref 單例化
--   ✅ ErrorBoundary fallback 必須是純靜態 JSX，嚴禁條件渲染業務組件
+-   ✅ ErrorBoundary fallback 必須是純靜態 JSX，嚴禁任何動態內容
+-   ✅ componentDidCatch 嚴禁 setState / 副作用 / 組件渲染
+-   ✅ 所有新增 ErrorBoundary 必須通過隔離測試驗收
 
 ## 🚨 常见错误 → 正确做法
 
