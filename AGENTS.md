@@ -2,12 +2,12 @@
 description: PhotoX 项目 AI 编码强制规范。所有代码生成、修改、审查必须严格遵守此文件。违反红线的代码将被拒绝。
 globs: ["src/**/*.{ts,tsx}"]
 alwaysApply: true
-version: "2.2"
-lastSynced: "2026-05-25"
+version: "2.3"
+lastSynced: "2026-05-26"
 sourceOfTruth: "ARCHITECTURE.md"
 ---
 
-# PhotoX AI Coding Rules v2.2
+# PhotoX AI Coding Rules v2.3
 
 > ⚠️ 本文件是 `ARCHITECTURE.md` 的执行层精简版。详细设计原理请参阅原文档。
 > 🔄 更新 `ARCHITECTURE.md` 后，必须同步更新本文件，并在 commit 中标注 `[rules-sync]`。
@@ -69,7 +69,9 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ❌ 严禁缺失尺寸时回源原图或触发实时优化
 - 缺失中间档时直接 fallback 至小缩略图
 
-### Virtuoso 防死循環剛性契約（永久生效，v2.2 新增）
+### Virtuoso 防死循環剛性契約（永久生效，v2.3 新增）
+- ✅ **全员强制**：所有虚拟滚动必须使用 `@/components/virtualizer/VirtualGrid`。
+- ✅ **严禁** 直接 import `react-virtuoso`，ESLint 已配置强制拦截。
 - ✅ ResponsivePhoto 必須接收固定 width/height，渲染剛性容器
 - ✅ 圖片通過 CSS object-fit 自適應，嚴禁觸發佈局重排
 - ✅ Virtuoso 配置：單列 <Virtuoso> 可配置 skipAnimationFrameInResizeObserver；<VirtuosoGrid> 嚴禁使用此屬性
@@ -79,10 +81,33 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ❌ 嚴禁圖片失敗時回退原圖或動態尺寸資源
 - 違反此契約即視為 P0 架構違規，PR 必須阻斷
 
+### ⚠️ VirtualGrid 封裝純度與測試契約
+
+-   **嚴禁業務注入**：`VirtualGrid` 僅作協議統一載體，嚴禁注入任何業務邏輯、狀態或副作用（如 groupId、isAdminMode、photos 過濾等）。所有業務適配必須在調用方完成。
+-   **測試與文檔同步**：修改 `VirtualGrid` 時必須同步更新 vitest 測試與 JSDoc `@remarks` 契約標註。無測試覆蓋的變更不予合併。
+-   **AI 生成約束**：AI 生成的 `VirtualGrid` 相關代碼必須通過 ESLint + tsc + vitest 三重校驗，任一失敗即視為違規。
+-   **適配層使用規範**：必須遵守 `VirtualGrid` 定義的props契約，嚴禁使用未導出的底層實現。原子文件（interactionTypes 等）職責單一。
+-   **交互狀態契約**：所有交互狀態必須存儲於 interactionBus Ref，嚴禁 useState/useContext；視覺反饋必須用 CSS data 屬性，嚴禁條件 className。
+-   ✅ 移除 useContext 後，必須全局搜索該 Context 提供的所有字段名，確保無殘留引用
+
+### ⚠️ 圖片渲染契約
+
+-   ✅ 所有圖片必須使用 loading="lazy" decoding="async" fetchpriority="low"
+-   ✅ 圖片尺寸必須用 CSS aspect-ratio 控制，嚴禁 JS 計算
+-   ✅ 圖片容器必須啟用 content-visibility: auto + contain-intrinsic-size
+-   ✅ R2 圖片 URL 必須通過數據管道生成，嚴禁字符串拼接
+
+### ⚠️ 數據管道契約
+
+-   **QueryKey 工廠化**：所有資源 Key 必須通過 `src/lib/queryKeys.ts` 中的工廠函數生成，嚴禁裸字符串拼接。
+-   ** Selector 模組化**：Selector 必須是模塊級純函數（`src/lib/selectors/*.ts`），禁止在組件內定義或依賴組件狀態。
+-   **數據歸一化防線**：所有進入 VirtualGrid 的數據（如通過 `flattenPhotoInfiniteQueryPages`）必須進行去重與 ID 合法性校驗，嚴禁髒數據穿透。
+
 ## 🚨 常见错误 → 正确做法
 
 | ❌ 错误 | ✅ 正确 |
 | :--- | :--- |
+| `import { VirtuosoGrid } from 'react-virtuoso'` | `import { VirtualGrid } from '@/components/virtualizer/VirtualGrid'` |
 | `const { photos } = useStore()` | `const { photos } = useStore(useShallow(s => ({ photos: s.photos })))` |
 | `confirm('确定删除？')` | `<AlertDialog>...</AlertDialog>` |
 | `toast.success('完成')` | `const { showSuccess } = useFeedback(); showSuccess('完成')` |
@@ -109,6 +134,7 @@ sourceOfTruth: "ARCHITECTURE.md"
 
 | 用途 | 路径 |
 | :--- | :--- |
+| 虚拟滚动基建 | `src/components/virtualizer/VirtualGrid.tsx` |
 | 查询 Hooks | `src/hooks/queries/usePhotos.ts` |
 | 变更 Service | `src/services/photoMutationService.ts` |
 | 删除 Hook | `src/hooks/useDelete.ts` |

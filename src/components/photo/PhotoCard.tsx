@@ -1,14 +1,15 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { Photo, Category, Manufacturer } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { safeArray } from '../../utils/safeAccess';
-import { useGalleryStore, useShallow } from '../../store';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
+import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { translations } from '../../lib/translations';
+import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 
 export interface PhotoCardProps {
   variant: GalleryVariant;
@@ -96,20 +97,15 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   hideDetails = false
 }) => {
   // --- Diagnostic Log ---
-  const isSelected = useGalleryStore(s => (s.selectedIds ?? []).includes(photo.id));
+  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  const { state, setters } = useInteractionBridge();
+  const [parent] = useAutoAnimate();
+  const isSelected = state.selectedIds.has(photo.id);
+  const isMultiSelect = state.isMultiSelect;
 
-  const { 
-    isMultiSelect, setIsMultiSelect, setSelectedIds,
-    appLang: lang
-  } = useGalleryStore(useShallow(s => ({
-    isMultiSelect: s.isMultiSelect,
-    setIsMultiSelect: s.setIsMultiSelect,
-    setSelectedIds: s.setSelectedIds,
-    appLang: s.appLang
-  })));
+  const { onTogglePinned } = usePhotoActions();
 
-  const { onTogglePinned, onToggleHidden } = usePhotoActions();
-
+  const lang = 'zh';
   const t = translations[lang as keyof typeof translations] || translations.zh;
 
   const { data: categories = [] } = useCategoriesQuery();
@@ -122,32 +118,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   );
   const { can } = usePermission();
 
-  const enable = useCallback(() => {
-    setIsMultiSelect(true);
-    setSelectedIds([photo.id]);
-  }, [setIsMultiSelect, setSelectedIds, photo.id]);
-
   const toggle = useCallback(() => {
-    const store = useGalleryStore.getState();
-    const current = store.selectedIds ?? [];
-    const isCurrentlySelected = current.includes(photo.id);
-    
-    // If showGroupsCollapsed is true and we're dealing with a group, we should select by group members if we have the list
-    let idsToToggle = [photo.id];
-    // Removed automatic group member selection because store.photos is no longer available in Zustand
-    // Future implementation: Provide current visible photo list via Context to PhotoCard
-    
-    let next: string[];
-    if (isCurrentlySelected) {
-      // Remove all ids in the group
-      next = current.filter((id: string) => !idsToToggle.includes(id));
-    } else {
-      // Add all ids in the group, ensuring uniqueness
-      next = Array.from(new Set([...current, ...idsToToggle]));
-    }
-    
-    setSelectedIds(next);
-  }, [setSelectedIds, photo.id, photo.group_id, showGroupsCollapsed]);
+    setters.toggleSelected(photo.id);
+  }, [photo.id, setters]);
 
   const handleOpenLightbox = useCallback(() => {
     onLightboxOpen(photo);
@@ -159,10 +132,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       return;
     }
 
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     if (isManagement) {
-      if (isMultiSelect && !e.shiftKey) {
-        toggle();
+      if (state.isMultiSelect && !e.shiftKey) {
+        setters.toggleSelected(photo.id);
       } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
         onGroupClick(photo.group_id, photo.id);
       } else {
@@ -175,17 +147,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         handleOpenLightbox();
       }
     }
-  }, [variant, isMultiSelect, toggle, photo.id, photo.group_id, onGroupClick, handleOpenLightbox, showGroupsCollapsed, onClick]);
+  }, [isManagement, state.isMultiSelect, setters, photo.id, showGroupsCollapsed, photo.group_id, onGroupClick, handleOpenLightbox, onClick]);
 
   const handleLongPress = useCallback(() => {
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     if (!isManagement || !can('photo:edit')) return;
     if (!isMultiSelect) {
-      enable();
+      setters.setIsMultiSelect(true);
+      setters.setSelectedIds(new Set([photo.id]));
     } else {
       toggle();
     }
-  }, [variant, isMultiSelect, enable, toggle, can]);
+  }, [isManagement, can, isMultiSelect, setters, photo.id, toggle]);
 
   const displayCatName = useMemo(() => 
     getTranslatedCategoryName(photo.category_id, categories, lang, t),
@@ -212,7 +184,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   );
 
   const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
 
   const cardSelectedClasses = isManagement
     ? (isMultiSelect && isSelected 
@@ -225,7 +196,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const isTouchRef = useRef(false);
 
   const startPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     if (!isManagement || !can('photo:edit')) return;
     if (e.type === 'touchstart') {
       isTouchRef.current = true;
@@ -247,7 +217,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [variant, handleLongPress]);
 
   const cancelPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     if (!isManagement) return;
     if (pressTimerRef.current) {
       clearTimeout(pressTimerRef.current);
@@ -259,7 +228,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     if (isManagement) {
       handleLongPress();
     } else {
@@ -276,7 +244,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [onTogglePinned, photo]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     if (isManagement) {
       if (pressTimerRef.current) {
         clearTimeout(pressTimerRef.current);
@@ -295,7 +262,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [variant, handleClick]);
 
   const imgClassName = useMemo(() => {
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     if (isManagement) {
       return `${isMultiSelect && isSelected ? 'opacity-40 grayscale-[0.5]' : ''} ${is_hidden ? 'opacity-70' : ''}`;
     }
@@ -303,15 +269,18 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [variant, isMultiSelect, isSelected, is_hidden]);
 
   const containerClasses = useMemo(() => {
-    const isManagement = variant === 'full-management' || variant === 'staff-workspace';
     const base = "aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group";
     const bg = isManagement ? 'bg-slate-50 rounded-lg' : 'bg-slate-100 rounded-xl';
     const border = isManagement && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : '';
     return `${base} ${bg} ${cardSelectedClasses} ${border} ${className}`;
-  }, [variant, is_hidden, cardSelectedClasses, className]);
+  }, [isManagement, is_hidden, cardSelectedClasses, className]);
 
   return (
     <div 
+      ref={parent}
+      data-photo-id={photo.id}
+      data-selected={isSelected}
+      data-multiselect={isMultiSelect}
       onContextMenu={handleContextMenu}
       onMouseDown={startPress}
       onMouseUp={cancelPress}
@@ -321,13 +290,22 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onTouchMove={cancelPress}
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
-      className={containerClasses}
+      className={`
+        aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group bg-slate-50 rounded-lg 
+        ${isManagement && isSelected ? 'ring-[3px] ring-blue-500 scale-[0.98] shadow-lg z-10' : 'md:hover:scale-[1.02] active:scale-[0.95]'}
+        ${isManagement && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : ''}
+        ${className}
+      `}
+      style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}
     >
       <ResponsivePhoto
         photo={photo}
         variant="sm"
         aspectRatio={1}
-        imgClassName={imgClassName}
+        imgClassName={`${imgClassName} w-full h-full object-cover aspect-square`}
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
       />
 
       {isManagement && isMultiSelect && <SelectionOverlay isSelected={isSelected} />}

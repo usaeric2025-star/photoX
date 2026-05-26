@@ -14,6 +14,17 @@ module.exports = {
     ],
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
+    'no-restricted-imports': [
+      'error',
+      {
+        'paths': [
+          {
+            'name': 'react-virtuoso',
+            'message': '❌ 禁止直接引用 react-virtuoso。请使用 @/components/virtualizer/VirtualGrid'
+          }
+        ]
+      }
+    ],
     'no-restricted-syntax': [
       'error',
       {
