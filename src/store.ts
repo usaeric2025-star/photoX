@@ -115,12 +115,18 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setSortOrder: (sortOrder) => set({ sortOrder }),
   showGroupsCollapsed: true,
   setShowGroupsCollapsed: (showGroupsCollapsed) => set({ showGroupsCollapsed }),
-  appLang: (localStorage.getItem('photo_appLang') as any) || 'en',
+  // @storage-contract: valid=['zh', 'en', 'ms'] default='en'
+  appLang: (localStorage.getItem('photo_appLang') || 'en') as 'zh' | 'en' | 'ms',
   setAppLang: (appLang) => {
     localStorage.setItem('photo_appLang', appLang);
     set({ appLang });
   },
-  columns: Number(localStorage.getItem('photo_columns') || 3) as 2 | 3 | 5,
+  // @storage-contract: valid=[2,3,5] default=3
+  columns: (() => {
+    const saved = localStorage.getItem('photo_columns');
+    const cols = saved ? Number(saved) : 3;
+    return (cols === 2 || cols === 3 || cols === 5) ? (cols as 2 | 3 | 5) : 3;
+  })(),
   setColumns: (columns) => {
     localStorage.setItem('photo_columns', String(columns));
     set({ columns });
@@ -186,6 +192,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setSelectedIds: (updater) => set((state) => ({ 
     selectedIds: typeof updater === 'function' ? updater(state.selectedIds) : updater 
   })),
+  // @storage-contract: valid=[true, false] default=false
   isStaffMode: localStorage.getItem('isStaffMode') === 'true',
   setIsStaffMode: (isStaffMode) => {
     localStorage.setItem('isStaffMode', String(isStaffMode));
@@ -201,7 +208,8 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setDraggedPhotoId: (draggedPhotoId) => set({ draggedPhotoId }),
   focusedGroupPhotoId: null,
   setFocusedGroupPhotoId: (focusedGroupPhotoId) => set({ focusedGroupPhotoId }),
-  viewMode: (localStorage.getItem('photo_viewMode') as any) || 'public',
+  // @storage-contract: valid=['admin', 'public'] default='public'
+  viewMode: (localStorage.getItem('photo_viewMode') || 'public') as 'admin' | 'public',
   setViewMode: (viewMode) => {
     localStorage.setItem('photo_viewMode', viewMode);
     set({ viewMode });
@@ -214,10 +222,13 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   isInfiniteMode: false,
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
   resetUI: () => {
-    sessionStorage.removeItem('photo_edit_form_draft');
-    sessionStorage.removeItem('photo_editPhotoId');
-    sessionStorage.removeItem('photo_batchEditingIds');
-    sessionStorage.removeItem('photo_activeGroupId');
+    // [SYNC-STORAGE-IN-RENDER] @ src/store.ts:217
+    setTimeout(() => {
+      sessionStorage.removeItem('photo_edit_form_draft');
+      sessionStorage.removeItem('photo_editPhotoId');
+      sessionStorage.removeItem('photo_batchEditingIds');
+      sessionStorage.removeItem('photo_activeGroupId');
+    }, 0);
     set({
       filterCatId: null,
       filterTagIds: [],
@@ -259,6 +270,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setNewPhotoData: (newPhotoData) => set({ newPhotoData }),
   showOtherFields: false,
   setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
+  // @storage-contract: valid=[true, false] default=false
   isSidebarCollapsed: localStorage.getItem('photo_isSidebarCollapsed') === 'true',
   setIsSidebarCollapsed: (isSidebarCollapsed) => {
     localStorage.setItem('photo_isSidebarCollapsed', String(isSidebarCollapsed));

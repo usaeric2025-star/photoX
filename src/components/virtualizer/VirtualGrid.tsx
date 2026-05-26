@@ -5,6 +5,103 @@ import { useInteractionBridge } from './useInteractionBridge';
 
 /**
  * @remarks
+ * VirtualGridRow 是行虛擬化的原子單元。computeLaneIndex 為其內部實現細節，嚴禁提取為獨立導出函數或在行容器外使用
+ */
+interface VirtualGridRowProps {
+  rowIndex: number;
+  lanes: number;
+  count: number;
+  itemOffset: number;
+  renderItem: (index: number) => React.ReactNode;
+  measureElement: (element: HTMLDivElement | null) => void;
+  virtualRow?: any;
+}
+
+/**
+ * @contract {
+ *   "dom_invariants": [
+ *     "根節點必須有 data-contract='virtual-grid-row'",
+ *     "內部必須有 data-contract='row-grid-layout' 且 display: grid",
+ *     "禁止使用 position: absolute 定位子項"
+ *   ],
+ *   "ai_maintenance_rule": "重構此組件時必須保留所有 data-contract 屬性"
+ * }
+ */
+const VirtualGridRow: React.FC<VirtualGridRowProps> = ({
+  rowIndex,
+  lanes,
+  count,
+  itemOffset,
+  renderItem,
+  measureElement,
+  virtualRow
+}) => {
+  /**
+   * @contract {
+   *   "invariants": [
+   *     "返回值必須在 [0, lanesCount-1] 範圍內",
+   *     "lane === 0 或 undefined 時必須回退到 index % lanesCount",
+   *     "lanesCount <= 0 時必須返回 0"
+   *   ],
+   *   "forbidden": ["禁止調用任何 DOM API", "禁止讀取外部狀態"],
+   *   "ai_maintenance_rule": "修改此函數前必須先更新 @contract 並通過 vitest"
+   * }
+   */
+  const computeLaneIndex = (lane: number | undefined, index: number, lanesCount: number): number => {
+    if (lanesCount <= 0) return 0;
+    if (lane !== undefined && lane !== 0) return lane;
+    return Math.max(0, index % lanesCount);
+  };
+
+  return (
+    <div
+      ref={measureElement}
+      data-index={rowIndex}
+      data-contract="virtual-grid-row"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        transform: `translate3d(0, ${itemOffset}px, 0)`,
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+      }}
+    >
+      <div
+        data-contract="row-grid-layout"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))`,
+          width: '100%',
+        }}
+      >
+        {Array.from({ length: lanes }).map((_, _laneIndex) => {
+          const itemIndex = rowIndex * lanes + _laneIndex;
+          if (itemIndex >= count) {
+            return <div key={`empty-${_laneIndex}`} />;
+          }
+          const computedLane = computeLaneIndex(virtualRow?.lane, itemIndex, lanes);
+          return (
+            <div 
+              key={itemIndex} 
+              className="h-full w-full"
+              data-lane={computedLane}
+              style={{
+                gridColumnStart: computedLane + 1,
+              }}
+            >
+              {renderItem(itemIndex)}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * @remarks
  * Strict VirtualGrid adaptation layer. 
  * Any modification requires updating tests and JSDoc markers.
  * 嚴禁注入任何業務邏輯（如 photos, groupId 等）。
@@ -23,7 +120,7 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const bridge = useInteractionBridge();
-  const lanes = props.lanes || 1;
+  const lanes = Math.max(1, props.lanes || 1);
 
   // Track the actual container element's width
   const [containerWidth, setContainerWidth] = React.useState<number>(800);
@@ -153,34 +250,18 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
             );
           }
 
-          // Grid row layout
+          // Grid row layout utilizing VirtualGridRow
           return (
-            <div
+            <VirtualGridRow
               key={virtualRow.key}
-              ref={virtualizer.measureElement}
-              data-index={virtualRow.index}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translate3d(0, ${itemOffset}px, 0)`,
-                display: 'grid',
-                gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))`,
-              }}
-            >
-              {Array.from({ length: lanes }).map((_, laneIndex) => {
-                const itemIndex = virtualRow.index * lanes + laneIndex;
-                if (itemIndex >= props.count) {
-                  return <div key={`empty-${laneIndex}`} />;
-                }
-                return (
-                  <div key={itemIndex} className="h-full w-full">
-                    {props.renderItem(itemIndex)}
-                  </div>
-                );
-              })}
-            </div>
+              rowIndex={virtualRow.index}
+              lanes={lanes}
+              count={props.count}
+              itemOffset={itemOffset}
+              renderItem={props.renderItem}
+              measureElement={virtualizer.measureElement}
+              virtualRow={virtualRow}
+            />
           );
         })}
       </div>
@@ -190,3 +271,5 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
 });
 
 VirtualGrid.displayName = 'VirtualGrid';
+
+export default VirtualGrid;

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Cloud, Settings2, Plus, Terminal } from 'lucide-react';
 import { useFeedback, useAdminMode, useTasks, useTaskExecutor, useMultiSelect } from '@/hooks';
@@ -24,6 +24,8 @@ import { TranslationType, getCacheBustedImageUrl } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
 
 /* Removed ErrorFallback component */
+
+const AdminDiagnostics = lazy(() => import('./AdminDiagnostics'));
 
 export const AdminViewContent: React.FC = () => {
   const logic = useAdmin();
@@ -187,6 +189,12 @@ export const AdminViewContent: React.FC = () => {
               <PhotoEditDrawer />
             )}
           </AnimatePresence>
+
+          {typeof __ADMIN_DIAGNOSTICS__ !== 'undefined' && __ADMIN_DIAGNOSTICS__ && (
+            <Suspense fallback={null}>
+              <AdminDiagnostics />
+            </Suspense>
+          )}
         </div>
       </div>
       </DataLoadingContainer>

@@ -1,0 +1,113 @@
+import { renderHook } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import fs from 'fs';
+import path from 'path';
+import { useMultiSelect } from '../shared/useMultiSelect';
+import { useLongPress } from '../shared/useLongPress';
+
+// Mock zustand gallery store for rendering test hooks
+vi.mock('@/store', () => ({
+  useGalleryStore: (fn: any) => fn({
+    isMultiSelect: false,
+    selectedIds: [],
+    setIsMultiSelect: vi.fn(),
+    setSelectedIds: vi.fn(),
+  }),
+  useShallow: (fn: any) => fn,
+}));
+
+describe('Hook Rigid Contracts [HOOK-CONTRACT]', () => {
+  
+  it('[HOOK-CONTRACT] 依賴數組靜態性檢查', () => {
+    // Audit the file contents of core custom hooks to ensure compliance with @deps-contract static annotation
+    const hookDirs = [
+      path.join(process.cwd(), 'src/hooks/shared'),
+      path.join(process.cwd(), 'src/hooks/admin'),
+      path.join(process.cwd(), 'src/hooks'),
+    ];
+
+    let totalContractsFound = 0;
+
+    hookDirs.forEach((dir) => {
+      if (!fs.existsSync(dir)) return;
+      const files = fs.readdirSync(dir);
+      files.forEach((file) => {
+        if (!file.endsWith('.ts') && !file.endsWith('.tsx')) return;
+        const filepath = path.join(dir, file);
+        if (fs.statSync(filepath).isDirectory()) return;
+
+        const content = fs.readFileSync(filepath, 'utf8');
+        
+        // Scan for @deps-contract pattern
+        if (content.includes('@deps-contract:')) {
+          totalContractsFound++;
+          const lines = content.split('\n');
+          lines.forEach((line) => {
+            if (line.includes('@deps-contract:')) {
+              // Ensure it follows static/dynamic format
+              expect(line).toMatch(/@deps-contract:\s*static=\[.*\]\s*dynamic=\[.*\]/);
+            }
+          });
+        }
+      });
+    });
+
+    expect(totalContractsFound).toBeGreaterThanOrEqual(2);
+  });
+
+  it('[HOOK-CONTRACT] 模組 JSDoc @hook-contract 註釋檢查', () => {
+    // Read files to ensure JSDoc "@hook-contract" exists
+    const filesToAudit = [
+      path.join(process.cwd(), 'src/hooks/useInfinitePhotoCursorPagination.ts'),
+      path.join(process.cwd(), 'src/hooks/shared/useScrollRestoration.ts'),
+      path.join(process.cwd(), 'src/hooks/shared/useMultiSelect.ts'),
+      path.join(process.cwd(), 'src/hooks/admin/useAdminEdit.ts'),
+    ];
+
+    filesToAudit.forEach((filepath) => {
+      expect(fs.existsSync(filepath)).toBe(true);
+      const content = fs.readFileSync(filepath, 'utf8');
+      expect(content).toContain('@hook-contract');
+      expect(content).toContain('inputs');
+      expect(content).toContain('outputs');
+      expect(content).toContain('invariants');
+    });
+  });
+
+  it('[HOOK-CONTRACT] 返回值結構完整性 (useMultiSelect)', () => {
+    const { result } = renderHook(() => useMultiSelect());
+    const returned = result.current;
+
+    // Must be object, NOT tuple/array
+    expect(Array.isArray(returned)).toBe(false);
+    expect(typeof returned).toBe('object');
+    expect(returned).not.toBeNull();
+
+    // Key properties
+    expect(returned).toHaveProperty('isMultiSelect');
+    expect(returned).toHaveProperty('selectedIds');
+    expect(returned).toHaveProperty('enable');
+    expect(returned).toHaveProperty('disable');
+    expect(returned).toHaveProperty('toggle');
+  });
+
+  it('[HOOK-CONTRACT] 返回值結構完整性 (useLongPress)', () => {
+    const onLongPress = vi.fn();
+    const onClick = vi.fn();
+    const { result } = renderHook(() => useLongPress(onLongPress, onClick));
+    const returned = result.current;
+
+    // Must be object, NOT tuple/array
+    expect(Array.isArray(returned)).toBe(false);
+    expect(typeof returned).toBe('object');
+    expect(returned).not.toBeNull();
+
+    // Check interaction hooks output properties
+    expect(returned).toHaveProperty('onMouseDown');
+    expect(returned).toHaveProperty('onTouchStart');
+    expect(returned).toHaveProperty('onMouseUp');
+    expect(returned).toHaveProperty('onTouchEnd');
+    expect(returned).toHaveProperty('startPress');
+    expect(returned).toHaveProperty('hasLongPressed');
+  });
+});

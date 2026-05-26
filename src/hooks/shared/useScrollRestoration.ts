@@ -1,5 +1,16 @@
 import { useEffect } from 'react';
 
+/**
+ * @hook-contract {
+ *   "inputs": { "key": "string" },
+ *   "outputs": "void",
+ *   "invariants": [
+ *     "每次 key 變化時重置並恢復對應捲動位置"
+ *   ],
+ *   "forbidden": ["禁止直接修改全局 state"],
+ *   "ai_maintenance_rule": "修改此 Hook 前必須先讀取並更新 @hook-contract"
+ * }
+ */
 export const useScrollRestoration = (key: string = 'window_scroll_pos') => {
   useEffect(() => {
     // Restore scroll position upon component mount
@@ -19,6 +30,7 @@ export const useScrollRestoration = (key: string = 'window_scroll_pos') => {
         console.error('Error restoring scroll position:', e);
       }
     }
+    // @deps-contract: static=[key] dynamic=[]
   }, [key]);
 
   useEffect(() => {
@@ -47,5 +59,6 @@ export const useScrollRestoration = (key: string = 'window_scroll_pos') => {
         cancelAnimationFrame(frameId);
       }
     };
+    // @deps-contract: static=[key] dynamic=[]
   }, [key]);
 };

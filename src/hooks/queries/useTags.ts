@@ -11,7 +11,8 @@ export const useTagsQuery = () => {
       syncCache.saveTags(tags).catch(() => {});
       return tags;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
     placeholderData: keepPreviousData,
   });
   return { ...result, data: result.data ?? [] };

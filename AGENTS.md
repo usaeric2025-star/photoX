@@ -103,6 +103,7 @@ sourceOfTruth: "ARCHITECTURE.md"
 -   **適配層使用規範**：必須遵守 `VirtualGrid` 定義的props契約，嚴禁使用未導出的底層實現。原子文件（interactionTypes 等）職責單一。
 -   **交互狀態契約**：所有交互狀態必須存儲於 interactionBus Ref，嚴禁 useState/useContext；視覺反饋必須用 CSS data 屬性，嚴禁條件 className。
 -   ✅ 移除 useContext 後，必須全局搜索該 Context 提供的所有字段名，確保無殘留引用
+-   **行渲染器結構化封包 (v2.5)**：`VirtualGrid` 的行渲染邏輯必須封裝在 `VirtualGridRow` 內部組件中，禁止將行內計算及列索引對齊邏輯提取為獨立導出或在行容器外使用。任何重構必須保持 `VirtualGridRow` 的原子性。
 
 ### ⚠️ 圖片渲染契約
 
@@ -124,6 +125,32 @@ sourceOfTruth: "ARCHITECTURE.md"
 -   ✅ componentDidCatch 嚴禁 setState / 副作用 / 組件渲染
 -   ✅ 同一渲染鏈路禁止多層 EB 嵌套
 -   ✅ 所有新增 ErrorBoundary 必須通過隔離測試驗收
+-   ✅ Admin Diagnostics 檢測項必須覆蓋所有 P1 審計發現
+-   ✅ 新增檢測項時必須同步更新 diagnosticRegistry
+-   ✅ Semua Admin Diagnostics Panel 必須保持 Lazy Loaded + 三層安全鎖
+-   ✅ 禁止在生產構建中包含診斷面板代碼
+-   ✅ [已完成] P2-2 Admin Diagnostics 基礎設施已集成
+-   ✅ 後續所有 P2/P3 修復項必須補充對應 diagnosticRegistry 檢測項
+-   ✅ VirtualGrid 任何重構前必須先通過 Lanes 專項基準測試
+-   ✅ P2-3 Step 1 基準測試確認：11/11 測試通過，維持 JV v3 + 原生 computeLaneIndex，暫不升級 v5
+-   ✅ P2-3 最終決策：維持 JV v3，自研 computeLaneIndex 封裝，11/11 基準測試通過
+-   ✅ VirtualGrid lanes 已標記為「已知技術債，待 JV v5 穩定後重新評估」
+-   ✅ 升級 JV 前必須先通過 Admin Diagnostics 11/11 基準測試
+-   ✅ [已完成] P2-4 Detail Fix (v2.5) 自研組件防禦加固與細節修復已完工
+-   ✅ [CONTRACT] 自研組件契約：自研組件（如 VirtualGrid / computeLaneIndex）必須使用 JSDoc @contract 標記不變量，測試用例全數加註 [CONTRACT] 前綴，並在 DOM 加 data-contract 屬性錨點
+-   ✅ [CONTRACT] AI 行為規範：AI 在修改或重構自研組件前，必須先讀取並嚴格驗證其 @contract 聲明的不變量不被破壞
+-   ✅ 視覺對齊優化：對 PhotoCard 文字區追加固定高度容器，並以 align-content: end 完成物理基線一致，修復次像素裂縫
+-   ⏳ 儲存治理標記：Storage 寫入治理與進階查詢優化留待明日執行，已在 store.ts 建立 @storage-contract 標記作為 AI 可識別錨點
+-   ✅ P2-4 基準測試：註冊檢測項及 [CONTRACT] 基準測試全數通過（14/14 項目）
+
+### ⚠️ AI-Native Hook 剛性化契約 (v2.5) 🆕
+
+1. ❌ **禁止動態依賴**：useEffect/useMemo 的 deps 必須是靜態字面量或穩定引用，嚴禁將 props/state 直接放入 deps。
+2. ❌ **禁止隱式返回值**：Hook 必須返回具名對象 `{ data, status, actions }` 等具名欄位，嚴禁返回元組 `[value, setValue]`。
+3. ✅ **強制狀態機模式**：複雜狀態必須用 useReducer + 明確 Action Type，嚴禁多個 useState 聯動。
+4. ✅ **強制純函數提取**：所有計算邏輯必須抽離為獨立純函數並附帶 `@contract`，Hook 僅負責膠水調度。
+5. ✅ **強制 JSDoc @hook-contract**：引進新 Hook 或修改現有 Hook 前必須先生成或更新 `@hook-contract` 聲明（包括 inputs, outputs, invariants 和 ai_maintenance_rule）。
+6.  *現有違規 Hook 的重構留待明日專項處理，今日不改業務代碼*
 
 ## 🚨 常见错误 → 正确做法
 

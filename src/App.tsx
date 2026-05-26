@@ -122,7 +122,7 @@ export default function AppRoutes() {
         // [AUTH-STORAGE-BLOCK] @ src/App.tsx:119 - Move storage-intensive reload logic out of the message handler
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-          window.location.reload();
+          // removed window.location.reload() to prevent blank screen, useQuery reactivity handles auth
         }, 0);
       }
     };

@@ -1,6 +1,29 @@
 import { useGalleryStore, useShallow } from '@/store';
 import { useCallback } from 'react';
 
+/**
+ * @hook-contract {
+ *   "inputs": {},
+ *   "outputs": {
+ *     "isMultiSelect": "boolean",
+ *     "selectedIds": "string[]",
+ *     "enable": "Function",
+ *     "disable": "Function",
+ *     "toggle": "Function",
+ *     "clear": "Function",
+ *     "reset": "Function",
+ *     "selectAll": "Function",
+ *     "deselectAllForList": "Function",
+ *     "activeClearSelection": "Function"
+ *   },
+ *   "invariants": [
+ *     "返回具名對象而非數組",
+ *     "管理多選狀態的開關及項目清單"
+ *   ],
+ *   "forbidden": ["禁止直接調用原生 DOM API"],
+ *   "ai_maintenance_rule": "修改此 Hook 前必須先讀取並更新 @hook-contract"
+ * }
+ */
 export const useMultiSelect = () => {
   const { isMultiSelect, selectedIds, setIsMultiSelect, setSelectedIds } = useGalleryStore(useShallow((state) => ({
     isMultiSelect: state.isMultiSelect,

@@ -11,7 +11,8 @@ export const useCategoriesQuery = () => {
       syncCache.saveCategories(cats).catch(() => {});
       return cats;
     },
-    staleTime: 1000 * 60 * 30, // 30 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,   // 10 minutes
     placeholderData: keepPreviousData,
   });
   return { ...result, data: result.data ?? [] };

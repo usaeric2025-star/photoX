@@ -4,6 +4,24 @@ import { useGalleryStore, useShallow } from '@/store';
 import { useTaskExecutor, useDeletePhotoMutation, useUpdatePhotoMutation, useBatchEditMutation, useGroupPhotosMutation, useUngroupMutation, useFeedback } from '@/hooks';
 import { loadPhotosByGroupId } from '@/services/photoService';
 
+/**
+ * @hook-contract {
+ *   "inputs": { "user": "User | null", "photos": "Photo[]", "onComplete": "() => void" },
+ *   "outputs": {
+ *     "formState": "ProductFormData",
+ *     "newPhotoData": "Partial<Photo>",
+ *     "showOtherFields": "boolean",
+ *     "deletePhoto": "Function",
+ *     "batchUpdatePhotos": "Function"
+ *   },
+ *   "invariants": [
+ *     "返回具名對象而非數組",
+ *     "內部管理相片的編輯與删除行為"
+ *   ],
+ *   "forbidden": ["禁止直接調用 supabase API 寫入"],
+ *   "ai_maintenance_rule": "修改此 Hook 前必須先讀取並更新 @hook-contract"
+ * }
+ */
 export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: () => void) => {
   const { runTask } = useTaskExecutor();
   const { showSuccess, showError } = useFeedback();
@@ -77,6 +95,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     if (Object.keys(updates).length > 0) {
       updateForm(updates);
     }
+    // @deps-contract: static=[updateForm] dynamic=[batchEditingIds, photos]
   }, [batchEditingIds, photos, updateForm]);
 
   // 批量编辑 API 调用

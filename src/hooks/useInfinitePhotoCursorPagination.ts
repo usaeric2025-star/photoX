@@ -3,6 +3,18 @@ import { Photo } from '@/types';
 import { photoKeys } from '@/lib/queryKeys';
 import { flattenPhotoInfiniteQueryPages } from '@/lib/selectors/photos';
 
+/**
+ * @hook-contract {
+ *   "inputs": { "queryKeyFilters": "Record<string, any>", "fetchFn": "(pageParam: number) => Promise<{ photos: Photo[], total: number }>", "pageSize": "number" },
+ *   "outputs": { "query": "UseInfiniteQueryResult", "photos": "Photo[]" },
+ *   "invariants": [
+ *     "返回具名對象而非數組",
+ *     "內部不包含 useEffect"
+ *   ],
+ *   "forbidden": ["禁止調用任何 DOM API"],
+ *   "ai_maintenance_rule": "修改此 Hook 前必須先讀取並更新 @hook-contract"
+ * }
+ */
 export const useInfinitePhotoCursorPagination = (
   queryKeyFilters: Record<string, any>,
   fetchFn: (pageParam: number) => Promise<{ photos: Photo[], total: number }>,
