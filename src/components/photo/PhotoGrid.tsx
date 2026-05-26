@@ -11,6 +11,7 @@ import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { GalleryEmpty } from '../shared/GalleryEmpty';
 import { useCategoriesQuery, useTagsQuery, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
 import { PAGINATION } from '../../constants/config';
+import { useOptionalAdmin } from '@/contexts/AdminContext';
 
 interface MemoizedPhotoCardProps {
   index: number;
@@ -113,16 +114,24 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
 
   const effectiveVariant: GalleryVariant = variant || (isAdminMode ? 'full-management' : 'public-showcase');
 
+  const adminData = useOptionalAdmin();
+
   // Real-time photo query based on store filters
-  const infinitePhotosQuery = useInfinitePhotos({
+  const infinitePhotosQueryInternal = useInfinitePhotos({
     category_id: filterCatId,
     tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,
     sortOrder: sortOrder,
     isAdminMode
-  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE);
+  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE, !isAdminMode);
 
-  const photos = React.useMemo(() => infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [], [infinitePhotosQuery.data]);
+  const infinitePhotosQuery = (isAdminMode && adminData) ? adminData.infinitePhotosQuery : infinitePhotosQueryInternal;
+
+  const photos = React.useMemo(() => {
+    if (isAdminMode && adminData) return adminData.photos;
+    return infinitePhotosQueryInternal.data?.pages.flatMap(p => p.photos) || [];
+  }, [isAdminMode, adminData, infinitePhotosQueryInternal.data]);
+
   const isFetching = infinitePhotosQuery.isLoading;
   const isFetchingNextPage = infinitePhotosQuery.isFetchingNextPage;
   const hasNextPage = !!infinitePhotosQuery.hasNextPage;

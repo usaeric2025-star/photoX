@@ -12,7 +12,7 @@ export const useInfinitePhotos = (filters: {
   sortOrder?: 'asc' | 'desc' | string | null;
   isAdminMode?: boolean;
   onlyUngrouped?: boolean;
-}, limit: number = PAGINATION.PUBLIC_PAGE_SIZE) => {
+}, limit: number = PAGINATION.PUBLIC_PAGE_SIZE, enabled: boolean = true) => {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.infinitePhotos({ 
       category_id: filters.category_id ?? null,
@@ -51,6 +51,7 @@ export const useInfinitePhotos = (filters: {
     },
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
+    enabled,
     placeholderData: keepPreviousData,
     staleTime: 1000 * 60, // 1 分钟
     retry: 2,

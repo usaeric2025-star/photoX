@@ -3,7 +3,7 @@ import { useAdminDataPrep } from '@/pages/AdminView/useAdminDataPrep';
 
 type AdminContextType = ReturnType<typeof useAdminDataPrep>;
 
-const AdminContext = createContext<AdminContextType | null>(null);
+export const AdminContext = createContext<AdminContextType | null>(null);
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const logic = useAdminDataPrep();
@@ -20,4 +20,8 @@ export const useAdmin = () => {
     throw new Error('useAdmin must be used within an AdminProvider');
   }
   return context;
+};
+
+export const useOptionalAdmin = () => {
+  return useContext(AdminContext);
 };

@@ -104,12 +104,12 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
     searchQuery: store.debouncedSearchQuery,
     sortOrder: store.sortOrder,
     isAdminMode: isManagement
-  }, pageSize);
+  }, pageSize, !isManagement);
 
   const photos = useMemo(() => {
-    if (isManagement) return photosFromAdmin;
+    if (isManagement && adminData) return photosFromAdmin;
     return flattenPhotoInfiniteQueryPages(infiniteQuery.data?.pages || []);
-  }, [isManagement, photosFromAdmin, infiniteQuery.data]);
+  }, [isManagement, adminData, photosFromAdmin, infiniteQuery.data]);
 
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,

@@ -298,8 +298,9 @@ export const useAdminDataPrep = () => {
     updateTag: (id: string, name: string) => categoryOps.updateTag(id, { name }),
     updateCategory: (id: string, name: string) => categoryOps.updateCategory(id, { name }),
     updateManufacturer: (id: string, name: string) => categoryOps.updateManufacturer(id, { name }),
+    infinitePhotosQuery
   }), [
-    user, logout, navigate, infinitePhotosQuery.isLoading, 
+    user, logout, navigate, infinitePhotosQuery.isLoading, infinitePhotosQuery,
     store, filters, importer, sync, ai, edit, categoryOps, actions, 
     isSyncing, isAnalyzing, photos, categories, tags, manufacturers, groupPhotos, initialPhotoId, 
     checkSyncLock, showError, onEditPhotoById, handleLogoUpload, showSuccess, disable, 

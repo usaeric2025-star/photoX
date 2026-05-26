@@ -7,6 +7,7 @@ import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCac
 import { safeArray } from '../../utils/safeAccess';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
+import { useStore, useShallow } from '../../store';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { translations } from '../../lib/translations';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
@@ -107,8 +108,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const { onTogglePinned } = usePhotoActions();
 
-  const lang = 'zh';
-  const t = translations[lang as keyof typeof translations] || translations.zh;
+  const { appLang } = useStore(useShallow(s => ({ appLang: s.appLang })));
+  const t = translations[appLang] || translations.zh;
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
@@ -162,8 +163,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [isManagement, can, isMultiSelect, setters, photo.id, toggle]);
 
   const displayCatName = useMemo(() => 
-    getTranslatedCategoryName(photo.category_id, categories, lang, t),
-    [photo.category_id, categories, lang, t]
+    getTranslatedCategoryName(photo.category_id, categories, appLang, t),
+    [photo.category_id, categories, appLang, t]
   );
 
   const isUncategorized = useMemo(() => {
