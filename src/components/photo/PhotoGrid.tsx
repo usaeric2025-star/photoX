@@ -227,7 +227,9 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
           data={gridPhotos}
         computeItemKey={(index, item) => {
           const p = item as Photo;
-          return p ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `loading-${index}`;
+          if (!p) return `loading-${index}`;
+          const idValue = p.type === 'group' ? p.group_id : p.id;
+          return idValue ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `admin-fallback-${index}`;
         }}
         endReached={() => {
           if (hasNextPage && !isFetchingNextPage) {
