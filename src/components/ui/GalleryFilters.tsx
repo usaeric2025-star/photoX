@@ -130,26 +130,6 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
           </div>
           
           <div className="flex gap-1 shrink-0">
-            {isManagement && onBatchAiIdentify && (
-                <button 
-                  onClick={onBatchAiIdentify}
-                  disabled={isAnalyzing}
-                  className={`h-9 px-2.5 rounded-xl flex items-center justify-center transition-all ${isAnalyzing ? 'bg-purple-600 text-white shadow-lg scale-105' : 'text-purple-600/70 hover:text-purple-600 bg-white border border-purple-600/20 shadow-sm'}`}
-                  title={t.batchAi}
-                >
-                  {isAnalyzing ? (
-                    batchProgress?.current > 0 ? (
-                      <span className="text-[10px] font-bold text-white">{batchProgress.current}</span>
-                    ) : (
-                      <Sparkles size={16} className="animate-spin" />
-                    )
-                  ) : (
-                    <Sparkles size={16} className="mr-1" />
-                  )}
-                  {!isAnalyzing && <span className="text-[11px] font-bold">AI</span>}
-                </button>
-            )}
-
             <SortButton 
               onClick={toggleSortOrder} 
               label={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest} 

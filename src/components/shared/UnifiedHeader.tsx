@@ -96,34 +96,75 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     window.location.reload();
   };
 
-  const isEffectiveStaffMode = isStaffMode && !user;
+  const isEffectiveStaffMode = (variant === 'staff-workspace') || (isStaffMode && !user);
 
-  const headerClass = isManagement 
-    ? (adminPreviewMode === 'public' ? "bg-green-50 border-green-200" : isEffectiveStaffMode ? "bg-amber-50 border-amber-200" : "bg-white border-[#ECECEC]")
-    : "bg-white border-[#ECECEC]";
+  let headerClass = "bg-white border-[#E2E8F0] shadow-sm";
+  let modeBadge = null;
+
+  if (isManagement) {
+    if (adminPreviewMode === 'public') {
+      headerClass = "bg-gradient-to-r from-emerald-50/90 to-green-50/40 border-emerald-200/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]";
+      modeBadge = (
+        <span className="hidden xs:inline-flex text-[9px] font-black tracking-widest bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-1.5 py-0.5 rounded-md uppercase whitespace-nowrap">
+          {lang === 'zh' ? '预览 / Preview' : lang === 'ms' ? 'Pratonton' : 'Preview'}
+        </span>
+      );
+    } else if (isEffectiveStaffMode) {
+      headerClass = "bg-gradient-to-r from-amber-50/90 to-orange-50/40 border-amber-200/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]";
+      modeBadge = (
+        <span className="hidden xs:inline-flex text-[9px] font-black tracking-widest bg-amber-500/10 text-amber-700 border border-amber-500/20 px-1.5 py-0.5 rounded-md uppercase whitespace-nowrap">
+          {lang === 'zh' ? '员工端 / Staff' : lang === 'ms' ? 'Kakitangan' : 'Staff'}
+        </span>
+      );
+    } else {
+      headerClass = "bg-gradient-to-r from-blue-50/90 to-indigo-50/40 border-blue-200/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]";
+      modeBadge = (
+        <span className="hidden xs:inline-flex text-[9px] font-black tracking-widest bg-blue-500/10 text-blue-700 border border-blue-500/20 px-1.5 py-0.5 rounded-md uppercase whitespace-nowrap">
+          {lang === 'zh' ? '管理模式 / Admin' : lang === 'ms' ? 'Urus' : 'Admin'}
+        </span>
+      );
+    }
+  } else if (isStaffMode) {
+    headerClass = "bg-gradient-to-r from-amber-50/90 to-orange-50/40 border-amber-200/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]";
+    modeBadge = (
+      <span className="hidden xs:inline-flex text-[9px] font-black tracking-widest bg-amber-500/10 text-amber-700 border border-amber-500/20 px-1.5 py-0.5 rounded-md uppercase whitespace-nowrap">
+        {lang === 'zh' ? '员工端 / Staff' : lang === 'ms' ? 'Kakitangan' : 'Staff'}
+      </span>
+    );
+  } else {
+    headerClass = "bg-white border-[#E2E8F0] shadow-sm";
+    modeBadge = (
+      <span className="hidden xs:inline-flex text-[9px] font-semibold text-slate-400 bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded-md whitespace-nowrap">
+        {lang === 'zh' ? '展示厅 / Showcase' : lang === 'ms' ? 'Pameran' : 'Showcase'}
+      </span>
+    );
+  }
 
   return (
     <header className={`shrink-0 z-[110] h-[58px] px-4 sm:px-6 flex items-center justify-between gap-1 sm:gap-4 border-b ${headerClass}`}>
       <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-        {fetchedSettings?.logo_url ? (
-          <img src={fetchedSettings.logo_url} alt="Logo" className="h-8 w-auto object-contain rounded-xl border border-[#ECECEC] p-0.5 bg-white shadow-sm shrink-0" />
-        ) : (
-          <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
-            {isManagement ? 'Admin' : 'PhotoX'}
-          </h1>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {fetchedSettings?.logo_url ? (
+            <img src={fetchedSettings.logo_url} alt="Logo" className="h-8 w-auto object-contain rounded-xl border border-[#ECECEC] p-0.5 bg-white shadow-sm shrink-0" />
+          ) : (
+            <h1 className="text-sm sm:text-lg font-black tracking-tighter text-brand-navy border border-brand-navy/10 px-2 sm:px-3 py-1 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+              {isManagement ? 'Admin' : 'PhotoX'}
+            </h1>
+          )}
+          {modeBadge}
+        </div>
 
         {(totalCount !== undefined || cloudCount !== undefined) && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner">
-            <div className="flex items-center gap-1 font-mono text-[12px] text-brand-navy/90">
-              <span className="font-bold">{totalCount ?? photos.length}</span>
-              <span className="text-[12px] font-sans font-medium text-brand-navy/80 ml-0.5">{t.photosUnit}</span>
+          <div className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-brand-navy/10 bg-brand-navy/5 shadow-inner whitespace-nowrap">
+            <div className="flex items-center font-mono text-[11px] sm:text-[12px] text-brand-navy/90 whitespace-nowrap">
+              <span className="font-bold text-brand-navy">{totalCount ?? photos.length}</span>
               {isManagement && (
                 <>
-                  <span className="text-brand-navy/30 mx-1">/</span>
-                  <span className="font-bold text-blue-600">{cloudCount ?? '?'}</span>
+                  <span className="text-brand-navy/30 mx-1 font-sans">/</span>
+                  <span className="font-semibold text-brand-navy/40" title="Cloud count">{cloudCount ?? '?'}</span>
                 </>
               )}
+              <span className="text-[11px] font-sans font-medium text-brand-navy/55 ml-1">{t.photosUnit}</span>
             </div>
           </div>
         )}

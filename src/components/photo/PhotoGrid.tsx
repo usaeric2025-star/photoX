@@ -212,7 +212,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     return () => { unsubscribe(); };
   }, [setIsMultiSelectMode, setSelectedIds]);
 
-  const isInitialLoad = (infinitePhotosQuery.isLoading && photos.length === 0) || isFilteringFetching;
+  const isInitialLoad = infinitePhotosQuery.isLoading && photos.length === 0;
 
   if (isInitialLoad) {
     const skeletonCount = getSkeletonCount(0, columns); // Will default appropriately
