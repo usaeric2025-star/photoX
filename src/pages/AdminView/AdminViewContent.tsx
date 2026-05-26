@@ -90,7 +90,11 @@ export const AdminViewContent: React.FC = () => {
     logic.performPullSync();
   }, [logic]);
 
-  const lastSyncTime = localStorage.getItem('lastSyncTime') ? new Date(localStorage.getItem('lastSyncTime')!).getTime() : null;
+  const lastSyncTime = React.useMemo(() => {
+    // [SYNC-STORAGE-IN-RENDER] @ src/pages/AdminView/AdminViewContent.tsx:93 - Read from storage in useMemo to avoid repeated sync reads
+    const saved = localStorage.getItem('lastSyncTime');
+    return saved ? new Date(saved).getTime() : null;
+  }, []);
 
   const logicRef = React.useRef(logic);
   useEffect(() => {

@@ -56,7 +56,14 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const saveTasks = (newTasks: BackgroundTask[]) => {
     // Exclude functional elements prior to storage
     const serializable = newTasks.map(({ onCancel, ...t }) => t);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+    // [AUTH-STORAGE-BLOCK] @ src/hooks/core/infra/useTasks.tsx:60 - Push storage write to next frame to avoid blocking UI during auth/sync
+    requestAnimationFrame(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
+      } catch (e) {
+        console.error('Failed to save tasks to localStorage:', e);
+      }
+    });
   };
 
   const addTask = useCallback((taskData: Omit<BackgroundTask, 'id' | 'status' | 'progress'>) => {

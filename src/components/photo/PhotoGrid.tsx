@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useEffect, useRef } from 'react';
-import { VirtuosoGrid } from 'react-virtuoso';
+import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { motion } from 'motion/react';
 import { PHOTO_GRID_CONFIG } from '../../config/virtuoso.config';
 import { Photo } from '../../types';
@@ -237,41 +237,36 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
   return (
     <div className="h-full w-full overscroll-y-contain relative">
       <div className={`h-full w-full transition-opacity duration-300 ${isFilteringFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-        <VirtuosoGrid
+        <VirtualGrid
           ref={virtuosoRef}
-          style={{ height: '100%', width: '100%' }}
-          data={gridPhotos}
-        computeItemKey={(index, item) => {
-          const p = item as Photo;
-          if (!p) return `loading-${index}`;
-          const idValue = p.type === 'group' ? p.group_id : p.id;
-          return idValue ? (p.type === 'group' ? `group-${p.group_id}` : `photo-${p.id}`) : `admin-fallback-${index}`;
-        }}
-        endReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            loadMorePhotos();
-          }
-        }}
-        overscan={PHOTO_GRID_CONFIG.overscan(columns)}
-        increaseViewportBy={PHOTO_GRID_CONFIG.increaseViewportBy}
-        useWindowScroll={false}
-        itemClassName="virtuoso-grid-item"
-        listClassName={`grid gap-2 px-1.5 py-2 pb-36 ${columns === 2 ? 'grid-cols-2' : columns === 3 ? 'grid-cols-3' : 'grid-cols-5'}`}
-        itemContent={(index, photo) => {
-          return (
-            <MemoizedPhotoCard
-              index={index}
-              photo={photo}
-              variant={effectiveVariant}
-              showGroupsCollapsed={showGroupsCollapsed}
-              onGroupClick={handleGroupClick}
-              onLightboxOpen={handleLightboxOpen}
-            />
-          );
-        }}
-        context={virtuosoContext}
-        components={VIRTUOSO_COMPONENTS}
-      />
+          count={gridPhotos.length}
+          lanes={columns}
+          estimateSize={() => 340} // Default height for PhotoCard with info
+          overscan={PHOTO_GRID_CONFIG.overscan(columns)}
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) {
+              loadMorePhotos();
+            }
+          }}
+          containerClassName="px-1.5 py-2 pb-36"
+          renderItem={(index) => {
+            const photo = gridPhotos[index];
+            if (!photo) return null;
+            return (
+              <div className="p-1 h-full w-full">
+                <MemoizedPhotoCard
+                  index={index}
+                  photo={photo}
+                  variant={effectiveVariant}
+                  showGroupsCollapsed={showGroupsCollapsed}
+                  onGroupClick={handleGroupClick}
+                  onLightboxOpen={handleLightboxOpen}
+                />
+              </div>
+            );
+          }}
+          footer={<MemoizedFooter context={virtuosoContext} />}
+        />
       </div>
       {isFilteringFetching && (
         <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full shadow-lg border border-slate-110 flex items-center gap-1.5 z-50 animate-pulse">

@@ -97,8 +97,11 @@ export default function AppRoutes() {
       if (hasAuthData) {
         const timer = setTimeout(() => {
           try {
-            window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
-            window.close();
+            // [AUTH-STORAGE-BLOCK] @ src/App.tsx:100 - Ensure UI/storage settles before signaling parent and closing
+            requestAnimationFrame(() => {
+              window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+              window.close();
+            });
           } catch (e) {
             console.error('Failed to postMessage or close popup:', e);
           }
@@ -116,9 +119,11 @@ export default function AppRoutes() {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        // Force invalidate user query and reload the application to grab the session from localStorage
-        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-        window.location.reload();
+        // [AUTH-STORAGE-BLOCK] @ src/App.tsx:119 - Move storage-intensive reload logic out of the message handler
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+          window.location.reload();
+        }, 0);
       }
     };
     window.addEventListener('message', handleOauthMessage);
