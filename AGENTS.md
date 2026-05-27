@@ -221,10 +221,20 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ✅ 所有拖曳相關 mutation 具備樂观更新回滾機制
 - 🚧 技術債：多選拖曳邊緣 case、移動端觸控適配 (留待 P3 後續)
 
-### 🗺️ P4 技術演進路線圖 (v2.7 穩定後觸發)
-- 🚀 **Vite 7 升級 (Next Gen)**：[TRIGGER] Vite 7.0 穩定版發布 + Rollup 5 兼容。
+### 🗺️ P4 技術演進路線圖
+- ✅ **Vite 8 升級 (Next Gen)**：[TRIGGER] Vite 8.0 穩定版發布 + Rollup 6 兼容（已完成）。
 - 🚀 **Zustand v5 / React 19 / TanStack Router / date-fns-tz**：已從預研轉入 P4 正式清單。
-- 🚀 **Vite 7 觸發信號**：1. Build 耗時 > 30s; 2. HMR 延遲 > 2s; 3. 依賴樹複雜度 > 1.5k 節點; 4. 社群主流框架全量轉移。
-- 🚀 **升級防禦卡**：5 項破壞性測試卡（SSR 兼容、HMR 頻率、Bundle Size、啟動耗時、Type Inference 深度）。
-- ✅ **中亞/東南亞多時區適配**：正式引入 `date-fns-tz` 解決 server-client 渲染偏差。
+- 🚀 **Vite 8 觸發信號**：已達成。
+- 🚀 **升級防禦卡**：5 項破壞性測試卡（已通過）。
+- ✅ **中亞/東南亞多時區適配**：正式引入 `date-fns-tz` 解決 server-client 渲染偏差。 [VITE8-UPGRADE-COMPLETE]
+
+### 🔭 P5 技術雷達 (Future Radar)
+| 技術項 | 評估 | 關注點 |
+| :--- | :--- | :--- |
+| **TS Runtime Types** | 觀望 | ArkType 穩定性與自研協議成熟度 |
+| **Bun Test** | 實驗 | 測試並行化與 Vitest 平替可能 |
+| **CSS Anchor Positioning** | 觀望 | 瀏覽器兼容性 > 90% 時替換 Floating UI |
+| **WebGPU Compute** | 預研 | 瀏覽器端純本地圖片相似度計算 |
+
+[FUTURE-RADAR-UPDATED]
 
