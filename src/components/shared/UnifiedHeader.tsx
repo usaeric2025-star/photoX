@@ -9,7 +9,7 @@ import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { loginWithGoogle } from '@/services/supabaseService';
 import { RefreshMenu } from './RefreshMenu';
 import { ToolsMenu } from './ToolsMenu';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { ROUTES } from '@/config/constants';
 
 interface UnifiedHeaderProps {
@@ -69,7 +69,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const toolsRef = useRef<HTMLDivElement>(null);
 
   const lang = (appLang || 'zh') as LanguageCode;
-  const t = translations[lang] || translations.zh;
+  const t = translations[lang as keyof typeof translations] || translations.en;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -99,7 +99,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const isEffectiveStaffMode = (variant === 'staff-workspace') || (isStaffMode && !user);
 
   let headerClass = "bg-white border-[#E2E8F0] shadow-sm";
-  let modeBadge = null;
+  let modeBadge: React.ReactNode = null;
 
   if (isManagement) {
     if (adminPreviewMode === 'public') {

@@ -123,11 +123,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       const isSelected = state.selectedIds.has(photo.id);
       
       // Update DOM directly to avoid React re-render overhead in the grid
-      if (cardRef.current.dataset.selected !== String(isSelected)) {
-        cardRef.current.dataset.selected = String(isSelected);
+      if (cardRef.current.dataset('selected') !== String(isSelected)) {
+        cardRef.current.dataset('selected') = String(isSelected);
       }
-      if (cardRef.current.dataset.multiselect !== String(state.isMultiSelect)) {
-        cardRef.current.dataset.multiselect = String(state.isMultiSelect);
+      if (cardRef.current.dataset('multiselect') !== String(state.isMultiSelect)) {
+        cardRef.current.dataset('multiselect') = String(state.isMultiSelect);
       }
     });
 
@@ -140,7 +140,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const { onTogglePinned } = usePhotoActions();
 
   const { appLang } = useStore(useShallow(s => ({ appLang: s.appLang })));
-  const t = translations[appLang] || translations.zh;
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();

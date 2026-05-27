@@ -11,7 +11,7 @@ export function usePermission() {
   const { user } = useAuth();
   const isStaffMode = useGalleryStore(s => s.isStaffMode);
   
-  const role = useMemo(() => getEffectiveRole(user, isStaffMode), [user, isStaffMode]);
+  const role = useMemo(() => getEffectiveRole(user || null, isStaffMode), [user, isStaffMode]);
   const permissions = useMemo(() => ROLE_PERMISSIONS[role] || [], [role]);
 
   /**

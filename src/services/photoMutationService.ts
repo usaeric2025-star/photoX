@@ -225,3 +225,15 @@ export const updatePhotoHiddenState = async (photoId: string, is_hidden: boolean
     updated_at: new Date().toISOString()
   });
 };
+
+/**
+ * [RED-LINE] Photo Mutation Service singleton
+ */
+export const photoMutationService = {
+  update: updatePhotoInCloud,
+  batchUpdate: batchUpdatePhotosInCloud,
+  delete: deletePhotoFromCloud,
+  toggleHidden: updatePhotoHiddenState,
+  movePhotosToGroup,
+  syncTags: syncPhotoTags
+};

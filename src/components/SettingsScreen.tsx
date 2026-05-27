@@ -69,7 +69,7 @@ export const SettingsScreen: React.FC = () => {
     togglePin,
     setSettingField
   } = useSettingsLogic({
-    user,
+    user: user || null,
     settings,
     geminiApiKey,
     customModel,
@@ -116,7 +116,7 @@ export const SettingsScreen: React.FC = () => {
           {activeTab === 'cloud' && (
             <>
               <SyncSettings 
-                user={user}
+                user={user || null}
                 loginWithGoogle={loginWithGoogle}
                 logout={logout}
                 performPushSync={performPushSync}
@@ -179,7 +179,7 @@ export const SettingsScreen: React.FC = () => {
                 categories={categories}
                 deleteCategory={deleteCategory}
                 updateCategory={updateCategory}
-                addCategory={addCategory}
+                addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw new Error("Failed"); return r; }}
                 manufacturers={manufacturers}
                 addManufacturer={addManufacturer}
                 updateManufacturer={updateManufacturer}

@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadGroupsFromCloud, getGroupById } from '../../services/groupService';
 import { QUERY_KEYS } from './keys';
@@ -15,7 +16,7 @@ export const useGroupDetailQuery = (groupId: string | null) => {
     queryKey: ['group', groupId],
     queryFn: () => getGroupById(groupId!),
     enabled: !!groupId,
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: createStaleTime('STABLE'), // 5 minutes cache
   });
 };
 

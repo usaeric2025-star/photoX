@@ -7,6 +7,8 @@ export * from './core/auth/usePermission';
 export * from './core/auth/useRouteGuard';
 export * from './core/infra/useSyncEngine';
 export * from './core/auth/useAdminMode';
+export * from './core/usePhotoAction';
+export * from './core/useGroupAction';
 
 // Shared Hooks
 export * from './shared/useFeedback';

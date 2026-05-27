@@ -6,7 +6,7 @@
 export * from './photo';
 export * from './api';
 
-import { translations } from '../lib/translations';
+import { translations, LanguageCode } from '../lib/translations';
 
 export type TranslationType = typeof translations['en'];
 

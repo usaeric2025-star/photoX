@@ -179,7 +179,7 @@ export const useAdminEdit = (user: User | null, photos: Photo[], onComplete?: ()
     try {
       const oldCover = photosRef.current.find(p => p.group_id === groupId && p.is_group_cover);
       
-      const updates = [];
+      const updates: Promise<void>[] = [];
       if (oldCover && oldCover.id !== id) {
           updates.push(updatePhotosBulk([oldCover.id], { is_group_cover: false }, { skipToast: true }));
       }

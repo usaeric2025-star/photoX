@@ -14,6 +14,7 @@ import { GalleryVariant } from '@/types/variant';
 import { cn } from '../../lib/utils';
 import { toTitleCase, getTranslatedCategoryName } from '../../lib/ui-helpers';
 import { useTagsDisplay } from '@/hooks';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { translations } from '../../lib/translations';
 
@@ -42,9 +43,15 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
 }) => {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   const isPublic = variant === 'public-showcase';
+  
+  const navigate = useNavigate();
+  // Using useSearch if public, otherwise we don't strictly need URL state for admin (though it helps)
+  const search = isPublic ? useSearch({ from: '/' }) : {} as any;
+  
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
   const { settings } = useSettings();
+  
   const searchQuery = useGalleryStore(s => s.searchQuery);
   const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
   const sortOrder = useGalleryStore(s => s.sortOrder);
@@ -61,10 +68,34 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   const setSelectedTagIds = useGalleryStore(s => s.setFilterTagIds);
   const lang = useGalleryStore(s => s.appLang);
 
-  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
+  const t = React.useMemo(() => translations[lang as keyof typeof translations] || translations.en, [lang]);
+
+  // Handle URL -> Store sync on mount/change for Public mode
+  useEffect(() => {
+    if (isPublic) {
+      if (search.q !== undefined && search.q !== searchQuery) setSearchQuery(search.q || '');
+      if (search.category !== undefined && String(search.category) !== String(selectedCatCode)) setSelectedCatCode(search.category);
+      if (search.sort !== undefined) {
+        const mappedSort = search.sort === 'date' ? 'newest' : search.sort === 'name' ? 'name' : 'newest';
+        if (mappedSort !== sortOrder) setSortOrder(mappedSort as any);
+      }
+    }
+  }, [isPublic, search.q, search.category, search.sort]);
+
+  const updateURL = (params: any) => {
+    if (isPublic) {
+      navigate({
+        to: '/',
+        search: (prev: any) => ({ ...prev, ...params }),
+        replace: true,
+      });
+    }
+  };
 
   const toggleSortOrder = () => {
-    setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest');
+    const nextSort = sortOrder === 'newest' ? 'oldest' : 'newest';
+    setSortOrder(nextSort);
+    updateURL({ sort: nextSort === 'newest' ? 'date' : 'popularity' }); // Simple mapping
   };
 
   const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(tags, settings);
@@ -72,24 +103,16 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   // Local state for instant typing responsive feedback
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
 
-  // Keep local search value synced if the searchQuery prop resets from external actions
+  // Keep local search value synced
   useEffect(() => {
     setLocalSearch(searchQuery || '');
   }, [searchQuery]);
 
-  // Debounced parent state update (500ms delay to make it smooth, prevent "always flashing")
-  const debouncedSetSearchQuery = useDebouncedCallback((val: string) => {
+  // Debounced parent state update
+  const debouncedSyncSearch = useDebouncedCallback((val: string) => {
     setSearchQuery(val);
+    updateURL({ q: val || undefined });
   }, 500);
-
-  // Safely wrap setSelectedTagIds to conform to whatever callback is needed
-  const handleSetSelectedTagIds = (updater: string[] | ((prev: string[]) => string[])) => {
-    if (typeof updater === 'function') {
-      setSelectedTagIds(updater as any);
-    } else {
-      setSelectedTagIds(() => updater);
-    }
-  };
 
   return (
     <div className="shrink-0 px-2 sm:px-3 pt-2 pb-1.5 z-40 bg-white border-b border-[#ECECEC]">
@@ -109,7 +132,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
               onChange={(e) => {
                 const val = e.target.value;
                 setLocalSearch(val);
-                debouncedSetSearchQuery(val);
+                debouncedSyncSearch(val);
               }}
               className="w-full bg-[#F7F7F7] border border-[#ECECEC] rounded-full py-1.5 pl-8 pr-8 text-[13px] font-normal text-[#1A1A1A] placeholder-[#999999] focus:outline-none focus:bg-white transition-all"
             />
@@ -118,8 +141,9 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
               <button
                 onClick={() => {
                   setLocalSearch('');
-                  debouncedSetSearchQuery.cancel();
+                  debouncedSyncSearch.cancel();
                   setSearchQuery('');
+                  updateURL({ q: undefined });
                 }}
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-[#888888] hover:text-[#1A1A1A] transition-colors"
                 aria-label="Clear search"
@@ -141,6 +165,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
               onClick={() => {
                 const next = columns === 2 ? 3 : columns === 3 ? 5 : 2;
                 setColumns(next as 2 | 3 | 5);
+                updateURL({ view: next === 2 ? 'list' : 'grid' });
               }}
             />
             <GroupToggle 
@@ -154,7 +179,13 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
             <CategoryChip 
                 name={(t.allCats || 'ALL').toUpperCase()} 
                 selected={!selectedCatCode && (!selectedTagIds || selectedTagIds.length === 0)} 
-                onClick={() => { setSelectedCatCode(null); setFilterSubId(null); setSelectedTagIds([]); onScrollToTop(); }} 
+                onClick={() => { 
+                  setSelectedCatCode(null); 
+                  setFilterSubId(null); 
+                  setSelectedTagIds([]); 
+                  onScrollToTop(); 
+                  updateURL({ category: undefined, manufacturer: undefined });
+                }} 
             />
             
             {categories
@@ -172,6 +203,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                       setFilterSubId(null);
                       setSelectedTagIds([]);
                       onScrollToTop();
+                      updateURL({ category: cat.id });
                     }}
                   />
                 );
@@ -197,7 +229,10 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                     key={sub.id}
                     name={toTitleCase(sub.name)}
                     selected={filterSubId === sub.id}
-                    onClick={() => { setFilterSubId(filterSubId === sub.id ? null : sub.id); onScrollToTop(); }}
+                    onClick={() => { 
+                      setFilterSubId(filterSubId === sub.id ? null : sub.id); 
+                      onScrollToTop(); 
+                    }}
                   />
                 ));
               })()}
@@ -229,6 +264,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                       setFilterSubId(null);
                       setSelectedTagIds([strTagId]);
                       onScrollToTop();
+                      updateURL({ category: undefined }); // Tags usually clear category in this app's logic
                     }}
                   />
                 );

@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { STORAGE } from './storageConfig';
+import { api } from '@/lib/api';
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -77,12 +78,10 @@ export const uploadImages = async (
         safeFileName = `upload_${timestamp}_${Math.random().toString(36).substring(7)}.webp`;
       }
 
-      const presignRes = await fetch('/api/upload-presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ photoId: photoId, contentType: 'image/webp' })
+      const presignRes = await api['upload-presign'].$post({
+        json: { photoId: photoId, contentType: 'image/webp' }
       });
-
+      
       if (!presignRes.ok) {
         throw new Error('Failed to get presigned upload URL from backend');
       }

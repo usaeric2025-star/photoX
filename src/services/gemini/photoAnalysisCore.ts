@@ -1,5 +1,6 @@
 import { Category, Tag, Manufacturer, Dimension } from '../../types';
 import { normalizeTagIds } from '../../utils/aiNormalizer';
+import { api } from '@/lib/api';
 import { AI_CONFIG } from '../../constants/config';
 import { AI_PROMPTS } from '../../constants/ai';
 import { extractJsonObject } from '../../lib/aiParsing';
@@ -70,35 +71,40 @@ export const analyzeProductPhoto = async (
     }
 
     const isProxy = fetchUrl.startsWith('/api/');
-    
-    const payload = isProxy ? {
-      base64Image: processedBase64Image,
-      promptText,
-      customModel: modelName,
-    } : {
-      model: modelName.replace('openrouter/', ''),
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: promptText },
-            {
-              type: "image_url",
-              image_url: { url: processedBase64Image }
-            }
-          ]
-        }
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 1024,
-    };
+    let fetchResponse: Response;
 
-    const fetchResponse = await fetch(fetchUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-      signal: combinedSignal
-    });
+    if (isProxy) {
+      fetchResponse = await api.ai.analyze.$post({
+        json: {
+          base64Image: processedBase64Image,
+          promptText,
+          customModel: modelName,
+        }
+      }, { signal: combinedSignal }) as any;
+    } else {
+      fetchResponse = await fetch(fetchUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: modelName.replace('openrouter/', ''),
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: promptText },
+                {
+                  type: "image_url",
+                  image_url: { url: processedBase64Image }
+                }
+              ]
+            }
+          ],
+          response_format: { type: "json_object" },
+          max_tokens: 1024,
+        }),
+        signal: combinedSignal
+      });
+    }
 
     clearTimeout(timeoutId);
 
@@ -247,8 +253,8 @@ export const analyzeProductPhoto = async (
     let newTagList: string[] = [];
     if (Array.isArray(dataToProcess.new_tags)) {
       newTagList = dataToProcess.new_tags
-        .map(s => String(s).trim())
-        .filter(s => s && !containsChinese(s));
+        .map((s: any) => String(s).trim())
+        .filter((s: any) => s && !containsChinese(s));
     }
 
     // Filter redundant tagIds (existing tags) and new tags

@@ -72,9 +72,9 @@ export const normalizeDimensions = (dims: Dimension[]): Dimension[] => {
           }
         } else if (nums.length > 0) {
           // 2️⃣ Pattern fallback: length -> width -> height (Standard LWH)
-          length = parseFloat(nums[0]);
-          if (nums.length >= 2) width = parseFloat(nums[1]);
-          if (nums.length >= 3) height = parseFloat(nums[2]);
+          length = parseFloat(nums[0] || '0');
+          if (nums.length >= 2) width = parseFloat(nums[1] || '0');
+          if (nums.length >= 3) height = parseFloat(nums[2] || '0');
         }
       }
       

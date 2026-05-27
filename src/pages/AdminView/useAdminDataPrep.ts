@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminImport, useAdminAI, useAdminEdit } from '../../hooks/admin';
 import { 
@@ -91,7 +91,7 @@ export const useAdminDataPrep = () => {
   const { mutateAsync: saveSettingsMut } = useSettingsMutation();
 
   const { reset: resetMultiSelect, disable } = useMultiSelect();
-  const editResult = useAdminEdit(user, photos, disable);
+  const editResult = useAdminEdit((user || null), photos, disable);
   const edit = useMemo(() => editResult, [editResult]);
 
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
@@ -119,8 +119,8 @@ export const useAdminDataPrep = () => {
     sortOrder: store.sortOrder
   }), [photos, handleRefreshFilters, store.searchQuery, store.debouncedSearchQuery, store.filterCatId, store.filterSubId, store.filterTagIds, store.sortOrder]);
 
-  const importerResult = useAdminImport(user, { setActiveScreen: store.setActiveScreen }, geminiApiKey, settings?.provider || 'openrouter', customModel || '', categories, tags, manufacturers, new Map(), photosRef);
-  const aiResult = useAdminAI(user, geminiApiKey, settings?.provider || 'openrouter', customModel || '', categories, tags, manufacturers, new Map(), photosRef);
+  const importerResult = useAdminImport((user || null), { setActiveScreen: store.setActiveScreen }, geminiApiKey, settings?.provider || 'openrouter', customModel || '', categories, tags, manufacturers, new Map(), photosRef);
+  const aiResult = useAdminAI((user || null), geminiApiKey, settings?.provider || 'openrouter', customModel || '', categories, tags, manufacturers, new Map(), photosRef);
 
   const importer = useMemo(() => importerResult, [importerResult]);
   const sync = useMemo(() => ({
@@ -241,10 +241,11 @@ export const useAdminDataPrep = () => {
   }, [runTask, showError, showSuccess, isMaintenanceRunning]);
 
   return useMemo(() => ({
-    user, authChecked: true, logout, navigate, isLoadingPhotos: infinitePhotosQuery.isLoading, 
+    user,
+    authChecked: true, logout, navigate, isLoadingPhotos: infinitePhotosQuery.isLoading, 
     t: translations[store.appLang as LanguageCode] || translations.en, 
     lang: store.appLang, 
-    onRefresh: () => refreshCloudData(user, () => {}),
+    onRefresh: () => refreshCloudData(user || null, () => {}),
     ...store, 
     ...filters, 
     ...importer, 

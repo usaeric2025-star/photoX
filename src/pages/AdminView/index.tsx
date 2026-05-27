@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { loadCategoriesFromCloud } from '@/services/categoryService';
@@ -19,7 +20,7 @@ export const AdminView: React.FC = () => {
         syncCache.saveCategories(cats).catch(() => {});
         return cats;
       },
-      staleTime: 5 * 60 * 1000,
+      staleTime: createStaleTime('STABLE'),
     });
 
     // Prefetch tags in the background
@@ -30,7 +31,7 @@ export const AdminView: React.FC = () => {
         syncCache.saveTags(tags).catch(() => {});
         return tags;
       },
-      staleTime: 5 * 60 * 1000,
+      staleTime: createStaleTime('STABLE'),
     });
   }, [queryClient]);
 

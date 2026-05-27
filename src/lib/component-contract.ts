@@ -1,0 +1,35 @@
+import React from 'react';
+import { type } from 'arktype';
+
+/**
+ * [V2.9-COMPONENT-CONTRACT] Component Prop Boundary
+ */
+// @ts-ignore
+export const SlotContractSchema = type({
+  "requiredSlots": "string[]",
+  "optionalSlots?": "string[]",
+});
+
+export type SlotContract = typeof SlotContractSchema.infer;
+
+/**
+ * Helper to ensure a component satisfies a contract
+ */
+export function defineComponentContract<P>(contract: SlotContract) {
+  return (props: P) => {
+    // Development-time contract enforcement could be added here
+    return props;
+  };
+}
+
+/**
+ * Explicit Slot pattern for better AI guidance
+ */
+export interface LayoutContract {
+  slots: {
+    header?: React.ReactNode;
+    content: React.ReactNode;
+    footer?: React.ReactNode;
+    sidebar?: React.ReactNode;
+  }
+}

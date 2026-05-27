@@ -18,7 +18,7 @@ import { useAdminMode, useFeedback, useGroupDetailQuery, useTasks } from '@/hook
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useInfiniteGroupPhotosQuery } from '@/hooks';
 import { useGalleryStore, useShallow } from '../store';
-import { translations } from '../lib/translations';
+import { createTranslate } from '@/lib/i18n';
 
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
@@ -43,7 +43,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { showError } = useFeedback();
 
   const lang = useGalleryStore(s => s.appLang);
-  const t = translations[lang as keyof typeof translations] || translations.zh;
+  const t = createTranslate(lang as any);
   
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
@@ -202,7 +202,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
               <div className="px-5 py-4 bg-white border-b border-slate-100">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-3 bg-blue-600 rounded-full" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t?.seriesStory || 'Series Story'}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('seriesStory') || 'Series Story'}</span>
                 </div>
                 {isGroupDataLoading ? (
                   <div className="space-y-2">

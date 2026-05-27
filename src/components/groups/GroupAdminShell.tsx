@@ -65,7 +65,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     initialPhotoId: props.initialPhotoId
   });
 
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const t = translations[appLang as keyof typeof translations as keyof typeof translations] || translations.en;
 
   const dragState = React.useRef({ draggedPhotoId, handleReorder, isAdminMode, isMultiSelect });
   React.useEffect(() => {

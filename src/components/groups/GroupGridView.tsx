@@ -67,7 +67,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
 }) => {
   const lang = useGalleryStore(s => s.appLang);
   const columns = useGalleryStore(s => s.columns);
-  const t = useMemo(() => translations[lang as keyof typeof translations] || translations.zh, [lang]);
+  const t = React.useMemo(() => translations[lang as keyof typeof translations as keyof typeof translations] || translations.en, [lang]);
 
   const header = useMemo(() => {
     if (!groupData || (!groupData.description && (!groupData.colors || groupData.colors.length === 0) && (!groupData.materials || groupData.materials.length === 0))) {

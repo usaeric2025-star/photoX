@@ -7,7 +7,7 @@ import {
   useFeedback, useTaskExecutor, useTasks
 } from '../../../hooks';
 import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
-import { useFormValidation } from '@/hooks';
+import { usePhotoAction } from '@/hooks/core/usePhotoAction';
 
 interface Props {
   editPhotoId: string | null;
@@ -27,7 +27,10 @@ export const usePhotoEditLogic = (props: Props) => {
   const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
   const isRotating = useMemo(() => tasks.some(t => t.status === 'running' && t.name === '旋转图片'), [tasks]);
-  const isRunning = useMemo(() => tasks.some(t => t.status === 'running'), [tasks]);
+  // Use usePhotoAction for the core save operation
+  const { isPending: isSavingAction, runUpdate } = usePhotoAction(editPhotoId || '', null);
+  
+  const isRunning = useMemo(() => isSavingAction || tasks.some(t => t.status === 'running'), [isSavingAction, tasks]);
   const aiDebugInfo = null;
 
   const { runTask } = useTaskExecutor();
@@ -35,7 +38,6 @@ export const usePhotoEditLogic = (props: Props) => {
   const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
   const appLang = useGalleryStore(s => s.appLang);
   const { showError, showSuccess } = useFeedback();
-  const { validatePhotoForm } = useFormValidation();
 
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();
@@ -90,14 +92,9 @@ export const usePhotoEditLogic = (props: Props) => {
   };
 
   const handleSave = async () => {
-    const { valid, errors } = validatePhotoForm(formState);
-    if (!valid) {
-      showError(new Error(errors[0]), '表單驗證失敗');
-      return;
-    }
-    await runTask('保存修改', async () => {
-      await saveNewPhoto();
-    }, { showSuccessToast: true, silent: true });
+    if (!editPhotoId) return;
+    // [V2.8] Use the R19 Action Paradigm
+    runUpdate(formState);
   };
 
   const toggleHidden = async () => {
@@ -137,6 +134,7 @@ export const usePhotoEditLogic = (props: Props) => {
     rotatePhoto,
     handleSave, toggleHidden, triggerAiAnalyze,
     isAnalyzing, aiDebugInfo, isPartOfGroup, isSyncing, isRotating, isRunning,
+    isSavingAction,
     setPromptDialog, setAlertDialog, appLang, showError
   };
 };

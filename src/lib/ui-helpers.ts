@@ -44,7 +44,7 @@ export const getPhotoDisplayName = (
 
   if (!isPlaceholder) return photo.name;
   
-  const catName = getTranslatedCategoryName(photo.category_id, categories, lang, t);
+  const catName = getTranslatedCategoryName(photo.category_id || undefined, categories, lang, t);
   if (catName && catName !== t.uncategorized) return catName;
 
   return t.furniture;

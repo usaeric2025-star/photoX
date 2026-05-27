@@ -1,11 +1,10 @@
 import React, { useMemo } from 'react';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { useInteractionBridge } from '@/components/virtualizer/useInteractionBridge';
-import { useAutoAnimate } from '@formkit/auto-animate/react';
+import { motion, LayoutGroup } from 'motion/react';
 
 // Isolated benchmark page
 export default function VirtualizerBenchmark() {
-  const [parent] = useAutoAnimate();
   const { state, setters } = useInteractionBridge();
 
   // 1. Grouped Scenario: <100 items (simulating collapsed/grouped cards)
@@ -18,8 +17,9 @@ export default function VirtualizerBenchmark() {
     <div className="p-8 space-y-12">
       <section>
         <h2 className="text-2xl font-bold mb-4 text-slate-800">1. Grouped Scenario (80 items)</h2>
-        <div ref={parent}>
-           <VirtualGrid
+        <LayoutGroup>
+          <motion.div layout>
+             <VirtualGrid
             count={groupedItems.length}
             estimateSize={() => 150}
             renderItem={(index) => (
@@ -29,12 +29,14 @@ export default function VirtualizerBenchmark() {
             )}
             containerClassName="grid grid-cols-4 gap-4"
           />
-        </div>
+          </motion.div>
+        </LayoutGroup>
       </section>
 
       <section>
         <h2 className="text-2xl font-bold mb-4 text-slate-800">2. Massive Grid Scenario (10,000 items)</h2>
-        <div ref={parent}>
+        <LayoutGroup>
+          <motion.div layout>
           <VirtualGrid
             count={gridItems.length}
             estimateSize={() => 100}
@@ -49,7 +51,8 @@ export default function VirtualizerBenchmark() {
             )}
             containerClassName="grid grid-cols-10 gap-2"
           />
-        </div>
+          </motion.div>
+        </LayoutGroup>
       </section>
     </div>
   );

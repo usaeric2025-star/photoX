@@ -29,7 +29,7 @@ export const BatchEditScreen = () => {
         </h2>
         
         <div className="flex items-center gap-2">
-          {logic.handleDeletePhotos && (
+          {(logic.handleDeletePhotos as any) && (
             <button 
               onClick={handleDelete}
               disabled={isLocalSaving || isSyncing}

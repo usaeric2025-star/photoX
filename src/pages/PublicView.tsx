@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
@@ -34,7 +34,8 @@ export default function PublicView() {
   useScrollRestoration('public_view_scroll');
   
   const navigate = useNavigate();
-  const { hash, groupId } = useParams<{ hash: string, groupId: string }>();
+  const search = useSearch({ strict: false });
+  const authError = (search as any).authError;
   
   const { data: count } = usePhotoCountQuery({});
 
@@ -46,21 +47,34 @@ export default function PublicView() {
         totalCount={count}
         onRefresh={() => window.location.reload()}
       />
-      <DataLoadingContainer
-        isLoading={isSettingsLoading || !settings}
-        hasData={true} // Data will be handled inside UnifiedGallery
-      >
-        <AdminProvider>
+      {authError ? (
+        <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
           <ErrorBoundary>
-            <UnifiedGallery 
-              variant="public-showcase"
-              onExit={() => navigate(ROUTES.ADMIN)}
-              onLogin={() => navigate(ROUTES.ADMIN)}
-              loginWithGoogle={loginWithGoogle}
-            />
+            <AuthErrorThrower message={authError} />
           </ErrorBoundary>
-        </AdminProvider>
-      </DataLoadingContainer>
+        </div>
+      ) : (
+        <DataLoadingContainer
+          isLoading={isSettingsLoading || !settings}
+          hasData={true} // Data will be handled inside UnifiedGallery
+        >
+          <AdminProvider>
+            <ErrorBoundary>
+              <UnifiedGallery 
+                variant="public-showcase"
+                onExit={() => navigate({ to: ROUTES.ADMIN })}
+                onLogin={() => navigate({ to: ROUTES.ADMIN })}
+                loginWithGoogle={loginWithGoogle}
+              />
+            </ErrorBoundary>
+          </AdminProvider>
+        </DataLoadingContainer>
+      )}
     </div>
   );
+}
+
+function AuthErrorThrower({ message }: { message: string }) {
+  throw new Error(message);
+  return null;
 }

@@ -108,3 +108,13 @@ export const deleteGroupFromCloud = async (id: string, userId?: string) => {
         throw new Error(`Delete Group Fail: ${error.message}`);
     }
 };
+
+/**
+ * [RED-LINE] Group Mutation Service singleton
+ */
+export const groupMutationService = {
+  update: updateGroupInCloud,
+  create: createGroupInCloud,
+  upsert: upsertGroupInCloud,
+  delete: deleteGroupFromCloud
+};

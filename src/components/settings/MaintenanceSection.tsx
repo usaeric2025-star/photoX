@@ -4,6 +4,7 @@ import { ShieldCheck, PackageSearch, Trash2 } from 'lucide-react';
 import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
 import { useFeedback } from '@/hooks/shared/useFeedback';
 import { useGalleryStore } from '@/store';
+import { api } from '@/lib/api';
 
 interface Props {
   onHealthCheck: () => Promise<void>;
@@ -47,12 +48,14 @@ export const MaintenanceSection: React.FC<Props> = ({
         <button 
            onClick={async () => {
              await runTask('R2 存储对账', async () => {
-               const response = await fetch('/api/storage/audit');
+               const response = await api.storage.audit.$get();
                const result = await response.json();
-               if (result.missing > 0 || result.orphans > 0) {
+               if (!result.success) throw new Error('Audit failed');
+               const data = result.data;
+               if (data.missing > 0 || data.orphans > 0) {
                  setAlertDialog({
                    title: '对账报告 / Audit Report',
-                   message: `✅ 正常/Healthy: ${result.healthy}\n❌ 缺失/Missing in R2: ${result.missing}\n🗑️ 孤儿/Orphans in R2: ${result.orphans}`,
+                   message: `✅ 正常/Healthy: ${data.healthy}\n❌ 缺失/Missing in R2: ${data.missing}\n🗑️ 孤儿/Orphans in R2: ${data.orphans}`,
                  });
                } else {
                  showSuccess('存储对账完成，一致性完美匹配 / Storage consistency verified! All good.');
@@ -73,12 +76,14 @@ export const MaintenanceSection: React.FC<Props> = ({
         <button 
            onClick={async () => {
              await runTask('清理孤儿文件', async () => {
-               const response = await fetch('/api/storage/clean', { method: 'POST' });
+               const response = await api.storage.clean.$post();
                const result = await response.json();
-               if (result.cleanedCount > 0) {
+               if (!result.success) throw new Error('Clean failed');
+               const data = result.data;
+               if (data.cleanedCount > 0) {
                  setAlertDialog({
                    title: '清理报告 / Cleanup Report',
-                   message: `🗑️ 成功清理了 ${result.cleanedCount} 个 R2 孤儿物理文件！\n\nSwiped clean ${result.cleanedCount} unused assets in R2 root directory.`,
+                   message: `🗑️ 成功清理了 ${data.cleanedCount} 个 R2 孤儿物理文件！\n\nSwiped clean ${data.cleanedCount} unused assets in R2 root directory.`,
                  });
                } else {
                  showSuccess('未发现多余的 R2 孤儿文件，一切洁净！ / Storage is already 100% clean.');

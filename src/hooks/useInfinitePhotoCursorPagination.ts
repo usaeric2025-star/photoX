@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Photo } from '@/types';
 import { photoKeys } from '@/lib/queryKeys';
@@ -28,7 +29,7 @@ export const useInfinitePhotoCursorPagination = (
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
       return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: createStaleTime('REALTIME'),
     refetchOnMount: false,
   });
 

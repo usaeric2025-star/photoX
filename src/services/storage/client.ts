@@ -1,9 +1,11 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import { getServerEnv } from "../../shared/envSchema";
 
 export async function getR2Client() {
-  const r2Endpoint = process.env.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
-  let r2AccessKeyId = process.env.R2_ACCESS_KEY_ID || '';
-  let r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY || '';
+  const serverEnv = getServerEnv(process.env);
+  const r2Endpoint = serverEnv.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
+  let r2AccessKeyId = serverEnv.R2_ACCESS_KEY_ID || '';
+  let r2SecretAccessKey = serverEnv.R2_SECRET_ACCESS_KEY || '';
   
   if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
     const temp = r2AccessKeyId;

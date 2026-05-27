@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { PhotoAIResult } from '@/types';
@@ -21,6 +22,6 @@ export const usePhotoAIResult = (photoId?: string) => {
       return data;
     },
     enabled: !!photoId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: createStaleTime('REALTIME'), // 5 minutes
   });
 };

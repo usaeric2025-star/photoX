@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import 'fake-indexeddb/auto';
 
 // Global mocks if needed
 Object.defineProperty(window, 'matchMedia', {

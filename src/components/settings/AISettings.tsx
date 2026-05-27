@@ -17,5 +17,5 @@ interface AISettingsProps {
 }
 
 export const AISettings: React.FC<AISettingsProps> = (props) => {
-  return <AISecuritySection {...props} />;
+  return <AISecuritySection {...props} geminiApiKey={props.geminiApiKey || ''} />;
 };

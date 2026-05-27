@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadAllPhotosFromCloud, loadPhotosByGroupId, loadPhotosByGroupIdPaginated, getPhotoCount } from '../../services/photoService';
 import { QUERY_KEYS } from './keys';
@@ -53,7 +54,7 @@ export const useInfinitePhotos = (filters: {
     initialPageParam: 1,
     enabled,
     placeholderData: keepPreviousData,
-    staleTime: 1000 * 60, // 1 分钟
+    staleTime: createStaleTime('REALTIME'), // 1 分钟
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
@@ -69,7 +70,7 @@ export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_i
     }),
     queryFn: () => getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode),
     placeholderData: keepPreviousData,
-    staleTime: 1000 * 60, // 1 分钟
+    staleTime: createStaleTime('REALTIME'), // 1 分钟
   });
 };
 

@@ -70,7 +70,7 @@ export const useUpdatePhotoMutation = () => {
     onSettled: (data, error, variables) => {
       queryClient.invalidateQueries({ queryKey: ['photos', 'group'] });
     },
-    onError: (err: unknown, variables, context: { previousInfinite?: InfiniteData<InfinitePhotosData>; previousGroups?: [any, Photo[]][] } = {}) => {
+    onError: (err: unknown, variables, context: any) => {
       // Check if it's a network error
       const errorMsg = err instanceof Error ? err.message : '';
       const isNetworkError = !navigator.onLine || errorMsg.includes('fetch') || errorMsg.includes('Network');

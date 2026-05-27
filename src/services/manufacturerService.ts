@@ -20,7 +20,7 @@ export const loadManufacturersFromCloud = async (): Promise<Manufacturer[]> => {
 
 // 新增厂商
 export const addManufacturerToDB = async (name: string): Promise<Manufacturer> => {
-  const data = await createManufacturer({ name, aliases: [] } as Manufacturer);
+  const data = await createManufacturer({ name, aliases: [] } as unknown as Manufacturer);
   return { ...data, id: String(data.id) } as Manufacturer;
 };
 

@@ -4,7 +4,7 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { useMultiSelect } from '@/hooks';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useGalleryStore, useShallow } from '@/store';
-import { translations } from '@/lib/translations';
+import { translations } from '../../lib/translations';
 import { AdminToolbar } from './AdminToolbar';
 import { AdminEmptyState } from './AdminEmptyState';
 
@@ -26,7 +26,7 @@ export const MainAdminScreen: React.FC = React.memo(() => {
   
   const isEffectiveStaffMode = isStaffMode && !user;
   
-  const t = translations[lang] || translations.zh;
+  const t = translations[lang as keyof typeof translations] || translations.en;
   
   const {
     onBatchAiAnalyze, 

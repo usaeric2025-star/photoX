@@ -1,14 +1,19 @@
 import { useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useRouterState, useNavigate } from '@tanstack/react-router'
 import { useGalleryStore as useStore } from '@/store'
 import { useAuth } from '@/hooks/core/auth/useAuth'
 import { ROUTES } from '@/config/constants'
 
+/**
+ * @deprecated This hook is kept as a fallback defense layer.
+ * Use declarative root beforeLoad checks with RouteAccessContract instead.
+ */
 export function useRouteGuard() {
-  const location = useLocation()
+  const state = useRouterState()
+  const pathname = state.location.pathname
   const navigate = useNavigate()
   const { user, isLoading } = useAuth()
-  const lastPathRef = useRef(location.pathname)
+  const lastPathRef = useRef(pathname)
   
   // 重置 UI 状态（仅在离开合组页面时）
   const resetUI = useStore((state) => state.resetUI)
@@ -16,16 +21,16 @@ export function useRouteGuard() {
   
   useEffect(() => {
     // 防止在同一个路径重复执行
-    if (lastPathRef.current === location.pathname) {
+    if (lastPathRef.current === pathname) {
       return
     }
-    lastPathRef.current = location.pathname
+    lastPathRef.current = pathname
     
     // 离开合组页面时清空 activeGroupId
-    if (activeGroupId && !location.pathname.includes('/group/') && !location.pathname.includes('/g/')) {
+    if (activeGroupId && !pathname.includes('/group/') && !pathname.includes('/g/')) {
       resetUI()
     }
-  }, [location.pathname, activeGroupId, resetUI]);
+  }, [pathname, activeGroupId, resetUI]);
   
   const isStaffMode = useStore((state) => state.isStaffMode)
   
@@ -33,15 +38,15 @@ export function useRouteGuard() {
   useEffect(() => {
     if (isLoading) return
     
-    const isAdminRoute = location.pathname.startsWith(ROUTES.ADMIN)
-    const isLoginRoute = location.pathname === ROUTES.LOGIN
+    const isAdminRoute = pathname.startsWith(ROUTES.ADMIN)
+    const isLoginRoute = pathname === ROUTES.LOGIN
     
     if (!user && !isStaffMode && isAdminRoute && !isLoginRoute) {
-      navigate(ROUTES.LOGIN, { replace: true })
+      navigate({ to: ROUTES.LOGIN, replace: true });
     }
     
     if ((user || isStaffMode) && isLoginRoute) {
-      navigate(ROUTES.ADMIN, { replace: true })
+      navigate({ to: ROUTES.ADMIN, replace: true });
     }
-  }, [user, isStaffMode, isLoading, location.pathname, navigate])
+  }, [user, isStaffMode, isLoading, pathname, navigate])
 }

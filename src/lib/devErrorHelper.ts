@@ -1,6 +1,8 @@
+import { clientEnv } from '../shared/envSchema';
+
 // 在控制台输入 __getLastError() 查看最近错误
 export const setupDevErrorHelper = () => {
-    if (!import.meta.env.DEV) {
+    if (!clientEnv.DEV) {
       (window as any).__getLastError = () => {
         const lastError = (window as any).__LAST_ERROR__;
         if (lastError) {

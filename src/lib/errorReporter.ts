@@ -1,5 +1,6 @@
 import * as ErrorMonitor from "@sentry/react";
 import { globalHandleError } from '@/utils/errorHandler';
+import { clientEnv } from '../shared/envSchema';
 
 export type ErrorLevel = 'info' | 'warn' | 'error' | 'critical';
 
@@ -39,7 +40,7 @@ export const ErrorReporter = {
     const enrichedError = new Error(`[${context}] @ ${route}: ${message}`);
     
     // 1. Console group for Dev
-    if (import.meta.env.DEV) {
+    if (clientEnv.DEV) {
       const color = level === 'critical' ? '#ef4444' : level === 'error' ? '#f97316' : level === 'warn' ? '#eab308' : '#3b82f6';
       console.group(`%c🔴 [${level.toUpperCase()}] ${context}`, `color: ${color}; font-weight: bold;`);
       console.error(enrichedError);

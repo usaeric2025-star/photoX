@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { flattenPhotoInfiniteQueryPages, normalizeAdminPhotos } from '@/lib/selectors/photos';
@@ -14,7 +14,7 @@ import { translations } from '../../lib/translations';
 import { useAdmin } from '@/contexts/AdminContext';
 import { FloatingActions } from './FloatingActions';
 import { Photo } from '../../types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { GalleryVariant } from '@/types/variant';
 
 interface UnifiedGalleryProps {
@@ -123,7 +123,7 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   );
 
   const lang = store.appLang || 'zh';
-  const t = useMemo(() => translations[lang] || translations['zh'], [lang]);
+  const t = React.useMemo(() => translations[lang as keyof typeof translations] || translations.en, [lang]);
 
   const virtuosoRef = useRef<any>(null);
   const scrollToTop = () => virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
@@ -191,121 +191,123 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   }, [t, store.activeGroupId, showSuccess, showError]);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text"
-    >
-      <GalleryFilters 
-        onScrollToTop={scrollToTop}
-        variant={variant}
-        onBatchAiIdentify={handleBatchAiIdentifyTrigger}
-        isAnalyzing={isAnalyzing}
-        batchProgress={batchProgress}
-      />
-
-      <div className="flex-1 overflow-hidden bg-brand-bg relative">
-        <AnimatePresence>
-          <motion.div
-            key="grid"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="h-full"
-          >
-            <PhotoBoard virtuosoRef={virtuosoRef} variant={variant} />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {variant === 'public-showcase' && store.lightboxIndex === null && (
-        <FloatingActions 
-          variant={variant} 
-          scrollToTop={scrollToTop} 
-          contactWhatsApp={() => handleWhatsAppContact(undefined as any)} 
+    <LayoutGroup id="gallery-v2.8">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text"
+      >
+        <GalleryFilters 
+          onScrollToTop={scrollToTop}
+          variant={variant}
+          onBatchAiIdentify={handleBatchAiIdentifyTrigger}
+          isAnalyzing={isAnalyzing}
+          batchProgress={batchProgress}
         />
-      )}
 
-      {isManagement && (
-        <>
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            multiple 
-            accept="image/*" 
-            className="hidden" 
-            onChange={(e) => adminData?.handlePhotoImport(e, true, store.activeGroupId)} 
-          />
+        <div className="flex-1 overflow-hidden bg-brand-bg relative">
+          <AnimatePresence>
+            <motion.div
+              key="grid"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+              className="h-full"
+            >
+              <PhotoBoard virtuosoRef={virtuosoRef} variant={variant} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {variant === 'public-showcase' && store.lightboxIndex === null && (
           <FloatingActions 
-            variant={variant}
-            onAdd={() => fileInputRef.current?.click()}
-            onBatchAiIdentify={() => {
-              const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
-              adminData?.handleBatchAiIdentifyTrigger(selectedPhotos);
-            }}
-            onBatchEdit={() => adminData?.handleBatchEdit(selectedIds)}
-            onGroup={() => adminData?.handleGroupPhotos(selectedIds)}
-            onDelete={() => adminData?.handleDeletePhotos(selectedIds)}
-            onToggleVisibility={() => adminData?.handleBatchToggleHidden(selectedIds)}
-            onClearSelection={disable}
+            variant={variant} 
+            scrollToTop={scrollToTop} 
+            contactWhatsApp={() => handleWhatsAppContact(undefined as any)} 
           />
-        </>
-      )}
-
-      <AnimatePresence>
-        {store.lightboxIndex !== null && displayPhotos[store.lightboxIndex] && (
-            <PhotoLightbox 
-              photo={displayPhotos[store.lightboxIndex]}
-              displayPhotos={displayPhotos}
-              index={store.lightboxIndex}
-              onClose={() => store.setLightboxIndex(null)}
-              onPrev={() => store.setLightboxIndex(store.lightboxIndex! > 0 ? store.lightboxIndex! - 1 : (displayPhotos?.length || 0) - 1)}
-              onNext={() => store.setLightboxIndex(store.lightboxIndex! < (displayPhotos?.length || 0) - 1 ? store.lightboxIndex! + 1 : 0)}
-              contactWhatsApp={variant === 'public-showcase' ? handleWhatsAppContact : undefined}
-              onEditPhoto={isManagement ? onEditPhoto : undefined}
-              onToggleHidden={isManagement ? onToggleHidden : undefined}
-              onTogglePinned={isManagement ? onTogglePinned : undefined}
-              onAiAnalyze={isManagement ? (onAiAnalyze as any) : undefined}
-              onSetGroupCover={isManagement ? (onSetGroupCover as any) : undefined}
-              onCancelAnalyze={isManagement ? onCancelAnalyze : undefined}
-              isAnalyzing={isAnalyzing}
-            />
         )}
-      </AnimatePresence>
 
-      <GroupDetailView 
-        activeGroupId={store.activeGroupId}
-        setActiveGroupId={(gid) => {
-          store.setActiveGroupId(gid);
-          if (gid === null) store.setActivePhotoId(null);
-        }}
-        initialPhotoId={store.activePhotoId}
-        displayPhotos={displayPhotos}
-        setLightboxIndex={store.setLightboxIndex}
-        isStaffMode={store.isStaffMode}
-        shareGroup={shareGroup}
-        contactWhatsApp={handleWhatsAppContact}
-        variant={variant}
-      />
+        {isManagement && (
+          <>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              multiple 
+              accept="image/*" 
+              className="hidden" 
+              onChange={(e) => adminData?.handlePhotoImport(e, true, store.activeGroupId)} 
+            />
+            <FloatingActions 
+              variant={variant}
+              onAdd={() => fileInputRef.current?.click()}
+              onBatchAiIdentify={() => {
+                const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
+                adminData?.handleBatchAiIdentifyTrigger(selectedPhotos);
+              }}
+              onBatchEdit={() => adminData?.handleBatchEdit(selectedIds)}
+              onGroup={() => adminData?.handleGroupPhotos(selectedIds)}
+              onDelete={() => adminData?.handleDeletePhotos(selectedIds)}
+              onToggleVisibility={() => adminData?.handleBatchToggleHidden(selectedIds)}
+              onClearSelection={disable}
+            />
+          </>
+        )}
 
-      {variant === 'public-showcase' && (
-        <GalleryDialogs 
-          showPassPrompt={showPassPrompt}
-          setShowPassPrompt={setShowPassPrompt}
-          passInput={passInput}
-          setPassInput={setPassInput}
-          passError={passError}
-          setPassError={setPassError}
-          t={t}
-          loginWithGoogle={loginWithGoogle}
-          setIsStaffMode={setIsStaffMode}
-          navigate={navigate}
-          showWhatsAppChoice={showWhatsAppChoice}
-          setShowWhatsAppChoice={setShowWhatsAppChoice}
-          openWhatsApp={openWhatsApp}
-          settings={settings}
+        <AnimatePresence>
+          {store.lightboxIndex !== null && displayPhotos[store.lightboxIndex] && (
+              <PhotoLightbox 
+                photo={displayPhotos[store.lightboxIndex]}
+                displayPhotos={displayPhotos}
+                index={store.lightboxIndex}
+                onClose={() => store.setLightboxIndex(null)}
+                onPrev={() => store.setLightboxIndex(store.lightboxIndex! > 0 ? store.lightboxIndex! - 1 : (displayPhotos?.length || 0) - 1)}
+                onNext={() => store.setLightboxIndex(store.lightboxIndex! < (displayPhotos?.length || 0) - 1 ? store.lightboxIndex! + 1 : 0)}
+                contactWhatsApp={variant === 'public-showcase' ? handleWhatsAppContact : undefined}
+                onEditPhoto={isManagement ? onEditPhoto : undefined}
+                onToggleHidden={isManagement ? onToggleHidden : undefined}
+                onTogglePinned={isManagement ? onTogglePinned : undefined}
+                onAiAnalyze={isManagement ? (onAiAnalyze as any) : undefined}
+                onSetGroupCover={isManagement ? (onSetGroupCover as any) : undefined}
+                onCancelAnalyze={isManagement ? onCancelAnalyze : undefined}
+                isAnalyzing={isAnalyzing}
+              />
+          )}
+        </AnimatePresence>
+
+        <GroupDetailView 
+          activeGroupId={store.activeGroupId}
+          setActiveGroupId={(gid) => {
+            store.setActiveGroupId(gid);
+            if (gid === null) store.setActivePhotoId(null);
+          }}
+          initialPhotoId={store.activePhotoId}
+          displayPhotos={displayPhotos}
+          setLightboxIndex={store.setLightboxIndex}
+          isStaffMode={store.isStaffMode}
+          shareGroup={shareGroup}
+          contactWhatsApp={handleWhatsAppContact}
+          variant={variant}
         />
-      )}
-    </motion.div>
+
+        {variant === 'public-showcase' && (
+          <GalleryDialogs 
+            showPassPrompt={showPassPrompt}
+            setShowPassPrompt={setShowPassPrompt}
+            passInput={passInput}
+            setPassInput={setPassInput}
+            passError={passError}
+            setPassError={setPassError}
+            t={t}
+            loginWithGoogle={loginWithGoogle}
+            setIsStaffMode={setIsStaffMode}
+            navigate={navigate}
+            showWhatsAppChoice={showWhatsAppChoice}
+            setShowWhatsAppChoice={setShowWhatsAppChoice}
+            openWhatsApp={openWhatsApp}
+            settings={settings}
+          />
+        )}
+      </motion.div>
+    </LayoutGroup>
   );
 });

@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchSettings, saveSettings } from '@/services/settingService'
 import { syncCache } from '@/utils/indexedDB'
@@ -14,7 +15,7 @@ export const useSettings = () => {
       }
       return data || {}
     },
-    staleTime: 1000 * 5,             // Keep settings fresh in cache for 5 seconds (allows rapid mounts, fetches on page entry)
+    staleTime: createStaleTime('ARCHIVE'),             // Keep settings fresh in cache for 5 seconds (allows rapid mounts, fetches on page entry)
     refetchOnWindowFocus: false,     // Disable automatic refetch when the browser window/iframe regains focus
     refetchOnReconnect: false        // Disable automatic refetch when reconnecting
   })

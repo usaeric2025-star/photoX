@@ -161,7 +161,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
   const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
 
   const lang = appLang;
-  const t = translations[lang] || translations['zh'];
+  const t = translations[lang as keyof typeof translations] || translations.en;
 
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,

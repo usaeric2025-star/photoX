@@ -114,7 +114,7 @@ sourceOfTruth: "ARCHITECTURE.md"
 
 ### ⚠️ 數據管道契約
 
--   **QueryKey 工廠化**：所有資源 Key 必須通過 `src/lib/queryKeys.ts` 中的工廠函數生成，嚴禁裸字符串拼接。
+-   **QueryKey 工廠化與新鮮度契約 (v2.11) 🆕**：所有資源 Key 必須通過 `src/lib/queryKeys.ts` 中的工廠函數生成，嚴禁裸字符串拼接。所有新查詢必須強制使用 `createQueryKey` / 內置函數 + `createStaleTime(policy)`，嚴禁硬編碼 `staleTime` 數字。 [AI-FRESHNESS-CONTRACT-ANCHORED]
 -   ** Selector 模組化**：Selector 必須是模塊級純函數（`src/lib/selectors/*.ts`），禁止在組件內定義或依賴組件狀態。
 -   **數據歸一化防線**：所有進入 VirtualGrid 的數據（如通過 `flattenPhotoInfiniteQueryPages`）必須進行去重與 ID 合法性校驗，嚴禁髒數據穿透。
 -   **[NEW] APF (AI-Protocol-Friendly) 驗證契約**: 
@@ -162,7 +162,7 @@ sourceOfTruth: "ARCHITECTURE.md"
 
 ### ⚠️ AI-Native Hook 剛性化契約 (v2.5) 🆕
 
-1. ❌ **禁止動態依賴**：useEffect/useMemo 的 deps 必須是靜態字面量或穩定引用，嚴禁將 props/state 直接放入 deps。
+1. ❌ **禁止動態依賴**：useEffect/useMemo 的 deps 必須是靜態字面量或稳定引用，嚴禁將 props/state 直接放入 deps。
 2. ❌ **禁止隱式返回值**：Hook 必須返回具名對象 `{ data, status, actions }` 等具名欄位，嚴禁返回元組 `[value, setValue]`。
 3. ✅ **強制狀態機模式**：複雜狀態必須用 useReducer + 明確 Action Type，嚴禁多個 useState 聯動。
 4. ✅ **強制純函數提取**：所有計算邏輯必須抽離為獨立純函數並附帶 `@contract`，Hook 僅負責膠水調度。
@@ -172,6 +172,13 @@ sourceOfTruth: "ARCHITECTURE.md"
     - **嚴禁** 對已有 `@deps-contract` 或手動優化的核心 Hook 移除 `useMemo` / `useCallback`。
     - 衝突時以 `@deps-contract` 手動管理為準。
 7.  *現有違規 Hook 的重構留待明日專項處理，今日不改業務代碼*
+
+### ⚠️ 聲明式路由創建權限規範 (v2.10) 🆕
+
+1. **強制 RouteAccessContract 聲明**：所有新路由 **必須** 在 `beforeLoad` 中顯式聲明 `RouteAccessContract`（含 `permission` 精確至 `'public' | 'authenticated' | 'admin'`，與 `fallbackRedirect`）。
+2. **安全驗證調用**：必須調用 `@/shared/permissionsSchema` 中的 `validateAccess(contract, context)` 進行聲明式安全攔截，嚴禁在路由中編寫原生 `throw redirect` 與手寫 BeforeLoad 安全邏輯。
+3. **備用防禦層**：保留並相容 `useRouteGuard` Hook，但將其實現標記為 `@deprecated`，以 `validateAccess` 為首要防線。
+4. **[AI-PERMISSION-CONTRACT-ANCHORED]**
 
 ## 🚨 常见错误 → 正确做法
 
@@ -213,6 +220,18 @@ sourceOfTruth: "ARCHITECTURE.md"
 | UI 状态 | `src/store.ts` |
 | 错误处理 | `src/utils/errorHandler.ts` |
 | Virtuoso 配置 | `src/config/virtuoso.config.ts` |
+
+### ⚠️ 全域化與重構安全規範 (v2.12) 🆕
+
+- ✅ **強制 AST 安全重構**：任何跨多個文件的全局性代碼轉換、i18n 更新或重構，**必須** 使用 AST 語法樹解析器（如 `jscodeshift` / `ts-morph`）分批安全執行，並在每次運行後即時進行 `tsc --noEmit` 驗證。**嚴禁** 使用 Regex/sed 執行全局非結構化文本替換。
+- ❌ **嚴禁單字母語義變量**：除了極少數公認的語法學慣例（如 `for` 循環索引 `i`，泛型參數 `<T>`）外，變量/對象/函數命名長度必須 $\ge 2$。**嚴禁** 引入 `t`, `x`, `e`, `p` 等單字母變量作為核心語義（例如：用 `t` 代表 `translate`，或用 `p` 代表 `photo`）。
+  - **推薦替代命名方案**：
+    - 代替單字母 `t`：`translate`, `dict`, `langDict`
+    - 代替單字母 `e` / `err`：`error`, `exception`
+    - 代替單字母 `p`：`photo`, `item`
+- ✅ **沙盒先行驗證**：所有全局轉換腳本、AST 插件或自定義 Codemod，必須先在 `sandbox/` 目錄中的測試樣本上驗證通過，確保 100% 語法樹完備且不破壞原有 JSX/對象屬性（如同名屬性 `t.id` 不被改為 `translate.id`），方能實施於 `src/`。
+
+[ENGINEERING-CONTRACT-PATCHED]
 
 ### ⚠️ P3-A 拖曳分組 (v2.6)
 - ✅ 31/31 Diagnostics PASSED

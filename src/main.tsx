@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as ErrorMonitor from "@sentry/react";
@@ -11,11 +12,13 @@ import { ErrorReporter } from './lib/errorReporter';
 import { setupDevErrorHelper } from './lib/devErrorHelper';
 import './index.css';
 
+import { clientEnv } from './shared/envSchema';
+
 setupGlobalErrorHandling();
 setupDevErrorHelper();
 
 // 挂载全局错误捕获
-if (!import.meta.env.DEV) {
+if (!clientEnv.DEV) {
   window.addEventListener('error', (event) => {
     (window as any).__LAST_ERROR__ = {
       message: event.message,
@@ -37,14 +40,14 @@ if (!import.meta.env.DEV) {
 
 ErrorMonitor.init({
   dsn: "https://5056f30974504ff1becd3b5da98a68af@app.glitchtip.com/23689",
-  environment: import.meta.env.MODE,
+  environment: clientEnv.MODE || 'development',
   tracesSampleRate: 1.0,
 });
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,   // 5 分钟内不重新请求
+      staleTime: createStaleTime('STABLE'),   // 5 分钟内不重新请求
       refetchOnMount: false,       // 组件挂载时不自动刷新
       refetchOnWindowFocus: false, // 切换 tab 不刷新
       retry: 1,
@@ -66,4 +69,15 @@ if (container) {
       </QueryClientProvider>
     </StrictMode>
   );
+
+  // v2.11.1: 平滑淡出並移除啟動骨架屏 [PERCEIVED-PERFORMANCE-IMPROVED]
+  setTimeout(() => {
+    const skeleton = document.getElementById('app-startup-skeleton');
+    if (skeleton) {
+      skeleton.style.opacity = '0';
+      setTimeout(() => {
+        skeleton.remove();
+      }, 300);
+    }
+  }, 50);
 }

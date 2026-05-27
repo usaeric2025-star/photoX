@@ -1,5 +1,6 @@
 import { AI_PROMPTS } from '../../constants/ai';
 import { extractJsonObject } from '../../lib/aiParsing';
+import { api } from '@/lib/api';
 
 export const translateDescription = async (
   zhText: string,
@@ -14,23 +15,31 @@ export const translateDescription = async (
   const fetchUrl = isProxy ? '/api/ai/translate' : 'https://openrouter.ai/api/v1/chat/completions';
 
   try {
-    const response = await fetch(fetchUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(isProxy ? {} : { 'Authorization': `Bearer ${apiKey}`, 'HTTP-Referer': window.location.origin }),
-      },
-      body: JSON.stringify(isProxy ? {
-        promptText: prompt,
-        customModel: modelName
-      } : {
-        model: modelName.includes('/') ? modelName : `google/${modelName}`,
-        messages: [{ role: 'user', content: prompt }],
-        response_format: { type: 'json_object' },
-        max_tokens: 1024
-      }),
-      signal
-    });
+    let response: Response;
+    if (isProxy) {
+      response = await api.ai.translate.$post({
+        json: {
+          promptText: prompt,
+          customModel: modelName
+        }
+      }, { signal }) as any;
+    } else {
+      response = await fetch(fetchUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`, 
+          'HTTP-Referer': window.location.origin
+        },
+        body: JSON.stringify({
+          model: modelName.includes('/') ? modelName : `google/${modelName}`,
+          messages: [{ role: 'user', content: prompt }],
+          response_format: { type: 'json_object' },
+          max_tokens: 1024
+        }),
+        signal
+      });
+    }
 
     if (!response.ok) {
        if (response.status === 404 && fetchUrl.startsWith('/api/')) {

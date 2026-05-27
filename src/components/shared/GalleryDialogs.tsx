@@ -52,7 +52,7 @@ export const GalleryDialogs: React.FC<GalleryDialogsProps> = (props) => {
       <WhatsAppChoiceDialog 
         isOpen={props.showWhatsAppChoice}
         onClose={() => props.setShowWhatsAppChoice(false)}
-        settings={props.settings}
+        settings={props.settings || null}
         t={props.t}
         onSelect={(num) => props.openWhatsApp(num)}
       />

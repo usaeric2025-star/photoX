@@ -40,8 +40,8 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   
   const { onEditPhoto } = usePhotoActions();
   const { canEdit } = usePermission();
-  const catName = getTranslatedCategoryName(photo.category_id, categories, activeLang, t);
-  const mfrName = getManufacturerName(photo.manufacturer_id, manufacturers);
+  const catName = getTranslatedCategoryName(photo.category_id || undefined, categories, activeLang, t);
+  const mfrName = getManufacturerName(photo.manufacturer_id || undefined, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
   
   const { tasks } = useTasks();

@@ -8,7 +8,7 @@ import { Validator } from './protocol';
  * Enforces snake_case DB mapping and strict type safety for Photo mutations.
  */
 export const createPhotoValidator = (): Validator<any> => {
-    // @ts-expect-error ArkType requires strict mode for inference, but we are bypassing for compatibility
+    // ArkType requires strict mode for inference, but we are bypassing for compatibility
     const photoSchema = type({
         id: 'string',
         'user_id?': 'string',
@@ -58,7 +58,7 @@ export const createPhotoValidator = (): Validator<any> => {
  * Factory for ProductGroup validator.
  */
 export const createGroupValidator = (): Validator<any> => {
-    // @ts-expect-error ArkType requires strict mode for inference, but we are bypassing for compatibility
+    // ArkType requires strict mode for inference, but we are bypassing for compatibility
     const groupSchema = type({
         id: 'string',
         'user_id?': 'string',

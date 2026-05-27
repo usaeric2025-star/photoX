@@ -1,92 +1,17 @@
-import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { RouterProvider } from '@tanstack/react-router';
+import { router } from './router';
 import { useQueryClient } from '@tanstack/react-query';
-import { User } from './types';
-import { useAuth, useRouteGuard } from '@/hooks';
-import { useGalleryStore } from './store';
+import { useAuth, usePermission } from '@/hooks';
 import { migrateStorage } from '@/lib/storage';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
-import { motion, AnimatePresence } from 'motion/react';
 import { globalHandleError } from './utils/errorHandler';
-import { ROUTES } from './config/constants';
 import { FullPageLoading } from './components/FullPageLoading';
 
-function lazyWithRetry(importFn: () => Promise<any>, pageName: string) {
-  return lazy(() => 
-    importFn().catch(error => {
-      console.error(`[Dynamic Import Error] Failed to load component ${pageName}:`, error);
-      
-      const isDynamicImportError = 
-        error.message?.includes('Failed to fetch dynamically imported module') ||
-        error.name === 'TypeError' ||
-        String(error).includes('dynamically imported module') ||
-        String(error).includes('loading chunk');
-
-      if (isDynamicImportError) {
-        const lastReloadKey = `last_chunk_reload_${pageName}`;
-        const lastReload = sessionStorage.getItem(lastReloadKey);
-        const now = Date.now();
-        
-        if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
-          sessionStorage.setItem(lastReloadKey, String(now));
-          console.warn(`Dynamic import of ${pageName} failed. Performing automatic page reload...`);
-          window.location.reload();
-          return new Promise(() => {}); 
-        }
-      }
-      
-      globalHandleError(error, `加载页面组件 (${pageName}) 失败`);
-      throw error;
-    })
-  );
-}
-
-const PublicView = lazyWithRetry(() => import('./pages/PublicView'), 'PublicView');
-const AdminView = lazyWithRetry(() => import('./pages/AdminView'), 'AdminView');
-
-/* Removed Fallback component */
-
-function AnimatedRoutes({ user }: { user: User | null }) {
-  useRouteGuard(); // <--- 使用路由守卫
-  const location = useLocation();
-  const { hash, groupId } = location.state || {};
-  const isStaffMode = useGalleryStore((s) => s.isStaffMode);
-
-
-  return (
-    <AnimatePresence mode="sync">
-      <Routes location={location} key={location.pathname}>
-        <Route path={ROUTES.HOME} element={
-            (user || isStaffMode) ? <Navigate to={ROUTES.ADMIN} replace /> : (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-                 <PublicView />
-              </motion.div>
-            )
-        } />
-        <Route path="/h/:hash" element={
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
-            <PublicView />
-          </motion.div>
-        } />
-        <Route path={ROUTES.GROUP(":groupId")} element={
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }}>
-            <PublicView />
-          </motion.div>
-        } />
-        <Route path={ROUTES.ADMIN} element={
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.4 }}>
-            <AdminView />
-          </motion.div>
-        } />
-        <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
-      </Routes>
-    </AnimatePresence>
-  );
-}
-
 export default function AppRoutes() {
-  const { user, isLoading } = useAuth();
+  const { isLoading, user } = useAuth();
+  const { role, can } = usePermission();
   const queryClient = useQueryClient();
   
   // If loading inside a popup, detect auth credentials, wait for Supabase to persist them, send success postMessage, and close.
@@ -179,10 +104,6 @@ export default function AppRoutes() {
   if (isLoading) return <FullPageLoading />;
 
   return (
-      <BrowserRouter>
-        <Suspense fallback={<FullPageLoading />}>
-          <AnimatedRoutes user={user} />
-        </Suspense>
-      </BrowserRouter>
+      <RouterProvider router={router} context={{ user, role, can }} />
   );
 }

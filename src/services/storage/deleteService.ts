@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG } from '../../constants/config';
+import { api } from '@/lib/api';
 
 /**
  * Universal storage cleanup service
@@ -34,10 +35,8 @@ export const cleanupPhysicalStorage = async (fileKeys: string[], urls: string[])
   // Cleanup R2 via Server API
   if (r2Files.length > 0) {
     tasks.push(
-      fetch('/api/r2-delete', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileKeys: r2Files })
+      api['r2-delete'].$post({
+        json: { fileKeys: r2Files }
       }).then(res => {
         if (!res.ok) console.warn('R2 cleanup API failed');
         return res.json();

@@ -43,7 +43,7 @@ export const WhatsAppChoiceDialog: React.FC<WhatsAppChoiceDialogProps> = ({
         <div className="space-y-3">
           {settings?.whatsapp_1 && (
             <button 
-              onClick={() => onSelect(settings.whatsapp_1)}
+              onClick={() => onSelect(settings.whatsapp_1!)}
               className="w-full py-4 px-6 bg-[#25D366] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
             >
               <span className="text-xl">👵</span>
@@ -56,7 +56,7 @@ export const WhatsAppChoiceDialog: React.FC<WhatsAppChoiceDialogProps> = ({
           )}
           {settings?.whatsapp_2 && (
             <button 
-              onClick={() => onSelect(settings.whatsapp_2)}
+              onClick={() => onSelect(settings.whatsapp_2!)}
               className="w-full py-4 px-6 bg-[#128C7E] text-white rounded-2xl font-bold flex items-center justify-center gap-3 shadow-lg active:scale-[0.98] transition-all"
             >
               <span className="text-xl">🏢</span>
