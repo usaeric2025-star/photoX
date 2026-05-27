@@ -14,6 +14,15 @@ export default defineConfig(({mode}) => {
     ],
     build: {
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+          }
+        }
+      }
     },
     define: {
       'process.env.NODE_ENV': JSON.stringify(mode),

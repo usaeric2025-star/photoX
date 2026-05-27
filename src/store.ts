@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { Photo, Category, Tag, Manufacturer, AppSettings, User, DialogData, ProductFormData } from './types';
+import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
 
 interface StoreState {
   searchQuery: string;
@@ -116,72 +117,82 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   showGroupsCollapsed: true,
   setShowGroupsCollapsed: (showGroupsCollapsed) => set({ showGroupsCollapsed }),
   // @storage-contract: valid=['zh', 'en', 'ms'] default='en'
-  appLang: (localStorage.getItem('photo_appLang') || 'en') as 'zh' | 'en' | 'ms',
+  appLang: safeGetItem(STORAGE_KEYS.LANG, 'en', (v) => ['zh', 'en', 'ms'].includes(v) ? v : 'en') as 'zh' | 'en' | 'ms',
   setAppLang: (appLang) => {
-    localStorage.setItem('photo_appLang', appLang);
+    safeSetItem(STORAGE_KEYS.LANG, appLang);
     set({ appLang });
   },
   // @storage-contract: valid=[2,3,5] default=3
-  columns: (() => {
-    const saved = localStorage.getItem('photo_columns');
-    const cols = saved ? Number(saved) : 3;
-    return (cols === 2 || cols === 3 || cols === 5) ? (cols as 2 | 3 | 5) : 3;
-  })(),
-  setColumns: (columns) => {
-    localStorage.setItem('photo_columns', String(columns));
-    set({ columns });
+  columns: safeGetItem(STORAGE_KEYS.COLUMNS, 3, (v) => {
+    const n = Number(v);
+    return (n === 2 || n === 3 || n === 5) ? n : 3;
+  }),
+  setColumns: (cols) => {
+    safeSetItem(STORAGE_KEYS.COLUMNS, cols);
+    set({ columns: cols });
   },
   lightboxIndex: null,
   setLightboxIndex: (lightboxIndex) => set({ lightboxIndex }),
-  activeGroupId: sessionStorage.getItem('photo_activeGroupId') || null,
+  activeGroupId: safeGetItem(STORAGE_KEYS.ACTIVE_GROUP, null, undefined, true),
   setActiveGroupId: (activeGroupId) => {
-    if (activeGroupId === null) {
-      sessionStorage.removeItem('photo_activeGroupId');
-    } else {
-      sessionStorage.setItem('photo_activeGroupId', activeGroupId);
-    }
+    safeSetItem(STORAGE_KEYS.ACTIVE_GROUP, activeGroupId, true);
     set({ activeGroupId });
   },
-  activePhotoId: sessionStorage.getItem('photo_activePhotoId') || null,
+  activePhotoId: safeGetItem(STORAGE_KEYS.ACTIVE_PHOTO, null, undefined, true),
   setActivePhotoId: (activePhotoId) => {
-    if (activePhotoId === null) {
-      sessionStorage.removeItem('photo_activePhotoId');
-    } else {
-      sessionStorage.setItem('photo_activePhotoId', activePhotoId);
-    }
+    safeSetItem(STORAGE_KEYS.ACTIVE_PHOTO, activePhotoId, true);
     set({ activePhotoId });
   },
-  editPhotoId: sessionStorage.getItem('photo_editPhotoId') || null,
+  editPhotoId: safeGetItem(STORAGE_KEYS.EDIT_PHOTO, null, undefined, true),
   setEditPhotoId: (editPhotoId) => {
-    if (editPhotoId === null) {
-      sessionStorage.removeItem('photo_editPhotoId');
-      sessionStorage.removeItem('photo_edit_form_draft');
-    } else {
-      sessionStorage.setItem('photo_editPhotoId', editPhotoId);
+    safeSetItem(STORAGE_KEYS.EDIT_PHOTO, editPhotoId, true);
+    if (!editPhotoId) {
+      sessionStorage.removeItem(STORAGE_KEYS.EDIT_FORM_DRAFT);
     }
     set({ editPhotoId });
   },
-  batchEditingIds: (() => {
-    try {
-      const saved = sessionStorage.getItem('photo_batchEditingIds');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  })(),
+  batchEditingIds: safeGetItem(STORAGE_KEYS.BATCH_EDITING, null, undefined, true),
   setBatchEditingIds: (batchEditingIds) => {
-    if (batchEditingIds === null) {
-      sessionStorage.removeItem('photo_batchEditingIds');
-    } else {
-      sessionStorage.setItem('photo_batchEditingIds', JSON.stringify(batchEditingIds));
-    }
+    safeSetItem(STORAGE_KEYS.BATCH_EDITING, batchEditingIds, true);
     set({ batchEditingIds });
   },
-  groupSettingsOpen: sessionStorage.getItem('photo_groupSettingsOpen') === 'true',
+  groupSettingsOpen: safeGetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, false, (v) => v === 'true', true),
   setGroupSettingsOpen: (groupSettingsOpen) => {
-    sessionStorage.setItem('photo_groupSettingsOpen', String(groupSettingsOpen));
+    safeSetItem(STORAGE_KEYS.GROUP_SETTINGS_OPEN, String(groupSettingsOpen), true);
     set({ groupSettingsOpen });
   },
+  isStaffMode: safeGetItem(STORAGE_KEYS.IS_STAFF_MODE, false, (v) => v === 'true'),
+  setIsStaffMode: (isStaffMode) => {
+    safeSetItem(STORAGE_KEYS.IS_STAFF_MODE, String(isStaffMode));
+    set({ isStaffMode });
+  },
+  viewMode: safeGetItem(STORAGE_KEYS.VIEW_MODE, 'public', (v) => ['admin', 'public'].includes(v) ? v : 'public') as 'admin' | 'public',
+  setViewMode: (viewMode) => {
+    safeSetItem(STORAGE_KEYS.VIEW_MODE, viewMode);
+    set({ viewMode });
+  },
+  activeScreen: safeGetItem(STORAGE_KEYS.ACTIVE_SCREEN, 'gallery', undefined, true),
+  setActiveScreen: (activeScreen) => {
+    safeSetItem(STORAGE_KEYS.ACTIVE_SCREEN, activeScreen, true);
+    set({ activeScreen });
+  },
+  formState: safeGetItem(STORAGE_KEYS.EDIT_FORM_DRAFT, defaultForm, undefined, true),
+  updateForm: (updates) => set((state) => {
+    const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
+    safeSetItem(STORAGE_KEYS.EDIT_FORM_DRAFT, nextFormState, true);
+    return { formState: nextFormState };
+  }),
+  resetForm: () => {
+    sessionStorage.removeItem(STORAGE_KEYS.EDIT_FORM_DRAFT);
+    set({ formState: defaultForm });
+  },
+  isSidebarCollapsed: safeGetItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, false, (v) => v === 'true'),
+  setIsSidebarCollapsed: (isSidebarCollapsed) => {
+    safeSetItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, String(isSidebarCollapsed));
+    set({ isSidebarCollapsed });
+  },
+  showPassPrompt: false,
+  setShowPassPrompt: (showPassPrompt) => set({ showPassPrompt }),
   isPhotoPickerOpen: false,
   setIsPhotoPickerOpen: (isPhotoPickerOpen) => set({ isPhotoPickerOpen }),
   photoPickerGroupId: null,
@@ -192,12 +203,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setSelectedIds: (updater) => set((state) => ({ 
     selectedIds: typeof updater === 'function' ? updater(state.selectedIds) : updater 
   })),
-  // @storage-contract: valid=[true, false] default=false
-  isStaffMode: localStorage.getItem('isStaffMode') === 'true',
-  setIsStaffMode: (isStaffMode) => {
-    localStorage.setItem('isStaffMode', String(isStaffMode));
-    set({ isStaffMode });
-  },
   alertDialog: null,
   setAlertDialog: (alertDialog) => set({ alertDialog }),
   promptDialog: null,
@@ -208,28 +213,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setDraggedPhotoId: (draggedPhotoId) => set({ draggedPhotoId }),
   focusedGroupPhotoId: null,
   setFocusedGroupPhotoId: (focusedGroupPhotoId) => set({ focusedGroupPhotoId }),
-  // @storage-contract: valid=['admin', 'public'] default='public'
-  viewMode: (localStorage.getItem('photo_viewMode') || 'public') as 'admin' | 'public',
-  setViewMode: (viewMode) => {
-    localStorage.setItem('photo_viewMode', viewMode);
-    set({ viewMode });
-  },
-  activeScreen: sessionStorage.getItem('photo_activeScreen') || 'gallery',
-  setActiveScreen: (activeScreen) => {
-    sessionStorage.setItem('photo_activeScreen', activeScreen);
-    set({ activeScreen });
-  },
-  isInfiniteMode: false,
-  setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
-  resetUI: () => {
-    // [SYNC-STORAGE-IN-RENDER] @ src/store.ts:217
-    setTimeout(() => {
-      sessionStorage.removeItem('photo_edit_form_draft');
-      sessionStorage.removeItem('photo_editPhotoId');
-      sessionStorage.removeItem('photo_batchEditingIds');
-      sessionStorage.removeItem('photo_activeGroupId');
-    }, 0);
-    set({
+  resetUI: () => set({
       filterCatId: null,
       filterTagIds: [],
       searchQuery: '',
@@ -239,8 +223,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
       activeGroupId: null,
       batchEditingIds: null,
       formState: defaultForm
-    });
-  },
+    }),
   resetFilters: () => set({
     filterCatId: null,
     filterTagIds: [],
@@ -249,35 +232,12 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   }),
   showWhatsAppChoice: false,
   setShowWhatsAppChoice: (showWhatsAppChoice) => set({ showWhatsAppChoice }),
-  formState: (() => {
-    try {
-      const saved = sessionStorage.getItem('photo_edit_form_draft');
-      return saved ? JSON.parse(saved) : defaultForm;
-    } catch {
-      return defaultForm;
-    }
-  })(),
-  updateForm: (updates: Partial<ProductFormData> | ((prev: ProductFormData) => ProductFormData)) => set((state) => {
-    const nextFormState = typeof updates === 'function' ? updates(state.formState) : { ...state.formState, ...updates };
-    sessionStorage.setItem('photo_edit_form_draft', JSON.stringify(nextFormState));
-    return { formState: nextFormState };
-  }),
-  resetForm: () => {
-    sessionStorage.removeItem('photo_edit_form_draft');
-    set({ formState: defaultForm });
-  },
   newPhotoData: null,
   setNewPhotoData: (newPhotoData) => set({ newPhotoData }),
   showOtherFields: false,
   setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
-  // @storage-contract: valid=[true, false] default=false
-  isSidebarCollapsed: localStorage.getItem('photo_isSidebarCollapsed') === 'true',
-  setIsSidebarCollapsed: (isSidebarCollapsed) => {
-    localStorage.setItem('photo_isSidebarCollapsed', String(isSidebarCollapsed));
-    set({ isSidebarCollapsed });
-  },
-  showPassPrompt: false,
-  setShowPassPrompt: (showPassPrompt) => set({ showPassPrompt }),
+  isInfiniteMode: false,
+  setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
 }));
 
 export const useStore = useGalleryStore;

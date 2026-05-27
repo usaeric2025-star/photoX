@@ -199,6 +199,10 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
   return { dissolvedGroupId };
 };
 
+export const movePhotosToGroup = async (userId: string, photoIds: string[], targetGroupId: string | null) => {
+  return await batchUpdatePhotosInCloud(userId, photoIds, { group_id: targetGroupId });
+};
+
 export const updatePhotoHiddenState = async (photoId: string, is_hidden: boolean) => {
   return updatePhotoInCloud(photoId, { 
     is_hidden,

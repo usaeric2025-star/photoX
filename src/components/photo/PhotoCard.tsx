@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import { Photo, Category, Manufacturer } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
@@ -150,6 +151,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
     [tags]
   );
   const { can } = usePermission();
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: photo.id,
+  });
 
   const handleOpenLightbox = useCallback(() => {
     onLightboxOpen(photo);
@@ -289,10 +293,19 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   return (
     <div 
-      ref={cardRef}
+      ref={(node) => {
+        cardRef.current = node;
+        setNodeRef(node);
+      }}
       data-photo-id={photo.id}
       data-selected={initialIsSelected}
       data-multiselect={initialIsMultiSelect}
+      {...listeners}
+      {...attributes}
+      style={{
+        ... { contentVisibility: 'auto', containIntrinsicSize: '300px' },
+        transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+      }}
       onContextMenu={handleContextMenu}
       onMouseDown={startPress}
       onMouseUp={cancelPress}
@@ -309,7 +322,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
         ${isManagement && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : ''}
         ${className}
       `}
-      style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}
     >
       <div className="w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]">
         <ResponsivePhoto

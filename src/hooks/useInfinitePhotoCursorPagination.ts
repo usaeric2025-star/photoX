@@ -28,6 +28,8 @@ export const useInfinitePhotoCursorPagination = (
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
       return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
     },
+    staleTime: 5 * 60 * 1000,
+    refetchOnMount: false,
   });
 
   const photos = flattenPhotoInfiniteQueryPages(query.data?.pages || []);

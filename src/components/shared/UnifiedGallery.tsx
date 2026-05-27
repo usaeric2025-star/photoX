@@ -34,6 +34,28 @@ interface UnifiedGalleryProps {
  */
 const ADMIN_GALLERY_DISABLED = false;
 
+const gallerySelector = (s: any) => ({
+    showGroupsCollapsed: s.showGroupsCollapsed,
+    appLang: s.appLang,
+    columns: s.columns,
+    lightboxIndex: s.lightboxIndex,
+    setLightboxIndex: s.setLightboxIndex,
+    activeGroupId: s.activeGroupId,
+    setActiveGroupId: s.setActiveGroupId,
+    activePhotoId: s.activePhotoId,
+    setActivePhotoId: s.setActivePhotoId,
+    sortOrder: s.sortOrder,
+    setSortOrder: s.setSortOrder,
+    filterCatId: s.filterCatId,
+    filterTagIds: s.filterTagIds,
+    debouncedSearchQuery: s.debouncedSearchQuery,
+    isStaffMode: s.isStaffMode,
+    setIsStaffMode: s.setIsStaffMode,
+    viewMode: s.viewMode,
+    showPassPrompt: s.showPassPrompt,
+    setShowPassPrompt: s.setShowPassPrompt
+  });
+
 export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   variant,
   onExit,
@@ -60,27 +82,7 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Store
-  const store = useGalleryStore(useShallow(s => ({
-    showGroupsCollapsed: s.showGroupsCollapsed,
-    appLang: s.appLang,
-    columns: s.columns,
-    lightboxIndex: s.lightboxIndex,
-    setLightboxIndex: s.setLightboxIndex,
-    activeGroupId: s.activeGroupId,
-    setActiveGroupId: s.setActiveGroupId,
-    activePhotoId: s.activePhotoId,
-    setActivePhotoId: s.setActivePhotoId,
-    sortOrder: s.sortOrder,
-    setSortOrder: s.setSortOrder,
-    filterCatId: s.filterCatId,
-    filterTagIds: s.filterTagIds,
-    debouncedSearchQuery: s.debouncedSearchQuery,
-    isStaffMode: s.isStaffMode,
-    setIsStaffMode: s.setIsStaffMode,
-    viewMode: s.viewMode,
-    showPassPrompt: s.showPassPrompt,
-    setShowPassPrompt: s.setShowPassPrompt
-  })));
+  const store = useGalleryStore(useShallow(gallerySelector));
 
   // Core Data fetchers (handled differently per variant or shared)
   const adminData = isManagement ? useAdmin() : null;

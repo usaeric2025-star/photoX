@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { User } from './types';
 import { useAuth, useRouteGuard } from '@/hooks';
 import { useGalleryStore } from './store';
+import { migrateStorage } from '@/lib/storage';
 import { clearExpiredCaches } from './utils/indexedDB';
 import { supabase } from './lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
@@ -152,7 +153,8 @@ export default function AppRoutes() {
         window.history.replaceState(null, '', window.location.pathname);
     }
 
-    // 2. Background cache cleanup
+  // 2. Background cache cleanup
+    migrateStorage();
     clearExpiredCaches(7).catch(err => globalHandleError(err, '本地缓存自动清理失败', true));
     
     // 3. Supabase Session Health Check

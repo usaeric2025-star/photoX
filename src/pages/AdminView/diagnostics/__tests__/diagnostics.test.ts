@@ -15,20 +15,34 @@ import '../lanesEmptyState.test';
 import '../selectBoundary.test';
 import '../prefetchCache.test';
 import '../elementSizeSafety.test';
+import '../storageSchema.test';
+import '../lazyLoadPurity.test';
+import '../componentStructureGuard.test';
+import '../queryCacheCoverage.test';
+import '../batchMutationConsistency.test';
+import '../batchDialogProtocol.test';
+import '../batchDeleteConsistency.test';
+import '../aiBatchTagPartialFailure.test';
+import '../singleDeleteConsistency.test';
+import '../categoryUpdateConsistency.test';
+import '../tagAssignmentConsistency.test';
+import '../photoUploadConsistency.test';
+import '../singleEditConsistency.test';
+import '../optimisticRollback.test';
+import '../dragGroupingConsistency.test';
+import '../virtualGridDragStability.test';
+import '../dragOptimisticRollback.test';
 
 describe('Admin Diagnostics Interfaces', () => {
   beforeEach(() => {
-    // Clear the registry manually for specific tests if needed
-    // But since we want to check total length from global imports, 
-    // we should be careful. We'll only clear conditionally or use another block.
   });
 
-  it('should have 14 registered diagnostic tests exactly', async () => {
-    // Because we imported all 14 modules above, they should all be registered by now.
-    expect(diagnosticRegistry.length).toBe(14);
+  it('should have 31 registered diagnostic tests exactly', async () => {
+    // Because we imported all modules above, they should all be registered by now.
+    expect(diagnosticRegistry.length).toBe(31);
     const ids = diagnosticRegistry.map(t => t.id);
     const uniqueIds = new Set(ids);
-    expect(uniqueIds.size).toBe(14);
+    expect(uniqueIds.size).toBe(31);
   });
 
   it('should correctly register a new diagnostic test to the registry', async () => {

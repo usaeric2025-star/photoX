@@ -84,12 +84,7 @@ const MemoizedFooter = React.memo(({
 });
 MemoizedFooter.displayName = 'MemoizedFooter';
 
-export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: GalleryVariant }> = React.memo(({ virtuosoRef, variant }) => {
-  const { 
-    columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
-    isStaffMode, viewMode, activeGroupId, activePhotoId,
-    filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
-  } = useGalleryStore(useShallow(s => ({
+const photoGridSelector = (s: any) => ({
     columns: s.columns,
     setActiveGroupId: s.setActiveGroupId,
     setActivePhotoId: s.setActivePhotoId,
@@ -103,7 +98,22 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     filterTagIds: s.filterTagIds,
     debouncedSearchQuery: s.debouncedSearchQuery,
     sortOrder: s.sortOrder
-  })));
+  });
+
+const infiniteModeSelector = (s: any) => ({ isInfiniteMode: s.isInfiniteMode });
+
+const multiSelectSelector = (s: any) => ({
+    setSelectedIds: s.setSelectedIds,
+    setIsMultiSelectMode: s.setIsMultiSelectMode
+  });
+
+export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: GalleryVariant }> = React.memo(({ virtuosoRef, variant }) => {
+  const { 
+    columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
+    isStaffMode, viewMode, activeGroupId, activePhotoId,
+    filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
+  } = useGalleryStore(useShallow(photoGridSelector));
+
   
   const isHookAdminMode = useAdminMode();
   const isPageAdmin = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
@@ -112,6 +122,11 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
   const effectiveVariant: GalleryVariant = variant || (isAdminMode ? 'full-management' : 'public-showcase');
 
   const adminData = useOptionalAdmin();
+  const isFirstMount = useRef(true);
+
+  useEffect(() => {
+    isFirstMount.current = false;
+  }, []);
 
   // [STATE-BRIDGE-CONFLICT FIX] If adminData is present, we are in a managed view.
   // We MUST NOT launch an independent useInfinitePhotos query here to avoid race conditions and recursion.
@@ -158,7 +173,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     }
   );
 
-  const isFilteringFetching = infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage;
+  const isFilteringFetching = infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage && !isFirstMount.current;
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
      setActiveGroupId(gid);
@@ -191,15 +206,12 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     prevActiveGroupId.current = activeGroupId;
   }, [activeGroupId, gridPhotos, activePhotoId, virtuosoRef]);
 
-  const { isInfiniteMode } = useGalleryStore(useShallow(s => ({ isInfiniteMode: s.isInfiniteMode })));
+  const { isInfiniteMode } = useGalleryStore(useShallow(infiniteModeSelector));
 
   // [INTERACTION-BRIDGE-SYNC]
   // Sync the high-performance Interaction Bus back to the Zustand Store
   // specifically for the Batch Toolbar and global selection awareness.
-  const { setSelectedIds, setIsMultiSelectMode } = useGalleryStore(useShallow(s => ({
-    setSelectedIds: s.setSelectedIds,
-    setIsMultiSelectMode: s.setIsMultiSelectMode
-  })));
+  const { setSelectedIds, setIsMultiSelectMode } = useGalleryStore(useShallow(multiSelectSelector));
 
   useEffect(() => {
     const unsubscribe = interactionBus.subscribe((state) => {

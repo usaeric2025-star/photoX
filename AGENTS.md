@@ -192,3 +192,10 @@ sourceOfTruth: "ARCHITECTURE.md"
 | UI 状态 | `src/store.ts` |
 | 错误处理 | `src/utils/errorHandler.ts` |
 | Virtuoso 配置 | `src/config/virtuoso.config.ts` |
+
+### ⚠️ P3-A 拖曳分組 (v2.6)
+- ✅ 31/31 Diagnostics PASSED
+- ✅ 拖曳操作必須通過 `useDragGrouping` Hook，嚴禁原生 drag 事件綁定
+- ✅ 所有拖曳相關 mutation 具備樂观更新回滾機制
+- 🚧 技術債：多選拖曳邊緣 case、移動端觸控適配 (留待 P3 後續)
+
