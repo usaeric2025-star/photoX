@@ -150,7 +150,11 @@ sourceOfTruth: "ARCHITECTURE.md"
 3. ✅ **強制狀態機模式**：複雜狀態必須用 useReducer + 明確 Action Type，嚴禁多個 useState 聯動。
 4. ✅ **強制純函數提取**：所有計算邏輯必須抽離為獨立純函數並附帶 `@contract`，Hook 僅負責膠水調度。
 5. ✅ **強制 JSDoc @hook-contract**：引進新 Hook 或修改現有 Hook 前必須先生成或更新 `@hook-contract` 聲明（包括 inputs, outputs, invariants 和 ai_maintenance_rule）。
-6.  *現有違規 Hook 的重構留待明日專項處理，今日不改業務代碼*
+6. ✅ **React Compiler (Babel Plugin) 共存策略**：
+    - 新模塊首選啟用 Compiler 以減少手動記憶化工作量。
+    - **嚴禁** 對已有 `@deps-contract` 或手動優化的核心 Hook 移除 `useMemo` / `useCallback`。
+    - 衝突時以 `@deps-contract` 手動管理為準。
+7.  *現有違規 Hook 的重構留待明日專項處理，今日不改業務代碼*
 
 ## 🚨 常见错误 → 正确做法
 
@@ -198,4 +202,10 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ✅ 拖曳操作必須通過 `useDragGrouping` Hook，嚴禁原生 drag 事件綁定
 - ✅ 所有拖曳相關 mutation 具備樂观更新回滾機制
 - 🚧 技術債：多選拖曳邊緣 case、移動端觸控適配 (留待 P3 後續)
+
+### 🗺️ P3 技術演進路線圖 (v2.6 更新)
+- ✅ **P3-B Zustand v5 & Vite 6 升級**：[TRIGGER] stable 版發布；[BLOCKER] 無；預期工時 6h。
+- ✅ **P3-C React 19 & Compiler 啟用**：[TRIGGER] R19 stable + 核心庫兼容性驗證通過；[BLOCKER] `@deps-contract` 邊界劃分；預期工時 20h。
+- ✅ **P3-D TanStack Router 遷移**：[TRIGGER] 業務觀察期平穩；[BLOCKER] 路由參數方案收斂；預期工時 16h。
+- ✅ **P3-E 瀏覽器端 AI (Transformers.js)**：[TRIGGER] WebGPU 普及率 > 80%；[BLOCKER] 模型體積與載入策略；預期工時 30h。
 
