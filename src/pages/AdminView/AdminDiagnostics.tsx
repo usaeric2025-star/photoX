@@ -17,6 +17,7 @@ import './diagnostics/lanesEmptyState.test.ts';
 import './diagnostics/selectBoundary.test.ts';
 import './diagnostics/prefetchCache.test.ts';
 import './diagnostics/elementSizeSafety.test.ts';
+import './diagnostics/validatorParity.test.ts';
 
 const AdminDiagnostics: React.FC = () => {
   const { user } = useAuth();

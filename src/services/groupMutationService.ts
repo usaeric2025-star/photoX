@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { ProductGroup } from '../types';
+import { createGroupValidator } from '../lib/validators/factory';
 
 /**
  * Service for all group-related write operations.
@@ -44,6 +45,13 @@ const getCurrentUserId = async (): Promise<string | undefined> => {
 };
 
 export const updateGroupInCloud = async (groupId: string, updates: Partial<ProductGroup>) => {
+    // [APF-CONTRACT] Validate updates
+    const validator = createGroupValidator();
+    const validationRes = validator.validate(updates);
+    if (validationRes.isErr()) {
+        throw new Error(`Group Update Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
+    }
+
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(updates, false, userId);
     const { error } = await supabase
@@ -57,6 +65,13 @@ export const updateGroupInCloud = async (groupId: string, updates: Partial<Produ
 };
 
 export const createGroupInCloud = async (groupData: ProductGroup) => {
+    // [APF-CONTRACT] Validate groupData
+    const validator = createGroupValidator();
+    const validationRes = validator.validate(groupData);
+    if (validationRes.isErr()) {
+        throw new Error(`Group Creation Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
+    }
+
     const userId = await getCurrentUserId();
     const dbUpdates = mapToDb(groupData as unknown as Record<string, unknown>, true, userId);
     const { error, data } = await supabase

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { toast } from 'sonner';
+import { toast } from '../../lib/ui/toast';
 import { useErrorHandler } from '../../utils/errorHandler';
 
 /**
@@ -9,8 +9,13 @@ import { useErrorHandler } from '../../utils/errorHandler';
 export function useFeedback() {
   const { handleError } = useErrorHandler();
 
-  const showSuccess = useCallback((message: string) => {
-    toast.success(message);
+  const showSuccess = useCallback((message: string, isHeavy: boolean = false) => {
+    console.log(`[PhotoX Success] ${message}`);
+    // SILENT SUCCESS RULE (v2.7): Success toast is forbidden for light tasks.
+    // Only show for heavy tasks or explicit overrides.
+    if (isHeavy) {
+      toast.success(message);
+    }
   }, []);
 
   const showError = useCallback((error: unknown, context: string) => {

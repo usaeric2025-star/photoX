@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useTasks } from './useTasks';
 import { reportError } from '@/lib/errorReporter';
-import { toast } from 'sonner';
+import { toast } from '@/lib/ui/toast';
 
 /**
  * Hook for executing long-running tasks with background progress tracking.

@@ -3,6 +3,7 @@ import { DB_CONFIG } from '../constants/config';
 import { Photo } from '../types';
 import { mapToDb } from './photo/photoMappingUtils';
 import { safeArray } from '../lib/utils';
+import { createPhotoValidator } from '../lib/validators/factory';
 
 /**
  * Service for all photo-related write operations (Insert, Update, Delete).
@@ -17,6 +18,13 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   // Clean up updates
   const cleanUpdates = { ...updates };
   delete cleanUpdates.id;
+
+  // [APF-CONTRACT] Validate updates before processing
+  const validator = createPhotoValidator();
+  const validationRes = validator.validate(cleanUpdates);
+  if (validationRes.isErr()) {
+    throw new Error(`Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
+  }
 
   const dbUpdates = mapToDb(cleanUpdates);
   
@@ -69,6 +77,14 @@ export const batchUpdatePhotosInCloud = async (
   
   const total = ids.length;
   const BATCH_SIZE = 100; // Standard batch size
+  
+  // [APF-CONTRACT] Validate updates before batch processing
+  const validator = createPhotoValidator();
+  const validationRes = validator.validate(updates);
+  if (validationRes.isErr()) {
+    throw new Error(`Batch Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
+  }
+
   const dbUpdates = mapToDb(updates);
   
   for (let i = 0; i < ids.length; i += BATCH_SIZE) {

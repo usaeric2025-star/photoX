@@ -26,8 +26,8 @@ export const useBatchConfirmation = ({
     setAlertDialog({
       title: '批量操作確認 / Confirm Bulk Action',
       message: `确定执行 "${actionType}" 操作吗？(共 ${selectedCount} 项) / Are you sure to "${actionType}"? (${selectedCount} items)`,
-      confirmText: '确认 / Confirm',
-      cancelText: '取消 / Cancel',
+      confirmLabel: '确认 / Confirm',
+      cancelLabel: '取消 / Cancel',
       onConfirm: async () => {
         setIsPending(true);
         try {

@@ -2,12 +2,12 @@
 description: PhotoX 项目 AI 编码强制规范。所有代码生成、修改、审查必须严格遵守此文件。违反红线的代码将被拒绝。
 globs: ["src/**/*.{ts,tsx}"]
 alwaysApply: true
-version: "3.0"
-lastSynced: "2026-05-26"
+version: "3.5"
+lastSynced: "2026-05-27"
 sourceOfTruth: "ARCHITECTURE.md"
 ---
 
-# PhotoX AI Coding Rules v3.0
+# PhotoX AI Coding Rules v3.5 (v2.7 AI-Native Validator Edition)
 
 > ⚠️ 本文件是 `ARCHITECTURE.md` 的執行層精簡版。詳細設計原理請參閱原文档。
 > 🔄 更新 `ARCHITECTURE.md` 後，必須同步更新本文件，并在 commit 中标注 `[rules-sync]`。
@@ -117,7 +117,24 @@ sourceOfTruth: "ARCHITECTURE.md"
 -   **QueryKey 工廠化**：所有資源 Key 必須通過 `src/lib/queryKeys.ts` 中的工廠函數生成，嚴禁裸字符串拼接。
 -   ** Selector 模組化**：Selector 必須是模塊級純函數（`src/lib/selectors/*.ts`），禁止在組件內定義或依賴組件狀態。
 -   **數據歸一化防線**：所有進入 VirtualGrid 的數據（如通過 `flattenPhotoInfiniteQueryPages`）必須進行去重與 ID 合法性校驗，嚴禁髒數據穿透。
+-   **[NEW] APF (AI-Protocol-Friendly) 驗證契約**: 
+    - 數據寫入/修改前 **必須** 通過 `Validator<T>` 協議進行驗證。
+    - Validator 必須實現 `serialize()` 方法以向 AI 暴露元數據（fields, hints）。
+    - 對於複雜 schema，必須使用工廠函數（如 `createPhotoValidator`）生成，嚴禁在業務邏輯中裸寫驗證規則。
 -   **數據歸一化路由契約** 🆕：分頁數據與扁平數據必須使用不同的歸一化函數（`flattenPhotoInfiniteQueryPages` vs `normalizeAdminPhotos`）。禁止將扁平數組傳入分頁歸一化函數。新增歸一化函數必須通過結構一致性測試。
+
+### ⚠️ 樣式與交互預算契約 (v2.7) 🆕
+
+- ✅ **clsx + tw-merge 整合**：所有類名拼接 **必須** 通過 `@/lib/utils.ts` 中的 `cn()` 函數，嚴禁裸寫模板字符串或 `+` 號拼接。
+- ✅ **Sonner 統一調度**：所有 Toast 通知 **必須** 通過 `@/lib/ui/toast.ts` 入口，嚴禁直接 import `sonner`。
+- ✅ **Light Task 靜默法則**：成功操作嚴禁彈出 Toast，僅在失敗時顯示帶診斷按鈕的 Error Toast。
+
+### ⚠️ AI-Native Validator 協議與元數據契約 (v2.7) 🆕
+
+- ✅ **APF 核心**：數據寫入前 **必須** 通過 `Validator<T>` 接口驗證。
+- ✅ **元數據驅動**：AI 應主動調用 `serialize()` 獲取字段約束與維護提示（aiHints），確保生成代碼與 DB 映射 100% 一致。
+- ✅ **分區隔離**：Validator 實現（如 ArkType）必須封裝在 `src/lib/validators/engines/` 中，業務代碼僅感知協議。
+- ✅ **契約測試**：任何 Schema 變動必須同步更新 `validatorParity.test.ts` 並確保 32/32 Diagnostics PASSED。
 
 ### ⚠️ 全域 ErrorBoundary 安全契約
 
@@ -200,12 +217,14 @@ sourceOfTruth: "ARCHITECTURE.md"
 ### ⚠️ P3-A 拖曳分組 (v2.6)
 - ✅ 31/31 Diagnostics PASSED
 - ✅ 拖曳操作必須通過 `useDragGrouping` Hook，嚴禁原生 drag 事件綁定
+- ✅ **[NEW] 防禦式編碼**: 複雜狀態切換必須使用 `ts-pattern` 確保窮盡性；異步 Mutation 返回值必須封裝為 `neverthrow` 的 `Result` 類型。
 - ✅ 所有拖曳相關 mutation 具備樂观更新回滾機制
 - 🚧 技術債：多選拖曳邊緣 case、移動端觸控適配 (留待 P3 後續)
 
-### 🗺️ P3 技術演進路線圖 (v2.6 更新)
-- ✅ **P3-B Zustand v5 & Vite 6 升級**：[TRIGGER] stable 版發布；[BLOCKER] 無；預期工時 6h。
-- ✅ **P3-C React 19 & Compiler 啟用**：[TRIGGER] R19 stable + 核心庫兼容性驗證通過；[BLOCKER] `@deps-contract` 邊界劃分；預期工時 20h。
-- ✅ **P3-D TanStack Router 遷移**：[TRIGGER] 業務觀察期平穩；[BLOCKER] 路由參數方案收斂；預期工時 16h。
-- ✅ **P3-E 瀏覽器端 AI (Transformers.js)**：[TRIGGER] WebGPU 普及率 > 80%；[BLOCKER] 模型體積與載入策略；預期工時 30h。
+### 🗺️ P4 技術演進路線圖 (v2.7 穩定後觸發)
+- 🚀 **Vite 7 升級 (Next Gen)**：[TRIGGER] Vite 7.0 穩定版發布 + Rollup 5 兼容。
+- 🚀 **Zustand v5 / React 19 / TanStack Router / date-fns-tz**：已從預研轉入 P4 正式清單。
+- 🚀 **Vite 7 觸發信號**：1. Build 耗時 > 30s; 2. HMR 延遲 > 2s; 3. 依賴樹複雜度 > 1.5k 節點; 4. 社群主流框架全量轉移。
+- 🚀 **升級防禦卡**：5 項破壞性測試卡（SSR 兼容、HMR 頻率、Bundle Size、啟動耗時、Type Inference 深度）。
+- ✅ **中亞/東南亞多時區適配**：正式引入 `date-fns-tz` 解決 server-client 渲染偏差。
 

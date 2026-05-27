@@ -12,6 +12,7 @@ import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { translations } from '../../lib/translations';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 import { interactionBus } from '@/lib/interactionBus';
+import { cn } from '@/lib/utils';
 
 export interface PhotoCardProps {
   variant: GalleryVariant;
@@ -30,11 +31,10 @@ const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; photo
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
       {photo.group_id && photoCount > 1 && (
-        <div className={
-          isManagement
-            ? "bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none"
-            : "bg-black/40 backdrop-blur-[4px] px-2 py-0.5 rounded-md text-[9px] text-white font-bold flex items-center gap-1 border border-white/10 pointer-events-none"
-        }>
+        <div className={cn(
+          "backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none",
+          isManagement ? "bg-black/60" : "bg-black/40 px-2 py-0.5 rounded-md border-white/10"
+        )}>
           <Layers size={isManagement ? 10 : 9} strokeWidth={2.5} />
           {photoCount}
         </div>
@@ -315,13 +315,13 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       onTouchMove={cancelPress}
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
-      className={`
-        aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group bg-slate-50 rounded-lg 
-        data-[selected=true]:ring-[3px] data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.98] data-[selected=true]:shadow-lg data-[selected=true]:z-10
-        ${isManagement ? 'md:hover:scale-[1.02] active:scale-[0.95]' : 'active:scale-[0.95]'}
-        ${isManagement && is_hidden ? 'ring-[3px] ring-yellow-200 shadow-md' : ''}
-        ${className}
-      `}
+      className={cn(
+        "aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group bg-slate-50 rounded-lg",
+        "data-[selected=true]:ring-[3px] data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.98] data-[selected=true]:shadow-lg data-[selected=true]:z-10",
+        isManagement ? "md:hover:scale-[1.02] active:scale-[0.95]" : "active:scale-[0.95]",
+        isManagement && is_hidden && "ring-[3px] ring-yellow-200 shadow-md",
+        className
+      )}
     >
       <div className="w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]">
         <ResponsivePhoto

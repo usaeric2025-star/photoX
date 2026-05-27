@@ -1,6 +1,5 @@
 import { registerDiagnostic, DiagnosticTest } from './index';
 import { expect, test } from 'vitest';
-import { queryClient } from '@/lib/supabase';
 
 // [CONTRACT] batchDeleteConsistency: Verifies that after a batch delete, 
 // the deleted items are removed from the cache and their count decreases.

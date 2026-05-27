@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { toast } from 'sonner';
+import { toast } from '../lib/ui/toast';
 import { logErrorToSupabase } from '../services/logService';
 import * as ErrorMonitor from '@sentry/react';
 

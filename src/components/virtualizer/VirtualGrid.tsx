@@ -2,6 +2,7 @@ import React, { useRef, useImperativeHandle, forwardRef } from 'react';
 import { useVirtualizer, VirtualizerOptions } from '@tanstack/react-virtual';
 import { PHOTO_GRID_CONFIG } from '@/config/virtuoso.config';
 import { useInteractionBridge } from './useInteractionBridge';
+import { cn } from '@/lib/utils';
 
 /**
  * @remarks
@@ -220,7 +221,7 @@ export const VirtualGrid = forwardRef<any, VirtualGridProps>((props, ref) => {
   return (
     <div 
       ref={containerRef} 
-      className={props.containerClassName || ''}
+      className={cn("w-full h-full", props.containerClassName)}
       style={{ overflowY: 'auto', height: '100%', width: '100%' }}
     >
       {props.header && (
