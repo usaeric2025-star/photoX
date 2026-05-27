@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import { removeTagFromPhotoFromDB } from '@/services/tagService';
 import { 
   useUpdateTagMutation, useDeleteTagMutation, 
   useUpdateCategoryMutation, useDeleteCategoryMutation,
@@ -73,8 +74,6 @@ export const useAdminCategory = (adminUI: {
 
   const removeTagFromPhoto = useCallback(async (photoId: string, tagId: string) => {
     try {
-      const { removeTagFromPhotoFromDB } = await import('@/services/tagService');
-      
       // Optimistic update
       queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
         if (!old || !old.pages) return old;

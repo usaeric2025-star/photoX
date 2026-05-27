@@ -11,14 +11,20 @@ import { globalHandleError } from './utils/errorHandler';
 import { Capability } from './config/permissions';
 import { validateRouteAccess } from './lib/permissions-contract';
 import { validateAccess, RouteAccessContract } from './shared/permissionsSchema';
+import { QueryClient } from '@tanstack/react-query';
+import { photoKeys, groupKeys } from '@/lib/queryKeys';
+import { createStaleTime } from '@/shared/freshnessSchema';
+import { getGroupById } from '@/services/groupService';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
+ * Expanded in v2.13 with queryClient for alignment of route-prefetching.
  */
 interface RouterContext {
   user: any;
   role: string;
   can: (cap: Capability) => boolean;
+  queryClient?: QueryClient;
 }
 
 /**
@@ -80,6 +86,9 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
   ),
 });
 
+import { type } from 'arktype';
+import { PAGINATION } from '@/constants/config';
+
 // 2. Main Routes
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -93,6 +102,41 @@ const indexRoute = createRoute({
       view: (search.view as GallerySearchParams['view']) || 'grid',
       authError: (search.authError as string) || undefined,
     };
+  },
+  loader: async ({ context }) => {
+    const { queryClient } = context;
+    if (!queryClient) return;
+    const queryKey = photoKeys.infinite({ 
+      category_id: null,
+      tag_id: null,
+      searchQuery: null,
+      sortOrder: null,
+      isAdminMode: false,
+      onlyUngrouped: false,
+      limit: PAGINATION.PUBLIC_PAGE_SIZE
+    }, 'REALTIME');
+
+    queryClient.prefetchInfiniteQuery({
+      queryKey,
+      queryFn: async () => {
+        const { loadAllPhotosFromCloud } = await import('./services/photoService');
+        const photos = await loadAllPhotosFromCloud(
+          undefined,
+          0,
+          PAGINATION.PUBLIC_PAGE_SIZE,
+          undefined,
+          undefined,
+          undefined,
+          false
+        );
+        return {
+          photos: photos || [],
+          nextPage: undefined
+        };
+      },
+      initialPageParam: 1,
+      staleTime: createStaleTime('REALTIME'),
+    });
   },
   component: PublicView,
 });
@@ -112,6 +156,16 @@ const groupRoute = createRoute({
       category: (search.category as string) || undefined,
       sort: (search.sort as GallerySearchParams['sort']) || 'date',
     };
+  },
+  loader: async ({ params: { groupId }, context }) => {
+    const { queryClient } = context;
+    if (!queryClient || !groupId) return;
+    const queryKey = groupKeys.detail(groupId, 'STABLE');
+    queryClient.prefetchQuery({
+      queryKey,
+      queryFn: () => getGroupById(groupId),
+      staleTime: createStaleTime('STABLE'),
+    });
   },
   component: PublicView,
 });

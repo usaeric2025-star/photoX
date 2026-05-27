@@ -34,6 +34,7 @@ import '../storageSchema.test';
 import '../tagAssignmentConsistency.test';
 import '../validatorParity.test.ts';
 import '../virtualGridDragStability.test';
+import '../apiContracts.test';
 
 describe('Admin Diagnostics Registration', () => {
   it('should have all 32+ diagnostics registered', () => {

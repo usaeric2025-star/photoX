@@ -2,7 +2,9 @@ import { useState, useCallback } from 'react';
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '@/types';
 import { useGalleryStore } from '@/store';
 import { testAiConnection } from '@/services/geminiService';
-import { deduplicatePhotos } from '@/services/photoService';
+import { deduplicatePhotos, getPhotosWithoutThumbHash } from '@/services/photoService';
+import { scanAndRepairPhotoIds } from '@/services/photo/photoMaintenanceService';
+import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
 import { useFeedback, useInvalidatePhotos, useTaskExecutor } from '@/hooks';
 
@@ -73,10 +75,6 @@ export const useSettingsLogic = ({
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
     try {
-        const { scanAndRepairPhotoIds } = await import('@/services/photo/photoMaintenanceService');
-        const { backfillThumbHashes } = await import('@/services/photo/backfillService');
-        const { getPhotosWithoutThumbHash } = await import('@/services/photoService');
-
         // 1. Check data consistency
         const broken = await scanAndRepairPhotoIds(allPhotos);
         if (broken.length > 0) {

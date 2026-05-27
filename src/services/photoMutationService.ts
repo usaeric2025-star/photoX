@@ -206,7 +206,6 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
       .eq('group_id', groupId);
       
     if (remaining && remaining.length <= 1) {
-      const { ungroupPhotos } = await import('./photo/photoMaintenanceService');
       await ungroupPhotos(groupId);
       dissolvedGroupId = groupId;
     }

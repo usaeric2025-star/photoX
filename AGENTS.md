@@ -173,12 +173,23 @@ sourceOfTruth: "ARCHITECTURE.md"
     - 衝突時以 `@deps-contract` 手動管理為準。
 7.  *現有違規 Hook 的重構留待明日專項處理，今日不改業務代碼*
 
-### ⚠️ 聲明式路由創建權限規範 (v2.10) 🆕
+### ⚠️ 聲明式路由創建權限規範 (v2.10/v2.13 升級) 🆕
 
 1. **強制 RouteAccessContract 聲明**：所有新路由 **必須** 在 `beforeLoad` 中顯式聲明 `RouteAccessContract`（含 `permission` 精確至 `'public' | 'authenticated' | 'admin'`，與 `fallbackRedirect`）。
 2. **安全驗證調用**：必須調用 `@/shared/permissionsSchema` 中的 `validateAccess(contract, context)` 進行聲明式安全攔截，嚴禁在路由中編寫原生 `throw redirect` 與手寫 BeforeLoad 安全邏輯。
-3. **備用防禦層**：保留並相容 `useRouteGuard` Hook，但將其實現標記為 `@deprecated`，以 `validateAccess` 為首要防線。
-4. **[AI-PERMISSION-CONTRACT-ANCHORED]**
+3. **無遺留安全防禦**：已徹底刪除 legacy/deprecated `useRouteGuard` 及其所有調用點與文件，全面依賴 `validateAccess` 進行路由守衛。
+4. **[AI-PERMISSION-CONTRACT-ANCHORED]** [DEP-HYGIENE-HOOK-CLEANUP]
+
+### ⚠️ 認知同步術語及契約化術語對照表 (v2.13) 🆕
+
+為確保 AI 開發時語意精確度、避免語意模糊，禁止使用以下過時的前端描述词汇，必須全數替換為對應的「契約化語意」：
+
+- **「權限檢查」** ➡️ 替換為：**「路由 beforeLoad 契約聲明」**
+- **「狀態管理」** ➡️ 替換為：**「URL Params / Query Key 契約流動」**
+- **「錯誤處理」** ➡️ 替換為：**「Schema aiDebugHint 結構化診斷」**
+- **「Hook 邏輯」** ➡️ 替換為：**「契約執行器管道接口」**
+
+[TERMINOLOGY-SYNCED]
 
 ## 🚨 常见错误 → 正确做法
 

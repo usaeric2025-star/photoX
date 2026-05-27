@@ -12,6 +12,7 @@ import { globalHandleError } from '../utils/errorHandler';
 import { PAGINATION } from '../config/constants';
 import { safeArray } from '../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photo/photoMappingUtils';
+import { ungroupPhotos } from './photo/photoMaintenanceService';
 
 export * from './photo/photoMappingUtils';
 export * from './photo/photoUploadService';
@@ -588,7 +589,6 @@ export const deletePhotosBatch = async (
   
   // Check affected groups and dissolve if only <=1 photo remains
   if (affectedGroupIds.size > 0) {
-    const { ungroupPhotos } = await import('./photo/photoMaintenanceService');
     for (const groupId of affectedGroupIds) {
       const { data: remaining } = await supabase
         .from(DB_CONFIG.TABLE_NAME)
@@ -654,7 +654,6 @@ export const removePhotosFromGroup = async (photoIds: string[], groupId: string)
 
   // 3. If 1 or 0 photos remain, dissolve the group
   if (remainingPhotos.length <= 1) {
-    const { ungroupPhotos } = await import('./photo/photoMaintenanceService');
     await ungroupPhotos(groupId);
   }
 };

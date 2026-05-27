@@ -4,7 +4,6 @@ export * from './core/infra/useSettings';
 export * from './core/infra/useTaskExecutor';
 export * from './core/infra/useTasks';
 export * from './core/auth/usePermission';
-export * from './core/auth/useRouteGuard';
 export * from './core/infra/useSyncEngine';
 export * from './core/auth/useAdminMode';
 export * from './core/usePhotoAction';
