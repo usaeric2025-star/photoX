@@ -6,12 +6,13 @@ import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
 import { checkDuplicate, DuplicatePhotoError } from '../../utils/duplicateCheck';
 import { generateItemCode } from '../utils';
+import { StandardError } from '@/lib/validators/protocol';
 
 export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: (s: string) => void): Promise<string> => {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session?.user) {
-    throw new Error('鉴权失败: 无活跃会话');
+    throw new StandardError('鉴权失败: 无活跃会话', { aiDebugHint: '[savePhotoToCloud] userId extraction failed' });
   }
 
   // Pre-insert duplicate check
@@ -37,7 +38,11 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
       photo.image_url = imageUrl;
       photo.thumb_url = thumbUrl;
     } catch (e) {
-      throw new Error(`存储上传失败: ${e instanceof Error ? e.message : '未知原因'}`);
+      const message = e instanceof Error ? e.message : String(e)
+      throw new StandardError(message, { 
+        originalError: e,
+        aiDebugHint: `[savePhotoToCloud] 底層異常: ${message}` 
+      });
     }
   }
 
@@ -81,7 +86,10 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
       const { cleanupPhysicalStorage } = await import('../storage/deleteService');
       cleanupPhysicalStorage([photo.storage_id || photo.id], [photo.image_url]).catch(() => {});
     }
-    throw new Error(`数据库保存失败: ${dbError.message}`);
+    throw new StandardError(dbError.message, { 
+      originalError: dbError,
+      aiDebugHint: `[savePhotoToCloud/upsert] 底層異常: ${dbError.message}` 
+    });
   }
 
   const finalPhotoId = savedPhoto?.id || photo.id;
@@ -122,7 +130,7 @@ export const savePhotosToCloudBatch = async (
 
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) {
-    throw new Error('No active session for database');
+    throw new StandardError('No active session for database', { aiDebugHint: '[uploadPhotosBatch] userId extraction failed' });
   }
 
   // Pre-filter duplicates
@@ -155,7 +163,11 @@ export const savePhotosToCloudBatch = async (
         photo.image_url = imageUrl;
         photo.thumb_url = thumbUrl;
       } catch (e) {
-        throw e; // Propagate error
+        const message = e instanceof Error ? e.message : String(e)
+        throw new StandardError(message, { 
+          originalError: e,
+          aiDebugHint: `[uploadPhotosBatch] 底層異常: ${message}` 
+        });
       }
     }
   }
@@ -244,7 +256,10 @@ export const savePhotosToCloudBatch = async (
     }
 
     if (dbError) {
-      throw new Error(`批量同步失敗: ${dbError.message}`);
+      throw new StandardError(dbError.message, { 
+        originalError: dbError,
+        aiDebugHint: `[uploadPhotosBatch/upsert] 底層異常: ${dbError.message}` 
+      });
     }
     
     if (savedRows) {

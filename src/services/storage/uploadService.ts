@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { STORAGE } from './storageConfig';
 import { api } from '@/lib/api';
+import { StandardError } from '@/lib/validators/protocol';
 
 export const compressImage = (base64Data: string, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -109,16 +110,11 @@ export const uploadImages = async (
     const thumbUrl = await uploadFile(thumbBase64, `public/thumb_${photoId}.webp`, false);
 
     return { imageUrl, thumbUrl };
-  } catch (err: unknown) {
-    console.error("Image processing or upload failed:", err);
-    let errorMessage = '请检查网络';
-    if (err instanceof Error) {
-        errorMessage = err.message;
-    } else if (typeof err === 'string') {
-        errorMessage = err;
-    } else if (err && typeof err === 'object' && 'message' in err) {
-        errorMessage = String((err as any).message);
-    }
-    throw new Error(`图片处理异常: ${errorMessage}`);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new StandardError(`图片处理异常: ${message}`, { 
+      originalError: error,
+      aiDebugHint: `[uploadToR2] 底層異常: ${message}` 
+    })
   }
 };

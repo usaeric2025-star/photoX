@@ -8,6 +8,7 @@ import { convertToJpegAndResize } from './imageProcessor';
 import { normalizeDimensions } from './dimensionNormalizer';
 import { translateDescription } from './translationCore';
 import { cleanObject } from '../utils';
+import { StandardError } from '@/lib/validators/protocol';
 
 export const analyzeProductPhoto = async (
   base64Image: string,
@@ -33,8 +34,11 @@ export const analyzeProductPhoto = async (
   try {
      processedBase64Image = await convertToJpegAndResize(base64Image, 1000, signal);
   } catch (e) {
-     console.error('Image preprocessing failed:', e);
-     throw new Error('Image preprocessing failed: ' + (e instanceof Error ? e.message : String(e)));
+     const message = e instanceof Error ? e.message : String(e)
+     throw new StandardError(message, { 
+       originalError: e,
+       aiDebugHint: `[analyzeProductPhoto/preprocessing] 底層異常: Image preprocessing failed - ${message}` 
+     });
   }
 
   const categoriesJson = (categories || []).map(c => ({
@@ -124,20 +128,20 @@ export const analyzeProductPhoto = async (
       (detailedError as any).url = fetchUrl;
       (detailedError as any).response = { data: errorData };
       
-      throw detailedError;
+      throw Object.assign(new StandardError(detailedError.message, { aiDebugHint: `[analyzeProductPhoto/fetch] 底層異常: HTTP ${fetchResponse.status}` }), detailedError);
     }
 
     const data = await fetchResponse.json();
     const textOutput = data.choices[0]?.message?.content;
     
     if (!textOutput) {
-      throw new Error(`AI 未回传分析结果`);
+      throw new StandardError(`AI 未回传分析结果`, { aiDebugHint: '[analyzeProductPhoto/fetch] 空結果' });
     }
 
     const parsedData = extractJsonObject(textOutput);
     if (!parsedData) {
       console.error("AI parse failed. Content:", textOutput);
-      throw new Error(`回传格式错误，找不到有效的 JSON 对象。AI 回传前120字: "${textOutput.slice(0, 120)}..."`);
+      throw new StandardError(`回传格式错误，找不到有效的 JSON 对象。AI 回传前120字: "${textOutput.slice(0, 120)}..."`, { aiDebugHint: '[analyzeProductPhoto/parse] JSON 解析失敗' });
     }
 
     // --- Added compatibility handling for multi-item response ---
@@ -322,6 +326,9 @@ export const analyzeProductPhoto = async (
         errorMsg = "API Key 没有权限、遭停权，或是此地区被封锁: " + errObj.response.data;
     }
 
-    throw new Error(`AI_FAIL|${status}|${errorMsg}`);
+    throw new StandardError(`AI_FAIL|${status}|${errorMsg}`, {
+      originalError: error,
+      aiDebugHint: `[analyzeProductPhoto] 底層異常: status=${status} url=${url}`
+    });
   }
 };

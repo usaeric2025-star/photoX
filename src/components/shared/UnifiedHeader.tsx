@@ -42,7 +42,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   const isPublic = variant === 'public-showcase';
   const { settings: fetchedSettings } = useSettings();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isPending: isAuthPending } = useAuth();
   const { appLang, isStaffMode, activeScreen, setActiveScreen,
     isInfiniteMode, setIsInfiniteMode, setAppLang
   } = useGalleryStore(useShallow(s => ({
@@ -172,9 +172,24 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-2xl bg-brand-navy/5 border border-brand-navy/10 shadow-inner">
-          {/* Refresh Component */}
-          <div className="relative flex items-center" ref={dropdownRef}>
+        {/* [HEADER-INITIAL-CONTRACT] Consuming useAuthSession().isPending for right toolbar */}
+        {isAuthPending ? (
+          <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-2xl bg-brand-navy/5 border border-brand-navy/10 animate-pulse">
+             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200/60" />
+             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200/60 hidden xs:block" />
+          </div>
+        ) : !user && isPublic ? (
+            <button 
+              onClick={handleLogin}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0"
+            >
+              <LogIn size={16} />
+            </button>
+        ) : (
+          <>
+            <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-2xl bg-brand-navy/5 border border-brand-navy/10 shadow-inner">
+              {/* Refresh Component */}
+              <div className="relative flex items-center" ref={dropdownRef}>
             <button 
               onClick={onRefresh}
               disabled={isRefreshing}
@@ -247,22 +262,12 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         </div>
 
         {isPublic && (
-          isAuthLoading ? (
-             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 border border-slate-200 animate-pulse flex-shrink-0" />
-          ) : !user ? (
-            <button 
-              onClick={handleLogin}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0"
-            >
-              <LogIn size={16} />
-            </button>
-          ) : (
             <button 
               onClick={() => {
                 if (role !== 'admin') {
-                  showError('当前账号不是管理员，无权限访问管理后台。');
+                  showError('当前账号不是管理员，无权限访问管理后台。', 'UnifiedHeader');
                 } else {
-                  navigate({ to: '/admin' });
+                  navigate({ to: '/admin' as any });
                 }
               }}
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0"
@@ -270,7 +275,8 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             >
               <Wrench size={16} />
             </button>
-          )
+        )}
+        </>
         )}
       </div>
     </header>

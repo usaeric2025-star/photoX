@@ -12,7 +12,9 @@ describe('AdminDiagnostics Security Locks', () => {
   it('should render null if not admin', () => {
     vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
       user: { role: 'user', email: 'test@example.com' } as any,
+      isPending: false,
       isLoading: false,
+      refetch: vi.fn() as any,
       loginWithGoogle: vi.fn(),
       logout: vi.fn()
     });
@@ -24,7 +26,9 @@ describe('AdminDiagnostics Security Locks', () => {
   it('should render trigger button if is admin', () => {
     vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
       user: { role: 'admin', email: 'admin@example.com' } as any,
+      isPending: false,
       isLoading: false,
+      refetch: vi.fn() as any,
       loginWithGoogle: vi.fn(),
       logout: vi.fn()
     });

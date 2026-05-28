@@ -2,6 +2,8 @@ import { supabase } from '../supabaseService';
 import { generateThumbHash } from '../../utils/thumbHash';
 import { updatePhotoInCloud } from '../photoService';
 
+import { StandardError } from '@/lib/validators/protocol';
+
 export interface BackfillStats {
   total: number;
   processed: number;
@@ -19,7 +21,12 @@ export async function backfillThumbHashes(onProgress: (stats: BackfillStats) => 
     .select('id, image_url')
     .is('thumb_hash', null);
 
-  if (error) throw error;
+  if (error) {
+    throw new StandardError(error.message, { 
+      originalError: error,
+      aiDebugHint: `[backfillThumbHashes] 底層異常: ${error.message}` 
+    });
+  }
   if (!photos || photos.length === 0) return;
 
   const stats: BackfillStats = {

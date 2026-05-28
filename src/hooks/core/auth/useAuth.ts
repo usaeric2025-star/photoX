@@ -6,7 +6,7 @@ import { User } from '@/types'
  * Hook for authentication state and operations.
  */
 export const useAuth = () => {
-  const { data: user, isLoading } = useQuery({
+  const { data: user, isPending, isLoading, refetch } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: async () => {
       const { data } = await supabase.auth.getUser()
@@ -57,5 +57,5 @@ export const useAuth = () => {
     },
   })
 
-  return { user, isLoading, loginWithGoogle: loginWithGoogle.mutateAsync, logout: logout.mutateAsync }
+  return { user, isPending, isLoading, refetch, loginWithGoogle: loginWithGoogle.mutateAsync, logout: logout.mutateAsync }
 }

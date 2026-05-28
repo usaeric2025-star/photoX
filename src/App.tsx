@@ -10,14 +10,16 @@ import { globalHandleError } from './utils/errorHandler';
 import { FullPageLoading } from './components/FullPageLoading';
 
 export default function AppRoutes() {
-  const { isLoading, user } = useAuth();
+  const { isLoading, user, refetch } = useAuth();
   const { role, can } = usePermission();
   const queryClient = useQueryClient();
   
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        // [OAUTH-CALLBACK-ATOMIC] Write to storage, invalidate and refetch synchronously.
         queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        await refetch();
       }
     });
     
@@ -42,40 +44,50 @@ export default function AppRoutes() {
                           window.location.search.includes('code=') ||
                           window.location.hash.includes('error=');
       if (hasAuthData) {
+        
+        // [OAUTH-CALLBACK-FIXED] Wait for exact token write event from Supabase instead of race condition timeout
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || window.location.hash.includes('error=')) {
+              window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
+              window.close();
+           }
+        });
+        
+        // Failsafe
         const timer = setTimeout(() => {
           try {
-            // [AUTH-STORAGE-BLOCK] @ src/App.tsx:100 - Ensure UI/storage settles before signaling parent and closing
             requestAnimationFrame(() => {
               window.opener.postMessage({ type: 'OAUTH_AUTH_SUCCESS' }, '*');
               window.close();
             });
-          } catch (e) {
-            console.error('Failed to postMessage or close popup:', e);
-          }
-        }, 1500);
-        return () => clearTimeout(timer);
+          } catch (e) {}
+        }, 3000);
+
+        return () => {
+           subscription.unsubscribe();
+           clearTimeout(timer);
+        };
       }
     }
   }, []);
 
-  // Listen for login success event in the main application frame
+  // [AUTH-CHAIN-AUDITED] Listen for login success event in the main application frame
   useEffect(() => {
-    const handleOauthMessage = (event: MessageEvent) => {
+    const handleOauthMessage = async (event: MessageEvent) => {
       const origin = event.origin;
       if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('webcontainer')) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        // [AUTH-STORAGE-BLOCK] @ src/App.tsx:119 - Move storage-intensive reload logic out of the message handler
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-          // removed window.location.reload() to prevent blank screen, useQuery reactivity handles auth
-        }, 0);
+        // [AUTH-STORAGE-BLOCK] [OAUTH-CALLBACK-FIXED] move storage intensive refresh but ensure we invalidate
+        // [OAUTH-CALLBACK-ATOMIC] Write to storage, invalidate and refetch synchronously.
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        await refetch();
       }
     };
     window.addEventListener('message', handleOauthMessage);
     return () => window.removeEventListener('message', handleOauthMessage);
-  }, []);
+  }, [queryClient, refetch]);
 
   useEffect(() => {
     // 1. Detect OAuth error in URL hash OR query params
@@ -122,7 +134,7 @@ export default function AppRoutes() {
 
   // Handle Global Search Debouncing via local state or query logic
   
-  if (isLoading) return <FullPageLoading />;
+  if (isLoading && window.location.pathname.startsWith('/admin')) return <FullPageLoading />;
 
   return (
       <RouterProvider router={router} context={{ user, role, can }} />

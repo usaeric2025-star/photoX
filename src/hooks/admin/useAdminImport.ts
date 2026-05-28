@@ -9,6 +9,7 @@ import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useFeedback, useTaskExecutor, useImageHash, useDuplicateCheck } from '@/hooks';
 import { processSinglePhoto as processAiAnalysis } from '@/hooks/photoAi/processSinglePhoto';
+import { StandardError } from '@/lib/validators/protocol';
 
 export const useAdminImport = (
   user: User | null,
@@ -79,7 +80,7 @@ export const useAdminImport = (
             if (importCancelledRef.current || signal.aborted) break;
             
             if (Date.now() - lastProgressAt > STALL_TIMEOUT) {
-                throw new Error('导入长时间无进度，已自动中止');
+                throw new StandardError('导入长时间无进度，已自动中止', { aiDebugHint: '[handlePhotoImport] timeout' });
             }
 
             const file = sFileArray[i];
@@ -127,7 +128,11 @@ export const useAdminImport = (
                             duplicateCount++;
                             successCount--;
                           } else {
-                            throw err;
+                            const message = err instanceof Error ? err.message : String(err)
+                            throw new StandardError(message, {
+                               originalError: err,
+                               aiDebugHint: `[handlePhotoImport] 底層異常: ${message}`
+                            });
                           }
                         }
                     }
@@ -148,7 +153,7 @@ export const useAdminImport = (
         saveData('product_photos', photosRef.current).catch(e => console.error('存入本地失败', e));
         
         if (failCount > 0) {
-            throw new Error(`导入完成：成功 ${successCount - failCount}，跳过 ${duplicateCount}，失败 ${failCount}: ${failedFiles.slice(0, 3).join(', ')}`);
+            throw new StandardError(`导入完成：成功 ${successCount - failCount}，跳过 ${duplicateCount}，失败 ${failCount}: ${failedFiles.slice(0, 3).join(', ')}`, { aiDebugHint: '[handlePhotoImport] batch failures' });
         }
     }, { showSuccessToast: true });
   }, [

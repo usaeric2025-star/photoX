@@ -4,10 +4,28 @@ import { Result } from 'neverthrow';
  * @validator-contract StandardError
  * Standardized error structure for all validator engines.
  */
-export interface StandardError {
+
+export class StandardError {
     message: string;
     path: string[];
     aiDebugHint: string;
+    originalError?: any;
+    name?: string;
+    stack?: string;
+
+    constructor(message: string, options?: { originalError?: any, aiDebugHint?: string, path?: string[] }) {
+        this.message = message;
+        this.name = 'StandardError';
+        this.path = options?.path || [];
+        this.aiDebugHint = options?.aiDebugHint || '';
+        this.originalError = options?.originalError;
+        
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, StandardError);
+        } else {
+            this.stack = (new Error()).stack;
+        }
+    }
 }
 
 /**

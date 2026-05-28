@@ -9,6 +9,7 @@ import { DB_CONFIG } from '../../constants/config';
 import { Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { deletePhotoFromCloud } from '../photoMutationService';
+import { StandardError } from '@/lib/validators/protocol';
 
 export { updatePhotosBatch, clearCategoryFromPhotos, clearManufacturerFromPhotos, ungroupPhotos };
 
@@ -54,9 +55,12 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
       }
     }
     return { removed: removedCount };
-  } catch (err) {
-    console.error("Deduplication failed:", err);
-    return { removed: 0 };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new StandardError(message, {
+       originalError: error,
+       aiDebugHint: `[deduplicatePhotos] 底層異常: ${message}`
+    });
   }
 };
 
