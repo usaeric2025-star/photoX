@@ -13,7 +13,6 @@ import { PAGINATION, ROUTES, UI } from '@/config/constants';
 import { Photo, Tag } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '@/hooks/queries/keys';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { saveData, syncCache } from '@/utils/indexedDB';
 import { UnifiedHeader } from '@/components/shared/UnifiedHeader';

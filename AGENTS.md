@@ -242,7 +242,38 @@ sourceOfTruth: "ARCHITECTURE.md"
     - 代替單字母 `p`：`photo`, `item`
 - ✅ **沙盒先行驗證**：所有全局轉換腳本、AST 插件或自定義 Codemod，必須先在 `sandbox/` 目錄中的測試樣本上驗證通過，確保 100% 語法樹完備且不破壞原有 JSX/對象屬性（如同名屬性 `t.id` 不被改為 `translate.id`），方能實施於 `src/`。
 
-[ENGINEERING-CONTRACT-PATCHED]
+### ⚠️ R2 Audit Report 消費規範 (v2.17)
+- ✅ **Schema 消費約束**：必須調用 `StorageAuditResSchema` 進行數據校验，嚴禁裸對象讀取。
+- ✅ **診斷探針義務**：新增存儲功能時必須同步更新 `storageHealth.test.ts`，確保 AVIF/WebP 佔比達標。
+- ✅ **視覺反饋隔離**：Audit 數據異常時，必須通過 `useFeedback` 彈出結構化錯誤，嚴禁將底層技術棧錯誤（如 R2 403）直接拋給用戶。
+
+[STORAGE-AUDIT-CONSUMPTION-ANCHORED]
+
+### ⚠️ Traffic Replay 探針運用規範 (v2.19) 🆕
+- ✅ **最小特權原则**：探針採集必須僅限於 GET 請求，嚴禁採集任何寫入交互。
+- ✅ **脫敏審計**：採集前必須通過 `trafficCapture.ts` 移除所有敏感 Header。
+- ✅ **性能閾值**：回放測試結果若導致生產響應延遲 >50ms，必須優先暫停探針。
+
+[TRAFFIC-REPLAY-CONTRACT-ANCHORED]
+
+
+### ⚠️ v2.15 已知错误模式库（Anti-Patterns，严禁复现）
+
+1. **Schema 污染模式**：严禁在 `photoBatchUpdateSchema` 中混入 `price` / `item_code`（如果不是批量操作所需），跨领域耦合校驗會導致不可預期的驗證失敗。
+2. **虚假成功模式**：严禁在批量 API 路由中简单返回 `{ success: true }`，必须在 `BatchResult` 正确类型接口下返回 `processed` / `skipped` / `failed` 明细，供前端渲染三态 UI。
+3. **HTTP 异常抛错模式**：严禁在 Hono 中直接抛出未经包装的 Error 对象，客户端无法结构化解析。必须使用全局 onError 中间件，并确保 RPC 客户端预检能拦截非 JSON 响应。
+
+4. **回放探针风险模式**：严禁在未做脱敏的情况下开启生产环境流量回放採集，严禁在回放测试中执行任何非 GET 请求以免污染生产数据库。生產環境必須嚴格遵循 1% 採樣率。
+ 
+ ### ⚠️ Hono Request 適配與 Header 讀取規範 (v2.22) 🆕
+- ✅ **Header 讀取義務**: 在 Hono 路由/適配層讀取 Header 時，必須優先使用 `c.req.header('name')`，嚴禁解構 `c.req.raw.headers`。
+- ✅ **解構防禦**: 嚴禁在未檢查 `c.req` 是否存在的情況下進行解構（如 `const { authorization } = c.req.header('authorization')` 的語法），正確做法是 `c.req.header('authorization')` 直接獲取。
+- ✅ **Adapter 穩定性**: 所有針對 Node Server 的適配必須通過 `getRequestListener(app.fetch)` 轉發，確保 Request 對象生命週期完整。
+
+### ⚠️ 第三方庫適配規範 (v2.18) 🆕
+- 嚴禁業務組件直接引用第三方庫層級（如 `@radix-ui/*`, `react-query` hooks 等）。
+- 必須通過 `src/lib/adapters/*` 進行封裝與轉發。
+- 新增 Adapter 前必須在 `docs/ecosystem-watchlist.md` 登記。
 
 ### ⚠️ P3-A 拖曳分組 (v2.6)
 - ✅ 31/31 Diagnostics PASSED
@@ -267,4 +298,40 @@ sourceOfTruth: "ARCHITECTURE.md"
 | **WebGPU Compute** | 預研 | 瀏覽器端純本地圖片相似度計算 |
 
 [FUTURE-RADAR-UPDATED]
+
+### ⚠️ 反偷懶與命名契約 (v2.22+) 🆕
+
+#### 1. 命名契約 (Naming Contract)
+- ✅ **拒絕弱語義**: 所有變量名長度 $\ge 2$（循環索引除外）。
+- ✅ **禁止通用詞**: 嚴禁在業務組件中使用 `data`, `item`, `res`, `error` 作為頂層具名變量。必須帶上資源前綴（如 `photoData`, `groupItem`, `apiResponse`, `uploadError`）。
+- ✅ **顯式解構**: 路由參數必須通過 `use*Params` 獲取，嚴禁模糊解構。
+
+#### 2. 反偷懶契約 (Anti-Laziness Contract)
+- ✅ **類型嚴格化**: 嚴禁在 Schema 定義中使用 `type.any()` 或 `type.unknown()`，除非附帶 `@allow-any` 註釋說明物理限制理由。
+- ✅ **錯誤處理語義化**: ErrorBoundary 必須消費 `StandardError` 結構，禁止僅展示硬編碼文案。
+- ✅ **設計令牌強制化**: 嚴禁在樣式中使用魔法數字 `w-[...]`, `mt-[...]`。所有數值必須來自配置好的設計令牌或基於 4px 網格的 Tailwind 工具類。
+
+#### 3. 靜態掃描剛性約束
+- 任何違反上述契約的代碼將在 Diagnostics 面板中標記為 [FAIL]，並阻斷生產環境發布。
+
+[LAZINESS-CONTRACT-ENFORCED]
+
+### ⚠️ 魯棒性契約 (v2.23) 🆕
+
+1. ✅ **DB-Schema 對齊**: 新增 Select 字段前 **必須** 驗證 DB 物理列存在性，或在 `photoService.ts` 中聲明為 `VIRTUAL_FIELDS`。
+2. ✅ **查詢錯誤顯式化**: 所有 Supabase `select` 調用 **必須** 檢查 `error`，若失敗 **必須** 拋出 `StandardError` 以供 EB-DIAG 結構化診斷。
+3. ✅ **緩存版本防護**: `SCHEMA_VERSION` 變更時 **必須** 自動失效舊緩存，確保物理 Schema 與緩存數據一致。
+4. ✅ **字段級 Fallback**: 非關鍵 UI 字段（如 `description`, `title`）缺失時，組件 **必須** 內置降級渲染邏輯，嚴禁佈局塌陷或報錯。
+
+### ⚠️ 視覺層級與防抖契約 (v2.24/v2.25) 🆕
+
+1. ✅ **防擠壓約定**: 所有視圖頂部 Sticky 標題（Header）必須聲明 `flex-shrink-0`，確保佈局在內容過長時不被壓縮或覆蓋。
+2. ✅ **DOM 一致性**: Skeleton 骨架屏的容器嵌套層級與 CSS Token（如 Padding, Margin, z-index）必須與真實渲染 DOM 嚴格對齊，消除切換時的 Layout Shift。
+3. ✅ **狀態連續性**: Swapping UI（如合組切換）時必須對 Query 配置 `placeholderData: keepPreviousData`，嚴禁觸發中間態 Loading。
+4. ✅ **文檔流約束**: 嚴禁用 z-index hack 修復層級問題，主視圖核心模塊必須遵從自上而下的 flex-col 文檔流佈局。
+
+### ⚠️ Agent 自主學習規範 (v2.20) 🆕
+- ✅ **提議機制**：AI 僅允許通過 `scripts/propose-anti-pattern.ts` 輸出提議，禁止直接修改 `AGENTS.md` 或 Schema定義。
+- ✅ **審核流程**：所有提議必須由人類開發者在 `sandbox/anti-pattern-proposals/` 中審核並合併。
+- ✅ **格式約束**：提議必須包含明確的「根因」「觸發條件」「修復路徑」，並經由 `DiagnosticResult` 的 `healthReport` 數據支持。
 

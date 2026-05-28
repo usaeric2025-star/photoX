@@ -41,6 +41,21 @@ export const StorageAuditResSchema = type({
     healthy: 'number',
     missing: 'number',
     orphans: 'number',
+    formatDistribution: {
+      avif: 'number',
+      webp: 'number',
+      jpg: 'number',
+      other: 'number',
+    },
+    orphanedFiles: type({
+      key: 'string',
+      size: 'number',
+      lastModified: 'string',
+    }).array(),
+    missingReferences: type({
+      dbId: 'string',
+      expectedKey: 'string',
+    }).array(),
   },
   'error?': 'string',
 });
@@ -71,3 +86,19 @@ export const AITranslateReqSchema = type({
   promptText: 'string',
 });
 export type AITranslateReq = typeof AITranslateReqSchema.infer;
+
+// 7. Batch Update Photo Contracts (Independent from individual updates)
+export const photoBatchItemSchema = type({
+  id: 'string',
+  updates: type({
+    category_id: 'string|null',
+    group_id: 'string|null',
+    is_hidden: 'boolean|null',
+    item_code: 'string|null',
+  }),
+});
+
+export const photoBatchUpdateSchema = type({
+  items: photoBatchItemSchema.array(),
+});
+export type PhotoBatchUpdate = typeof photoBatchUpdateSchema.infer;

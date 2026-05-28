@@ -12,7 +12,16 @@ import { ErrorReporter } from './lib/errorReporter';
 import { setupDevErrorHelper } from './lib/devErrorHelper';
 import './index.css';
 
-import { clientEnv } from './shared/envSchema';
+import { clientEnvSchema } from './shared/envSchema';
+import { type } from 'arktype';
+
+const rawEnv = { ...(import.meta as any).env };
+const check = clientEnvSchema(rawEnv);
+if (check instanceof type.errors) {
+    console.error("❌ [ENV-VALIDATION] Startup failed:", check.summary);
+    process.exit(1);
+}
+export const clientEnv = check;
 
 setupGlobalErrorHandling();
 setupDevErrorHelper();

@@ -13,7 +13,8 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "storage:audit": "npx tsx scripts/storage/auditR2.ts",
-    "storage:clean": "npx tsx scripts/storage/cleanOrphans.ts"
+    "storage:clean": "npx tsx scripts/storage/cleanOrphans.ts",
+    "check:schema-compat": "npx tsx scripts/schema-compat-check.ts"
   },
   "dependencies": {
     "@aws-sdk/s3-request-presigner": "^3.1053.0",
@@ -73,6 +74,7 @@
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^29.1.1",
     "knip": "^6.14.1",
+    "ts-morph": "^28.0.0",
     "vitest": "^4.1.7"
   }
 }

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Photo } from '../../types';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupSettingsSheet } from './GroupSettingsSheet';
+import { GroupDetailSkeleton } from './GroupDetailSkeleton';
 import { GroupHeader } from './GroupHeader';
 import { GroupMultiSelectBar } from './GroupMultiSelectBar';
 import { useGroupAdminLogic } from './useGroupAdminLogic';
@@ -65,7 +66,9 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     initialPhotoId: props.initialPhotoId
   });
 
-  const t = translations[appLang as keyof typeof translations as keyof typeof translations] || translations.en;
+  const translate = translations[appLang as keyof typeof translations as keyof typeof translations] || translations.en;
+
+  const isLoading = isGroupPhotosLoading || isGroupDataLoading;
 
   const dragState = React.useRef({ draggedPhotoId, handleReorder, isAdminMode, isMultiSelect });
   React.useEffect(() => {
@@ -151,45 +154,51 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col"
           >
-           {/* Top Header */}
-           <GroupHeader 
-             activeGroupId={activeGroupId}
-             setActiveGroupId={setActiveGroupId}
-             isAdminMode={isAdminMode}
-             groupData={groupData}
-             isGroupDataLoading={isGroupDataLoading}
-             activeGroupPhotos={activeGroupPhotos}
-             onBatchAiAnalyzeByGroupId={analyzeGroupById}
-           />
+            {isLoading && activeGroupPhotos.length === 0 ? (
+              <GroupDetailSkeleton />
+            ) : (
+              <>
+                {/* Top Header */}
+                <GroupHeader 
+                  activeGroupId={activeGroupId}
+                  setActiveGroupId={setActiveGroupId}
+                  isAdminMode={isAdminMode}
+                  groupData={groupData}
+                  isGroupDataLoading={isGroupDataLoading}
+                  activeGroupPhotos={activeGroupPhotos}
+                  onBatchAiAnalyzeByGroupId={analyzeGroupById}
+                />
 
-           <GroupGridView 
-             key={activeGroupId}
-             virtuosoRef={virtuosoRef}
-             photos={activeGroupPhotos}
-             isLoading={isGroupPhotosLoading}
-               highlightId={currentHighlightId}
-               onPhotoClick={handlePhotoClick}
-               onPhotoContextMenu={handlePhotoContextMenu}
-               getPhotoProps={stableGetPhotoProps}
-             />
+                <GroupGridView 
+                  key={activeGroupId}
+                  virtuosoRef={virtuosoRef}
+                  photos={activeGroupPhotos}
+                  isLoading={isGroupPhotosLoading}
+                  highlightId={currentHighlightId}
+                  onPhotoClick={handlePhotoClick}
+                  onPhotoContextMenu={handlePhotoContextMenu}
+                  getPhotoProps={stableGetPhotoProps}
+                />
+              </>
+            )}
 
-           {/* Multi-Select Floating Bar */}
-           <GroupMultiSelectBar 
-             activeGroupPhotos={activeGroupPhotos}
-             handleBulkAction={hookHandleBulkAction}
-           />
+            {/* Multi-Select Floating Bar */}
+            <GroupMultiSelectBar 
+              activeGroupPhotos={activeGroupPhotos}
+              handleBulkAction={hookHandleBulkAction}
+            />
 
-           {/* Photo Picker for adding photos to group */}
-           <GroupPhotoPicker 
-             isOpen={!!isPhotoPickerOpen}
-             onClose={() => setIsPhotoPickerOpen(false)}
-             groupId={activeGroupId || ''}
-             onAdd={async (ids) => {
-               if (activeGroupId) {
-                 await handleAddToGroup(ids, activeGroupId);
-               }
-             }}
-           />
+            {/* Photo Picker for adding photos to group */}
+            <GroupPhotoPicker 
+              isOpen={!!isPhotoPickerOpen}
+              onClose={() => setIsPhotoPickerOpen(false)}
+              groupId={activeGroupId || ''}
+              onAdd={async (ids) => {
+                if (activeGroupId) {
+                  await handleAddToGroup(ids, activeGroupId);
+                }
+              }}
+            />
 
             {/* Group Settings Sheet */}
             <GroupSettingsSheet 
@@ -204,39 +213,39 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
               handleBatchUpdateDimensions={handleBatchUpdateDimensions}
               setAlertDialog={setAlertDialog}
               setPromptDialog={setPromptDialog}
-              t={t}
+              t={translate}
             />
 
-           {/* Unified Photo Lightbox */}
-           <AnimatePresence>
-             {focusedGroupPhotoId && (() => {
-                 const currentIndex = activeGroupPhotos.findIndex(p => p.id === focusedGroupPhotoId);
-                 const photo = activeGroupPhotos[currentIndex];
-                 if (!photo) return null;
+            {/* Unified Photo Lightbox */}
+            <AnimatePresence>
+              {focusedGroupPhotoId && (() => {
+                  const currentIndex = activeGroupPhotos.findIndex(p => p.id === focusedGroupPhotoId);
+                  const photo = activeGroupPhotos[currentIndex];
+                  if (!photo) return null;
 
-                 return (
-                    <PhotoLightbox 
-                      photo={photo}
-                      displayPhotos={activeGroupPhotos}
-                      index={currentIndex}
-                      onClose={handleCloseLightbox}
-                      onPrev={() => handlePrevLightbox(currentIndex)}
-                      onNext={() => handleNextLightbox(currentIndex)}
-                      contactWhatsApp={() => {}}
-                      onUngroup={handleUngroupLightbox}
-                      onSetGroupCover={handleSetGroupCoverLightbox}
-                      onEditPhoto={handleEditPhoto}
-                      onToggleHidden={handleToggleHiddenLightbox}
-                      onAiAnalyze={onAiAnalyze}
-                      onCancelAnalyze={onCancelAnalyze}
-                      isAnalyzing={isAnalyzing}
-                    />
-                 );
-             })()}
-           </AnimatePresence>
-        </motion.div>
-      )}
-    </AnimatePresence>
+                  return (
+                     <PhotoLightbox 
+                       photo={photo}
+                       displayPhotos={activeGroupPhotos}
+                       index={currentIndex}
+                       onClose={handleCloseLightbox}
+                       onPrev={() => handlePrevLightbox(currentIndex)}
+                       onNext={() => handleNextLightbox(currentIndex)}
+                       contactWhatsApp={() => {}}
+                       onUngroup={handleUngroupLightbox}
+                       onSetGroupCover={handleSetGroupCoverLightbox}
+                       onEditPhoto={handleEditPhoto}
+                       onToggleHidden={handleToggleHiddenLightbox}
+                       onAiAnalyze={onAiAnalyze}
+                       onCancelAnalyze={onCancelAnalyze}
+                       isAnalyzing={isAnalyzing}
+                     />
+                  );
+              })()}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

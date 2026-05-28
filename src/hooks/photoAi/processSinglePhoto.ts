@@ -6,7 +6,7 @@ import { savePhotoToCloud } from '@/services/photoService';
 import { shouldUpdateName, cleanAiName } from './photoAiUtils';
 import { safeArray } from '@/lib/utils';
 import { QueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '@/hooks/queries/keys';
+import { photoKeys } from '@/lib/queryKeys';
 
 export interface ImportWorkflowProps {
   user: User | null;
@@ -84,7 +84,7 @@ export const processSinglePhoto = async (
         photosRef.current[index].id = finalPhotoId;
       }
       if (useAi) {
-        queryClient.invalidateQueries({ queryKey: QUERY_KEYS.tags });
+        queryClient.invalidateQueries({ queryKey: photoKeys.tags() });
       }
     }
   } catch (err) {

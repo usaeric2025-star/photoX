@@ -67,6 +67,8 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
           <motion.button
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.1 }}
             onClick={onAdd}
             className={`${buttonStyles.button} bg-blue-600 fixed bottom-6 right-6 z-[100] rounded-full shadow-lg hover:shadow-xl transition-shadow`}
             title="Add Photo"

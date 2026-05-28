@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@base-ui/react/dialog';
 import { Photo } from '../../../types';
+import { HeadlessSlot } from '../../../lib/component-contract';
 import { usePhotoEditLogic } from './usePhotoEditLogic';
 import { DrawerHeader } from './DrawerHeader';
 import { useGalleryStore, useShallow } from '../../../store';
@@ -10,7 +11,7 @@ import { OrgTab } from './OrgTab';
 import { DetailsTab } from './DetailsTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../ui/tabs";
 import { getCacheBustedImageUrl } from '../../../lib/ui-helpers';
-import { translations } from '../../lib/translations';
+import { translations } from '../../../lib/translations';
 
 import { 
   useInfinitePhotos 
@@ -20,11 +21,16 @@ import { PAGINATION } from '../../../constants/config';
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 
 /**
- * [STYLE-AND-A11Y-UPGRADED] PhotoEditDrawer
- * Integrated with Base UI Dialog for better focus/keyboard/a11y.
- * motion/react for smooth layout transitions.
+ * [V2.14-SLOT-CONTRACT] PhotoEditDrawer Props
  */
-export const PhotoEditDrawer: React.FC = () => {
+interface PhotoEditDrawerProps {
+  slots?: {
+    drawerHeader?: HeadlessSlot<any>;
+    tabs?: HeadlessSlot<any>;
+  };
+}
+
+export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
   const { 
     editPhotoId, formState, updateForm, newPhotoData, setNewPhotoData, 
     appLang, filterCatId, filterTagIds, debouncedSearchQuery, sortOrder,
@@ -134,126 +140,130 @@ export const PhotoEditDrawer: React.FC = () => {
       <AnimatePresence>
         {isOpen && (
           <Dialog.Portal keepMounted>
-            <Dialog.Backdrop asChild>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[599] bg-black/20 backdrop-blur-sm"
-              />
-            </Dialog.Backdrop>
-            <Dialog.Popup asChild>
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
-              >
-                <DrawerHeader 
-                  editPhotoId={editPhotoId}
-                  formState={formState}
-                  updateForm={updateForm}
-                  isAnalyzing={logic.isAnalyzing}
-                  aiDebugInfo={logic.aiDebugInfo}
-                  isPartOfGroup={logic.isPartOfGroup}
-                  isSyncing={logic.isSyncing}
-                  onAbort={onCancelAnalyze}
-                  onAiAnalyze={logic.triggerAiAnalyze}
-                  onDelete={onDeletePhoto ? () => {
-                    logic.setAlertDialog({
-                      title: '确定要删除此照片吗？',
-                      message: '此操作不可撤销，照片将从云端彻底移除。',
-                      onConfirm: () => onDeletePhoto!(editPhotoId!),
-                      confirmLabel: '删除',
-                      type: 'danger'
-                    });
-                  } : undefined}
-                  onSave={logic.handleSave}
-                  onToggleHidden={logic.toggleHidden}
-                  onClose={() => {
-                    resetAddState();
-                    setEditPhotoId(null);
-                  }}
-                  onErrorClick={(err) => {
-                    const readableError = err.includes('|') ? err.split('|').slice(1).join(': ') : err;
-                    logic.showError(new Error(readableError), 'AI识别错误');
-                  }}
-                  isRunning={logic.isRunning}
+            <Dialog.Backdrop 
+              render={
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[599] bg-black/20 backdrop-blur-sm"
                 />
+              }
+            />
+            <Dialog.Popup 
+              render={
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="fixed inset-0 z-[600] bg-slate-50 flex flex-col pt-safe pb-safe shadow-2xl focus:outline-none"
+                >
+                  <DrawerHeader 
+                    editPhotoId={editPhotoId}
+                    formState={formState}
+                    updateForm={updateForm}
+                    isAnalyzing={logic.isAnalyzing}
+                    aiDebugInfo={logic.aiDebugInfo}
+                    isPartOfGroup={logic.isPartOfGroup}
+                    isSyncing={logic.isSyncing}
+                    onAbort={onCancelAnalyze}
+                    onAiAnalyze={logic.triggerAiAnalyze}
+                    onDelete={onDeletePhoto ? () => {
+                      logic.setAlertDialog({
+                        title: '确定要删除此照片吗？',
+                        message: '此操作不可撤销，照片将从云端彻底移除。',
+                        onConfirm: () => onDeletePhoto!(editPhotoId!),
+                        confirmLabel: '删除',
+                        type: 'danger'
+                      });
+                    } : undefined}
+                    onSave={logic.handleSave}
+                    onToggleHidden={logic.toggleHidden}
+                    onClose={() => {
+                      resetAddState();
+                      setEditPhotoId(null);
+                    }}
+                    onErrorClick={(err) => {
+                      const readableError = err.includes('|') ? err.split('|').slice(1).join(': ') : err;
+                      logic.showError(new Error(readableError), 'AI识别错误');
+                    }}
+                    isRunning={logic.isRunning}
+                  />
 
-                <div className="flex-1 overflow-hidden flex flex-col pt-2">
-                  <Tabs defaultValue="basic" className="flex-1 flex flex-col overflow-hidden">
-                    <div className="container mx-auto max-w-4xl px-4">
-                       <div className="pb-2 border-b border-slate-100 bg-white">
-                        <TabsList className="w-full bg-slate-100/50 p-1 rounded-2xl h-12 flex items-center gap-1 border border-slate-200">
-                          <TabsTrigger value="basic" className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full">基础 / BASIC</TabsTrigger>
-                          <TabsTrigger value="org" className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full">分类 / ORG</TabsTrigger>
-                          <TabsTrigger value="details" className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full">细节 / DETAIL</TabsTrigger>
-                        </TabsList>
+                  <div className="flex-1 overflow-hidden flex flex-col pt-2">
+                    <Tabs defaultValue="basic" className="flex-1 flex flex-col overflow-hidden">
+                      <div className="container mx-auto max-w-4xl px-4">
+                         <div className="pb-2 border-b border-slate-100 bg-white">
+                          <TabsList className="w-full bg-slate-100/50 p-1 rounded-2xl h-12 flex items-center gap-1 border border-slate-200">
+                            <TabsTrigger value="basic" className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full">基础 / BASIC</TabsTrigger>
+                            <TabsTrigger value="org" className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full">分类 / ORG</TabsTrigger>
+                            <TabsTrigger value="details" className="flex-1 rounded-xl text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 transition-all h-full">细节 / DETAIL</TabsTrigger>
+                          </TabsList>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
-                      <TabsContent value="basic">
-                        <BasicInfoTab 
-                          editPhotoId={editPhotoId}
-                          formState={formState}
-                          updateForm={updateForm}
-                          previewSrc={newPhotoData || editPhotoPreview}
-                          isProcessingImage={logic.isRotating}
-                          onRotate={logic.rotatePhoto}
-                        />
-                      </TabsContent>
+                      <div className="flex-1 overflow-y-auto no-scrollbar pt-2 container mx-auto max-w-4xl px-4 pb-12">
+                        <TabsContent value="basic">
+                          <BasicInfoTab 
+                            editPhotoId={editPhotoId}
+                            formState={formState}
+                            updateForm={updateForm}
+                            previewSrc={newPhotoData || editPhotoPreview}
+                            isProcessingImage={logic.isRotating}
+                            onRotate={logic.rotatePhoto}
+                          />
+                        </TabsContent>
 
-                      <TabsContent value="org">
-                        <OrgTab 
-                          formState={formState}
-                          updateForm={updateForm}
-                          categories={logic.categories}
-                          tags={logic.tags}
-                          manufacturers={logic.manufacturers}
-                          appLang={logic.appLang}
-                          onAddTag={logic.addTag}
-                          onUpdateTag={logic.updateTag}
-                          onDeleteTag={logic.deleteTag}
-                          onAddManufacturer={() => {
-                            logic.setPromptDialog({
-                              title: '新增厂商 / New Manufacturer',
-                              placeholder: '输入厂商名称',
-                              onSubmit: async (name) => { await logic.addManufacturer(name); }
-                            })
-                          }}
-                          onEditManufacturer={(mfr) => {
-                            logic.setPromptDialog({
-                              title: '编辑生产商 / Edit Manufacturer',
-                              placeholder: mfr.name,
-                              onSubmit: async (name) => {
-                                const trimmed = name.trim();
-                                if(trimmed) await logic.updateManufacturer(mfr.id, { name: trimmed });
-                              }
-                            });
-                          }}
-                          onUpdateManufacturer={logic.updateManufacturer}
-                          onDeleteManufacturer={logic.deleteManufacturer}
-                        />
-                      </TabsContent>
+                        <TabsContent value="org">
+                          <OrgTab 
+                            formState={formState}
+                            updateForm={updateForm}
+                            categories={logic.categories}
+                            tags={logic.tags}
+                            manufacturers={logic.manufacturers}
+                            appLang={logic.appLang}
+                            onAddTag={logic.addTag}
+                            onUpdateTag={logic.updateTag}
+                            onDeleteTag={logic.deleteTag}
+                            onAddManufacturer={() => {
+                              logic.setPromptDialog({
+                                title: '新增厂商 / New Manufacturer',
+                                placeholder: '输入厂商名称',
+                                onSubmit: async (name) => { await logic.addManufacturer(name); }
+                              })
+                            }}
+                            onEditManufacturer={(mfr) => {
+                              logic.setPromptDialog({
+                                title: '编辑生产商 / Edit Manufacturer',
+                                placeholder: mfr.name,
+                                onSubmit: async (name) => {
+                                  const trimmed = name.trim();
+                                  if(trimmed) await logic.updateManufacturer(mfr.id, { name: trimmed });
+                                }
+                              });
+                            }}
+                            onUpdateManufacturer={logic.updateManufacturer}
+                            onDeleteManufacturer={logic.deleteManufacturer}
+                          />
+                        </TabsContent>
 
-                      <TabsContent value="details">
-                        <DetailsTab 
-                          formState={formState}
-                          updateForm={updateForm}
-                          showAiButton={true}
-                          isAnalyzing={logic.isAnalyzing}
-                          onAiAnalyze={logic.triggerAiAnalyze}
-                          t={t}
-                        />
-                      </TabsContent>
-                    </div>
-                  </Tabs>
-                </div>
-              </motion.div>
-            </Dialog.Popup>
+                        <TabsContent value="details">
+                          <DetailsTab 
+                            formState={formState}
+                            updateForm={updateForm}
+                            showAiButton={true}
+                            isAnalyzing={logic.isAnalyzing}
+                            onAiAnalyze={logic.triggerAiAnalyze}
+                            t={t}
+                          />
+                        </TabsContent>
+                      </div>
+                    </Tabs>
+                  </div>
+                </motion.div>
+              }
+            />
           </Dialog.Portal>
         )}
       </AnimatePresence>

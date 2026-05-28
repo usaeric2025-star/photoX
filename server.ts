@@ -9,6 +9,7 @@ import { PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aw
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getR2Client } from "./src/services/storage/client";
 import { getServerEnv } from "./src/shared/envSchema";
+import { logTraffic } from "./src/lib/trafficCapture";
 
 // 启动校验
 const serverEnv = getServerEnv(process.env);
@@ -18,6 +19,33 @@ const app = new Hono().basePath("/api");
 
 // Middleware
 app.use("*", cors());
+app.use("*", async (c, next) => {
+    // 1% sample rate for production, 100% for dev
+    if (serverEnv.NODE_ENV === 'production') {
+        if (Math.random() < 0.01) logTraffic(c.req, null);
+    } else {
+        logTraffic(c.req, null);
+    }
+    await next();
+});
+
+// Global Exception Handler
+app.onError((err, c) => {
+  console.error('[Hono Global Error]', {
+    message: err.message,
+    stack: err.stack,
+    context: c.req.path
+  });
+  
+  // Return StandardError structure
+  return c.json({
+    success: false,
+    error: {
+      message: err.message,
+      code: 'INTERNAL_SERVER_ERROR'
+    }
+  }, 500);
+});
 
 // --- Supabase Admin Helper ---
 async function getSupabaseAdmin() {
@@ -76,6 +104,23 @@ const apiRoutes = app
       
       return c.json({ success: true });
     } catch(e: any) {
+      return c.json({ success: false, error: e.message }, 500);
+    }
+  })
+  .get("/photos", async (c) => {
+    try {
+      const supabase = await getSupabaseAdmin();
+      const { data, error } = await supabase.from("furniture_items").select("*").limit(50);
+      if (error) throw error;
+      
+      // Verification anchor for hotfix diagnostic
+      const auth = c.req.header('authorization');
+      if (!auth) {
+        console.warn('[API-SMOKE-WARN] No auth header detected in request');
+      }
+
+      return c.json(data);
+    } catch (e: any) {
       return c.json({ success: false, error: e.message }, 500);
     }
   })

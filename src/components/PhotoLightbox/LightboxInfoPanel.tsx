@@ -28,7 +28,7 @@ interface LightboxInfoPanelProps {
   onTogglePinned?: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
-  contactWhatsApp: (photo: Photo) => void;
+  contactWhatsApp?: (photo: Photo) => void;
 }
 
 export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
@@ -223,7 +223,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
           </div>
         )}
 
-        {(photo.description || (groupData && (groupData.description || groupData.description_translations))) && (
+        {(photo.description || (groupData && (groupData.description || groupData.description_translations))) ? (
           <div className="space-y-4">
              <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
                  {['zh', 'en', 'ms'].map(l => (
@@ -278,7 +278,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
                </div>
              )}
           </div>
-        )}
+        ) : null}
 
         {(isAdminMode) && photo.manual_code && (
           <div className="bg-red-50 border border-red-100 p-3 rounded-xl mt-4">
@@ -288,19 +288,24 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
         )}
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 bg-gradient-to-t from-white via-white to-transparent pointer-events-none sticky bottom-0">
-         <button 
-           onClick={(e) => {
-              e.stopPropagation();
-              (window as any)._pendingPhoto = photo;
-              contactWhatsApp(photo);
-            }}
-           className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
-         >
-           <MessageCircle size={20} fill="currentColor" />
-           {t.whatsAppInquiry}
-         </button>
-      </div>
+      {/* [FIELD-LEVEL-FALLBACK] Hide button if contactWhatsApp is missing */}
+      {contactWhatsApp && (
+        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5 bg-gradient-to-t from-white via-white to-transparent pointer-events-none sticky bottom-0">
+           <button 
+             onClick={(e) => {
+                e.stopPropagation();
+                (window as any)._pendingPhoto = photo;
+                if (contactWhatsApp) {
+                  contactWhatsApp(photo);
+                }
+              }}
+             className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 flex-none rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_8px_30px_rgb(37,211,102,0.3)] pointer-events-auto transition-transform active:scale-[0.98]"
+           >
+             <MessageCircle size={20} fill="currentColor" />
+             {t.whatsAppInquiry}
+           </button>
+        </div>
+      )}
     </motion.div>
   );
 });

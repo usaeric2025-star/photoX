@@ -68,7 +68,8 @@ const PhotoInfoFooter: React.FC<{
     <div className="h-[38px] w-full flex flex-col justify-end items-start gap-0.5" style={{ alignContent: 'end' }}>
        {!isUncategorized && displayCatName && (
         <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
-          {displayCatName}
+          {/* [FIELD-LEVEL-FALLBACK] Display category name or generic fallback */}
+          {displayCatName || 'Product Detail'}
         </p>
       )}
       {!hideTags && photoTags.length > 0 && (
@@ -123,11 +124,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       const isSelected = state.selectedIds.has(photo.id);
       
       // Update DOM directly to avoid React re-render overhead in the grid
-      if (cardRef.current.dataset('selected') !== String(isSelected)) {
-        cardRef.current.dataset('selected') = String(isSelected);
+      if (cardRef.current.dataset.selected !== String(isSelected)) {
+        cardRef.current.dataset.selected = String(isSelected);
       }
-      if (cardRef.current.dataset('multiselect') !== String(state.isMultiSelect)) {
-        cardRef.current.dataset('multiselect') = String(state.isMultiSelect);
+      if (cardRef.current.dataset.multiselect !== String(state.isMultiSelect)) {
+        cardRef.current.dataset.multiselect = String(state.isMultiSelect);
       }
     });
 
@@ -196,12 +197,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   }, [isManagement, can, setters, photo.id]);
 
   const displayCatName = useMemo(() => 
-    getTranslatedCategoryName(photo.category_id, categories, appLang, t),
+    getTranslatedCategoryName(photo.category_id || undefined, categories, appLang, t),
     [photo.category_id, categories, appLang, t]
   );
 
   const isUncategorized = useMemo(() => {
-    const catId = photo.category_id;
+    const catId = photo.category_id || undefined;
     return isUncategorizedName(displayCatName, t, catId);
   }, [displayCatName, t, photo.category_id]);
   

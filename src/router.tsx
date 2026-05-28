@@ -25,6 +25,7 @@ interface RouterContext {
   role: string;
   can: (cap: Capability) => boolean;
   queryClient?: QueryClient;
+  availableActions: string[];
 }
 
 /**
@@ -67,8 +68,8 @@ function lazyWithRetry(importFn: () => Promise<any>, pageName: string) {
   );
 }
 
-const PublicView = lazyWithRetry(() => import('./pages/PublicView'), 'PublicView');
-const AdminView = lazyWithRetry(() => import('./pages/AdminView'), 'AdminView');
+const PublicView = lazyWithRetry(() => import('@/pages/PublicView'), 'PublicView');
+const AdminView = lazyWithRetry(() => import('@/pages/AdminView'), 'AdminView');
 
 // 1. Root Route
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
@@ -203,6 +204,7 @@ export const router = createRouter({
     user: null,
     role: 'guest',
     can: () => false,
+    availableActions: [],
   },
 });
 

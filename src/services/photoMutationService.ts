@@ -4,6 +4,7 @@ import { Photo } from '../types';
 import { mapToDb } from './photo/photoMappingUtils';
 import { safeArray } from '../lib/utils';
 import { createPhotoValidator } from '../lib/validators/factory';
+import { generateItemCode } from './utils';
 
 /**
  * Service for all photo-related write operations (Insert, Update, Delete).
@@ -35,7 +36,6 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
     
   if (error && error.message.includes('furniture_items_item_code_key')) {
     console.warn("Item code collision during update, regenerating...");
-    const { generateItemCode } = await import('./utils');
     const retryUpdates = { ...dbUpdates, item_code: generateItemCode() };
     const { error: retryError } = await supabase
       .from(DB_CONFIG.TABLE_NAME)

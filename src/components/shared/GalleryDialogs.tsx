@@ -15,7 +15,7 @@ interface GalleryDialogsProps {
   loginWithGoogle?: () => Promise<any>;
   settings?: AppSettings;
   setIsStaffMode: (is: boolean) => void;
-  navigate: (path: string) => void;
+  navigate: (options: any) => void;
   showWhatsAppChoice: boolean;
   setShowWhatsAppChoice: (show: boolean) => void;
   openWhatsApp: (num: string) => void;
@@ -40,7 +40,7 @@ export const GalleryDialogs: React.FC<GalleryDialogsProps> = (props) => {
                 props.setIsStaffMode(true);
                 props.setShowPassPrompt(false);
                 props.setPassInput('');
-                props.navigate('/admin');
+                props.navigate({ to: '/admin' });
               } else {
                 props.setPassError(true);
               }

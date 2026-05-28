@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Photo } from '@/types';
 import { thumbHashToDataURL } from '../../utils/thumbHash';
+import { ContractedImage } from './ContractedImage';
 
 interface ResponsivePhotoProps {
   photo: Photo;
@@ -19,7 +20,7 @@ export const ResponsivePhoto: React.FC<ResponsivePhotoProps> = ({
 }) => {
   const src = variant === 'md' 
     ? (photo.thumbnail_md_url || photo.thumbnail_sm_url || photo.image_url)
-    : (photo.thumbnail_sm_url || photo.image_url);
+    : (photo.thumbnail_sm_url || photo.image_url || photo.uri);
 
   const placeholderDataUrl = useMemo(() => {
     if (!photo.thumb_hash) return null;
@@ -44,14 +45,12 @@ export const ResponsivePhoto: React.FC<ResponsivePhotoProps> = ({
         />
       )}
       {src && (
-        <img
+        <ContractedImage
           src={src}
           alt={photo.name || 'Photo'}
-          className={`absolute inset-0 w-full h-full object-cover pointer-events-none ${imgClassName}`}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          loading="lazy"
-          decoding="async"
-          fetchPriority="low"
+          width={variant === 'md' ? [320, 640, 800] : [320, 640]}
+          aspectRatio={String(aspectRatio)}
+          className={`absolute inset-0 w-full h-full ${imgClassName}`}
         />
       )}
     </div>

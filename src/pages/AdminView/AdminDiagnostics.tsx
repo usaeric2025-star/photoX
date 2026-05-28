@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/hooks/core/auth/useAuth';
-import { diagnosticRegistry } from './diagnostics';
+import { diagnosticRegistry, DiagnosticResult } from './diagnostics';
 
 // Load all diagnostic tests
 import './diagnostics/emptyData.test.ts';
@@ -18,6 +18,14 @@ import './diagnostics/selectBoundary.test.ts';
 import './diagnostics/prefetchCache.test.ts';
 import './diagnostics/elementSizeSafety.test.ts';
 import './diagnostics/validatorParity.test.ts';
+import './diagnostics/selectFieldCoverage.test.ts';
+import './diagnostics/queryKeyFactoryCoverage.test.ts';
+import './diagnostics/schemaStrictness.test.ts';
+import './diagnostics/weakSemanticVariables.test.ts';
+import './diagnostics/errorSemanticCheck.test.ts';
+import './diagnostics/designTokenEnforcement.test.ts';
+import './diagnostics/dbSchemaAlignment.test.ts';
+import './diagnostics/layoutIntegrity.test.ts';
 
 const AdminDiagnostics: React.FC = () => {
   const { user } = useAuth();
@@ -27,13 +35,13 @@ const AdminDiagnostics: React.FC = () => {
     return null;
   }
 
-  const [results, setResults] = useState<Record<string, { passed: boolean; message: string; durationMs: number }>>({});
+  const [results, setResults] = useState<Record<string, DiagnosticResult>>({});
   const [isRunning, setIsRunning] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const runAll = async () => {
     setIsRunning(true);
-    const newResults: Record<string, { passed: boolean; message: string; durationMs: number }> = {};
+    const newResults: Record<string, DiagnosticResult> = {};
     for (const test of diagnosticRegistry) {
       newResults[test.id] = await test.run();
       setResults({ ...newResults });
@@ -90,9 +98,18 @@ const AdminDiagnostics: React.FC = () => {
               </div>
               <div className="text-gray-500 mb-1">{test.description}</div>
               {res && (
-                <div className={`mt-1 p-1 flex justify-between rounded text-[10px] ${res.passed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                  <span>{res.message}</span>
-                  <span className="font-bold opacity-75">{Math.round(res.durationMs)}ms</span>
+                <div className={`mt-1 p-1 flex flex-col rounded text-[10px] ${res.passed ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  <div className="flex justify-between">
+                    <span>{res.message}</span>
+                    <span className="font-bold opacity-75">{Math.round(res.durationMs)}ms</span>
+                  </div>
+                  {res.healthReport && (
+                    <div className="mt-1 border-t border-current pt-1 grid grid-cols-3 gap-1 italic">
+                      <span>C: {res.healthReport.schemaComplexity}</span>
+                      <span>TPR: {res.healthReport.probeFalsePositiveRate}</span>
+                      <span>AS: {res.healthReport.adapterStaleness}</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

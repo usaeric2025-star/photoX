@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { loadCategoriesFromCloud } from '@/services/categoryService';
 import { loadTagsFromCloud } from '@/services/tagService';
 import { syncCache } from '@/utils/indexedDB';
-import { QUERY_KEYS } from '@/hooks/queries/keys';
+import { photoKeys } from '@/lib/queryKeys';
 import { AdminViewContent } from './AdminViewContent';
 import { AdminProvider } from '@/contexts/AdminContext';
 
@@ -14,7 +14,7 @@ export const AdminView: React.FC = () => {
   useEffect(() => {
     // Prefetch categories in the background
     queryClient.prefetchQuery({
-      queryKey: QUERY_KEYS.categories,
+      queryKey: photoKeys.categories(),
       queryFn: async () => {
         const cats = await loadCategoriesFromCloud();
         syncCache.saveCategories(cats).catch(() => {});
@@ -25,7 +25,7 @@ export const AdminView: React.FC = () => {
 
     // Prefetch tags in the background
     queryClient.prefetchQuery({
-      queryKey: QUERY_KEYS.tags,
+      queryKey: photoKeys.tags(),
       queryFn: async () => {
         const tags = await loadTagsFromCloud();
         syncCache.saveTags(tags).catch(() => {});

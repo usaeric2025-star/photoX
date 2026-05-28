@@ -33,3 +33,13 @@ export interface LayoutContract {
     sidebar?: React.ReactNode;
   }
 }
+
+/**
+ * [V2.14-SLOT-CONTRACT] Headless Slot Contract
+ */
+export interface HeadlessSlot<T> {
+  component: React.ComponentType<T>;
+  props: T;
+  key?: string;
+  name: string;
+}

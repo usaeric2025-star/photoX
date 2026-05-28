@@ -15,13 +15,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     flowType: 'pkce',
     storage: {
-      getItem: (key) => window.localStorage.getItem(key),
+      getItem: (key) => typeof window !== 'undefined' ? window.localStorage.getItem(key) : null,
       setItem: (key, value) => {
         // [SYNC-STORAGE-IN-RENDER] @ src/lib/supabase.ts:16
-        setTimeout(() => window.localStorage.setItem(key, value), 0);
+        if (typeof window !== 'undefined') {
+          setTimeout(() => window.localStorage.setItem(key, value), 0);
+        }
       },
       removeItem: (key) => {
-        setTimeout(() => window.localStorage.removeItem(key), 0);
+        if (typeof window !== 'undefined') {
+          setTimeout(() => window.localStorage.removeItem(key), 0);
+        }
       }
     }
   },

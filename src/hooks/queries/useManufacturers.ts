@@ -1,11 +1,11 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadManufacturersFromCloud } from '../../services/manufacturerService';
-import { QUERY_KEYS } from './keys';
+import { photoKeys } from '../../lib/queryKeys';
 import { syncCache } from '../../utils/indexedDB';
 
 export const useManufacturersQuery = () => {
   const result = useQuery({
-    queryKey: QUERY_KEYS.manufacturers,
+    queryKey: photoKeys.manufacturers(),
     queryFn: async () => {
       const mfrs = await loadManufacturersFromCloud();
       syncCache.saveManufacturers(mfrs).catch(() => {});

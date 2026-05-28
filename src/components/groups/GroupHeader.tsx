@@ -21,7 +21,7 @@ interface GroupHeaderProps {
   groupData: ProductGroup | null;
   isGroupDataLoading: boolean;
   activeGroupPhotos: Photo[];
-  onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void>;
+  onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void | null>;
 }
 
 export const GroupHeader: React.FC<GroupHeaderProps> = ({
@@ -46,7 +46,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   const { onBatchEdit, onBatchAiAnalyze } = usePhotoActions();
   
   return (
-    <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+    <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
       <div className="flex items-center gap-3">
         <button 
           onClick={() => setActiveGroupId(null)}
@@ -63,23 +63,24 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
             }
           }}
         >
-          <div className="flex items-center gap-2 min-h-[1.5rem]">
+          <div className="flex items-center gap-2 min-h-[1.75rem]">
             {isGroupDataLoading ? (
-              <Skeleton className="h-6 w-32 bg-slate-200" />
+              <Skeleton className="h-6 w-32 bg-slate-200 animate-pulse" />
             ) : (
               <>
                 <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">
-                  {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId?.slice(-4)}`}
+                  {/* [FIELD-LEVEL-FALLBACK] Render group name, first photo name, or ID as last resort */}
+                  {groupData?.name || activeGroupPhotos[0]?.name || activeGroupPhotos[0]?.item_code || `GROUP ${activeGroupId?.slice(-4)}`}
                 </h2>
                 {isAdminMode && <Pencil size={12} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
               </>
             )}
           </div>
-          <div className="min-h-[0.8rem]">
+          <div className="min-h-[1rem]">
             {isGroupDataLoading ? (
-              <Skeleton className="h-3 w-40 mt-1 bg-slate-100" />
+              <Skeleton className="h-3 w-40 mt-1 bg-slate-100 animate-pulse" />
             ) : (
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none">
                 {groupData?.name ? `封面产品: ${activeGroupPhotos[0]?.name || ''}` : `${activeGroupPhotos.length} 张照片 / Photos`}
               </p>
             )}

@@ -12,7 +12,7 @@ import { safeArray } from '@/lib/utils';
 import { useFeedback, useInvalidatePhotos } from '@/hooks';
 import { Category, Photo, Tag, Manufacturer } from '@/types';
 import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '@/hooks';
-import { QUERY_KEYS } from '@/hooks/queries/keys';
+import { photoKeys } from '@/lib/queryKeys';
 
 export const useAdminCategory = (adminUI: {
   setAlertDialog: (d: { title: string, message: string, onConfirm?: () => void, onCancel?: () => void, confirmLabel?: string, type?: 'danger' | 'info' } | null) => void;
@@ -75,7 +75,7 @@ export const useAdminCategory = (adminUI: {
   const removeTagFromPhoto = useCallback(async (photoId: string, tagId: string) => {
     try {
       // Optimistic update
-      queryClient.setQueriesData({ queryKey: ['photos', 'infinite'] }, (old: any) => {
+      queryClient.setQueriesData({ queryKey: photoKeys.all }, (old: any) => {
         if (!old || !old.pages) return old;
         return {
           ...old,

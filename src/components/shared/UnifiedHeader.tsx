@@ -233,12 +233,12 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
               <ToolsMenu 
                 show={showToolsMenu} 
                 t={t} 
-                handleOpenSettings={handleManageClick}
+                handleOpenSettings={() => handleManageClick?.()}
                 isStaffMode={isEffectiveStaffMode}
                 handleExitStaffMode={handleExitStaffMode}
                 currentLang={lang}
                 onSetLang={(l) => setAppLang(l as any)}
-                adminPreviewMode={adminPreviewMode}
+                adminPreviewMode={adminPreviewMode || 'private'}
                 toggleAdminPreviewMode={() => setAdminPreviewMode?.(adminPreviewMode === 'private' ? 'public' : 'private')}
               />
             </div>

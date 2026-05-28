@@ -20,7 +20,7 @@ export interface PhotoLightboxProps {
   onClose: () => void;
   onPrev: (e?: React.MouseEvent) => void;
   onNext: (e?: React.MouseEvent) => void;
-  contactWhatsApp: (photo: Photo) => void;
+  contactWhatsApp?: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
   onEditPhoto?: (photo: Photo) => void;
@@ -45,7 +45,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
 
   const actions = usePhotoActions();
   const { tasks } = useTasks();
-  const storeIsAnalyzing = React.useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+  const storeIsAnalyzing = React.useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
 
   const onEditPhoto = props.onEditPhoto ?? actions.onEditPhoto;
   const onToggleHidden = props.onToggleHidden ?? actions.onToggleHidden;
@@ -69,7 +69,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
 
   const lang = useGalleryStore(s => s.appLang);
   const isAdminMode = useAdminMode();
-  const t = React.useMemo(() => (translations[lang as LanguageCode] || translations.en), [lang]);
+  const translate = React.useMemo(() => (translations[lang as LanguageCode] || translations.en), [lang]);
 
   const index = React.useMemo(() => {
     if (!photo) return null;
@@ -126,70 +126,84 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
       <AnimatePresence>
         {isOpen && (
           <Dialog.Portal keepMounted>
-             <DialogBackdrop asChild>
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[499] bg-black/40 backdrop-blur-md"
-              />
-            </DialogBackdrop>
-            <DialogPopup asChild>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
-              >
-                <LightboxImageSection 
-                  photo={photo!}
-                  index={index!}
-                  isZoomed={isZoomed}
-                  setIsZoomed={setIsZoomed}
-                  isImageLoading={isImageLoading}
-                  setIsImageLoading={setIsImageLoading}
-                  isImageError={isImageError}
-                  setIsImageError={setIsImageError}
-                  slides={slides}
-                  onPrev={onPrev}
-                  onNext={onNext}
-                  onClose={onClose}
-                  onTouchStart={onTouchStart}
-                  onTouchMove={onTouchMove}
-                  onTouchEnd={onTouchEnd}
-                  onEditPhoto={isAdmin ? onEditPhoto : undefined}
-                  handleDownload={handleDownload}
-                  t={t}
-                  retryImageLoad={retryImageLoad}
-                />
-
-                {!isZoomed && (
-                  <LightboxInfoPanel 
-                    photo={photo!}
-                    groupData={groupData}
-                    isGroupDataLoading={isGroupDataLoading}
-                    activeLang={activeLang}
-                    setActiveLang={setActiveLang}
-                    isAdminMode={isAdminMode}
-                    isCopied={isCopied}
-                    isAnalyzing={isAnalyzing}
-                    t={t}
-                    categories={categories}
-                    manufacturers={manufacturers}
-                    tagMap={tagMap}
-                    handleShare={handleShare}
-                    onAiAnalyze={isAdminMode ? onAiAnalyze : undefined}
-                    onCancelAnalyze={onCancelAnalyze}
-                    onToggleHidden={isAdminMode ? onToggleHidden : undefined}
-                    onTogglePinned={isAdminMode ? onTogglePinned : undefined}
-                    onUngroup={isAdminMode ? onUngroup : undefined}
-                    onSetGroupCover={isAdminMode ? onSetGroupCover : undefined}
-                    contactWhatsApp={contactWhatsApp}
+            <Dialog.Backdrop 
+              render={(backdropProps) => {
+                // Remove incompatible animation props to avoid motion conflict
+                const { onAnimationStart: _, onAnimationEnd: __, asChild: ___, ...restBackdropProps } = backdropProps as any;
+                return (
+                  <motion.div 
+                    {...restBackdropProps}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[499] bg-black/40 backdrop-blur-md"
                   />
-                )}
-              </motion.div>
-            </DialogPopup>
+                );
+              }}
+            />
+            <Dialog.Popup 
+              render={(popupProps) => {
+                // Remove asChild and animation props to prevent React/Motion conflict
+                const { asChild: _ , onAnimationStart: __, onAnimationEnd: ___, ...restPopupProps } = popupProps as any;
+                return (
+                  <motion.div 
+                    {...restPopupProps}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
+                  >
+                    <LightboxImageSection 
+                      photo={photo!}
+                      index={index!}
+                      isZoomed={isZoomed}
+                      setIsZoomed={setIsZoomed}
+                      isImageLoading={isImageLoading}
+                      setIsImageLoading={setIsImageLoading}
+                      isImageError={isImageError}
+                      setIsImageError={setIsImageError}
+                      slides={slides}
+                      onPrev={onPrev}
+                      onNext={onNext}
+                      onClose={onClose}
+                      onTouchStart={onTouchStart}
+                      onTouchMove={onTouchMove}
+                      onTouchEnd={onTouchEnd}
+                      onEditPhoto={isAdmin ? onEditPhoto : undefined}
+                      handleDownload={handleDownload}
+                      t={translate}
+                      retryImageLoad={retryImageLoad}
+                    />
+
+                    {!isZoomed && (
+                      <LightboxInfoPanel 
+                        photo={photo!}
+                        groupData={groupData}
+                        isGroupDataLoading={isGroupDataLoading}
+                        activeLang={activeLang}
+                        setActiveLang={setActiveLang}
+                        isAdminMode={isAdminMode}
+                        isCopied={isCopied}
+                        isAnalyzing={isAnalyzing}
+                        t={translate}
+                        categories={categories}
+                        manufacturers={manufacturers}
+                        tagMap={tagMap}
+                        handleShare={handleShare}
+                        onAiAnalyze={isAdminMode ? onAiAnalyze : undefined}
+                        onCancelAnalyze={onCancelAnalyze}
+                        onToggleHidden={isAdminMode ? onToggleHidden : undefined}
+                        onTogglePinned={isAdminMode ? onTogglePinned : undefined}
+                        onUngroup={isAdminMode ? onUngroup : undefined}
+                        onSetGroupCover={isAdminMode ? onSetGroupCover : undefined}
+                        contactWhatsApp={contactWhatsApp}
+                      />
+                    )}
+                  </motion.div>
+                );
+              }}
+            />
           </Dialog.Portal>
         )}
       </AnimatePresence>

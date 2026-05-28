@@ -1,12 +1,12 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadCategoriesFromCloud } from '../../services/categoryService';
-import { QUERY_KEYS } from './keys';
+import { photoKeys } from '../../lib/queryKeys';
 import { syncCache } from '../../utils/indexedDB';
 
 export const useCategoriesQuery = () => {
   const result = useQuery({
-    queryKey: QUERY_KEYS.categories,
+    queryKey: photoKeys.categories(),
     queryFn: async () => {
       const cats = await loadCategoriesFromCloud();
       syncCache.saveCategories(cats).catch(() => {});

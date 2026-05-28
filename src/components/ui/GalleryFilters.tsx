@@ -46,7 +46,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   
   const navigate = useNavigate();
   // Using useSearch if public, otherwise we don't strictly need URL state for admin (though it helps)
-  const search = isPublic ? useSearch({ from: '/' }) : {} as any;
+  const search = isPublic ? useSearch({ strict: false }) : {} as any;
   
   const { data: categories = [] } = useCategoriesQuery();
   const { data: tags = [] } = useTagsQuery();

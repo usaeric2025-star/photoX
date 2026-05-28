@@ -1,6 +1,6 @@
 import { DiagnosticTest, registerDiagnostic } from './index';
 import { QueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '@/hooks/queries/keys';
+import { photoKeys } from '@/lib/queryKeys';
 import { syncCache } from '@/utils/indexedDB';
 import { Category, Tag } from '@/types';
 
@@ -23,19 +23,19 @@ const test: DiagnosticTest = {
 
       // Prefetch categories
       await queryClient.prefetchQuery({
-        queryKey: QUERY_KEYS.categories,
+        queryKey: photoKeys.categories(),
         queryFn: async () => mockCategories,
       });
 
       // Prefetch tags
       await queryClient.prefetchQuery({
-        queryKey: QUERY_KEYS.tags,
+        queryKey: photoKeys.tags(),
         queryFn: async () => mockTags,
       });
 
       // Assert caches are populated correctly
-      const cachedCategories = queryClient.getQueryData<Category[]>(QUERY_KEYS.categories);
-      const cachedTags = queryClient.getQueryData<Tag[]>(QUERY_KEYS.tags);
+      const cachedCategories = queryClient.getQueryData<Category[]>(photoKeys.categories());
+      const cachedTags = queryClient.getQueryData<Tag[]>(photoKeys.tags());
 
       if (!cachedCategories || cachedCategories.length === 0) {
         throw new Error('QueryClient category prefetch cache is missing or empty');

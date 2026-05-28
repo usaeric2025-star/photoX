@@ -4,7 +4,8 @@ import {
   UploadPresignReqSchema, UploadPresignResSchema,
   R2DeleteReqSchema, R2DeleteResSchema,
   StorageAuditResSchema, StorageCleanResSchema,
-  AIAnalyzeReqSchema, AITranslateReqSchema
+  AIAnalyzeReqSchema, AITranslateReqSchema,
+  photoBatchUpdateSchema
 } from '@/shared/apiContractSchema';
 import { createPhotoValidator, createGroupValidator } from '@/lib/validators/factory';
 import { type } from 'arktype';
@@ -118,6 +119,23 @@ describe('Hono RPC API Contract Validation Anchors', () => {
   it('Anchor: AI Translate Input Contract', () => {
     const payload = { promptText: 'Translate this listing to Chinese' };
     const check = AITranslateReqSchema(payload);
+    expect(check instanceof type.errors).toBe(false);
+  });
+
+  it('Anchor: Batch Update Photo Contract', () => {
+    const payload = {
+      items: [
+        {
+          id: 'uuid-1',
+          updates: { category_id: 'cat-1', group_id: 'grp-1', is_hidden: false, item_code: 'A1' }
+        },
+        {
+          id: 'uuid-2',
+          updates: { category_id: null, group_id: null, is_hidden: true, item_code: null }
+        }
+      ]
+    };
+    const check = photoBatchUpdateSchema(payload);
     expect(check instanceof type.errors).toBe(false);
   });
 

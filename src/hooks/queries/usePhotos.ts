@@ -1,7 +1,7 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadAllPhotosFromCloud, loadPhotosByGroupId, loadPhotosByGroupIdPaginated, getPhotoCount } from '../../services/photoService';
-import { QUERY_KEYS } from './keys';
+import { photoKeys } from '../../lib/queryKeys';
 import { syncCache } from '../../utils/indexedDB';
 
 import { PAGINATION } from '@/constants/config';
@@ -15,7 +15,7 @@ export const useInfinitePhotos = (filters: {
   onlyUngrouped?: boolean;
 }, limit: number = PAGINATION.PUBLIC_PAGE_SIZE, enabled: boolean = true) => {
   return useInfiniteQuery({
-    queryKey: QUERY_KEYS.infinitePhotos({ 
+    queryKey: photoKeys.infinite({ 
       category_id: filters.category_id ?? null,
       tag_id: filters.tag_id ?? null,
       searchQuery: filters.searchQuery ?? null,
@@ -62,7 +62,7 @@ export const useInfinitePhotos = (filters: {
 
 export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_id?: string | null; searchQuery?: string | null }, isAdminMode: boolean = false) => {
   return useQuery({
-    queryKey: QUERY_KEYS.photoCount({ 
+    queryKey: photoKeys.count({ 
       category_id: filters.category_id ?? null,
       tag_id: filters.tag_id ?? null,
       searchQuery: filters.searchQuery ?? null,
@@ -76,9 +76,10 @@ export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_i
 
 export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = false) => {
   return useQuery({
-    queryKey: ['photos', 'group', groupId, isAdminMode],
+    queryKey: photoKeys.group(groupId),
     queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
+    placeholderData: keepPreviousData,
     select: (data) => data ?? [],
   });
 };
@@ -86,11 +87,12 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
 export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode: boolean = false, pageSize: number = 60) => {
 
   return useInfiniteQuery({
-    queryKey: ['photos', 'group', 'infinite', groupId, isAdminMode, pageSize],
+    queryKey: photoKeys.infinite({ groupId, isAdminMode, pageSize }),
     queryFn: ({ pageParam = 1 }) => 
       loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode),
     enabled: !!groupId,
     initialPageParam: 1,
+    placeholderData: keepPreviousData,
     getNextPageParam: (lastPage, allPages) => {
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
       return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;

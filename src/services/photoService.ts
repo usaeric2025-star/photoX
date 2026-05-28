@@ -18,6 +18,8 @@ export * from './photo/photoMappingUtils';
 export * from './photo/photoUploadService';
 export * from './photo/photoMaintenanceService';
 
+export const VIRTUAL_FIELDS = ['thumbnail_sm_url', 'thumbnail_md_url'];
+
 export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     if (!item) return {} as Photo;
     
@@ -84,6 +86,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       description: (item.description as string) || '',
       image_url: (item.image_url as string) || '',
       thumb_url: (item.thumb_url as string) || (item.image_url as string) || '',
+      // [VIRTUAL-FIELD-REGISTRY] Fallback using virtual field logic
       thumbnail_sm_url: (item.thumbnail_sm_url as string) || (item.thumb_url as string) || (item.image_url as string) || '',
       thumbnail_md_url: (item.thumbnail_md_url as string) || (item.thumb_url as string) || (item.image_url as string) || '',
       thumb_hash: (item.thumb_hash as string) || '',
@@ -106,7 +109,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     };
 }
 
-const PHOTO_SELECT_FIELDS = 'id, name, item_code, manual_code, model_number, image_hash, category_id, manufacturer_id, sub_category, description, image_url, thumb_url, thumb_hash, created_at, updated_at, group_id, is_group_cover, is_hidden, is_pinned, is_analyzing, user_id, price, description_translations, dimensions, group_order, photo_tags(tag_id)';
+export const PHOTO_SELECT_FIELDS = 'id, name, item_code, manual_code, model_number, image_hash, category_id, manufacturer_id, sub_category, description, image_url, thumb_url, thumb_hash, created_at, updated_at, group_id, is_group_cover, is_hidden, is_pinned, is_analyzing, user_id, price, description_translations, dimensions, group_order, photo_tags(tag_id)';
 
 export const loadAllPhotosFromCloud = async (
     since?: string,
@@ -147,7 +150,14 @@ export const loadAllPhotosFromCloud = async (
   }
 
   if (tagId) {
-    const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
+    const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
+    if (ptError) {
+      throw {
+        message: `Failed to fetch photo_tags in loadAllPhotosFromCloud: ${ptError.message}`,
+        path: ['photoService', 'loadAllPhotosFromCloud', 'tags'],
+        aiDebugHint: `Verify tag_id and photo_tags table. Code: ${ptError.code}`
+      };
+    }
     const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
     if (photoIdsWithTag.length > 0) {
       query = query.in('id', photoIdsWithTag);
@@ -168,12 +178,27 @@ export const loadAllPhotosFromCloud = async (
       supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`)
     ]);
 
+    if (tagsRes.error || catsRes.error) {
+       throw {
+         message: `Search resolution failed in loadAllPhotosFromCloud: ${tagsRes.error?.message || catsRes.error?.message}`,
+         path: ['photoService', 'loadAllPhotosFromCloud', 'search'],
+         aiDebugHint: `Check performance or ILIKE complexity on tags/categories.`
+       };
+    }
+
     const tagIds = (tagsRes.data || []).map(t => t.id);
     const catIds = (catsRes.data || []).map(c => c.id);
 
     let photoIdsFromTags: string[] = [];
     if (tagIds.length > 0) {
-      const { data: ptData } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
+      const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
+      if (ptError) {
+        throw {
+          message: `Failed to resolve photo tags during search in loadAllPhotosFromCloud: ${ptError.message}`,
+          path: ['photoService', 'loadAllPhotosFromCloud', 'search-tags'],
+          aiDebugHint: `Possible heavy IN query on photo_tags.`
+        };
+      }
       if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
     }
 
@@ -220,7 +245,12 @@ export const loadAllPhotosFromCloud = async (
   const { data, error } = await query.range(from, to);
 
   if (error) {
-    throw error;
+    // [DB-ERROR-VISIBLE] Throw StandardError for explicit diagnostic visibility
+    throw {
+      message: `Failed to load photos: ${error.message}`,
+      path: ['photoService', 'loadAllPhotosFromCloud'],
+      aiDebugHint: `Check PHOTO_SELECT_FIELDS for missing columns or RLS policies. Code: ${error.code}`
+    };
   }
 
   const fetched = (data || []).map(item => mapSupabasePhoto(item));
@@ -293,7 +323,12 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
     const { data, error } = await query;
 
     if (error) {
-        throw error;
+        // [DB-ERROR-VISIBLE]
+        throw {
+            message: `Failed to load photos by group ID: ${error.message}`,
+            path: ['photoService', 'loadPhotosByGroupId'],
+            aiDebugHint: `Verify group_id column exists and group_id ${groupId} exists. Code: ${error.code}`
+        };
     }
 
     return (data || []).map(item => mapSupabasePhoto(item));
@@ -353,7 +388,12 @@ export const loadPhotosByGroupIdPaginated = async (
   ]);
 
   if (queryRes.error) {
-    throw queryRes.error;
+    // [DB-ERROR-VISIBLE]
+    throw {
+      message: `Failed to load paginated photos by group ID: ${queryRes.error.message}`,
+      path: ['photoService', 'loadPhotosByGroupIdPaginated'],
+      aiDebugHint: `Check RPC definition or table column consistency. Code: ${queryRes.error.code}`
+    };
   }
 
   const mapped = (queryRes.data || []).map(item => mapSupabasePhoto(item));
@@ -379,7 +419,14 @@ export const getPhotoCount = async (
   }
 
   if (tagId) {
-    const { data: ptData } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
+    const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').eq('tag_id', tagId);
+    if (ptError) {
+      throw {
+        message: `Failed to fetch photo_tags for count in getPhotoCount: ${ptError.message}`,
+        path: ['photoService', 'getPhotoCount', 'tags'],
+        aiDebugHint: `Check photo_tags table index. Code: ${ptError.code}`
+      };
+    }
     const photoIdsWithTag = (ptData || []).map(pt => String(pt.photo_id));
     if (photoIdsWithTag.length > 0) {
       query = query.in('id', photoIdsWithTag);
@@ -399,12 +446,27 @@ export const getPhotoCount = async (
       supabase.from('categories').select('id').or(`name.ilike.%${q}%,zh.ilike.%${q}%,en.ilike.%${q}%,ms.ilike.%${q}%`)
     ]);
 
+    if (tagsRes.error || catsRes.error) {
+       throw {
+         message: `Search resolution failed in getPhotoCount: ${tagsRes.error?.message || catsRes.error?.message}`,
+         path: ['photoService', 'getPhotoCount', 'search'],
+         aiDebugHint: `Check tag/category search complexity. Error codes: ${tagsRes.error?.code}, ${catsRes.error?.code}`
+       };
+    }
+
     const tagIds = (tagsRes.data || []).map(t => t.id);
     const catIds = (catsRes.data || []).map(c => c.id);
 
     let photoIdsFromTags: string[] = [];
     if (tagIds.length > 0) {
-      const { data: ptData } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
+      const { data: ptData, error: ptError } = await supabase.from('photo_tags').select('photo_id').in('tag_id', tagIds);
+      if (ptError) {
+        throw {
+          message: `Failed to resolve tag ids for count in getPhotoCount: ${ptError.message}`,
+          path: ['photoService', 'getPhotoCount', 'search-tags'],
+          aiDebugHint: `Check photo_tags table index. Code: ${ptError.code}`
+        };
+      }
       if (ptData) photoIdsFromTags = ptData.map(pt => pt.photo_id);
     }
 
@@ -430,7 +492,12 @@ export const getPhotoCount = async (
   const { count, error } = await query;
   
   if (error) {
-    throw error;
+    // [DB-ERROR-VISIBLE] [DB-SCHEMA-ALIGNMENT]
+    throw {
+      message: `Failed to get photo count from cloud in getPhotoCount: ${error.message}`,
+      path: ['photoService', 'getPhotoCount'],
+      aiDebugHint: `Check query filter logic and RLS. Code: ${error.code}`
+    };
   }
 
   return count || 0;
@@ -443,7 +510,12 @@ export const getPhotosWithoutThumbHash = async (): Promise<{ id: string }[]> => 
     .is('thumb_hash', null);
 
   if (error) {
-    throw new Error(error.message);
+    // [DB-ERROR-VISIBLE]
+    throw {
+      message: `Failed to find photos without thumbhash: ${error.message}`,
+      path: ['photoService', 'getPhotosWithoutThumbHash'],
+      aiDebugHint: `Check table ${DB_CONFIG.TABLE_NAME} for thumb_hash column. Code: ${error.code}`
+    };
   }
   return data || [];
 };
@@ -612,7 +684,13 @@ export const checkImageHashExists = async (hash: string): Promise<{image_url: st
       .limit(1)
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      throw {
+        message: `Hash check query failed: ${error.message}`,
+        path: ['photoService', 'checkImageHashExists'],
+        aiDebugHint: `Check image_hash index on ${DB_CONFIG.TABLE_NAME}.`
+      };
+    }
     return data ? { image_url: data.image_url, manual_code: data.manual_code } : null;
   } catch (err) {
     globalHandleError(err, "Hash Check", true);

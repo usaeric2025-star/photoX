@@ -6,7 +6,7 @@ import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
 import { filterPhotosByMode } from '../utils/photoVisibility';
-import { PhotoGridSkeleton } from './photo/PhotoGridSkeleton';
+import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { PhotoLightbox } from './PhotoLightbox';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
@@ -18,7 +18,8 @@ import { useAdminMode, useFeedback, useGroupDetailQuery, useTasks } from '@/hook
 import { usePhotoActions } from '@/contexts/PhotoActionsContext';
 import { useInfiniteGroupPhotosQuery } from '@/hooks';
 import { useGalleryStore, useShallow } from '../store';
-import { createTranslate } from '@/lib/i18n';
+import { translations } from '../lib/translations';
+import { createTranslate } from '../lib/i18n';
 
 
 // Add displayPhotos and setLightboxIndex for compatibility with PublicGallery
@@ -43,10 +44,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { showError } = useFeedback();
 
   const lang = useGalleryStore(s => s.appLang);
-  const t = createTranslate(lang as any);
+  const translate = createTranslate(lang as any);
   
   const { tasks } = useTasks();
-  const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
+  const isAnalyzing = useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
   
   const { onEditPhoto, onToggleHidden, onAiAnalyze, onCancelAnalyze } = usePhotoActions();
   
@@ -67,7 +68,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     isLoading: isGroupPhotosLoading
   } = useInfiniteGroupPhotosQuery(activeGroupId, isAdminMode, 20);
 
-  const isLoading = isGroupPhotosLoading;
+  const isLoading = isGroupPhotosLoading || isGroupDataLoading;
 
   useEffect(() => {
     if (activeGroupId && initialPhotoId) {
@@ -137,7 +138,18 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   if (!activeGroupId) return null;
 
   if (isAdminMode) {
-    return <GroupAdminShell initialPhotoId={initialPhotoId} {...props} />;
+    // Explicitly destructure to avoid passing internal React Router/Base UI props like asChild down to child components
+    const { 
+      activeGroupId: _ag, 
+      setActiveGroupId: _sag, 
+      shareGroup: _sg, 
+      initialPhotoId: _ipi, 
+      variant: _v, 
+      // Filter out asChild if it somehow exists in props
+      ...restProps 
+    } = props as any;
+
+    return <GroupAdminShell initialPhotoId={initialPhotoId} {...restProps} />;
   }
 
   return (
@@ -153,90 +165,94 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[200] bg-brand-bg overflow-hidden pt-safe flex flex-col"
         >
-           {/* Top Header */}
-           <div className="sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setActiveGroupId(null)}
-                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <div className="flex flex-col min-h-[3rem]">
+          {isLoading && !infinitePhotosData ? (
+            <GroupDetailSkeleton />
+          ) : (
+            <>
+               {/* Top Header */}
+               <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setActiveGroupId(null)}
+                      className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
+                    <div className="flex flex-col min-h-[3rem]">
+                      <div className="flex items-center gap-2 min-h-[1.75rem]">
+                         {isGroupDataLoading ? (
+                           <Skeleton className="h-6 w-32 bg-slate-200" />
+                         ) : (
+                           <h2 className="text-lg font-bold text-slate-800 tracking-tight">
+                             {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
+                           </h2>
+                         )}
+                      </div>
+                      <div className="min-h-[1rem]">
+                        {isGroupDataLoading ? (
+                          <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
+                        ) : (
+                          <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div className="flex items-center gap-2">
-                     {isGroupDataLoading && activeGroupPhotos.length === 0 ? (
-                       <Skeleton className="h-6 w-32 bg-slate-200" />
-                     ) : (
-                       <h2 className="text-lg font-bold text-slate-800 tracking-tight">
-                         {groupData?.name || activeGroupPhotos[0]?.name || `GROUP ${activeGroupId.slice(-4)}`}
-                       </h2>
-                     )}
+                    {shareGroup && (
+                      <button 
+                        onClick={() => shareGroup(activeGroupPhotos)}
+                        className="w-10 h-10 flex items-center justify-center text-blue-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
+                      >
+                        <Share2 size={24} />
+                      </button>
+                    )}
+                    <button 
+                        onClick={() => setActiveGroupId(null)}
+                        className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
+                    >
+                        <X size={24} />
+                    </button>
                   </div>
-                  {isGroupDataLoading ? (
-                    <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
-                  ) : (
-                    <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>
-                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {shareGroup && (
-                  <button 
-                    onClick={() => shareGroup(activeGroupPhotos)}
-                    className="w-10 h-10 flex items-center justify-center text-blue-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
-                  >
-                    <Share2 size={24} />
-                  </button>
-                )}
-                <button 
-                    onClick={() => setActiveGroupId(null)}
-                    className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
-                >
-                    <X size={24} />
-                </button>
-              </div>
-            </div>
-            
-            {/* Series Story Section */}
-            {(isGroupDataLoading || groupData?.description) && (
-              <div className="px-5 py-4 bg-white border-b border-slate-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1 h-3 bg-blue-600 rounded-full" />
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('seriesStory') || 'Series Story'}</span>
-                </div>
-                {isGroupDataLoading ? (
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
+                
+                {/* Series Story Section */}
+                {(isGroupDataLoading || groupData?.description) && (
+                  <div className="px-5 py-4 bg-white border-b border-slate-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-1 h-3 bg-blue-600 rounded-full" />
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{translate('seriesStory') || 'Series Story'}</span>
+                    </div>
+                    {isGroupDataLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-5/6" />
+                      </div>
+                    ) : (
+                      <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
+                        {groupData?.description}
+                      </p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-wrap italic">
-                    {groupData?.description}
-                  </p>
                 )}
-              </div>
-            )}
 
-            {isLoading ? (
-              <PhotoGridSkeleton columns={3} count={9} />
-            ) : (
-              <GroupGridView 
-                key={activeGroupId}
-                variant={variant}
-                onEndReached={() => {
-                  if (hasNextPage && !isFetchingNextPage) {
-                    fetchNextPage();
-                  }
-                }}
-                virtuosoRef={virtuosoRef}
-                photos={activeGroupPhotos} 
-                isLoading={isLoading}
-                isFetchingNextPage={isFetchingNextPage}
-                hasNextPage={hasNextPage}
-                highlightId={currentHighlightId}
-                onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
-              />
-            )}
+                <GroupGridView 
+                  key={activeGroupId}
+                  variant={variant}
+                  onEndReached={() => {
+                    if (hasNextPage && !isFetchingNextPage) {
+                      fetchNextPage();
+                    }
+                  }}
+                  virtuosoRef={virtuosoRef}
+                  photos={activeGroupPhotos} 
+                  isLoading={isLoading}
+                  isFetchingNextPage={isFetchingNextPage}
+                  hasNextPage={hasNextPage}
+                  highlightId={currentHighlightId}
+                  onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
+                />
+            </>
+          )}
 
            {/* Unified Photo Lightbox */}
            <AnimatePresence>
