@@ -79,7 +79,6 @@ export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = fals
     queryKey: photoKeys.group(groupId),
     queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
-    placeholderData: keepPreviousData,
     select: (data) => data ?? [],
   });
 };
@@ -92,7 +91,6 @@ export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode:
       loadPhotosByGroupIdPaginated(groupId!, pageParam, pageSize, isAdminMode),
     enabled: !!groupId,
     initialPageParam: 1,
-    placeholderData: keepPreviousData,
     getNextPageParam: (lastPage, allPages) => {
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
       return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;

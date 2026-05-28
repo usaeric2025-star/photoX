@@ -78,7 +78,8 @@ export const useGroupAdminLogic = ({
 
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
-    const groupPhotos = dbGroupPhotos;
+    // Strict Group Guard: Guard against stale query data from other group IDs
+    const groupPhotos = dbGroupPhotos.filter(p => p.group_id === activeGroupId);
     return filterPhotosByMode(groupPhotos, isAdminMode)
       .sort((a, b) => {
         if (a.is_group_cover) return -1;

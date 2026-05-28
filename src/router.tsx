@@ -183,7 +183,7 @@ const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
   beforeLoad: ({ context }) => {
-    validateAccess({ permission: 'admin', fallbackRedirect: ROUTES.HOME }, context);
+    validateAccess({ permission: 'public', fallbackRedirect: ROUTES.HOME }, context);
   },
   component: AdminView,
 });

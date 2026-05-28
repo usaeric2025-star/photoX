@@ -16,7 +16,6 @@ export const useGroupDetailQuery = (groupId: string | null) => {
     queryKey: groupId ? groupKeys.detail(groupId) : ['groups', 'detail', null],
     queryFn: () => getGroupById(groupId!),
     enabled: !!groupId,
-    placeholderData: keepPreviousData,
     staleTime: createStaleTime('STABLE'), // 5 minutes cache
   });
 };
