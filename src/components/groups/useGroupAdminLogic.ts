@@ -8,6 +8,7 @@ import { updatePhotosGroupInCloud } from '../../services/photoService';
 import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetailQuery, useAuth } from '@/hooks';
 import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
 import { useGalleryStore, useShallow } from '@/store';
+import { groupKeys } from '@/lib/queryKeys';
 
 
 export const useGroupAdminLogic = ({
@@ -232,7 +233,7 @@ export const useGroupAdminLogic = ({
     
     try {
       await saveGroupToCloud(nextGroupData);
-      queryClient.invalidateQueries({ queryKey: ['group', activeGroupId] });
+      queryClient.invalidateQueries({ queryKey: groupKeys.detail(activeGroupId) });
       sessionStorage.removeItem(`draft_group_${activeGroupId}`);
       
       if (updates.hasOwnProperty('is_hidden')) {

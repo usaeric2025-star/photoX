@@ -91,19 +91,42 @@ export const uploadImages = async (
       if (!result.success) throw new Error(result.error);
       const { uploadUrl, publicUrl } = result.data;
 
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'image/webp' },
-        body: new Uint8Array(buffer)
-      });
+      try {
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'image/webp' },
+          body: new Uint8Array(buffer)
+        });
 
-      if (!uploadRes.ok) {
-        throw new Error(`Upload to R2 failed: ${uploadRes.statusText}`);
+        if (!uploadRes.ok) {
+          throw new Error(`Upload to R2 failed: ${uploadRes.statusText}`);
+        }
+        
+        if (isMain && onProgress) onProgress(100);
+        return publicUrl;
+      } catch (browserUploadErr) {
+        console.warn(`[uploadService] Browser direct upload to R2 failed (likely due to CORS policy or network). Retrying via server-proxied fallback...`, browserUploadErr);
+        // Fallback: upload full base64 to server-proxied direct endpoint
+        const fallbackRes = await api['upload-direct'].$post({
+          json: {
+            base64Data: base64,
+            fileKey: safeFileName,
+            contentType: 'image/webp'
+          }
+        });
+
+        if (!fallbackRes.ok) {
+          throw new Error(`Server-proxied direct upload fallback failed with HTTP ${fallbackRes.status}`);
+        }
+
+        const fallbackResult = await fallbackRes.json();
+        if (!fallbackResult.success) {
+          throw new Error(fallbackResult.error || `Server-proxied direct upload fallback failed`);
+        }
+
+        if (isMain && onProgress) onProgress(100);
+        return fallbackResult.data.publicUrl;
       }
-
-      if (isMain && onProgress) onProgress(100);
-      
-      return publicUrl;
     };
 
     const imageUrl = await uploadFile(originalBase64, `public/${photoId}.webp`, true);

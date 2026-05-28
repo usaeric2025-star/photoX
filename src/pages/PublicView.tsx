@@ -53,21 +53,23 @@ export default function PublicView() {
           </ErrorBoundary>
         </div>
       ) : (
-        <DataLoadingContainer
-          isLoading={isSettingsLoading || !settings}
-          hasData={true} // Data will be handled inside UnifiedGallery
-        >
-          <AdminProvider>
-            <ErrorBoundary>
-              <UnifiedGallery 
-                variant="public-showcase"
-                onExit={() => navigate({ to: ROUTES.ADMIN })}
-                onLogin={() => navigate({ to: ROUTES.ADMIN })}
-                loginWithGoogle={loginWithGoogle}
-              />
-            </ErrorBoundary>
-          </AdminProvider>
-        </DataLoadingContainer>
+        <div className="flex-1 min-h-0 relative">
+          <DataLoadingContainer
+            isLoading={isSettingsLoading || !settings}
+            hasData={true} // Data will be handled inside UnifiedGallery
+          >
+            <AdminProvider>
+              <ErrorBoundary>
+                <UnifiedGallery 
+                  variant="public-showcase"
+                  onExit={() => navigate({ to: ROUTES.ADMIN })}
+                  onLogin={() => navigate({ to: ROUTES.ADMIN })}
+                  loginWithGoogle={loginWithGoogle}
+                />
+              </ErrorBoundary>
+            </AdminProvider>
+          </DataLoadingContainer>
+        </div>
       )}
     </div>
   );

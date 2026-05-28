@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, Category, Tag, Manufacturer, User } from '@/types';
+import { groupKeys } from '@/lib/queryKeys';
 import { useTaskExecutor } from '@/hooks';
 import { analyzeProductPhoto } from '@/services/geminiService';
 import { resolveTagIdsBatch } from '@/utils/tagUtils';
@@ -49,7 +50,10 @@ export const usePhotoAIGroup = (
              try { await savePhotoToCloud(user.id, up); } catch (e) {}
           }
         }
-        queryClient.invalidateQueries({ queryKey: ['group', updatedPhotos[0]?.group_id] });
+        const firstGroupId = updatedPhotos[0]?.group_id;
+        if (firstGroupId) {
+          queryClient.invalidateQueries({ queryKey: groupKeys.detail(firstGroupId) });
+        }
       } finally {
          currentControllers.current.delete('group');
       }

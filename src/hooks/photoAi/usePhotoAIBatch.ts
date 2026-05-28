@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, Category, Tag, Manufacturer, User } from '@/types';
+import { groupKeys } from '@/lib/queryKeys';
 import { useTaskExecutor } from '@/hooks';
 import { AI_CONFIG } from '@/constants/config';
 import { analyzeProductPhoto, translateDescription } from '@/services/geminiService';
@@ -190,7 +191,7 @@ export const usePhotoAIBatch = (
     // Invalidate queries
     const groupIds = Array.from(new Set(unProcessed.map(p => p.group_id)));
     groupIds.forEach(gid => {
-      if (gid) queryClient.invalidateQueries({ queryKey: ['group', gid] });
+      if (gid) queryClient.invalidateQueries({ queryKey: groupKeys.detail(gid) });
     });
   }, [user, geminiApiKey, aiProvider, customModel, categories, tags, manufacturers, tagNameToIdMap, currentControllers, queryClient, runTask]);
 

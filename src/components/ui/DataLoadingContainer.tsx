@@ -32,7 +32,7 @@ export const DataLoadingContainer: React.FC<DataLoadingContainerProps> = ({
   const showBackgroundIndicator = (isLoading || delayLoading) && hasData;
 
   return (
-    <div className="relative w-full h-full min-h-screen">
+    <div className="relative w-full h-full">
       {/* Non-intrusive thin gradient loader strip on the top when loading incrementally/silently */}
       <AnimatePresence>
         {showBackgroundIndicator && (

@@ -2,6 +2,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, Category, Tag, Manufacturer, User } from '@/types';
+import { groupKeys } from '@/lib/queryKeys';
 import { useTaskExecutor } from '@/hooks'; // Simplified Feedback handled by useTaskExecutor and factory-like error handling
 import { analyzeProductPhoto } from '@/services/geminiService';
 import { cleanObject } from '@/services/utils';
@@ -40,7 +41,9 @@ export const usePhotoAISingle = (
         // Invalidate Query
         // Invalidate specific photo query
         queryClient.invalidateQueries({ queryKey: ['photos', 'ai-result', photo.id] });
-        queryClient.invalidateQueries({ queryKey: ['group', photo.group_id] });
+        if (photo.group_id) {
+          queryClient.invalidateQueries({ queryKey: groupKeys.detail(photo.group_id) });
+        }
         
         return result;
       } finally {

@@ -84,6 +84,32 @@ const apiRoutes = app
       return c.json({ success: false, error: e.message }, 500);
     }
   })
+  .post("/upload-direct", async (c) => {
+    try {
+      const { base64Data, fileKey, contentType } = await c.req.json();
+      if (!base64Data) return c.json({ success: false, error: "base64Data required" }, 400);
+
+      // Convert base64 to binary buffer
+      const base64Content = base64Data.split(',')[1] || base64Data;
+      const buffer = Buffer.from(base64Content, 'base64');
+      
+      const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/upload_${Date.now()}.webp`;
+      const s3Client = await getR2Client();
+      
+      const command = new PutObjectCommand({
+        Bucket: serverEnv.R2_BUCKET_NAME || 'photox-storage',
+        Key: fileName,
+        ContentType: contentType || 'image/webp',
+      });
+      
+      await s3Client.send(command);
+      
+      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev'}/${fileName}`;
+      return c.json({ success: true, data: { publicUrl } });
+    } catch(e: any) {
+      return c.json({ success: false, error: e.message }, 500);
+    }
+  })
   .post("/r2-delete", async (c) => {
     try {
       const { fileKeys } = await c.req.json();

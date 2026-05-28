@@ -75,7 +75,15 @@ export default function AppRoutes() {
   useEffect(() => {
     const handleOauthMessage = async (event: MessageEvent) => {
       const origin = event.origin;
-      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && !origin.includes('webcontainer')) {
+      const isAllowedOrigin = 
+        origin === window.location.origin ||
+        origin.endsWith('.run.app') || 
+        origin.includes('localhost') || 
+        origin.includes('webcontainer') || 
+        origin.includes('vercel.app') || 
+        origin.includes('stackblitz');
+
+      if (!isAllowedOrigin) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
@@ -88,6 +96,13 @@ export default function AppRoutes() {
     window.addEventListener('message', handleOauthMessage);
     return () => window.removeEventListener('message', handleOauthMessage);
   }, [queryClient, refetch]);
+
+  // Invalidate router context when auth credentials change or load completes
+  useEffect(() => {
+    if (!isLoading) {
+      router.invalidate();
+    }
+  }, [user, role, isLoading]);
 
   useEffect(() => {
     // 1. Detect OAuth error in URL hash OR query params
