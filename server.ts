@@ -64,10 +64,10 @@ async function getSupabaseAdmin() {
 const apiRoutes = app
   .post("/upload-presign", async (c) => {
     try {
-      const { photoId, contentType } = await c.req.json();
-      if (!photoId) return c.json({ error: "photoId required" }, 400);
+      const { photoId, fileKey, contentType } = await c.req.json();
+      if (!photoId && !fileKey) return c.json({ error: "photoId or fileKey required" }, 400);
       
-      const fileName = `photox/public/${photoId}.webp`;
+      const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/${photoId}.webp`;
       const s3Client = await getR2Client();
       
       const command = new PutObjectCommand({

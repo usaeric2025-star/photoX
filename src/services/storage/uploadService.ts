@@ -79,7 +79,7 @@ export const uploadImages = async (
       }
 
       const presignRes = await api['upload-presign'].$post({
-        json: { photoId: photoId, contentType: 'image/webp' }
+        json: { photoId: photoId, fileKey: safeFileName, contentType: 'image/webp' }
       });
       
       if (!presignRes.ok) {
