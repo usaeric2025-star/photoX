@@ -115,10 +115,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
 
     const groupPhotos = infinitePhotosData?.pages.flatMap(page => page.photos) || [];
 
-    // Strict Group Guard: Ensure we filter out photos belonging to other groups to prevent stale leaks during transitions
-    const strictFilteredGroupPhotos = groupPhotos.filter(p => p.group_id === activeGroupId);
-
-    const visiblePhotos = filterPhotosByMode(strictFilteredGroupPhotos, isAdminMode);
+    const visiblePhotos = filterPhotosByMode(groupPhotos, isAdminMode);
 
     return sortGroupPhotos(visiblePhotos);
   }, [activeGroupId, infinitePhotosData, isAdminMode]);

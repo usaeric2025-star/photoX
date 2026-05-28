@@ -172,7 +172,15 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-2xl bg-brand-navy/5 border border-brand-navy/10 shadow-inner">
+        {/* [HEADER-INITIAL-CONTRACT] Consuming useAuthSession().isPending for right toolbar */}
+        {isAuthPending ? (
+          <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-2xl bg-brand-navy/5 border border-brand-navy/10 animate-pulse">
+             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200/60" />
+             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200/60 hidden xs:block" />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-2xl bg-brand-navy/5 border border-brand-navy/10 shadow-inner">
               {/* Refresh Component */}
               <div className="relative flex items-center" ref={dropdownRef}>
                 <button 
@@ -271,7 +279,8 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 </button>
               )
             )}
-          </div>
+          </>
+        )}
       </div>
     </header>
   );
