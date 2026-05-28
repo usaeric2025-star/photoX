@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect, useRef } from 'react';
+import React, { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { motion } from 'motion/react';
 import { PHOTO_GRID_CONFIG } from '../../config/virtuoso.config';
@@ -10,6 +10,7 @@ import { useGalleryStore, useShallow } from '../../store';
 import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { GalleryEmpty } from '../shared/GalleryEmpty';
+import { PageSkeleton } from '../PageSkeleton';
 import { useCategoriesQuery, useTagsQuery, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
 import { PAGINATION } from '../../constants/config';
 import { useOptionalAdmin } from '@/contexts/AdminContext';
@@ -230,21 +231,30 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     return () => { unsubscribe(); };
   }, [setIsMultiSelectMode, setSelectedIds]);
 
-  const isInitialLoad = infinitePhotosQuery.isLoading && photos.length === 0;
+  // [CROSS-KEY-TRANSITION] [CATEGORY-SUSPENSE-UNIFIED]
+  // [INTERACTION-FEEDBACK-CSS-ONLY]
+  const isPending = infinitePhotosQuery.isPending || (infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage);
+  const hasPreviousData = photos && photos.length > 0;
 
-  if (isInitialLoad) {
-    const skeletonCount = getSkeletonCount(0, columns); // Will default appropriately
+  const [showSkeletonOnClear, setShowSkeletonOnClear] = useState(false);
+  const prevSearchQuery = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (debouncedSearchQuery === '' && prevSearchQuery.current) {
+      setShowSkeletonOnClear(true);
+      const timer = setTimeout(() => {
+        setShowSkeletonOnClear(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+    prevSearchQuery.current = debouncedSearchQuery;
+  }, [debouncedSearchQuery]);
+
+  if ((isPending && !hasPreviousData) || showSkeletonOnClear) {
     return (
-      <motion.div 
-        key="skeleton"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto"
-      >
-        <PhotoGridSkeleton columns={columns} count={skeletonCount} />
-      </motion.div>
+      <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto" id="page-skeleton-container">
+        <PageSkeleton />
+      </div>
     );
   }
 
@@ -262,9 +272,11 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     );
   }
 
+  const isStale = isPending && hasPreviousData;
+
   return (
     <div className="h-full w-full overscroll-y-contain relative">
-      <div className={`h-full w-full transition-opacity duration-300 ${isFilteringFetching ? 'opacity-70' : 'opacity-100'}`}>
+      <div className={`h-full w-full transition-all duration-300 ${isStale ? 'opacity-60 animate-pulse' : 'opacity-100'}`}>
         <VirtualGrid
           ref={virtuosoRef}
           count={gridPhotos.length}
@@ -305,12 +317,6 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
           }
         />
       </div>
-      {isFilteringFetching && (
-        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-2.5 py-1 rounded-full shadow-lg border border-slate-110 flex items-center gap-1.5 z-50 animate-pulse">
-          <div className="w-1.5 h-1.5 bg-sky-500 rounded-full animate-ping" />
-          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Updating...</span>
-        </div>
-      )}
     </div>
   );
 });

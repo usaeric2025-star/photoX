@@ -178,105 +178,108 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200/60" />
              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200/60 hidden xs:block" />
           </div>
-        ) : !user && isPublic ? (
-            <button 
-              onClick={handleLogin}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0"
-            >
-              <LogIn size={16} />
-            </button>
         ) : (
           <>
             <div className="flex items-center gap-1 sm:gap-2 p-1 rounded-2xl bg-brand-navy/5 border border-brand-navy/10 shadow-inner">
               {/* Refresh Component */}
               <div className="relative flex items-center" ref={dropdownRef}>
-            <button 
-              onClick={onRefresh}
-              disabled={isRefreshing}
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all shadow-sm border border-brand-navy/10 active:scale-95 ${isRefreshing ? 'bg-blue-600 text-white animate-spin' : 'bg-white text-brand-navy/60 hover:text-blue-600'}`}
-            >
-              <RefreshCcw size={16} />
-            </button>
-            {isManagement && (
-              <button 
-                onClick={() => setShowRefreshMenu(!showRefreshMenu)}
-                className="absolute -right-1.5 bottom-0 w-4 h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-white"
-              >
-                <ChevronDown size={10} />
-              </button>
-            )}
-            {isManagement && <RefreshMenu show={showRefreshMenu} isInfiniteMode={isInfiniteMode} t={t} toggleInfinite={() => setIsInfiniteMode(!isInfiniteMode)} />}
-          </div>
+                <button 
+                  onClick={onRefresh}
+                  disabled={isRefreshing}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all shadow-sm border border-brand-navy/10 active:scale-95 ${isRefreshing ? 'bg-blue-600 text-white animate-spin' : 'bg-white text-brand-navy/60 hover:text-blue-600'}`}
+                >
+                  <RefreshCcw size={16} />
+                </button>
+                {isManagement && (
+                  <button 
+                    onClick={() => setShowRefreshMenu(!showRefreshMenu)}
+                    className="absolute -right-1.5 bottom-0 w-4 h-4 rounded-full bg-brand-navy text-white flex items-center justify-center border-2 border-white"
+                  >
+                    <ChevronDown size={10} />
+                  </button>
+                )}
+                {isManagement && <RefreshMenu show={showRefreshMenu} isInfiniteMode={isInfiniteMode} t={t} toggleInfinite={() => setIsInfiniteMode(!isInfiniteMode)} />}
+              </div>
 
-          {isPublic && <LanguageSwitcher variant={variant} />}
+              {isPublic && <LanguageSwitcher variant={variant} />}
 
-          {isManagement && adminPreviewMode === 'private' && (
-            <button 
-              onClick={handleBatchAiIdentifyTrigger}
-              className="h-9 sm:h-10 px-2.5 rounded-xl border border-brand-navy/10 bg-white text-brand-navy/60 hover:text-blue-600 shadow-sm transition-all"
-            >
-              <Sparkles size={18} />
-            </button>
-          )}
+              {isManagement && adminPreviewMode === 'private' && (
+                <button 
+                  onClick={handleBatchAiIdentifyTrigger}
+                  className="h-9 sm:h-10 px-2.5 rounded-xl border border-brand-navy/10 bg-white text-brand-navy/60 hover:text-blue-600 shadow-sm transition-all"
+                >
+                  <Sparkles size={18} />
+                </button>
+              )}
 
-          {isManagement && (
-            <button 
-              onClick={() => setAdminPreviewMode?.(adminPreviewMode === 'private' ? 'public' : 'private')}
-              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${adminPreviewMode === 'public' ? 'bg-green-600 text-white shadow-lg' : 'bg-white text-brand-navy/40 border border-brand-navy/10 shadow-sm'}`}
-            >
-              <Globe size={18} />
-            </button>
-          )}
+              {isManagement && (
+                <button 
+                  onClick={() => setAdminPreviewMode?.(adminPreviewMode === 'private' ? 'public' : 'private')}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all ${adminPreviewMode === 'public' ? 'bg-green-600 text-white shadow-lg' : 'bg-white text-brand-navy/40 border border-brand-navy/10 shadow-sm'}`}
+                >
+                  <Globe size={18} />
+                </button>
+              )}
 
-          {isPublic && onExit && (
-            <button 
-              onClick={onExit}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all bg-green-600 hover:bg-green-700 text-white shadow-md active:scale-95 shrink-0"
-              title={lang === 'zh' ? '返回管理端' : lang === 'ms' ? 'Kembali ke Urus' : 'Back to Admin'}
-            >
-              <Globe size={18} />
-            </button>
-          )}
+              {isPublic && onExit && (
+                <button 
+                  onClick={onExit}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all bg-green-600 hover:bg-green-700 text-white shadow-md active:scale-95 shrink-0"
+                  title={lang === 'zh' ? '返回管理端' : lang === 'ms' ? 'Kembali ke Urus' : 'Back to Admin'}
+                >
+                  <Globe size={18} />
+                </button>
+              )}
 
-          {!isPublic && (
-            <div className="relative" ref={toolsRef}>
-              <button 
-                onClick={() => setShowToolsMenu(!showToolsMenu)}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-brand-navy/10 text-brand-navy/60 flex items-center justify-center shadow-sm"
-              >
-                <Menu size={18} />
-              </button>
-              <ToolsMenu 
-                show={showToolsMenu} 
-                t={t} 
-                handleOpenSettings={() => handleManageClick?.()}
-                isStaffMode={isEffectiveStaffMode}
-                handleExitStaffMode={handleExitStaffMode}
-                currentLang={lang}
-                onSetLang={(l) => setAppLang(l as any)}
-                adminPreviewMode={adminPreviewMode || 'private'}
-                toggleAdminPreviewMode={() => setAdminPreviewMode?.(adminPreviewMode === 'private' ? 'public' : 'private')}
-              />
+              {!isPublic && (
+                <div className="relative" ref={toolsRef}>
+                  <button 
+                    onClick={() => setShowToolsMenu(!showToolsMenu)}
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-brand-navy/10 text-brand-navy/60 flex items-center justify-center shadow-sm"
+                  >
+                    <Menu size={18} />
+                  </button>
+                  <ToolsMenu 
+                    show={showToolsMenu} 
+                    t={t} 
+                    handleOpenSettings={() => handleManageClick?.()}
+                    isStaffMode={isEffectiveStaffMode}
+                    handleExitStaffMode={handleExitStaffMode}
+                    currentLang={lang}
+                    onSetLang={(l) => setAppLang(l as any)}
+                    adminPreviewMode={adminPreviewMode || 'private'}
+                    toggleAdminPreviewMode={() => setAdminPreviewMode?.(adminPreviewMode === 'private' ? 'public' : 'private')}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {isPublic && (
-            <button 
-              onClick={() => {
-                if (role !== 'admin') {
-                  showError('当前账号不是管理员，无权限访问管理后台。', 'UnifiedHeader');
-                } else {
-                  navigate({ to: '/admin' as any });
-                }
-              }}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0"
-              title="管理工具"
-            >
-              <Wrench size={16} />
-            </button>
-        )}
-        </>
+            {isPublic && (
+              !user ? (
+                <button 
+                  onClick={handleLogin}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0 active:scale-95 transition-transform"
+                  title="管理员登录"
+                >
+                  <LogIn size={16} />
+                </button>
+              ) : (
+                <button 
+                  onClick={() => {
+                    if (role !== 'admin') {
+                      showError('当前账号不是管理员，无权限访问管理后台。', 'UnifiedHeader');
+                    } else {
+                      navigate({ to: '/admin' as any });
+                    }
+                  }}
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0 active:scale-95 transition-transform"
+                  title="管理工具"
+                >
+                  <Wrench size={16} />
+                </button>
+              )
+            )}
+          </>
         )}
       </div>
     </header>

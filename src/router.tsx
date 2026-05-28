@@ -80,6 +80,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
       can: context?.can || (() => false),
     };
   },
+  /* [CATEGORY-SUSPENSE-UNIFIED] unified route-level suspense fallback */
   component: () => (
     <Suspense fallback={<PageSkeleton />}>
       <Outlet />

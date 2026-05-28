@@ -109,10 +109,13 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   }, [searchQuery]);
 
   // Debounced parent state update
+  // [INTERACTION-FEEDBACK-CSS-ONLY]
   const debouncedSyncSearch = useDebouncedCallback((val: string) => {
     setSearchQuery(val);
     updateURL({ q: val || undefined });
-  }, 500);
+  }, 300);
+
+  const isSearchingLocal = localSearch !== (searchQuery || '');
 
   return (
     <div className="shrink-0 px-2 sm:px-3 pt-2 pb-1.5 z-40 bg-white border-b border-[#ECECEC]">
@@ -136,7 +139,11 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
               }}
               className="w-full bg-[#F7F7F7] border border-[#ECECEC] rounded-full py-1.5 pl-8 pr-8 text-[13px] font-normal text-[#1A1A1A] placeholder-[#999999] focus:outline-none focus:bg-white transition-all"
             />
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888888]" />
+            {isSearchingLocal ? (
+              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+            ) : (
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#888888]" />
+            )}
             {localSearch && (
               <button
                 onClick={() => {

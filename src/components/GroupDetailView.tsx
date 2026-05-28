@@ -57,7 +57,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const virtuosoRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
 
-  const { data: groupData, isLoading: isGroupDataLoading } = useGroupDetailQuery(activeGroupId);
+  const { data: groupData, isLoading: isGroupDataLoading, isPlaceholderData: isGroupDataPlaceholder } = useGroupDetailQuery(activeGroupId);
 
   // Paginated group photos via React Query Infinite Query
   const {
@@ -65,8 +65,12 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading: isGroupPhotosLoading
+    isLoading: isGroupPhotosLoading,
+    isPlaceholderData: isGroupPhotosPlaceholder
   } = useInfiniteGroupPhotosQuery(activeGroupId, isAdminMode, 20);
+
+  // [GROUP-STALE-SIGNAL]
+  const isStale = isGroupDataPlaceholder || isGroupPhotosPlaceholder;
 
   const isLoading = isGroupPhotosLoading || isGroupDataLoading;
 
@@ -178,7 +182,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                     >
                       <ChevronLeft size={24} />
                     </button>
-                    <div className="flex flex-col min-h-[3rem]">
+                    <div className={`flex flex-col min-h-[3rem] ${isStale ? "animate-pulse" : ""}`}>
                       <div className="flex items-center gap-2 min-h-[1.75rem]">
                          {isGroupDataLoading ? (
                            <Skeleton className="h-6 w-32 bg-slate-200" />
@@ -235,22 +239,25 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                   </div>
                 )}
 
-                <GroupGridView 
-                  key={activeGroupId}
-                  variant={variant}
-                  onEndReached={() => {
-                    if (hasNextPage && !isFetchingNextPage) {
-                      fetchNextPage();
-                    }
-                  }}
-                  virtuosoRef={virtuosoRef}
-                  photos={activeGroupPhotos} 
-                  isLoading={isLoading}
-                  isFetchingNextPage={isFetchingNextPage}
-                  hasNextPage={hasNextPage}
-                  highlightId={currentHighlightId}
-                  onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
-                />
+                {/* [GROUP-STALE-SIGNAL] */}
+                <div className={`flex-1 min-h-0 transition-opacity duration-300 ${isStale ? "opacity-60" : "opacity-100"}`}>
+                  <GroupGridView 
+                    key={activeGroupId}
+                    variant={variant}
+                    onEndReached={() => {
+                      if (hasNextPage && !isFetchingNextPage) {
+                        fetchNextPage();
+                      }
+                    }}
+                    virtuosoRef={virtuosoRef}
+                    photos={activeGroupPhotos} 
+                    isLoading={isLoading}
+                    isFetchingNextPage={isFetchingNextPage}
+                    hasNextPage={hasNextPage}
+                    highlightId={currentHighlightId}
+                    onPhotoClick={(photo) => setFocusedGroupPhotoId(photo.id)} 
+                  />
+                </div>
             </>
           )}
 
