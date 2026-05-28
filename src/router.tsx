@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-router';
 import { ROUTES } from './config/constants';
 import { lazy, Suspense } from 'react';
-import { FullPageLoading } from './components/FullPageLoading';
+import { PageSkeleton } from './components/PageSkeleton';
 import { globalHandleError } from './utils/errorHandler';
 import { Capability } from './config/permissions';
 import { validateRouteAccess } from './lib/permissions-contract';
@@ -81,7 +81,7 @@ export const rootRoute = createRootRouteWithContext<RouterContext>()({
     };
   },
   component: () => (
-    <Suspense fallback={<FullPageLoading />}>
+    <Suspense fallback={<PageSkeleton />}>
       <Outlet />
     </Suspense>
   ),
@@ -99,8 +99,8 @@ const indexRoute = createRoute({
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
       manufacturer: (search.manufacturer as string) || undefined,
-      sort: (search.sort as GallerySearchParams['sort']) || 'date',
-      view: (search.view as GallerySearchParams['view']) || 'grid',
+      sort: (search.sort as GallerySearchParams['sort']) || undefined,
+      view: (search.view as GallerySearchParams['view']) || undefined,
       authError: (search.authError as string) || undefined,
     };
   },
@@ -155,7 +155,7 @@ const groupRoute = createRoute({
     return {
       q: (search.q as string) || undefined,
       category: (search.category as string) || undefined,
-      sort: (search.sort as GallerySearchParams['sort']) || 'date',
+      sort: (search.sort as GallerySearchParams['sort']) || undefined,
     };
   },
   loader: async ({ params: { groupId }, context }) => {

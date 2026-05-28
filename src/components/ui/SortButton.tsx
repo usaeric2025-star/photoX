@@ -12,7 +12,7 @@ export const SortButton = ({ onClick, label = "排序", selected }: SortButtonPr
     variant={selected ? "default" : "outline"} 
     size="sm" 
     onClick={onClick} 
-    className="h-8 gap-1.5"
+    className="h-8 gap-1.5 active:scale-95 transition-transform"
   >
     <ArrowUpDown size={14} />
     {label}

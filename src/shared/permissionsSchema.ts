@@ -52,17 +52,11 @@ export function validateAccess(contract: RouteAccessContract, context: { user: a
     const hint = aiDebugHints[permission] || "Insufficient permissions";
     const errorMessage = `Access Denied: Required level is '${permission}'. ${hint}`;
 
-    // Standardize reporting to ErrorBoundary diagnostic logs
-    ErrorBoundary.report(
-      new Error(`[AUTH-VIOLATION] ${errorMessage}`),
-      `RouteAccess:${permission}`
-    );
-
-    // Perform redirect throwing
+    // Perform redirect without throwing or logging to ErrorBoundary for graceful degradation
     throw redirect({
       to: fallback,
       search: {
-        authError: errorMessage
+        authError: "admin_required"
       } as any
     });
   }

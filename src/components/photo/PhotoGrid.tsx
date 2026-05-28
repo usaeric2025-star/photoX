@@ -58,18 +58,24 @@ interface GridContext {
   textEndOfList: string;
 }
 
+const ListFooterSkeleton = React.memo(({ columns }: { columns: number }) => {
+  return (
+    <div 
+      className="grid gap-2 p-1 pb-32"
+      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+    >
+      {Array.from({ length: columns }).map((_, i) => (
+        <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 animate-pulse border border-slate-50" />
+      ))}
+    </div>
+  );
+});
+
 const MemoizedFooter = React.memo(({ 
-  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList 
-}: GridContext) => {
+  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList, columns 
+}: GridContext & { columns: number }) => {
   if (isFetchingNextPage) {
-    return (
-      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-        <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
-        <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
-          {textLoading}
-        </span>
-      </div>
-    );
+    return <ListFooterSkeleton columns={columns} />;
   }
   if (!isFetchingNextPage && !hasNextPage && hasPhotos) {
     return (
@@ -258,7 +264,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
 
   return (
     <div className="h-full w-full overscroll-y-contain relative">
-      <div className={`h-full w-full transition-opacity duration-300 ${isFilteringFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`h-full w-full transition-opacity duration-300 ${isFilteringFetching ? 'opacity-70' : 'opacity-100'}`}>
         <VirtualGrid
           ref={virtuosoRef}
           count={gridPhotos.length}
@@ -294,6 +300,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
               hasPhotos={displayPhotos.length > 0}
               textLoading={(t as any).loading || '正在载入更多...'}
               textEndOfList={(t as any).endOfList || '已经到底啦'}
+              columns={columns}
             />
           }
         />

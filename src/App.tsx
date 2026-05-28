@@ -14,6 +14,27 @@ export default function AppRoutes() {
   const { role, can } = usePermission();
   const queryClient = useQueryClient();
   
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      }
+    });
+    
+    // bfcache compatibility: ensure auth state is fresh when returning from back/forward cache
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) {
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, [queryClient]);
+
   // If loading inside a popup, detect auth credentials, wait for Supabase to persist them, send success postMessage, and close.
   useEffect(() => {
     if (window.opener && window.opener !== window) {

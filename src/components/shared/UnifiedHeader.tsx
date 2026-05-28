@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RefreshCcw, Globe, Menu, LogIn, Wrench, Sparkles, CheckSquare, Search, ChevronDown } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
-import { useFeedback, useMultiSelect, useTasks, useSettings, useAuth } from '../../hooks';
+import { useFeedback, useMultiSelect, useTasks, useSettings, useAuth, usePermission } from '../../hooks';
 import { translations, LanguageCode } from '../../lib/translations';
 import { Photo, AppSettings } from '../../types';
 import { GalleryVariant } from '@/types/variant';
@@ -42,9 +42,8 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   const isPublic = variant === 'public-showcase';
   const { settings: fetchedSettings } = useSettings();
-  const { user } = useAuth();
-  const { 
-    appLang, isStaffMode, activeScreen, setActiveScreen,
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const { appLang, isStaffMode, activeScreen, setActiveScreen,
     isInfiniteMode, setIsInfiniteMode, setAppLang
   } = useGalleryStore(useShallow(s => ({
     appLang: s.appLang,
@@ -55,6 +54,8 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     setIsInfiniteMode: s.setIsInfiniteMode,
     setAppLang: s.setAppLang
   })));
+
+  const { role } = usePermission();
 
   const { tasks } = useTasks();
   const isSyncing = tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入')));
@@ -245,13 +246,31 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           )}
         </div>
 
-        {isPublic && !user && (
-          <button 
-            onClick={handleLogin}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm"
-          >
-            <LogIn size={16} />
-          </button>
+        {isPublic && (
+          isAuthLoading ? (
+             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-100 border border-slate-200 animate-pulse flex-shrink-0" />
+          ) : !user ? (
+            <button 
+              onClick={handleLogin}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0"
+            >
+              <LogIn size={16} />
+            </button>
+          ) : (
+            <button 
+              onClick={() => {
+                if (role !== 'admin') {
+                  showError('当前账号不是管理员，无权限访问管理后台。');
+                } else {
+                  navigate({ to: '/admin' });
+                }
+              }}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white border border-[#ECECEC] text-[#555555] flex items-center justify-center shadow-sm shrink-0"
+              title="管理工具"
+            >
+              <Wrench size={16} />
+            </button>
+          )
         )}
       </div>
     </header>
