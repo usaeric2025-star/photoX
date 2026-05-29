@@ -5,7 +5,7 @@ import { PhotoCard } from '../PhotoCard';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock dependencies
-vi.mock('@/contexts/PhotoActionsContext', () => ({
+vi.mock('@/features/admin/useAdmin', () => ({
   usePhotoActions: () => ({
     setPhotos: vi.fn(),
   }),

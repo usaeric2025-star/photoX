@@ -101,9 +101,6 @@ const photoGridSelector = (s: any) => ({
     viewMode: s.viewMode,
     activeGroupId: s.activeGroupId,
     activePhotoId: s.activePhotoId,
-    filterCatId: s.filterCatId,
-    filterTagIds: s.filterTagIds,
-    debouncedSearchQuery: s.debouncedSearchQuery,
     sortOrder: s.sortOrder
   });
 
@@ -117,11 +114,11 @@ const multiSelectSelector = (s: any) => ({
 export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: GalleryVariant }> = React.memo(({ virtuosoRef, variant }) => {
   const { 
     columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
-    isStaffMode, viewMode, activeGroupId, activePhotoId,
-    filterCatId, filterTagIds, debouncedSearchQuery, sortOrder
+    isStaffMode, viewMode, activeGroupId, activePhotoId, sortOrder
   } = useGalleryStore(useShallow(photoGridSelector));
 
-  
+  const { filters } = useFilters();
+  const showGroupsCollapsed = filters.showGroupsCollapsed;
   const isHookAdminMode = useAdminMode();
   const isPageAdmin = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
   const isAdminMode = isHookAdminMode || isPageAdmin || viewMode === 'admin' || isStaffMode;
@@ -142,9 +139,9 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
 
   // Real-time photo query based on store filters
   const infinitePhotosQueryInternal = useInfinitePhotos({
-    category_id: filterCatId,
-    tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
-    searchQuery: debouncedSearchQuery,
+    category_id: filters.categoryId,
+    tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
+    searchQuery: filters.searchQuery,
     sortOrder: sortOrder,
     isAdminMode: false // Public grid query is never adminMode
   }, PAGINATION.PUBLIC_PAGE_SIZE, shouldEnableInternalQuery);
@@ -165,8 +162,6 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
   
   const { data: categories = [] } = useCategoriesQuery();
   const { data: contextTags = [] } = useTagsQuery();
-  const { filters } = useFilters();
-  const showGroupsCollapsed = filters.showGroupsCollapsed;
 
   const lang = appLang;
   const t = translations[lang as keyof typeof translations] || translations.en;
@@ -241,15 +236,15 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
   const prevSearchQuery = useRef<string | null>(null);
 
   useEffect(() => {
-    if (debouncedSearchQuery === '' && prevSearchQuery.current) {
+    if (filters.searchQuery === '' && prevSearchQuery.current) {
       setShowSkeletonOnClear(true);
       const timer = setTimeout(() => {
         setShowSkeletonOnClear(false);
       }, 300);
       return () => clearTimeout(timer);
     }
-    prevSearchQuery.current = debouncedSearchQuery;
-  }, [debouncedSearchQuery]);
+    prevSearchQuery.current = filters.searchQuery;
+  }, [filters.searchQuery]);
 
   if ((isPending && !hasPreviousData) || showSkeletonOnClear) {
     return (

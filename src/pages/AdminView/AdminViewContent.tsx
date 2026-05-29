@@ -15,7 +15,6 @@ import { LoginScreen } from '@/components/admin/LoginScreen';
 import { AdminScreen } from '@/components/AdminScreen';
 import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
 import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
-import { PhotoActionsContext } from '@/contexts/PhotoActionsContext';
 import { useGalleryStore, useShallow } from '@/store';
 import { useFilters } from '@/features/filters/useFilters';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
@@ -105,7 +104,6 @@ export const AdminViewContent: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <PhotoActionsContext.Provider value={photoActions as any}>
         <DataLoadingContainer
           isLoading={!!isLoading}
           hasData={!!logic.photos && logic.photos.length > 0}
@@ -176,7 +174,6 @@ export const AdminViewContent: React.FC = () => {
         </main>
       </div>
       </DataLoadingContainer>
-      </PhotoActionsContext.Provider>
     </ErrorBoundary>
   );
 };

@@ -15,7 +15,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
-import { PhotoActionsContext } from '../../contexts/PhotoActionsContext';
 import { useAuth, usePermission } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
 

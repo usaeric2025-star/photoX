@@ -45,9 +45,6 @@ const gallerySelector = (s: any) => ({
     setActivePhotoId: s.setActivePhotoId,
     sortOrder: s.sortOrder,
     setSortOrder: s.setSortOrder,
-    filterCatId: s.filterCatId,
-    filterTagIds: s.filterTagIds,
-    debouncedSearchQuery: s.debouncedSearchQuery,
     isStaffMode: s.isStaffMode,
     setIsStaffMode: s.setIsStaffMode,
     viewMode: s.viewMode,
@@ -82,6 +79,7 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
 
   // Store
   const store = useGalleryStore(useShallow(gallerySelector));
+  const { filters } = useFilters();
 
   // Core Data fetchers (handled differently per variant or shared)
   const adminData = isManagement ? useAdmin() : null;
@@ -99,9 +97,9 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   const pageSize = isManagement ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE;
   
   const infiniteQuery = useInfinitePhotos({
-    category_id: store.filterCatId,
-    tag_id: Array.isArray(store.filterTagIds) && store.filterTagIds.length > 0 ? store.filterTagIds[0] : null,
-    searchQuery: store.debouncedSearchQuery,
+    category_id: filters.categoryId,
+    tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
+    searchQuery: filters.searchQuery,
     sortOrder: store.sortOrder,
     isAdminMode: isManagement
   }, pageSize, !isManagement);
@@ -111,7 +109,6 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
     return flattenPhotoInfiniteQueryPages(infiniteQuery.data?.pages || []);
   }, [isManagement, adminData, photosFromAdmin, infiniteQuery.data]);
 
-  const { filters } = useFilters();
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
     categories,
