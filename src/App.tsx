@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router';
 import { useQueryClient } from '@tanstack/react-query';
@@ -109,11 +109,12 @@ export default function AppRoutes() {
   }, [queryClient, refetch]);
 
   // Invalidate router context when auth credentials change or load completes
-  useEffect(() => {
-    if (!isLoading) {
-      router.invalidate();
-    }
-  }, [user, role, isLoading]);
+  // 注释掉以防止无限死循环
+  // useEffect(() => {
+  //   if (!isLoading) {
+  //     router.invalidate();
+  //   }
+  // }, [user, role, isLoading]);
 
   useEffect(() => {
     // 1. Detect OAuth error in URL hash OR query params
@@ -171,7 +172,9 @@ export default function AppRoutes() {
     return <FullPageLoading />;
   }
 
+  const routerContext = useMemo(() => ({ user, role, can }), [user, role, can]);
+
   return (
-      <RouterProvider router={router} context={{ user, role, can }} />
+      <RouterProvider router={router} context={routerContext} />
   );
 }

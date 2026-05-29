@@ -18,15 +18,8 @@ const getEnv = (key: string): string => {
   return '';
 };
 
-const supabaseUrl = 
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || 
-  (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || 
-  'https://vbpnlkeweqkjufijtdph.supabase.co';
-
-const supabaseAnonKey = 
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || 
-  (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || 
-  'sb_publishable_mXZxsfqH-fATbT2g9fiX7A_-VfzOwa8';
+const supabaseUrl = getEnv('VITE_SUPABASE_URL') || 'https://vbpnlkeweqkjufijtdph.supabase.co';
+const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY') || 'sb_publishable_mXZxsfqH-fATbT2g9fiX7A_-VfzOwa8';
 
 // 验证环境变量
 if (!supabaseUrl || !supabaseAnonKey) {
