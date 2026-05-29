@@ -41,7 +41,7 @@ export async function getR2Client() {
 }
 
 // --- Hono App Implementation ---
-const app = new Hono().basePath("/api");
+export const app = new Hono().basePath("/api");
 
 // Middleware
 app.use("*", cors());
