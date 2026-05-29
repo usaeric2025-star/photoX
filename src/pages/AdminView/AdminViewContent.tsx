@@ -182,14 +182,14 @@ export const AdminViewContent: React.FC = () => {
         >
           <AdminGlobalModals />
       
-        <div className="grid grid-rows-[auto_1fr_auto] h-dvh bg-brand-bg">
+        <div className="flex h-screen bg-brand-bg overflow-hidden w-full">
           {store.viewMode !== 'public' && (
-            <div className="hidden lg:block shrink-0">
+            <div className="hidden lg:block shrink-0 h-full">
               <AdminSidebar />
             </div>
           )}
 
-          <div className="overflow-auto flex flex-col flex-1 min-h-0">
+          <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
               {store.batchEditingIds && store.batchEditingIds.length > 0 && (
                 <BatchEditScreen />
               )}

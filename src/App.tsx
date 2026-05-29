@@ -17,8 +17,18 @@ export default function AppRoutes() {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        console.log(`🔐 App.tsx onAuthStateChange event: ${event}`);
         // [OAUTH-CALLBACK-ATOMIC] Write to storage, invalidate synchronously.
-        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        await queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        router.invalidate();
+
+        if (event === 'SIGNED_IN') {
+          // If we are currently on the home page or root path, redirect automatically to admin mode
+          if (window.location.pathname === '/' || window.location.pathname === '') {
+            console.log('🚀 User signed in on root page. Navigating to /admin');
+            router.navigate({ to: '/admin' as any });
+          }
+        }
       }
     });
     
@@ -91,6 +101,14 @@ export default function AppRoutes() {
     console.log('🔍 显示 FullPageLoading');
     return <FullPageLoading />;
   }
+
+  // Synchronize router context whenever auth user or permission changes
+  useEffect(() => {
+    if (user !== undefined) {
+      console.log('🔄 Invalidating router after auth context update', { user: user?.email, role });
+      router.invalidate();
+    }
+  }, [user, role]);
 
   const routerContext = useMemo(() => ({ user, role, can }), [user, role, can]);
 
