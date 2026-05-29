@@ -194,12 +194,12 @@ const authCallbackRoute = createRoute({
 
 // 3. Route Tree
 const routeTree = rootRoute.addChildren([
+  authCallbackRoute,
   indexRoute,
   hashRoute,
   groupRoute,
   gRoute,
   adminRoute,
-  authCallbackRoute,
 ]);
 
 // 4. Create Router

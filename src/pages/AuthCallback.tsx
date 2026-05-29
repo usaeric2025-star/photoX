@@ -4,19 +4,29 @@ import { supabase } from '@/lib/supabase';
 export function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
-      const code = new URLSearchParams(window.location.search).get('code');
+      const searchParams = new URLSearchParams(window.location.search);
+      const code = searchParams.get('code');
+      console.log('1. [AuthCallback] Entered callback page. Code exists:', !!code);
+      
       if (!code) {
+        console.warn('2. [AuthCallback] No authorization code found in URL, redirecting to home.');
         window.location.href = '/';
         return;
       }
       
       try {
-        await supabase.auth.exchangeCodeForSession(window.location.href);
+        console.log('3. [AuthCallback] Found code. Exchanging token for session with original URL:', window.location.href);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+        if (error) {
+          console.error('4. [AuthCallback] Exchange code failed:', error);
+          throw error;
+        }
+        console.log('5. [AuthCallback] Code exchange succeeded, session retrieved. Redirecting to /admin');
+        window.location.href = '/admin';
       } catch (err) {
-        console.error('Error exchanging authorization code:', err);
+        console.error('6. [AuthCallback] Critical error during code exchange:', err);
+        window.location.href = '/?error=login_failed';
       }
-      
-      window.location.href = '/admin';
     };
     
     handleCallback();
