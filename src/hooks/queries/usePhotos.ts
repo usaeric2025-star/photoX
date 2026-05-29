@@ -54,6 +54,9 @@ export const useInfinitePhotos = (filters: {
     initialPageParam: 1,
     enabled,
     staleTime: createStaleTime('REALTIME'), // 1 分钟
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });

@@ -69,15 +69,15 @@ export const AdminViewContent: React.FC = () => {
   // 添加 loading 超时强制显示
   const [forceShow, setForceShow] = useState(false);
   useEffect(() => {
-    if (isLoading) {
-      const timer = setTimeout(() => {
-        console.warn('⚠️ Loading 超时，强制显示内容');
-        setForceShow(true);
-      }, 5000);
-      return () => clearTimeout(timer);
-    } else {
+    if (!isLoading) return;
+    const timer = setTimeout(() => {
+      console.warn('⚠️ Loading 超时，强制显示内容');
+      setForceShow(true);
+    }, 10000);
+    return () => {
+      clearTimeout(timer);
       setForceShow(false);
-    }
+    };
   }, [isLoading]);
 
   const { showError, showSuccess } = useFeedback();
@@ -129,6 +129,50 @@ export const AdminViewContent: React.FC = () => {
   if (!isAuthLoading && !user && !store.isStaffMode) {
     console.log('🔍 条件触发: 无用户且非StaffMode，显示登录页');
     return <LoginScreen loginWithGoogle={loginWithGoogle} isLoading={isSyncing} />;
+  }
+
+  // 员工模式：显示受限限制界面
+  if (!user && store.isStaffMode) {
+    console.log('🔍 显示员工模式受限界面');
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+        <div className="w-full max-w-md bg-white border border-slate-200 rounded-[24px] p-8 shadow-sm space-y-6">
+          <div className="text-center space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-[11px] font-bold tracking-wider uppercase mb-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+              员工模式 / Staff Mode
+            </div>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+              PHOT<span className="text-blue-600">O</span>X WORKSPACE
+            </h1>
+            <p className="text-xs text-slate-500">
+              功能受限模式 / Restricted Access Mode
+            </p>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-600 space-y-3 leading-relaxed">
+            <p className="font-semibold text-slate-800">
+              当前为员工工作环境，提供以下安全权限：
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-slate-600 pl-1">
+              <li>查看商品画册及隐藏信息</li>
+              <li>使用 AI 人工智能属性别名识别</li>
+              <li>商品分组关联与编辑权限</li>
+            </ul>
+            <p className="text-[10px] text-slate-400">
+              * 为保障系统安全性，云端同步及系统全局配置等底层架构管理功能已物理隔离。如需完整控制，请切换至管理员账号。
+            </p>
+          </div>
+
+          <button
+            onClick={() => useGalleryStore.getState().setIsStaffMode(false)}
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+          >
+            退出员工模式 / Exit Workspace
+          </button>
+        </div>
+      </div>
+    );
   }
 
   console.log('🔍 条件通过: 有用户或StaffMode，显示管理内容');
