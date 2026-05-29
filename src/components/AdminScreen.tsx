@@ -38,15 +38,12 @@ export const AdminScreen: React.FC = React.memo(() => {
   const [forceShow, setForceShow] = useState(false);
 
   useEffect(() => {
-    if (isLoadingPhotos) {
-      const timer = setTimeout(() => {
-        console.warn('⚠️ [AdminScreen] Photos loading timed out, forcing view display');
-        setForceShow(true);
-      }, 5000);
-      return () => clearTimeout(timer);
-    } else {
-      setForceShow(false);
-    }
+    if (!isLoadingPhotos) return;
+    const timer = setTimeout(() => {
+      console.warn('⚠️ [AdminScreen] Photos loading timed out, forcing view display');
+      setForceShow(true);
+    }, 5000);
+    return () => clearTimeout(timer);
   }, [isLoadingPhotos]);
 
   const shouldShowContent = !isLoadingPhotos || forceShow;

@@ -74,10 +74,7 @@ export const AdminViewContent: React.FC = () => {
       console.warn('⚠️ Loading 超时，强制显示内容');
       setForceShow(true);
     }, 10000);
-    return () => {
-      clearTimeout(timer);
-      setForceShow(false);
-    };
+    return () => clearTimeout(timer);
   }, [isLoading]);
 
   const { showError, showSuccess } = useFeedback();

@@ -72,6 +72,9 @@ export const usePhotoCount = (filters: { category_id?: string | null; tag_id?: s
     }),
     queryFn: () => getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode),
     staleTime: createStaleTime('REALTIME'), // 1 分钟
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 };
 
@@ -81,6 +84,9 @@ export const useGroupPhotos = (groupId: string, isAdminMode: boolean = false) =>
     queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
     select: (data) => data ?? [],
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 };
 
@@ -96,5 +102,8 @@ export const useInfiniteGroupPhotosQuery = (groupId: string | null, isAdminMode:
       const loaded = allPages.reduce((sum, p) => sum + p.photos.length, 0);
       return (loaded < lastPage.total && lastPage.photos.length > 0) ? allPages.length + 1 : undefined;
     },
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 };
