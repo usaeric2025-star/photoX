@@ -15,6 +15,10 @@ export const useAuth = () => {
       try {
         const { data, error } = await supabase.auth.getUser()
         console.log('🔐 getUser 结果:', { user: data?.user?.email, error: error?.message || error });
+        if (error) {
+          console.error('🔐 getUser 错误:', error);
+          return null;
+        }
         const u = data?.user;
         if (!u) return null;
         return {
@@ -31,6 +35,10 @@ export const useAuth = () => {
       }
     },
     staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
   })
 
   console.log('🔐 useAuth 返回:', { user: user?.email, isLoading, isPending });
