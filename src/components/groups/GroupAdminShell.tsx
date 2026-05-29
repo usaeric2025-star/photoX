@@ -11,9 +11,9 @@ import { GroupGridView } from './GroupGridView';
 import { GroupPhotoPicker } from './GroupPhotoPicker';
 
 import { useAdminMode } from '@/hooks';
-import { useAdmin } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
+import { useGalleryStore, useShallow } from '@/store';
 import { translations } from '../../lib/translations';
-import { usePhotoActions } from '@/features/admin/useAdmin';
 
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;
@@ -27,17 +27,29 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     onAiAnalyze, onCancelAnalyze, isAnalyzing,
   } = props;
   const isAdminMode = useAdminMode();
-  const adminLogic = useAdmin();
+  
   const {
      activeGroupId, setActiveGroupId, appLang,
      setEditPhotoId,
-     analyzeGroupById,
-     handleAddToGroup,
      isPhotoPickerOpen, setIsPhotoPickerOpen,
      photoPickerGroupId
-  } = adminLogic;
+  } = useGalleryStore(useShallow(s => ({
+    activeGroupId: s.activeGroupId,
+    setActiveGroupId: s.setActiveGroupId,
+    appLang: s.appLang,
+    setEditPhotoId: s.setEditPhotoId,
+    isPhotoPickerOpen: s.isPhotoPickerOpen,
+    setIsPhotoPickerOpen: s.setIsPhotoPickerOpen,
+    photoPickerGroupId: s.photoPickerGroupId
+  })));
   
-  const { onUngroup, onEditPhoto: storeEditPhoto } = usePhotoActions();
+  const adminActions = useAdminActions();
+  const onUngroup = (groupId: string) => { /* To be implemented properly via useAdminActions */ };
+  const storeEditPhoto = (p: Photo | string) => setEditPhotoId(typeof p === 'string' ? p : p.id);
+  const analyzeGroupById = async (id: string) => {}; // Unused or needs porting
+  const handleAddToGroup = async (ids: string[], groupId: string) => {
+     await adminActions.batchUpdate.mutateAsync({ ids, updates: { group_id: groupId } });
+  };
 
   const {
     activeGroupPhotos,

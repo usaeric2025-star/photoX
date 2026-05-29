@@ -22,24 +22,11 @@ export const loginWithGoogle = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/admin',
-        skipBrowserRedirect: true
+        redirectTo: window.location.origin + '/admin'
       }
     });
 
     if (error) throw error;
-    if (!data?.url) throw new Error('No authorization URL returned from Supabase');
-
-    const authWindow = window.open(
-      data.url,
-      'supabase_oauth_popup',
-      'width=600,height=700'
-    );
-
-    if (!authWindow) {
-      throw new Error('Please allow popups for this site to complete login.');
-    }
-
     return data;
   } catch (err: unknown) {
     throw err;

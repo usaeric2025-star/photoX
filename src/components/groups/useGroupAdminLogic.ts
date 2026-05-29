@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 import { saveGroupToCloud } from '../../services/groups';
 import { updatePhotosGroupInCloud } from '../../services/photos';
 import { isErr } from '@/lib/errorFactory';
@@ -42,10 +42,11 @@ export const useGroupAdminLogic = ({
     setBatchEditingIds: s.setBatchEditingIds
   })));
 
-  const {
-    onTogglePinned, onDeletePhoto, onUpdatePhoto, onUpdatePhotosBulk, onToggleHidden,
-    onGroupPhotos, onUngroup, onBatchAiAnalyze, onBatchEdit
-  } = usePhotoActions();
+  const adminActions = useAdminActions();
+  const onUpdatePhoto = (id: string, data: any) => adminActions.updatePhoto(id, data);
+  const onUpdatePhotosBulk = (ids: string[], data: any) => adminActions.batchUpdate.mutateAsync({ ids, updates: data });
+  const onBatchAiAnalyze = (photos: Photo[]) => {};
+  const onBatchEdit = (ids: string[]) => setBatchEditingIds(ids);
   
   const setAlertDialog = contextSetAlertDialog;
   const { showError, showSuccess } = useFeedback();

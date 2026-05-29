@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useGalleryStore, useShallow } from '@/store';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useFeedback } from '@/hooks/shared/useFeedback';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { photoKeys } from '@/lib/queryKeys';
@@ -19,7 +19,7 @@ export function useBatchEdit() {
     resetForm: s.resetForm
   })));
 
-  const { deletePhoto, updatePhoto, batchUpdate } = usePhotoActions();
+  const { deletePhoto, updatePhoto, batchUpdate } = useAdminActions();
   const { showError, showSuccess } = useFeedback();
 
   const [batchIsHiddenApplied, setBatchIsHiddenApplied] = useState(false);

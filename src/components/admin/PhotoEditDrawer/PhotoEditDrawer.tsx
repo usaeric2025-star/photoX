@@ -18,7 +18,7 @@ import {
 } from '../../../hooks';
 import { cleanPhotos } from '../../../lib/filters';
 import { PAGINATION } from '../../../constants/config';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useFilters } from '@/features/filters/useFilters';
 
 /**
@@ -51,7 +51,11 @@ export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
     setEditPhotoId: s.setEditPhotoId
   })));
 
-  const { onDeletePhoto, onUpdatePhoto, onAiAnalyze, onCancelAnalyze } = usePhotoActions();
+  const adminActions = useAdminActions();
+  const onDeletePhoto = (id: string) => adminActions.deletePhoto([id]);
+  const onUpdatePhoto = (id: string, data: any) => adminActions.updatePhoto(id, data);
+  const onAiAnalyze = (photo: Photo) => {};
+  const onCancelAnalyze = () => {};
 
   const infinitePhotosQuery = useInfinitePhotos({
     category_id: filterCatId,

@@ -11,7 +11,7 @@ import { useAdminMode, usePermission, useTasks, useCategoriesQuery, useManufactu
 import { useGalleryStore, useShallow } from '../../store';
 import { createTranslate } from '@/lib/i18n';
 import { translations, LanguageCode } from '../../lib/translations';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 
 export interface PhotoLightboxProps {
   photo: Photo | null;
@@ -43,17 +43,18 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
 
-  const actions = usePhotoActions();
+  const actions = useAdminActions();
+  const { setEditPhotoId } = useGalleryStore(useShallow(s => ({ setEditPhotoId: s.setEditPhotoId })));
   const { tasks } = useTasks();
   const storeIsAnalyzing = React.useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
 
-  const onEditPhoto = props.onEditPhoto ?? actions.onEditPhoto;
-  const onToggleHidden = props.onToggleHidden ?? actions.onToggleHidden;
-  const onTogglePinned = props.onTogglePinned ?? actions.onTogglePinned;
-  const onAiAnalyze = props.onAiAnalyze ?? actions.onAiAnalyze;
-  const onCancelAnalyze = props.onCancelAnalyze ?? actions.onCancelAnalyze;
-  const onUngroup = props.onUngroup ?? actions.onUngroup;
-  const onSetGroupCover = props.onSetGroupCover ?? actions.onSetGroupCover;
+  const onEditPhoto = props.onEditPhoto ?? ((p: Photo) => setEditPhotoId(p.id));
+  const onToggleHidden = props.onToggleHidden ?? ((p: Photo) => actions.updatePhoto(p.id, { is_hidden: !p.is_hidden }));
+  const onTogglePinned = props.onTogglePinned ?? ((p: Photo) => actions.updatePhoto(p.id, { is_pinned: !p.is_pinned }));
+  const onAiAnalyze = props.onAiAnalyze ?? ((p: Photo) => {});
+  const onCancelAnalyze = props.onCancelAnalyze ?? (() => {});
+  const onUngroup = props.onUngroup ?? ((gid: string) => {});
+  const onSetGroupCover = props.onSetGroupCover ?? ((id: string, gid: string) => {});
   const isAnalyzing = props.isAnalyzing ?? storeIsAnalyzing;
 
   const { data: categories = [] } = useCategoriesQuery();

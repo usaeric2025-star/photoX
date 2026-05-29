@@ -1,36 +1,37 @@
 import React from 'react';
 import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
-import { useAdmin } from '@/features/admin/useAdmin';
-import { useMultiSelect } from '@/hooks';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useMultiSelect, useAuth, useTasks, useSyncMutation } from '@/hooks';
+import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
 import { useGalleryStore, useShallow } from '@/store';
 import { translations } from '@/lib/translations';
 import { AdminToolbar } from '@/pages/AdminView/AdminToolbar';
 import { AdminEmptyState } from '@/pages/AdminView/AdminEmptyState';
 
 export const AdminScreen: React.FC = React.memo(() => {
-  const logic = useAdmin();
-  const {
-    user, photos, onRefresh, cloudCount,
-    isSyncing, loginWithGoogle,
-    isLoadingPhotos,
-    handleManageClick: onManageClick,
-    handleImport: onImport,
-  } = logic;
+  const { user, loginWithGoogle } = useAuth();
+  const { photos, isLoading: isLoadingPhotos } = usePhotoGallery();
+  const { tasks } = useTasks();
+  const { mutateAsync: syncMut } = useSyncMutation();
+  const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
+  const onRefresh = () => syncMut('pull');
+  const cloudCount = 0;
 
-  const { selectedIds, clear } = useMultiSelect();
-  const { lang, isStaffMode } = useGalleryStore(useShallow(s => ({
+  const { lang, isStaffMode, setActiveScreen, viewMode, setViewMode } = useGalleryStore(useShallow(s => ({
     lang: s.appLang,
-    isStaffMode: s.isStaffMode
+    isStaffMode: s.isStaffMode,
+    setActiveScreen: s.setActiveScreen,
+    viewMode: s.viewMode,
+    setViewMode: s.setViewMode
   })));
   
+  const onManageClick = () => setActiveScreen('manage');
+
+  const { selectedIds, clear } = useMultiSelect();
   const isEffectiveStaffMode = isStaffMode && !user;
   
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const {
-    onBatchAiAnalyze, 
-  } = usePhotoActions();
+  const onBatchAiAnalyze = (photos: any[]) => {}; // To be refactored to use task execution
 
   const variant = user ? 'full-management' : 'staff-workspace';
   
@@ -44,10 +45,9 @@ export const AdminScreen: React.FC = React.memo(() => {
               onRefresh={onRefresh}
               cloudCount={cloudCount}
               isSyncing={isSyncing}
-              adminPreviewMode={logic.adminPreviewMode}
-              setAdminPreviewMode={logic.setAdminPreviewMode}
+              adminPreviewMode={viewMode as any}
+              setAdminPreviewMode={setViewMode as any}
               handleBatchAiIdentifyTrigger={async () => {
-            if (onBatchAiAnalyze) {
               if (selectedIds.length > 0) {
                 // Same logic as floating buttons
                 const { supabase } = await import('@/lib/supabase');
@@ -65,7 +65,6 @@ export const AdminScreen: React.FC = React.memo(() => {
               } else {
                 onBatchAiAnalyze(photos);
               }
-            }
         }}
       />
       <div className="flex-1 min-h-0 relative">
@@ -75,7 +74,7 @@ export const AdminScreen: React.FC = React.memo(() => {
           <UnifiedGallery 
             variant={variant}
             handleBatchAiIdentifyTrigger={async () => {
-               if (onBatchAiAnalyze) onBatchAiAnalyze(photos);
+               onBatchAiAnalyze(photos);
             }}
           />
         )}

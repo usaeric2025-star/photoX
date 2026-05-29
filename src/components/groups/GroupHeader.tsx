@@ -11,7 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useGalleryStore, useShallow } from '../../store';
-import { usePhotoActions } from '@/features/admin/useAdmin';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 interface GroupHeaderProps {
@@ -33,17 +32,19 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   activeGroupPhotos,
   onBatchAiAnalyzeByGroupId,
 }) => {
-  const { setGroupSettingsOpen, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, setIsPhotoPickerOpen, setPhotoPickerGroupId } = useGalleryStore(useShallow(s => ({
+  const { setGroupSettingsOpen, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, setIsPhotoPickerOpen, setPhotoPickerGroupId, setBatchEditingIds } = useGalleryStore(useShallow(s => ({
     setGroupSettingsOpen: s.setGroupSettingsOpen,
     isMultiSelect: s.isMultiSelect,
     setIsMultiSelect: s.setIsMultiSelect,
     selectedIds: s.selectedIds,
     setSelectedIds: s.setSelectedIds,
     setIsPhotoPickerOpen: s.setIsPhotoPickerOpen,
-    setPhotoPickerGroupId: s.setPhotoPickerGroupId
+    setPhotoPickerGroupId: s.setPhotoPickerGroupId,
+    setBatchEditingIds: s.setBatchEditingIds
   })));
   
-  const { onBatchEdit, onBatchAiAnalyze } = usePhotoActions();
+  const onBatchAiAnalyze = (photos: Photo[]) => {};
+  const onBatchEdit = (ids: string[]) => setBatchEditingIds(ids);
   
   return (
     <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">

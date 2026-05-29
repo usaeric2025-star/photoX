@@ -8,7 +8,7 @@ import { safeArray } from '../../utils/safeAccess';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
 import { useStore, useShallow } from '../../store';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 import { translations } from '../../lib/translations';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 import { interactionBus } from '@/lib/interactionBus';
@@ -138,7 +138,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   // Ensure consistent count access
   const photoCount = photo.member_count ?? 1;
 
-  const { onTogglePinned } = usePhotoActions();
+  const adminActions = useAdminActions();
+  const onTogglePinned = (p: Photo) => adminActions.updatePhoto(p.id, { is_pinned: !p.is_pinned });
 
   const { appLang } = useStore(useShallow(s => ({ appLang: s.appLang })));
   const t = translations[appLang as keyof typeof translations] || translations.en;

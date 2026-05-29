@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { 
   BarChart3, 
   Settings2, 
@@ -15,8 +15,8 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
-import { useAuth, usePermission } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
+import { useAuth, usePermission, useSettings, useSyncMutation } from '@/hooks';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -53,22 +53,30 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, on
   </button>
 );
 
-import { useAdmin } from '@/features/admin/useAdmin';
-
 export const AdminSidebar: React.FC = () => {
-  const logic = useAdmin();
   const { 
-    activeScreen, setActiveScreen, cloudCount, 
-    onRefresh, handleImport, settings 
-  } = logic;
-  
-  const { can } = usePermission();
-  const { isStaffMode, appLang, isSidebarCollapsed, setIsSidebarCollapsed } = useGalleryStore(useShallow(s => ({
+    activeScreen, setActiveScreen, isStaffMode, appLang, 
+    isSidebarCollapsed, setIsSidebarCollapsed 
+  } = useGalleryStore(useShallow(s => ({
+    activeScreen: s.activeScreen,
+    setActiveScreen: s.setActiveScreen,
     isStaffMode: s.isStaffMode,
     appLang: s.appLang,
     isSidebarCollapsed: s.isSidebarCollapsed,
     setIsSidebarCollapsed: s.setIsSidebarCollapsed
   })));
+  
+  const { can } = usePermission();
+  const { settings } = useSettings();
+  const { mutateAsync: syncMut } = useSyncMutation();
+
+  const handleImport = useCallback(() => {
+    // Import action logic if needed
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    syncMut('pull');
+  }, [syncMut]);
 
   const { user, loginWithGoogle, logout } = useAuth();
   const isEffectiveStaffMode = isStaffMode && !user;
@@ -194,7 +202,7 @@ export const AdminSidebar: React.FC = () => {
               collapsed={isSidebarCollapsed}
               active={false} 
               onClick={() => {}}
-              badge={cloudCount || 0}
+              badge={0}
             />
           </div>
         )}

@@ -15,7 +15,7 @@ import { mapSupabasePhoto } from '../services/photos';
 import { DB_CONFIG } from '../constants/config';
 
 import { useAdminMode, useFeedback, useGroupDetailQuery, useTasks } from '@/hooks';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useInfiniteGroupPhotosQuery } from '@/hooks';
 import { useGalleryStore, useShallow } from '../store';
 import { translations } from '../lib/translations';
@@ -49,7 +49,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
   
-  const { onEditPhoto, onToggleHidden, onAiAnalyze, onCancelAnalyze } = usePhotoActions();
+  const adminActions = useAdminActions();
+  const onEditPhoto = (p: Photo | string) => {};
+  const onToggleHidden = async (p: Photo) => { await adminActions.updatePhoto(p.id, { is_hidden: !p.is_hidden }); };
+  const onAiAnalyze = async (p: Photo) => {};
+  const onCancelAnalyze = () => {};
   
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 

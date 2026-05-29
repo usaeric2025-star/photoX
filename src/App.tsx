@@ -83,14 +83,25 @@ export default function AppRoutes() {
         origin.includes('vercel.app') || 
         origin.includes('stackblitz');
 
-      if (!isAllowedOrigin) {
-        return;
-      }
+      if (!isAllowedOrigin) return;
+      
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        // [AUTH-STORAGE-BLOCK] [OAUTH-CALLBACK-FIXED] move storage intensive refresh but ensure we invalidate
-        // [OAUTH-CALLBACK-ATOMIC] Write to storage, invalidate and refetch synchronously.
-        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        // 等待 Session 写入完成（轮询）
+        let retries = 0;
+        let hasSession = false;
+        while (retries < 10 && !hasSession) {
+          await new Promise(r => setTimeout(r, 200));
+          const { data: { session } } = await supabase.auth.getSession();
+          hasSession = !!session;
+          retries++;
+        }
+        
+        // 刷新用户状态
+        await queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
         await refetch();
+        
+        // 让路由自己处理跳转，不强制 window.location
+        router.invalidate();
       }
     };
     window.addEventListener('message', handleOauthMessage);

@@ -4,7 +4,7 @@ import { useGalleryStore, useShallow } from '../../store';
 import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X } from 'lucide-react';
 import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer } from '../../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 import { Skeleton } from '../ui/Skeleton';
 import { usePermission, useFeedback, useTaskExecutor, useTasks } from '@/hooks';
 
@@ -38,7 +38,8 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
 }) => {
   
-  const { onEditPhoto } = usePhotoActions();
+  const { setEditPhotoId } = useGalleryStore(useShallow(s => ({ setEditPhotoId: s.setEditPhotoId })));
+  const onEditPhoto = (p: Photo) => setEditPhotoId(p.id);
   const { canEdit } = usePermission();
   const catName = getTranslatedCategoryName(photo.category_id || undefined, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturer_id || undefined, manufacturers);

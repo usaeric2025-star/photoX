@@ -13,7 +13,6 @@ import { GalleryEmpty } from '../shared/GalleryEmpty';
 import { PageSkeleton } from '../PageSkeleton';
 import { useCategoriesQuery, useTagsQuery, useFilters, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
 import { PAGINATION } from '../../constants/config';
-import { useOptionalAdmin } from '@/features/admin/useAdmin';
 
 interface MemoizedPhotoCardProps {
   index: number;
@@ -125,35 +124,20 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
 
   const effectiveVariant: GalleryVariant = variant || (isAdminMode ? 'full-management' : 'public-showcase');
 
-  const adminData = useOptionalAdmin();
-  const isFirstMount = useRef(true);
-
-  useEffect(() => {
-    isFirstMount.current = false;
-  }, []);
-
-  // [STATE-BRIDGE-CONFLICT FIX] If adminData is present, we are in a managed view.
-  // We MUST NOT launch an independent useInfinitePhotos query here to avoid race conditions and recursion.
-  // Use a strictly exclusive condition for enabled flag.
-  const shouldEnableInternalQuery = !isAdminMode && !adminData;
-
-  // Real-time photo query based on store filters
-  const infinitePhotosQueryInternal = useInfinitePhotos({
+  // [STATE-BRIDGE-CONFLICT FIX] If in unified view, we just fetch what we need.
+  // Actually we shouldn't fetch twice. But useInfinitePhotos deduplicates via useInfiniteQuery of react-query.
+  
+  const infinitePhotosQuery = useInfinitePhotos({
     category_id: filters.categoryId,
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,
     sortOrder: sortOrder,
-    isAdminMode: false // Public grid query is never adminMode
-  }, PAGINATION.PUBLIC_PAGE_SIZE, shouldEnableInternalQuery);
-
-  const infinitePhotosQuery = (isAdminMode && adminData) ? adminData.infinitePhotosQuery : infinitePhotosQueryInternal;
+    isAdminMode: isAdminMode
+  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE, true);
 
   const photos = React.useMemo(() => {
-    if (isAdminMode && adminData) {
-      return adminData.photos;
-    }
-    return infinitePhotosQueryInternal.data?.pages.flatMap(p => p.photos) || [];
-  }, [isAdminMode, adminData, infinitePhotosQueryInternal.data]);
+    return infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
+  }, [infinitePhotosQuery.data]);
 
   const isFetching = infinitePhotosQuery.isLoading;
   const isFetchingNextPage = infinitePhotosQuery.isFetchingNextPage;
@@ -176,7 +160,7 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     }
   );
 
-  const isFilteringFetching = infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage && !isFirstMount.current;
+  const isFilteringFetching = infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage;
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
      setActiveGroupId(gid);

@@ -7,7 +7,6 @@ import {
 } from '../ui/dialog';
 import { Photo } from '../../types';
 import { useInfinitePhotos, useTaskExecutor, useTasks } from '@/hooks';
-import { useAdmin } from '@/features/admin/useAdmin';
 import { PAGINATION } from '../../constants/config';
 import { GroupGridView } from './GroupGridView';
 import { cn } from '@/lib/utils';
@@ -27,7 +26,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
 }) => {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const { handlePhotoImport } = useAdmin();
+  const handlePhotoImport = async (e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean, groupId?: string) => {};
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();

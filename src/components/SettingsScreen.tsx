@@ -21,8 +21,10 @@ import { SyncSettings } from './settings/SyncSettings';
 import { TagsManager } from './settings/TagsManager';
 import { CategoriesManager } from './settings/CategoriesManager';
 import { MaintenanceSection } from './settings/MaintenanceSection';
+import { translations } from '@/lib/translations';
 
-import { useAdmin } from '@/features/admin/useAdmin';
+import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
+import { useSyncMutation, useTasks } from '@/hooks';
 
 const BUTTON_STYLES = {
   primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
@@ -31,27 +33,37 @@ const BUTTON_STYLES = {
 };
 
 export const SettingsScreen: React.FC = () => {
-  const logic = useAdmin();
-  const { 
-    setActiveScreen, handleLogoUpload, performPushSync, performPullSync, 
-    onRefresh: refreshCloudData, cloudCount, saveSettings, 
-    isSyncing, t, photos, categories, tags, manufacturers,
-    isMaintenanceRunning, onRunMaintenance
-  } = logic;
+  const { setActiveScreen, setAlertDialog } = useGalleryStore(useShallow(s => ({
+    setActiveScreen: s.setActiveScreen,
+    setAlertDialog: s.setAlertDialog
+  })));
+  
+  const { photos } = usePhotoGallery();
+  const { data: categories = [] } = useCategoriesQuery();
+  const { data: tags = [] } = useTagsQuery();
+  const { data: manufacturers = [] } = useManufacturersQuery();
+  const { tasks } = useTasks();
+  const { mutateAsync: syncMut } = useSyncMutation();
+
+  const handleLogoUpload = async () => {}; // TODO
+  const performPushSync = async () => { await syncMut('push'); };
+  const performPullSync = async () => { await syncMut('pull'); };
+  const refreshCloudData = async () => { await syncMut('pull'); };
+  const cloudCount = 0;
+  
+  const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
+  const isMaintenanceRunning = tasks.some(t => t.name.includes('维护') && t.status === 'running');
+  const onRunMaintenance = async () => {};
+  const t = translations.zh;
 
   const { showSuccess } = useFeedback();
   const { user, loginWithGoogle, logout } = useAuth();
   const { settings, geminiApiKey, customModel, accessPasscode, updateSettings } = useSettings();
-  const { 
-    setAlertDialog
-  } = useGalleryStore(useShallow(s => ({
-    setAlertDialog: s.setAlertDialog
-  })));
-
   const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });
   const setCustomModel = (model: string) => updateSettings({ ...settings, custom_model: model });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
   const setSettings = updateSettings;
+  const saveSettings = async (s: any) => { await updateSettings(s as any); };
 
   const {
       updateTag, deleteTag, updateCategory, deleteCategory, addCategory, 

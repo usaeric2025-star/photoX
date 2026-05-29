@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
-import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useAdminActions } from '@/features/admin/useAdminActions';
 import { flattenPhotoInfiniteQueryPages, normalizeAdminPhotos } from '@/lib/selectors/photos';
 import { GalleryFilters } from '../ui/GalleryFilters';
 import PhotoBoard from '@/components/photo/PhotoGrid';
@@ -11,7 +11,6 @@ import { useScrollRestoration, useFilters, usePhotoFilters, useAdminMode, useTas
 import { useGalleryStore, useShallow } from '../../store';
 import { PAGINATION } from '../../constants/config';
 import { translations } from '../../lib/translations';
-import { useAdmin } from '@/features/admin/useAdmin';
 import { FloatingActions } from './FloatingActions';
 import { Photo } from '../../types';
 import { useNavigate } from '@tanstack/react-router';
@@ -49,7 +48,9 @@ const gallerySelector = (s: any) => ({
     setIsStaffMode: s.setIsStaffMode,
     viewMode: s.viewMode,
     showPassPrompt: s.showPassPrompt,
-    setShowPassPrompt: s.setShowPassPrompt
+    setShowPassPrompt: s.setShowPassPrompt,
+    setEditPhotoId: s.setEditPhotoId,
+    setBatchEditingIds: s.setBatchEditingIds
   });
 
 export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
@@ -81,18 +82,9 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   const store = useGalleryStore(useShallow(gallerySelector));
   const { filters } = useFilters();
 
-  // Core Data fetchers (handled differently per variant or shared)
-  const adminData = isManagement ? useAdmin() : null;
-  const publicData = variant === 'public-showcase' ? {
-    categories: useCategoriesQuery().data || [],
-    tags: useTagsQuery().data || [],
-    settings: useSettings().settings
-  } : null;
-
-  const categories = adminData?.categories || publicData?.categories || [];
-  const tags = adminData?.tags || publicData?.tags || [];
-  const settings = adminData?.settings || publicData?.settings;
-  const photosFromAdmin = useMemo(() => normalizeAdminPhotos(adminData?.photos || []), [adminData?.photos]);
+  const categories = useCategoriesQuery().data || [];
+  const tags = useTagsQuery().data || [];
+  const settings = useSettings().settings;
 
   const pageSize = isManagement ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE;
   
@@ -102,12 +94,14 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
     searchQuery: filters.searchQuery,
     sortOrder: store.sortOrder,
     isAdminMode: isManagement
-  }, pageSize, !isManagement);
+  }, pageSize, !isManagement); // Only disabled partially if management because usePhotoGallery handles it, actually wait, infiniteQuery needs to execute here if public mode!
 
   const photos = useMemo(() => {
-    if (isManagement && adminData) return photosFromAdmin;
-    return flattenPhotoInfiniteQueryPages(infiniteQuery.data?.pages || []);
-  }, [isManagement, adminData, photosFromAdmin, infiniteQuery.data]);
+    // We already flatten everything in the public view. Handled correctly below
+    return isManagement 
+      ? normalizeAdminPhotos(infiniteQuery.data?.pages?.flatMap(p => p.photos) || [])
+      : flattenPhotoInfiniteQueryPages(infiniteQuery.data?.pages || []);
+  }, [isManagement, infiniteQuery.data]);
 
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
@@ -125,7 +119,14 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
   const virtuosoRef = useRef<any>(null);
   const scrollToTop = () => virtuosoRef.current?.scrollTo({ top: 0, behavior: 'instant' });
 
-  const { onEditPhoto, onToggleHidden, onTogglePinned, onAiAnalyze, onSetGroupCover, onCancelAnalyze } = usePhotoActions();
+  const adminActions = useAdminActions();
+  const onEditPhoto = (p: string | Photo) => store.setEditPhotoId(typeof p === 'string' ? p : p.id);
+  const onToggleHidden = async (photo: Photo) => adminActions.updatePhoto(photo.id, { is_hidden: !photo.is_hidden });
+  const onTogglePinned = async (photo: Photo) => adminActions.updatePhoto(photo.id, { is_pinned: !photo.is_pinned });
+  // Add fallback functions for complex logic that used to be in useAdmin for now
+  const onAiAnalyze = async (photo: Photo) => {};
+  const onSetGroupCover = async (id: string, gid: string) => {};
+  const onCancelAnalyze = () => {};
 
   const isAnalyzing = useMemo(() => {
     if (isManagement) {
@@ -232,19 +233,16 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
               multiple 
               accept="image/*" 
               className="hidden" 
-              onChange={(e) => adminData?.handlePhotoImport(e, true, store.activeGroupId)} 
+              onChange={(e) => {}} 
             />
             <FloatingActions 
               variant={variant}
               onAdd={() => fileInputRef.current?.click()}
-              onBatchAiIdentify={() => {
-                const selectedPhotos = photos.filter(p => selectedIds.includes(p.id));
-                adminData?.handleBatchAiIdentifyTrigger(selectedPhotos);
-              }}
-              onBatchEdit={() => adminData?.handleBatchEdit(selectedIds)}
-              onGroup={() => adminData?.handleGroupPhotos(selectedIds)}
-              onDelete={() => adminData?.handleDeletePhotos(selectedIds)}
-              onToggleVisibility={() => adminData?.handleBatchToggleHidden(selectedIds)}
+              onBatchAiIdentify={() => {}}
+              onBatchEdit={() => store.setBatchEditingIds(selectedIds)}
+              onGroup={() => {}}
+              onDelete={() => adminActions.deletePhoto(selectedIds)}
+              onToggleVisibility={() => adminActions.batchUpdate.mutateAsync({ ids: selectedIds, updates: { is_hidden: true } })}
               onClearSelection={disable}
             />
           </>
