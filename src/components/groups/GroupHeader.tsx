@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { useGalleryStore, useShallow } from '../../store';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 interface GroupHeaderProps {

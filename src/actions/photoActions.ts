@@ -1,7 +1,7 @@
 import { Photo, ProductFormData } from '../types';
 import { createPhotoValidator } from '../lib/validators/factory';
 import { photoMutationService } from '../services/photoMutationService';
-import { Result, err, ok } from 'neverthrow';
+import { Result, err, ok, isErr } from '../lib/errorFactory';
 import { StandardError } from '../lib/validators/protocol';
 
 /**
@@ -18,7 +18,7 @@ export async function updatePhotoAction(
   
   // 1. Validation
   const validationResult = validator.validate({ ...data, id });
-  if (validationResult.isErr()) {
+  if (isErr(validationResult)) {
     return err(validationResult.error);
   }
 
@@ -36,10 +36,9 @@ export async function updatePhotoAction(
     // Here we just return success with a placeholder or refetched data if needed
     return ok({ id, ...data } as any);
   } catch (error: any) {
-    return err({
-      message: error.message || 'Update failed',
+    return err(new StandardError(error.message || 'Update failed', {
       path: ['server'],
       aiDebugHint: 'Check supabase/R2 connectivity and snake_case mapping.'
-    });
+    }));
   }
 }

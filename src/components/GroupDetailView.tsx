@@ -11,11 +11,11 @@ import { PhotoLightbox } from './PhotoLightbox';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
-import { mapSupabasePhoto } from '../services/photoService';
+import { mapSupabasePhoto } from '../services/photos';
 import { DB_CONFIG } from '../constants/config';
 
 import { useAdminMode, useFeedback, useGroupDetailQuery, useTasks } from '@/hooks';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
 import { useInfiniteGroupPhotosQuery } from '@/hooks';
 import { useGalleryStore, useShallow } from '../store';
 import { translations } from '../lib/translations';

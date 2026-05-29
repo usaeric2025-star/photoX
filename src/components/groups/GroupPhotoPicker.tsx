@@ -7,7 +7,7 @@ import {
 } from '../ui/dialog';
 import { Photo } from '../../types';
 import { useInfinitePhotos, useTaskExecutor, useTasks } from '@/hooks';
-import { useAdmin } from '@/contexts/AdminContext';
+import { useAdmin } from '@/features/admin/useAdmin';
 import { PAGINATION } from '../../constants/config';
 import { GroupGridView } from './GroupGridView';
 import { cn } from '@/lib/utils';

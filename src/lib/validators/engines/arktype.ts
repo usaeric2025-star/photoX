@@ -1,5 +1,5 @@
 import { type Type, type } from 'arktype';
-import { ok, err, Result } from 'neverthrow';
+import { ok, err, type Result } from '@/lib/errorFactory';
 import { Validator, StandardError, ValidatorMeta } from '../protocol';
 
 /**
@@ -24,11 +24,13 @@ export class ArkTypeValidator<T> implements Validator<T> {
             const errorList = Array.from(out as any);
             const firstError = errorList[0] as any;
             
-            return err({
-                message: out.summary || 'Validation failed',
-                path: firstError?.path || [],
-                aiDebugHint: `Validation failed at ${firstError?.path?.join('.') || 'root'}. Expected ${firstError?.expected || 'valid data'}. ${this.meta.aiHints.join(' ')}`
-            });
+            return err(new StandardError(
+                out.summary || 'Validation failed',
+                {
+                    path: firstError?.path || [],
+                    aiDebugHint: `Validation failed at ${firstError?.path?.join('.') || 'root'}. Expected ${firstError?.expected || 'valid data'}. ${this.meta.aiHints.join(' ')}`
+                }
+            ));
         }
         return ok(out as T);
     }

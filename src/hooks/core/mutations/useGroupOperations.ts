@@ -7,8 +7,8 @@ interface InfinitePhotosData {
   nextCursor?: string;
 }
 
-import { createMutationHook } from '@/hooks/_factory/createMutationHook';
-import { groupPhotos, ungroupPhotos, removePhotosFromGroup } from '@/services/photoService';
+import { createMutationHook } from './factory';
+import { groupPhotos, ungroupPhotos, removePhotosFromGroup } from '@/services/photos';
 
 export const useGroupPhotosMutation = createMutationHook({
   entity: 'Group',

@@ -8,6 +8,7 @@ import {
   photoBatchUpdateSchema
 } from '@/shared/apiContractSchema';
 import { createPhotoValidator, createGroupValidator } from '@/lib/validators/factory';
+import { isErr } from '@/lib/errorFactory';
 import { type } from 'arktype';
 
 const apiContractsTest: DiagnosticTest = {
@@ -27,7 +28,7 @@ const apiContractsTest: DiagnosticTest = {
         name: 'Fine Dining Chair'
       };
       const photoCheck = photoValidator.validate(samplePhoto);
-      if (photoCheck.isErr()) {
+      if (isErr(photoCheck)) {
         throw new Error('Photo validator logic is out of sync with structural schemas.');
       }
 

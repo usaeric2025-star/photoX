@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { useFeedback, useTasks, useTaskExecutor } from '../../hooks';
-import { getGroupById } from '../../services/groupService';
+import { getGroupById } from '../../services/groups';
+import { isOk } from '@/lib/errorFactory';
 
 interface UsePhotoLightboxLogicProps {
   photo: Photo | null;
@@ -52,7 +53,8 @@ export const usePhotoLightboxLogic = ({
     
     if (photo?.group_id) {
       runTask('获取产品组数据', async () => {
-        const data = await getGroupById(photo.group_id!);
+        const result = await getGroupById(photo.group_id!);
+        const data = isOk(result) ? result.value : null;
         setGroupData(data);
       }, { silent: true });
     } else {

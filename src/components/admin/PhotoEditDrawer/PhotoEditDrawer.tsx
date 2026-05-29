@@ -18,7 +18,8 @@ import {
 } from '../../../hooks';
 import { cleanPhotos } from '../../../lib/filters';
 import { PAGINATION } from '../../../constants/config';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
+import { useFilters } from '@/features/filters/useFilters';
 
 /**
  * [V2.14-SLOT-CONTRACT] PhotoEditDrawer Props
@@ -31,9 +32,12 @@ interface PhotoEditDrawerProps {
 }
 
 export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
+  const { filters } = useFilters();
+  const { categoryId: filterCatId, tagIds: filterTagIds, searchQuery: debouncedSearchQuery } = filters;
+  
   const { 
     editPhotoId, formState, updateForm, newPhotoData, setNewPhotoData, 
-    appLang, filterCatId, filterTagIds, debouncedSearchQuery, sortOrder,
+    appLang, sortOrder,
     setBatchEditingIds, setEditPhotoId
   } = useGalleryStore(useShallow(s => ({
     editPhotoId: s.editPhotoId,
@@ -42,9 +46,6 @@ export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
     newPhotoData: s.newPhotoData,
     setNewPhotoData: s.setNewPhotoData,
     appLang: s.appLang,
-    filterCatId: s.filterCatId,
-    filterTagIds: s.filterTagIds,
-    debouncedSearchQuery: s.debouncedSearchQuery,
     sortOrder: s.sortOrder,
     setBatchEditingIds: s.setBatchEditingIds,
     setEditPhotoId: s.setEditPhotoId

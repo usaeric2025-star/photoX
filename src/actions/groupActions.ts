@@ -1,7 +1,7 @@
 import { ProductGroup } from '../types';
 import { createGroupValidator } from '../lib/validators/factory';
 import { groupMutationService } from '../services/groupMutationService';
-import { Result, err, ok } from 'neverthrow';
+import { Result, err, ok, isErr } from '../lib/errorFactory';
 import { StandardError } from '../lib/validators/protocol';
 
 /**
@@ -16,7 +16,7 @@ export async function updateGroupAction(
   
   // 1. Validation
   const validationResult = validator.validate(data);
-  if (validationResult.isErr()) {
+  if (isErr(validationResult)) {
     return err(validationResult.error);
   }
 
@@ -25,11 +25,10 @@ export async function updateGroupAction(
     await groupMutationService.update(id, data);
     return ok({ id, ...data } as ProductGroup);
   } catch (error: any) {
-    return err({
-      message: error.message || 'Update failed',
+    return err(new StandardError(error.message || 'Update failed', {
       path: ['server'],
       aiDebugHint: 'Check group table permissions and snake_case naming.'
-    });
+    }));
   }
 }
 
@@ -44,7 +43,7 @@ export async function createGroupAction(
   
   // 1. Validation
   const validationResult = validator.validate(data);
-  if (validationResult.isErr()) {
+  if (isErr(validationResult)) {
     return err(validationResult.error);
   }
 
@@ -52,10 +51,9 @@ export async function createGroupAction(
     const group = await groupMutationService.create(data);
     return ok(group);
   } catch (error: any) {
-    return err({
-      message: error.message || 'Creation failed',
+    return err(new StandardError(error.message || 'Creation failed', {
       path: ['server'],
       aiDebugHint: 'Check bucket limits or column constraints.'
-    });
+    }));
   }
 }

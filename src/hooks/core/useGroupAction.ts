@@ -3,6 +3,7 @@ import { updateGroupAction, createGroupAction } from '../../actions/groupActions
 import { ProductGroup } from '../../types';
 import { StandardError } from '../../lib/validators/protocol';
 import { useFeedback } from '@/hooks';
+import { isOk } from '../../lib/errorFactory';
 
 interface ActionState {
   data: ProductGroup | null;
@@ -24,7 +25,7 @@ export function useGroupAction(id?: string, initialData?: ProductGroup | null) {
         ? await updateGroupAction(id, formData)
         : await createGroupAction(formData);
       
-      if (result.isOk()) {
+      if (isOk(result)) {
         showSuccess(id ? '更新成功' : '創建成功');
         return {
           data: result.value,
@@ -32,10 +33,10 @@ export function useGroupAction(id?: string, initialData?: ProductGroup | null) {
           status: 'success'
         };
       } else {
-        handleError(new Error(result.error.message), `操作失敗: ${result.error.aiDebugHint}`);
+        handleError(new Error(result.error instanceof Error ? result.error.message : 'Unknown error'), `操作失敗: ${(result.error as any)?.aiDebugHint || ''}`);
         return {
           data: prevState.data,
-          error: result.error,
+          error: result.error as any,
           status: 'error'
         };
       }

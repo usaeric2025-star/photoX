@@ -12,13 +12,16 @@ import { PhotoEditDrawer } from '@/components/admin/PhotoEditDrawer';
 import { GroupDetailView } from '@/components/GroupDetailView';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
-import { MainAdminScreen } from './MainAdminScreen';
+import { AdminScreen } from '@/components/AdminScreen';
 import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
 import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
 import { PhotoActionsContext } from '@/contexts/PhotoActionsContext';
 import { useGalleryStore, useShallow } from '@/store';
-import { useAdmin } from '@/contexts/AdminContext';
-import { useAdminDataPrep } from './useAdminDataPrep';
+import { useFilters } from '@/features/filters/useFilters';
+import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
+import { useGroupView } from '@/features/groups/useGroupView';
+import { useAdminActions } from '@/features/admin/useAdminActions';
+import { useAdmin } from '@/features/admin/useAdmin';
 import { User, Photo } from '@/types';
 import { TranslationType, getCacheBustedImageUrl } from '@/lib/ui-helpers';
 import { LanguageCode } from '@/lib/translations';
@@ -29,19 +32,12 @@ const AdminDiagnostics = lazy(() => import('./AdminDiagnostics'));
 
 export const AdminViewContent: React.FC = () => {
   const logic = useAdmin();
-  const {
-    user, authChecked, t, lang, isSyncing, isLoadingPhotos
-  } = logic;
+  const { photos } = usePhotoGallery();
+  const { filters } = useFilters();
+  const { groupPhotos } = useGroupView(logic.activeGroupId);
+  const { deletePhoto, updatePhoto } = useAdminActions();
 
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-
-  useEffect(() => {
-    if (isLoadingPhotos === false) {
-      setHasLoadedOnce(true);
-    }
-  }, [isLoadingPhotos]);
-
-  const isLoading = !hasLoadedOnce && isLoadingPhotos;
+  const isLoading = logic.isLoading;
 
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
@@ -50,6 +46,7 @@ export const AdminViewContent: React.FC = () => {
     setAlertDialog: s.setAlertDialog,
     isStaffMode: s.isStaffMode
   })));
+  const user = logic.user;
   const isEffectiveStaffMode = isStaffMode && !user;
 
   const { tasks, cancelTask } = useTasks();
@@ -62,24 +59,7 @@ export const AdminViewContent: React.FC = () => {
     };
   }, [reset]);
 
-  // 保存滚动位置
-  useEffect(() => {
-    const handleScroll = () => {
-      requestAnimationFrame(() => {
-        sessionStorage.setItem('scrollPosition', String(window.scrollY));
-      });
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  // 恢复滚动位置
-  useEffect(() => {
-    const savedPosition = sessionStorage.getItem('scrollPosition');
-    if (savedPosition) {
-      window.scrollTo({ top: parseInt(savedPosition), behavior: 'auto' });
-    }
-  }, []);
 
   const handleExitPublic = useCallback(() => {
     reset();
@@ -107,7 +87,7 @@ export const AdminViewContent: React.FC = () => {
     onTogglePinned: (photo: Photo) => logicRef.current.togglePinned(photo),
     onDeletePhoto: (id: string | string[]) => logicRef.current.handleDeletePhoto(id),
     onUpdatePhoto: (id: string, updates: Partial<Photo>) => logicRef.current.handleUpdatePhoto(id, updates),
-    onUpdatePhotosBulk: (ids: string[], updates: Partial<Photo>, taskName?: string) => logicRef.current.handleUpdatePhotosBulk(ids, updates, { taskName }),
+    onUpdatePhotosBulk: (ids: string[], updates: Partial<Photo>) => logicRef.current.handleUpdatePhotosBulk(ids, updates),
     onToggleHidden: (photo: Photo) => logicRef.current.handleToggleHidden(photo),
     onGroupPhotos: (ids: string[]) => logicRef.current.handleGroupPhotos(ids),
     onUngroup: (groupId: string) => logicRef.current.handleUngroup(groupId),
@@ -119,27 +99,27 @@ export const AdminViewContent: React.FC = () => {
     onCancelAnalyze: () => logicRef.current.abortAnalysis()
   }), []);
 
-  if (authChecked && !user && !isStaffMode) {
-    return <LoginScreen loginWithGoogle={async () => { await logic.loginWithGoogle(); }} isLoading={isSyncing} />;
+  if (logic.authChecked && !user && !isStaffMode) {
+    return <LoginScreen loginWithGoogle={async () => { await logic.loginWithGoogle(); }} isLoading={logic.isSyncing} />;
   }
 
   return (
     <ErrorBoundary>
-      <PhotoActionsContext.Provider value={photoActions}>
+      <PhotoActionsContext.Provider value={photoActions as any}>
         <DataLoadingContainer
           isLoading={!!isLoading}
           hasData={!!logic.photos && logic.photos.length > 0}
         >
           <AdminGlobalModals />
       
-        <div className="flex h-[100dvh] overflow-hidden bg-brand-bg">
+        <div className="grid grid-rows-[auto_1fr_auto] h-dvh bg-brand-bg">
           {logic.adminPreviewMode !== 'public' && (
             <div className="hidden lg:block shrink-0">
               <AdminSidebar />
             </div>
           )}
 
-          <div className="flex-1 flex flex-col min-w-0 relative h-full">
+          <main className="overflow-auto">
               {logic.batchEditIds && logic.batchEditIds.length > 0 && (
                 <BatchEditScreen />
               )}
@@ -156,14 +136,14 @@ export const AdminViewContent: React.FC = () => {
                 className={`absolute inset-0 transition-opacity duration-200 ease-out ${logic.activeScreen === 'home' || logic.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
               >
                 <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'private' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
-                  <MainAdminScreen />
+                  <AdminScreen />
                 </div>
                 <div className={`absolute inset-0 transition-opacity duration-300 ${logic.adminPreviewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <div className="flex flex-col h-full bg-brand-bg">
                     <UnifiedHeader 
                       variant="public-showcase"
                       onRefresh={handleRefreshPublic}
-                      isRefreshing={isSyncing}
+                      isRefreshing={logic.isSyncing}
                       onExit={handleExitPublic}
                     />
                     <UnifiedGallery 
@@ -193,7 +173,7 @@ export const AdminViewContent: React.FC = () => {
               <AdminDiagnostics />
             </Suspense>
           )}
-        </div>
+        </main>
       </div>
       </DataLoadingContainer>
       </PhotoActionsContext.Provider>

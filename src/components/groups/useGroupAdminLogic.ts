@@ -2,11 +2,12 @@ import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
 import { filterPhotosByMode } from '../../utils/photoVisibility';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
-import { saveGroupToCloud } from '../../services/groupService';
-import { updatePhotosGroupInCloud } from '../../services/photoService';
+import { usePhotoActions } from '@/features/admin/useAdmin';
+import { saveGroupToCloud } from '../../services/groups';
+import { updatePhotosGroupInCloud } from '../../services/photos';
+import { isErr } from '@/lib/errorFactory';
 import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetailQuery, useAuth } from '@/hooks';
-import { useGroupPhotosQuery } from '../../hooks/queries/usePhotos';
+import { useGroupPhotos } from '../../hooks/queries/usePhotos';
 import { useGalleryStore, useShallow } from '@/store';
 import { groupKeys } from '@/lib/queryKeys';
 
@@ -73,7 +74,7 @@ export const useGroupAdminLogic = ({
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
   const virtuosoRef = useRef<any>(null);
 
-  const { data: dbGroupPhotosData, isLoading: isGroupPhotosLoading } = useGroupPhotosQuery(activeGroupId || '', isAdminMode);
+  const { data: dbGroupPhotosData, isLoading: isGroupPhotosLoading } = useGroupPhotos(activeGroupId || '', isAdminMode);
   const dbGroupPhotos = useMemo(() => dbGroupPhotosData ?? [], [dbGroupPhotosData]);
 
   const activeGroupPhotos = useMemo(() => {
@@ -216,7 +217,7 @@ export const useGroupAdminLogic = ({
       if (onUpdatePhoto) {
         await onUpdatePhoto(photoId, updates);
       } else {
-         const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoService');
+         const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photos');
          await serviceUpdatePhoto(photoId, updates);
       }
     } catch (err: any) {
@@ -232,7 +233,11 @@ export const useGroupAdminLogic = ({
     sessionStorage.setItem(`draft_group_${activeGroupId}`, JSON.stringify(nextGroupData));
     
     try {
-      await saveGroupToCloud(nextGroupData);
+      const result = await saveGroupToCloud(nextGroupData);
+      if (isErr(result)) {
+        showError(result.error, '更新群組資料失敗');
+        return;
+      }
       queryClient.invalidateQueries({ queryKey: groupKeys.detail(activeGroupId) });
       sessionStorage.removeItem(`draft_group_${activeGroupId}`);
       
@@ -269,13 +274,13 @@ export const useGroupAdminLogic = ({
       onConfirm: async () => {
         try {
           if (onUpdatePhotosBulk) {
-            await onUpdatePhotosBulk(activeGroupPhotos.map(p => p.id), { dimensions: newDims }, '批量更新尺寸');
+            await onUpdatePhotosBulk(activeGroupPhotos.map(p => p.id), { dimensions: newDims });
           } else if (onUpdatePhoto) {
             await Promise.all(
               activeGroupPhotos.map(p => onUpdatePhoto(p.id, { dimensions: newDims }))
             );
           } else {
-            const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoService');
+            const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photos');
             await Promise.all(
               activeGroupPhotos.map(p => serviceUpdatePhoto(p.id, { dimensions: newDims }))
             );
@@ -307,7 +312,7 @@ export const useGroupAdminLogic = ({
     }));
     
     try {
-      const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photoService');
+      const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photos');
       await Promise.all(
         updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { group_order: p.group_order }))
       );

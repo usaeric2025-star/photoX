@@ -17,6 +17,7 @@ export const STORAGE_KEYS = {
   ACTIVE_SCREEN: 'photo_activeScreen',
   SIDEBAR_COLLAPSED: 'photo_isSidebarCollapsed',
   EDIT_FORM_DRAFT: 'photo_edit_form_draft',
+  SORT_ORDER: 'photo_sortOrder',
 } as const;
 
 type Validator<T> = (value: any) => T;

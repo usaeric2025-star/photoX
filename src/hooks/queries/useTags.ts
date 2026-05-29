@@ -1,6 +1,6 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { loadTagsFromCloud } from '../../services/tagService';
+import { loadTagsFromCloud } from '../../services/tags';
 import { photoKeys } from '../../lib/queryKeys';
 import { syncCache } from '../../utils/indexedDB';
 

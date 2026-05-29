@@ -8,7 +8,7 @@ import { safeArray } from '../../utils/safeAccess';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
 import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
 import { useStore, useShallow } from '../../store';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
 import { translations } from '../../lib/translations';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 import { interactionBus } from '@/lib/interactionBus';
@@ -351,7 +351,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       
       <PhotoStatusBadges photo={photo} variant={variant} photoCount={photoCount} />
 
-      {isManagement && can('photo:toggle-pinned') && onTogglePinned && (
+      {isManagement && can('photo:toggle-pinned') && (
          <button 
            onClick={handleTogglePinnedClick}
            className="absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white group-data-[pinned=true]:text-red-500 z-20 hover:scale-115 active:scale-95 transition-transform"

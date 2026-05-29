@@ -4,7 +4,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
-  useCategoriesQuery, useInfinitePhotos, usePhotoCountQuery, useUpdatePhotoMutation, 
+  useCategoriesQuery, useInfinitePhotos, usePhotoCount, 
   useFeedback, useTagsQuery, useScrollRestoration, useDebouncedSearch,
   useAuth, useSettings, useMultiSelect
 } from '@/hooks';
@@ -19,7 +19,7 @@ import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
 import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { loginWithGoogle } from '@/services/supabaseService';
-import { AdminProvider } from '@/contexts/AdminContext';
+// import { AdminProvider } from '@/contexts/PhotoActionsContext';
 
 /* Removed ErrorFallback component */
 
@@ -36,7 +36,7 @@ export default function PublicView() {
   const search = useSearch({ strict: false });
   const authError = (search as any).authError;
   
-  const { data: count } = usePhotoCountQuery({});
+  const { data: count } = usePhotoCount({});
 
   // ========== 8. 正常渲染 ==========
   return (
@@ -58,8 +58,7 @@ export default function PublicView() {
             isLoading={isSettingsLoading || !settings}
             hasData={true} // Data will be handled inside UnifiedGallery
           >
-            <AdminProvider>
-              <ErrorBoundary>
+            <ErrorBoundary>
                 <UnifiedGallery 
                   variant="public-showcase"
                   onExit={() => navigate({ to: ROUTES.ADMIN })}
@@ -67,7 +66,6 @@ export default function PublicView() {
                   loginWithGoogle={loginWithGoogle}
                 />
               </ErrorBoundary>
-            </AdminProvider>
           </DataLoadingContainer>
         </div>
       )}

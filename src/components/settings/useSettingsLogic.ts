@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '@/types';
 import { useGalleryStore } from '@/store';
 import { testAiConnection } from '@/services/geminiService';
-import { deduplicatePhotos, getPhotosWithoutThumbHash } from '@/services/photoService';
+import { deduplicatePhotos, getPhotosWithoutThumbHash } from '@/services/photos';
 import { scanAndRepairPhotoIds } from '@/services/photo/photoMaintenanceService';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';

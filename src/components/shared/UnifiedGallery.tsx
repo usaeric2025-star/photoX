@@ -1,17 +1,17 @@
 import React, { useMemo, useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { PhotoLightbox } from '../PhotoLightbox';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
 import { flattenPhotoInfiniteQueryPages, normalizeAdminPhotos } from '@/lib/selectors/photos';
 import { GalleryFilters } from '../ui/GalleryFilters';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { GroupDetailView } from '../GroupDetailView';
 import { GalleryDialogs } from './GalleryDialogs';
-import { useScrollRestoration, usePhotoFilters, useAdminMode, useTasks, useInfinitePhotos, useFeedback, useCategoriesQuery, useTagsQuery, useSettings, usePhotoCountQuery, useMultiSelect, usePermission } from '../../hooks';
+import { useScrollRestoration, useFilters, usePhotoFilters, useAdminMode, useTasks, useInfinitePhotos, useFeedback, useCategoriesQuery, useTagsQuery, useSettings, usePhotoCount, useMultiSelect, usePermission } from '../../hooks';
 import { useGalleryStore, useShallow } from '../../store';
 import { PAGINATION } from '../../constants/config';
 import { translations } from '../../lib/translations';
-import { useAdmin } from '@/contexts/AdminContext';
+import { useAdmin } from '@/features/admin/useAdmin';
 import { FloatingActions } from './FloatingActions';
 import { Photo } from '../../types';
 import { useNavigate } from '@tanstack/react-router';
@@ -35,7 +35,6 @@ interface UnifiedGalleryProps {
 const ADMIN_GALLERY_DISABLED = false;
 
 const gallerySelector = (s: any) => ({
-    showGroupsCollapsed: s.showGroupsCollapsed,
     appLang: s.appLang,
     columns: s.columns,
     lightboxIndex: s.lightboxIndex,
@@ -112,12 +111,13 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
     return flattenPhotoInfiniteQueryPages(infiniteQuery.data?.pages || []);
   }, [isManagement, adminData, photosFromAdmin, infiniteQuery.data]);
 
+  const { filters } = useFilters();
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
     categories,
     tags,
     {
-      showGroupsCollapsed: store.showGroupsCollapsed,
+      showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: isManagement
     }
   );

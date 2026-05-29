@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { Photo, ProductFormData } from '../../types';
-import { loadPhotosByGroupId } from '../../services/photoService';
+import { loadPhotosByGroupId } from '../../services/photos';
 import { hapticFeedback } from '../../utils/haptics';
 
 export const useAdminActions = (

@@ -1,6 +1,6 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
-import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
-import { loadAllPhotosFromCloud, loadPhotosByGroupId, loadPhotosByGroupIdPaginated, getPhotoCount } from '../../services/photoService';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { loadAllPhotosFromCloud, loadPhotosByGroupId, loadPhotosByGroupIdPaginated, getPhotoCount } from '../../services/photos';
 import { photoKeys } from '../../lib/queryKeys';
 import { syncCache } from '../../utils/indexedDB';
 
@@ -53,14 +53,13 @@ export const useInfinitePhotos = (filters: {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     enabled,
-    placeholderData: keepPreviousData,
     staleTime: createStaleTime('REALTIME'), // 1 分钟
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 };
 
-export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_id?: string | null; searchQuery?: string | null }, isAdminMode: boolean = false) => {
+export const usePhotoCount = (filters: { category_id?: string | null; tag_id?: string | null; searchQuery?: string | null }, isAdminMode: boolean = false) => {
   return useQuery({
     queryKey: photoKeys.count({ 
       category_id: filters.category_id ?? null,
@@ -69,12 +68,11 @@ export const usePhotoCountQuery = (filters: { category_id?: string | null; tag_i
       isAdminMode 
     }),
     queryFn: () => getPhotoCount(filters.category_id, filters.tag_id, filters.searchQuery, isAdminMode),
-    placeholderData: keepPreviousData,
     staleTime: createStaleTime('REALTIME'), // 1 分钟
   });
 };
 
-export const useGroupPhotosQuery = (groupId: string, isAdminMode: boolean = false) => {
+export const useGroupPhotos = (groupId: string, isAdminMode: boolean = false) => {
   return useQuery({
     queryKey: photoKeys.group(groupId),
     queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),

@@ -18,12 +18,11 @@ export * from './shared/useClickOutside';
 export * from './shared/useLongPress';
 export * from './shared/useScrollRestoration';
 export * from './shared/useFormValidation';
+export * from './shared/useAdminCategory';
 export * from './shared/usePhotoFilters';
 export * from './shared/useImageHash';
 export * from './shared/useMountedRef';
-
-// Admin Hooks
-export * from './admin';
+export * from '../features/filters/useFilters';
 
 // Queries
 export * from './queries/usePhotos';
@@ -34,17 +33,12 @@ export * from './queries/useGroups';
 export * from './queries/useInvalidatePhotos';
 
 // Mutations
-export * from './core/mutations/useDeletePhoto';
-export * from './core/mutations/useUpdatePhoto';
+export * from './mutations/usePhotoMutations';
 export * from './core/mutations/useGroupOperations';
 export * from './core/mutations/useAdminMutations';
 export * from './core/mutations/useGroupCoverMutation';
 export * from './core/mutations/useSettingsMutation';
-export * from './core/mutations/useBatchEditMutation';
 export * from './core/mutations/useSyncMutation';
-
-// AI Hooks
-export * from './photoAi';
 
 // Utils
 export { useGalleryStore, useStore, useShallow } from '../store';

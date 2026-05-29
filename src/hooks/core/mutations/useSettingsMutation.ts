@@ -1,4 +1,4 @@
-import { createMutationHook } from '@/hooks/_factory/createMutationHook';
+import { createMutationHook } from './factory';
 import { saveSettings } from '@/services/settingService';
 import { settingsKeys } from '@/lib/queryKeys';
 

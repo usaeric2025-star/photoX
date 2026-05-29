@@ -22,7 +22,7 @@ import { TagsManager } from './settings/TagsManager';
 import { CategoriesManager } from './settings/CategoriesManager';
 import { MaintenanceSection } from './settings/MaintenanceSection';
 
-import { useAdmin } from '@/contexts/AdminContext';
+import { useAdmin } from '@/features/admin/useAdmin';
 
 const BUTTON_STYLES = {
   primary: "px-5 py-2.5 bg-brand-navy hover:bg-brand-navy/90 text-brand-bg rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
@@ -119,8 +119,8 @@ export const SettingsScreen: React.FC = () => {
                 user={user || null}
                 loginWithGoogle={loginWithGoogle}
                 logout={logout}
-                performPushSync={performPushSync}
-                performPullSync={performPullSync}
+                performPushSync={async () => { await performPushSync(); return { success: true, data: null } as unknown as ApiResponse<any>; }}
+                performPullSync={async () => { await performPullSync(); return { success: true, data: null } as unknown as ApiResponse<any>; }}
                 refreshCloudData={refreshCloudData}
                 cloudCount={cloudCount}
                 isSyncing={isSyncing}
@@ -178,11 +178,11 @@ export const SettingsScreen: React.FC = () => {
               <CategoriesManager 
                 categories={categories}
                 deleteCategory={deleteCategory}
-                updateCategory={updateCategory}
+                updateCategory={async (id, data) => { const r = await updateCategory(id, data); return !!r; }}
                 addCategory={async (name: string) => { const r = await addCategory(name); if (!r) throw new Error("Failed"); return r; }}
                 manufacturers={manufacturers}
-                addManufacturer={addManufacturer}
-                updateManufacturer={updateManufacturer}
+                addManufacturer={async (name) => { const r = await addManufacturer(name); if (!r) throw new Error("Failed"); return r; }}
+                updateManufacturer={async (id, data) => { const r = await updateManufacturer(id, data); return !!r; }}
                 deleteManufacturer={deleteManufacturer}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
@@ -190,8 +190,8 @@ export const SettingsScreen: React.FC = () => {
               <TagsManager 
                 tags={tags}
                 settings={settings}
-                addTag={addTag}
-                updateTag={updateTag}
+                addTag={async (name) => { const r = await addTag(name); if (!r) throw new Error("Failed"); return r; }}
+                updateTag={async (id, data) => { const r = await updateTag(id, data); return !!r; }}
                 activeTagMenuId={activeTagMenuId}
                 setActiveTagMenuId={setActiveTagMenuId}
                 deleteTag={deleteTag}

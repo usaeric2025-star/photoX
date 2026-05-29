@@ -1,5 +1,5 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { loadManufacturersFromCloud } from '../../services/manufacturerService';
+import { loadManufacturersFromCloud } from '../../services/manufacturers';
 import { photoKeys } from '../../lib/queryKeys';
 import { syncCache } from '../../utils/indexedDB';
 

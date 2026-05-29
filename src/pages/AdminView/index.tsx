@@ -1,12 +1,11 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { loadCategoriesFromCloud } from '@/services/categoryService';
-import { loadTagsFromCloud } from '@/services/tagService';
+import { loadCategoriesFromCloud } from '@/services/categories';
+import { loadTagsFromCloud } from '@/services/tags';
 import { syncCache } from '@/utils/indexedDB';
 import { photoKeys } from '@/lib/queryKeys';
 import { AdminViewContent } from './AdminViewContent';
-import { AdminProvider } from '@/contexts/AdminContext';
 
 export const AdminView: React.FC = () => {
   const queryClient = useQueryClient();
@@ -36,9 +35,7 @@ export const AdminView: React.FC = () => {
   }, [queryClient]);
 
   return (
-    <AdminProvider>
-      <AdminViewContent />
-    </AdminProvider>
+    <AdminViewContent />
   );
 };
 

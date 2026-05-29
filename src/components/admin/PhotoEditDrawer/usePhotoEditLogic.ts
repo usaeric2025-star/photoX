@@ -103,7 +103,7 @@ export const usePhotoEditLogic = (props: Props) => {
     
     if (editPhotoId && !editPhotoId.startsWith('temp-')) {
         await runTask('更新可见性', async () => {
-            const m = await import('../../../services/photoService');
+            const m = await import('../../../services/photos');
             await m.updatePhotoHidden(editPhotoId, nextValue);
         }, { showSuccessToast: true, silent: true });
     } else {

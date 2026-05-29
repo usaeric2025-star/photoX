@@ -15,7 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useGalleryStore, useShallow } from '../../store';
-import { useAdmin } from '../../contexts/AdminContext';
+import { PhotoActionsContext } from '../../contexts/PhotoActionsContext';
 import { useAuth, usePermission } from '../../hooks';
 import { reportError } from '@/lib/errorReporter';
 
@@ -54,10 +54,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, on
   </button>
 );
 
+import { useAdmin } from '@/features/admin/useAdmin';
+
 export const AdminSidebar: React.FC = () => {
+  const logic = useAdmin();
   const { 
-    settings, activeScreen, setActiveScreen, cloudCount, onRefresh, handleImport 
-  } = useAdmin();
+    activeScreen, setActiveScreen, cloudCount, 
+    onRefresh, handleImport, settings 
+  } = logic;
   
   const { can } = usePermission();
   const { isStaffMode, appLang, isSidebarCollapsed, setIsSidebarCollapsed } = useGalleryStore(useShallow(s => ({

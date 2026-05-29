@@ -4,7 +4,7 @@ import { useGalleryStore, useShallow } from '../../store';
 import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X } from 'lucide-react';
 import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer } from '../../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
 import { Skeleton } from '../ui/Skeleton';
 import { usePermission, useFeedback, useTaskExecutor, useTasks } from '@/hooks';
 

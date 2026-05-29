@@ -1,9 +1,9 @@
 import { useActionState, useTransition } from 'react';
 import { updatePhotoAction } from '../../actions/photoActions';
 import { ProductFormData, Photo } from '../../types';
-import { Result } from 'neverthrow';
 import { StandardError } from '../../lib/validators/protocol';
 import { useFeedback } from '@/hooks';
+import { isOk } from '../../lib/errorFactory';
 
 interface ActionState {
   data: Photo | null;
@@ -23,7 +23,7 @@ export function usePhotoAction(id: string, initialData?: Photo | null) {
     async (prevState: ActionState, formData: ProductFormData): Promise<ActionState> => {
       const result = await updatePhotoAction(id, formData);
       
-      if (result.isOk()) {
+      if (isOk(result)) {
         showSuccess('保存成功 / Saved successfully');
         return {
           data: result.value,
@@ -31,10 +31,10 @@ export function usePhotoAction(id: string, initialData?: Photo | null) {
           status: 'success'
         };
       } else {
-        handleError(new Error(result.error.message), `保存失败: ${result.error.aiDebugHint}`);
+        handleError(new Error(result.error instanceof Error ? result.error.message : 'Unknown error'), `保存失败: ${(result.error as any)?.aiDebugHint || ''}`);
         return {
           data: prevState.data,
-          error: result.error,
+          error: result.error as any,
           status: 'error'
         };
       }

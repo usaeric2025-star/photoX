@@ -11,9 +11,9 @@ import { GroupGridView } from './GroupGridView';
 import { GroupPhotoPicker } from './GroupPhotoPicker';
 
 import { useAdminMode } from '@/hooks';
-import { useAdmin } from '@/contexts/AdminContext';
+import { useAdmin } from '@/features/admin/useAdmin';
 import { translations } from '../../lib/translations';
-import { usePhotoActions } from '@/contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
 
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;

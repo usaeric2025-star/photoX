@@ -17,6 +17,7 @@ import { useTagsDisplay } from '@/hooks';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 import { translations } from '../../lib/translations';
+import { useFilters } from '@/features/filters/useFilters';
 
 import { useCategoriesQuery, useTagsQuery, useSettings } from '../../hooks';
 
@@ -52,20 +53,19 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   const { data: tags = [] } = useTagsQuery();
   const { settings } = useSettings();
   
-  const searchQuery = useGalleryStore(s => s.searchQuery);
-  const setSearchQuery = useGalleryStore(s => s.setSearchQuery);
+  const { filters, setCategory, setTags, setSearch, setShowGroupsCollapsed } = useFilters();
+  const { searchQuery, categoryId, tagIds, showGroupsCollapsed } = filters;
   const sortOrder = useGalleryStore(s => s.sortOrder);
   const setSortOrder = useGalleryStore(s => s.setSortOrder);
   const columns = useGalleryStore(s => s.columns);
   const setColumns = useGalleryStore(s => s.setColumns);
-  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
-  const setShowGroupsCollapsed = useGalleryStore(s => s.setShowGroupsCollapsed);
-  const selectedCatCode = useGalleryStore(s => s.filterCatId);
-  const setSelectedCatCode = useGalleryStore(s => s.setFilterCatId);
-  const filterSubId = useGalleryStore(s => s.filterSubId);
-  const setFilterSubId = useGalleryStore(s => s.setFilterSubId);
-  const selectedTagIds = useGalleryStore(s => s.filterTagIds);
-  const setSelectedTagIds = useGalleryStore(s => s.setFilterTagIds);
+  
+  const setSelectedCatCode = setCategory; // Aliased for backward compatibility in the component
+  const setFilterSubId = useGalleryStore(s => s.setFilterSubId); // Still in store.ts
+  const setSelectedTagIds = setTags; // Aliased for backward compatibility
+  const selectedCatCode = categoryId;
+  const filterSubId = useGalleryStore(s => s.filterSubId); // Still in store
+  const selectedTagIds = tagIds;
   const lang = useGalleryStore(s => s.appLang);
 
   const t = React.useMemo(() => translations[lang as keyof typeof translations] || translations.en, [lang]);
@@ -73,7 +73,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   // Handle URL -> Store sync on mount/change for Public mode
   useEffect(() => {
     if (isPublic) {
-      if (search.q !== undefined && search.q !== searchQuery) setSearchQuery(search.q || '');
+      if (search.q !== undefined && search.q !== searchQuery) setSearch(search.q || '');
       if (search.category !== undefined && String(search.category) !== String(selectedCatCode)) setSelectedCatCode(search.category);
       if (search.sort !== undefined) {
         const mappedSort = search.sort === 'date' ? 'newest' : search.sort === 'name' ? 'name' : 'newest';
@@ -111,7 +111,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   // Debounced parent state update
   // [INTERACTION-FEEDBACK-CSS-ONLY]
   const debouncedSyncSearch = useDebouncedCallback((val: string) => {
-    setSearchQuery(val);
+    setSearch(val);
     updateURL({ q: val || undefined });
   }, 300);
 
@@ -149,7 +149,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                 onClick={() => {
                   setLocalSearch('');
                   debouncedSyncSearch.cancel();
-                  setSearchQuery('');
+                  setSearch('');
                   updateURL({ q: undefined });
                 }}
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-[#888888] hover:text-[#1A1A1A] transition-colors"

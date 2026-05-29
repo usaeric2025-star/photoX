@@ -1,4 +1,4 @@
-import { createMutationHook } from '@/hooks/_factory/createMutationHook';
+import { createMutationHook } from './factory';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos } from '@/hooks';
 

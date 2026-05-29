@@ -5,6 +5,7 @@ import { mapToDb } from './photo/photoMappingUtils';
 import { safeArray } from '../lib/utils';
 import { createPhotoValidator } from '../lib/validators/factory';
 import { generateItemCode } from './utils';
+import { isErr } from '@/lib/errorFactory';
 
 /**
  * Service for all photo-related write operations (Insert, Update, Delete).
@@ -23,7 +24,7 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   // [APF-CONTRACT] Validate updates before processing
   const validator = createPhotoValidator();
   const validationRes = validator.validate(cleanUpdates);
-  if (validationRes.isErr()) {
+  if (isErr(validationRes)) {
     throw new Error(`Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
   }
 
@@ -81,7 +82,7 @@ export const batchUpdatePhotosInCloud = async (
   // [APF-CONTRACT] Validate updates before batch processing
   const validator = createPhotoValidator();
   const validationRes = validator.validate(updates);
-  if (validationRes.isErr()) {
+  if (isErr(validationRes)) {
     throw new Error(`Batch Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
   }
 

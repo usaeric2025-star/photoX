@@ -1,8 +1,8 @@
-import { createMutationHook } from '@/hooks/_factory/createMutationHook';
+import { createMutationHook } from './factory';
 import { Tag, Category, Manufacturer } from '@/types';
-import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tagService';
-import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/categoryService';
-import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturerService';
+import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tags';
+import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/categories';
+import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturers';
 import { photoKeys } from '@/lib/queryKeys';
 
 export const useAddTagMutation = createMutationHook({
@@ -11,7 +11,6 @@ export const useAddTagMutation = createMutationHook({
   mutationFn: addTagToDB,
   invalidateKeys: [photoKeys.tags()],
   onSuccessMessage: '标签添加成功',
-  taskLevel: 'heavy',
 });
 
 export const useUpdateTagMutation = createMutationHook({
@@ -20,7 +19,6 @@ export const useUpdateTagMutation = createMutationHook({
   mutationFn: ({ id, updates }: { id: string; updates: Partial<Tag> }) => updateTagInDB(id, updates),
   invalidateKeys: [photoKeys.tags()],
   onSuccessMessage: '标签更新成功',
-  taskLevel: 'heavy',
 });
 
 export const useDeleteTagMutation = createMutationHook({

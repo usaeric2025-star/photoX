@@ -11,9 +11,9 @@ import { translations } from '../../lib/translations';
 import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { GalleryEmpty } from '../shared/GalleryEmpty';
 import { PageSkeleton } from '../PageSkeleton';
-import { useCategoriesQuery, useTagsQuery, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
+import { useCategoriesQuery, useTagsQuery, useFilters, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
 import { PAGINATION } from '../../constants/config';
-import { useOptionalAdmin } from '@/contexts/AdminContext';
+import { useOptionalAdmin } from '@/features/admin/useAdmin';
 
 interface MemoizedPhotoCardProps {
   index: number;
@@ -165,7 +165,8 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
   
   const { data: categories = [] } = useCategoriesQuery();
   const { data: contextTags = [] } = useTagsQuery();
-  const showGroupsCollapsed = useGalleryStore(s => s.showGroupsCollapsed);
+  const { filters } = useFilters();
+  const showGroupsCollapsed = filters.showGroupsCollapsed;
 
   const lang = appLang;
   const t = translations[lang as keyof typeof translations] || translations.en;

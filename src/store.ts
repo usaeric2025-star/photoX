@@ -5,20 +5,6 @@ import { Photo, Category, Tag, Manufacturer, AppSettings, User, DialogData, Prod
 import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
 
 interface StoreState {
-  searchQuery: string;
-  setSearchQuery: (q: string) => void;
-  debouncedSearchQuery: string;
-  setDebouncedSearchQuery: (q: string) => void;
-  filterCatId: string | null;
-  setFilterCatId: (id: string | null) => void;
-  filterSubId: string | null;
-  setFilterSubId: (id: string | null) => void;
-  filterTagIds: string[];
-  setFilterTagIds: (ids: string[] | ((prev: string[]) => string[])) => void;
-  sortOrder: 'newest' | 'oldest';
-  setSortOrder: (order: 'newest' | 'oldest') => void;
-  showGroupsCollapsed: boolean;
-  setShowGroupsCollapsed: (show: boolean) => void;
   appLang: 'zh' | 'en' | 'ms';
   setAppLang: (lang: 'zh' | 'en' | 'ms') => void;
   columns: 2 | 3 | 5;
@@ -59,15 +45,18 @@ interface StoreState {
   focusedGroupPhotoId: string | null;
   setFocusedGroupPhotoId: (id: string | null) => void;
 
-  viewMode: 'admin' | 'public';
-  setViewMode: (mode: 'admin' | 'public') => void;
+  viewMode: 'private' | 'public';
+  setViewMode: (mode: 'private' | 'public') => void;
   activeScreen: string;
   setActiveScreen: (screen: string) => void;
   isInfiniteMode: boolean;
   setIsInfiniteMode: (mode: boolean) => void;
+  sortOrder: 'newest' | 'oldest' | 'name';
+  setSortOrder: (order: 'newest' | 'oldest' | 'name') => void;
+  filterSubId: string | null;
+  setFilterSubId: (id: string | null) => void;
 
   resetUI: () => void;
-  resetFilters: () => void;
   showWhatsAppChoice: boolean;
   setShowWhatsAppChoice: (show: boolean) => void;
   
@@ -100,29 +89,11 @@ const defaultForm: ProductFormData = {
 
 export { useShallow };
 export const useGalleryStore = create<StoreState>()((set) => ({
-  searchQuery: '',
-  setSearchQuery: (searchQuery) => set({ searchQuery, debouncedSearchQuery: searchQuery }),
-  debouncedSearchQuery: '',
-  setDebouncedSearchQuery: (debouncedSearchQuery) => set({ debouncedSearchQuery }),
-  filterCatId: null,
-  setFilterCatId: (filterCatId) => set({ filterCatId }),
-  filterSubId: null,
-  setFilterSubId: (filterSubId) => set({ filterSubId }),
-  filterTagIds: [],
-  setFilterTagIds: (updater) => set((state) => ({ 
-    filterTagIds: typeof updater === 'function' ? updater(state.filterTagIds) : updater 
-  })),
-  sortOrder: 'newest',
-  setSortOrder: (sortOrder) => set({ sortOrder }),
-  showGroupsCollapsed: true,
-  setShowGroupsCollapsed: (showGroupsCollapsed) => set({ showGroupsCollapsed }),
-  // @storage-contract: valid=['zh', 'en', 'ms'] default='en'
   appLang: safeGetItem(STORAGE_KEYS.LANG, 'en', (v) => ['zh', 'en', 'ms'].includes(v) ? v : 'en') as 'zh' | 'en' | 'ms',
   setAppLang: (appLang) => {
     safeSetItem(STORAGE_KEYS.LANG, appLang);
     set({ appLang });
   },
-  // @storage-contract: valid=[2,3,5] default=3
   columns: safeGetItem(STORAGE_KEYS.COLUMNS, 3, (v) => {
     const n = Number(v);
     return (n === 2 || n === 3 || n === 5) ? n : 3;
@@ -166,7 +137,7 @@ export const useGalleryStore = create<StoreState>()((set) => ({
     safeSetItem(STORAGE_KEYS.IS_STAFF_MODE, String(isStaffMode));
     set({ isStaffMode });
   },
-  viewMode: safeGetItem(STORAGE_KEYS.VIEW_MODE, 'public', (v) => ['admin', 'public'].includes(v) ? v : 'public') as 'admin' | 'public',
+  viewMode: safeGetItem(STORAGE_KEYS.VIEW_MODE, 'public', (v) => ['private', 'public'].includes(v) ? v : 'public') as 'private' | 'public',
   setViewMode: (viewMode) => {
     safeSetItem(STORAGE_KEYS.VIEW_MODE, viewMode);
     set({ viewMode });
@@ -214,9 +185,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   focusedGroupPhotoId: null,
   setFocusedGroupPhotoId: (focusedGroupPhotoId) => set({ focusedGroupPhotoId }),
   resetUI: () => set({
-      filterCatId: null,
-      filterTagIds: [],
-      searchQuery: '',
       selectedIds: [],
       isMultiSelect: false,
       editPhotoId: null,
@@ -224,12 +192,6 @@ export const useGalleryStore = create<StoreState>()((set) => ({
       batchEditingIds: null,
       formState: defaultForm
     }),
-  resetFilters: () => set({
-    filterCatId: null,
-    filterTagIds: [],
-    searchQuery: '',
-    debouncedSearchQuery: ''
-  }),
   showWhatsAppChoice: false,
   setShowWhatsAppChoice: (showWhatsAppChoice) => set({ showWhatsAppChoice }),
   newPhotoData: null,
@@ -238,6 +200,14 @@ export const useGalleryStore = create<StoreState>()((set) => ({
   setShowOtherFields: (showOtherFields) => set({ showOtherFields }),
   isInfiniteMode: false,
   setIsInfiniteMode: (isInfiniteMode) => set({ isInfiniteMode }),
+  sortOrder: safeGetItem(STORAGE_KEYS.SORT_ORDER, 'newest', (v) => ['newest', 'oldest', 'name'].includes(v) ? v : 'newest') as 'newest' | 'oldest' | 'name',
+  setSortOrder: (sortOrder) => {
+    safeSetItem(STORAGE_KEYS.SORT_ORDER, sortOrder);
+    set({ sortOrder });
+  },
+  filterSubId: null,
+  setFilterSubId: (filterSubId) => set({ filterSubId }),
 }));
+
 
 export const useStore = useGalleryStore;

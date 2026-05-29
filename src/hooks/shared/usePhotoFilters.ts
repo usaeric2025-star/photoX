@@ -4,6 +4,7 @@ import { useGalleryStore, useShallow } from '@/store';
 import { filterPhotos, groupPhotos } from '@/lib/filters';
 import { isValidPhoto } from '@/lib/typeGuard';
 import { useAdminMode } from '@/hooks';
+import { useFilters } from '@/features/filters/useFilters';
 
 /**
  * Unified hook for filtering and grouping photos.
@@ -18,17 +19,14 @@ export function usePhotoFilters(
     isAdminModeOverride?: boolean;
   } = {}
 ) {
+  const { filters } = useFilters();
   const { 
-    searchQuery, filterCatId, filterSubId, filterTagIds, sortOrder, 
-    isStaffMode, showGroupsCollapsed: storeShowGroupsCollapsed 
+    filterSubId, sortOrder, 
+    isStaffMode 
   } = useGalleryStore(useShallow(s => ({
-    searchQuery: s.searchQuery,
-    filterCatId: s.filterCatId,
     filterSubId: s.filterSubId,
-    filterTagIds: s.filterTagIds,
     sortOrder: s.sortOrder,
-    isStaffMode: s.isStaffMode,
-    showGroupsCollapsed: s.showGroupsCollapsed
+    isStaffMode: s.isStaffMode
   })));
 
   const hookIsAdminMode = useAdminMode();
@@ -38,7 +36,7 @@ export function usePhotoFilters(
 
   const showGroups = options.showGroupsCollapsed !== undefined
     ? options.showGroupsCollapsed
-    : storeShowGroupsCollapsed;
+    : filters.showGroupsCollapsed;
 
   const searchMaps = useMemo(() => {
     const tMap = new Map<string, string[]>();
@@ -66,10 +64,10 @@ export function usePhotoFilters(
     const validPhotos = (incomingPhotos || []).filter(isValidPhoto);
     
     const dp = filterPhotos(validPhotos, {
-      searchQuery,
-      filterCatId,
+      searchQuery: filters.searchQuery,
+      filterCatId: filters.categoryId,
       filterSubId,
-      filterTagIds,
+      filterTagIds: filters.tagIds,
       sortOrder,
       isAdminMode: effectiveIsAdminMode,
       isStaffMode
@@ -79,10 +77,10 @@ export function usePhotoFilters(
     return { displayPhotos: dp, gridPhotos: gp };
   }, [
     incomingPhotos, 
-    searchQuery, 
-    filterCatId, 
+    filters.searchQuery, 
+    filters.categoryId, 
     filterSubId, 
-    filterTagIds, 
+    filters.tagIds, 
     sortOrder, 
     effectiveIsAdminMode, 
     isStaffMode, 

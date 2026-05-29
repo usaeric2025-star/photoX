@@ -1,30 +1,21 @@
-import { Result } from 'neverthrow';
+import { type Result } from '@/lib/errorFactory';
 
 /**
  * @validator-contract StandardError
  * Standardized error structure for all validator engines.
  */
 
-export class StandardError {
-    message: string;
+export class StandardError extends Error {
     path: string[];
     aiDebugHint: string;
     originalError?: any;
-    name?: string;
-    stack?: string;
 
     constructor(message: string, options?: { originalError?: any, aiDebugHint?: string, path?: string[] }) {
-        this.message = message;
+        super(message);
         this.name = 'StandardError';
         this.path = options?.path || [];
         this.aiDebugHint = options?.aiDebugHint || '';
         this.originalError = options?.originalError;
-        
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, StandardError);
-        } else {
-            this.stack = (new Error()).stack;
-        }
     }
 }
 

@@ -335,3 +335,32 @@ sourceOfTruth: "ARCHITECTURE.md"
 - ✅ **審核流程**：所有提議必須由人類開發者在 `sandbox/anti-pattern-proposals/` 中審核並合併。
 - ✅ **格式約束**：提議必須包含明確的「根因」「觸發條件」「修復路徑」，並經由 `DiagnosticResult` 的 `healthReport` 數據支持。
 
+## 迁移期铁律（2026-06 至 2026-12）
+
+- ✅ 新 feature 可读旧 store（只读，用于过渡）
+- ❌ 旧组件禁止调用新 service
+- ❌ 新 feature 禁止写入旧 store
+- 每完成一个 feature 迁移，立即删除对应的"只读旧 store"引用
+
+## 🔄 Cosmetic Refactor Final Specs (v3.6) 🆕 [COSMETIC-SYNCED]
+
+### 1. 服务层规范 (Service Naming)
+- ✅ **复数化命名**: 所有数据服务文件已重命名为复数形式并移除 `Service` 后缀。
+  - `photos.ts`, `groups.ts`, `categories.ts`, `tags.ts`, `manufacturers.ts`
+- ✅ **禁止单数**: 严禁在业务逻辑中直接 import 单数命名的 Service 文件。
+- ✅ **别名推荐**: 推荐使用 `import * as photos from '@/services/photos'` 模式。
+
+### 2. Hook 命名规范 (Hook Naming)
+- ✅ **去 Query 化**: 对齐 XState 风格，主数据查询 Hook 已移除 `Query` 后缀。
+  - `usePhotoCount`, `useGroupPhotos`
+- ✅ **一致性**: 必须通过 `@/hooks` 统一导出，禁止跨层级深层引用 `queries/*.ts`。
+
+### 3. 组件命名规范 (Component Naming)
+- ✅ **管理端主入口**: 固定命名为 `AdminScreen.tsx` (原 `MainAdminScreen.tsx`)。
+- ✅ **路径归并**: 已移动至 `src/components/AdminScreen.tsx`，保持页面逻辑与 UI 容器分离。
+
+### 4. 状态管理规范 (State Management)
+- ✅ **全局滤镜**: 强制使用 `useFilters` (XState Actor) 作为唯一真相来源。
+- ✅ **静默更新**: 滤镜切换必须完全静默且触发乐观更新，严禁出现中间 Loading。
+
+[PROJECT-REFACTOR-COMPLETE]

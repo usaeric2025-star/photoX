@@ -11,7 +11,7 @@ import { useAdminMode, usePermission, useTasks, useCategoriesQuery, useManufactu
 import { useGalleryStore, useShallow } from '../../store';
 import { createTranslate } from '@/lib/i18n';
 import { translations, LanguageCode } from '../../lib/translations';
-import { usePhotoActions } from '../../contexts/PhotoActionsContext';
+import { usePhotoActions } from '@/features/admin/useAdmin';
 
 export interface PhotoLightboxProps {
   photo: Photo | null;

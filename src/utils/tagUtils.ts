@@ -1,5 +1,5 @@
 import { Tag } from '../types';
-import { batchCreateTags } from '../services/tagService';
+import { batchCreateTags } from '../services/tags';
 
 /**
  * 标签排序算法：

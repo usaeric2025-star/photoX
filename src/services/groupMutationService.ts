@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { ProductGroup } from '../types';
 import { createGroupValidator } from '../lib/validators/factory';
+import { isErr } from '@/lib/errorFactory';
 
 /**
  * Service for all group-related write operations.
@@ -48,7 +49,7 @@ export const updateGroupInCloud = async (groupId: string, updates: Partial<Produ
     // [APF-CONTRACT] Validate updates
     const validator = createGroupValidator();
     const validationRes = validator.validate(updates);
-    if (validationRes.isErr()) {
+    if (isErr(validationRes)) {
         throw new Error(`Group Update Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
     }
 
@@ -68,7 +69,7 @@ export const createGroupInCloud = async (groupData: ProductGroup) => {
     // [APF-CONTRACT] Validate groupData
     const validator = createGroupValidator();
     const validationRes = validator.validate(groupData);
-    if (validationRes.isErr()) {
+    if (isErr(validationRes)) {
         throw new Error(`Group Creation Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
     }
 
