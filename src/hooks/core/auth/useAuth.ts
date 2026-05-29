@@ -16,7 +16,11 @@ export const useAuth = () => {
         const { data, error } = await supabase.auth.getUser()
         console.log('🔐 getUser 结果:', { user: data?.user?.email, error: error?.message || error });
         if (error) {
-          console.error('🔐 getUser 错误:', error);
+          if (error.message?.includes('session missing') || error.name === 'AuthSessionMissingError' || error.message?.includes('Auth session missing')) {
+            console.log('🔐 No active session (unauthenticated guest)');
+          } else {
+            console.error('🔐 getUser 错误:', error);
+          }
           return null;
         }
         const u = data?.user;
