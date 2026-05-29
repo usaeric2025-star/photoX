@@ -94,7 +94,7 @@ export const UnifiedGallery: React.FC<UnifiedGalleryProps> = React.memo(({
     searchQuery: filters.searchQuery,
     sortOrder: store.sortOrder,
     isAdminMode: isManagement
-  }, pageSize, !isManagement); // Only disabled partially if management because usePhotoGallery handles it, actually wait, infiniteQuery needs to execute here if public mode!
+  }, pageSize, true);
 
   const photos = useMemo(() => {
     // We already flatten everything in the public view. Handled correctly below

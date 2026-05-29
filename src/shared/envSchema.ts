@@ -62,14 +62,21 @@ export function getClientEnv(): ClientEnv {
   }
   
   const rawEnv = { ...(import.meta as any).env };
-  if (!rawEnv.VITE_SUPABASE_URL) {
-    rawEnv.VITE_SUPABASE_URL = "https://vbpnlkeweqkjufijtdph.supabase.co";
+  const filteredEnv: Record<string, any> = {};
+  const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'MODE', 'DEV', 'PROD'];
+  allowedKeys.forEach(key => {
+    if (rawEnv[key] !== undefined) {
+      filteredEnv[key] = rawEnv[key];
+    }
+  });
+  if (!filteredEnv.VITE_SUPABASE_URL) {
+    filteredEnv.VITE_SUPABASE_URL = "https://vbpnlkeweqkjufijtdph.supabase.co";
   }
-  if (!rawEnv.VITE_SUPABASE_ANON_KEY) {
-    rawEnv.VITE_SUPABASE_ANON_KEY = "sb_publishable_mXZxsfqH-fATbT2g9fiX7A_-VfzOwa8";
+  if (!filteredEnv.VITE_SUPABASE_ANON_KEY) {
+    filteredEnv.VITE_SUPABASE_ANON_KEY = "sb_publishable_mXZxsfqH-fATbT2g9fiX7A_-VfzOwa8";
   }
 
-  const result = clientEnvSchema(rawEnv);
+  const result = clientEnvSchema(filteredEnv);
   if (result instanceof type.errors) {
     console.error("❌ [ENV-VALIDATION-INTEGRATED] Invalid Client Environment Variables:");
     result.forEach((err) => {

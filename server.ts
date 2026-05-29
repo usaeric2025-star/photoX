@@ -5,14 +5,40 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { cors } from "hono/cors";
 import path from "path";
 import fs from "fs";
-import { PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getR2Client } from "./src/services/storage/client";
 import { getServerEnv } from "./src/shared/envSchema";
 import { logTraffic } from "./src/lib/trafficCapture";
 
 // 启动校验
 const serverEnv = getServerEnv(process.env);
+
+export async function getR2Client() {
+  const r2Endpoint = serverEnv.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
+  let r2AccessKeyId = serverEnv.R2_ACCESS_KEY_ID || '';
+  let r2SecretAccessKey = serverEnv.R2_SECRET_ACCESS_KEY || '';
+  
+  if (r2AccessKeyId.length === 64 && r2SecretAccessKey.length === 32) {
+    const temp = r2AccessKeyId;
+    r2AccessKeyId = r2SecretAccessKey;
+    r2SecretAccessKey = temp;
+  }
+
+  if (!r2AccessKeyId || !r2SecretAccessKey) {
+    console.error("[getR2Client] R2 Credentials missing!");
+    throw new Error("R2 credentials missing (R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY)");
+  }
+
+  return new S3Client({
+    region: 'auto',
+    endpoint: r2Endpoint,
+    credentials: {
+      accessKeyId: r2AccessKeyId,
+      secretAccessKey: r2SecretAccessKey,
+    },
+    forcePathStyle: true,
+  });
+}
 
 // --- Hono App Implementation ---
 const app = new Hono().basePath("/api");
