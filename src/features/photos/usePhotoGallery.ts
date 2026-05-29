@@ -6,7 +6,11 @@ import { useMemo, useEffect } from 'react';
 import { useGalleryStore } from '@/store';
 
 export function usePhotoGallery() {
+  console.log('📸 usePhotoGallery 被调用');
+
   const { filters } = useFilters();
+  console.log('📸 filters:', filters);
+
   const sortOrder = useGalleryStore(s => s.sortOrder);
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const pageSize = isAdminPath ? 60 : 20;  // Use fixed numeric sizes to avoid import/rebuild side effects
@@ -19,8 +23,14 @@ export function usePhotoGallery() {
     isAdminMode: true,
   }, pageSize, true);  // enabled is explicitly true
 
+  console.log('📸 useInfinitePhotos 状态:', {
+    isLoading: infinitePhotosQuery.isLoading,
+    status: infinitePhotosQuery.status,
+    error: (infinitePhotosQuery as any).error?.message
+  });
+
   // Detailed debug logging
-  console.log('📸 usePhotoGallery 调用:', {
+  console.log('📸 usePhotoGallery 详细状态:', {
     filters: filters,
     pageSize,
     isLoading: infinitePhotosQuery.isLoading,
@@ -32,7 +42,7 @@ export function usePhotoGallery() {
     console.log('[DEBUG] usePhotoGallery query executed:', {
       status: infinitePhotosQuery.status,
       fetchStatus: infinitePhotosQuery.fetchStatus,
-      dataLength: infinitePhotosQuery.data?.pages.length
+      dataLength: infinitePhotosQuery.data?.pages?.length
     });
   }, [infinitePhotosQuery.status, infinitePhotosQuery.fetchStatus, infinitePhotosQuery.data]);
 

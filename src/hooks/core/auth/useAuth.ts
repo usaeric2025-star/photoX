@@ -6,13 +6,15 @@ import { User } from '@/types'
  * Hook for authentication state and operations.
  */
 export const useAuth = () => {
+  console.log('🔐 useAuth 被调用');
+
   const { data: user, isPending, isLoading, refetch } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: async () => {
-      console.log('🔍 useAuth queryFn 开始执行');
+      console.log('🔐 useAuth queryFn 开始执行');
       try {
         const { data, error } = await supabase.auth.getUser()
-        console.log('🔍 getUser 结果:', { user: data?.user?.email, error });
+        console.log('🔐 getUser 结果:', { user: data?.user?.email, error: error?.message || error });
         const u = data?.user;
         if (!u) return null;
         return {
@@ -24,12 +26,14 @@ export const useAuth = () => {
           email_verified: !!u.email_confirmed_at
         } as User;
       } catch (err) {
-        console.error('🔍 useAuth queryFn 发生异常:', err);
+        console.error('🔐 useAuth queryFn 发生异常:', err);
         return null;
       }
     },
     staleTime: Infinity,
   })
+
+  console.log('🔐 useAuth 返回:', { user: user?.email, isLoading, isPending });
 
   const loginWithGoogle = useMutation({
     mutationFn: async () => {

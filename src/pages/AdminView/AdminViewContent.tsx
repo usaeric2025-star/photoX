@@ -29,10 +29,18 @@ import { LanguageCode } from '@/lib/translations';
 const AdminDiagnostics = lazy(() => import('./AdminDiagnostics'));
 
 export const AdminViewContent: React.FC = () => {
-  console.log('🔍 AdminViewContent 渲染开始');
+  console.log('🔍 AdminViewContent 组件渲染');
 
   const { user, isLoading: isAuthLoading, loginWithGoogle } = useAuth();
+  console.log('🔍 useAuth 结果:', { user: user?.email, isAuthLoading });
+
   const { photos, isLoading: isPhotosLoading, infinitePhotosQuery } = usePhotoGallery();
+  console.log('🔍 usePhotoGallery 结果:', { 
+    photosCount: photos?.length, 
+    isPhotosLoading, 
+    photosError: (infinitePhotosQuery as any)?.error?.message 
+  });
+
   const { filters } = useFilters();
   const { deletePhoto, updatePhoto } = useAdminActions();
   const adminActions = useAdminActions();
@@ -119,8 +127,11 @@ export const AdminViewContent: React.FC = () => {
   // NOTE: photoActions might not be used here since we deleted contexts earlier.
 
   if (!isAuthLoading && !user && !store.isStaffMode) {
+    console.log('🔍 条件触发: 无用户且非StaffMode，显示登录页');
     return <LoginScreen loginWithGoogle={loginWithGoogle} isLoading={isSyncing} />;
   }
+
+  console.log('🔍 条件通过: 有用户或StaffMode，显示管理内容');
 
   return (
     <ErrorBoundary>

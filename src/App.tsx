@@ -160,7 +160,16 @@ export default function AppRoutes() {
 
   // Handle Global Search Debouncing via local state or query logic
   
-  if (isLoading && window.location.pathname.startsWith('/admin')) return <FullPageLoading />;
+  console.log('🔍 AppRoutes 渲染:', { 
+    isLoading, 
+    user: user?.email, 
+    pathname: window.location.pathname 
+  });
+
+  if (isLoading && window.location.pathname.startsWith('/admin')) {
+    console.log('🔍 显示 FullPageLoading');
+    return <FullPageLoading />;
+  }
 
   return (
       <RouterProvider router={router} context={{ user, role, can }} />
