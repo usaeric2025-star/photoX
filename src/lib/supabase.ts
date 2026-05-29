@@ -14,20 +14,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: {
-      getItem: (key) => typeof window !== 'undefined' ? window.localStorage.getItem(key) : null,
-      setItem: (key, value) => {
-        // [SYNC-STORAGE-IN-RENDER] @ src/lib/supabase.ts:16
-        if (typeof window !== 'undefined') {
-          setTimeout(() => window.localStorage.setItem(key, value), 0);
-        }
-      },
-      removeItem: (key) => {
-        if (typeof window !== 'undefined') {
-          setTimeout(() => window.localStorage.removeItem(key), 0);
-        }
-      }
-    }
   },
   global: {
     fetch: (url, options) => {

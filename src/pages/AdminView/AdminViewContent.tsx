@@ -137,7 +137,7 @@ export const AdminViewContent: React.FC = () => {
             </div>
           )}
 
-          <main className="overflow-auto">
+          <div className="overflow-auto flex flex-col flex-1 min-h-0">
               {store.batchEditingIds && store.batchEditingIds.length > 0 && (
                 <BatchEditScreen />
               )}
@@ -191,7 +191,7 @@ export const AdminViewContent: React.FC = () => {
               <AdminDiagnostics />
             </Suspense>
           )}
-        </main>
+        </div>
       </div>
       </DataLoadingContainer>
     </ErrorBoundary>
