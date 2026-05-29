@@ -6,7 +6,7 @@ import { useGalleryStore } from '../../store';
 import { useFeedback } from '../../hooks';
 import { normalizeTagName } from '../../utils/stringHelper';
 import { useTaskExecutor, useTasks } from '@/hooks';
-import { triggerRefreshTagHotScores } from '../../services/tagsMutationService';
+import { triggerRefreshTagHotScores } from '../../services/tags';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface TagsSectionProps {
