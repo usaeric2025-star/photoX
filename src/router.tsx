@@ -15,7 +15,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/groups';
-import { AuthCallback } from '@/pages/AuthCallback';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -186,15 +185,8 @@ const adminRoute = createRoute({
   component: AdminView,
 });
 
-const authCallbackRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/auth/callback',
-  component: AuthCallback,
-});
-
 // 3. Route Tree
 const routeTree = rootRoute.addChildren([
-  authCallbackRoute,
   indexRoute,
   hashRoute,
   groupRoute,
