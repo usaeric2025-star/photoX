@@ -51,10 +51,10 @@ export const AdminScreen: React.FC = React.memo(() => {
               if (selectedIds.length > 0) {
                 // Same logic as floating buttons
                 const { supabase } = await import('@/lib/supabase');
-                const { mapSupabasePhoto } = await import('@/services/photos');
+                const { mapSupabasePhoto, PHOTO_SELECT_FIELDS } = await import('@/services/photos');
                 const { data } = await supabase
                   .from('furniture_items')
-                  .select('id, name, item_code, manual_code, model_number, image_hash, category_id, manufacturer_id, sub_category, description, image_url, thumb_url, thumb_hash, created_at, updated_at, group_id, is_group_cover, is_hidden, is_pinned, is_analyzing, user_id, price, description_translations, dimensions, group_order, photo_tags(tag_id)')
+                  .select(PHOTO_SELECT_FIELDS)
                   .or(`id.in.(${selectedIds.join(',')}),group_id.in.(${selectedIds.join(',')})`);
                 
                 const dbPhotos = (data || []).map(mapSupabasePhoto);

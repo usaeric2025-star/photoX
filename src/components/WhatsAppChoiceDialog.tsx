@@ -17,7 +17,7 @@ export const WhatsAppChoiceDialog: React.FC<WhatsAppChoiceDialogProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  const fallback = (import.meta as any).env.VITE_WHATSAPP_NUMBER;
+  const fallback = import.meta.env.VITE_WHATSAPP_NUMBER;
 
   return (
     <motion.div 

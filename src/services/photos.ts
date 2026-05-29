@@ -110,7 +110,9 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     };
 }
 
-export const PHOTO_SELECT_FIELDS = 'id, name, item_code, manual_code, model_number, image_hash, category_id, manufacturer_id, sub_category, description, image_url, thumb_url, thumb_hash, created_at, updated_at, group_id, is_group_cover, is_hidden, is_pinned, is_analyzing, user_id, price, description_translations, dimensions, group_order, photo_tags(tag_id)';
+import { PHOTO_LIST_FIELDS, PHOTO_DETAIL_FIELDS } from '../constants/photoFields';
+
+export const PHOTO_SELECT_FIELDS = PHOTO_DETAIL_FIELDS;
 
 export const loadAllPhotosFromCloud = async (
     since?: string,
@@ -124,7 +126,7 @@ export const loadAllPhotosFromCloud = async (
     sortOrder?: 'asc' | 'desc' | 'newest' | 'oldest' | 'name' | string | null,
     onlyUngrouped: boolean = false
 ): Promise<Photo[]> => {
-    const selectQuery = PHOTO_SELECT_FIELDS;
+    const selectQuery = PHOTO_LIST_FIELDS;
 
     let query = supabase
         .from(DB_CONFIG.TABLE_NAME)
@@ -409,7 +411,7 @@ export const getPhotoCount = async (
 ): Promise<number> => {
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'exact', head: true });
+    .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'estimated', head: true });
   
   if (!isAdminMode) {
     query = query.or(VISIBILITY_OR_QUERY);

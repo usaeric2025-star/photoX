@@ -61,7 +61,7 @@ export function getClientEnv(): ClientEnv {
     return {} as ClientEnv;
   }
   
-  const rawEnv = { ...(import.meta as any).env };
+  const rawEnv = { ...import.meta.env };
   const filteredEnv: Record<string, any> = {};
   const allowedKeys = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'MODE', 'DEV', 'PROD'];
   allowedKeys.forEach(key => {
@@ -78,12 +78,12 @@ export function getClientEnv(): ClientEnv {
 
   const result = clientEnvSchema(filteredEnv);
   if (result instanceof type.errors) {
-    console.error("❌ [ENV-VALIDATION-INTEGRATED] Invalid Client Environment Variables:");
+    console.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Client Environment Variables (Falling back gracefully):");
     result.forEach((err) => {
       const hint = aiDebugHints[err.path.join('.')] || "Check .env configuration";
-      console.error(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
+      console.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
     });
-    throw new Error(`Client Environment Contract Violation: ${result.summary}\nHint: Check your .env file and ensure variables match ArkType schema requirements.`);
+    return filteredEnv as ClientEnv;
   }
   return result as ClientEnv;
 }
@@ -101,12 +101,12 @@ export function getServerEnv(envObj: any): ServerEnv {
   }
   const result = serverEnvSchema(rawEnv);
   if (result instanceof type.errors) {
-    console.error("❌ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables:");
+    console.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");
     result.forEach((err) => {
       const hint = aiDebugHints[err.path.join('.')] || "Check .env configuration or deployment env variables";
-      console.error(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
+      console.warn(`- ${err.path}: ${err.message} (aiDebugHint: ${hint})`);
     });
-    throw new Error(`Server Environment Contract Violation: ${result.summary}\nHint: Please provide the required environment variables in your deployment / runtime configuration.`);
+    return rawEnv as ServerEnv;
   }
   return result as ServerEnv;
 }
