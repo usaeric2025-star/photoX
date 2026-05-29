@@ -18,7 +18,7 @@ import { saveData, syncCache } from '@/utils/indexedDB';
 import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
 import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { loginWithGoogle } from '@/services/supabaseService';
+import { loginWithGoogle } from '@/services/authService';
 // import { AdminProvider } from '@/contexts/PhotoActionsContext';
 
 /* Removed ErrorFallback component */

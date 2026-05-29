@@ -6,7 +6,7 @@ import { translations, LanguageCode } from '../../lib/translations';
 import { Photo, AppSettings } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { loginWithGoogle } from '@/services/supabaseService';
+import { loginWithGoogle } from '@/services/authService';
 import { RefreshMenu } from './RefreshMenu';
 import { ToolsMenu } from './ToolsMenu';
 import { useNavigate } from '@tanstack/react-router';

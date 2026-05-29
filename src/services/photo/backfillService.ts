@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseService';
+import { supabase } from '@/lib/supabase';
 import { generateThumbHash } from '../../utils/thumbHash';
 import { updatePhotoInCloud } from '../photos';
 
