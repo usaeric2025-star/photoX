@@ -11,6 +11,8 @@ import { useTogglePin } from '@/hooks/core/mutations/useTogglePin';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 import { interactionBus } from '@/lib/interactionBus';
 import { cn } from '@/lib/utils';
+import { translations } from '@/lib/translations';
+import { useGalleryStore } from '@/store/galleryStore';
 
 export interface PhotoCardProps {
   variant: GalleryVariant;
@@ -24,11 +26,11 @@ export interface PhotoCardProps {
   hideDetails?: boolean;
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant }> = React.memo(({ photo, variant }) => {
+const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; showGroupsCollapsed: boolean }> = React.memo(({ photo, variant, showGroupsCollapsed }) => {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
   // Display group info if photo belongs to a group and has more than 1 members
-  const shouldShowGroup = photo.group_id && (photo.group?.member_count ?? 1) > 1;
+  const shouldShowGroup = showGroupsCollapsed && photo.group_id && (photo.group?.member_count ?? 1) > 1;
 
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
@@ -64,7 +66,8 @@ const PhotoInfoFooter: React.FC<{
   displayCatName: string; 
   photoTags: string[];
   hideTags?: boolean;
-}> = React.memo(({ displayCatName, photoTags, hideTags }) => (
+  t: any;
+}> = React.memo(({ displayCatName, photoTags, hideTags, t }) => (
   <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
     <div className="h-[38px] w-full flex flex-col justify-end items-start gap-0.5" style={{ alignContent: 'end' }}>
        <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
@@ -109,6 +112,9 @@ export const PhotoCard = React.memo(({
   const { setters } = useInteractionBridge();
   const cardRef = useRef<HTMLDivElement>(null);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  
+  const lang = useGalleryStore(s => s.appLang);
+  const t = useMemo(() => translations[lang as keyof typeof translations] || translations.en, [lang]);
   
   // Initial values for the first render to avoid flicker
   const initialIsSelected = interactionBus.current.selectedIds.has(photo.id);
@@ -322,7 +328,7 @@ export const PhotoCard = React.memo(({
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} variant={variant} />
+      <PhotoStatusBadges photo={photo} variant={variant} showGroupsCollapsed={showGroupsCollapsed} />
 
       {isManagement && can('photo:toggle-pinned') && (
          <button 
@@ -338,6 +344,7 @@ export const PhotoCard = React.memo(({
         displayCatName={displayCatName} 
         photoTags={photoTags}
         hideTags={hideDetails}
+        t={t}
       />
     </div>
   );

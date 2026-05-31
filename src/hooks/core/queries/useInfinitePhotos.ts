@@ -23,7 +23,7 @@ export const usePhotoInfiniteList = (filters: {
       searchQuery: filters.searchQuery ?? null,
       sortOrder: filters.sortOrder ?? null,
       isAdminMode: filters.isAdminMode ?? false,
-      onlyUngrouped: filters.onlyUngrouped ?? false,
+      onlyUngrouped: !filters.showGroupsCollapsed, 
       limit 
     }),
     queryFn: async ({ pageParam = 1, signal }) => {

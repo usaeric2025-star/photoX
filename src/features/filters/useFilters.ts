@@ -13,6 +13,7 @@ export function useFilters() {
     setCategory: (categoryId: string | null) => filtersService.send({ type: 'SET_CATEGORY', categoryId }),
     setTags: (tagIds: string[]) => filtersService.send({ type: 'SET_TAGS', tagIds }),
     setSearch: (searchQuery: string) => filtersService.send({ type: 'SET_SEARCH', searchQuery }),
+    setFilters: (filters: any) => filtersService.send({ type: 'SET_FILTERS', filters }),
     setShowGroupsCollapsed: (showGroupsCollapsed: boolean) => filtersService.send({ type: 'SET_GROUPS_COLLAPSED', showGroupsCollapsed }),
     resetFilters: () => filtersService.send({ type: 'RESET' }),
   };

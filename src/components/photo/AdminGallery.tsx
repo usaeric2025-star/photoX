@@ -4,7 +4,7 @@ import { Photo, Category, Tag } from '@/types';
 import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
-import { GalleryControls } from '@/components/photo/GalleryControls';
+import { AdminFilters } from '@/components/ui/AdminFilters';
 import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList, useEnrichedPhotos } from '@/hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { FloatingActions } from '@/components/shared/FloatingActions';
@@ -13,6 +13,9 @@ import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailView } from '../GroupDetailView';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
+const updateURL = (params: any) => console.log('updateURL stub', params);
+import { interactionBus } from '@/lib/interactionBus';
+import { useNavigate } from '@tanstack/react-router';
 
 interface AdminGalleryProps {
   variant: GalleryVariant;
@@ -37,17 +40,20 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
   const { isMultiSelect, selectedIds, disable } = useMultiSelect();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { filters } = useFilters();
+  const navigate = useNavigate();
+  const { filters, setFilters, setSearch, setShowGroupsCollapsed } = useFilters();
   const store = useGalleryStore(useShallow(s => ({
     setBatchEditingIds: s.setBatchEditingIds,
     sortOrder: s.sortOrder,
+    setSortOrder: s.setSortOrder,
     lightboxIndex: s.lightboxIndex,
     setLightboxIndex: s.setLightboxIndex,
     activeGroupId: s.activeGroupId,
     setActiveGroupId: s.setActiveGroupId,
     activePhotoId: s.activePhotoId,
     setActivePhotoId: s.setActivePhotoId,
-    columns: s.columns
+    columns: s.columns,
+    setColumns: s.setColumns
   })));
 
   const infiniteQuery = usePhotoInfiniteList({
@@ -107,12 +113,23 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
   return (
     <LayoutGroup id="admin-gallery">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
-        <GalleryControls 
-          onScrollToTop={scrollToTop}
-          variant={variant}
-          handleBatchAiIdentifyTrigger={handleBatchAiIdentifyTrigger}
-          isAnalyzing={isAnalyzing}
-          batchProgress={batchProgress}
+        <AdminFilters 
+          onSearch={setSearch}
+          searchQuery={filters.searchQuery || ''}
+          onSortChange={() => store.setSortOrder(store.sortOrder === 'newest' ? 'oldest' : 'newest')}
+          currentSort={store.sortOrder}
+          onColumnsChange={(cols) => {
+              store.setColumns(cols as 2 | 3 | 5);
+              updateURL({ view: cols === 2 ? 'list' : 'grid' });
+          }}
+          currentColumns={store.columns}
+          onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
+          showGroupsCollapsed={filters.showGroupsCollapsed}
+          isMultiSelect={isMultiSelect}
+          onMultiSelect={() => {}} // Placeholder as useMultiSelect doesn't have a simple toggle
+          selectedCount={interactionBus.current.selectedIds.size}
+          onSettings={() => navigate({ to: '/settings' })}
+          onUpload={() => fileInputRef.current?.click()}
         />
 
         <div className="flex-1 overflow-hidden bg-brand-bg relative">

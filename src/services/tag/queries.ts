@@ -15,7 +15,8 @@ export const loadTagsFromCloud = async (): Promise<Tag[]> => {
       ...t,
       name: (t.name || '').toUpperCase(),
       id: String(t.id),
-      hot_score: t.hot_score || 0
+      hot_score: t.hot_score || 0,
+      is_pinned: !!t.is_pinned
     }));
 
     return result;

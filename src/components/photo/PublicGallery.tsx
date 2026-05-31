@@ -1,9 +1,10 @@
 import React, { useMemo, useCallback } from 'react';
 import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
-import { GalleryFilters } from '@/components/ui/GalleryFilters';
+import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { usePhotoInfiniteList, useFilters, usePhotoFilters, useSettings, useEnrichedPhotos } from '@/hooks';
+const updateURL = (params: any) => console.log('updateURL stub', params);
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailView } from '../GroupDetailView';
@@ -31,19 +32,22 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   const { filters } = useFilters();
   const { settings } = useSettings(); 
   
+  const { setSearch, setShowGroupsCollapsed } = useFilters();
   const { 
     setLightboxIndex,
-    sortOrder,
+    sortOrder, setSortOrder,
     activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
-    columns, showWhatsAppChoice, setShowWhatsAppChoice, appLang
+    columns, setColumns, showWhatsAppChoice, setShowWhatsAppChoice, appLang
   } = useGalleryStore(useShallow(s => ({
     setLightboxIndex: s.setLightboxIndex,
     sortOrder: s.sortOrder,
+    setSortOrder: s.setSortOrder,
     activeGroupId: s.activeGroupId,
     setActiveGroupId: s.setActiveGroupId,
     activePhotoId: s.activePhotoId,
     setActivePhotoId: s.setActivePhotoId,
     columns: s.columns,
+    setColumns: s.setColumns,
     showWhatsAppChoice: s.showWhatsAppChoice,
     setShowWhatsAppChoice: s.setShowWhatsAppChoice,
     appLang: s.appLang
@@ -58,8 +62,9 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,
     sortOrder: sortOrder,
-    isAdminMode: false
-  }, PAGINATION.PUBLIC_PAGE_SIZE, true);
+    isAdminMode: false,
+    onlyUngrouped: false
+  }, columns * 10, true);
 
   const rawPhotos = useMemo(() => {
     return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
@@ -67,6 +72,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   const photos = useEnrichedPhotos(rawPhotos);
 
+  console.log('🧪 [PublicGallery] Input photos:', photos.length);
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
     [],
@@ -76,6 +82,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
       isAdminModeOverride: false
     }
   );
+  console.log('🧪 [PublicGallery] Grouped photos:', gridPhotos.map(p => ({id: p.id, group_id: p.group_id, is_cover: p.is_group_cover, member_count: p.group?.member_count})));
 
   console.log('🧪 [PublicGallery] Filters result:', {
     incomingPhotosCount: photos.length,
@@ -121,9 +128,18 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">
-        <GalleryFilters 
-          onScrollToTop={onScrollToTop}
-          variant={variant}
+        <PublicFilters 
+          onSearch={setSearch}
+          searchQuery={filters.searchQuery || ''}
+          onSortChange={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          currentSort={sortOrder}
+          onColumnsChange={(cols) => {
+              setColumns(cols as 2 | 3 | 5);
+              updateURL({ view: cols === 2 ? 'list' : 'grid' });
+          }}
+          currentColumns={columns}
+          onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
+          showGroupsCollapsed={filters.showGroupsCollapsed}
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <PhotoBoard 
