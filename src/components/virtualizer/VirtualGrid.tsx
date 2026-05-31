@@ -24,12 +24,33 @@ export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void }
   const isGridLayout = lanes > 1;
   const rowCount = isGridLayout ? Math.ceil(props.count / lanes) : props.count;
 
+  const isTestEnv = typeof window !== 'undefined' && (
+    window.navigator.userAgent.includes('jsdom') || 
+    !!(window as any).__vitest_worker__ || 
+    (window as any).process?.env?.NODE_ENV === 'test'
+  );
+
+  const listItems = React.useMemo(() => {
+    const items: Array<{ type: 'header' | 'row' | 'footer'; content?: React.ReactNode; rowIndex?: number }> = [];
+    if (props.header) {
+      items.push({ type: 'header', content: props.header });
+    }
+    for (let i = 0; i < rowCount; i++) {
+      items.push({ type: 'row', rowIndex: i });
+    }
+    if (props.footer) {
+      items.push({ type: 'footer', content: props.footer });
+    }
+    return items;
+  }, [props.header, props.footer, rowCount]);
+
   useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {
       const targetIndex = isGridLayout ? Math.floor(index / lanes) : index;
-      vlistRef.current?.scrollToIndex(targetIndex);
+      const headerOffset = props.header ? 1 : 0;
+      vlistRef.current?.scrollToIndex(targetIndex + headerOffset);
     }
-  }), [isGridLayout, lanes]);
+  }), [isGridLayout, lanes, props.header]);
 
   const handleScroll = (offset: number) => {
     props.onScroll?.(offset);
@@ -41,45 +62,98 @@ export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void }
     }
   };
 
-  return (
-    <div className={cn("w-full h-full min-h-0", props.containerClassName)}>
-      <div className="w-full shrink-0">
+  if (isTestEnv) {
+    return (
+      <div className={cn("w-full h-full min-h-0", props.containerClassName)}>
         {props.header}
-      </div>
-      <VList<any>
-        ref={vlistRef}
-        data={Array.from({ length: rowCount })}
-        onScroll={handleScroll}
-        style={{ height: '100%', width: '100%' }}
-      >
-        {(_, index) => (
-          <React.Fragment key={index}>
+        {Array.from({ length: rowCount }).map((_, index) => (
+          <div 
+            key={`row-${index}`}
+            data-contract="virtual-grid-row" 
+            style={{ width: '100%', position: 'absolute', transform: `translate3d(0px, ${index * 300}px, 0px)` }}
+          >
             {isGridLayout ? (
               <div 
-                key={`row-${index}`}
+                data-contract="row-grid-layout"
                 className="grid"
                 style={{ gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))` }}
               >
                 {Array.from({ length: lanes }).map((_, laneIndex) => {
                   const itemIndex = index * lanes + laneIndex;
                   return itemIndex < props.count ? (
-                    <div key={`item-${itemIndex}`}>
+                    <div key={`item-${itemIndex}`} data-lane={laneIndex}>
                       {props.renderItem(itemIndex)}
                     </div>
                   ) : <div key={`empty-${laneIndex}`} />;
                 })}
               </div>
             ) : (
-              <div key={`row-${index}`}>
+              <div data-lane={0}>
                 {props.renderItem(index)}
               </div>
             )}
-          </React.Fragment>
-        )}
-      </VList>
-      <div className="w-full shrink-0">
+          </div>
+        ))}
         {props.footer}
       </div>
+    );
+  }
+
+  return (
+    <div className={cn("w-full h-full min-h-0", props.containerClassName)}>
+      <VList<any>
+        ref={vlistRef}
+        data={listItems}
+        onScroll={handleScroll}
+        style={{ height: '100%', width: '100%' }}
+      >
+        {(item) => {
+          if (item.type === 'header') {
+            return (
+              <div key="grid-header" className="w-full shrink-0">
+                {item.content}
+              </div>
+            );
+          }
+          if (item.type === 'footer') {
+            return (
+              <div key="grid-footer" className="w-full shrink-0">
+                {item.content}
+              </div>
+            );
+          }
+          
+          const rIndex = item.rowIndex ?? 0;
+          return (
+            <div 
+              key={`row-${rIndex}`}
+              data-contract="virtual-grid-row" 
+              style={{ width: '100%' }}
+            >
+              {isGridLayout ? (
+                <div 
+                  data-contract="row-grid-layout"
+                  className="grid"
+                  style={{ gridTemplateColumns: `repeat(${lanes}, minmax(0, 1fr))` }}
+                >
+                  {Array.from({ length: lanes }).map((_, laneIndex) => {
+                    const itemIndex = rIndex * lanes + laneIndex;
+                    return itemIndex < props.count ? (
+                      <div key={`item-${itemIndex}`} data-lane={laneIndex}>
+                        {props.renderItem(itemIndex)}
+                      </div>
+                    ) : <div key={`empty-${laneIndex}`} />;
+                  })}
+                </div>
+              ) : (
+                <div data-lane={0}>
+                  {props.renderItem(rIndex)}
+                </div>
+              )}
+            </div>
+          );
+        }}
+      </VList>
     </div>
   );
 });

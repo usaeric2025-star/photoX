@@ -15,6 +15,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { getGroupById } from '@/services/group/queries';
+import { AdminAuthGuard } from '@/components/AdminAuthGuard';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -182,7 +183,11 @@ const gRoute = createRoute({
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
-  component: AdminView,
+  component: () => (
+    <AdminAuthGuard>
+      <AdminView />
+    </AdminAuthGuard>
+  ),
 });
 
 // 3. Route Tree
