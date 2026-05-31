@@ -35,6 +35,8 @@ export default function PublicView() {
   
   const { data: count } = usePhotoCount({});
 
+  const { isLoading } = usePhotoInfiniteList({});
+
   // ========== 8. 正常渲染 ==========
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden" id="public-view">
@@ -54,7 +56,7 @@ export default function PublicView() {
       ) : (
         <div className="flex-1 min-h-0 relative">
           <DataLoadingContainer
-            isLoading={false}
+            isLoading={isLoading}
             hasData={true} // Data will be handled inside PublicGallery
           >
             <ErrorBoundary>

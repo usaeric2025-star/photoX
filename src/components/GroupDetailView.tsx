@@ -196,7 +196,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                         {isGroupDataLoading ? (
                           <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
                         ) : (
-                          <p className="text-xs text-slate-500 font-normal">{activeGroupPhotos.length} 張照片 / Photos</p>
+                          <p className="text-xs text-slate-500 font-normal">{groupData?.member_count ?? activeGroupPhotos.length} 張照片 / Photos</p>
                         )}
                       </div>
                     </div>

@@ -20,6 +20,7 @@ export { usePhotoFilters } from './usePhotoFilters';
 export { usePhotoFingerprint, useImageHash } from './usePhotoFingerprint';
 export { useDebouncedSearch } from './useDebouncedSearch';
 export { useStaticData } from './useStaticData';
+export { useEnrichedPhotos } from './useEnrichedPhotos';
 export { useBatchEdit } from '../features/photo/useBatchEdit';
 export { useBatchConfirmation as useBatchConfirmDialog } from '../features/photo/useBatchConfirmDialog';
 export { useMultiSelect } from '../features/photo/usePhotoSelection';

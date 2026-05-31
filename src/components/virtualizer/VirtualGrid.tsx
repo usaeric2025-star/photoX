@@ -50,6 +50,9 @@ export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void }
       const targetIndex = isGridLayout ? Math.floor(index / lanes) : index;
       const headerOffset = props.header ? 1 : 0;
       vlistRef.current?.scrollToIndex(targetIndex + headerOffset);
+    },
+    scrollTo: (offset: number) => {
+      vlistRef.current?.scrollTo(offset);
     }
   }), [isGridLayout, lanes, props.header]);
 

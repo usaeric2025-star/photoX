@@ -3,7 +3,7 @@ import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { GalleryFilters } from '@/components/ui/GalleryFilters';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
-import { usePhotoInfiniteList, useFilters, usePhotoFilters, useStaticData } from '@/hooks';
+import { usePhotoInfiniteList, useFilters, usePhotoFilters, useSettings, useEnrichedPhotos } from '@/hooks';
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailView } from '../GroupDetailView';
@@ -29,20 +29,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   virtualGridRef
 }) => {
   const { filters } = useFilters();
-  const publicSettings = useMemo(() => ({
-    app_name: 'PhotoX',
-    logo_url: '',
-    whatsapp_1: '',
-    whatsapp_1_name: '',
-    whatsapp_2: '',
-    whatsapp_2_name: '',
-  }), []);
+  const { settings } = useSettings(); 
+  
   const { 
-    lightboxIndex, setLightboxIndex, sortOrder,
+    setLightboxIndex,
+    sortOrder,
     activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
     columns, showWhatsAppChoice, setShowWhatsAppChoice, appLang
   } = useGalleryStore(useShallow(s => ({
-    lightboxIndex: s.lightboxIndex,
     setLightboxIndex: s.setLightboxIndex,
     sortOrder: s.sortOrder,
     activeGroupId: s.activeGroupId,
@@ -55,8 +49,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     appLang: s.appLang
   })));
 
-  const { categoryMap, tagMap, manufacturerMap } = useStaticData();
-
+  const publicSettings = settings;
+  
   const t = useMemo(() => translations[appLang as keyof typeof translations] || translations.en, [appLang]);
 
   const infiniteQuery = usePhotoInfiniteList({
@@ -71,14 +65,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
   }, [infiniteQuery.data]);
 
-  const photos = useMemo(() => {
-    return rawPhotos.map(photo => ({
-      ...photo,
-      categoryName: categoryMap.get(photo.category_id || '')?.name ?? '',
-      tagNames: photo.tag_ids?.map(id => tagMap.get(id)?.name ?? '').filter(Boolean) ?? [],
-      manufacturerName: manufacturerMap.get(photo.manufacturer_id || '')?.name ?? '',
-    }));
-  }, [rawPhotos, categoryMap, tagMap, manufacturerMap]);
+  const photos = useEnrichedPhotos(rawPhotos);
 
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,

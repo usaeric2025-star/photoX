@@ -5,7 +5,7 @@ import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { GalleryControls } from '@/components/photo/GalleryControls';
-import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList, useStaticData } from '@/hooks';
+import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList, useEnrichedPhotos } from '@/hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { FloatingActions } from '@/components/shared/FloatingActions';
 import { useAdminActions } from '@/features/admin/useAdminActions';
@@ -50,8 +50,6 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
     columns: s.columns
   })));
 
-  const { categoryMap, tagMap, manufacturerMap } = useStaticData();
-
   const infiniteQuery = usePhotoInfiniteList({
     category_id: filters.categoryId,
     tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
@@ -61,17 +59,11 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
   }, PAGINATION.ADMIN_BATCH_SIZE, true);
 
   const rawPhotos = useMemo(() => {
-    return normalizeAdminPhotos(infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY);
+    return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
   }, [infiniteQuery.data]);
 
-  const photos = useMemo(() => {
-    return rawPhotos.map(photo => ({
-      ...photo,
-      categoryName: categoryMap.get(photo.category_id || '')?.name ?? '',
-      tagNames: photo.tag_ids?.map(id => tagMap.get(id)?.name ?? '').filter(Boolean) ?? [],
-      manufacturerName: manufacturerMap.get(photo.manufacturer_id || '')?.name ?? '',
-    }));
-  }, [rawPhotos, categoryMap, tagMap, manufacturerMap]);
+  const enrichedPhotos = useEnrichedPhotos(rawPhotos);
+  const photos = useMemo(() => normalizeAdminPhotos(enrichedPhotos), [enrichedPhotos]);
 
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
@@ -88,7 +80,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
   }, [tasks]);
 
   const virtualGridRef = useRef<any>(null);
-  const scrollToTop = () => virtualGridRef.current?.scrollTo({ top: 0, behavior: 'instant' });
+  const scrollToTop = () => virtualGridRef.current?.scrollTo(0);
   const adminActions = useAdminActions();
 
   // activePhoto can be removed if not needed, but keep activePhotoId
@@ -131,7 +123,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
              hasNextPage={!!infiniteQuery.hasNextPage}
              onLoadMore={infiniteQuery.fetchNextPage}
              renderCard={renderCard}
-             virtualGridRef={virtualGridRef} 
+             ref={virtualGridRef} 
              columns={store.columns}
            />
         </div>

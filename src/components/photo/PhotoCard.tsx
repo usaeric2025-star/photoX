@@ -67,12 +67,10 @@ const PhotoInfoFooter: React.FC<{
 }> = React.memo(({ displayCatName, photoTags, hideTags }) => (
   <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
     <div className="h-[38px] w-full flex flex-col justify-end items-start gap-0.5" style={{ alignContent: 'end' }}>
-       {displayCatName && (
-        <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
+       <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
           {/* [FIELD-LEVEL-FALLBACK] Display category name or generic fallback */}
           {displayCatName || 'Product Detail'}
         </p>
-      )}
       {!hideTags && photoTags.length > 0 && (
         <div className="flex flex-nowrap gap-1 w-full overflow-x-auto pointer-events-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-0.5 pb-0.5 mt-auto">
           {photoTags.map((tag, i) => (
@@ -139,6 +137,9 @@ export const PhotoCard = React.memo(({
   // Ensure consistent group count access
   const photoMemberCount = photo.group?.member_count ?? 1;
 
+  const displayCatName = photo.categoryName || '';
+  const photoTags = photo.tagNames || [];
+
   const adminActions = useAdminActions();
   const togglePinMutation = useTogglePin(photo, adminActions.updatePhoto);
 
@@ -188,10 +189,6 @@ export const PhotoCard = React.memo(({
       setters.toggleSelected(photo.id);
     }
   }, [isManagement, can, setters, photo.id]);
-
-  const displayCatName = photo.categoryName || '';
-
-  const photoTags = photo.tagNames;
 
   const thumbSrc = useMemo(() => 
     getCacheBustedImageUrl(photo, 'thumb'),
@@ -246,8 +243,9 @@ export const PhotoCard = React.memo(({
 
   const handleTogglePinnedClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('Pin button clicked for photo:', photo.id);
     togglePinMutation.mutate();
-  }, [togglePinMutation]);
+  }, [togglePinMutation, photo.id]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
     if (isManagement) {
@@ -349,6 +347,9 @@ export const PhotoCard = React.memo(({
     prevProps.photo.thumb_hash === nextProps.photo.thumb_hash &&
     prevProps.photo.is_hidden === nextProps.photo.is_hidden &&
     prevProps.photo.is_pinned === nextProps.photo.is_pinned &&
+    prevProps.photo.categoryName === nextProps.photo.categoryName &&
+    (prevProps.photo.tagNames?.join(',') === nextProps.photo.tagNames?.join(',')) &&
+    prevProps.photo.group?.member_count === nextProps.photo.group?.member_count &&
     prevProps.variant === nextProps.variant &&
     prevProps.hideDetails === nextProps.hideDetails &&
     prevProps.showGroupsCollapsed === nextProps.showGroupsCollapsed

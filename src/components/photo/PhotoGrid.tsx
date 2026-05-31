@@ -7,7 +7,7 @@ import { interactionBus } from '@/lib/interactionBus';
 import { PhotoCard } from '../photo/PhotoCard';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { translations } from '../../lib/translations';
-import { PageSkeleton } from '../PageSkeleton';
+import { PhotoGridSkeleton } from './PhotoGridSkeleton';
 import { useFilters } from '../../hooks';
 
 interface PhotoBoardProps {
@@ -17,7 +17,6 @@ interface PhotoBoardProps {
   hasNextPage?: boolean;
   onLoadMore?: () => void;
   renderCard: (photo: Photo, index: number) => React.ReactNode;
-  virtualGridRef?: React.RefObject<any>;
   columns: number;
 }
 
@@ -35,16 +34,16 @@ const multiSelectSelector = (s: any) => ({
   setIsMultiSelectMode: s.setIsMultiSelectMode
 });
 
-export const PhotoBoard: React.FC<PhotoBoardProps> = React.memo(({ 
-  photos, 
-  isFetching,
-  isFetchingNextPage,
-  hasNextPage,
-  onLoadMore,
-  renderCard,
-  virtualGridRef, 
-  columns
-}) => {
+export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) => { 
+  const { 
+    photos, 
+    isFetching,
+    isFetchingNextPage,
+    hasNextPage,
+    onLoadMore,
+    renderCard,
+    columns
+  } = props;
   const { 
     appLang, activeGroupId, activePhotoId
   } = useGalleryStore(useShallow(photoGridLayoutSelector));
@@ -59,12 +58,12 @@ export const PhotoBoard: React.FC<PhotoBoardProps> = React.memo(({
         const index = photos.findIndex(p => p.id === targetId || p.group_id === targetId);
         if (index !== -1) {
           setTimeout(() => {
-            (virtualGridRef as any)?.current?.scrollToIndex(index);
+            (ref as any)?.current?.scrollToIndex(index);
           }, 100);
         }
       }
     }
-  }, [activeGroupId, photos, activePhotoId, virtualGridRef]);
+  }, [activeGroupId, photos, activePhotoId, ref]);
 
   // [INTERACTION-BRIDGE-SYNC]
   const { setSelectedIds, setIsMultiSelectMode } = useGalleryStore(useShallow(multiSelectSelector));
@@ -84,7 +83,7 @@ export const PhotoBoard: React.FC<PhotoBoardProps> = React.memo(({
   if (isLoading) {
     return (
       <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto">
-        <PageSkeleton />
+        <PhotoGridSkeleton columns={columns} />
       </div>
     );
   }
@@ -93,7 +92,7 @@ export const PhotoBoard: React.FC<PhotoBoardProps> = React.memo(({
     <div className="h-full w-full overscroll-y-contain relative">
       <div className="h-full w-full">
         <VirtualGrid
-          ref={virtualGridRef}
+          ref={ref}
           count={photos.length}
           lanes={columns}
           onEndReached={() => {
@@ -126,6 +125,8 @@ export const PhotoBoard: React.FC<PhotoBoardProps> = React.memo(({
     </div>
   );
 });
+
+PhotoBoard.displayName = 'PhotoBoard';
 
 const MemoizedFooter = React.memo(({ 
   isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList, columns 

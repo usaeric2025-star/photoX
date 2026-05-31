@@ -112,7 +112,7 @@ async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
   try {
     const { data: groupsData, error: groupsError } = await supabase
       .from('groups')
-      .select('id, name, colors, cover_photo_id')
+      .select('id, name, colors, cover_photo_id, member_count')
       .in('id', groupIds);
 
     if (groupsError) {
@@ -134,7 +134,8 @@ async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
         id: String(g.id),
         name: g.name || '',
         color: colorValue || '#3b82f6',
-        cover_photo_id: g.cover_photo_id || null
+        cover_photo_id: g.cover_photo_id || null,
+        member_count: g.member_count ?? 1
       });
     });
 
@@ -263,16 +264,13 @@ export const loadAllPhotosFromCloud = async (
   const from = page * limit;
   const to = from + limit - 1;
 
-  // 1. 自定义顺序 (用户拖拽排序)
-  query = query.order('sort_order', { ascending: true, nullsFirst: false });
-  // 2. 置顶优先
+  // 1. 置顶优先
   query = query.order('is_pinned', { ascending: false, nullsFirst: false });
-  // 原有顺序
-  query = query.order('group_order', { ascending: true, nullsFirst: false });
   if (isAdminMode) {
     query = query.order('is_hidden', { ascending: true, nullsFirst: true });
   }
   
+  // 2. 动态用户选择排序 (如最新上传、最旧、按名称)
   if (sortOrder === 'oldest' || sortOrder === 'asc') {
     query = query.order('created_at', { ascending: true })
                  .order('id', { ascending: true });
@@ -280,9 +278,14 @@ export const loadAllPhotosFromCloud = async (
     query = query.order('name', { ascending: true, nullsFirst: true })
                  .order('created_at', { ascending: false });
   } else {
+    // 默认：最新上传优先
     query = query.order('created_at', { ascending: false })
                  .order('id', { ascending: false });
   }
+
+  // 3. 兜底及拖拽/合组顺序
+  query = query.order('sort_order', { ascending: true, nullsFirst: false })
+               .order('group_order', { ascending: true, nullsFirst: false });
 
   const { data, error } = await query.range(from, to);
 
