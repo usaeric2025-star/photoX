@@ -2,6 +2,19 @@ import React, { useImperativeHandle, forwardRef, useRef } from 'react';
 import { VList, VListHandle } from 'virtua';
 import { cn } from '@/lib/utils';
 
+// Virtua 建議針對 ResizeObserver Loop 錯誤的特殊處理
+// 這是官方建議的 patch，避免動畫或佈局改變觸發 ResizeObserver 的連續循環
+const OriginalResizeObserver = window.ResizeObserver;
+(window as any).ResizeObserver = class extends OriginalResizeObserver {
+  constructor(callback: ResizeObserverCallback) {
+    super((entries, observer) => {
+      requestAnimationFrame(() => {
+        callback(entries, observer);
+      });
+    });
+  }
+};
+
 /**
  * @remarks
  * Strict VirtualGrid adaptation layer using official Virtua VList API.
