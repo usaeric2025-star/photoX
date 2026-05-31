@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@base-ui/react/dialog';
 import { X } from 'lucide-react';
 import { Photo } from '../../types';
+import { GalleryVariant } from '@/types/variant';
 import { usePhotoLightboxLogic } from './usePhotoLightboxLogic';
 import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
@@ -28,6 +29,7 @@ export interface PhotoLightboxProps {
   onAiAnalyze?: (photo: Photo) => void;
   onCancelAnalyze?: () => void;
   isAnalyzing?: boolean;
+  variant?: GalleryVariant;
 }
 
 /**
@@ -84,7 +86,8 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
     return map;
   }, [contextTags]);
 
-  const isAdminMode = useAdminMode();
+  const isManagement = props.variant === 'full-management' || props.variant === 'staff-workspace';
+  const isAdminMode = useAdminMode() && isManagement;
   const translate = React.useMemo(() => (translations[lang as LanguageCode] || translations.en), [lang]);
 
 
@@ -209,6 +212,7 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
                       handleDownload={handleDownload}
                       t={translate}
                       retryImageLoad={retryImageLoad}
+                      isAdminMode={isAdminMode}
                     />
 
                     {!isZoomed && (

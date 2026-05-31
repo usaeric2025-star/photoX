@@ -5,7 +5,6 @@ import "yet-another-react-lightbox/styles.css";
 import { X, Maximize, ChevronLeft, ChevronRight, Download, Edit3, Image as ImageIcon } from 'lucide-react';
 import { Photo, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { useAdminMode } from '@/hooks';
 import { thumbHashToDataURL } from '@/lib/image/thumbHash';
 
 interface LightboxImageSectionProps {
@@ -28,15 +27,15 @@ interface LightboxImageSectionProps {
   handleDownload: () => void;
   t: TranslationType;
   retryImageLoad: () => void;
+  isAdminMode?: boolean;
 }
 
 export function LightboxImageSection({
   photo, index, isZoomed, setIsZoomed, isImageLoading, setIsImageLoading,
   isImageError, setIsImageError, slides, onPrev, onNext, onClose,
   onTouchStart, onTouchMove, onTouchEnd, onEditPhoto,
-  handleDownload, t, retryImageLoad
+  handleDownload, t, retryImageLoad, isAdminMode
 }: LightboxImageSectionProps) {
-  const isAdminMode = useAdminMode();
   const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
 
   const initialSrc = useMemo(() => getCacheBustedImageUrl(photo, 'image'), [photo]);

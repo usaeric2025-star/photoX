@@ -36,7 +36,8 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
 
 export function GroupDetailView(props: GroupDetailViewProps) {
   const { activeGroupId, setActiveGroupId, shareGroup, initialPhotoId, variant } = props;
-  const isAdminMode = useAdminMode();
+  const isManagement = props.variant === 'full-management' || props.variant === 'staff-workspace';
+  const isAdminMode = useAdminMode() && isManagement;
   const { showError } = useFeedback();
 
   const { lang } = useGalleryStore(useShallow(s => ({ lang: s.appLang })));
@@ -285,6 +286,7 @@ export function GroupDetailView(props: GroupDetailViewProps) {
                       onAiAnalyze={onAiAnalyze as any}
                       onCancelAnalyze={onCancelAnalyze}
                       isAnalyzing={isAnalyzing}
+                      variant={props.variant}
                     />
                  );
              })()}

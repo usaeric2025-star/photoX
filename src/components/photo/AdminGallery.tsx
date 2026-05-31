@@ -164,6 +164,7 @@ export function AdminGallery({
             photoId={store.activePhotoId}
             displayPhotos={displayPhotos}
             onClose={() => store.setActivePhotoId(null)}
+            variant={variant}
           />
         )}
 

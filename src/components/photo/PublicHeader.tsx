@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogIn, RefreshCw, X, User as UserIcon, LogOut, Settings } from 'lucide-react';
+import { LogIn, RefreshCw, X, User as UserIcon, LogOut, Settings, Eye, EyeOff } from 'lucide-react';
 import { checkPublicAuth, logoutPublic } from '@/lib/publicAuth';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
@@ -35,7 +35,9 @@ export function PublicHeader({
   onExit,
   totalCount,
   loginWithGoogle,
-  handleManageClick
+  handleManageClick,
+  adminPreviewMode,
+  setAdminPreviewMode
 }: PublicHeaderProps) {
   const [user, setUser] = useState<any>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -55,10 +57,17 @@ export function PublicHeader({
   }, []);
 
   return (
-    <header className="h-14 sm:h-16 shrink-0 bg-white border-b border-slate-200 px-2 sm:px-4 flex items-center justify-between flex-nowrap z-30 font-sans overflow-hidden">
+    <header className={cn(
+      "h-14 sm:h-16 shrink-0 border-b px-2 sm:px-4 flex items-center justify-between flex-nowrap z-30 font-sans overflow-hidden transition-colors",
+      variant === 'full-management' ? "bg-red-50 hover:bg-red-50/80 border-red-200" :
+      variant === 'staff-workspace' ? "bg-indigo-50 hover:bg-indigo-50/80 border-indigo-200" :
+      "bg-white border-slate-200"
+    )}>
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
-        <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter whitespace-nowrap shrink-0">
-          PHOT<span className="text-blue-600">O</span>X
+        <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter whitespace-nowrap shrink-0 flex items-center">
+          <span>PHOT<span className="text-blue-600">O</span>X</span>
+          {variant === 'full-management' && <span className="ml-2 text-[10px] sm:text-xs font-bold text-red-600 uppercase tracking-widest bg-red-100 px-1.5 sm:px-2 py-0.5 rounded-full">Admin</span>}
+          {variant === 'staff-workspace' && <span className="ml-2 text-[10px] sm:text-xs font-bold text-indigo-600 uppercase tracking-widest bg-indigo-100 px-1.5 sm:px-2 py-0.5 rounded-full">Staff</span>}
         </h1>
         {totalCount !== undefined && (
           <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[9px] sm:text-[10px] font-bold whitespace-nowrap shrink-0">
@@ -69,6 +78,26 @@ export function PublicHeader({
 
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
         <LanguageSwitcher variant={variant as any} />
+
+        {adminPreviewMode && setAdminPreviewMode && (
+          <button
+            onClick={() => setAdminPreviewMode(adminPreviewMode === 'public' ? 'private' : 'public')}
+            className={cn(
+              "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-8 sm:h-9 rounded-full font-bold transition-all shrink-0 active:scale-95 text-[10px] sm:text-xs",
+              adminPreviewMode === 'public' 
+                ? "bg-slate-100 text-slate-600 hover:bg-slate-200" 
+                : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+            )}
+            title={adminPreviewMode === 'public' ? 'Exit Public Preview' : 'Enter Public Preview'}
+          >
+            {adminPreviewMode === 'public' ? (
+               <Eye size={14} />
+            ) : (
+               <EyeOff size={14} />
+            )}
+            <span className="hidden sm:inline">{adminPreviewMode === 'public' ? '公开预览' : '管理预览'}</span>
+          </button>
+        )}
 
         {onRefresh && (
           <button 

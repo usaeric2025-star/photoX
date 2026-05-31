@@ -168,6 +168,7 @@ export function PublicGallery({
               (window as any)._pendingPhoto = photo;
               setShowWhatsAppChoice(true);
             }}
+            variant={variant}
           />
         )}
 
