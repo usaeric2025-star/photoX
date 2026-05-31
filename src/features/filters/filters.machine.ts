@@ -11,6 +11,7 @@ export type FiltersEvent =
   | { type: 'SET_CATEGORY'; categoryId: string | null }
   | { type: 'SET_TAGS'; tagIds: string[] }
   | { type: 'SET_SEARCH'; searchQuery: string }
+  | { type: 'SET_FILTERS'; filters: Partial<FiltersContext> }
   | { type: 'SET_GROUPS_COLLAPSED'; showGroupsCollapsed: boolean }
   | { type: 'RESET' };
 
@@ -34,6 +35,9 @@ export const filtersMachine = createMachine({
         },
         SET_SEARCH: {
           actions: assign({ searchQuery: ({ event }) => event.searchQuery })
+        },
+        SET_FILTERS: {
+          actions: assign(({ event }) => event.filters)
         },
         SET_GROUPS_COLLAPSED: {
           actions: assign({ showGroupsCollapsed: ({ event }) => event.showGroupsCollapsed })

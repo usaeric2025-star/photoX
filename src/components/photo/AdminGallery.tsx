@@ -5,7 +5,7 @@ import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { AdminFilters } from '@/components/ui/AdminFilters';
-import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList, useEnrichedPhotos } from '@/hooks';
+import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList } from '@/hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { FloatingActions } from '@/components/shared/FloatingActions';
 import { useAdminActions } from '@/features/admin/useAdminActions';
@@ -25,12 +25,11 @@ interface AdminGalleryProps {
 
 const EMPTY_ARRAY: Photo[] = [];
 
-export const AdminGallery: React.FC<AdminGalleryProps> = ({
-
+export function AdminGallery({
   variant,
   handleBatchAiIdentifyTrigger,
   batchProgress
-}) => {
+}: AdminGalleryProps) {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   useScrollRestoration('admin_gallery_scroll');
   
@@ -53,8 +52,12 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
     activePhotoId: s.activePhotoId,
     setActivePhotoId: s.setActivePhotoId,
     columns: s.columns,
-    setColumns: s.setColumns
+    setColumns: s.setColumns,
+    setActiveScreen: s.setActiveScreen
   })));
+
+  const { data: categories = [] } = useCategoryList();
+  const { data: tags = [] } = useTagList();
 
   const infiniteQuery = usePhotoInfiniteList({
     category_id: filters.categoryId,
@@ -68,13 +71,12 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
     return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
   }, [infiniteQuery.data]);
 
-  const enrichedPhotos = useEnrichedPhotos(rawPhotos);
-  const photos = useMemo(() => normalizeAdminPhotos(enrichedPhotos), [enrichedPhotos]);
+  const photos = useMemo(() => normalizeAdminPhotos(rawPhotos), [rawPhotos]);
 
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
-    [],
-    [],
+    categories,
+    tags,
     {
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode
@@ -128,7 +130,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
           isMultiSelect={isMultiSelect}
           onMultiSelect={() => {}} // Placeholder as useMultiSelect doesn't have a simple toggle
           selectedCount={interactionBus.current.selectedIds.size}
-          onSettings={() => navigate({ to: '/settings' })}
+          onSettings={() => store.setActiveScreen('settings')}
           onUpload={() => fileInputRef.current?.click()}
         />
 

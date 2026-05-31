@@ -113,14 +113,14 @@ export const analyzeProductPhoto = async (
     clearTimeout(timeoutId);
 
     if (!fetchResponse.ok) {
-      let errorData: any;
+      let errorData: unknown;
       try {
         errorData = await fetchResponse.json();
       } catch (e) {
         errorData = await fetchResponse.text();
       }
       
-      const serverMessage = errorData?.error?.message || errorData?.message || (typeof errorData === 'string' ? errorData : JSON.stringify(errorData));
+      const serverMessage = (errorData as any)?.error?.message || (errorData as any)?.message || (typeof errorData === 'string' ? errorData : JSON.stringify(errorData));
       const detailedMessage = `HTTP ${fetchResponse.status}: ${serverMessage}`;
       
       const detailedError = new Error(detailedMessage);
@@ -152,7 +152,7 @@ export const analyzeProductPhoto = async (
         
         // If there are other items, append their model number/dimension info into the main product to avoid losing info
         if (parsedData.items.length > 1) {
-            const extraInfo = parsedData.items.slice(1).map((item: any, index: number) => {
+            const extraInfo = parsedData.items.slice(1).map((item: Record<string, any>, index: number) => {
                 return `【其他型号${index + 1}】型号: ${item.modelNumber || item.model || 'N/A'}, 尺寸: ${item.dimensions ? JSON.stringify(item.dimensions) : 'N/A'}`;
             }).join('\n');
             
@@ -257,8 +257,8 @@ export const analyzeProductPhoto = async (
     let newTagList: string[] = [];
     if (Array.isArray(dataToProcess.new_tags)) {
       newTagList = dataToProcess.new_tags
-        .map((s: any) => String(s).trim())
-        .filter((s: any) => s && !containsChinese(s));
+        .map((s: unknown) => String(s).trim())
+        .filter((s: string) => s && !containsChinese(s));
     }
 
     // Filter redundant tagIds (existing tags) and new tags

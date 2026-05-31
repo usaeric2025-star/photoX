@@ -8,7 +8,7 @@ interface LoginScreenProps {
   isLoading?: boolean;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle, isLoading }) => {
+export function LoginScreen({ loginWithGoogle, isLoading }: LoginScreenProps) {
   const { showError, showSuccess } = useFeedback();
   const { settings } = useSettings();
   const [mode, setMode] = useState<'admin' | 'staff'>('admin');

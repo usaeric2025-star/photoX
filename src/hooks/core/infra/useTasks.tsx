@@ -31,7 +31,7 @@ const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'photox_background_tasks';
 
-export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function TaskProvider({ children }: { children: React.ReactNode }) {
   const cancelCallbacks = useRef<Map<string, () => void>>(new Map());
 
   const [tasks, setTasks] = useState<BackgroundTask[]>(() => {
@@ -40,7 +40,7 @@ export const TaskProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const parsed = JSON.parse(saved);
         // Only keep recent tasks, and mark running ones as potentially needing resume
-        return parsed.map((t: any) => ({
+        return parsed.map((t: BackgroundTask) => ({
           ...t,
           // We don't mark them as running immediately if we want to wait for the resume logic
         }));
@@ -175,7 +175,7 @@ export const useTasks = () => {
   return context;
 };
 
-const BackgroundTaskPanel: React.FC = () => {
+function BackgroundTaskPanel() {
   const { tasks, removeTask, clearCompleted, isAvoidingSelection, cancelTask } = useTasks();
   const [isExpanded, setIsExpanded] = useState(false);
   

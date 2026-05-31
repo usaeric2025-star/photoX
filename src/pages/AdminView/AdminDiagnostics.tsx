@@ -27,7 +27,7 @@ import './diagnostics/designTokenEnforcement.test.ts';
 import './diagnostics/dbSchemaAlignment.test.ts';
 import './diagnostics/layoutIntegrity.test.ts';
 
-const AdminDiagnostics: React.FC = () => {
+function AdminDiagnostics() {
   const { user } = useAuth();
   
   // @ts-ignore

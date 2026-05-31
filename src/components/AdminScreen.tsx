@@ -7,7 +7,7 @@ import { translations } from '@/lib/translations';
 import { AdminToolbar } from '@/pages/AdminView/AdminToolbar';
 import { AdminEmptyState } from '@/pages/AdminView/AdminEmptyState';
 
-export const AdminScreen: React.FC = React.memo(() => {
+export function AdminScreen() {
   const { user, loginWithGoogle } = useAuth();
   const { photos, isLoading: isLoadingPhotos } = usePhotoGallery();
   const { tasks } = useTasks();
@@ -103,4 +103,4 @@ export const AdminScreen: React.FC = React.memo(() => {
        </div>
     </div>
   );
-});
+}

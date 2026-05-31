@@ -6,10 +6,10 @@ interface PublicFloatingActionsProps {
   onWhatsAppClick: () => void;
 }
 
-export const PublicFloatingActions: React.FC<PublicFloatingActionsProps> = ({ 
+export function PublicFloatingActions({ 
   onScrollToTop, 
   onWhatsAppClick 
-}) => {
+}: PublicFloatingActionsProps) {
   return (
     <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-40">
       {onScrollToTop && (

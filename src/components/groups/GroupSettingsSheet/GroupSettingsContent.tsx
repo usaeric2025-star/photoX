@@ -3,15 +3,15 @@ import { EyeOff, Eye, Plus, Maximize, Sparkles, X, Save } from 'lucide-react';
 import { DimensionEditor } from '../../admin/edit/DimensionEditor';
 import { ProductGroup, Dimension } from '../../../types';
 
-export const GroupSettingsContent: React.FC<{
+export function GroupSettingsContent({
+  groupData, setGroupData, handleUpdateGroupData, handleBatchUpdateDimensions, setPromptDialog
+}: {
   groupData: ProductGroup | null;
   setGroupData: React.Dispatch<React.SetStateAction<ProductGroup | null>>;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
   handleBatchUpdateDimensions: (newDims: Dimension[]) => Promise<void>;
   setPromptDialog: (d: { title: string; message: string; placeholder?: string; onSubmit: (val: string) => void } | null) => void;
-}> = ({
-  groupData, setGroupData, handleUpdateGroupData, handleBatchUpdateDimensions, setPromptDialog
-}) => {
+}) {
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-8 no-scrollbar h-[calc(100vh-80px)] pb-20">
       {/* Series Identity */}

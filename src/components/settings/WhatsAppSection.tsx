@@ -9,12 +9,12 @@ interface WhatsAppSectionProps {
   inputClass: string;
 }
 
-export const WhatsAppSection: React.FC<WhatsAppSectionProps> = ({
+export function WhatsAppSection({
   settings,
   setSettingField,
   cardClass,
   inputClass
-}) => {
+}: WhatsAppSectionProps) {
   return (
     <div className={cardClass} id="section-whatsapp">
       <div className="flex items-center gap-2">

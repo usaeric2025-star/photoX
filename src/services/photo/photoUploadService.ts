@@ -1,3 +1,4 @@
+import { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { DB_CONFIG, PAGINATION } from '../../constants/config';
 import { Photo } from '../../types';
@@ -50,16 +51,19 @@ export const savePhotoToCloud = async (userId: string, photo: Photo, onStatus?: 
   
   normalizeDimensionsBeforeSave(photo.dimensions);
 
+  // Explicitly assign a valid UUID if it is missing or starts with temp-
+  if (!photo.id || photo.id.startsWith('temp-')) {
+      const newId = crypto.randomUUID();
+      photo.id = newId;
+  }
+  
   const payload: Record<string, unknown> = mapToDb({
     ...photo,
     user_id: session.user.id,
   }, true); // Always map to DB as if new
-
-  // Explicitly remove id from payload to let DB generate UUID IF it is temporary or missing
-  if (!photo.id || photo.id.startsWith('temp-')) {
-      delete payload.id;
-  } else {
-      payload.id = photo.id;
+  
+  if (!payload.id) {
+     payload.id = photo.id;
   }
 
   let { data: savedPhoto, error: dbError } = await supabase
@@ -155,6 +159,23 @@ export const savePhotosToCloudBatch = async (
   sPhotos = uniquePhotos;
   if (sPhotos.length === 0) return [];
 
+  // Replace temp- IDs with proper UUIDs to ensure group consistency
+  const idMap = new Map<string, string>();
+  sPhotos.forEach(p => {
+    if (!p.id || p.id.startsWith('temp-')) {
+      const newId = crypto.randomUUID();
+      if (p.id) idMap.set(p.id, newId);
+      p.id = newId;
+    }
+  });
+
+  // Update group_id references using the idMap
+  sPhotos.forEach(p => {
+    if (p.group_id && idMap.has(p.group_id)) {
+      p.group_id = idMap.get(p.group_id)!;
+    }
+  });
+
   for (const photo of sPhotos) {
     if (!photo.image_url && photo.uri) {
       try {
@@ -207,8 +228,8 @@ export const savePhotosToCloudBatch = async (
   const chunkSize = PAGINATION.CHUNK_SIZE;
   for (let i = 0; i < payloads.length; i += chunkSize) {
     const chunk = payloads.slice(i, i + chunkSize);
-    let savedRows: any = null;
-    let dbError: any = null;
+    let savedRows: { id: string; image_hash: string }[] | null = null;
+    let dbError: PostgrestError | null = null;
 
     let AttemptChunk = chunk.map(p => ({ ...p }));
     for (let attempt = 1; attempt <= 4; attempt++) {
@@ -264,7 +285,7 @@ export const savePhotosToCloudBatch = async (
     
     if (savedRows) {
       const usedIndexes = new Set<number>();
-      savedRows.forEach((row: { id: string; image_hash: string }) => {
+      savedRows.forEach((row) => {
         const photoIndex = results.findIndex((p, idx) => 
           p.image_hash === row.image_hash && !usedIndexes.has(idx)
         );

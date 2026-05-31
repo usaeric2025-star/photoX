@@ -1,5 +1,6 @@
 import React from 'react';
 import { EyeOff, Eye, RefreshCcw } from 'lucide-react';
+import { ProductFormData, Photo } from '@/types';
 import { PhotoTagSelector } from './PhotoTagSelector';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from '../FormShared';
 import { useCategoryList, useTagList, useManufacturerList } from '@/hooks';
@@ -7,17 +8,17 @@ import { safeArray } from '@/lib/utils';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 
 interface BatchEditFormProps {
-  formState: any;
-  handleUpdateForm: (updates: any) => void;
+  formState: Partial<ProductFormData>;
+  handleUpdateForm: (updates: Partial<ProductFormData>) => void;
   batchIsHiddenApplied: boolean;
   setBatchIsHiddenApplied: (v: boolean) => void;
   quickAddMfr: () => void;
-  addTag: (name: string) => Promise<any>;
-  updateTag: (id: string, name: string) => Promise<any>;
-  deleteTag: (id: string) => Promise<any>;
+  addTag: (name: string) => Promise<void | string | number | { id: string }>;
+  updateTag: (id: string, name: string) => Promise<boolean | void>;
+  deleteTag: (id: string) => Promise<boolean | void>;
 }
 
-export const BatchEditForm: React.FC<BatchEditFormProps> = ({
+export function BatchEditForm({
   formState,
   handleUpdateForm,
   batchIsHiddenApplied,
@@ -26,7 +27,7 @@ export const BatchEditForm: React.FC<BatchEditFormProps> = ({
   addTag,
   updateTag,
   deleteTag
-}) => {
+}: BatchEditFormProps) {
   const { data: categories = [] } = useCategoryList();
   const { data: manufacturers = [] } = useManufacturerList();
   const { data: tags = [] } = useTagList();
@@ -125,7 +126,7 @@ export const BatchEditForm: React.FC<BatchEditFormProps> = ({
         <FormSectionHeader title="产品目录" subtitle="CATEGORY *" />
         <CategoryGrid 
           categories={categories}
-          selectedId={formState.category_id}
+          selectedId={formState.category_id || null}
           onSelect={(id) => handleUpdateForm({ category_id: id })}
           appLang={appLang}
         />
@@ -139,7 +140,7 @@ export const BatchEditForm: React.FC<BatchEditFormProps> = ({
         />
         <ManufacturerList 
           manufacturers={manufacturers}
-          selectedId={formState?.manufacturer_id}
+          selectedId={formState?.manufacturer_id || null}
           onSelect={(id) => handleUpdateForm({ manufacturer_id: id })}
         />
       </section>

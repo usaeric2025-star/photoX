@@ -2,7 +2,7 @@ import React from 'react';
 import { Skeleton } from '../ui/Skeleton';
 import { PhotoGridSkeleton } from '../photo/PhotoGridSkeleton';
 
-export const GroupDetailSkeleton: React.FC = () => {
+export function GroupDetailSkeleton() {
   return (
     <>
       {/* Header Skeleton */}

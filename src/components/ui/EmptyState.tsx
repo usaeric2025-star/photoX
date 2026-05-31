@@ -10,13 +10,13 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ 
+export function EmptyState({ 
   title, 
   description, 
   icon = <Ghost className="w-12 h-12 text-slate-300" />, 
   action,
   className 
-}) => {
+}: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center py-12 px-4 text-center", className)}>
       <div className="mb-4">{icon}</div>

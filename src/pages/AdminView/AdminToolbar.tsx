@@ -16,7 +16,7 @@ interface AdminToolbarProps {
   variant?: GalleryVariant;
 }
 
-export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
+export function AdminToolbar(props: AdminToolbarProps) {
   return (
     <UnifiedHeader 
       variant={props.variant || 'full-management'}

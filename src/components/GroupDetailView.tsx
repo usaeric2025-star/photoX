@@ -34,7 +34,7 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
   variant?: GalleryVariant;
 }
 
-export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
+export function GroupDetailView(props: GroupDetailViewProps) {
   const { activeGroupId, setActiveGroupId, shareGroup, initialPhotoId, variant } = props;
   const isAdminMode = useAdminMode();
   const { showError } = useFeedback();

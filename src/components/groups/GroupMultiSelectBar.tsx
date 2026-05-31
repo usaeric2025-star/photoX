@@ -9,10 +9,10 @@ interface GroupMultiSelectBarProps {
   handleBulkAction: (action: 'ai' | 'remove' | 'batch') => void;
 }
 
-export const GroupMultiSelectBar: React.FC<GroupMultiSelectBarProps> = ({
+export function GroupMultiSelectBar({
   activeGroupPhotos,
   handleBulkAction,
-}) => {
+}: GroupMultiSelectBarProps) {
   const { isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds } = useGalleryStore(useShallow(s => ({
     isMultiSelect: s.isMultiSelect,
     setIsMultiSelect: s.setIsMultiSelect,

@@ -10,7 +10,7 @@ interface AdminAuthGuardProps {
   children: React.ReactNode;
 }
 
-export const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({ children }) => {
+export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const { isLoading, user } = useAuth();
   const { role } = usePermission();
   const queryClient = useQueryClient();

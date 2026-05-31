@@ -8,7 +8,7 @@ import { syncCache } from '@/lib/db/indexedDB';
 import { photoKeys } from '@/lib/queryKeys';
 import { AdminViewContent } from './AdminViewContent';
 
-export const AdminView: React.FC = () => {
+export function AdminView() {
   const queryClient = useQueryClient();
 
   useEffect(() => {

@@ -9,12 +9,12 @@ interface DataLoadingContainerProps {
   children: React.ReactNode;
 }
 
-export const DataLoadingContainer: React.FC<DataLoadingContainerProps> = ({
+export function DataLoadingContainer({
   isLoading,
   hasData,
   showImmediateLoading = false,
   children
-}) => {
+}: DataLoadingContainerProps) {
   const [delayLoading, setDelayLoading] = useState(showImmediateLoading);
 
   useEffect(() => {

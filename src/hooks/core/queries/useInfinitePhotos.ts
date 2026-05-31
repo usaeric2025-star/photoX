@@ -54,7 +54,7 @@ export const usePhotoInfiniteList = (filters: {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     enabled,
-    staleTime: createStaleTime('REALTIME'),
+    staleTime: createStaleTime('STABLE'),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -80,5 +80,6 @@ export const usePhotoInfiniteGroupList = (groupId: string | null, isAdminMode: b
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
+    staleTime: createStaleTime('STABLE'),
   });
 };

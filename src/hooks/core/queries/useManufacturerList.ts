@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadManufacturersFromCloud } from '@/services/manufacturer/queries';
 import { photoKeys } from '@/lib/queryKeys';
@@ -14,6 +15,7 @@ export const useManufacturerList = () => {
       syncCache.saveManufacturers(mfrs).catch(() => {});
       return mfrs;
     },
+    staleTime: createStaleTime('INFINITY'),
     placeholderData: keepPreviousData,
   });
   return { ...result, data: result.data ?? [] };

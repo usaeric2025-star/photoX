@@ -4,7 +4,7 @@ import { storageKeys } from '@/lib/queryKeys';
 import { StorageAuditResSchema } from '@/shared/apiContractSchema';
 import { type } from 'arktype';
 
-export const R2AuditReport: React.FC = () => {
+export function R2AuditReport() {
   const { data, isLoading, error } = useQuery({
     queryKey: storageKeys.audit(),
     queryFn: async () => {

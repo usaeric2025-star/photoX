@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from "../ui/alert-dialog";
 
-export const AdminGlobalModals: React.FC = () => {
+export function AdminGlobalModals() {
   const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useGalleryStore(useShallow(s => ({
     alertDialog: s.alertDialog,
     setAlertDialog: s.setAlertDialog,

@@ -18,7 +18,7 @@ interface PromptDialogProps {
   onClose: () => void;
 }
 
-export const PromptDialog: React.FC<PromptDialogProps> = ({ dialog, onClose }) => {
+export function PromptDialog({ dialog, onClose }: PromptDialogProps) {
   const [value, setValue] = useState('');
 
   useEffect(() => {

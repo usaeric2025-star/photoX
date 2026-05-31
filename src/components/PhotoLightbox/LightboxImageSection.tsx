@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Lightbox from "yet-another-react-lightbox";
 import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/styles.css";
@@ -30,14 +30,23 @@ interface LightboxImageSectionProps {
   retryImageLoad: () => void;
 }
 
-export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
+export function LightboxImageSection({
   photo, index, isZoomed, setIsZoomed, isImageLoading, setIsImageLoading,
   isImageError, setIsImageError, slides, onPrev, onNext, onClose,
   onTouchStart, onTouchMove, onTouchEnd, onEditPhoto,
   handleDownload, t, retryImageLoad
-}) => {
+}: LightboxImageSectionProps) {
   const isAdminMode = useAdminMode();
   const placeholderDataUrl = useMemo(() => thumbHashToDataURL(photo.thumb_hash), [photo.thumb_hash]);
+
+  const initialSrc = useMemo(() => getCacheBustedImageUrl(photo, 'image'), [photo]);
+  const [currentSrc, setCurrentSrc] = useState(initialSrc);
+  const [hasFallbackTried, setHasFallbackTried] = useState(false);
+
+  useEffect(() => {
+    setCurrentSrc(getCacheBustedImageUrl(photo, 'image'));
+    setHasFallbackTried(false);
+  }, [photo.id, photo.image_url]);
 
   return (
     <div 
@@ -117,11 +126,19 @@ export const LightboxImageSection: React.FC<LightboxImageSectionProps> = ({
               key={photo.id}
               referrerPolicy="no-referrer"
               decoding="async"
-              src={getCacheBustedImageUrl(photo, 'image')}
+              src={currentSrc}
               alt={photo.name || 'Photo'}
               className={`absolute inset-0 z-10 object-contain h-full w-full cursor-pointer transition-all duration-700 ease-out ${isImageLoading ? 'opacity-0 scale-105 blur-lg' : 'opacity-100 scale-100 blur-0'}`} 
               onLoad={() => setIsImageLoading(false)}
               onError={() => {
+                if (!hasFallbackTried) {
+                  setHasFallbackTried(true);
+                  const fallback = getCacheBustedImageUrl(photo, 'thumb');
+                  if (fallback && fallback !== currentSrc) {
+                    setCurrentSrc(fallback);
+                    return;
+                  }
+                }
                 setIsImageLoading(false);
                 setIsImageError(true);
               }}

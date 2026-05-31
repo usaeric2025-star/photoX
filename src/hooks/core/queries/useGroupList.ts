@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { loadGroupsFromCloud } from '@/services/group/queries';
 import { groupKeys } from '@/lib/queryKeys';
@@ -15,6 +16,7 @@ export const useGroupList = (userId: string) => {
       return result.value;
     },
     select: (data) => data ?? [],
+    staleTime: createStaleTime('STABLE'),
     placeholderData: keepPreviousData,
   });
 };

@@ -3,7 +3,31 @@ import { useShallow } from 'zustand/shallow';
 import { STORAGE_KEYS, safeGetItem, safeSetItem } from '@/lib/storage';
 import { ProductFormData } from '../types';
 
-interface GalleryStoreState {
+export interface AlertDialogProps {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  confirmLabel?: string;
+  onCancel?: () => void;
+  cancelLabel?: string;
+  type?: 'danger' | 'info';
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+    type?: 'danger' | 'info';
+  };
+}
+
+export interface PromptDialogProps {
+  title: string;
+  message?: string;
+  placeholder?: string;
+  onSubmit: (val: string) => void | Promise<void>;
+  initialValue?: string;
+  onCancel?: () => void;
+}
+
+export interface GalleryStoreState {
   columns: 2 | 3 | 4 | 5;
   setColumns: (cols: 2 | 3 | 4 | 5) => void;
   lightboxIndex: number | null;
@@ -26,10 +50,10 @@ interface GalleryStoreState {
   setIsMultiSelect: (is: boolean) => void;
   selectedIds: string[];
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
-  alertDialog: any | null; 
-  setAlertDialog: (dialog: any | null) => void;
-  promptDialog: any | null; 
-  setPromptDialog: (dialog: any | null) => void;
+  alertDialog: AlertDialogProps | null; 
+  setAlertDialog: (dialog: AlertDialogProps | null) => void;
+  promptDialog: PromptDialogProps | null; 
+  setPromptDialog: (dialog: PromptDialogProps | null) => void;
   isMultiSelectMode: boolean;
   setIsMultiSelectMode: (is: boolean) => void;
   draggedPhotoId: string | null;

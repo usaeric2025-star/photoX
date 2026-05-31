@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient, UseMutationOptions, QueryKey } from '@tanstack/react-query';
+import { useMutation, useQueryClient, UseMutationOptions, QueryKey, QueryClient } from '@tanstack/react-query';
 import { useFeedback } from '@/hooks';
 import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
 
@@ -9,8 +9,8 @@ export interface MutationConfig<TData, TVariables, TContext> {
   invalidateKeys?: QueryKey[];
   onSuccessMessage?: string | ((data: TData, variables: TVariables) => string);
   errorMessage?: string | ((error: unknown, variables: TVariables) => string);
-  optimisticUpdate?: (variables: TVariables, queryClient: any) => Promise<TContext | void>;
-  rollback?: (error: unknown, variables: TVariables, context: TContext | undefined, queryClient: any) => void;
+  optimisticUpdate?: (variables: TVariables, queryClient: QueryClient) => Promise<TContext | void>;
+  rollback?: (error: unknown, variables: TVariables, context: TContext | undefined, queryClient: QueryClient) => void;
 }
 
 /**

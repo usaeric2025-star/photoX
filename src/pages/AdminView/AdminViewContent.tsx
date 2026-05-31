@@ -28,7 +28,7 @@ import { LanguageCode } from '@/lib/translations';
 
 const AdminDiagnostics = lazy(() => import('./AdminDiagnostics'));
 
-export const AdminViewContent: React.FC = () => {
+export function AdminViewContent() {
   console.log('🔍 AdminViewContent 组件渲染');
 
   const { user, isLoading: isAuthLoading, loginWithGoogle } = useAuth();

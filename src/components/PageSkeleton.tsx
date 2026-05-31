@@ -1,7 +1,7 @@
 import React from 'react';
 import { PhotoGridSkeleton } from './photo/PhotoGridSkeleton';
 
-export const PageSkeleton: React.FC = () => {
+export function PageSkeleton() {
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full min-h-screen">
       {/* Header Area */}

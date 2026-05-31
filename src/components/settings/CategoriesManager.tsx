@@ -16,7 +16,7 @@ interface CategoriesManagerProps {
   buttonStyles: any;
 }
 
-export const CategoriesManager: React.FC<CategoriesManagerProps> = (props) => {
+export function CategoriesManager(props: CategoriesManagerProps) {
   return (
     <>
       <CategoriesSection 

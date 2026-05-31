@@ -4,10 +4,11 @@ import { Settings2, LogIn, LogOut, Database, Globe } from 'lucide-react';
 import { useAuth, useAdminMode } from '@/hooks';
 import { reportError } from '@/lib/errorReporter';
 import { useGalleryStore } from '@/store/galleryStore';
+import { TranslationType } from '@/types';
 
 interface ToolsMenuProps {
   show: boolean;
-  t: any;
+  t: TranslationType;
   handleOpenSettings: () => void;
   handleExitStaffMode?: () => void;
   currentLang: string;
@@ -16,9 +17,9 @@ interface ToolsMenuProps {
   toggleAdminPreviewMode: () => void;
 }
 
-export const ToolsMenu: React.FC<ToolsMenuProps> = ({ 
+export function ToolsMenu({ 
   show, t, handleOpenSettings, handleExitStaffMode, currentLang, onSetLang, adminPreviewMode, toggleAdminPreviewMode
-}) => {
+}: ToolsMenuProps) {
   const { user, loginWithGoogle, logout } = useAuth();
   const hasAdminAccess = useAdminMode();
   

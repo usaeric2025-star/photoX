@@ -3,7 +3,7 @@ import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
-import { usePhotoInfiniteList, useFilters, usePhotoFilters, useSettings, useEnrichedPhotos } from '@/hooks';
+import { usePhotoInfiniteList, useFilters, usePhotoFilters, useSettings, useCategoryList, useTagList } from '@/hooks';
 const updateURL = (params: any) => console.log('updateURL stub', params);
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
@@ -24,11 +24,11 @@ interface PublicGalleryProps {
 
 const EMPTY_ARRAY: Photo[] = [];
 
-export const PublicGallery: React.FC<PublicGalleryProps> = ({
+export function PublicGallery({
   variant,
   onScrollToTop,
   virtualGridRef
-}) => {
+}: PublicGalleryProps) {
   const { filters } = useFilters();
   const { settings } = useSettings(); 
   
@@ -54,6 +54,8 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   })));
 
   const publicSettings = settings;
+  const { data: categories = [] } = useCategoryList();
+  const { data: tags = [] } = useTagList();
   
   const t = useMemo(() => translations[appLang as keyof typeof translations] || translations.en, [appLang]);
 
@@ -70,28 +72,15 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
   }, [infiniteQuery.data]);
 
-  const photos = useEnrichedPhotos(rawPhotos);
-
-  console.log('🧪 [PublicGallery] Input photos:', photos.length);
   const { displayPhotos, gridPhotos } = usePhotoFilters(
-    photos,
-    [],
-    [],
+    rawPhotos,
+    categories,
+    tags,
     {
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
   );
-  console.log('🧪 [PublicGallery] Grouped photos:', gridPhotos.map(p => ({id: p.id, group_id: p.group_id, is_cover: p.is_group_cover, member_count: p.group?.member_count})));
-
-  console.log('🧪 [PublicGallery] Filters result:', {
-    incomingPhotosCount: photos.length,
-    displayPhotosCount: displayPhotos.length,
-    gridPhotosCount: gridPhotos.length,
-    columns,
-    activeGroupId,
-    activePhotoId
-  });
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
     setActiveGroupId(gid);                

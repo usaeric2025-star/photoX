@@ -10,11 +10,12 @@ interface Props {
   className?: string;
   style?: React.CSSProperties;
   onLoad?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+  onError?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
-export const ContractedImage: React.FC<Props> = ({ 
-  src, alt, width, aspectRatio = '1/1', priority = false, className = '', style, onLoad
-}) => {
+export function ContractedImage({ 
+  src, alt, width, aspectRatio = '1/1', priority = false, className = '', style, onLoad, onError
+}: Props) {
    const widths = Array.isArray(width) ? width : [width];
    
    const getSrcSet = (format?: 'avif' | 'webp') => {
@@ -36,6 +37,7 @@ export const ContractedImage: React.FC<Props> = ({
          fetchPriority={priority ? "high" : "low"}
          decoding="async"
          onLoad={onLoad}
+         onError={onError}
          style={{ aspectRatio }}
          className="w-full h-full object-cover"
        />

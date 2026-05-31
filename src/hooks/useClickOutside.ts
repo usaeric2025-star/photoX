@@ -1,26 +1,23 @@
 import { useEffect, useRef } from 'react';
 
 export const useClickOutside = <T extends HTMLElement>(
-  isOpen: boolean,
-  onClose: () => void
+  enabled: boolean,
+  callback: () => void
 ) => {
   const ref = useRef<T>(null);
-
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        onClose();
+    if (!enabled) return;
+    const handleClick = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        callback();
       }
     };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
     };
-  }, [isOpen, onClose]);
-
+  }, [enabled, callback]);
   return ref;
 };

@@ -32,7 +32,7 @@ const BUTTON_STYLES = {
   accent: "px-5 py-2.5 bg-brand-gold hover:bg-brand-gold/90 text-white rounded-2xl text-[11px] font-bold uppercase tracking-tight shadow-md active:scale-95 transition-all flex items-center gap-2 justify-center disabled:opacity-50",
 };
 
-export const SettingsScreen: React.FC = () => {
+export function SettingsScreen() {
   const { setActiveScreen, setAlertDialog } = useGalleryStore(useShallow(s => ({
     setActiveScreen: s.setActiveScreen,
     setAlertDialog: s.setAlertDialog
@@ -45,25 +45,58 @@ export const SettingsScreen: React.FC = () => {
   const { tasks } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();
 
-  const handleLogoUpload = async () => {}; // TODO
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      showSuccess("正在上传 Logo...", true);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64Data = reader.result as string;
+        const resp = await fetch('/api/upload-direct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base64Data,
+            fileKey: `settings/logo_${Date.now()}.webp`,
+            contentType: file.type
+          })
+        });
+        const res = await resp.json();
+        if (res.success && res.data.publicUrl) {
+          setSettingField('logo_url', res.data.publicUrl);
+          showSuccess("Logo 上传成功");
+        } else {
+          showError(new Error(res.error || 'Upload failed'), 'Logo 上传失败');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      handleError(err, 'Logo 上传失败');
+    }
+  };
+
   const performPushSync = async () => { await syncMut('push'); };
   const performPullSync = async () => { await syncMut('pull'); };
   const refreshCloudData = async () => { await syncMut('pull'); };
   const cloudCount = 0;
   
   const isSyncing = tasks.some(t => t.name.includes('同步') && t.status === 'running');
-  const isMaintenanceRunning = tasks.some(t => t.name.includes('维护') && t.status === 'running');
-  const onRunMaintenance = async () => {};
+  const isMaintenanceRunning = tasks.some(t => (t.name.includes('维护') || t.name.includes('诊断')) && t.status === 'running');
+  const onRunMaintenance = async () => {
+    await handleHealthCheck(photos);
+  };
   const t = translations.zh;
 
-  const { showSuccess } = useFeedback();
+  const { showSuccess, showError, handleError } = useFeedback();
   const { user, loginWithGoogle, logout } = useAuth();
   const { settings, geminiApiKey, customModel, accessPasscode, updateSettings } = useSettings();
   const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });
   const setCustomModel = (model: string) => updateSettings({ ...settings, custom_model: model });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
   const setSettings = updateSettings;
-  const saveSettings = async (s: any) => { await updateSettings(s as any); };
+  const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
 
   const {
       updateTag, deleteTag, updateCategory, deleteCategory, addCategory, 
@@ -87,7 +120,7 @@ export const SettingsScreen: React.FC = () => {
     customModel,
     saveSettings,
     performPullSync,
-    setSettings: (s) => { void updateSettings(s as any); }
+    setSettings: (s) => { void updateSettings(s as Partial<AppSettings>); }
   });
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
@@ -131,8 +164,8 @@ export const SettingsScreen: React.FC = () => {
                 user={user || null}
                 loginWithGoogle={loginWithGoogle}
                 logout={logout}
-                performPushSync={async () => { await performPushSync(); return { success: true, data: null } as unknown as ApiResponse<any>; }}
-                performPullSync={async () => { await performPullSync(); return { success: true, data: null } as unknown as ApiResponse<any>; }}
+                performPushSync={async () => { await performPushSync(); return { success: true, data: null } as ApiResponse<null>; }}
+                performPullSync={async () => { await performPullSync(); return { success: true, data: null } as ApiResponse<null>; }}
                 refreshCloudData={refreshCloudData}
                 cloudCount={cloudCount}
                 isSyncing={isSyncing}
@@ -145,7 +178,7 @@ export const SettingsScreen: React.FC = () => {
                 buttonStyles={BUTTON_STYLES}
               />
               <MaintenanceSection 
-                onHealthCheck={() => handleHealthCheck(photos)}
+                onHealthCheck={onRunMaintenance}
                 isChecking={isMaintenanceRunning}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}

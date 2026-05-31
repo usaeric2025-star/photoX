@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef } from 'react';
-import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
+import React, { useEffect, useRef } from 'react';
+import { VirtualGrid, VirtualGridHandle } from '@/components/virtualizer/VirtualGrid';
 import { motion } from 'motion/react';
 import { PHOTO_GRID_CONFIG } from '../../config/virtuoso.config';
-import { Photo } from '../../types';
+import { Photo, TranslationType } from '../../types';
+import { GalleryStoreState } from '@/store/galleryStore';
 import { interactionBus } from '@/lib/interactionBus';
 import { PhotoCard } from '../photo/PhotoCard';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
@@ -20,7 +21,7 @@ interface PhotoBoardProps {
   columns: number;
 }
 
-const photoGridLayoutSelector = (s: any) => ({
+const photoGridLayoutSelector = (s: GalleryStoreState) => ({
   columns: s.columns,
   appLang: s.appLang,
   activeGroupId: s.activeGroupId,
@@ -29,12 +30,12 @@ const photoGridLayoutSelector = (s: any) => ({
   setActivePhotoId: s.setActivePhotoId
 });
 
-const multiSelectSelector = (s: any) => ({
+const multiSelectSelector = (s: GalleryStoreState) => ({
   setSelectedIds: s.setSelectedIds,
   setIsMultiSelectMode: s.setIsMultiSelectMode
 });
 
-export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) => { 
+export const PhotoBoard = ({ ref, ...props }: PhotoBoardProps & { ref?: React.Ref<VirtualGridHandle> }) => { 
   const { 
     photos, 
     isFetching,
@@ -48,7 +49,7 @@ export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) =>
     appLang, activeGroupId, activePhotoId
   } = useGalleryStore(useShallow(photoGridLayoutSelector));
 
-  const t = translations[appLang as keyof typeof translations] || translations.en;
+  const t = (translations[appLang as keyof typeof translations] || translations.en) as TranslationType;
 
   // Anchoring logic: when returning from a group detail view
   useEffect(() => {
@@ -58,7 +59,7 @@ export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) =>
         const index = photos.findIndex(p => p.id === targetId || p.group_id === targetId);
         if (index !== -1) {
           setTimeout(() => {
-            (ref as any)?.current?.scrollToIndex(index);
+            (ref as React.RefObject<VirtualGridHandle>)?.current?.scrollToIndex(index);
           }, 100);
         }
       }
@@ -119,23 +120,23 @@ export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) =>
               onLoadMore();
             }
           }}
-          containerClassName="px-[10px] pt-2 pb-8"
+          containerClassName="px-2 pt-2 pb-4"
           renderItem={(index) => {
             const photo = photos[index];
             if (!photo) return null;
             return (
-              <div className="p-1.5 w-full">
+              <div className="p-1.5 sm:p-2 w-full">
                 {renderCard(photo, index)}
               </div>
             );
           }}
           footer={
-            <MemoizedFooter 
+            <PhotoGridFooter 
               isFetchingNextPage={!!isFetchingNextPage}
               hasNextPage={!!hasNextPage}
               hasPhotos={photos.length > 0}
-              textLoading={(t as any).loading || '正在载入更多...'}
-              textEndOfList={(t as any).endOfList || '已经到底啦'}
+              textLoading={t.loading || '正在载入更多...'}
+              textEndOfList={t.endOfList || '已经到底啦'}
               columns={columns}
             />
           }
@@ -143,11 +144,11 @@ export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) =>
       </div>
     </div>
   );
-});
+};
 
 PhotoBoard.displayName = 'PhotoBoard';
 
-const MemoizedFooter = React.memo(({ 
+const PhotoGridFooter = ({ 
   isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList, columns 
 }: {
   isFetchingNextPage: boolean;
@@ -160,18 +161,18 @@ const MemoizedFooter = React.memo(({
   if (isFetchingNextPage) {
     return (
       <div 
-        className="grid gap-2 p-1 pb-32"
+        className="grid gap-2 p-1.5 sm:p-2 pb-8"
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {Array.from({ length: columns }).map((_, i) => (
-          <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 animate-pulse border border-slate-50" />
+          <div key={i} className="aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 animate-pulse border border-slate-50" />
         ))}
       </div>
     );
   }
   if (!isFetchingNextPage && !hasNextPage && hasPhotos) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-16">
+      <div className="py-4 flex flex-col items-center justify-center gap-2 pb-8">
         <span className="text-[10px] text-slate-400 font-medium tracking-tight">
           {textEndOfList}
         </span>
@@ -179,7 +180,7 @@ const MemoizedFooter = React.memo(({
     );
   }
   return null;
-});
-MemoizedFooter.displayName = 'MemoizedFooter';
+};
+PhotoGridFooter.displayName = 'PhotoGridFooter';
 
 export default PhotoBoard;

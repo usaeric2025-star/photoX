@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { useDebouncedSearch } from '@/hooks';
 import { Input } from './input';
@@ -6,7 +6,9 @@ import { cn } from '@/lib/utils';
 
 interface SearchInputProps {
   onSearch: (value: string) => void;
+  value?: string;
   placeholder?: string;
+  clearLabel?: string;
   delay?: number;
   className?: string;
   autoFocus?: boolean;
@@ -14,12 +16,19 @@ interface SearchInputProps {
 
 export const SearchInput = ({
   onSearch,
-  placeholder = '搜索...',
+  value: controlledValue = '',
+  placeholder = 'Search...',
+  clearLabel = 'Clear',
   delay = 300,
   className,
   autoFocus = false,
 }: SearchInputProps) => {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(controlledValue);
+
+  // Sync if controlledValue changes from outside (e.g. clear filters)
+  useEffect(() => {
+    setValue(controlledValue);
+  }, [controlledValue]);
 
   const debouncedSearch = useDebouncedSearch((val: string) => {
     onSearch(val);
@@ -33,6 +42,7 @@ export const SearchInput = ({
 
   const handleClear = () => {
     setValue('');
+    debouncedSearch.cancel(); // Cancel any pending debounced search
     onSearch('');
   };
 
@@ -51,6 +61,7 @@ export const SearchInput = ({
         <button
           onClick={handleClear}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          aria-label={clearLabel}
         >
           <X size={14} />
         </button>

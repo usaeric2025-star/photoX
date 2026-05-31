@@ -7,9 +7,9 @@ interface CategoriesSectionProps {
   cardClass: string;
 }
 
-export const CategoriesSection: React.FC<CategoriesSectionProps> = ({ 
+export function CategoriesSection({ 
   categories, cardClass 
-}) => {
+}: CategoriesSectionProps) {
   const { appLang } = useGalleryStore(useShallow(s => ({ appLang: s.appLang })));
 
   return (

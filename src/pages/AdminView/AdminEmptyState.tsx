@@ -5,7 +5,7 @@ interface AdminEmptyStateProps {
   t: any;
 }
 
-export const AdminEmptyState: React.FC<AdminEmptyStateProps> = ({ t }) => {
+export function AdminEmptyState({ t }: AdminEmptyStateProps) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
       <GalleryEmpty t={t} />

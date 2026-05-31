@@ -69,12 +69,6 @@ export function getClientEnv(): ClientEnv {
       filteredEnv[key] = rawEnv[key];
     }
   });
-  if (!filteredEnv.VITE_SUPABASE_URL) {
-    filteredEnv.VITE_SUPABASE_URL = "https://vbpnlkeweqkjufijtdph.supabase.co";
-  }
-  if (!filteredEnv.VITE_SUPABASE_ANON_KEY) {
-    filteredEnv.VITE_SUPABASE_ANON_KEY = "sb_publishable_mXZxsfqH-fATbT2g9fiX7A_-VfzOwa8";
-  }
 
   const result = clientEnvSchema(filteredEnv);
   if (result instanceof type.errors) {
@@ -93,12 +87,6 @@ export function getClientEnv(): ClientEnv {
  */
 export function getServerEnv(envObj: any): ServerEnv {
   const rawEnv = { ...envObj };
-  if (!rawEnv.VITE_SUPABASE_URL) {
-    rawEnv.VITE_SUPABASE_URL = "https://vbpnlkeweqkjufijtdph.supabase.co";
-  }
-  if (!rawEnv.VITE_SUPABASE_ANON_KEY) {
-    rawEnv.VITE_SUPABASE_ANON_KEY = "sb_publishable_mXZxsfqH-fATbT2g9fiX7A_-VfzOwa8";
-  }
   const result = serverEnvSchema(rawEnv);
   if (result instanceof type.errors) {
     console.warn("⚠️ [ENV-VALIDATION-INTEGRATED] Invalid Server Environment Variables (Falling back gracefully):");

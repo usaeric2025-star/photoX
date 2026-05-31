@@ -20,11 +20,11 @@ interface Props {
   onDeleteManufacturer: (id: string) => void;
 }
 
-export const OrgTab: React.FC<Props> = ({
+export function OrgTab({
   formState, updateForm, categories, tags, manufacturers, appLang,
   onAddTag, onUpdateTag, onDeleteTag,
   onAddManufacturer, onEditManufacturer, onDeleteManufacturer
-}) => {
+}: Props) {
   return (
     <div className="m-0 p-4 space-y-6 animate-in fade-in slide-in-from-right-2 duration-300">
       <section className="space-y-4">

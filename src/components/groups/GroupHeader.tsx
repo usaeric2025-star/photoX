@@ -23,7 +23,7 @@ interface GroupHeaderProps {
   onBatchAiAnalyzeByGroupId?: (groupId: string) => Promise<void | null>;
 }
 
-export const GroupHeader: React.FC<GroupHeaderProps> = ({
+export function GroupHeader({
   activeGroupId,
   setActiveGroupId,
   isAdminMode,
@@ -31,7 +31,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   isGroupDataLoading,
   activeGroupPhotos,
   onBatchAiAnalyzeByGroupId,
-}) => {
+}: GroupHeaderProps) {
   const { setGroupSettingsOpen, isMultiSelect, setIsMultiSelect, selectedIds, setSelectedIds, setIsPhotoPickerOpen, setPhotoPickerGroupId, setBatchEditingIds } = useGalleryStore(useShallow(s => ({
     setGroupSettingsOpen: s.setGroupSettingsOpen,
     isMultiSelect: s.isMultiSelect,

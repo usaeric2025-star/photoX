@@ -4,7 +4,7 @@ import { Category, Tag, Manufacturer, AppSettings } from '../../types';
 
 interface LogoSectionProps {
   settings: AppSettings | null;
-  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: Category[], tags: Tag[], manufacturers: Manufacturer[]) => Promise<void>;
+  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   categories: Category[];
   tags: Tag[];
   manufacturers: Manufacturer[];
@@ -12,7 +12,7 @@ interface LogoSectionProps {
   buttonStyles: { secondary: string };
 }
 
-export const LogoSection: React.FC<LogoSectionProps> = ({
+export function LogoSection({
   settings,
   handleLogoUpload,
   categories,
@@ -20,7 +20,7 @@ export const LogoSection: React.FC<LogoSectionProps> = ({
   manufacturers,
   cardClass,
   buttonStyles
-}) => {
+}: LogoSectionProps) {
   return (
     <div className={cardClass} id="section-logo">
       <div className="flex items-center gap-2">
@@ -48,7 +48,7 @@ export const LogoSection: React.FC<LogoSectionProps> = ({
               </span>
               <input 
                 type="file" 
-                onChange={(e) => handleLogoUpload(e, categories, tags, manufacturers)} 
+                onChange={handleLogoUpload} 
                 className="absolute inset-0 opacity-0 cursor-pointer" 
                 accept="image/*" 
               />

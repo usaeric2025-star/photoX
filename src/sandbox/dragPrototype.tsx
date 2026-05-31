@@ -5,7 +5,7 @@ import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor } from '@
  * [DRAG-SANDBOX-RESULT]: Prototype verifies dnd-kit works within VirtualGrid 
  * by isolating event propagation to the drag handle.
  */
-export const DragPrototypeSandbox: React.FC = () => {
+export function DragPrototypeSandbox() {
     const sensors = useSensors(useSensor(PointerSensor));
     return (
         <DndContext sensors={sensors}>

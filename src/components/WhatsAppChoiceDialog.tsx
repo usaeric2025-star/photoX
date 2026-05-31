@@ -12,9 +12,9 @@ interface WhatsAppChoiceDialogProps {
   t: Record<string, any>;
 }
 
-export const WhatsAppChoiceDialog: React.FC<WhatsAppChoiceDialogProps> = ({
+export function WhatsAppChoiceDialog({
   isOpen, onClose, settings, onSelect, t
-}) => {
+}: WhatsAppChoiceDialogProps) {
   if (!isOpen) return null;
 
   const fallback = import.meta.env.VITE_WHATSAPP_NUMBER;

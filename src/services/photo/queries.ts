@@ -5,15 +5,16 @@ import { normalizeSearchQuery } from '@/lib/utils/stringHelper';
 import { VISIBILITY_OR_QUERY } from '../../constants/photoConstants';
 import { PAGINATION } from '../../config/constants';
 import { PHOTO_LIST_FIELDS } from '../../constants/photoFields';
+import { SupabasePhotoRaw } from '@/types/supabase';
 
-export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
+export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
     if (!item) return {} as Photo;
     
     // Extract storageId from image_url if possible
-    let storageId = item.id as string;
+    let storageId = item.id;
     if (item.image_url) {
       try {
-        const parts = (item.image_url as string).split('/');
+        const parts = item.image_url.split('/');
         const lastPart = parts[parts.length - 1];
         if (lastPart) {
           storageId = lastPart.split('.')[0];
@@ -26,10 +27,10 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     let tag_ids: string[] = [];
     if (Array.isArray(item.photo_tags)) {
       tag_ids = item.photo_tags
-        .map((pt: { tag_id?: string | number; tags?: { id: string | number }; id?: string | number }) => {
+        .map((pt) => {
           if (pt == null) return null;
           if (typeof pt === 'object') {
-            const typedPt = pt;
+            const typedPt = pt as any;
             if (typedPt.tag_id != null) return String(typedPt.tag_id);
             if (typedPt.tags && typedPt.tags.id != null) return String(typedPt.tags.id);
             if (typedPt.id != null) return String(typedPt.id);
@@ -40,7 +41,7 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     } else if (Array.isArray(item.tags)) {
       // Fallback in case tags are returned directly
       tag_ids = (item.tags as { id: string | number }[])
-        .map((t: { id?: string | number } | string | number) => {
+        .map((t) => {
           if (t == null) return null;
           if (typeof t === 'object' && t.id != null) return String(t.id);
           return String(t);
@@ -48,14 +49,14 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
         .filter((id: string | null) => id != null && id !== 'undefined' && id !== 'null' && id !== '') as string[];
     }
 
-    const group_id = item.group_id ? String(item.group_id) : undefined;
-    const group = item.group as any;
-    const created_at = item.created_at as string | undefined;
-    const updated_at = item.updated_at as string | undefined;
+    const group_id_val = item.group_id ? String(item.group_id) : undefined;
+    const group = item.group;
+    const created_at = item.created_at;
+    const updated_at = item.updated_at;
     const is_group_cover = !!item.is_group_cover;
-    const is_pinned = !!item.is_pinned || !!(item as any).is_pinned;
+    const is_pinned = !!item.is_pinned;
     const is_analyzing = !!item.is_analyzing;
-    const group_order = item.group_order as number | undefined;
+    const group_order = item.group_order;
     const user_id = item.user_id ? String(item.user_id) : undefined;
     const category_id = item.category_id ? String(item.category_id) : null;
     const manufacturer_id = item.manufacturer_id ? String(item.manufacturer_id) : null;
@@ -63,23 +64,23 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     return {
       id: String(item.id),
       storage_id: storageId,
-      item_code: (item.item_code as string) || '',
-      manual_code: (item.manual_code as string) || '',
-      model_number: (item.model_number as string) || '',
-      image_hash: (item.image_hash as string) || '',
-      name: (item.name as string) || 'Unnamed Product',
+      item_code: item.item_code || '',
+      manual_code: item.manual_code || '',
+      model_number: item.model_number || '',
+      image_hash: item.image_hash || '',
+      name: item.name || 'Unnamed Product',
       category_id: category_id,
       manufacturer_id: manufacturer_id,
-      description: (item.description as string) || '',
-      image_url: (item.image_url as string) || '',
-      thumb_url: (item.thumb_url as string) || (item.image_url as string) || '',
-      thumbnail_sm_url: (item.thumbnail_sm_url as string) || (item.thumb_url as string) || (item.image_url as string) || '',
-      thumbnail_md_url: (item.thumbnail_md_url as string) || (item.thumb_url as string) || (item.image_url as string) || '',
-      thumb_hash: (item.thumb_hash as string) || '',
-      exif_data: (item.exif_data as Record<string, unknown>) ?? null,
+      description: item.description || '',
+      image_url: item.image_url || '',
+      thumb_url: item.thumb_url || item.image_url || '',
+      thumbnail_sm_url: item.thumbnail_sm_url || item.thumb_url || item.image_url || '',
+      thumbnail_md_url: item.thumbnail_md_url || item.thumb_url || item.image_url || '',
+      thumb_hash: item.thumb_hash || '',
+      exif_data: item.exif_data ?? null,
       created_at: created_at || new Date().toISOString(),
       updated_at: updated_at || created_at || new Date().toISOString(),
-      group_id: group_id,
+      group_id: group_id_val,
       group: group ? {
           id: group.id,
           name: group.name,
@@ -93,12 +94,12 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       is_analyzing: is_analyzing,
       group_order: group_order,
       user_id: user_id,
-      uri: (item.image_url as string) || '',
+      uri: item.image_url || '',
       price: item.price ? String(item.price) : '',
       description_translations: item.description_translations as (Photo['description_translations'] | undefined),
       tag_ids: Array.isArray(tag_ids) ? tag_ids : [],
       dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
-      created_at_timestamp: item.created_at_timestamp as number | undefined,
+      created_at_timestamp: item.created_at_timestamp,
       categoryName: '',
       tagNames: [],
       manufacturerName: ''
@@ -337,7 +338,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
         if (error) throw error;
         if (data) {
             const rows = Array.isArray(data) ? data : (data.photos || []);
-            let photos = rows.map((item: any) => mapSupabasePhoto(item));
+            let photos = rows.map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
             if (!isAdminMode) {
                photos = photos.filter(p => !p.is_hidden);
             }
@@ -388,7 +389,7 @@ export const loadPhotosByGroupIdPaginated = async (
     if (error) throw error;
     if (data) {
        const rows = Array.isArray(data) ? data : (data.photos || []);
-       let photos = rows.map((item: any) => mapSupabasePhoto(item));
+       let photos = rows.map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
        if (!isAdminMode) {
           photos = photos.filter(p => !p.is_hidden);
        }

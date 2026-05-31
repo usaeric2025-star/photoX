@@ -3,12 +3,13 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import * as ErrorMonitor from "@sentry/react";
 import { Toaster } from 'sonner';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App';
 import { TaskProvider } from '@/hooks';
 import { setupGlobalErrorHandling } from './lib/errorHandling';
-import { ErrorReporter } from './lib/errorReporter';
+import { reportError } from './lib/errorTracker';
+import { queryClient } from './lib/queryClient';
 import { setupDevErrorHelper } from './lib/devErrorHelper';
 import './index.css';
 import { clientEnv } from './shared/envSchema';
@@ -47,20 +48,20 @@ ErrorMonitor.init({
   tracesSampleRate: 1.0,
 });
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: createStaleTime('STABLE'),   // 5 分钟内不重新请求
-      refetchOnMount: false,       // 组件挂载时不自动刷新
-      refetchOnWindowFocus: false, // 切换 tab 不刷新
-      retry: 1,
-    },
-  },
-});
-
 const container = document.getElementById("root");
 if (container) {
-  const root = createRoot(container);
+  const root = createRoot(container, {
+    onCaughtError: (error, errorInfo) => {
+      reportError(error, `Component: ${errorInfo.componentStack?.slice(0, 200)}`);
+    },
+    onUncaughtError: (error) => {
+      reportError(error, 'Uncaught');
+    },
+    onRecoverableError: (error) => {
+      reportError(error, 'Recoverable');
+    },
+  });
+  
   root.render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>

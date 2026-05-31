@@ -3,7 +3,7 @@ import { Globe } from 'lucide-react';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { GalleryVariant } from '@/types/variant';
 
-export const LanguageSwitcher: React.FC<{ variant?: GalleryVariant | 'ghost' }> = ({ variant = 'full-management' }) => {
+export function LanguageSwitcher({ variant = 'full-management' }: { variant?: GalleryVariant | 'ghost' }) {
   const { appLang, setAppLang } = useGalleryStore(useShallow(s => ({ 
     appLang: s.appLang,
     setAppLang: s.setAppLang

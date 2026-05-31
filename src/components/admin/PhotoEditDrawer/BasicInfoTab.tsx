@@ -11,10 +11,10 @@ interface Props {
   onRotate: () => void;
 }
 
-export const BasicInfoTab: React.FC<Props> = ({ 
+export function BasicInfoTab({ 
   editPhotoId, formState, updateForm, previewSrc, 
   isProcessingImage, onRotate 
-}) => {
+}: Props) {
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
       <div className="flex gap-4 items-start">

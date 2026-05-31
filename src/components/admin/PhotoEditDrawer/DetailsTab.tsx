@@ -1,6 +1,6 @@
 import React from 'react';
 import { DimensionEditor } from '../edit/DimensionEditor';
-import { ProductFormData, Dimension } from '../../../types';
+import { ProductFormData, Dimension, TranslationType } from '../../../types';
 import { safeArray } from '../../../lib/utils';
 
 interface Props {
@@ -9,12 +9,12 @@ interface Props {
   showAiButton: boolean;
   isAnalyzing: boolean;
   onAiAnalyze: () => void;
-  t: any;
+  t: TranslationType;
 }
 
-export const DetailsTab: React.FC<Props> = ({
+export function DetailsTab({
   formState, updateForm, showAiButton, isAnalyzing, onAiAnalyze, t
-}) => {
+}: Props) {
   return (
     <div className="m-0 p-4 space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <DimensionEditor 

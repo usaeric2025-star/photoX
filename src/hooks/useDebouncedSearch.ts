@@ -1,16 +1,25 @@
-import { useDebouncedCallback } from 'use-debounce';
-import { UI } from '@/config/constants';
+import { useCallback, useRef, useEffect } from 'react';
 
-/**
- * Standard debounced search hook for the application.
- * @param callback Function to execute after the delay
- * @param delay Delay in milliseconds (defaults to UI.DEBOUNCE_DELAY_MS)
- */
-export function useDebouncedSearch(
-  callback: (value: string) => void,
-  delay: number = UI.DEBOUNCE_DELAY_MS
+export function useDebouncedSearch<T extends (...args: any[]) => any>(
+  callback: T,
+  delay: number = 300
 ) {
-  return useDebouncedCallback(callback, delay, {
-    trailing: true,
-  });
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debounced = useCallback(
+    (...args: Parameters<T>) => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay]
+  );
+  
+  const cancel = useCallback(() => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  }, []);
+  
+  // Attach cancel method to the debounced function
+  return Object.assign(debounced, { cancel });
 }

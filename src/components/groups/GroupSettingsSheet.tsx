@@ -21,7 +21,7 @@ interface GroupSettingsSheetProps {
   t: any;
 }
 
-export const GroupSettingsSheet: React.FC<GroupSettingsSheetProps> = (props) => {
+export function GroupSettingsSheet(props: GroupSettingsSheetProps) {
   const isAdminMode = useAdminMode();
 
   const childProps = {

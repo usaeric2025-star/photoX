@@ -2,7 +2,7 @@ import React from 'react';
 import { AnimatePresence } from 'motion/react';
 import { StaffUnlockDialog } from '../StaffUnlockDialog';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
-import { AppSettings } from '../../types';
+import { AppSettings, TranslationType } from '../../types';
 
 interface GalleryDialogsProps {
   showPassPrompt: boolean;
@@ -11,17 +11,17 @@ interface GalleryDialogsProps {
   setPassInput: (val: string) => void;
   passError: boolean;
   setPassError: (err: boolean) => void;
-  t: any;
-  loginWithGoogle?: () => Promise<any>;
+  t: TranslationType;
+  loginWithGoogle?: () => Promise<void>;
   settings?: AppSettings;
   setIsStaffMode: (is: boolean) => void;
-  navigate: (options: any) => void;
+  navigate: (options: { to: string }) => void;
   showWhatsAppChoice: boolean;
   setShowWhatsAppChoice: (show: boolean) => void;
   openWhatsApp: (num: string) => void;
 }
 
-export const GalleryDialogs: React.FC<GalleryDialogsProps> = (props) => {
+export function GalleryDialogs(props: GalleryDialogsProps) {
   return (
     <>
       <AnimatePresence>

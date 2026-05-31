@@ -14,10 +14,10 @@ interface Props {
   isAllSelected?: boolean;
 }
 
-export const MultiSelectToolbar: React.FC<Props> = ({
+export function MultiSelectToolbar({
   selectedCount, onClose,
   onBatchAiIdentify, onBatchEdit, onGroup, onDelete, onToggleVisibility
-}) => {
+}: Props) {
   const { openDialog: confirmDelete } = useBatchConfirmation({
     actionType: 'delete',
     selectedCount,

@@ -22,7 +22,7 @@ interface SyncSettingsProps {
   buttonStyles: any;
 }
 
-export const SyncSettings: React.FC<SyncSettingsProps> = (props) => {
+export function SyncSettings(props: SyncSettingsProps) {
   const { setAlertDialog } = useGalleryStore();
   return (
     <>

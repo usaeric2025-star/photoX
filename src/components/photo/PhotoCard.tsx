@@ -1,11 +1,59 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
+import { useActionState, useOptimistic, startTransition } from 'react';
+import { supabase } from '@/lib/supabase';
+import { reportError } from '@/lib/errorTracker';
+import { queryClient } from '@/lib/queryClient';
+import { photoKeys } from '@/lib/queryKeys';
+
+async function togglePinAction(prevState: { error: string | null }, formData: FormData) {
+  const photoId = formData.get('photoId') as string;
+  const currentPinned = formData.get('currentPinned') === 'true';
+  try {
+    const { error } = await supabase.from('furniture_items').update({ is_pinned: !currentPinned }).eq('id', photoId);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+    return { error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '置顶失败';
+    reportError(err, `TogglePin photoId=${photoId}`);
+    return { error: message };
+  }
+}
+
+function PinButton({ photoId, isPinned }: { photoId: string; isPinned: boolean }) {
+  const [optimisticPinned, setOptimisticPinned] = useOptimistic(isPinned);
+  const [state, formAction, isPending] = useActionState(togglePinAction, { error: null });
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startTransition(() => {
+      setOptimisticPinned(!optimisticPinned);
+      const formData = new FormData();
+      formData.append('photoId', photoId);
+      formData.append('currentPinned', String(optimisticPinned));
+      formAction(formData);
+    });
+  };
+
+  return (
+    <button 
+      onClick={handleClick}
+      disabled={isPending}
+      className="absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white data-[pinned=true]:text-red-500 z-20 hover:scale-115 active:scale-95 transition-transform disabled:opacity-50"
+      data-pinned={optimisticPinned ? 'true' : 'false'}
+    >
+      <Heart size={12} className={optimisticPinned ? 'fill-current' : ''} />
+      {state.error && <span className="absolute right-0 top-full mt-1 text-[8px] bg-red-500 text-white px-1 py-0.5 rounded shadow-sm whitespace-nowrap">{state.error}</span>}
+    </button>
+  );
+}
 import { useDraggable } from '@dnd-kit/core';
-import { Photo } from '../../types';
+import { Photo, Category } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { usePermission } from '../../hooks';
+import { usePermission, useFilters, useStaticData } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useTogglePin } from '@/hooks/core/mutations/useTogglePin';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
@@ -26,7 +74,7 @@ export interface PhotoCardProps {
   hideDetails?: boolean;
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; showGroupsCollapsed: boolean }> = React.memo(({ photo, variant, showGroupsCollapsed }) => {
+function PhotoStatusBadges({ photo, variant, showGroupsCollapsed, isPinned }: { photo: Photo; variant: GalleryVariant; showGroupsCollapsed: boolean; isPinned: boolean }) {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
   // Display group info if photo belongs to a group
@@ -43,51 +91,94 @@ const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; showG
           <span>{memberCount}</span>
         </div>
       )}
-      {isManagement && photo.is_pinned && (
+      {isManagement && isPinned && (
         <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5 border border-white/10 shadow-sm">
           <Heart size={8} className="fill-current" />
         </div>
       )}
     </div>
   );
-});
+};
 PhotoStatusBadges.displayName = 'PhotoStatusBadges';
 
-const SelectionOverlay: React.FC<{ isSelected: boolean }> = React.memo(({ isSelected }) => (
-  <div className={`absolute top-0 left-0 w-full h-full transition-all duration-300 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10 ${isSelected ? 'bg-blue-500/10' : 'bg-transparent'}`}>
-     <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all flex items-center justify-center pointer-events-none ${isSelected ? 'bg-blue-600 border-white shadow-xl scale-110' : 'bg-white/40 border-white/60 shadow-sm opacity-0 md:group-hover:opacity-100'}`}>
-        {isSelected && <Check size={16} className="text-white" />}
-     </div>
-  </div>
-));
+function SelectionOverlay({ isSelected }: { isSelected: boolean }) {
+  return (
+    <div className={cn(
+      "absolute top-0 left-0 w-full h-full transition-all duration-500 flex items-center justify-center p-3 sm:p-4 pointer-events-none z-10",
+      isSelected ? "bg-blue-500/5 backdrop-blur-[1px]" : "bg-transparent"
+    )}>
+       <div className={cn(
+         "w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all duration-300 flex items-center justify-center pointer-events-none shadow-sm",
+         isSelected 
+           ? "bg-blue-600 border-white shadow-blue-500/50 scale-110 opacity-100" 
+           : "bg-white/40 border-white/60 opacity-0 md:group-hover:opacity-100"
+       )}>
+          {isSelected && <Check size={18} className="text-white animate-in zoom-in-50 duration-300" />}
+       </div>
+    </div>
+  );
+}
 SelectionOverlay.displayName = 'SelectionOverlay';
 
-const PhotoInfoFooter: React.FC<{ 
+function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagIds }: { 
   displayCatName: string; 
   photoTags: string[];
   hideTags?: boolean;
-}> = React.memo(({ displayCatName, photoTags, hideTags }) => {
+  categoryId?: string | number | null;
+  tagIds?: string[];
+}) {
   if (hideTags) return null;
-  
-  const tagsText = (photoTags && photoTags.length > 0) ? photoTags.join(', ') : '';
+  const { filters, setCategory, setTags } = useFilters();
+
 
   return (
-    <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-none p-2 bg-gradient-to-t from-black/60 to-transparent">
-        <div className="flex flex-col gap-0.5">
-            {displayCatName && (
-                <span className="text-[10px] text-white/90 font-medium truncate">
-                {displayCatName}
-                </span>
-            )}
-            {tagsText && (
-                <span className="text-[9px] text-white/70 truncate">
-                {tagsText}
-                </span>
-            )}
-        </div>
+    <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-2 pt-8 flex flex-col gap-1.5 bg-gradient-to-t from-black/95 via-black/65 to-transparent">
+        {displayCatName && (
+            <span 
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setCategory(categoryId ? String(categoryId) : null);
+              }}
+              className="text-[9px] text-brand-gold font-bold tracking-widest leading-none truncate hover:bg-black/85 px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-sm w-fit active:scale-95 transition-all uppercase border border-brand-gold/30 hover:border-brand-gold/60 cursor-pointer shadow-md"
+            >
+            {displayCatName.toUpperCase()}
+            </span>
+        )}
+        {photoTags && photoTags.length > 0 && (
+            <div className="flex flex-row gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto pb-1 px-1">
+                {photoTags.map((tag, i) => {
+                    const tagId = tagIds && tagIds[i];
+                    return (
+                        <span 
+                            key={tag}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              if (tagId) {
+                                const targetIdStr = String(tagId);
+                                const isSelected = filters.tagIds?.includes(targetIdStr);
+                                const nextTags = isSelected
+                                    ? filters.tagIds?.filter(id => id !== targetIdStr)
+                                    : [...(filters.tagIds || []), targetIdStr];
+                                setTags(nextTags);
+                              }
+                            }}
+                            className="text-[8px] text-slate-100 font-semibold px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-md leading-tight border border-white/10 hover:border-white/30 cursor-pointer hover:bg-black/80 hover:text-white active:scale-95 transition-all whitespace-nowrap"
+                        >
+                        {tag}
+                        </span>
+                    );
+                })}
+            </div>
+        )}
     </div>
   );
-});
+};
 PhotoInfoFooter.displayName = 'PhotoInfoFooter';
 
 const toTitleCase = (str: string) => {
@@ -101,7 +192,7 @@ const toTitleCase = (str: string) => {
  * Any animation requiring React state or refs that triggers setStates inside
  * the virtualizer loop will cause infinite update depth loop.
  */
-export const PhotoCard = React.memo(({ 
+export const PhotoCard = ({ 
   variant, photo, index, showGroupsCollapsed,
   onGroupClick, 
   onLightboxOpen, 
@@ -113,8 +204,19 @@ export const PhotoCard = React.memo(({
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
   const lang = useGalleryStore(s => s.appLang);
-  const t = useMemo(() => translations[lang as keyof typeof translations] || translations.en, [lang]);
+  const t = translations[lang as keyof typeof translations] || translations.en;
   
+  const { categoryMap, tagMap } = useStaticData();
+  
+  const categoryId = photo.category_id ? String(photo.category_id) : '';
+  const category = categoryMap.get(categoryId);
+  const displayCatName = category ? (category[lang as keyof Category] as string || category.name) : '';
+
+  const tagIdsList = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
+  const photoTags = tagIdsList
+    .map(id => tagMap.get(String(id))?.name ?? '')
+    .filter(Boolean);
+
   // Initial values for the first render to avoid flicker
   const initialIsSelected = interactionBus.current.selectedIds.has(photo.id);
   const initialIsMultiSelect = interactionBus.current.isMultiSelect;
@@ -142,22 +244,16 @@ export const PhotoCard = React.memo(({
   // Ensure consistent group count access
   const photoMemberCount = photo.group?.member_count ?? 1;
 
-  const displayCatName = photo.categoryName || '';
-  const photoTags = photo.tagNames || [];
-
-  const adminActions = useAdminActions();
-  const togglePinMutation = useTogglePin(photo, adminActions.updatePhoto);
-
   const { can } = usePermission();
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: photo.id,
   });
 
-  const handleOpenLightbox = useCallback(() => {
+  const handleOpenLightbox = () => {
     onLightboxOpen(photo);
-  }, [photo, onLightboxOpen]);
+  };
     
-  const handleClick = useCallback((e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
       onClick(e);
       return;
@@ -182,9 +278,9 @@ export const PhotoCard = React.memo(({
         handleOpenLightbox();
       }
     }
-  }, [isManagement, setters, photo.id, showGroupsCollapsed, photo.group_id, onGroupClick, handleOpenLightbox, onClick]);
+  };
 
-  const handleLongPress = useCallback(() => {
+  const handleLongPress = () => {
     if (!isManagement || !can('photo:edit')) return;
     const { isMultiSelect } = interactionBus.current;
     if (!isMultiSelect) {
@@ -193,20 +289,17 @@ export const PhotoCard = React.memo(({
     } else {
       setters.toggleSelected(photo.id);
     }
-  }, [isManagement, can, setters, photo.id]);
+  };
 
-  const thumbSrc = useMemo(() => 
-    getCacheBustedImageUrl(photo, 'thumb'),
-    [photo.thumbnail_sm_url, photo.image_url, photo.uri, photo.updated_at, photo.created_at]
-  );
+  const thumbSrc = getCacheBustedImageUrl(photo, 'thumb');
 
-  const is_hidden = useMemo(() => !!photo.is_hidden, [photo.is_hidden]);
+  const is_hidden = !!photo.is_hidden;
 
   const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isLongPressedRef = useRef(false);
   const isTouchRef = useRef(false);
 
-  const startPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const startPress = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isManagement || !can('photo:edit')) return;
     if (e.type === 'touchstart') {
       isTouchRef.current = true;
@@ -225,34 +318,27 @@ export const PhotoCard = React.memo(({
       isLongPressedRef.current = true;
       if ('vibrate' in navigator) navigator.vibrate(50);
     }, 500); 
-  }, [isManagement, can]);
+  };
 
-  const cancelPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const cancelPress = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isManagement) return;
     if (pressTimerRef.current) {
       clearTimeout(pressTimerRef.current);
       pressTimerRef.current = null;
     }
-  }, [isManagement]);
+  };
 
   const shouldEagerLoad = index < 10;
 
-  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+  const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     if (isManagement) {
       handleLongPress();
-    } else {
     }
     if ('vibrate' in navigator) navigator.vibrate(50);
-  }, [isManagement, handleLongPress]);
+  };
 
-  const handleTogglePinnedClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log('Pin button clicked for photo:', photo.id);
-    togglePinMutation.mutate();
-  }, [togglePinMutation, photo.id]);
-
-  const handleCardClick = useCallback((e: React.MouseEvent) => {
+  const handleCardClick = (e: React.MouseEvent) => {
     if (isManagement) {
       if (pressTimerRef.current) {
         clearTimeout(pressTimerRef.current);
@@ -268,7 +354,7 @@ export const PhotoCard = React.memo(({
     }
 
     handleClick(e);
-  }, [isManagement, handleClick]);
+  };
 
   return (
     <div 
@@ -295,19 +381,29 @@ export const PhotoCard = React.memo(({
       onTouchCancel={cancelPress}
       onClick={handleCardClick}
       className={cn(
-        "aspect-square overflow-hidden cursor-pointer relative shadow-sm transition-all duration-300 md:hover:shadow-md group bg-slate-50 rounded-lg",
-        "data-[selected=true]:ring-[3px] data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.98] data-[selected=true]:shadow-lg data-[selected=true]:z-10",
-        isManagement ? "md:hover:scale-[1.02] active:scale-[0.95]" : "active:scale-[0.95]",
-        isManagement && is_hidden && "ring-[3px] ring-yellow-200 shadow-md",
+        "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group bg-white rounded-2xl shadow-sm ring-1 ring-slate-100",
+        "before:absolute before:inset-0 before:z-30 before:pointer-events-none before:transition-all before:duration-300",
+        "md:hover:shadow-xl md:hover:scale-[1.01] active:scale-[0.98]",
+        "data-[selected=true]:ring-4 data-[selected=true]:ring-blue-500 data-[selected=true]:scale-[0.96] data-[selected=true]:z-10 data-[selected=true]:shadow-lg",
+        isManagement && is_hidden && "ring-2 ring-yellow-400/50 grayscale-[0.3]",
         className
       )}
     >
-      <div className="relative aspect-square w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]" style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}>
+      <div 
+        className={cn(
+          "relative aspect-square w-full h-full pointer-events-none transition-all duration-500",
+          "group-data-[selected=true]:opacity-60 group-data-[selected=true]:scale-90 group-data-[selected=true]:rounded-xl overflow-hidden"
+        )}
+        style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}
+      >
         <ResponsivePhoto
           photo={photo}
           variant="sm"
           aspectRatio={1}
-          imgClassName={`w-full h-full object-cover ${is_hidden ? 'opacity-70' : ''}`}
+          imgClassName={cn(
+            "w-full h-full object-cover transition-transform duration-700 group-hover:scale-110",
+            is_hidden && "opacity-60"
+          )}
         />
       </div>
 
@@ -327,38 +423,21 @@ export const PhotoCard = React.memo(({
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} variant={variant} showGroupsCollapsed={showGroupsCollapsed} />
+      <PhotoStatusBadges photo={photo} variant={variant} showGroupsCollapsed={showGroupsCollapsed} isPinned={!!photo.is_pinned} />
 
       {isManagement && can('photo:toggle-pinned') && (
-         <button 
-           onClick={handleTogglePinnedClick}
-           className="absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white group-data-[pinned=true]:text-red-500 z-20 hover:scale-115 active:scale-95 transition-transform"
-           data-pinned={photo.is_pinned ? 'true' : 'false'}
-         >
-           <Heart size={12} className={photo.is_pinned ? 'fill-current' : ''} />
-         </button>
+         <PinButton photoId={photo.id} isPinned={!!photo.is_pinned} />
       )}
 
       <PhotoInfoFooter 
         displayCatName={displayCatName} 
         photoTags={photoTags}
         hideTags={hideDetails}
+        categoryId={photo.category_id}
+        tagIds={photo.tag_ids}
       />
     </div>
   );
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.photo.id === nextProps.photo.id &&
-    prevProps.photo.thumb_hash === nextProps.photo.thumb_hash &&
-    prevProps.photo.is_hidden === nextProps.photo.is_hidden &&
-    prevProps.photo.is_pinned === nextProps.photo.is_pinned &&
-    prevProps.photo.categoryName === nextProps.photo.categoryName &&
-    (prevProps.photo.tagNames?.join(',') === nextProps.photo.tagNames?.join(',')) &&
-    prevProps.photo.group?.member_count === nextProps.photo.group?.member_count &&
-    prevProps.variant === nextProps.variant &&
-    prevProps.hideDetails === nextProps.hideDetails &&
-    prevProps.showGroupsCollapsed === nextProps.showGroupsCollapsed
-  );
-});
+};
 
 PhotoCard.displayName = 'PhotoCard';

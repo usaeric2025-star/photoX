@@ -18,7 +18,7 @@ interface SyncSectionProps {
   setAlertDialog: (d: DialogData | null) => void;
 }
 
-export const SyncSection: React.FC<SyncSectionProps> = ({
+export function SyncSection({
   user,
   loginWithGoogle,
   logout,
@@ -28,7 +28,7 @@ export const SyncSection: React.FC<SyncSectionProps> = ({
   cloudCount,
   isSyncing,
   setAlertDialog
-}) => {
+}: SyncSectionProps) {
   const { showSuccess } = useFeedback();
   
   return (

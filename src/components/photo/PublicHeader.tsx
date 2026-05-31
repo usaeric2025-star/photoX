@@ -28,7 +28,7 @@ interface PublicHeaderProps {
   setAdminPreviewMode?: (m: 'public' | 'private') => void;
 }
 
-export const PublicHeader: React.FC<PublicHeaderProps> = ({
+export function PublicHeader({
   variant,
   onRefresh,
   isRefreshing,
@@ -36,7 +36,7 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
   totalCount,
   loginWithGoogle,
   handleManageClick
-}) => {
+}: PublicHeaderProps) {
   const [user, setUser] = useState<any>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const { setActiveScreen } = useGalleryStore(useShallow(s => ({ setActiveScreen: s.setActiveScreen })));

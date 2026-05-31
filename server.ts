@@ -14,7 +14,7 @@ import { logTraffic } from "./src/lib/trafficCapture";
 const serverEnv = getServerEnv(process.env);
 
 export async function getR2Client() {
-  const r2Endpoint = serverEnv.R2_ENDPOINT || 'https://3e1f6d6a9c0f2526239f23a5809fc667.r2.cloudflarestorage.com';
+  const r2Endpoint = serverEnv.R2_ENDPOINT;
   let r2AccessKeyId = serverEnv.R2_ACCESS_KEY_ID || '';
   let r2SecretAccessKey = serverEnv.R2_SECRET_ACCESS_KEY || '';
   
@@ -24,9 +24,9 @@ export async function getR2Client() {
     r2SecretAccessKey = temp;
   }
 
-  if (!r2AccessKeyId || !r2SecretAccessKey) {
-    console.error("[getR2Client] R2 Credentials missing!");
-    throw new Error("R2 credentials missing (R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY)");
+  if (!r2AccessKeyId || !r2SecretAccessKey || !r2Endpoint) {
+    console.error("[getR2Client] R2 Credentials missing!", { endpoint: !!r2Endpoint, key: !!r2AccessKeyId, secret: !!r2SecretAccessKey });
+    throw new Error("R2 storage credentials missing. Please check R2_ENDPOINT, R2_ACCESS_KEY_ID, and R2_SECRET_ACCESS_KEY env variables.");
   }
 
   return new S3Client({
@@ -96,14 +96,18 @@ const apiRoutes = app
       const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/${photoId}.webp`;
       const s3Client = await getR2Client();
       
+      const bucketName = serverEnv.R2_BUCKET_NAME;
+      if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
+
       const command = new PutObjectCommand({
-        Bucket: serverEnv.R2_BUCKET_NAME || 'photox-storage',
+        Bucket: bucketName,
         Key: fileName,
         ContentType: contentType || 'image/webp',
       });
       
       const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 300 });
-      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev'}/${fileName}`;
+      if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
+      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
       
       return c.json({ success: true, data: { uploadUrl, publicUrl } });
     } catch(e: any) {
@@ -122,15 +126,20 @@ const apiRoutes = app
       const fileName = fileKey ? `photox/public/${fileKey}` : `photox/public/upload_${Date.now()}.webp`;
       const s3Client = await getR2Client();
       
+      const bucketName = serverEnv.R2_BUCKET_NAME;
+      if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
+      
       const command = new PutObjectCommand({
-        Bucket: serverEnv.R2_BUCKET_NAME || 'photox-storage',
+        Bucket: bucketName,
         Key: fileName,
         ContentType: contentType || 'image/webp',
+        Body: buffer
       });
       
       await s3Client.send(command);
       
-      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX || 'https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev'}/${fileName}`;
+      if (!serverEnv.R2_PUBLIC_URL_PREFIX) throw new Error("R2_PUBLIC_URL_PREFIX missing");
+      const publicUrl = `${serverEnv.R2_PUBLIC_URL_PREFIX}/${fileName}`;
       return c.json({ success: true, data: { publicUrl } });
     } catch(e: any) {
       return c.json({ success: false, error: e.message }, 500);
@@ -144,7 +153,8 @@ const apiRoutes = app
       }
       
       const s3Client = await getR2Client();
-      const bucketName = serverEnv.R2_BUCKET_NAME || 'photox-storage';
+      const bucketName = serverEnv.R2_BUCKET_NAME;
+      if (!bucketName) throw new Error("R2_BUCKET_NAME missing");
       
       await Promise.all(fileKeys.map(async (key) => {
           const command = new DeleteObjectCommand({
@@ -183,7 +193,8 @@ const apiRoutes = app
     try {
       const supabase = await getSupabaseAdmin();
       const s3Client = await getR2Client();
-      const bucket = serverEnv.R2_BUCKET_NAME || 'photox-storage';
+      const bucket = serverEnv.R2_BUCKET_NAME;
+      if (!bucket) throw new Error("R2_BUCKET_NAME missing");
 
       const { data: photos, error } = await supabase.from("furniture_items").select("id, image_url, thumb_url");
       if (error) throw error;
@@ -219,7 +230,8 @@ const apiRoutes = app
     try {
       const supabase = await getSupabaseAdmin();
       const s3Client = await getR2Client();
-      const bucket = serverEnv.R2_BUCKET_NAME || 'photox-storage';
+      const bucket = serverEnv.R2_BUCKET_NAME;
+      if (!bucket) throw new Error("R2_BUCKET_NAME missing");
 
       const { data: photos, error } = await supabase.from("furniture_items").select("image_url, thumb_url");
       if (error) throw error;

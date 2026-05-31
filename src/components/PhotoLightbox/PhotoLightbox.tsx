@@ -35,7 +35,7 @@ export interface PhotoLightboxProps {
  * Integrated with Base UI Dialog for accessibility.
  * LayoutGroup usually handled by parent but motion.div provides local transition.
  */
-export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
+export function PhotoLightbox(props: PhotoLightboxProps) {
   const {
     photoId, onClose, onPhotoIdChange,
     contactWhatsApp, displayPhotos: rawDisplayPhotos
@@ -136,11 +136,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
     const timer = setTimeout(() => {
       if (isImageLoading) {
         setIsImageLoading(false);
-        showError('图片加载超时，请检查网络连接。');
+        showError(new Error('Timeout'), translate.imageLoadFailed || 'Image load failed.');
       }
     }, 10000);
     return () => clearTimeout(timer);
-  }, [isImageLoading, index, showError]);
+  }, [isImageLoading, index, showError, translate.imageLoadFailed]);
 
   const isOpen = index !== null && !!activePhoto;
 
@@ -180,11 +180,11 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
                     transition={{ duration: 0.2 }}
                     className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
                   >
-                    {/* 始终可用的关闭按钮 */}
+                    {/* Always visible close button */}
                     <button
                       onClick={onClose}
                       className="fixed top-4 right-4 z-[501] w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full text-white flex items-center justify-center transition-all"
-                      aria-label="关闭"
+                      aria-label={translate.close}
                     >
                       <X size={20} />
                     </button>

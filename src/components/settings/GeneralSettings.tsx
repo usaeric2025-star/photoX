@@ -6,7 +6,7 @@ import { AppSettings, Category, Tag, Manufacturer, Photo } from '@/types';
 
 interface GeneralSettingsProps {
   settings: AppSettings;
-  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>, categories: Category[], tags: Tag[], manufacturers: Manufacturer[]) => Promise<void>;
+  handleLogoUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   categories: Category[];
   tags: Tag[];
   manufacturers: Manufacturer[];
@@ -18,7 +18,7 @@ interface GeneralSettingsProps {
   buttonStyles: any;
 }
 
-export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
+export function GeneralSettings({
   settings, 
   handleLogoUpload, 
   categories, 
@@ -30,7 +30,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
   cardClass,
   inputClass,
   buttonStyles
-}) => {
+}: GeneralSettingsProps) {
   return (
     <>
       <LogoSection 

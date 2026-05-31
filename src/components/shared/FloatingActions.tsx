@@ -21,7 +21,7 @@ interface FloatingActionsProps {
   contactWhatsApp?: () => void;
 }
 
-export const FloatingActions: React.FC<FloatingActionsProps> = ({
+export function FloatingActions({
   variant,
   onAdd,
   onBatchAiIdentify,
@@ -32,7 +32,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
   onClearSelection,
   scrollToTop,
   contactWhatsApp,
-}) => {
+}: FloatingActionsProps) {
   const { isMultiSelect, selectedIds } = useMultiSelect();
   const { can } = usePermission();
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';

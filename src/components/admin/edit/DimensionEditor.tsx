@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback } from 'react';
 import { Sparkles, X as CloseIcon } from 'lucide-react';
-import { Dimension } from '../../../types';
+import { Dimension, TranslationType } from '../../../types';
 import { safeArray } from '../../../lib/utils';
 
 interface DimensionEditorProps {
@@ -9,17 +9,17 @@ interface DimensionEditorProps {
   showAiButton?: boolean;
   isAnalyzing?: boolean;
   onAiAnalyze?: () => void;
-  t: any;
+  t: TranslationType;
 }
 
-export const DimensionEditor: React.FC<DimensionEditorProps> = ({
+export function DimensionEditor({
   dimensions,
   onChange,
   showAiButton,
   isAnalyzing,
   onAiAnalyze,
   t
-}) => {
+}: DimensionEditorProps) {
   const displayDims = useMemo(() => 
     dimensions.length > 0 ? dimensions : [{ label: '', length: 0, width: 0, height: 0, unit: 'cm' } as Dimension]
   , [dimensions]);

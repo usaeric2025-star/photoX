@@ -23,11 +23,11 @@ interface HeaderProps {
   isRunning?: boolean;
 }
 
-export const DrawerHeader: React.FC<HeaderProps> = ({
+export function DrawerHeader({
   editPhotoId, formState, updateForm, isAnalyzing, aiDebugInfo, 
   isPartOfGroup, isSyncing, onAbort, onAiAnalyze, onDelete, 
   onSave, onToggleHidden, onClose, onErrorClick, isRunning
-}) => {
+}: HeaderProps) {
   const { setAlertDialog } = useGalleryStore();
   return (
     <div className="px-4 py-3 border-b border-slate-200 bg-white shadow-sm flex items-center justify-between gap-3 min-h-[72px]">

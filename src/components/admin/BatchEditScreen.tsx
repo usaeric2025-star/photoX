@@ -1,7 +1,67 @@
-import React from 'react';
+import React, { useActionState, useOptimistic, startTransition, useEffect } from 'react';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
 import { useBatchEdit } from '@/hooks';
 import { BatchEditForm } from './edit/BatchEditForm';
+import { supabase } from '@/lib/supabase';
+import { reportError } from '@/lib/errorTracker';
+import { queryClient } from '@/lib/queryClient';
+import { photoKeys } from '@/lib/queryKeys';
+
+async function batchDeleteAction(prevState: { error: string | null; success?: boolean }, formData: FormData) {
+  const photoIdsStr = formData.get('photoIds') as string;
+  if (!photoIdsStr) return { error: null };
+  const photoIds = JSON.parse(photoIdsStr);
+  try {
+    const { error } = await supabase.from('furniture_items').delete().in('id', photoIds);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+    return { error: null, success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '删除失败';
+    reportError(err, 'BatchDeleteAction');
+    return { error: message, success: false };
+  }
+}
+
+function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {
+  const [state, formAction, isPending] = useActionState(batchDeleteAction, { error: null });
+  const [optimisticCount, setOptimisticCount] = useOptimistic(selectedIds.length);
+
+  useEffect(() => {
+    if (state.success) {
+      onSuccess();
+    }
+  }, [state.success, onSuccess]);
+
+  const handleDelete = () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`确认删除这 ${selectedIds.length} 项吗？`)) return;
+    
+    startTransition(() => {
+      setOptimisticCount(0);
+      const formData = new FormData();
+      formData.append('photoIds', JSON.stringify(selectedIds));
+      formAction(formData);
+    });
+  };
+
+  return (
+    <div className="relative">
+      <button 
+        onClick={handleDelete}
+        disabled={isPending || optimisticCount === 0}
+        className="h-10 px-3 bg-red-50 text-red-500 
+        rounded-xl flex items-center justify-center gap-1.5
+        active:bg-red-100 transition-colors disabled:opacity-50 text-sm font-bold"
+        title="批量删除"
+      >
+        <Trash2 size={16} />
+        {isPending ? '删除中...' : `删除 (${optimisticCount})`}
+      </button>
+      {state.error && <span className="absolute top-full left-0 mt-1 min-w-max text-[10px] bg-red-500 text-white px-2 py-1 rounded shadow">{state.error}</span>}
+    </div>
+  );
+}
 
 export const BatchEditScreen = () => {
   const {
@@ -30,16 +90,7 @@ export const BatchEditScreen = () => {
         
         <div className="flex items-center gap-2">
           {(logic.handleDeletePhotos as any) && (
-            <button 
-              onClick={handleDelete}
-              disabled={isLocalSaving || isSyncing}
-              className="w-10 h-10 bg-red-50 text-red-500 
-              rounded-xl flex items-center justify-center 
-              active:bg-red-100 transition-colors disabled:opacity-50"
-              title="批量删除"
-            >
-              <Trash2 size={18} />
-            </button>
+            <BatchDeleteButton selectedIds={batchEditIds} onSuccess={handleClose} />
           )}
 
           <button onClick={handleSave}

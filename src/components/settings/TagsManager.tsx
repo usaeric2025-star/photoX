@@ -18,6 +18,6 @@ interface TagsManagerProps {
   buttonStyles: any;
 }
 
-export const TagsManager: React.FC<TagsManagerProps> = (props) => {
+export function TagsManager(props: TagsManagerProps) {
   return <TagsSection {...props} />;
 };

@@ -51,7 +51,7 @@ const MemoizedFooter = React.memo(({
 });
 MemoizedFooter.displayName = 'MemoizedFooter';
 
-export const GroupGridView: React.FC<GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }> = ({
+export function GroupGridView({
   photos,
   groupData,
   onPhotoClick,
@@ -64,7 +64,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtualGridRef?: Rea
   isFetchingNextPage,
   hasNextPage,
   variant = 'public-showcase'
-}) => {
+}: GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }) {
   const { lang, columns } = useGalleryStore(useShallow(s => ({
     lang: s.appLang,
     columns: s.columns

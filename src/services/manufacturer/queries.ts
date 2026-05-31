@@ -11,8 +11,8 @@ export const loadManufacturersFromCloud = async (): Promise<Manufacturer[]> => {
   if (error) {
     return [];
   }
-  const result = (data || []).map((m: any) => ({
-    ...m,
+  const result = (data || []).map((m) => ({
+    ...(m as Manufacturer),
     id: String(m.id)
   }));
   return result;

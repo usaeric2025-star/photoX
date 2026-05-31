@@ -7,20 +7,15 @@ export { usePermission } from './core/auth/usePermission';
 export { useSyncEngine } from './core/infra/useSyncEngine';
 export { useAdminMode } from './core/auth/useAdminMode';
 export { usePhotoAction } from './core/usePhotoAction';
-export { useGroupAction } from './core/useGroupAction';
 export { useScrollRestoration } from '../core/infra/useScrollRestoration';
-export { useFormValidation } from '../core/infra/useFormValidation';
 
 // Features Hooks
 export { useToast, useFeedback } from './useToast';
 export { useClickOutside } from './useClickOutside';
 export { useLongPress } from './useLongPress';
-export { useMountedRef } from './useMountedRef';
 export { usePhotoFilters } from './usePhotoFilters';
-export { usePhotoFingerprint, useImageHash } from './usePhotoFingerprint';
 export { useDebouncedSearch } from './useDebouncedSearch';
 export { useStaticData } from './useStaticData';
-export { useEnrichedPhotos } from './useEnrichedPhotos';
 export { useBatchEdit } from '../features/photo/useBatchEdit';
 export { useBatchConfirmation as useBatchConfirmDialog } from '../features/photo/useBatchConfirmDialog';
 export { useMultiSelect } from '../features/photo/usePhotoSelection';

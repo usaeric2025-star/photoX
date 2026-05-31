@@ -13,7 +13,7 @@ interface PublicFiltersProps {
   showGroupsCollapsed: boolean;
 }
 
-export const PublicFilters: React.FC<PublicFiltersProps> = (props) => {
+export function PublicFilters(props: PublicFiltersProps) {
   return (
     <div className="flex flex-col bg-white border-b border-slate-200">
       <div className="flex items-center gap-2 p-3">

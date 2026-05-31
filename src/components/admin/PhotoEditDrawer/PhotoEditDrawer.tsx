@@ -31,7 +31,7 @@ interface PhotoEditDrawerProps {
   };
 }
 
-export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
+export function PhotoEditDrawer({ slots }: PhotoEditDrawerProps) {
   const { filters } = useFilters();
   const { categoryId: filterCatId, tagIds: filterTagIds, searchQuery: debouncedSearchQuery } = filters;
   
@@ -53,7 +53,7 @@ export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
 
   const adminActions = useAdminActions();
   const onDeletePhoto = (id: string) => adminActions.deletePhoto([id]);
-  const onUpdatePhoto = (id: string, data: any) => adminActions.updatePhoto(id, data);
+  const onUpdatePhoto = (id: string, data: Partial<Photo>) => adminActions.updatePhoto(id, data);
   const onAiAnalyze = (photo: Photo) => {};
   const onCancelAnalyze = () => {};
 
@@ -127,11 +127,11 @@ export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
     }, 
     saveNewPhoto: async () => {
       if (editPhotoId && onUpdatePhoto) {
-        const updates: any = { ...formState };
+        const updates: Partial<Photo> & { uri?: string } = { ...formState };
         if (newPhotoData) {
           updates.uri = newPhotoData;
         }
-        await onUpdatePhoto(editPhotoId, updates);
+        await onUpdatePhoto(editPhotoId, updates as Partial<Photo>);
         setNewPhotoData(null);
         setEditPhotoId(null);
       }

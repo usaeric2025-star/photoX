@@ -1,188 +1,71 @@
 import { useCallback, useRef, useState } from 'react';
 
-export interface UseLongPressOptions {
-  delay?: number;
-  shouldPreventDefault?: boolean;
-}
-
 export const useLongPress = <T = any>(
-  onLongPress: (itemOrEvent: any) => void,
-  onClick?: (itemOrEvent: any) => void,
-  options: UseLongPressOptions = {}
+  onLongPress: (item: T, e?: any) => void,
+  onClick?: (item: T, e?: any) => void,
+  options: { delay?: number; shouldPreventDefault?: boolean } = {}
 ) => {
   const { delay = 500, shouldPreventDefault = true } = options;
+  const timeout = useRef<NodeJS.Timeout | null>(null);
+  const target = useRef<EventTarget | null>(null);
+  const activeItemRef = useRef<T | null>(null);
+  
+  const [activeItem, setActiveItemState] = useState<T | null>(null);
+  const longPressTriggered = useRef(false);
 
-  // legacy state support for TagEditor/FormShared
-  const [activeItem, setActiveItem] = useState<T | null>(null);
-  const [, setHasLongPressedState] = useState(false);
-  const hasLongPressedRef = useRef(false);
+  const setActiveItem = useCallback((item: T | null) => {
+    activeItemRef.current = item;
+    setActiveItemState(item);
+  }, []);
 
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressedRef = useRef(false);
-  const isTouchRef = useRef(false);
-  const startCoordsRef = useRef<{ x: number; y: number } | null>(null);
-
-  // New API: Start press triggering
   const start = useCallback(
-    (event: React.MouseEvent | React.TouchEvent, item?: T) => {
-      if (event.type === 'touchstart') {
-        isTouchRef.current = true;
-        const touch = (event as React.TouchEvent).touches[0];
-        if (touch) {
-          startCoordsRef.current = { x: touch.clientX, y: touch.clientY };
-        }
-      } else if (isTouchRef.current && event.type === 'mousedown') {
-        return; // Ignore simulated mouse events on touch screens
+    (item: T, e?: any) => {
+      setActiveItem(item);
+      if (shouldPreventDefault && e && e.target) {
+        e.target.addEventListener('touchend', preventDefault, { passive: false });
+        target.current = e.target;
       }
-
-      isLongPressedRef.current = false;
-      hasLongPressedRef.current = false;
-      setHasLongPressedState(false);
-
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      timeoutRef.current = setTimeout(() => {
-        isLongPressedRef.current = true;
-        hasLongPressedRef.current = true;
-        setHasLongPressedState(true);
-        if (item !== undefined) {
-          onLongPress(item);
-        } else {
-          onLongPress(event);
-        }
-        if ('vibrate' in navigator) {
-          try {
-            navigator.vibrate(50);
-          } catch (e) {
-            // Ignore sandboxing restrictions in nested iframe contexts
-          }
-        }
+      longPressTriggered.current = false;
+      timeout.current = setTimeout(() => {
+        onLongPress(item, e);
+        longPressTriggered.current = true;
       }, delay);
     },
-    [onLongPress, delay]
+    [onLongPress, delay, shouldPreventDefault, setActiveItem]
   );
 
-  // Legacy API: startPress supporting passing an item first
-  const startPress = useCallback(
-    (item: T, event?: React.MouseEvent | React.TouchEvent) => {
-      if (event) {
-        start(event, item);
-      } else {
-        isLongPressedRef.current = false;
-        hasLongPressedRef.current = false;
-        setHasLongPressedState(false);
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = setTimeout(() => {
-          isLongPressedRef.current = true;
-          hasLongPressedRef.current = true;
-          setHasLongPressedState(true);
-          onLongPress(item);
-          if ('vibrate' in navigator) {
-            try {
-              navigator.vibrate(50);
-            } catch (e) {
-              // Ignore sandboxing restrictions
-            }
-          }
-        }, delay);
-      }
-    },
-    [start, onLongPress, delay]
-  );
-
-  // New API: Clear press triggering
   const clear = useCallback(
-    (event: React.MouseEvent | React.TouchEvent, shouldTriggerClick = true) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-
-      if (isLongPressedRef.current) {
-        if (shouldPreventDefault && event.cancelable) {
-          event.preventDefault();
-        }
-        isLongPressedRef.current = false;
-        return;
-      }
-
-      // Automatically reset long pressed ref after clear turns are completed to allow next presses
-      setTimeout(() => {
-        hasLongPressedRef.current = false;
-      }, 0);
-
-      if (shouldTriggerClick && onClick) {
-        onClick(event);
+    (e?: any, shouldTriggerClick = true) => {
+      timeout.current && clearTimeout(timeout.current);
+      shouldTriggerClick && !longPressTriggered.current && onClick && activeItemRef.current && onClick(activeItemRef.current, e);
+      longPressTriggered.current = false;
+      if (shouldPreventDefault && target.current) {
+        target.current.removeEventListener('touchend', preventDefault);
       }
     },
-    [onClick, shouldPreventDefault]
+    [shouldPreventDefault, onClick]
   );
 
-  // Legacy API events: endPress, cancelPress, handleTouchMove
-  const endPress = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+  const preventDefault = (e: any) => {
+    if (!('touches' in e) || e.touches.length < 2 && e.preventDefault) {
+      e.preventDefault();
     }
-    isLongPressedRef.current = false;
-  }, []);
-
-  const cancelPress = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    isLongPressedRef.current = false;
-  }, []);
-
-  const handleTouchMove = useCallback((event: React.TouchEvent | any) => {
-    // Only cancel if touch has moved significantly (e.g. over 12px) to withstand natural finger tremors
-    if (startCoordsRef.current && event?.touches?.[0]) {
-      const touch = event.touches[0];
-      const dx = touch.clientX - startCoordsRef.current.x;
-      const dy = touch.clientY - startCoordsRef.current.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < 12) {
-        return; // Retain long press timer
-      }
-    }
-    
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
-
-  const handleContextMenu = useCallback(
-    (event: React.MouseEvent) => {
-      if (shouldPreventDefault) {
-        event.preventDefault();
-      }
-    },
-    [shouldPreventDefault]
-  );
+  };
 
   return {
-    // New API Spread bindings
-    onMouseDown: start,
-    onTouchStart: start,
-    onMouseUp: (e: React.MouseEvent) => clear(e, true),
-    onTouchEnd: (e: React.TouchEvent) => clear(e, true),
-    onMouseLeave: (e: React.MouseEvent) => clear(e, false),
-    onTouchMove: (e: React.TouchEvent) => clear(e, false),
-    onTouchCancel: (e: React.TouchEvent) => clear(e, false),
-    onContextMenu: handleContextMenu,
-
-    // Legacy support elements
-    startPress,
-    endPress,
-    cancelPress,
-    handleTouchMove,
-    hasLongPressed: hasLongPressedRef,
+    onMouseDown: (item: T, e?: any) => start(item, e),
+    onTouchStart: (item: T, e?: any) => start(item, e),
+    onMouseUp: (e?: any) => clear(e),
+    onMouseLeave: (e?: any) => clear(e, false),
+    onTouchEnd: (e?: any) => clear(e),
+    onTouchCancel: (e?: any) => clear(e, false),
+    onTouchMove: (e?: any) => clear(e, false),
+    onContextMenu: (e?: any) => e?.preventDefault?.(),
+    startPress: start,
+    endPress: clear,
+    cancelPress: (e?: any, trigger?: boolean) => clear(e, trigger),
+    handleTouchMove: (e?: any, trigger?: boolean) => clear(e, trigger),
+    hasLongPressed: longPressTriggered,
     activeItem,
     setActiveItem,
   };

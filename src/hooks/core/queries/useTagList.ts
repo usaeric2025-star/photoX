@@ -15,7 +15,7 @@ export const useTagList = () => {
       syncCache.saveTags(tags).catch(() => {});
       return tags;
     },
-    staleTime: createStaleTime('STABLE'),
+    staleTime: createStaleTime('INFINITY'),
     gcTime: 10 * 60 * 1000,
     placeholderData: keepPreviousData,
   });

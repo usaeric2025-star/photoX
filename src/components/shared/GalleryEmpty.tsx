@@ -1,12 +1,13 @@
 import React from 'react';
 import { ImageIcon } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { TranslationType } from '../../types';
 
 interface GalleryEmptyProps {
-  t: any;
+  t: TranslationType;
 }
 
-export const GalleryEmpty: React.FC<GalleryEmptyProps> = ({ t }) => {
+export function GalleryEmpty({ t }: GalleryEmptyProps) {
   return (
     <EmptyState
       title={t.empty}

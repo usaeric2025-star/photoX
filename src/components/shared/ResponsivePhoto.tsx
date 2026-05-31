@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Photo } from '@/types';
 import { thumbHashToDataURL } from '@/lib/image/thumbHash';
 import { ContractedImage } from './ContractedImage';
+import { ImageOff } from 'lucide-react';
 
 interface ResponsivePhotoProps {
   photo: Photo;
@@ -11,14 +12,16 @@ interface ResponsivePhotoProps {
   imgClassName?: string;
 }
 
-export const ResponsivePhoto: React.FC<ResponsivePhotoProps> = ({ 
+export function ResponsivePhoto({ 
   photo, 
   variant, 
   aspectRatio, 
   className = '',
   imgClassName = ''
-}) => {
-  const [isLoaded, setIsLoaded] = React.useState(false);
+}: ResponsivePhotoProps) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
   const src = variant === 'md' 
     ? (photo.thumbnail_md_url || photo.thumbnail_sm_url || photo.image_url)
     : (photo.thumbnail_sm_url || photo.image_url || photo.uri);
@@ -44,7 +47,7 @@ export const ResponsivePhoto: React.FC<ResponsivePhotoProps> = ({
         contain: 'layout style paint' 
       }}
     >
-      {placeholderDataUrl && (
+      {placeholderDataUrl && !hasError && (
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center pointer-events-none filter blur-lg scale-105 transition-opacity duration-500 ease-in-out"
           style={{ 
@@ -54,25 +57,35 @@ export const ResponsivePhoto: React.FC<ResponsivePhotoProps> = ({
           }}
         />
       )}
-      {src && (
-        <ContractedImage
-          src={src}
-          alt={photo.name || 'Photo'}
-          width={variant === 'md' ? [320, 640, 800] : [320, 640]}
-          aspectRatio={String(aspectRatio)}
 
-          onLoad={async (e: any) => {
-             if (e.target instanceof HTMLImageElement) {
-                await e.target.decode().catch(() => {});
-             }
-             setIsLoaded(true);
-          }}
-          className={`${imgClassName} absolute inset-0 z-10 w-full h-full transition-opacity duration-300 ease-out`}
-          style={{ 
-             opacity: isLoaded ? 1 : 0,
-             willChange: 'opacity' 
-          }}
-        />
+      {hasError ? (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-50">
+          <ImageOff size={24} className="text-slate-300" />
+        </div>
+      ) : (
+        src && (
+          <ContractedImage
+            src={src}
+            alt={photo.name || 'Photo'}
+            width={variant === 'md' ? [320, 640, 800] : [320, 640]}
+            aspectRatio={String(aspectRatio)}
+  
+            onLoad={async (e: any) => {
+               if (e.target instanceof HTMLImageElement) {
+                  await e.target.decode().catch(() => {});
+               }
+               setIsLoaded(true);
+            }}
+            onError={() => {
+              setHasError(true);
+            }}
+            className={`${imgClassName} absolute inset-0 z-10 w-full h-full transition-opacity duration-300 ease-out`}
+            style={{ 
+               opacity: isLoaded ? 1 : 0,
+               willChange: 'opacity' 
+            }}
+          />
+        )
       )}
     </div>
   );

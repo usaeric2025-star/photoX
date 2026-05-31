@@ -6,7 +6,7 @@ interface PhotoGridSkeletonProps {
   count?: number;
 }
 
-export const PhotoGridSkeleton: React.FC<PhotoGridSkeletonProps> = ({ columns, count = 12 }) => {
+export function PhotoGridSkeleton({ columns, count = 12 }: PhotoGridSkeletonProps) {
   return (
     <div 
       className="grid gap-2 sm:gap-4 p-2 sm:p-4"

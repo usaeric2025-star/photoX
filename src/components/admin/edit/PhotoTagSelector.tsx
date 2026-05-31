@@ -14,14 +14,14 @@ interface PhotoTagSelectorProps {
   deleteTag: (id: string) => Promise<any>;
 }
 
-export const PhotoTagSelector: React.FC<PhotoTagSelectorProps> = ({
+export function PhotoTagSelector({
   tags,
   selectedTagIds,
   onChange,
   addTag,
   updateTag,
   deleteTag
-}) => {
+}: PhotoTagSelectorProps) {
   const { setPromptDialog } = useGalleryStore();
   const { showError } = useFeedback();
 

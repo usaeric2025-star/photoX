@@ -9,7 +9,15 @@ export default defineConfig(({mode}) => {
   return {
     base: '/',
     plugins: [
-      react(), 
+      react({
+        babel: {
+          plugins: [
+            ['babel-plugin-react-compiler', {
+              target: '19'
+            }]
+          ]
+        }
+      }), 
       tailwindcss(),
     ],
     build: {

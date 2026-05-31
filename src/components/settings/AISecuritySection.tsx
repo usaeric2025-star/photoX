@@ -16,7 +16,7 @@ interface AISecuritySectionProps {
   inputClass: string;
 }
 
-export const AISecuritySection: React.FC<AISecuritySectionProps> = ({
+export function AISecuritySection({
   geminiApiKey,
   setGeminiApiKey,
   customModel,
@@ -28,7 +28,7 @@ export const AISecuritySection: React.FC<AISecuritySectionProps> = ({
   setSettingField,
   cardClass,
   inputClass
-}) => {
+}: AISecuritySectionProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <details className="group [&_summary::-webkit-details-marker]:hidden bg-white rounded-[32px] shadow-sm border border-brand-navy/10" id="section-ai">

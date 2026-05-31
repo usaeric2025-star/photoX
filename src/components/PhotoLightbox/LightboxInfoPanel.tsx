@@ -31,12 +31,12 @@ interface LightboxInfoPanelProps {
   contactWhatsApp?: (photo: Photo) => void;
 }
 
-export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
+export function LightboxInfoPanel({
   photo, groupData, isGroupDataLoading, activeLang, setActiveLang,
   isAdminMode, isCopied, isAnalyzing, t, categories,
   manufacturers, tagMap, handleShare, onAiAnalyze, onCancelAnalyze,
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
-}) => {
+}: LightboxInfoPanelProps) {
   
   const { setEditPhotoId } = useGalleryStore(useShallow(s => ({ setEditPhotoId: s.setEditPhotoId })));
   const onEditPhoto = (p: Photo) => setEditPhotoId(p.id);
@@ -68,9 +68,9 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
         await onAiAnalyze(photo);
       }
     } catch (err) {
-      handleError(err as Error, 'AI分析失败');
+      handleError(err as Error, t.aiAnalyzeFailed || 'AI Analysis Failed');
     }
-  }, [onAiAnalyze, photo, handleError]);
+  }, [onAiAnalyze, photo, handleError, t.aiAnalyzeFailed]);
 
 
   return (
@@ -94,7 +94,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
             <button
               onClick={handleShare}
               className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${isCopied ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-              title="Copy Direct Link"
+              title={t.copyLink || 'Copy Direct Link'}
             >
               {isCopied ? <Check size={16} /> : <Share2 size={16} />}
             </button>
@@ -281,7 +281,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
 
         {(isAdminMode) && photo.manual_code && (
           <div className="bg-red-50 border border-red-100 p-3 rounded-xl mt-4">
-            <h3 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Internal Reference</h3>
+            <h3 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">{t.internalRef || 'Internal Reference'}</h3>
             <p className="font-mono font-black text-red-600 tracking-wider uppercase">{photo.manual_code}</p>
           </div>
         )}
@@ -307,4 +307,4 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
       )}
     </motion.div>
   );
-});
+}

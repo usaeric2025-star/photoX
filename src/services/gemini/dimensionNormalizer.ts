@@ -1,6 +1,6 @@
 import { Dimension } from '../../types';
 
-export function isPlaceholderDimension(dim: any): boolean {
+export function isPlaceholderDimension(dim: Partial<Dimension> | null | undefined): boolean {
   if (!dim) return true;
   const label = String(dim.label || '').trim();
   if (label === '' || label === '-') return true;

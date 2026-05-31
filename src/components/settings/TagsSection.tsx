@@ -25,7 +25,7 @@ interface TagsSectionProps {
   buttonStyles: { accent: string };
 }
 
-export const TagsSection: React.FC<TagsSectionProps> = ({
+export function TagsSection({
   tags,
   settings,
   addTag,
@@ -39,7 +39,7 @@ export const TagsSection: React.FC<TagsSectionProps> = ({
   debouncedSave,
   cardClass,
   buttonStyles
-}) => {
+}: TagsSectionProps) {
   const { setPromptDialog } = useGalleryStore();
   const { showSuccess, showError } = useFeedback();
   const { runTask } = useTaskExecutor();

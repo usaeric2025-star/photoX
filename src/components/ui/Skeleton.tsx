@@ -1,32 +1,36 @@
 import React from 'react';
 
-export const Skeleton: React.FC<{ className?: string, children?: React.ReactNode }> = ({ className, children }) => (
-  <div 
-    className={`bg-brand-navy/10 rounded-md animate-pulse ${className}`}
-  >
-    {children}
-  </div>
-);
-
-export const PhotoCardSkeleton: React.FC = () => (
-  <div 
-    className="aspect-square w-full bg-brand-navy/5 rounded-xl overflow-hidden relative border border-brand-navy/[0.03] animate-pulse"
-  >
-    {/* Shimmer effect Overlay */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-    {/* Image Placeholder */}
-    <div className="absolute inset-0 bg-brand-navy/5 flex items-center justify-center">
-      <div className="w-12 h-12 rounded-full border-2 border-brand-navy/5" />
+export function Skeleton({ className, children }: { className?: string, children?: React.ReactNode }) {
+  return (
+    <div 
+      className={`bg-brand-navy/10 rounded-md animate-pulse ${className}`}
+    >
+      {children}
     </div>
+  );
+}
 
-    {/* Text Placeholders */}
-    <div className="absolute bottom-0 left-0 w-full p-3 space-y-2 bg-gradient-to-t from-brand-navy/10 to-transparent">
-      <div className="h-4 w-3/4 bg-brand-navy/10 rounded-full" />
-      <div className="flex gap-2">
-        <div className="h-2 w-12 bg-brand-navy/5 rounded-full" />
-        <div className="h-2 w-12 bg-brand-navy/5 rounded-full" />
+export function PhotoCardSkeleton() {
+  return (
+    <div 
+      className="aspect-square w-full bg-brand-navy/5 rounded-xl overflow-hidden relative border border-brand-navy/[0.03] animate-pulse"
+    >
+      {/* Shimmer effect Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+  
+      {/* Image Placeholder */}
+      <div className="absolute inset-0 bg-brand-navy/5 flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full border-2 border-brand-navy/5" />
+      </div>
+  
+      {/* Text Placeholders */}
+      <div className="absolute bottom-0 left-0 w-full p-3 space-y-2 bg-gradient-to-t from-brand-navy/10 to-transparent">
+        <div className="h-4 w-3/4 bg-brand-navy/10 rounded-full" />
+        <div className="flex gap-2">
+          <div className="h-2 w-12 bg-brand-navy/5 rounded-full" />
+          <div className="h-2 w-12 bg-brand-navy/5 rounded-full" />
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+}

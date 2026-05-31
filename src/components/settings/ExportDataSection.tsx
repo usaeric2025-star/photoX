@@ -15,9 +15,9 @@ interface ExportDataSectionProps {
   handleDeduplicate: () => Promise<void>;
 }
 
-export const ExportDataSection: React.FC<ExportDataSectionProps> = ({
+export function ExportDataSection({
   photos, categories, tags, manufacturers, isSyncing, user, cardClass, buttonStyles, handleDeduplicate
-}) => {
+}: ExportDataSectionProps) {
   const { showError } = useFeedback();
   return (
     <div className={cardClass}>

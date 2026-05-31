@@ -13,7 +13,7 @@ const sizeClasses = {
   lg: 'w-8 h-8',
 };
 
-export const Spinner: React.FC<SpinnerProps> = ({ className, size = 'md' }) => {
+export function Spinner({ className, size = 'md' }: SpinnerProps) {
   return (
     <Loader2 className={cn('animate-spin text-slate-400', sizeClasses[size], className)} />
   );

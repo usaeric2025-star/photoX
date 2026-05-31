@@ -18,12 +18,12 @@ interface GroupPhotoPickerProps {
   onAdd: (photoIds: string[]) => Promise<void>;
 }
 
-export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
+export function GroupPhotoPicker({
   isOpen,
   onClose,
   groupId,
   onAdd
-}) => {
+}: GroupPhotoPickerProps) {
   const [search, setSearch] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const handlePhotoImport = async (e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean, groupId?: string) => {};

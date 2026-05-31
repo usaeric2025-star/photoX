@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useCategoryList, useTagList, useManufacturerList } from '@/hooks';
 import { Category, Tag, Manufacturer } from '@/types';
 
@@ -7,11 +6,9 @@ export function useStaticData() {
   const { data: tags = [] } = useTagList();
   const { data: manufacturers = [] } = useManufacturerList();
 
-  return useMemo(() => {
-    const categoryMap = new Map<string, Category>(categories.map(c => [String(c.id), c]));
-    const tagMap = new Map<string, Tag>(tags.map(t => [String(t.id), t]));
-    const manufacturerMap = new Map<string, Manufacturer>(manufacturers.map(m => [String(m.id), m]));
+  const categoryMap = new Map<string, Category>(categories.map(c => [String(c.id), c]));
+  const tagMap = new Map<string, Tag>(tags.map(t => [String(t.id), t]));
+  const manufacturerMap = new Map<string, Manufacturer>(manufacturers.map(m => [String(m.id), m]));
 
-    return { categoryMap, tagMap, manufacturerMap };
-  }, [categories, tags, manufacturers]);
+  return { categoryMap, tagMap, manufacturerMap };
 }

@@ -3,6 +3,9 @@ import { Upload, Settings, Trash2, CheckSquare } from 'lucide-react';
 import { BaseFilters } from './BaseFilters';
 import { FilterPanel } from './FilterPanel';
 
+import { useGalleryStore } from '@/store/galleryStore';
+import { translations } from '@/lib/translations';
+
 interface AdminFiltersProps {
   onSearch: (query: string) => void;
   searchQuery: string;
@@ -20,7 +23,7 @@ interface AdminFiltersProps {
   selectedCount?: number;
 }
 
-export const AdminFilters: React.FC<AdminFiltersProps> = ({
+export function AdminFilters({
   onUpload,
   onSettings,
   onBatchDelete,
@@ -28,7 +31,10 @@ export const AdminFilters: React.FC<AdminFiltersProps> = ({
   isMultiSelect,
   selectedCount = 0,
   ...baseProps
-}) => {
+}: AdminFiltersProps) {
+  const appLang = useGalleryStore(s => s.appLang);
+  const t = (translations as any)[appLang];
+
   return (
     <div className="flex flex-col bg-white border-b border-slate-200">
       <div className="flex items-center gap-2 p-3">
@@ -39,7 +45,7 @@ export const AdminFilters: React.FC<AdminFiltersProps> = ({
             <button
               onClick={onUpload}
               className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-              title="上传"
+              title={t.upload}
             >
               <Upload size={18} className="text-slate-600" />
             </button>
@@ -49,7 +55,7 @@ export const AdminFilters: React.FC<AdminFiltersProps> = ({
             <button
               onClick={onMultiSelect}
               className={`p-2 rounded-lg transition-colors ${isMultiSelect ? 'bg-blue-500 text-white' : 'hover:bg-slate-100'}`}
-              title="多选"
+              title={t.multiSelect}
             >
               <CheckSquare size={18} />
             </button>
@@ -59,7 +65,7 @@ export const AdminFilters: React.FC<AdminFiltersProps> = ({
             <button
               onClick={onBatchDelete}
               className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
-              title={`删除 ${selectedCount} 项`}
+              title={t.deleteSelected(selectedCount)}
             >
               <Trash2 size={18} />
             </button>
@@ -69,7 +75,7 @@ export const AdminFilters: React.FC<AdminFiltersProps> = ({
             <button
               onClick={onSettings}
               className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-              title="设置"
+              title={t.settings}
             >
               <Settings size={18} className="text-slate-600" />
             </button>

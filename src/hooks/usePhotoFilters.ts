@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Photo, Category, Tag } from '@/types';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { filterPhotos, groupPhotos } from '@/lib/filters';
@@ -36,55 +35,36 @@ export function usePhotoFilters(
     ? options.showGroupsCollapsed
     : filters.showGroupsCollapsed;
 
-  const searchMaps = useMemo(() => {
-    const tMap = new Map<string, string[]>();
-    tags.forEach(t => {
-      const terms = [t.name.toLowerCase()];
-      if (Array.isArray(t.aliases)) {
-        t.aliases.forEach(a => terms.push(a.toLowerCase()));
-      }
-      tMap.set(String(t.id), terms);
-    });
+  const tagMap = new Map<string, string[]>();
+  tags.forEach(t => {
+    const terms = [t.name.toLowerCase()];
+    if (Array.isArray(t.aliases)) {
+      t.aliases.forEach(a => terms.push(a.toLowerCase()));
+    }
+    tagMap.set(String(t.id), terms);
+  });
     
-    const cMap = new Map<string, string[]>();
-    categories.forEach(c => {
-      const terms = [(c.name || '').toLowerCase()];
-      if (Array.isArray(c.aliases)) {
-        c.aliases.forEach(a => terms.push(a.toLowerCase()));
-      }
-      cMap.set(String(c.id), terms);
-    });
+  const catMap = new Map<string, string[]>();
+  categories.forEach(c => {
+    const terms = [(c.name || '').toLowerCase()];
+    if (Array.isArray(c.aliases)) {
+      c.aliases.forEach(a => terms.push(a.toLowerCase()));
+    }
+    catMap.set(String(c.id), terms);
+  });
 
-    return { tagMap: tMap, catMap: cMap };
-  }, [tags, categories]);
-
-  const { displayPhotos, gridPhotos } = useMemo(() => {
-    const validPhotos = (incomingPhotos || []).filter(isValidPhoto);
+  const validPhotos = (incomingPhotos || []).filter(isValidPhoto);
     
-    const dp = filterPhotos(validPhotos, {
-      searchQuery: filters.searchQuery,
-      filterCatId: filters.categoryId,
-      filterSubId,
-      filterTagIds: filters.tagIds,
-      sortOrder,
-      isAdminMode: effectiveIsAdminMode,
-    }, tags, categories, searchMaps.tagMap, searchMaps.catMap);
+  const displayPhotos = filterPhotos(validPhotos, {
+    searchQuery: filters.searchQuery,
+    filterCatId: filters.categoryId,
+    filterSubId,
+    filterTagIds: filters.tagIds,
+    sortOrder,
+    isAdminMode: effectiveIsAdminMode,
+  }, tags, categories, tagMap, catMap);
 
-    const gp = groupPhotos(dp, showGroups, sortOrder, validPhotos);
-    return { displayPhotos: dp, gridPhotos: gp };
-  }, [
-    incomingPhotos, 
-    filters.searchQuery, 
-    filters.categoryId, 
-    filterSubId, 
-    filters.tagIds, 
-    sortOrder, 
-    effectiveIsAdminMode, 
-    tags, 
-    categories, 
-    showGroups,
-    searchMaps
-  ]);
+  const gridPhotos = groupPhotos(displayPhotos, showGroups, sortOrder, validPhotos);
 
-  return useMemo(() => ({ displayPhotos, gridPhotos }), [displayPhotos, gridPhotos]);
+  return { displayPhotos, gridPhotos };
 }

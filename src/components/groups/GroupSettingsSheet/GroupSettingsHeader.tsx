@@ -5,17 +5,17 @@ import { ProductGroup, DialogData } from '../../../types';
 import { saveGroup as saveGroupToCloud } from '@/services/group/commands';
 import { useFeedback, useTaskExecutor, useTasks } from '../../../hooks';
 
-export const GroupSettingsHeader: React.FC<{
+export function GroupSettingsHeader({
+  groupData, activeGroupId, onUngroup, setActiveGroupId, setShowGroupSettings,
+  setAlertDialog
+}: {
   groupData: ProductGroup | null;
   activeGroupId: string | null;
   onUngroup?: (groupId: string) => void;
   setActiveGroupId: (id: string | null) => void;
   setShowGroupSettings: (show: boolean) => void;
   setAlertDialog: (d: DialogData | null) => void;
-}> = ({
-  groupData, activeGroupId, onUngroup, setActiveGroupId, setShowGroupSettings,
-  setAlertDialog
-}) => {
+}) {
   const { showError: handleError } = useFeedback();
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();

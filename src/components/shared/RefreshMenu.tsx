@@ -1,15 +1,16 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle2, FileText } from 'lucide-react';
+import { TranslationType } from '../../types';
 
 interface RefreshMenuProps {
   show: boolean;
   isInfiniteMode: boolean;
-  t: any;
+  t: TranslationType;
   toggleInfinite: () => void;
 }
 
-export const RefreshMenu: React.FC<RefreshMenuProps> = ({ show, isInfiniteMode, t, toggleInfinite }) => {
+export function RefreshMenu({ show, isInfiniteMode, t, toggleInfinite }: RefreshMenuProps) {
   return (
     <AnimatePresence>
       {show && (

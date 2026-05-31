@@ -15,14 +15,14 @@ interface ManufacturersSectionProps {
   buttonStyles: { [key in 'primary' | 'secondary' | 'accent']: string };
 }
 
-export const ManufacturersSection: React.FC<ManufacturersSectionProps> = ({
+export function ManufacturersSection({
   manufacturers,
   addManufacturer,
   updateManufacturer,
   deleteManufacturer,
   cardClass,
   buttonStyles
-}) => {
+}: ManufacturersSectionProps) {
   const { setPromptDialog } = useGalleryStore();
   const { showSuccess, showError } = useFeedback();
 

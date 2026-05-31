@@ -6,7 +6,7 @@ interface SettingsTabsProps {
   onTabChange: (id: string) => void;
 }
 
-export const SettingsTabs: React.FC<SettingsTabsProps> = ({ activeTab, onTabChange }) => {
+export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
   const tabs = [
     { id: 'cloud', label: '云端与同步', icon: Cloud, subLabel: 'Cloud & Sync' },
     { id: 'app', label: '基础与 AI', icon: Cog, subLabel: 'General & AI' },

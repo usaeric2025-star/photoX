@@ -1,5 +1,8 @@
 import React from 'react';
-import { Search, ArrowUpDown, Layers, Grid2x2, Grid3x3, LayoutGrid } from 'lucide-react';
+import { ArrowUpDown, Layers, Grid2x2, Grid3x3, LayoutGrid } from 'lucide-react';
+import { SearchInput } from './SearchInput';
+import { useGalleryStore } from '@/store/galleryStore';
+import { translations } from '@/lib/translations';
 
 interface BaseFiltersProps {
   onSearch: (query: string) => void;
@@ -12,7 +15,7 @@ interface BaseFiltersProps {
   showGroupsCollapsed: boolean;
 }
 
-export const BaseFilters: React.FC<BaseFiltersProps> = ({
+export function BaseFilters({
   onSearch,
   searchQuery,
   onSortChange,
@@ -21,7 +24,10 @@ export const BaseFilters: React.FC<BaseFiltersProps> = ({
   currentColumns,
   onToggleGroups,
   showGroupsCollapsed,
-}) => {
+}: BaseFiltersProps) {
+  const appLang = useGalleryStore(s => s.appLang);
+  const t = (translations as any)[appLang];
+
   const toggleColumns = () => {
     const nextCols = currentColumns === 2 ? 3 : currentColumns === 3 ? 4 : currentColumns === 4 ? 5 : 2;
     onColumnsChange(nextCols);
@@ -29,14 +35,13 @@ export const BaseFilters: React.FC<BaseFiltersProps> = ({
 
   return (
     <>
-      <div className="flex-1 relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-        <input
-          type="text"
-          placeholder="搜索产品..."
+      <div className="flex-1">
+        <SearchInput
+          onSearch={onSearch}
           value={searchQuery}
-          onChange={(e) => onSearch(e.target.value)}
-          className="w-full pl-8 pr-3 h-[34px] text-[12px] border border-slate-200 bg-slate-50/50 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+          placeholder={t.searchPlaceholder}
+          clearLabel={t.clear}
+          className="w-full"
         />
       </div>
 

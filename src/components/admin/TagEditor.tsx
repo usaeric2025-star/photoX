@@ -16,10 +16,10 @@ interface TagEditorProps {
   showHotEffects?: boolean;
 }
 
-export const TagEditor: React.FC<TagEditorProps> = ({ 
+export function TagEditor({ 
   tags, selectedTagIds, onToggleTag, onUpdateTag, onDeleteTag, onQuickAdd, onRenameTagRequest,
   showHotEffects = false
-}) => {
+}: TagEditorProps) {
   const { setAlertDialog } = useGalleryStore(useShallow(s => ({ setAlertDialog: s.setAlertDialog })));
   const [searchTerm, setSearchTerm] = useState('');
   const { settings, updateSettings } = useSettings();

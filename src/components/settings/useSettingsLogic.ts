@@ -86,7 +86,33 @@ export const useSettingsLogic = ({
             showError(new Error(`发现 ${broken.length} 个异常ID`), '建议刷新页面');
         }
 
-        // 2. Check for missing hashes
+        // 2. Storage Audit (Orphans and missing files)
+        const auditResp = await fetch('/api/storage/audit');
+        const auditData = await auditResp.json();
+        if (auditData.success && auditData.data) {
+          const { missing, orphans } = auditData.data;
+          if (missing > 0 || orphans > 0) {
+            console.warn(`[Storage Audit] Missing: ${missing}, Orphans: ${orphans}`);
+            if (orphans > 0) {
+              setAlertDialog({
+                title: '发现孤儿文件 / Orphans Found',
+                message: `存储空间中发现了 ${orphans} 个不再被数据库使用的文件。是否要清理这些“废弃孤本”以释放空间？`,
+                confirmLabel: '立即清理',
+                onConfirm: async () => {
+                  setAlertDialog(null);
+                  showSuccess('正在清理存储空间...', true);
+                  const cleanResp = await fetch('/api/storage/clean', { method: 'POST' });
+                  const cleanData = await cleanResp.json();
+                  if (cleanData.success) {
+                    showSuccess(`清理完成！共删除 ${cleanData.data.cleanedCount} 个文件。`);
+                  }
+                }
+              });
+            }
+          }
+        }
+
+        // 3. Check for missing hashes
         const missingHashes = await getPhotosWithoutThumbHash();
 
         if (!missingHashes || missingHashes.length === 0) {

@@ -27,33 +27,35 @@ interface SidebarItemProps {
   collapsed?: boolean;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, onClick, badge, collapsed }) => (
-  <button 
-    onClick={onClick}
-    className={`w-full flex items-center justify-between py-3 rounded-2xl transition-all group ${
-      active 
-        ? 'bg-brand-navy text-white shadow-lg' 
-        : 'text-brand-navy/60 hover:bg-brand-navy/5 hover:text-brand-navy'
-    } ${collapsed ? 'px-0 justify-center' : 'px-4'}`}
-    title={collapsed ? label : undefined}
-  >
-    <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-      <div className={`p-1 rounded-lg ${active ? 'bg-white/10' : 'group-hover:bg-brand-navy/5'}`}>
-        <Icon size={18} />
+function SidebarItem({ icon: Icon, label, active, onClick, badge, collapsed }: SidebarItemProps) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`w-full flex items-center justify-between py-3 rounded-2xl transition-all group ${
+        active 
+          ? 'bg-brand-navy text-white shadow-lg' 
+          : 'text-brand-navy/60 hover:bg-brand-navy/5 hover:text-brand-navy'
+      } ${collapsed ? 'px-0 justify-center' : 'px-4'}`}
+      title={collapsed ? label : undefined}
+    >
+      <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+        <div className={`p-1 rounded-lg ${active ? 'bg-white/10' : 'group-hover:bg-brand-navy/5'}`}>
+          <Icon size={18} />
+        </div>
+        {!collapsed && <span className="text-[13px] font-semibold tracking-tight">{label}</span>}
       </div>
-      {!collapsed && <span className="text-[13px] font-semibold tracking-tight">{label}</span>}
-    </div>
-    {!collapsed && badge !== undefined && (
-      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-        active ? 'bg-white/20 text-white' : 'bg-brand-navy/10 text-brand-navy'
-      }`}>
-        {badge}
-      </span>
-    )}
-  </button>
-);
+      {!collapsed && badge !== undefined && (
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          active ? 'bg-white/20 text-white' : 'bg-brand-navy/10 text-brand-navy'
+        }`}>
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
 
-export const AdminSidebar: React.FC = () => {
+export function AdminSidebar() {
   const { 
     activeScreen, setActiveScreen, appLang, 
     isSidebarCollapsed, setIsSidebarCollapsed 

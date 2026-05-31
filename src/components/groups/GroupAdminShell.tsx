@@ -22,7 +22,7 @@ export interface GroupAdminShellProps {
   isAnalyzing?: boolean;
 }
 
-export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
+export function GroupAdminShell(props: GroupAdminShellProps) {
   const { 
     onAiAnalyze, onCancelAnalyze, isAnalyzing,
   } = props;

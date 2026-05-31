@@ -15,9 +15,9 @@ interface StaffUnlockDialogProps {
   t: Record<string, any>;
 }
 
-export const StaffUnlockDialog: React.FC<StaffUnlockDialogProps> = ({
+export function StaffUnlockDialog({
   isOpen, onClose, passInput, setPassInput, passError, onSubmit, onLogin, loginWithGoogle, t
-}) => {
+}: StaffUnlockDialogProps) {
   if (!isOpen) return null;
   const { handleError } = useErrorHandler();
 

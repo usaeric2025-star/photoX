@@ -1,3 +1,4 @@
+import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery } from '@tanstack/react-query';
 import { loadPhotosByGroupId } from '@/services/photo/queries';
 import { photoKeys } from '@/lib/queryKeys';
@@ -12,6 +13,7 @@ export const usePhotoList = (groupId: string, isAdminMode: boolean = false) => {
     queryFn: () => loadPhotosByGroupId(groupId, isAdminMode),
     enabled: !!groupId,
     select: (data) => data ?? [],
+    staleTime: createStaleTime('STABLE'),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

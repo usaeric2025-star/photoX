@@ -16,6 +16,6 @@ interface AISettingsProps {
   inputClass: string;
 }
 
-export const AISettings: React.FC<AISettingsProps> = (props) => {
+export function AISettings(props: AISettingsProps) {
   return <AISecuritySection {...props} geminiApiKey={props.geminiApiKey || ''} />;
 };

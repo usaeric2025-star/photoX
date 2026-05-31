@@ -15,9 +15,9 @@ interface TagItemProps {
   togglePin: (id: string) => void;
 }
 
-export const TagItem: React.FC<TagItemProps> = ({ 
+export function TagItem({ 
   tag, activeTagMenuId, setActiveTagMenuId, handleUpdateTagName, deleteTag, isPinned, togglePin 
-}) => {
+}: TagItemProps) {
   const { setAlertDialog, setPromptDialog } = useGalleryStore();
 
   const itemRef = useClickOutside<HTMLDivElement>(

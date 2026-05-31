@@ -10,8 +10,16 @@ export const useAuth = () => {
     queryKey: ['auth', 'user'],
     queryFn: async () => {
         const { data, error } = await supabase.auth.getUser();
-        if (error) return null;
-        return data.user;
+        if (error || !data?.user) return null;
+        const u = data.user;
+        return {
+          id: u.id,
+          email: u.email || null,
+          display_name: u.user_metadata?.full_name || u.user_metadata?.display_name || u.email || null,
+          photo_url: u.user_metadata?.avatar_url || u.user_metadata?.photo_url || null,
+          avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.photo_url || null,
+          email_verified: !!u.email_confirmed_at || !!(u as any).email_verified
+        } as User;
     },
     staleTime: Infinity,
     retry: 1,

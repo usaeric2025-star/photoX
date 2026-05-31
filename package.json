@@ -37,6 +37,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "@xstate/react": "^6.1.0",
     "arktype": "^2.2.0",
+    "babel-plugin-react-compiler": "^19.0.0-beta-af1b7da-20250417",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

@@ -10,12 +10,12 @@ interface Props {
   onHealthCheck: () => Promise<void>;
   isChecking: boolean;
   cardClass: string;
-  buttonStyles: any;
+  buttonStyles: { primary: string; secondary: string; accent: string };
 }
 
-export const MaintenanceSection: React.FC<Props> = ({ 
+export function MaintenanceSection({ 
   onHealthCheck, isChecking, cardClass, buttonStyles
-}) => {
+}: Props) {
   const { runTask } = useTaskExecutor();
   const { setAlertDialog } = useGalleryStore();
   const { showSuccess } = useFeedback();
@@ -56,6 +56,8 @@ export const MaintenanceSection: React.FC<Props> = ({
                  setAlertDialog({
                    title: '对账报告 / Audit Report',
                    message: `✅ 正常/Healthy: ${data.healthy}\n❌ 缺失/Missing in R2: ${data.missing}\n🗑️ 孤儿/Orphans in R2: ${data.orphans}`,
+                   onConfirm: () => setAlertDialog(null),
+                   confirmLabel: 'OK'
                  });
                } else {
                  showSuccess('存储对账完成，一致性完美匹配 / Storage consistency verified! All good.');
@@ -84,6 +86,8 @@ export const MaintenanceSection: React.FC<Props> = ({
                  setAlertDialog({
                    title: '清理报告 / Cleanup Report',
                    message: `🗑️ 成功清理了 ${data.cleanedCount} 个 R2 孤儿物理文件！\n\nSwiped clean ${data.cleanedCount} unused assets in R2 root directory.`,
+                   onConfirm: () => setAlertDialog(null),
+                   confirmLabel: 'OK'
                  });
                } else {
                  showSuccess('未发现多余的 R2 孤儿文件，一切洁净！ / Storage is already 100% clean.');
