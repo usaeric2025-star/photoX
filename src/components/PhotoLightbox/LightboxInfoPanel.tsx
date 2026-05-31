@@ -41,7 +41,6 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
   const { setEditPhotoId } = useGalleryStore(useShallow(s => ({ setEditPhotoId: s.setEditPhotoId })));
   const onEditPhoto = (p: Photo) => setEditPhotoId(p.id);
   const { canEdit } = usePermission();
-  const catName = getTranslatedCategoryName(photo.category_id || undefined, categories, activeLang, t);
   const mfrName = getManufacturerName(photo.manufacturer_id || undefined, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);
   
@@ -143,9 +142,9 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
           </div>
         )}
 
-        {((mfrName && mfrName !== catName) || displayTags.length > 0) && (
+        {(mfrName || displayTags.length > 0) && (
           <div className="flex flex-wrap items-center gap-2">
-             {(mfrName && mfrName !== catName) && (
+             {mfrName && (
                <span className="bg-orange-50 text-orange-600 px-2.5 py-1 border border-orange-200 rounded-lg text-xs font-bold flex items-center">
                  <Key size={10} className="mr-1.5" />
                  {mfrName}

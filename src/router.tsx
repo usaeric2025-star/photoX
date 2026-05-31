@@ -183,11 +183,7 @@ const gRoute = createRoute({
 const adminRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: ROUTES.ADMIN,
-  component: () => (
-    <AdminAuthGuard>
-      <AdminView />
-    </AdminAuthGuard>
-  ),
+  component: () => <AdminView />,
 });
 
 // 3. Route Tree
