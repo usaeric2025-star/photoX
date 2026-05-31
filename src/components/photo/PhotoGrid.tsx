@@ -78,6 +78,25 @@ export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) =>
     return () => { unsubscribe(); };
   }, [setIsMultiSelectMode, setSelectedIds]);
 
+  const lastTriggeredLengthRef = useRef<number>(-1);
+
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && onLoadMore && photos.length > 0 && photos.length < 24) {
+      if (lastTriggeredLengthRef.current === photos.length) {
+        return;
+      }
+      const timer = setTimeout(() => {
+        console.log(`[PhotoBoard] Auto-triggering onLoadMore. Current length: ${photos.length}`);
+        lastTriggeredLengthRef.current = photos.length;
+        onLoadMore();
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+    if (!isFetchingNextPage && photos.length >= 24) {
+      lastTriggeredLengthRef.current = -1;
+    }
+  }, [hasNextPage, isFetchingNextPage, onLoadMore, photos.length]);
+
   const isLoading = isFetching && photos.length === 0;
 
   if (isLoading) {
@@ -100,12 +119,12 @@ export const PhotoBoard = React.forwardRef<any, PhotoBoardProps>((props, ref) =>
               onLoadMore();
             }
           }}
-          containerClassName="px-1.5 py-2"
+          containerClassName="px-[10px] pt-2 pb-8"
           renderItem={(index) => {
             const photo = photos[index];
             if (!photo) return null;
             return (
-              <div className="p-1 w-full">
+              <div className="p-1.5 w-full">
                 {renderCard(photo, index)}
               </div>
             );

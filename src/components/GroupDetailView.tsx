@@ -110,6 +110,11 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
 
 
 
+  const totalGroupPhotosCount = useMemo(() => {
+    if (!infinitePhotosData?.pages || infinitePhotosData.pages.length === 0) return undefined;
+    return (infinitePhotosData.pages[0] as any).total;
+  }, [infinitePhotosData]);
+
   const activeGroupPhotos = useMemo(() => {
     if (!activeGroupId) return [];
 
@@ -196,7 +201,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                         {isGroupDataLoading ? (
                           <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
                         ) : (
-                          <p className="text-xs text-slate-500 font-normal">{groupData?.member_count ?? activeGroupPhotos.length} 張照片 / Photos</p>
+                          <p className="text-xs text-slate-500 font-normal">{totalGroupPhotosCount ?? groupData?.member_count ?? activeGroupPhotos.length} 張照片 / Photos</p>
                         )}
                       </div>
                     </div>

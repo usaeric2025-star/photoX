@@ -263,9 +263,9 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
       const sorted = sortGroupPhotos(groupList);
       
       if (showGroupsCollapsed) {
-        const trueMemberCount = globalGroupCounts.has(p.group_id) 
+        const trueMemberCount = (globalGroupCounts.has(p.group_id) 
           ? globalGroupCounts.get(p.group_id)! 
-          : groupList.length;
+          : (sorted[0].group?.member_count || groupList.length));
           
         const cover = {
            ...sorted[0],

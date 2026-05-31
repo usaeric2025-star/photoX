@@ -29,22 +29,22 @@ export interface PhotoCardProps {
 const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; showGroupsCollapsed: boolean }> = React.memo(({ photo, variant, showGroupsCollapsed }) => {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
-  // Display group info if photo belongs to a group and has more than 1 members
-  const shouldShowGroup = showGroupsCollapsed && photo.group_id && (photo.group?.member_count ?? 1) > 1;
+  // Display group info if photo belongs to a group
+  const shouldShowGroup = showGroupsCollapsed && photo.group_id;
+
+  const groupCode = photo.group_id ? photo.group_id.slice(-4).toUpperCase() : '';
+  const memberCount = photo.group?.member_count ?? 1;
 
   return (
-    <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
+    <div className="absolute top-1.5 left-1.5 z-10 flex gap-1 flex-col pointer-events-none">
       {shouldShowGroup && (
-        <div className={cn(
-          "backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none",
-          isManagement ? "bg-black/60" : "bg-black/40 px-2 py-0.5 rounded-md border-white/10"
-        )}>
-          <Layers size={isManagement ? 10 : 9} strokeWidth={2.5} />
-          {photo.group?.member_count ?? 1}
+        <div className="backdrop-blur-md px-1.5 py-0.5 rounded-md text-[10px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm bg-blue-600/80">
+          <Layers size={10} strokeWidth={2.5} />
+          <span>{memberCount}</span>
         </div>
       )}
       {isManagement && photo.is_pinned && (
-        <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[7px] font-bold flex items-center gap-0.5 border border-white/10 shadow-sm pointer-events-none">
+        <div className="bg-amber-500 text-white px-1 py-0.5 rounded text-[8px] font-bold flex items-center gap-0.5 border border-white/10 shadow-sm">
           <Heart size={8} className="fill-current" />
         </div>
       )}
@@ -66,29 +66,28 @@ const PhotoInfoFooter: React.FC<{
   displayCatName: string; 
   photoTags: string[];
   hideTags?: boolean;
-  t: any;
-}> = React.memo(({ displayCatName, photoTags, hideTags, t }) => (
-  <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
-    <div className="h-[38px] w-full flex flex-col justify-end items-start gap-0.5" style={{ alignContent: 'end' }}>
-       <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
-          {/* [FIELD-LEVEL-FALLBACK] Display category name or generic fallback */}
-          {displayCatName || t.productDetail || 'Product'}
-        </p>
-      {!hideTags && photoTags.length > 0 && (
-        <div className="flex flex-nowrap gap-1 w-full overflow-x-auto pointer-events-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-0.5 pb-0.5 mt-auto">
-          {photoTags.map((tag, i) => (
-            <span 
-              key={i} 
-              className="shrink-0 text-[7.5px] text-white/95 font-bold px-1 py-[2px] bg-white/20 backdrop-blur-md rounded-[3px] border border-white/20 leading-none shadow-sm uppercase tracking-wide"
-            >
-              {tag}
-            </span>
-           ))}
-         </div>
-      )}
+}> = React.memo(({ displayCatName, photoTags, hideTags }) => {
+  if (hideTags) return null;
+  
+  const tagsText = (photoTags && photoTags.length > 0) ? photoTags.join(', ') : '';
+
+  return (
+    <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-none p-2 bg-gradient-to-t from-black/60 to-transparent">
+        <div className="flex flex-col gap-0.5">
+            {displayCatName && (
+                <span className="text-[10px] text-white/90 font-medium truncate">
+                {displayCatName}
+                </span>
+            )}
+            {tagsText && (
+                <span className="text-[9px] text-white/70 truncate">
+                {tagsText}
+                </span>
+            )}
+        </div>
     </div>
-  </div>
-));
+  );
+});
 PhotoInfoFooter.displayName = 'PhotoInfoFooter';
 
 const toTitleCase = (str: string) => {
@@ -344,7 +343,6 @@ export const PhotoCard = React.memo(({
         displayCatName={displayCatName} 
         photoTags={photoTags}
         hideTags={hideDetails}
-        t={t}
       />
     </div>
   );

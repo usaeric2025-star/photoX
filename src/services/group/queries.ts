@@ -29,7 +29,8 @@ export const loadGroupsFromCloud = async (userId: string): Promise<Result<Produc
       is_hidden: (item.is_hidden ?? false) as boolean,
       created_at: item.created_at,
       updated_at: item.updated_at,
-      user_id: item.user_id
+      user_id: item.user_id,
+      member_count: item.member_count ?? 1
     }));
     return ok(groups);
   } catch (errValue) {
@@ -63,7 +64,8 @@ export const getGroupById = async (id: string): Promise<Result<ProductGroup | nu
       is_hidden: (data.is_hidden ?? false) as boolean,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      user_id: data.user_id
+      user_id: data.user_id,
+      member_count: data.member_count ?? 1
     };
     
     return ok(result);

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
@@ -64,7 +64,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     sortOrder: sortOrder,
     isAdminMode: false,
     onlyUngrouped: false
-  }, columns * 10, true);
+  }, PAGINATION.PUBLIC_PAGE_SIZE, true);
 
   const rawPhotos = useMemo(() => {
     return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
@@ -94,9 +94,25 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   });
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
-    setActiveGroupId(gid);
-    setActivePhotoId(null);
+    setActiveGroupId(gid);                
+    setActivePhotoId(photoId || null);
   }, [setActiveGroupId, setActivePhotoId]);
+
+  useEffect(() => {
+    let lastIsMobile = window.innerWidth <= 768;
+    setColumns(lastIsMobile ? 2 : 3);
+
+    const handleResize = () => {
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile !== lastIsMobile) {
+        lastIsMobile = isMobile;
+        setColumns(isMobile ? 2 : 3);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setColumns]);
+
 
   const handleLightboxOpen = useCallback((photo: Photo) => {
     setActivePhotoId(photo.id);
@@ -134,7 +150,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
           onSortChange={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
           currentSort={sortOrder}
           onColumnsChange={(cols) => {
-              setColumns(cols as 2 | 3 | 5);
+              setColumns(cols as 2 | 3 | 4 | 5);
               updateURL({ view: cols === 2 ? 'list' : 'grid' });
           }}
           currentColumns={columns}

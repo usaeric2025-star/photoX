@@ -114,6 +114,7 @@ export interface ProductGroup {
   user_id: string;
   created_at: string;
   updated_at: string;
+  member_count?: number;
 }
 
 export interface ProductFormData {

@@ -1,13 +1,14 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@base-ui/react/dialog';
+import { X } from 'lucide-react';
 import { Photo } from '../../types';
 import { usePhotoLightboxLogic } from './usePhotoLightboxLogic';
 import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAdminMode, usePermission, useTasks, useCategoryList, useManufacturerList, useTagList } from '../../hooks';
+import { useAdminMode, usePermission, useTasks, useCategoryList, useManufacturerList, useTagList, useFeedback } from '../../hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { createTranslate } from '@/lib/i18n';
 import { translations, LanguageCode } from '../../lib/translations';
@@ -89,24 +90,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
 
 
   const { isAdmin } = usePermission();
-
-  useEffect(() => {
-    if (index !== null) {
-      const preloadNeighbors = (idx: number, range: number) => {
-        const start = Math.max(0, idx - range);
-        const end = Math.min(displayPhotos.length - 1, idx + range);
-        
-        for (let i = start; i <= end; i++) {
-          const p = displayPhotos[i];
-          if (p?.image_url) {
-            const img = new Image();
-            img.src = p.image_url;
-          }
-        }
-      };
-      preloadNeighbors(index, 5);
-    }
-  }, [index, displayPhotos]);
+  const { showError } = useFeedback();
 
   const {
     isZoomed, setIsZoomed,
@@ -127,6 +111,36 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   } = usePhotoLightboxLogic({
     photo, displayPhotos, index, lang, onPrev, onNext, onClose
   });
+
+  useEffect(() => {
+    if (index !== null) {
+      const preloadNeighbors = (idx: number, range: number) => {
+        const start = Math.max(0, idx - range);
+        const end = Math.min(displayPhotos.length - 1, idx + range);
+        
+        for (let i = start; i <= end; i++) {
+          const p = displayPhotos[i];
+          if (p?.image_url) {
+            const img = new Image();
+            img.src = p.image_url;
+          }
+        }
+      };
+      preloadNeighbors(index, 5);
+    }
+  }, [index, displayPhotos]);
+
+  // 超时保护
+  useEffect(() => {
+    if (index === -1) return;
+    const timer = setTimeout(() => {
+      if (isImageLoading) {
+        setIsImageLoading(false);
+        showError('图片加载超时，请检查网络连接。');
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [isImageLoading, index, showError]);
 
   const isOpen = index !== null && !!activePhoto;
 
@@ -166,6 +180,15 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
                     transition={{ duration: 0.2 }}
                     className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
                   >
+                    {/* 始终可用的关闭按钮 */}
+                    <button
+                      onClick={onClose}
+                      className="fixed top-4 right-4 z-[501] w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full text-white flex items-center justify-center transition-all"
+                      aria-label="关闭"
+                    >
+                      <X size={20} />
+                    </button>
+
                     <LightboxImageSection 
                       photo={activePhoto!}
                       index={index!}
