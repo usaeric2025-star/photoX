@@ -46,13 +46,13 @@ export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void }
       <div className="w-full shrink-0">
         {props.header}
       </div>
-      <VList
+      <VList<any>
         ref={vlistRef}
         data={Array.from({ length: rowCount })}
         onScroll={handleScroll}
         style={{ height: '100%', width: '100%' }}
       >
-        {({ index: index }) => (
+        {(_, index) => (
           <React.Fragment key={index}>
             {isGridLayout ? (
               <div 
@@ -75,7 +75,7 @@ export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void }
               </div>
             )}
           </React.Fragment>
-        ) as any}
+        )}
       </VList>
       <div className="w-full shrink-0">
         {props.footer}
