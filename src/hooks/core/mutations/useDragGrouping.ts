@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { movePhotosToGroup } from '@/services/photoMutationService';
-import { useFeedback } from '@/hooks/shared/useFeedback';
+import { useFeedback } from '@/hooks';
 import { match } from 'ts-pattern';
 import { ResultAsync } from 'neverthrow';
 

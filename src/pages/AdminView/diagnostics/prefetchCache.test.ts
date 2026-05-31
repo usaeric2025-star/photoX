@@ -1,7 +1,7 @@
 import { DiagnosticTest, registerDiagnostic } from './index';
 import { QueryClient } from '@tanstack/react-query';
 import { photoKeys } from '@/lib/queryKeys';
-import { syncCache } from '@/utils/indexedDB';
+import { syncCache } from '@/lib/db/indexedDB';
 import { Category, Tag } from '@/types';
 
 const test: DiagnosticTest = {

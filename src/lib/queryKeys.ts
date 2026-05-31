@@ -14,6 +14,8 @@ export const photoKeys = {
     [...photoKeys.all, 'count', filters, { freshness }] as const,
   group: (groupId: string, freshness: DataFreshnessPolicy = 'STABLE') => 
     [...photoKeys.all, 'group', groupId, { freshness }] as const,
+  detail: (photoId: string, freshness: DataFreshnessPolicy = 'REALTIME') => 
+    [...photoKeys.all, 'detail', photoId, { freshness }] as const,
   tags: () => ['tags', SCHEMA_VERSION] as const,
   categories: () => ['categories', SCHEMA_VERSION] as const,
   manufacturers: () => ['manufacturers', SCHEMA_VERSION] as const,

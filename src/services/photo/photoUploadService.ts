@@ -4,7 +4,7 @@ import { Photo } from '../../types';
 import { uploadImages } from '../storage';
 import { safeArray } from '../../lib/utils';
 import { mapToDb, normalizeDimensionsBeforeSave } from './photoMappingUtils';
-import { checkDuplicate, DuplicatePhotoError } from '../../utils/duplicateCheck';
+import { checkDuplicate, DuplicatePhotoError } from '@/lib/data/duplicateCheck';
 import { generateItemCode } from '../utils';
 import { StandardError } from '@/lib/validators/protocol';
 

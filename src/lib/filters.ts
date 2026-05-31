@@ -1,6 +1,6 @@
 import { Photo, Category, Tag } from '../types';
 import { isValidPhoto } from './typeGuard';
-import { filterPhotosByMode } from '../utils/photoVisibility';
+import { filterPhotosByMode } from './filters/photoVisibility';
 
 export const cleanPhotos = (photos: unknown[]): Photo[] => {
   if (!Array.isArray(photos)) return [];

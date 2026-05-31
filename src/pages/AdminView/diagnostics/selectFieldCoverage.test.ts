@@ -1,5 +1,5 @@
 import { DiagnosticTest, registerDiagnostic } from './index';
-import { PHOTO_SELECT_FIELDS } from '@/services/photos';
+import { PHOTO_LIST_FIELDS as PHOTO_SELECT_FIELDS } from '@/constants/photoFields';
 
 const testConfig: DiagnosticTest = {
   id: 'select_field_coverage',

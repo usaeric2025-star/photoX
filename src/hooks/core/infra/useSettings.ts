@@ -1,7 +1,7 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchSettings, saveSettings } from '@/services/settingService'
-import { syncCache } from '@/utils/indexedDB'
+import { syncCache } from '@/lib/db/indexedDB'
 
 export const useSettings = () => {
   const queryClient = useQueryClient()

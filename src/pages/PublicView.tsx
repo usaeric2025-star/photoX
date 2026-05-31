@@ -4,19 +4,19 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { Skeleton } from '../components/ui/Skeleton';
 import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
-  useCategoriesQuery, useInfinitePhotos, usePhotoCount, 
-  useFeedback, useTagsQuery, useScrollRestoration, useDebouncedSearch,
+  useCategoryList, usePhotoInfiniteList, usePhotoCount, 
+  useFeedback, useTagList, useScrollRestoration, useDebouncedSearch,
   useAuth, useSettings, useMultiSelect
 } from '@/hooks';
-import { useGalleryStore, useShallow } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { PAGINATION, ROUTES, UI } from '@/config/constants';
 import { Photo, Tag } from '@/types';
 import { safeArray } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
-import { saveData, syncCache } from '@/utils/indexedDB';
-import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
-import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
+import { saveData, syncCache } from '@/lib/db/indexedDB';
+import { PublicGallery } from '@/components/photo/PublicGallery';
+import { PublicHeader } from '@/components/photo/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { loginWithGoogle } from '@/services/authService';
 // import { AdminProvider } from '@/contexts/PhotoActionsContext';
@@ -41,10 +41,12 @@ export default function PublicView() {
   // ========== 8. 正常渲染 ==========
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden" id="public-view">
-      <UnifiedHeader 
+      <PublicHeader 
         variant="public-showcase"
         totalCount={count}
         onRefresh={() => window.location.reload()}
+        loginWithGoogle={() => loginWithGoogle()}
+        handleManageClick={() => navigate({ to: ROUTES.ADMIN })}
       />
       {authError ? (
         <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">
@@ -56,14 +58,13 @@ export default function PublicView() {
         <div className="flex-1 min-h-0 relative">
           <DataLoadingContainer
             isLoading={isSettingsLoading || !settings}
-            hasData={true} // Data will be handled inside UnifiedGallery
+            hasData={true} // Data will be handled inside PublicGallery
           >
             <ErrorBoundary>
-                <UnifiedGallery 
+                <PublicGallery 
                   variant="public-showcase"
-                  onExit={() => navigate({ to: ROUTES.ADMIN })}
-                  onLogin={() => navigate({ to: ROUTES.ADMIN })}
-                  loginWithGoogle={loginWithGoogle}
+                  onScrollToTop={() => {}}
+                  virtualGridRef={null}
                 />
               </ErrorBoundary>
           </DataLoadingContainer>

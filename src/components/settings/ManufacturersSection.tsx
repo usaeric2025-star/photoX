@@ -2,9 +2,9 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { Manufacturer } from '../../types';
 import { ManufacturerItem } from '../admin/ManufacturerItem';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore } from '@/store/galleryStore';
 import { useFeedback } from '../../hooks';
-import { normalizeManufacturerName } from '../../utils/stringHelper';
+import { normalizeManufacturerName } from '@/lib/utils/stringHelper';
 
 interface ManufacturersSectionProps {
   manufacturers: Manufacturer[];

@@ -4,11 +4,12 @@ import { Photo, Category, Manufacturer } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { safeArray } from '../../utils/safeAccess';
+import { safeArray } from '@/lib/utils';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { useCategoriesQuery, useManufacturersQuery, usePermission, useTagsQuery } from '../../hooks';
-import { useStore, useShallow } from '../../store';
+import { useCategoryList, useManufacturerList, usePermission, useTagList } from '../../hooks';
+import { useStore, useShallow } from '@/store/galleryStore';
 import { useAdminActions } from '@/features/admin/useAdminActions';
+import { useTogglePin } from '@/hooks/core/mutations/useTogglePin';
 import { translations } from '../../lib/translations';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 import { interactionBus } from '@/lib/interactionBus';
@@ -28,15 +29,19 @@ export interface PhotoCardProps {
 
 const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; photoCount: number }> = React.memo(({ photo, variant, photoCount }) => {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
+  
+  // Display group info if photo belongs to a group and has more than 1 members
+  const shouldShowGroup = photo.group_id && (photo.member_count ?? photoCount) > 1;
+
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
-      {photo.group_id && photoCount > 1 && (
+      {shouldShowGroup && (
         <div className={cn(
           "backdrop-blur-sm px-1.5 py-0.5 rounded-lg text-[9px] text-white font-bold flex items-center gap-1 border border-white/20 shadow-sm pointer-events-none",
           isManagement ? "bg-black/60" : "bg-black/40 px-2 py-0.5 rounded-md border-white/10"
         )}>
           <Layers size={isManagement ? 10 : 9} strokeWidth={2.5} />
-          {photoCount}
+          {photo.member_count ?? photoCount}
         </div>
       )}
       {isManagement && photo.is_pinned && (
@@ -100,7 +105,7 @@ const toTitleCase = (str: string) => {
  * Any animation requiring React state or refs that triggers setStates inside
  * the virtualizer loop will cause infinite update depth loop.
  */
-export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({ 
+export const PhotoCard: React.FC<PhotoCardProps> = ({ 
   variant, photo, index, showGroupsCollapsed,
   onGroupClick, 
   onLightboxOpen, 
@@ -139,14 +144,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
   const photoCount = photo.member_count ?? 1;
 
   const adminActions = useAdminActions();
-  const onTogglePinned = (p: Photo) => adminActions.updatePhoto(p.id, { is_pinned: !p.is_pinned });
+  const togglePinMutation = useTogglePin(photo, adminActions.updatePhoto);
 
   const { appLang } = useStore(useShallow(s => ({ appLang: s.appLang })));
   const t = translations[appLang as keyof typeof translations] || translations.en;
 
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: tags = [] } = useTagsQuery();
-  const { data: manufacturers = [] } = useManufacturersQuery();
+  const { data: categories = [] } = useCategoryList();
+  const { data: tags = [] } = useTagList();
+  const { data: manufacturers = [] } = useManufacturerList();
   
   const tagMap = useMemo(() => 
     tags.reduce((acc, t) => ({ ...acc, [t.id]: t.name }), {} as Record<string, string>),
@@ -173,12 +178,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       if (isMultiSelect && !e.shiftKey) {
         setters.toggleSelected(photo.id);
       } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
+        e.stopPropagation();
         onGroupClick(photo.group_id, photo.id);
       } else {
         handleOpenLightbox();
       }
     } else {
       if (showGroupsCollapsed && photo.group_id && onGroupClick) {
+        e.stopPropagation();
         onGroupClick(photo.group_id, photo.id);
       } else {
         handleOpenLightbox();
@@ -270,10 +277,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
 
   const handleTogglePinnedClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onTogglePinned) {
-      onTogglePinned(photo);
-    }
-  }, [onTogglePinned, photo]);
+    togglePinMutation.mutate();
+  }, [togglePinMutation]);
 
   const handleCardClick = useCallback((e: React.MouseEvent) => {
     if (isManagement) {
@@ -356,7 +361,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
          <button 
            onClick={handleTogglePinnedClick}
            className="absolute top-1 right-2 bg-black/50 p-1 rounded-full text-white group-data-[pinned=true]:text-red-500 z-20 hover:scale-115 active:scale-95 transition-transform"
-           data-pinned={photo.is_pinned}
+           data-pinned={photo.is_pinned ? 'true' : 'false'}
          >
            <Heart size={12} className={photo.is_pinned ? 'fill-current' : ''} />
          </button>
@@ -370,6 +375,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = React.memo(({
       />
     </div>
   );
-});
+};
 
 PhotoCard.displayName = 'PhotoCard';

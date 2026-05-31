@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, Pencil, Trash2 } from 'lucide-react';
 import { Tag } from '../../types';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore } from '@/store/galleryStore';
 import { useClickOutside, useLongPress } from '../../hooks';
 
 interface TagItemProps {

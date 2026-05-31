@@ -1,5 +1,5 @@
 import { usePermission } from '@/hooks/core/auth/usePermission';
-import { useGalleryStore, useShallow } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 
 /**
  * Unified hook to get the effective admin mode.
@@ -7,10 +7,7 @@ import { useGalleryStore, useShallow } from '@/store';
  */
 export function useAdminMode() {
   const { isAdmin } = usePermission();
-  const { isStaffMode } = useGalleryStore(useShallow(s => ({
-    isStaffMode: s.isStaffMode
-  })));
   
-  // Effective admin mode: Must be logged in as admin OR in staff mode
-  return (isAdmin || isStaffMode);
+  // Effective admin mode: Must be logged in as admin
+  return isAdmin;
 }

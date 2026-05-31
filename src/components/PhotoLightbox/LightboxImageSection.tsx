@@ -6,7 +6,7 @@ import { X, Maximize, ChevronLeft, ChevronRight, Download, Edit3, Image as Image
 import { Photo, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { useAdminMode } from '@/hooks';
-import { thumbHashToDataURL } from '../../utils/thumbHash';
+import { thumbHashToDataURL } from '@/lib/image/thumbHash';
 
 interface LightboxImageSectionProps {
   photo: Photo;

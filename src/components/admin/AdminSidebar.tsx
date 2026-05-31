@@ -14,9 +14,9 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { useGalleryStore, useShallow } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { reportError } from '@/lib/errorReporter';
-import { useAuth, usePermission, useSettings, useSyncMutation } from '@/hooks';
+import { useAuth, usePermission, useSettings, useSyncMutation, useAdminMode } from '@/hooks';
 
 interface SidebarItemProps {
   icon: React.ElementType;
@@ -55,18 +55,18 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, active, on
 
 export const AdminSidebar: React.FC = () => {
   const { 
-    activeScreen, setActiveScreen, isStaffMode, appLang, 
+    activeScreen, setActiveScreen, appLang, 
     isSidebarCollapsed, setIsSidebarCollapsed 
   } = useGalleryStore(useShallow(s => ({
     activeScreen: s.activeScreen,
     setActiveScreen: s.setActiveScreen,
-    isStaffMode: s.isStaffMode,
     appLang: s.appLang,
     isSidebarCollapsed: s.isSidebarCollapsed,
     setIsSidebarCollapsed: s.setIsSidebarCollapsed
   })));
   
   const { can } = usePermission();
+  const hasAdminAccess = useAdminMode();
   const { settings } = useSettings();
   const { mutateAsync: syncMut } = useSyncMutation();
 
@@ -79,7 +79,7 @@ export const AdminSidebar: React.FC = () => {
   }, [syncMut]);
 
   const { user, loginWithGoogle, logout } = useAuth();
-  const isEffectiveStaffMode = isStaffMode && !user;
+  const isEffectiveStaffMode = hasAdminAccess && !user;
 
   return (
     <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden transition-all duration-300 relative`}>
@@ -93,7 +93,7 @@ export const AdminSidebar: React.FC = () => {
 
       {/* Logo Section */}
       <div className={`p-6 border-b border-brand-navy/5 flex items-center ${isSidebarCollapsed ? 'justify-center p-4' : ''}`}>
-        {settings?.logo_url ? (
+        {settings?.logo_url && settings.logo_url.trim() !== '' ? (
           <img 
             src={settings.logo_url} 
             alt="Logo" 
@@ -222,9 +222,6 @@ export const AdminSidebar: React.FC = () => {
             )}
             <button 
               onClick={() => {
-                useGalleryStore.getState().setIsStaffMode(false);
-                sessionStorage.removeItem('isStaffMode');
-                localStorage.removeItem('isStaffMode');
                 window.location.reload();
               }}
               className={`w-full py-2 px-3 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-black text-[9px] uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-md shadow-red-500/25 ${isSidebarCollapsed ? 'px-0' : ''}`}

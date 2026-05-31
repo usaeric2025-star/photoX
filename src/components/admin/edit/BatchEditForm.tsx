@@ -2,9 +2,9 @@ import React from 'react';
 import { EyeOff, Eye, RefreshCcw } from 'lucide-react';
 import { PhotoTagSelector } from './PhotoTagSelector';
 import { FormSectionHeader, CategoryGrid, ManufacturerList } from '../FormShared';
-import { useCategoriesQuery, useTagsQuery, useManufacturersQuery } from '@/hooks';
+import { useCategoryList, useTagList, useManufacturerList } from '@/hooks';
 import { safeArray } from '@/lib/utils';
-import { useGalleryStore } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 
 interface BatchEditFormProps {
   formState: any;
@@ -27,10 +27,10 @@ export const BatchEditForm: React.FC<BatchEditFormProps> = ({
   updateTag,
   deleteTag
 }) => {
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: manufacturers = [] } = useManufacturersQuery();
-  const { data: tags = [] } = useTagsQuery();
-  const appLang = useGalleryStore(s => s.appLang);
+  const { data: categories = [] } = useCategoryList();
+  const { data: manufacturers = [] } = useManufacturerList();
+  const { data: tags = [] } = useTagList();
+  const { appLang } = useGalleryStore(useShallow(s => ({ appLang: s.appLang })));
 
   return (
     <div className="space-y-6">

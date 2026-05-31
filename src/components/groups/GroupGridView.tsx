@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useCallback } from 'react';
 import { Photo, ProductGroup } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Quote } from 'lucide-react';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { translations } from '../../lib/translations';
 import { PhotoCard } from '../photo/PhotoCard';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
@@ -30,7 +30,7 @@ const MemoizedFooter = React.memo(({
 }) => {
   if (isFetchingNextPage) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-16">
         <div className="w-5 h-5 border-[2px] border-slate-300 border-t-slate-800 rounded-full animate-spin" />
         <span className="text-[10px] text-slate-500 font-medium tracking-tight animate-pulse">
           {textLoading}
@@ -40,24 +40,24 @@ const MemoizedFooter = React.memo(({
   }
   if (!isFetchingNextPage && !hasNextPage && hasPhotos) {
     return (
-      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
+      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-16">
         <span className="text-[10px] text-slate-400 font-medium tracking-tight">
           {textEndOfList}
         </span>
       </div>
     );
   }
-  return <div className="h-40" />;
+  return null;
 });
 MemoizedFooter.displayName = 'MemoizedFooter';
 
-export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.Ref<any>, isLoading?: boolean }> = ({
+export const GroupGridView: React.FC<GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }> = ({
   photos,
   groupData,
   onPhotoClick,
   onPhotoContextMenu,
   getPhotoProps,
-  virtuosoRef,
+  virtualGridRef,
   highlightId,
   onEndReached,
   isLoading = false,
@@ -65,8 +65,10 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   hasNextPage,
   variant = 'public-showcase'
 }) => {
-  const lang = useGalleryStore(s => s.appLang);
-  const columns = useGalleryStore(s => s.columns);
+  const { lang, columns } = useGalleryStore(useShallow(s => ({
+    lang: s.appLang,
+    columns: s.columns
+  })));
   const t = React.useMemo(() => translations[lang as keyof typeof translations as keyof typeof translations] || translations.en, [lang]);
 
   const header = useMemo(() => {
@@ -142,7 +144,7 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
     const extraProps = getPhotoProps ? getPhotoProps(photo) : {};
     
     return (
-      <div className="p-1 h-full w-full">
+      <div className="p-1 w-full">
         <PhotoCard
           variant={variant}
           photo={photo}
@@ -157,13 +159,11 @@ export const GroupGridView: React.FC<GroupGridViewProps & { virtuosoRef?: React.
   }, [isLoading, photos, variant, onPhotoClick, highlightId, getPhotoProps]);
 
   return (
-    <div className={`flex-1 min-h-0 relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
+    <div className={`w-full h-full relative ${groupData?.is_hidden ? 'grayscale opacity-70' : ''}`}>
       <VirtualGrid
-        ref={virtuosoRef}
+        ref={virtualGridRef}
         count={isLoading ? 12 : photos.length}
         lanes={columns}
-        estimateSize={() => 340}
-        overscan={GROUP_LIST_CONFIG.overscan(columns)}
         onEndReached={onEndReached}
         header={header}
         footer={

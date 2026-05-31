@@ -1,4 +1,4 @@
-import { globalHandleError } from '../utils/errorHandler';
+import { globalHandleError } from './error/errorHandler';
 
 // Global Unhandled Promise Rejection handler
 export const setupGlobalErrorHandling = () => {
@@ -31,3 +31,4 @@ export const setupGlobalErrorHandling = () => {
     globalHandleError(event.error || new Error(event.message || '全局运行时错误'), '全局运行时错误');
   });
 };
+

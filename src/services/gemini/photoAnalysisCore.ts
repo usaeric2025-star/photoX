@@ -1,5 +1,5 @@
 import { Category, Tag, Manufacturer, Dimension } from '../../types';
-import { normalizeTagIds } from '../../utils/aiNormalizer';
+import { normalizeTagIds } from '@/lib/ai/aiNormalizer';
 import { api } from '@/lib/api';
 import { AI_CONFIG } from '../../constants/config';
 import { AI_PROMPTS } from '../../constants/ai';

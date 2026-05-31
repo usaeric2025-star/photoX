@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckSquare, X } from 'lucide-react';
-import { useGalleryStore, useShallow } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { PromptDialog } from './PromptDialog';
 import {
   AlertDialog,

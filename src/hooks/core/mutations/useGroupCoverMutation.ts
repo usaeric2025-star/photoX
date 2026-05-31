@@ -1,5 +1,5 @@
 import { createMutationHook } from './factory';
-import { updatePhotosGroupInCloud, setPhotoAsGroupCoverInCloud } from '@/services/photos';
+import { updatePhotosGroupInCloud, setPhotoAsGroupCoverInCloud } from '@/services/photo/commands';
 
 export const useGroupCoverMutation = () => {
     return createMutationHook({

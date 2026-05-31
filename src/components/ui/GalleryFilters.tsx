@@ -8,7 +8,7 @@ import { SortButton } from '../../components/ui/SortButton';
 import { LayoutButton } from '../../components/ui/LayoutButton';
 import { GroupToggle } from '../../components/ui/GroupToggle';
 import { motion, AnimatePresence } from 'motion/react';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { Category, Tag, AppSettings } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { cn } from '../../lib/utils';
@@ -19,7 +19,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router';
 import { translations } from '../../lib/translations';
 import { useFilters } from '@/features/filters/useFilters';
 
-import { useCategoriesQuery, useTagsQuery, useSettings } from '../../hooks';
+import { useCategoryList, useTagList, useSettings } from '../../hooks';
 
 interface GalleryFiltersProps {
   onScrollToTop: () => void;
@@ -49,24 +49,27 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   // Using useSearch if public, otherwise we don't strictly need URL state for admin (though it helps)
   const search = isPublic ? useSearch({ strict: false }) : {} as any;
   
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: tags = [] } = useTagsQuery();
+  const { data: categories = [] } = useCategoryList();
+  const { data: tags = [] } = useTagList();
   const { settings } = useSettings();
   
   const { filters, setCategory, setTags, setSearch, setShowGroupsCollapsed } = useFilters();
   const { searchQuery, categoryId, tagIds, showGroupsCollapsed } = filters;
-  const sortOrder = useGalleryStore(s => s.sortOrder);
-  const setSortOrder = useGalleryStore(s => s.setSortOrder);
-  const columns = useGalleryStore(s => s.columns);
-  const setColumns = useGalleryStore(s => s.setColumns);
+
+  const { sortOrder, setSortOrder, columns, setColumns, setFilterSubId, filterSubId, lang } = useGalleryStore(useShallow(s => ({
+    sortOrder: s.sortOrder,
+    setSortOrder: s.setSortOrder,
+    columns: s.columns,
+    setColumns: s.setColumns,
+    setFilterSubId: s.setFilterSubId,
+    filterSubId: s.filterSubId,
+    lang: s.appLang
+  })));
   
   const setSelectedCatCode = setCategory; // Aliased for backward compatibility in the component
-  const setFilterSubId = useGalleryStore(s => s.setFilterSubId); // Still in store.ts
   const setSelectedTagIds = setTags; // Aliased for backward compatibility
   const selectedCatCode = categoryId;
-  const filterSubId = useGalleryStore(s => s.filterSubId); // Still in store
   const selectedTagIds = tagIds;
-  const lang = useGalleryStore(s => s.appLang);
 
   const t = React.useMemo(() => translations[lang as keyof typeof translations] || translations.en, [lang]);
 

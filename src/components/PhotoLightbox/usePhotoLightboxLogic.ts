@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Photo, Category, Manufacturer, ProductGroup, TranslationType } from '../../types';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { useFeedback, useTasks, useTaskExecutor } from '../../hooks';
-import { getGroupById } from '../../services/groups';
+import { getGroupById } from '@/services/group/queries';
 import { isOk } from '@/lib/errorFactory';
+import { usePhotoDetail } from '@/hooks/core/queries/usePhotoDetail';
 
 interface UsePhotoLightboxLogicProps {
   photo: Photo | null;
@@ -28,6 +29,10 @@ export const usePhotoLightboxLogic = ({
   const [isZoomed, setIsZoomed] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [isImageError, setIsImageError] = useState(false);
+  
+  const { data: detailData, isLoading: isDetailLoading } = usePhotoDetail(photo?.id || '');
+  const activePhoto = detailData ?? photo;
+  
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
   const [activeLang, setActiveLang] = useState<string>(lang || 'en');
   const [isCopied, setIsCopied] = useState(false);
@@ -51,16 +56,16 @@ export const usePhotoLightboxLogic = ({
     setIsImageLoading(true);
     setIsImageError(false);
     
-    if (photo?.group_id) {
+    if (activePhoto?.group_id) {
       runTask('获取产品组数据', async () => {
-        const result = await getGroupById(photo.group_id!);
+        const result = await getGroupById(activePhoto.group_id!);
         const data = isOk(result) ? result.value : null;
         setGroupData(data);
       }, { silent: true });
     } else {
       setGroupData(null);
     }
-  }, [photo?.id, photo?.group_id, runTask]);
+  }, [activePhoto?.id, activePhoto?.group_id, runTask]);
 
   const slides = useMemo(() => {
     return (displayPhotos || [])
@@ -153,6 +158,7 @@ export const usePhotoLightboxLogic = ({
     onTouchStart,
     onTouchMove,
     onTouchEnd,
-    retryImageLoad
+    retryImageLoad,
+    activePhoto
   };
 };

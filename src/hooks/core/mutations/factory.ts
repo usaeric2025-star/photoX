@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, UseMutationOptions, QueryKey } from '@tanstack/react-query';
-import { useFeedback } from '@/hooks/shared/useFeedback';
+import { useFeedback } from '@/hooks';
 import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
 
 export interface MutationConfig<TData, TVariables, TContext> {

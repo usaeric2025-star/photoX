@@ -2,11 +2,11 @@ import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { useMultiSelect } from '../shared/useMultiSelect';
-import { useLongPress } from '../shared/useLongPress';
+import { useMultiSelect } from '@/features/photo/usePhotoSelection';
+import { useLongPress } from '@/hooks/useLongPress';
 
 // Mock zustand gallery store for rendering test hooks
-vi.mock('@/store', () => ({
+vi.mock('@/store/galleryStore', () => ({
   useGalleryStore: (fn: any) => fn({
     isMultiSelect: false,
     selectedIds: [],
@@ -21,8 +21,6 @@ describe('Hook Rigid Contracts [HOOK-CONTRACT]', () => {
   it('[HOOK-CONTRACT] 依賴數組靜態性檢查', () => {
     // Audit the file contents of core custom hooks to ensure compliance with @deps-contract static annotation
     const hookDirs = [
-      path.join(process.cwd(), 'src/hooks/shared'),
-      path.join(process.cwd(), 'src/hooks/admin'),
       path.join(process.cwd(), 'src/hooks'),
     ];
 
@@ -59,9 +57,7 @@ describe('Hook Rigid Contracts [HOOK-CONTRACT]', () => {
     // Read files to ensure JSDoc "@hook-contract" exists
     const filesToAudit = [
       path.join(process.cwd(), 'src/hooks/useInfinitePhotoCursorPagination.ts'),
-      path.join(process.cwd(), 'src/hooks/shared/useScrollRestoration.ts'),
-      path.join(process.cwd(), 'src/hooks/shared/useMultiSelect.ts'),
-      path.join(process.cwd(), 'src/hooks/admin/useAdminEdit.ts'),
+      path.join(process.cwd(), 'src/features/photo/usePhotoSelection.ts'),
     ];
 
     filesToAudit.forEach((filepath) => {

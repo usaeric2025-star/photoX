@@ -1,6 +1,6 @@
 import React from 'react';
 import { Category } from '../../types';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 
 interface CategoriesSectionProps {
   categories: Category[];
@@ -10,7 +10,7 @@ interface CategoriesSectionProps {
 export const CategoriesSection: React.FC<CategoriesSectionProps> = ({ 
   categories, cardClass 
 }) => {
-  const appLang = useGalleryStore(s => s.appLang);
+  const { appLang } = useGalleryStore(useShallow(s => ({ appLang: s.appLang })));
 
   return (
     <section className={cardClass} id="section-categories">

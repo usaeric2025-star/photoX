@@ -2,8 +2,8 @@ import React from 'react';
 import { Spinner } from '@/components/ui/Spinner';
 import { ShieldCheck, PackageSearch, Trash2 } from 'lucide-react';
 import { useTaskExecutor } from '@/hooks/core/infra/useTaskExecutor';
-import { useFeedback } from '@/hooks/shared/useFeedback';
-import { useGalleryStore } from '@/store';
+import { useFeedback } from '@/hooks';
+import { useGalleryStore } from '@/store/galleryStore';
 import { api } from '@/lib/api';
 
 interface Props {

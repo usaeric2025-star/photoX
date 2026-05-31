@@ -4,9 +4,9 @@ import { router } from './router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth, usePermission } from '@/hooks';
 import { migrateStorage } from '@/lib/storage';
-import { clearExpiredCaches } from './utils/indexedDB';
+import { clearExpiredCaches } from './lib/db/indexedDB';
 import { supabase } from './lib/supabase';
-import { globalHandleError } from './utils/errorHandler';
+import { globalHandleError } from './lib/error/errorHandler';
 import { FullPageLoading } from './components/FullPageLoading';
 
 export default function AppRoutes() {

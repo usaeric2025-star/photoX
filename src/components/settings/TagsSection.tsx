@@ -2,11 +2,11 @@ import React from 'react';
 import { Plus, Heart, RefreshCw } from 'lucide-react';
 import { Tag, AppSettings } from '../../types';
 import { TagItem } from './TagItem';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore } from '@/store/galleryStore';
 import { useFeedback } from '../../hooks';
-import { normalizeTagName } from '../../utils/stringHelper';
+import { normalizeTagName } from '@/lib/utils/stringHelper';
 import { useTaskExecutor, useTasks } from '@/hooks';
-import { triggerRefreshTagHotScores } from '../../services/tags';
+import { triggerRefreshTagHotScores } from '../../services/tag/commands';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface TagsSectionProps {

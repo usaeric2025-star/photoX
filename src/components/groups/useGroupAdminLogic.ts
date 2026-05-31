@@ -1,14 +1,13 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Photo, ProductGroup, Dimension, DialogData } from '../../types';
-import { filterPhotosByMode } from '../../utils/photoVisibility';
+import { filterPhotosByMode } from '@/lib/filters/photoVisibility';
 import { useAdminActions } from '@/features/admin/useAdminActions';
-import { saveGroupToCloud } from '../../services/groups';
-import { updatePhotosGroupInCloud } from '../../services/photos';
+import { saveGroup as saveGroupToCloud } from '@/services/group/commands';
+import { updatePhotosGroup as updatePhotosGroupInCloud } from '@/services/photo/commands';
 import { isErr } from '@/lib/errorFactory';
-import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetailQuery, useAuth } from '@/hooks';
-import { useGroupPhotos } from '../../hooks/queries/usePhotos';
-import { useGalleryStore, useShallow } from '@/store';
+import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetail, useAuth, usePhotoList } from '@/hooks';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { groupKeys } from '@/lib/queryKeys';
 
 
@@ -55,7 +54,7 @@ export const useGroupAdminLogic = ({
   const { mutateAsync: removePhotosBatch } = useRemoveFromGroupMutation();
   
   const [groupData, setGroupData] = useState<ProductGroup | null>(null);
-  const { data: queriedGroupData, isLoading: isGroupDataLoading } = useGroupDetailQuery(activeGroupId);
+  const { data: queriedGroupData, isLoading: isGroupDataLoading } = useGroupDetail(activeGroupId);
 
   const setCover = useCallback(async (photoId: string) => {
       const isAlreadyCover = groupData?.cover_photo_id === photoId;
@@ -73,9 +72,9 @@ export const useGroupAdminLogic = ({
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null);
   const [showGroupSettings, setShowGroupSettings] = useState(false);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
-  const virtuosoRef = useRef<any>(null);
+  const virtualGridRef = useRef<any>(null);
 
-  const { data: dbGroupPhotosData, isLoading: isGroupPhotosLoading } = useGroupPhotos(activeGroupId || '', isAdminMode);
+  const { data: dbGroupPhotosData, isLoading: isGroupPhotosLoading } = usePhotoList(activeGroupId || '', isAdminMode);
   const dbGroupPhotos = useMemo(() => dbGroupPhotosData ?? [], [dbGroupPhotosData]);
 
   const activeGroupPhotos = useMemo(() => {
@@ -106,7 +105,7 @@ export const useGroupAdminLogic = ({
       const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
       if (index !== -1) {
         setTimeout(() => {
-          virtuosoRef.current?.scrollToIndex({
+          virtualGridRef.current?.scrollToIndex({
             index,
             align: 'center',
             behavior: 'auto'
@@ -218,7 +217,7 @@ export const useGroupAdminLogic = ({
       if (onUpdatePhoto) {
         await onUpdatePhoto(photoId, updates);
       } else {
-         const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photos');
+         const { updatePhoto: serviceUpdatePhoto } = await import('@/services/photo/commands');
          await serviceUpdatePhoto(photoId, updates);
       }
     } catch (err: any) {
@@ -281,7 +280,7 @@ export const useGroupAdminLogic = ({
               activeGroupPhotos.map(p => onUpdatePhoto(p.id, { dimensions: newDims }))
             );
           } else {
-            const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photos');
+            const { updatePhoto: serviceUpdatePhoto } = await import('@/services/photo/commands');
             await Promise.all(
               activeGroupPhotos.map(p => serviceUpdatePhoto(p.id, { dimensions: newDims }))
             );
@@ -313,7 +312,7 @@ export const useGroupAdminLogic = ({
     }));
     
     try {
-      const { updatePhoto: serviceUpdatePhoto } = await import('../../services/photos');
+      const { updatePhoto: serviceUpdatePhoto } = await import('@/services/photo/commands');
       await Promise.all(
         updatedPhotosWithOrder.map(p => serviceUpdatePhoto(p.id, { group_order: p.group_order }))
       );
@@ -352,7 +351,7 @@ export const useGroupAdminLogic = ({
     isGroupDataLoading,
     activeGroupPhotos,
     containerRef,
-    virtuosoRef,
+    virtualGridRef,
     currentHighlightId,
     handleScroll,
     confirmBulkRemove,

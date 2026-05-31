@@ -1,30 +1,20 @@
 /**
- * Simple utility for mobile haptic feedback
+ * Simple haptic feedback utility
  */
 export const hapticFeedback = {
   light: () => {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(10);
     }
   },
   medium: () => {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate(25);
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(20);
     }
   },
   heavy: () => {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([30, 50, 30]);
-    }
-  },
-  success: () => {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([10, 30, 10]);
-    }
-  },
-  error: () => {
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([50, 100, 50]);
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(50);
     }
   }
 };

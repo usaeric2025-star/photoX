@@ -4,7 +4,7 @@ import { translations, LanguageCode } from '../../lib/translations';
 import { Category, Manufacturer } from '../../types';
 import { useLongPress } from '@/hooks';
 import { Pencil, Trash2 } from 'lucide-react';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore } from '@/store/galleryStore';
 
 interface SectionHeaderProps {
   title: string;

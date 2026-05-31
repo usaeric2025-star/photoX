@@ -14,7 +14,7 @@ import { getCacheBustedImageUrl } from '../../../lib/ui-helpers';
 import { translations } from '../../../lib/translations';
 
 import { 
-  useInfinitePhotos 
+  usePhotoInfiniteList 
 } from '../../../hooks';
 import { cleanPhotos } from '../../../lib/filters';
 import { PAGINATION } from '../../../constants/config';
@@ -57,7 +57,7 @@ export const PhotoEditDrawer: React.FC<PhotoEditDrawerProps> = ({ slots }) => {
   const onAiAnalyze = (photo: Photo) => {};
   const onCancelAnalyze = () => {};
 
-  const infinitePhotosQuery = useInfinitePhotos({
+  const infinitePhotosQuery = usePhotoInfiniteList({
     category_id: filterCatId,
     tag_id: Array.isArray(filterTagIds) && filterTagIds.length > 0 ? filterTagIds[0] : null,
     searchQuery: debouncedSearchQuery,

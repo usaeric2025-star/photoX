@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { GalleryVariant } from '@/types/variant';
 
 export const LanguageSwitcher: React.FC<{ variant?: GalleryVariant | 'ghost' }> = ({ variant = 'full-management' }) => {
-  const appLang = useGalleryStore(s => s.appLang);
-  const setAppLang = useGalleryStore(s => s.setAppLang);
+  const { appLang, setAppLang } = useGalleryStore(useShallow(s => ({ 
+    appLang: s.appLang,
+    setAppLang: s.setAppLang
+  })));
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -35,7 +37,7 @@ export const LanguageSwitcher: React.FC<{ variant?: GalleryVariant | 'ghost' }> 
 
   if (variant === 'public-showcase') {
     return (
-      <div className="flex items-center bg-[#F7F7F7] p-0.5 rounded-full border border-[#ECECEC] h-9">
+      <div className="flex items-center bg-[#F7F7F7] p-0.5 rounded-full border border-[#ECECEC] h-9 shrink-0 flex-nowrap">
         {[
           { code: 'zh', label: '中文' },
           { code: 'en', label: 'EN' },
@@ -44,7 +46,7 @@ export const LanguageSwitcher: React.FC<{ variant?: GalleryVariant | 'ghost' }> 
           <button 
             key={l.code} 
             onClick={() => setAppLang(l.code as any)} 
-            className={`px-3 h-8 flex items-center justify-center rounded-full text-[12px] font-bold transition-all ${appLang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888] hover:text-[#1A1A1A]'}`}
+            className={`px-1.5 sm:px-3 h-8 flex items-center justify-center rounded-full text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all ${appLang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888] hover:text-[#1A1A1A]'}`}
           >
             {l.label}
           </button>

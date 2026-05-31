@@ -32,7 +32,7 @@ export const LogoSection: React.FC<LogoSectionProps> = ({
       
       <div className="flex items-center gap-5 pt-2">
           <div className="relative group">
-            {settings?.logo_url ? (
+            {settings?.logo_url && settings.logo_url.trim() !== '' ? (
                 <img src={settings.logo_url} className="w-16 h-16 rounded-3xl object-cover shadow-md border-2 border-white p-1 bg-white" alt="Logo" />
             ) : (
                 <div className="w-16 h-16 bg-brand-navy/5 rounded-3xl flex flex-col items-center justify-center text-brand-navy/20 shadow-inner border border-brand-navy/10 italic">

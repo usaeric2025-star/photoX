@@ -5,6 +5,20 @@ import { Photo } from '@/types';
  * Normalizes photo pages by removing duplicates and filtering out items without valid IDs.
  */
 export const flattenPhotoInfiniteQueryPages = (pages: { photos: Photo[] }[]): Photo[] => {
+  if (import.meta.env.DEV) {
+    const ids = pages.flatMap(p => p.photos.map(photo => photo.id));
+    const uniqueIds = new Set(ids);
+    if (ids.length !== uniqueIds.size) {
+      console.error('[PHOTOX-ASSERT] Duplicate photo IDs detected in normalized data:', ids.filter((id, i) => ids.indexOf(id) !== i));
+    }
+    // 必填字段完整性校驗
+    for (const photo of pages.flatMap(p => p.photos)) {
+      if (!photo.id || !photo.image_url) {
+        console.error('[PHOTOX-ASSERT] Incomplete photo object in normalized data:', photo);
+      }
+    }
+  }
+
   const photoMap = new Map<string, Photo>();
   
   pages.flatMap(page => page.photos).forEach(photo => {

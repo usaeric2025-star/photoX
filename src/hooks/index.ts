@@ -1,44 +1,64 @@
 // Core Hooks
-export * from './core/auth/useAuth';
-export * from './core/infra/useSettings';
-export * from './core/infra/useTaskExecutor';
-export * from './core/infra/useTasks';
-export * from './core/auth/usePermission';
-export * from './core/infra/useSyncEngine';
-export * from './core/auth/useAdminMode';
-export * from './core/usePhotoAction';
-export * from './core/useGroupAction';
+export { useAuth } from './core/auth/useAuth';
+export { useSettings } from './core/infra/useSettings';
+export { useTaskExecutor } from './core/infra/useTaskExecutor';
+export { TaskProvider, useTasks } from './core/infra/useTasks';
+export { usePermission } from './core/auth/usePermission';
+export { useSyncEngine } from './core/infra/useSyncEngine';
+export { useAdminMode } from './core/auth/useAdminMode';
+export { usePhotoAction } from './core/usePhotoAction';
+export { useGroupAction } from './core/useGroupAction';
+export { useScrollRestoration } from '../core/infra/useScrollRestoration';
+export { useFormValidation } from '../core/infra/useFormValidation';
 
-// Shared Hooks
-export * from './shared/useFeedback';
-export * from './shared/useMultiSelect';
-export * from './shared/useDebouncedSearch';
-export * from './shared/useTagsDisplay';
-export * from './shared/useClickOutside';
-export * from './shared/useLongPress';
-export * from './shared/useScrollRestoration';
-export * from './shared/useFormValidation';
-export * from './shared/useAdminCategory';
-export * from './shared/usePhotoFilters';
-export * from './shared/useImageHash';
-export * from './shared/useMountedRef';
-export * from '../features/filters/useFilters';
+// Features Hooks
+export { useToast, useFeedback } from './useToast';
+export { useClickOutside } from './useClickOutside';
+export { useLongPress } from './useLongPress';
+export { useMountedRef } from './useMountedRef';
+export { usePhotoFilters } from './usePhotoFilters';
+export { usePhotoFingerprint, useImageHash } from './usePhotoFingerprint';
+export { useDebouncedSearch } from './useDebouncedSearch';
+export { useBatchEdit } from '../features/photo/useBatchEdit';
+export { useBatchConfirmation as useBatchConfirmDialog } from '../features/photo/useBatchConfirmDialog';
+export { useMultiSelect } from '../features/photo/usePhotoSelection';
+export { useTagsDisplay } from '../features/photo/useTagFiltering';
+export { useAdminCategory } from '../features/admin/useCategoryManagement';
+export { useFilters } from '../features/filters/useFilters';
 
 // Queries
-export * from './queries/usePhotos';
-export * from './queries/useCategories';
-export * from './queries/useTags';
-export * from './queries/useManufacturers';
-export * from './queries/useGroups';
-export * from './queries/useInvalidatePhotos';
+export { usePhotoInfiniteList, usePhotoInfiniteGroupList } from './core/queries/useInfinitePhotos';
+export { usePhotoList } from './core/queries/usePhotoList';
+export { usePhotoCount } from './core/queries/usePhotoCount';
+export { useCategoryList } from './core/queries/useCategoryList';
+export { useTagList } from './core/queries/useTagList';
+export { useManufacturerList } from './core/queries/useManufacturerList';
+export { useGroupList } from './core/queries/useGroupList';
+export { useGroupDetail } from './core/queries/useGroupDetail';
+export { useInvalidatePhotos } from './queries/useInvalidatePhotos';
 
 // Mutations
-export * from './mutations/usePhotoMutations';
-export * from './core/mutations/useGroupOperations';
-export * from './core/mutations/useAdminMutations';
-export * from './core/mutations/useGroupCoverMutation';
-export * from './core/mutations/useSettingsMutation';
-export * from './core/mutations/useSyncMutation';
+export { usePhotoEdit } from './core/mutations/usePhotoEdit';
+export { usePhotoDelete } from './core/mutations/usePhotoDelete';
+export { usePhotoBatchEdit } from './core/mutations/usePhotoBatchEdit';
+export { useTagCreate } from './core/mutations/useTagCreate';
+export { useTagEdit } from './core/mutations/useTagEdit';
+export { useTagDelete } from './core/mutations/useTagDelete';
+export { useCategoryCreate } from './core/mutations/useCategoryCreate';
+export { useCategoryEdit } from './core/mutations/useCategoryEdit';
+export { useCategoryDelete } from './core/mutations/useCategoryDelete';
+export { useManufacturerCreate } from './core/mutations/useManufacturerCreate';
+export { useManufacturerEdit } from './core/mutations/useManufacturerEdit';
+export { useManufacturerDelete } from './core/mutations/useManufacturerDelete';
+export { useGroupCreate } from './core/mutations/useGroupCreate';
+export { useGroupEdit, useGroupPhotosMutation, useRemoveFromGroupMutation, useUngroupMutation } from './core/mutations/useGroupEdit';
+export { useGroupDelete } from './core/mutations/useGroupDelete';
+export { useGroupCoverMutation } from './core/mutations/useGroupCoverMutation';
+export { useSettingsMutation } from './core/mutations/useSettingsMutation';
+export { useSyncMutation } from './core/mutations/useSyncMutation';
 
 // Utils
-export { useGalleryStore, useStore, useShallow } from '../store';
+export { useGalleryStore, useStore, useShallow } from '../store/galleryStore';
+
+
+

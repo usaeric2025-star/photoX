@@ -1,9 +1,9 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useGalleryStore } from '../../../store';
+import { useGalleryStore, useShallow } from '../../../store';
 import { 
-  useCategoriesQuery, useTagsQuery, useManufacturersQuery,
-  useAddTagMutation, useUpdateTagMutation, useDeleteTagMutation,
-  useAddManufacturerMutation, useUpdateManufacturerMutation, useDeleteManufacturerMutation,
+  useCategoryList, useTagList, useManufacturerList,
+  useTagCreate, useTagEdit, useTagDelete,
+  useManufacturerCreate, useManufacturerEdit, useManufacturerDelete,
   useFeedback, useTaskExecutor, useTasks
 } from '../../../hooks';
 import { Photo, ProductFormData, Tag, Manufacturer } from '../../../types';
@@ -34,21 +34,23 @@ export const usePhotoEditLogic = (props: Props) => {
   const aiDebugInfo = null;
 
   const { runTask } = useTaskExecutor();
-  const setPromptDialog = useGalleryStore(s => s.setPromptDialog);
-  const setAlertDialog = useGalleryStore(s => s.setAlertDialog);
-  const appLang = useGalleryStore(s => s.appLang);
+  const { setPromptDialog, setAlertDialog, appLang } = useGalleryStore(useShallow(s => ({
+    setPromptDialog: s.setPromptDialog,
+    setAlertDialog: s.setAlertDialog,
+    appLang: s.appLang
+  })));
   const { showError, showSuccess } = useFeedback();
 
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: tags = [] } = useTagsQuery();
-  const { data: manufacturers = [] } = useManufacturersQuery();
+  const { data: categories = [] } = useCategoryList();
+  const { data: tags = [] } = useTagList();
+  const { data: manufacturers = [] } = useManufacturerList();
 
-  const { mutateAsync: addTagMut } = useAddTagMutation();
-  const { mutateAsync: updateTagMut } = useUpdateTagMutation();
-  const { mutateAsync: deleteTagMut } = useDeleteTagMutation();
-  const { mutateAsync: addManMut } = useAddManufacturerMutation();
-  const { mutateAsync: updateManMut } = useUpdateManufacturerMutation();
-  const { mutateAsync: deleteManMut } = useDeleteManufacturerMutation();
+  const { mutateAsync: addTagMut } = useTagCreate();
+  const { mutateAsync: updateTagMut } = useTagEdit();
+  const { mutateAsync: deleteTagMut } = useTagDelete();
+  const { mutateAsync: addManMut } = useManufacturerCreate();
+  const { mutateAsync: updateManMut } = useManufacturerEdit();
+  const { mutateAsync: deleteManMut } = useManufacturerDelete();
 
 
   const addTag = async (name: string) => { const tag = await addTagMut(name); return tag.id; };
@@ -103,7 +105,7 @@ export const usePhotoEditLogic = (props: Props) => {
     
     if (editPhotoId && !editPhotoId.startsWith('temp-')) {
         await runTask('更新可见性', async () => {
-            const m = await import('../../../services/photos');
+            const m = await import('../../../services/photo/commands');
             await m.updatePhotoHidden(editPhotoId, nextValue);
         }, { showSuccessToast: true, silent: true });
     } else {

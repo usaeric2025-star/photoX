@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { useGalleryStore } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permissions';
 
 /**
@@ -9,9 +9,7 @@ import { ROLE_PERMISSIONS, getEffectiveRole, Capability } from '@/config/permiss
  */
 export function usePermission() {
   const { user } = useAuth();
-  const isStaffMode = useGalleryStore(s => s.isStaffMode);
-  
-  const role = useMemo(() => getEffectiveRole(user || null, isStaffMode), [user, isStaffMode]);
+  const role = useMemo(() => getEffectiveRole(user || null, false), [user]);
   const permissions = useMemo(() => ROLE_PERMISSIONS[role] || [], [role]);
 
   /**

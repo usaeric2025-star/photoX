@@ -1,27 +1,28 @@
-import { usePhotoMutations } from '@/hooks/mutations/usePhotoMutations';
-import { useFeedback } from '@/hooks/shared/useFeedback';
+import { usePhotoEdit, usePhotoDelete, usePhotoBatchEdit, useFeedback } from '@/hooks';
 import type { Photo } from '@/types';
 
 export function useAdminActions() {
-  const { deletePhoto, updatePhoto, batchUpdate } = usePhotoMutations();
+  const deletePhoto = usePhotoDelete();
+  const updatePhoto = usePhotoEdit();
+  const batchUpdate = usePhotoBatchEdit();
   const { showError, showSuccess } = useFeedback();
 
   const handleDeletePhoto = async (ids: string | string[]) => {
     const idList = Array.isArray(ids) ? ids : [ids];
     try {
       await deletePhoto.mutateAsync(idList);
-      showSuccess(`已删除 ${idList.length} 张照片`);
+      // Feedback is handled in the hook
     } catch (err) {
-      showError(err, '删除失败');
+      // Error feedback is handled in the hook
     }
   };
 
   const handleUpdatePhoto = async (id: string, updates: Partial<Photo>) => {
     try {
       await updatePhoto.mutateAsync({ id, updates });
-      showSuccess('更新成功');
+      // Feedback is handled in the hook
     } catch (err) {
-      showError(err, '更新失败');
+      // Error feedback is handled in the hook
     }
   };
 

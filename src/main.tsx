@@ -11,8 +11,11 @@ import { setupGlobalErrorHandling } from './lib/errorHandling';
 import { ErrorReporter } from './lib/errorReporter';
 import { setupDevErrorHelper } from './lib/devErrorHelper';
 import './index.css';
-
 import { clientEnv } from './shared/envSchema';
+
+if (clientEnv.DEV) {
+  import('./lib/resizeObserverPolyfill');
+}
 
 setupGlobalErrorHandling();
 setupDevErrorHelper();

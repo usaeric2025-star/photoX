@@ -7,19 +7,17 @@ import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAdminMode, usePermission, useTasks, useCategoriesQuery, useManufacturersQuery, useTagsQuery } from '../../hooks';
-import { useGalleryStore, useShallow } from '../../store';
+import { useAdminMode, usePermission, useTasks, useCategoryList, useManufacturerList, useTagList } from '../../hooks';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { createTranslate } from '@/lib/i18n';
 import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 
 export interface PhotoLightboxProps {
-  photo: Photo | null;
+  photoId: string | null;
   displayPhotos: Photo[];
-  index: number | null;
   onClose: () => void;
-  onPrev: (e?: React.MouseEvent) => void;
-  onNext: (e?: React.MouseEvent) => void;
+  onPhotoIdChange?: (id: string | null) => void;
   contactWhatsApp?: (photo: Photo) => void;
   onUngroup?: (photoId: string) => void;
   onSetGroupCover?: (photoId: string, groupId: string) => void;
@@ -38,13 +36,31 @@ export interface PhotoLightboxProps {
  */
 export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const {
-    photo, index: propIndex, onClose, onPrev, onNext,
+    photoId, onClose, onPhotoIdChange,
     contactWhatsApp, displayPhotos: rawDisplayPhotos
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
+  
+  const index = React.useMemo(() => displayPhotos.findIndex(p => p.id === photoId), [displayPhotos, photoId]);
+  const photo = index !== -1 ? displayPhotos[index] : null;
+  const { setActivePhotoId: setStoreActivePhotoId } = useGalleryStore(useShallow(s => ({ setActivePhotoId: s.setActivePhotoId })));
+  
+  const setActivePhotoId = onPhotoIdChange || setStoreActivePhotoId;
+  
+  const onPrev = React.useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (index > 0) setActivePhotoId(displayPhotos[index - 1].id);
+  }, [index, displayPhotos, setActivePhotoId]);
+  const onNext = React.useCallback((e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (index < displayPhotos.length - 1) setActivePhotoId(displayPhotos[index + 1].id);
+  }, [index, displayPhotos, setActivePhotoId]);
 
   const actions = useAdminActions();
-  const { setEditPhotoId } = useGalleryStore(useShallow(s => ({ setEditPhotoId: s.setEditPhotoId })));
+  const { setEditPhotoId, lang } = useGalleryStore(useShallow(s => ({ 
+    setEditPhotoId: s.setEditPhotoId,
+    lang: s.appLang
+  })));
   const { tasks } = useTasks();
   const storeIsAnalyzing = React.useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
 
@@ -57,10 +73,9 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
   const onSetGroupCover = props.onSetGroupCover ?? ((id: string, gid: string) => {});
   const isAnalyzing = props.isAnalyzing ?? storeIsAnalyzing;
 
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: qManufacturers = [] } = useManufacturersQuery();
-  const { data: contextTags = [] } = useTagsQuery();
-  const manufacturers = qManufacturers;
+  const { data: categories = [] } = useCategoryList();
+  const { data: manufacturers = [] } = useManufacturerList();
+  const { data: contextTags = [] } = useTagList();
   
   const tagMap = React.useMemo(() => {
     const map: Record<string, string> = { };
@@ -68,15 +83,10 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
     return map;
   }, [contextTags]);
 
-  const lang = useGalleryStore(s => s.appLang);
   const isAdminMode = useAdminMode();
   const translate = React.useMemo(() => (translations[lang as LanguageCode] || translations.en), [lang]);
 
-  const index = React.useMemo(() => {
-    if (!photo) return null;
-    const foundIndex = displayPhotos.findIndex((p) => p.id === photo.id);
-    return foundIndex !== -1 ? foundIndex : propIndex;
-  }, [photo, displayPhotos, propIndex]);
+
 
   const { isAdmin } = usePermission();
 
@@ -112,12 +122,13 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
     onTouchStart,
     onTouchMove,
     onTouchEnd,
-    retryImageLoad
+    retryImageLoad,
+    activePhoto
   } = usePhotoLightboxLogic({
     photo, displayPhotos, index, lang, onPrev, onNext, onClose
   });
 
-  const isOpen = index !== null && !!photo;
+  const isOpen = index !== null && !!activePhoto;
 
   const DialogBackdrop = Dialog.Backdrop as any;
   const DialogPopup = Dialog.Popup as any;
@@ -156,7 +167,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
                     className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
                   >
                     <LightboxImageSection 
-                      photo={photo!}
+                      photo={activePhoto!}
                       index={index!}
                       isZoomed={isZoomed}
                       setIsZoomed={setIsZoomed}
@@ -179,7 +190,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = (props) => {
 
                     {!isZoomed && (
                       <LightboxInfoPanel 
-                        photo={photo!}
+                        photo={activePhoto!}
                         groupData={groupData}
                         isGroupDataLoading={isGroupDataLoading}
                         activeLang={activeLang}

@@ -52,6 +52,12 @@ export interface Photo {
   member_count?: number;
   ai_failed?: boolean;
   metadata?: Record<string, any>;
+  group?: {
+      id: string;
+      name: string;
+      color: string | null;
+      cover_photo_id: string | null;
+  } | null;
 }
 
 export interface SubCategory {

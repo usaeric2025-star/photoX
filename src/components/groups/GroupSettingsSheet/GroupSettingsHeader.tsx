@@ -2,7 +2,7 @@ import React from 'react';
 import { Settings2, Trash2, X } from 'lucide-react';
 import { SheetHeader, SheetTitle } from "../../ui/sheet";
 import { ProductGroup, DialogData } from '../../../types';
-import { saveGroupToCloud } from '../../../services/groups';
+import { saveGroup as saveGroupToCloud } from '@/services/group/commands';
 import { useFeedback, useTaskExecutor, useTasks } from '../../../hooks';
 
 export const GroupSettingsHeader: React.FC<{

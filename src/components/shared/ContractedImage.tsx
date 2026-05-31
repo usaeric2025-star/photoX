@@ -8,10 +8,12 @@ interface Props {
   aspectRatio?: string;
   priority?: boolean;
   className?: string;
+  style?: React.CSSProperties;
+  onLoad?: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
 export const ContractedImage: React.FC<Props> = ({ 
-  src, alt, width, aspectRatio = '1/1', priority = false, className = '' 
+  src, alt, width, aspectRatio = '1/1', priority = false, className = '', style, onLoad
 }) => {
    const widths = Array.isArray(width) ? width : [width];
    
@@ -24,7 +26,7 @@ export const ContractedImage: React.FC<Props> = ({
    const fallbackSrc = src ? resolveImageUrl(src, { width: widths[0] }) : '/placeholder-image.webp';
 
    return (
-     <picture className={className}>
+     <picture className={className} style={style}>
        <source type="image/avif" srcSet={avifSrcSet} />
        <source type="image/webp" srcSet={webpSrcSet} />
        <img 
@@ -33,6 +35,7 @@ export const ContractedImage: React.FC<Props> = ({
          loading={priority ? "eager" : "lazy"}
          fetchPriority={priority ? "high" : "low"}
          decoding="async"
+         onLoad={onLoad}
          style={{ aspectRatio }}
          className="w-full h-full object-cover"
        />

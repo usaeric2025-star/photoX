@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles, Trash2, Layers, X, Edit3, EyeOff } from 'lucide-react';
-import { useBatchConfirmation } from '@/hooks/shared/useBatchConfirmation';
+import { useBatchConfirmDialog as useBatchConfirmation } from '@/hooks';
 
 interface Props {
   selectedCount: number;

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { generateThumbHash } from '../../utils/thumbHash';
-import { updatePhotoInCloud } from '../photos';
+import { generateThumbHash } from '@/lib/image/thumbHash';
+import { updatePhoto as updatePhotoInCloud } from './commands';
 
 import { StandardError } from '@/lib/validators/protocol';
 

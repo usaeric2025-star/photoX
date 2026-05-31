@@ -1,11 +1,11 @@
 import { useCallback, useEffect } from 'react';
-import { useGalleryStore, useShallow } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { User } from '@/types';
 import { fetchSettings } from '@/services/settingService';
-import { getPhotoCount } from '@/services/photos';
+import { getPhotoCount } from '@/services/photo/queries';
 import { useQueryClient } from '@tanstack/react-query';
 import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
-import { setupOfflineSyncListener } from '@/utils/offlineSync';
+import { setupOfflineSyncListener } from '@/lib/sync/offlineSync';
 
 export const useSyncEngine = () => {
   const { user } = useAuth();

@@ -2,7 +2,7 @@ import React from 'react';
 import { SyncSection } from './SyncSection';
 import { ExportDataSection } from './ExportDataSection';
 import { User, Photo, Category, Tag, Manufacturer, ApiResponse } from '@/types';
-import { useGalleryStore } from '@/store';
+import { useGalleryStore } from '@/store/galleryStore';
 
 interface SyncSettingsProps {
   user: User | null;

@@ -1,9 +1,9 @@
 import { createStaleTime } from '@/shared/freshnessSchema';
 import React, { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { loadCategoriesFromCloud } from '@/services/categories';
-import { loadTagsFromCloud } from '@/services/tags';
-import { syncCache } from '@/utils/indexedDB';
+import { loadCategoriesFromCloud } from '@/services/category/queries';
+import { loadTagsFromCloud } from '@/services/tag/queries';
+import { syncCache } from '@/lib/db/indexedDB';
 import { photoKeys } from '@/lib/queryKeys';
 import { AdminViewContent } from './AdminViewContent';
 

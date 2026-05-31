@@ -21,7 +21,6 @@ export default function VirtualizerBenchmark() {
           <motion.div layout>
              <VirtualGrid
             count={groupedItems.length}
-            estimateSize={() => 150}
             renderItem={(index) => (
                <div className="p-4 border border-slate-200 rounded-lg bg-white shadow-sm">
                  Group {index}
@@ -39,7 +38,6 @@ export default function VirtualizerBenchmark() {
           <motion.div layout>
           <VirtualGrid
             count={gridItems.length}
-            estimateSize={() => 100}
             renderItem={(index) => (
               <div 
                 className="aspect-square bg-slate-100 rounded flex items-center justify-center text-xs text-slate-400 border border-slate-200"

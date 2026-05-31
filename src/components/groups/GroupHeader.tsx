@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
-import { useGalleryStore, useShallow } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 
 interface GroupHeaderProps {

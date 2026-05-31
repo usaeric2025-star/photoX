@@ -1,5 +1,5 @@
 import * as ErrorMonitor from "@sentry/react";
-import { globalHandleError } from '@/utils/errorHandler';
+import { globalHandleError } from '@/lib/error/errorHandler';
 import { clientEnv } from '../shared/envSchema';
 
 export type ErrorLevel = 'info' | 'warn' | 'error' | 'critical';

@@ -39,6 +39,14 @@ export default defineConfig(({mode}) => {
       port: 3000,
       host: '0.0.0.0',
       hmr: process.env.DISABLE_HMR !== 'true',
+      overlay: {
+        runtimeErrors(error) {
+          if (error.message.includes('ResizeObserver')) {
+            return false;
+          }
+          return true;
+        },
+      },
     },
     test: {
       globals: true,

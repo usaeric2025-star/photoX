@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { supabase } from '@/lib/supabase';
-import { PHOTO_SELECT_FIELDS, VIRTUAL_FIELDS } from '@/services/photos';
+import { PHOTO_LIST_FIELDS as PHOTO_SELECT_FIELDS, VIRTUAL_FIELDS } from '@/constants/photoFields';
 import { DB_CONFIG } from '@/constants/config';
 import { registerDiagnostic } from './index';
 

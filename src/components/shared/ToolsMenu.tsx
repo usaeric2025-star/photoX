@@ -1,16 +1,15 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings2, LogIn, LogOut, Database, Globe } from 'lucide-react';
-import { useAuth } from '@/hooks';
+import { useAuth, useAdminMode } from '@/hooks';
 import { reportError } from '@/lib/errorReporter';
-import { useGalleryStore } from '@/store';
+import { useGalleryStore } from '@/store/galleryStore';
 
 interface ToolsMenuProps {
   show: boolean;
   t: any;
   handleOpenSettings: () => void;
   handleExitStaffMode?: () => void;
-  isStaffMode: boolean;
   currentLang: string;
   onSetLang: (l: string) => void;
   adminPreviewMode: 'private' | 'public';
@@ -18,9 +17,10 @@ interface ToolsMenuProps {
 }
 
 export const ToolsMenu: React.FC<ToolsMenuProps> = ({ 
-  show, t, handleOpenSettings, handleExitStaffMode, isStaffMode, currentLang, onSetLang, adminPreviewMode, toggleAdminPreviewMode
+  show, t, handleOpenSettings, handleExitStaffMode, currentLang, onSetLang, adminPreviewMode, toggleAdminPreviewMode
 }) => {
   const { user, loginWithGoogle, logout } = useAuth();
+  const hasAdminAccess = useAdminMode();
   
   return (
     <AnimatePresence>
@@ -32,7 +32,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
           className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-[120]"
         >
           
-          {(user || isStaffMode) && (
+          {(user || hasAdminAccess) && (
             <button 
               onClick={handleOpenSettings}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left font-semibold"
@@ -73,7 +73,7 @@ export const ToolsMenu: React.FC<ToolsMenuProps> = ({
             </button>
           )}
 
-          {isStaffMode && (
+          {hasAdminAccess && (
             <button 
               onClick={() => {
                 useGalleryStore.getState().setAlertDialog({

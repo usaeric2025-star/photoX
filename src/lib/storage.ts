@@ -12,7 +12,6 @@ export const STORAGE_KEYS = {
   EDIT_PHOTO: 'photo_editPhotoId',
   BATCH_EDITING: 'photo_batchEditingIds',
   GROUP_SETTINGS_OPEN: 'photo_groupSettingsOpen',
-  IS_STAFF_MODE: 'isStaffMode',
   VIEW_MODE: 'photo_viewMode',
   ACTIVE_SCREEN: 'photo_activeScreen',
   SIDEBAR_COLLAPSED: 'photo_isSidebarCollapsed',
@@ -62,7 +61,7 @@ export function migrateStorage() {
   
   stores.forEach(store => {
     Object.keys(store).forEach(key => {
-      if (key.startsWith('photo_') && !Object.values(STORAGE_KEYS).includes(key as any) && key !== 'isStaffMode') {
+      if (key.startsWith('photo_') && !Object.values(STORAGE_KEYS).includes(key as any)) {
         store.removeItem(key);
       }
     });

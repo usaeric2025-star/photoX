@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Trash2, Pencil } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore } from '@/store/galleryStore';
 import { useClickOutside, useLongPress } from '../../hooks';
-import { normalizeManufacturerName } from '../../utils/stringHelper';
+import { normalizeManufacturerName } from '@/lib/utils/stringHelper';
 
 import { Manufacturer } from '../../types';
 

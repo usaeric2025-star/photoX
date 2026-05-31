@@ -1,7 +1,7 @@
 import React from 'react';
 import { GalleryVariant } from '@/types/variant';
 import { Photo } from '@/types';
-import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
+import { PublicHeader as UnifiedHeader } from '@/components/photo/PublicHeader';
 
 interface AdminToolbarProps {
   photos: Photo[];
@@ -23,6 +23,7 @@ export const AdminToolbar: React.FC<AdminToolbarProps> = (props) => {
       photos={props.photos}
       handleBatchAiIdentifyTrigger={props.handleBatchAiIdentifyTrigger}
       handleManageClick={props.onManageClick}
+      loginWithGoogle={props.loginWithGoogle}
       onRefresh={props.onRefresh}
       cloudCount={props.cloudCount}
       isRefreshing={props.isSyncing}

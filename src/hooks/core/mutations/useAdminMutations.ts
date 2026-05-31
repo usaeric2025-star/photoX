@@ -1,8 +1,8 @@
 import { createMutationHook } from './factory';
 import { Tag, Category, Manufacturer } from '@/types';
-import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tags';
-import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/categories';
-import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturers';
+import { addTagToDB, updateTagInDB, deleteTagFromDB } from '@/services/tag/commands';
+import { addCategoryToDB, updateCategoryInDB, deleteCategoryFromDB } from '@/services/category/commands';
+import { addManufacturerToDB, updateManufacturerInDB, deleteManufacturerFromDB } from '@/services/manufacturer/commands';
 import { photoKeys } from '@/lib/queryKeys';
 
 export const useAddTagMutation = createMutationHook({

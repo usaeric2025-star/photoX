@@ -5,19 +5,17 @@ import { Photo, Tag, Category, ProductGroup, Manufacturer } from '../types';
 import { GalleryVariant } from '@/types/variant';
 import { TranslationType } from '../lib/ui-helpers';
 import { sortGroupPhotos } from '../lib/filters';
-import { filterPhotosByMode } from '../utils/photoVisibility';
+import { filterPhotosByMode } from '@/lib/filters/photoVisibility';
+import { useAdminMode, useFeedback, useGroupDetail, useTasks, usePhotoInfiniteGroupList } from '@/hooks';
 import { GroupDetailSkeleton } from './groups/GroupDetailSkeleton';
 import { PhotoLightbox } from './PhotoLightbox';
 import { Skeleton } from './ui/Skeleton';
 import { GroupGridView } from './groups/GroupGridView';
 import { GroupAdminShell, GroupAdminShellProps } from './groups/GroupAdminShell';
-import { mapSupabasePhoto } from '../services/photos';
+import { mapSupabasePhoto } from '@/services/photo/queries';
 import { DB_CONFIG } from '../constants/config';
-
-import { useAdminMode, useFeedback, useGroupDetailQuery, useTasks } from '@/hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
-import { useInfiniteGroupPhotosQuery } from '@/hooks';
-import { useGalleryStore, useShallow } from '../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { translations } from '../lib/translations';
 import { createTranslate } from '../lib/i18n';
 
@@ -32,18 +30,16 @@ export interface GroupDetailViewProps extends GroupAdminShellProps {
   onLongPressEnd?: () => void;
   shareGroup?: (photos: Photo[]) => void;
   initialPhotoId?: string | null;
-  isStaffMode?: boolean;
   contactWhatsApp?: (photo: Photo) => void;
   variant?: GalleryVariant;
 }
 
 export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const { activeGroupId, setActiveGroupId, shareGroup, initialPhotoId, variant } = props;
-  const isManagement = variant === 'full-management' || variant === 'staff-workspace';
-  const isAdminMode = isManagement;
+  const isAdminMode = useAdminMode();
   const { showError } = useFeedback();
 
-  const lang = useGalleryStore(s => s.appLang);
+  const { lang } = useGalleryStore(useShallow(s => ({ lang: s.appLang })));
   const translate = createTranslate(lang as any);
   
   const { tasks } = useTasks();
@@ -58,10 +54,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
   const [focusedGroupPhotoId, setFocusedGroupPhotoId] = useState<string | null>(null);
 
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const virtuosoRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
+  const virtualGridRef = useRef<{ scrollToIndex: (args: { index: number; align?: string; behavior?: string }) => void } | null>(null);
   const [currentHighlightId, setCurrentHighlightId] = useState<string | null>(null);
 
-  const { data: groupData, isLoading: isGroupDataLoading, isPlaceholderData: isGroupDataPlaceholder } = useGroupDetailQuery(activeGroupId);
+  const { data: groupData, isLoading: isGroupDataLoading, isPlaceholderData: isGroupDataPlaceholder } = useGroupDetail(activeGroupId);
 
   // Paginated group photos via React Query Infinite Query
   const {
@@ -71,7 +67,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
     isFetchingNextPage,
     isLoading: isGroupPhotosLoading,
     isPlaceholderData: isGroupPhotosPlaceholder
-  } = useInfiniteGroupPhotosQuery(activeGroupId, isAdminMode, 20);
+  } = usePhotoInfiniteGroupList(activeGroupId, isAdminMode, 20);
 
   // [GROUP-STALE-SIGNAL]
   const isStale = isGroupDataPlaceholder || isGroupPhotosPlaceholder;
@@ -130,9 +126,9 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
       if (!isLoading && activeGroupPhotos.length > 0) {
         const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
         if (index !== -1) {
-          // VirtuosoGrid scrollTo might need a small delay
+          // ScrollTo might need a small delay
           setTimeout(() => {
-             virtuosoRef.current?.scrollToIndex({
+             virtualGridRef.current?.scrollToIndex({
                 index,
                 align: 'center',
                 behavior: 'smooth'
@@ -244,7 +240,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                 )}
 
                 {/* [GROUP-STALE-SIGNAL] */}
-                <div className={`flex-1 min-h-0 transition-opacity duration-300 ${isStale ? "opacity-60" : "opacity-100"}`}>
+                <div className={`flex-1 min-h-0 flex flex-col transition-opacity duration-300 ${isStale ? "opacity-60" : "opacity-100"}`}>
                   <GroupGridView 
                     key={activeGroupId}
                     variant={variant}
@@ -253,7 +249,7 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
                         fetchNextPage();
                       }
                     }}
-                    virtuosoRef={virtuosoRef}
+                    virtualGridRef={virtualGridRef}
                     photos={activeGroupPhotos} 
                     isLoading={isLoading}
                     isFetchingNextPage={isFetchingNextPage}
@@ -274,18 +270,10 @@ export const GroupDetailView: React.FC<GroupDetailViewProps> = (props) => {
 
                  return (
                     <PhotoLightbox 
-                      photo={photo}
+                      photoId={focusedGroupPhotoId}
                       displayPhotos={activeGroupPhotos}
-                      index={currentIndex}
                       onClose={() => setFocusedGroupPhotoId(null)}
-                      onPrev={() => {
-                        const prev = currentIndex > 0 ? currentIndex - 1 : activeGroupPhotos.length - 1;
-                        setFocusedGroupPhotoId(activeGroupPhotos[prev].id);
-                      }}
-                      onNext={() => {
-                        const next = currentIndex < activeGroupPhotos.length - 1 ? currentIndex + 1 : 0;
-                        setFocusedGroupPhotoId(activeGroupPhotos[next].id);
-                      }}
+                      onPhotoIdChange={setFocusedGroupPhotoId}
                       contactWhatsApp={props.contactWhatsApp || (() => {})}
                       onEditPhoto={onEditPhoto}
                       onToggleHidden={onToggleHidden}

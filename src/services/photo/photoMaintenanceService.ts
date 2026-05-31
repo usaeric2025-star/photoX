@@ -10,12 +10,13 @@ import { Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { deletePhotoFromCloud } from '../photoMutationService';
 import { StandardError } from '@/lib/validators/protocol';
+import { ok, err, Result } from 'neverthrow';
 
 export { updatePhotosBatch, clearCategoryFromPhotos, clearManufacturerFromPhotos, ungroupPhotos };
 
 export const clearGroupIdInCloud = ungroupPhotos;
 
-export const deduplicatePhotos = async (userId?: string): Promise<{removed: number}> => {
+export const deduplicatePhotos = async (userId?: string): Promise<Result<{removed: number}, StandardError>> => {
   try {
     let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
@@ -27,7 +28,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
     }
 
     const { data, error } = await query;
-    if (error || !data) return { removed: 0 };
+    if (error || !data) return ok({ removed: 0 });
 
     const groups: Record<string, Photo[]> = {};
     safeArray(data).forEach(item => {
@@ -54,13 +55,13 @@ export const deduplicatePhotos = async (userId?: string): Promise<{removed: numb
         }
       }
     }
-    return { removed: removedCount };
+    return ok({ removed: removedCount });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new StandardError(message, {
+    return err(new StandardError(message, {
        originalError: error,
        aiDebugHint: `[deduplicatePhotos] 底層異常: ${message}`
-    });
+    }));
   }
 };
 

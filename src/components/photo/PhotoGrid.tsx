@@ -1,208 +1,76 @@
-import React, { useCallback, useMemo, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
 import { motion } from 'motion/react';
 import { PHOTO_GRID_CONFIG } from '../../config/virtuoso.config';
 import { Photo } from '../../types';
 import { interactionBus } from '@/lib/interactionBus';
-import { GalleryVariant } from '@/types/variant';
 import { PhotoCard } from '../photo/PhotoCard';
-import { useGalleryStore, useShallow } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { translations } from '../../lib/translations';
-import { PhotoGridSkeleton } from './PhotoGridSkeleton';
-import { GalleryEmpty } from '../shared/GalleryEmpty';
 import { PageSkeleton } from '../PageSkeleton';
-import { useCategoriesQuery, useTagsQuery, useFilters, usePhotoFilters, useAdminMode, useInfinitePhotos } from '../../hooks';
-import { PAGINATION } from '../../constants/config';
+import { useFilters } from '../../hooks';
 
-interface MemoizedPhotoCardProps {
-  index: number;
-  photo: Photo;
-  variant: GalleryVariant;
-  showGroupsCollapsed: boolean;
-  onGroupClick: (groupId: string, photoId?: string) => void;
-  onLightboxOpen: (photo: Photo) => void;
+interface PhotoBoardProps {
+  photos: Photo[];
+  isFetching?: boolean;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  onLoadMore?: () => void;
+  renderCard: (photo: Photo, index: number) => React.ReactNode;
+  virtualGridRef?: React.RefObject<any>;
+  columns: number;
 }
 
-const MemoizedPhotoCard = React.memo(({ 
-  index, photo, variant, showGroupsCollapsed, onGroupClick, 
-  onLightboxOpen
-}: MemoizedPhotoCardProps) => {
-
-  const handleGroupClickInternal = useCallback((gid: string) => {
-    onGroupClick(gid, photo.id);
-  }, [onGroupClick, photo.id]);
-
-  return (
-    <PhotoCard 
-      variant={variant}
-      photo={photo}
-      index={index}
-      showGroupsCollapsed={showGroupsCollapsed}
-      onGroupClick={handleGroupClickInternal}
-      onLightboxOpen={onLightboxOpen}
-    />
-  );
+const photoGridLayoutSelector = (s: any) => ({
+  columns: s.columns,
+  appLang: s.appLang,
+  activeGroupId: s.activeGroupId,
+  activePhotoId: s.activePhotoId,
+  setActiveGroupId: s.setActiveGroupId,
+  setActivePhotoId: s.setActivePhotoId
 });
-MemoizedPhotoCard.displayName = 'MemoizedPhotoCard';
-
-function getSkeletonCount(total: number = 0, columns: number): number {
-  if (total > 0) return Math.min(total, columns * 3);
-  return columns * 3;
-}
-
-interface GridContext {
-  isFetchingNextPage: boolean;
-  hasNextPage: boolean;
-  hasPhotos: boolean;
-  textLoading: string;
-  textEndOfList: string;
-}
-
-const ListFooterSkeleton = React.memo(({ columns }: { columns: number }) => {
-  return (
-    <div 
-      className="grid gap-2 p-1 pb-32"
-      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-    >
-      {Array.from({ length: columns }).map((_, i) => (
-        <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 animate-pulse border border-slate-50" />
-      ))}
-    </div>
-  );
-});
-
-const MemoizedFooter = React.memo(({ 
-  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList, columns 
-}: GridContext & { columns: number }) => {
-  if (isFetchingNextPage) {
-    return <ListFooterSkeleton columns={columns} />;
-  }
-  if (!isFetchingNextPage && !hasNextPage && hasPhotos) {
-    return (
-      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-32">
-        <span className="text-[10px] text-slate-400 font-medium tracking-tight">
-          {textEndOfList}
-        </span>
-      </div>
-    );
-  }
-  return null;
-});
-MemoizedFooter.displayName = 'MemoizedFooter';
-
-const photoGridSelector = (s: any) => ({
-    columns: s.columns,
-    setActiveGroupId: s.setActiveGroupId,
-    setActivePhotoId: s.setActivePhotoId,
-    setLightboxIndex: s.setLightboxIndex,
-    appLang: s.appLang,
-    isStaffMode: s.isStaffMode,
-    viewMode: s.viewMode,
-    activeGroupId: s.activeGroupId,
-    activePhotoId: s.activePhotoId,
-    sortOrder: s.sortOrder
-  });
-
-const infiniteModeSelector = (s: any) => ({ isInfiniteMode: s.isInfiniteMode });
 
 const multiSelectSelector = (s: any) => ({
-    setSelectedIds: s.setSelectedIds,
-    setIsMultiSelectMode: s.setIsMultiSelectMode
-  });
+  setSelectedIds: s.setSelectedIds,
+  setIsMultiSelectMode: s.setIsMultiSelectMode
+});
 
-export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: GalleryVariant }> = React.memo(({ virtuosoRef, variant }) => {
+export const PhotoBoard: React.FC<PhotoBoardProps> = React.memo(({ 
+  photos, 
+  isFetching,
+  isFetchingNextPage,
+  hasNextPage,
+  onLoadMore,
+  renderCard,
+  virtualGridRef, 
+  columns
+}) => {
   const { 
-    columns, setActiveGroupId, setActivePhotoId, setLightboxIndex, appLang,
-    isStaffMode, viewMode, activeGroupId, activePhotoId, sortOrder
-  } = useGalleryStore(useShallow(photoGridSelector));
+    appLang, activeGroupId, activePhotoId
+  } = useGalleryStore(useShallow(photoGridLayoutSelector));
 
-  const { filters } = useFilters();
-  const showGroupsCollapsed = filters.showGroupsCollapsed;
-  const isHookAdminMode = useAdminMode();
-  const isPageAdmin = typeof window !== 'undefined' && window.location.pathname.includes('/admin');
-  const isAdminMode = isHookAdminMode || isPageAdmin || viewMode === 'admin' || isStaffMode;
-
-  const effectiveVariant: GalleryVariant = variant || (isAdminMode ? 'full-management' : 'public-showcase');
-
-  // [STATE-BRIDGE-CONFLICT FIX] If in unified view, we just fetch what we need.
-  // Actually we shouldn't fetch twice. But useInfinitePhotos deduplicates via useInfiniteQuery of react-query.
-  
-  const infinitePhotosQuery = useInfinitePhotos({
-    category_id: filters.categoryId,
-    tag_id: Array.isArray(filters.tagIds) && filters.tagIds.length > 0 ? filters.tagIds[0] : null,
-    searchQuery: filters.searchQuery,
-    sortOrder: sortOrder,
-    isAdminMode: isAdminMode
-  }, isAdminMode ? PAGINATION.ADMIN_BATCH_SIZE : PAGINATION.PUBLIC_PAGE_SIZE, true);
-
-  const photos = React.useMemo(() => {
-    return infinitePhotosQuery.data?.pages.flatMap(p => p.photos) || [];
-  }, [infinitePhotosQuery.data]);
-
-  const isFetching = infinitePhotosQuery.isLoading;
-  const isFetchingNextPage = infinitePhotosQuery.isFetchingNextPage;
-  const hasNextPage = !!infinitePhotosQuery.hasNextPage;
-  const loadMorePhotos = infinitePhotosQuery.fetchNextPage;
-  
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: contextTags = [] } = useTagsQuery();
-
-  const lang = appLang;
-  const t = translations[lang as keyof typeof translations] || translations.en;
-
-  const { displayPhotos, gridPhotos } = usePhotoFilters(
-    photos,
-    categories,
-    contextTags,
-    {
-      showGroupsCollapsed,
-      isAdminModeOverride: isAdminMode
-    }
-  );
-
-  const isFilteringFetching = infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage;
-
-  const handleGroupClick = useCallback((gid: string, photoId?: string) => {
-     setActiveGroupId(gid);
-     if (photoId) {
-       setActivePhotoId(photoId);
-     }
-  }, [setActiveGroupId, setActivePhotoId]);
-
-  const handleLightboxOpen = useCallback((photo: Photo) => {
-    const realIndex = displayPhotos.findIndex(p => p?.id === photo.id);
-    if (realIndex !== -1) {
-      setLightboxIndex(realIndex);
-    }
-  }, [displayPhotos, setLightboxIndex]);
+  const t = translations[appLang as keyof typeof translations] || translations.en;
 
   // Anchoring logic: when returning from a group detail view
-  const prevActiveGroupId = useRef<string | null>(null);
   useEffect(() => {
-    if (activeGroupId === null && prevActiveGroupId.current !== null) {
-      const targetId = activePhotoId || prevActiveGroupId.current;
+    if (activeGroupId === null && photos.length > 0) {
+      const targetId = activePhotoId;
       if (targetId) {
-        const index = gridPhotos.findIndex(p => p.id === targetId || p.group_id === targetId);
+        const index = photos.findIndex(p => p.id === targetId || p.group_id === targetId);
         if (index !== -1) {
           setTimeout(() => {
-            (virtuosoRef as any).current?.scrollToIndex({ index, align: 'center', behavior: 'auto' });
+            (virtualGridRef as any)?.current?.scrollToIndex(index);
           }, 100);
         }
       }
     }
-    prevActiveGroupId.current = activeGroupId;
-  }, [activeGroupId, gridPhotos, activePhotoId, virtuosoRef]);
-
-  const { isInfiniteMode } = useGalleryStore(useShallow(infiniteModeSelector));
+  }, [activeGroupId, photos, activePhotoId, virtualGridRef]);
 
   // [INTERACTION-BRIDGE-SYNC]
-  // Sync the high-performance Interaction Bus back to the Zustand Store
-  // specifically for the Batch Toolbar and global selection awareness.
   const { setSelectedIds, setIsMultiSelectMode } = useGalleryStore(useShallow(multiSelectSelector));
 
   useEffect(() => {
     const unsubscribe = interactionBus.subscribe((state) => {
-      // Use requestAnimationFrame to batch state updates and avoid render-loop interference
       requestAnimationFrame(() => {
         setIsMultiSelectMode(state.isMultiSelect);
         setSelectedIds(Array.from(state.selectedIds));
@@ -211,85 +79,43 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     return () => { unsubscribe(); };
   }, [setIsMultiSelectMode, setSelectedIds]);
 
-  // [CROSS-KEY-TRANSITION] [CATEGORY-SUSPENSE-UNIFIED]
-  // [INTERACTION-FEEDBACK-CSS-ONLY]
-  const isPending = infinitePhotosQuery.isPending || (infinitePhotosQuery.isFetching && !infinitePhotosQuery.isFetchingNextPage);
-  const hasPreviousData = photos && photos.length > 0;
+  const isLoading = isFetching && photos.length === 0;
 
-  const [showSkeletonOnClear, setShowSkeletonOnClear] = useState(false);
-  const prevSearchQuery = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (filters.searchQuery === '' && prevSearchQuery.current) {
-      setShowSkeletonOnClear(true);
-      const timer = setTimeout(() => {
-        setShowSkeletonOnClear(false);
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-    prevSearchQuery.current = filters.searchQuery;
-  }, [filters.searchQuery]);
-
-  if ((isPending && !hasPreviousData) || showSkeletonOnClear) {
+  if (isLoading) {
     return (
-      <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto" id="page-skeleton-container">
+      <div className="absolute inset-0 z-10 bg-brand-bg overflow-y-auto">
         <PageSkeleton />
       </div>
     );
   }
 
-  if (gridPhotos.length === 0 && !isFetching) {
-    return (
-      <motion.div
-         key="empty"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="h-full relative"
-      >
-        <GalleryEmpty t={t} />
-      </motion.div>
-    );
-  }
-
-  const isStale = isPending && hasPreviousData;
-
   return (
     <div className="h-full w-full overscroll-y-contain relative">
-      <div className={`h-full w-full transition-all duration-300 ${isStale ? 'opacity-60 animate-pulse' : 'opacity-100'}`}>
+      <div className="h-full w-full">
         <VirtualGrid
-          ref={virtuosoRef}
-          count={gridPhotos.length}
+          ref={virtualGridRef}
+          count={photos.length}
           lanes={columns}
-          estimateSize={() => 340} // Default height for PhotoCard with info
-          overscan={PHOTO_GRID_CONFIG.overscan(columns)}
           onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) {
-              loadMorePhotos();
+            if (hasNextPage && !isFetchingNextPage && onLoadMore) {
+              onLoadMore();
             }
           }}
-          containerClassName="px-1.5 py-2 pb-36"
+          containerClassName="px-1.5 py-2"
           renderItem={(index) => {
-            const photo = gridPhotos[index];
+            const photo = photos[index];
             if (!photo) return null;
             return (
-              <div className="p-1 h-full w-full">
-                <MemoizedPhotoCard
-                  index={index}
-                  photo={photo}
-                  variant={effectiveVariant}
-                  showGroupsCollapsed={showGroupsCollapsed}
-                  onGroupClick={handleGroupClick}
-                  onLightboxOpen={handleLightboxOpen}
-                />
+              <div className="p-1 w-full">
+                {renderCard(photo, index)}
               </div>
             );
           }}
           footer={
             <MemoizedFooter 
-              isFetchingNextPage={isFetchingNextPage}
-              hasNextPage={hasNextPage}
-              hasPhotos={displayPhotos.length > 0}
+              isFetchingNextPage={!!isFetchingNextPage}
+              hasNextPage={!!hasNextPage}
+              hasPhotos={photos.length > 0}
               textLoading={(t as any).loading || '正在载入更多...'}
               textEndOfList={(t as any).endOfList || '已经到底啦'}
               columns={columns}
@@ -300,5 +126,40 @@ export const PhotoBoard: React.FC<{ virtuosoRef?: React.Ref<any>, variant?: Gall
     </div>
   );
 });
+
+const MemoizedFooter = React.memo(({ 
+  isFetchingNextPage, hasNextPage, hasPhotos, textLoading, textEndOfList, columns 
+}: {
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
+  hasPhotos: boolean;
+  textLoading: string;
+  textEndOfList: string;
+  columns: number;
+}) => {
+  if (isFetchingNextPage) {
+    return (
+      <div 
+        className="grid gap-2 p-1 pb-32"
+        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+      >
+        {Array.from({ length: columns }).map((_, i) => (
+          <div key={i} className="aspect-[3/4] rounded-xl overflow-hidden bg-slate-100 animate-pulse border border-slate-50" />
+        ))}
+      </div>
+    );
+  }
+  if (!isFetchingNextPage && !hasNextPage && hasPhotos) {
+    return (
+      <div className="py-8 flex flex-col items-center justify-center gap-2 pb-16">
+        <span className="text-[10px] text-slate-400 font-medium tracking-tight">
+          {textEndOfList}
+        </span>
+      </div>
+    );
+  }
+  return null;
+});
+MemoizedFooter.displayName = 'MemoizedFooter';
 
 export default PhotoBoard;

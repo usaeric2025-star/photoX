@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, Sparkles, Pencil, Layers, X } from 'lucide-react';
 import { Photo } from '../../types';
-import { useGalleryStore, useShallow } from '../../store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 
 interface GroupMultiSelectBarProps {
   activeGroupPhotos: Photo[];

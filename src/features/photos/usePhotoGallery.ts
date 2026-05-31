@@ -1,9 +1,9 @@
-import { useInfinitePhotos } from '@/hooks/queries/usePhotos';
+import { usePhotoInfiniteList } from '@/hooks';
 import { useFilters } from '@/features/filters/useFilters';
 import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
 import { useMemo, useEffect } from 'react';
-import { useGalleryStore } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 
 export function usePhotoGallery() {
   console.log('📸 usePhotoGallery 被调用');
@@ -11,11 +11,11 @@ export function usePhotoGallery() {
   const { filters } = useFilters();
   console.log('📸 filters:', filters);
 
-  const sortOrder = useGalleryStore(s => s.sortOrder);
+  const { sortOrder } = useGalleryStore(useShallow(s => ({ sortOrder: s.sortOrder })));
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const pageSize = isAdminPath ? 60 : 20;  // Use fixed numeric sizes to avoid import/rebuild side effects
 
-  const infinitePhotosQuery = useInfinitePhotos({
+  const infinitePhotosQuery = usePhotoInfiniteList({
     category_id: filters.categoryId,
     tag_id: filters.tagIds.length > 0 ? filters.tagIds[0] : null,
     searchQuery: filters.searchQuery,

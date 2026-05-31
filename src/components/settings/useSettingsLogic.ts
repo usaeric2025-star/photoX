@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '@/types';
-import { useGalleryStore } from '@/store';
+import { useGalleryStore } from '@/store/galleryStore';
 import { testAiConnection } from '@/services/geminiService';
-import { deduplicatePhotos, getPhotosWithoutThumbHash } from '@/services/photos';
-import { scanAndRepairPhotoIds } from '@/services/photo/photoMaintenanceService';
+import { getPhotosWithoutThumbHash } from '@/services/photo/queries';
+import { deduplicatePhotos, scanAndRepairPhotoIds } from '@/services/photo/photoMaintenanceService';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
-import { normalizeTagName, normalizeManufacturerName } from '@/utils/stringHelper';
+import { normalizeTagName, normalizeManufacturerName } from '@/lib/utils/stringHelper';
 import { useFeedback, useInvalidatePhotos, useTaskExecutor } from '@/hooks';
 
 interface UseSettingsLogicProps {
@@ -59,12 +59,17 @@ export const useSettingsLogic = ({
       onConfirm: async () => {
         try {
           setAlertDialog(null);
-          const { removed } = await deduplicatePhotos(user.id);
-          if (removed > 0) {
-            await performPullSync();
-            showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
+          const result = await deduplicatePhotos(user.id);
+          if (result.isOk()) {
+            const { removed } = result.value;
+            if (removed > 0) {
+              await performPullSync();
+              showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
+            } else {
+              showSuccess('扫描完毕，未发现重复记录。');
+            }
           } else {
-            showSuccess('扫描完毕，未发现重复记录。');
+            handleError(result.error, '排重失败');
           }
         } catch (err: any) {
           handleError(err, '排重失败');

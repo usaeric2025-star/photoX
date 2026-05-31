@@ -6,7 +6,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '../ui/dialog';
 import { Photo } from '../../types';
-import { useInfinitePhotos, useTaskExecutor, useTasks } from '@/hooks';
+import { usePhotoInfiniteList, useTaskExecutor, useTasks } from '@/hooks';
 import { PAGINATION } from '../../constants/config';
 import { GroupGridView } from './GroupGridView';
 import { cn } from '@/lib/utils';
@@ -44,7 +44,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
     hasNextPage,
     isFetchingNextPage,
     isLoading
-  } = useInfinitePhotos(queryParams, PAGINATION.ADMIN_BATCH_SIZE);
+  } = usePhotoInfiniteList(queryParams, PAGINATION.ADMIN_BATCH_SIZE);
 
   const photos = useMemo(() => {
     return data?.pages.flatMap(p => p.photos) || [];
@@ -129,7 +129,7 @@ export const GroupPhotoPicker: React.FC<GroupPhotoPickerProps> = ({
           </div>
         </div>
 
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 flex flex-col overflow-hidden relative">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2">

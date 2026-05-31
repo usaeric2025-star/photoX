@@ -1,9 +1,9 @@
-import { useGroupPhotos } from '@/hooks/queries/usePhotos';
+import { usePhotoList } from '@/hooks';
 import { cleanPhotos } from '@/lib/filters';
 import { useMemo } from 'react';
 
 export function useGroupView(activeGroupId: string | null) {
-  const groupPhotosQuery = useGroupPhotos(activeGroupId || '', true);
+  const groupPhotosQuery = usePhotoList(activeGroupId || '', true);
   
   const groupPhotos = useMemo(
     () => cleanPhotos(groupPhotosQuery.data || []),

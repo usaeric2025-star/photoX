@@ -1,6 +1,6 @@
 import React from 'react';
 import { X as CloseIcon, RefreshCcw, Save, Trash2 } from 'lucide-react';
-import { useBatchEdit } from '@/hooks/shared/useBatchEdit';
+import { useBatchEdit } from '@/hooks';
 import { BatchEditForm } from './edit/BatchEditForm';
 
 export const BatchEditScreen = () => {

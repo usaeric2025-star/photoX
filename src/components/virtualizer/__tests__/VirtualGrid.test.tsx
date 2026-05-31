@@ -12,6 +12,7 @@ describe('Security Guard: computeLaneIndex export constraint', () => {
 describe('VirtualGrid', () => {
   let originalClientHeight: any;
   let originalOffsetHeight: any;
+  let originalResizeObserver: any;
 
   beforeAll(() => {
     originalClientHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
@@ -25,6 +26,32 @@ describe('VirtualGrid', () => {
       configurable: true,
       value: 1000,
     });
+
+    originalResizeObserver = (global as any).ResizeObserver;
+    class MockResizeObserver {
+      callback: any;
+      constructor(callback: any) {
+        this.callback = callback;
+      }
+      observe(element: any) {
+        // Trigger callback with simulated rect properties
+        if (this.callback) {
+          this.callback([
+            {
+              target: element,
+              contentRect: { width: 1000, height: 1000, top: 0, left: 0, right: 1000, bottom: 1000 },
+              borderBoxSize: [{ inlineSize: 1000, blockSize: 1000 }]
+            }
+          ]);
+        }
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    (global as any).ResizeObserver = MockResizeObserver;
+    if (typeof window !== 'undefined') {
+      (window as any).ResizeObserver = MockResizeObserver;
+    }
   });
 
   afterAll(() => {
@@ -34,11 +61,22 @@ describe('VirtualGrid', () => {
     if (originalOffsetHeight) {
       Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight);
     }
+    if (originalResizeObserver) {
+      (global as any).ResizeObserver = originalResizeObserver;
+      if (typeof window !== 'undefined') {
+        (window as any).ResizeObserver = originalResizeObserver;
+      }
+    } else {
+      delete (global as any).ResizeObserver;
+      if (typeof window !== 'undefined') {
+        delete (window as any).ResizeObserver;
+      }
+    }
   });
 
   it('renders correctly with default props', () => {
     const { container } = render(
-      <VirtualGrid count={10} estimateSize={() => 100} renderItem={(i) => <div>{i}</div>} />
+      <VirtualGrid count={10} renderItem={(i) => <div>{i}</div>} />
     );
     expect(container).toBeDefined();
   });
@@ -48,7 +86,6 @@ describe('VirtualGrid', () => {
       <VirtualGrid 
         count={6} 
         lanes={3} 
-        estimateSize={() => 120} 
         renderItem={(i) => <div data-testid={`test-item-${i}`}>Item {i}</div>} 
       />
     );
@@ -71,7 +108,6 @@ describe('VirtualGrid', () => {
       <VirtualGrid 
         count={3} 
         lanes={1} 
-        estimateSize={() => 120} 
         renderItem={(i) => <div data-testid={`test-item-single-${i}`}>Item {i}</div>} 
       />
     );
@@ -90,7 +126,6 @@ describe('VirtualGrid', () => {
       <VirtualGrid 
         count={5} 
         lanes={3} 
-        estimateSize={() => 120} 
         renderItem={(i) => <div data-testid={`test-item-${i}`}>Item {i}</div>} 
       />
     );
@@ -120,7 +155,6 @@ describe('VirtualGrid', () => {
       <VirtualGrid 
         count={5} 
         lanes={3} 
-        estimateSize={() => 120} 
         renderItem={(i) => <div data-testid={`lane-item-${i}`}>Item {i}</div>} 
       />
     );
@@ -149,7 +183,6 @@ describe('VirtualGrid', () => {
       <VirtualGrid 
         count={3} 
         lanes={3} 
-        estimateSize={() => 120} 
         renderItem={(i) => <div>{i}</div>} 
       />
     );

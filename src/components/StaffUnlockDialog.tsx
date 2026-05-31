@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Lock, LogIn } from 'lucide-react';
-import { useErrorHandler } from '../utils/errorHandler';
+import { useErrorHandler } from '../lib/error/errorHandler';
 
 interface StaffUnlockDialogProps {
   isOpen: boolean;

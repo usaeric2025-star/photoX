@@ -8,9 +8,9 @@ import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
   useGalleryStore, useShallow
-} from '@/store';
+} from '@/store/galleryStore';
 import { 
-  useCategoriesQuery, useTagsQuery, useManufacturersQuery, useInfinitePhotos,
+  useCategoryList, useTagList, useManufacturerList, usePhotoInfiniteList,
   useAdminCategory, useAuth, useSettings
 } from '@/hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
@@ -39,9 +39,9 @@ export const SettingsScreen: React.FC = () => {
   })));
   
   const { photos } = usePhotoGallery();
-  const { data: categories = [] } = useCategoriesQuery();
-  const { data: tags = [] } = useTagsQuery();
-  const { data: manufacturers = [] } = useManufacturersQuery();
+  const { data: categories = [] } = useCategoryList();
+  const { data: tags = [] } = useTagList();
+  const { data: manufacturers = [] } = useManufacturerList();
   const { tasks } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();
 

@@ -7,14 +7,14 @@ import {
 import { ROUTES } from './config/constants';
 import { lazy, Suspense } from 'react';
 import { PageSkeleton } from './components/PageSkeleton';
-import { globalHandleError } from './utils/errorHandler';
+import { globalHandleError } from './lib/error/errorHandler';
 import { Capability } from './config/permissions';
 import { validateRouteAccess } from './lib/permissions-contract';
 import { validateAccess, RouteAccessContract } from './shared/permissionsSchema';
 import { QueryClient } from '@tanstack/react-query';
 import { photoKeys, groupKeys } from '@/lib/queryKeys';
 import { createStaleTime } from '@/shared/freshnessSchema';
-import { getGroupById } from '@/services/groups';
+import { getGroupById } from '@/services/group/queries';
 
 /**
  * [V2.10-ROUTER-PERMISSION-INTEGRATED] Router Context Definition
@@ -121,7 +121,7 @@ const indexRoute = createRoute({
     queryClient.prefetchInfiniteQuery({
       queryKey,
       queryFn: async () => {
-        const { loadAllPhotosFromCloud } = await import('./services/photos');
+        const { loadAllPhotosFromCloud } = await import('./services/photo/queries');
         const photos = await loadAllPhotosFromCloud(
           undefined,
           0,

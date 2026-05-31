@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
-import { useMultiSelect, useAuth, useTasks, useSyncMutation } from '@/hooks';
+import { AdminGallery } from '@/components/photo/AdminGallery';
+import { useMultiSelect, useAuth, useTasks, useSyncMutation, useAdminMode } from '@/hooks';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
-import { useGalleryStore, useShallow } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { translations } from '@/lib/translations';
 import { AdminToolbar } from '@/pages/AdminView/AdminToolbar';
 import { AdminEmptyState } from '@/pages/AdminView/AdminEmptyState';
@@ -16,9 +16,8 @@ export const AdminScreen: React.FC = React.memo(() => {
   const onRefresh = () => syncMut('pull');
   const cloudCount = 0;
 
-  const { lang, isStaffMode, setActiveScreen, viewMode, setViewMode } = useGalleryStore(useShallow(s => ({
+  const { lang, setActiveScreen, viewMode, setViewMode } = useGalleryStore(useShallow(s => ({
     lang: s.appLang,
-    isStaffMode: s.isStaffMode,
     setActiveScreen: s.setActiveScreen,
     viewMode: s.viewMode,
     setViewMode: s.setViewMode
@@ -27,7 +26,8 @@ export const AdminScreen: React.FC = React.memo(() => {
   const onManageClick = () => setActiveScreen('manage');
 
   const { selectedIds, clear } = useMultiSelect();
-  const isEffectiveStaffMode = isStaffMode && !user;
+  const hasAdminAccess = useAdminMode();
+  const isEffectiveStaffMode = hasAdminAccess && !user;
   
   const t = translations[lang as keyof typeof translations] || translations.en;
   
@@ -64,10 +64,11 @@ export const AdminScreen: React.FC = React.memo(() => {
               if (selectedIds.length > 0) {
                 // Same logic as floating buttons
                 const { supabase } = await import('@/lib/supabase');
-                const { mapSupabasePhoto, PHOTO_SELECT_FIELDS } = await import('@/services/photos');
+                const { mapSupabasePhoto } = await import('@/services/photo/queries');
+                const { PHOTO_DETAIL_FIELDS } = await import('@/constants/photoFields');
                 const { data } = await supabase
                   .from('furniture_items')
-                  .select(PHOTO_SELECT_FIELDS)
+                  .select(PHOTO_DETAIL_FIELDS)
                   .or(`id.in.(${selectedIds.join(',')}),group_id.in.(${selectedIds.join(',')})`);
                 
                 const dbPhotos = (data || []).map(mapSupabasePhoto);
@@ -92,7 +93,7 @@ export const AdminScreen: React.FC = React.memo(() => {
          ) : photos.length === 0 && !isSyncing ? (
            <AdminEmptyState t={t} />
          ) : (
-           <UnifiedGallery 
+           <AdminGallery 
              variant={variant}
              handleBatchAiIdentifyTrigger={async () => {
                 onBatchAiAnalyze(photos);

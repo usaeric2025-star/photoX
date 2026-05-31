@@ -12,7 +12,7 @@ import { GroupPhotoPicker } from './GroupPhotoPicker';
 
 import { useAdminMode } from '@/hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
-import { useGalleryStore, useShallow } from '@/store';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { translations } from '../../lib/translations';
 
 export interface GroupAdminShellProps {
@@ -59,7 +59,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
     groupData, setGroupData,
     isGroupDataLoading,
     containerRef,
-    virtuosoRef,
+    virtualGridRef,
     currentHighlightId,
     handleScroll,
     confirmBulkRemove,
@@ -183,7 +183,7 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
                 <GroupGridView 
                   key={activeGroupId}
-                  virtuosoRef={virtuosoRef}
+                  virtualGridRef={virtualGridRef}
                   photos={activeGroupPhotos}
                   isLoading={isGroupPhotosLoading}
                   highlightId={currentHighlightId}
@@ -237,12 +237,10 @@ export const GroupAdminShell: React.FC<GroupAdminShellProps> = (props) => {
 
                   return (
                      <PhotoLightbox 
-                       photo={photo}
+                       photoId={focusedGroupPhotoId}
                        displayPhotos={activeGroupPhotos}
-                       index={currentIndex}
                        onClose={handleCloseLightbox}
-                       onPrev={() => handlePrevLightbox(currentIndex)}
-                       onNext={() => handleNextLightbox(currentIndex)}
+                       onPhotoIdChange={setFocusedGroupPhotoId}
                        contactWhatsApp={() => {}}
                        onUngroup={handleUngroupLightbox}
                        onSetGroupCover={handleSetGroupCoverLightbox}

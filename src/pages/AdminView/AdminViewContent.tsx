@@ -13,9 +13,9 @@ import { GroupDetailView } from '@/components/GroupDetailView';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { AdminScreen } from '@/components/AdminScreen';
-import { UnifiedHeader } from '@/components/shared/UnifiedHeader';
-import { UnifiedGallery } from '@/components/shared/UnifiedGallery';
-import { useGalleryStore, useShallow } from '@/store';
+import { PublicGallery } from '@/components/photo/PublicGallery';
+import { PublicHeader } from '@/components/photo/PublicHeader';
+import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { useFilters } from '@/features/filters/useFilters';
 import { useGroupView } from '@/features/groups/useGroupView';
 import { useAdminActions } from '@/features/admin/useAdminActions';
@@ -58,10 +58,11 @@ export const AdminViewContent: React.FC = () => {
     setLightboxIndex: s.setLightboxIndex,
     activeGroupId: s.activeGroupId,
     setActiveGroupId: s.setActiveGroupId,
-    isStaffMode: s.isStaffMode,
     setAlertDialog: s.setAlertDialog,
   })));
 
+  const isStaffMode = false; // Persistent staff mode via localStorage is removed
+  const setIsStaffMode = (val: boolean) => {};
   const { groupPhotos } = useGroupView(store.activeGroupId);
 
   const isLoading = isAuthLoading || isPhotosLoading;
@@ -80,7 +81,7 @@ export const AdminViewContent: React.FC = () => {
   const { showError, showSuccess } = useFeedback();
   const isAdminMode = useAdminMode();
   const { runTask } = useTaskExecutor();
-  const isEffectiveStaffMode = store.isStaffMode && !user;
+  const isEffectiveStaffMode = !user && isAdminMode;
 
   console.log('📸 照片数量:', photos?.length, '加载状态:', isLoading, '强制显示:', forceShow);
 
@@ -123,13 +124,13 @@ export const AdminViewContent: React.FC = () => {
   
   // NOTE: photoActions might not be used here since we deleted contexts earlier.
 
-  if (!isAuthLoading && !user && !store.isStaffMode) {
+  if (!isAuthLoading && !user && !isStaffMode) {
     console.log('🔍 条件触发: 无用户且非StaffMode，显示登录页');
     return <LoginScreen loginWithGoogle={loginWithGoogle} isLoading={isSyncing} />;
   }
 
   // 员工模式：显示受限限制界面
-  if (!user && store.isStaffMode) {
+  if (!user && isStaffMode) {
     console.log('🔍 显示员工模式受限界面');
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
@@ -162,7 +163,7 @@ export const AdminViewContent: React.FC = () => {
           </div>
 
           <button
-            onClick={() => useGalleryStore.getState().setIsStaffMode(false)}
+            onClick={() => setIsStaffMode(false)}
             className="w-full bg-slate-900 hover:bg-slate-800 text-white h-14 rounded-2xl text-[13px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
           >
             退出员工模式 / Exit Workspace
@@ -194,13 +195,6 @@ export const AdminViewContent: React.FC = () => {
                 <BatchEditScreen />
               )}
               
-              <GroupDetailView
-                activeGroupId={store.activeGroupId} setActiveGroupId={store.setActiveGroupId}
-                initialPhotoId={null}
-                setLightboxIndex={store.setLightboxIndex} isStaffMode={isEffectiveStaffMode}
-                onLongPressStart={(photo: Photo) => {}} onLongPressEnd={() => {}}
-              />
-
             <main className="flex-1 relative overflow-hidden">
               <div 
                 className={`absolute inset-0 transition-opacity duration-200 ease-out ${store.activeScreen === 'home' || store.activeScreen === 'gallery' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}
@@ -210,16 +204,23 @@ export const AdminViewContent: React.FC = () => {
                 </div>
                 <div className={`absolute inset-0 transition-opacity duration-300 ${store.viewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <div className="flex flex-col h-full bg-brand-bg">
-                    <UnifiedHeader 
+                    <PublicHeader 
                       variant="public-showcase"
                       onRefresh={handleRefreshPublic}
                       isRefreshing={isSyncing}
                       onExit={handleExitPublic}
+                      loginWithGoogle={loginWithGoogle}
+                      handleManageClick={() => {
+                        store.setViewMode('private');
+                        store.setActiveScreen('manage');
+                      }}
                     />
-                    <UnifiedGallery 
+                    <PublicGallery 
                       variant="public-showcase"
                       onExit={handleExitPublic} 
                       loginWithGoogle={loginWithGoogle}
+                      onScrollToTop={() => {}}
+                      virtualGridRef={null}
                     />
                   </div>
                 </div>

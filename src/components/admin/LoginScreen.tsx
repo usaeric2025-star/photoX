@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock } from 'lucide-react';
 import { useFeedback, useSettings } from '../../hooks';
-import { useGalleryStore } from '../../store';
+import { useGalleryStore } from '@/store/galleryStore';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;
@@ -22,8 +22,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ loginWithGoogle, isLoa
       return;
     }
     if (passInput === settings.access_passcode) {
-      useGalleryStore.getState().setIsStaffMode(true);
       showSuccess('员工模式登录成功 / Staff mode entered successfully');
+      window.location.reload();
     } else {
       setPassError(true);
     }
