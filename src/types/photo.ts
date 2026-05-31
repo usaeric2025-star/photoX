@@ -49,7 +49,6 @@ export interface Photo {
   sub_category?: string | null;
   _time?: number; 
   created_at_timestamp?: number; 
-  member_count?: number;
   ai_failed?: boolean;
   metadata?: Record<string, any>;
   group?: {
@@ -57,7 +56,11 @@ export interface Photo {
       name: string;
       color: string | null;
       cover_photo_id: string | null;
+      member_count: number;
   } | null;
+  categoryName: string;
+  tagNames: string[];
+  manufacturerName: string;
 }
 
 export interface SubCategory {

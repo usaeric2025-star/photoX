@@ -9,7 +9,7 @@ const optimisticTogglePin = (oldData: any, photoId: string) => {
     ...oldData,
     pages: oldData.pages.map((page: any) => ({
       ...page,
-      data: page.data.map((p: any) =>
+      photos: page.photos.map((p: any) =>
         p.id === photoId ? { ...p, is_pinned: !p.is_pinned } : p
       )
     }))

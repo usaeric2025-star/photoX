@@ -5,7 +5,7 @@ import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { PhotoCard } from '@/components/photo/PhotoCard';
 import { GalleryControls } from '@/components/photo/GalleryControls';
-import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList } from '@/hooks';
+import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList, useStaticData } from '@/hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { FloatingActions } from '@/components/shared/FloatingActions';
 import { useAdminActions } from '@/features/admin/useAdminActions';
@@ -21,8 +21,6 @@ interface AdminGalleryProps {
 }
 
 const EMPTY_ARRAY: Photo[] = [];
-const EMPTY_CATEGORIES: Category[] = [];
-const EMPTY_TAGS: Tag[] = [];
 
 export const AdminGallery: React.FC<AdminGalleryProps> = ({
 
@@ -52,8 +50,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
     columns: s.columns
   })));
 
-  const categories = useCategoryList().data ?? EMPTY_CATEGORIES;
-  const tags = useTagList().data ?? EMPTY_TAGS;
+  const { categoryMap, tagMap, manufacturerMap } = useStaticData();
 
   const infiniteQuery = usePhotoInfiniteList({
     category_id: filters.categoryId,
@@ -63,14 +60,23 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
     isAdminMode: isAdminMode
   }, PAGINATION.ADMIN_BATCH_SIZE, true);
 
-  const photos = useMemo(() => {
+  const rawPhotos = useMemo(() => {
     return normalizeAdminPhotos(infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY);
   }, [infiniteQuery.data]);
 
+  const photos = useMemo(() => {
+    return rawPhotos.map(photo => ({
+      ...photo,
+      categoryName: categoryMap.get(photo.category_id || '')?.name ?? '',
+      tagNames: photo.tag_ids?.map(id => tagMap.get(id)?.name ?? '').filter(Boolean) ?? [],
+      manufacturerName: manufacturerMap.get(photo.manufacturer_id || '')?.name ?? '',
+    }));
+  }, [rawPhotos, categoryMap, tagMap, manufacturerMap]);
+
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
-    categories,
-    tags,
+    [],
+    [],
     {
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: isAdminMode

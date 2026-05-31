@@ -41,8 +41,9 @@ export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void }
     if (props.footer) {
       items.push({ type: 'footer', content: props.footer });
     }
+    console.log('📊 [VirtualGrid] Computed listItems:', { count: props.count, rowCount, listItemsLength: items.length });
     return items;
-  }, [props.header, props.footer, rowCount]);
+  }, [props.header, props.footer, rowCount, props.count]);
 
   useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {

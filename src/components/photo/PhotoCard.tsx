@@ -1,16 +1,13 @@
 import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { Photo, Category, Manufacturer } from '../../types';
+import { Photo } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
-import { getTranslatedCategoryName, isUncategorizedName, TranslationType, getCacheBustedImageUrl } from '../../lib/ui-helpers';
-import { safeArray } from '@/lib/utils';
+import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { useCategoryList, useManufacturerList, usePermission, useTagList } from '../../hooks';
-import { useStore, useShallow } from '@/store/galleryStore';
+import { usePermission } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useTogglePin } from '@/hooks/core/mutations/useTogglePin';
-import { translations } from '../../lib/translations';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 import { interactionBus } from '@/lib/interactionBus';
 import { cn } from '@/lib/utils';
@@ -27,11 +24,11 @@ export interface PhotoCardProps {
   hideDetails?: boolean;
 }
 
-const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; photoCount: number }> = React.memo(({ photo, variant, photoCount }) => {
+const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant }> = React.memo(({ photo, variant }) => {
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
   // Display group info if photo belongs to a group and has more than 1 members
-  const shouldShowGroup = photo.group_id && (photo.member_count ?? photoCount) > 1;
+  const shouldShowGroup = photo.group_id && (photo.group?.member_count ?? 1) > 1;
 
   return (
     <div className="absolute top-1 left-1 z-10 flex gap-0.5 flex-col pointer-events-none">
@@ -41,7 +38,7 @@ const PhotoStatusBadges: React.FC<{ photo: Photo; variant: GalleryVariant; photo
           isManagement ? "bg-black/60" : "bg-black/40 px-2 py-0.5 rounded-md border-white/10"
         )}>
           <Layers size={isManagement ? 10 : 9} strokeWidth={2.5} />
-          {photo.member_count ?? photoCount}
+          {photo.group?.member_count ?? 1}
         </div>
       )}
       {isManagement && photo.is_pinned && (
@@ -65,13 +62,12 @@ SelectionOverlay.displayName = 'SelectionOverlay';
 
 const PhotoInfoFooter: React.FC<{ 
   displayCatName: string; 
-  isUncategorized: boolean; 
   photoTags: string[];
   hideTags?: boolean;
-}> = React.memo(({ displayCatName, isUncategorized, photoTags, hideTags }) => (
+}> = React.memo(({ displayCatName, photoTags, hideTags }) => (
   <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none h-[40%] flex flex-col justify-end items-start gap-1">
     <div className="h-[38px] w-full flex flex-col justify-end items-start gap-0.5" style={{ alignContent: 'end' }}>
-       {!isUncategorized && displayCatName && (
+       {displayCatName && (
         <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
           {/* [FIELD-LEVEL-FALLBACK] Display category name or generic fallback */}
           {displayCatName || 'Product Detail'}
@@ -105,17 +101,17 @@ const toTitleCase = (str: string) => {
  * Any animation requiring React state or refs that triggers setStates inside
  * the virtualizer loop will cause infinite update depth loop.
  */
-export const PhotoCard: React.FC<PhotoCardProps> = ({ 
+export const PhotoCard = React.memo(({ 
   variant, photo, index, showGroupsCollapsed,
   onGroupClick, 
   onLightboxOpen, 
   className = '', onClick,
   hideDetails = false
-}) => {
+}: PhotoCardProps) => {
   const { setters } = useInteractionBridge();
   const cardRef = useRef<HTMLDivElement>(null);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
-
+  
   // Initial values for the first render to avoid flicker
   const initialIsSelected = interactionBus.current.selectedIds.has(photo.id);
   const initialIsMultiSelect = interactionBus.current.isMultiSelect;
@@ -140,23 +136,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
     return () => { unsubscribe(); };
   }, [photo.id]);
 
-  // Ensure consistent count access
-  const photoCount = photo.member_count ?? 1;
+  // Ensure consistent group count access
+  const photoMemberCount = photo.group?.member_count ?? 1;
 
   const adminActions = useAdminActions();
   const togglePinMutation = useTogglePin(photo, adminActions.updatePhoto);
 
-  const { appLang } = useStore(useShallow(s => ({ appLang: s.appLang })));
-  const t = translations[appLang as keyof typeof translations] || translations.en;
-
-  const { data: categories = [] } = useCategoryList();
-  const { data: tags = [] } = useTagList();
-  const { data: manufacturers = [] } = useManufacturerList();
-  
-  const tagMap = useMemo(() => 
-    tags.reduce((acc, t) => ({ ...acc, [t.id]: t.name }), {} as Record<string, string>),
-    [tags]
-  );
   const { can } = usePermission();
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: photo.id,
@@ -204,24 +189,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
     }
   }, [isManagement, can, setters, photo.id]);
 
-  const displayCatName = useMemo(() => 
-    getTranslatedCategoryName(photo.category_id || undefined, categories, appLang, t),
-    [photo.category_id, categories, appLang, t]
-  );
+  const displayCatName = photo.categoryName || '';
 
-  const isUncategorized = useMemo(() => {
-    const catId = photo.category_id || undefined;
-    return isUncategorizedName(displayCatName, t, catId);
-  }, [displayCatName, t, photo.category_id]);
-  
-  const photoTags = useMemo(() => {
-    const rawTagIds = safeArray<string | number>(photo.tag_ids);
-    if (!rawTagIds || rawTagIds.length === 0) return [];
-    return rawTagIds
-      .map(tid => tagMap[String(tid)])
-      .filter(Boolean)
-      .map(toTitleCase);
-  }, [photo.tag_ids, tagMap]);
+  const photoTags = photo.tagNames;
 
   const thumbSrc = useMemo(() => 
     getCacheBustedImageUrl(photo, 'thumb'),
@@ -253,7 +223,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
       isLongPressedRef.current = true;
       if ('vibrate' in navigator) navigator.vibrate(50);
     }, 500); 
-  }, [variant, handleLongPress]);
+  }, [isManagement, can]);
 
   const cancelPress = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!isManagement) return;
@@ -261,7 +231,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
       clearTimeout(pressTimerRef.current);
       pressTimerRef.current = null;
     }
-  }, [variant]);
+  }, [isManagement]);
 
   const shouldEagerLoad = index < 10;
 
@@ -270,10 +240,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
     if (isManagement) {
       handleLongPress();
     } else {
-      // share logic moved inside or use feedback hook
     }
     if ('vibrate' in navigator) navigator.vibrate(50);
-  }, [variant, handleLongPress, photo.id]);
+  }, [isManagement, handleLongPress]);
 
   const handleTogglePinnedClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -330,7 +299,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         className
       )}
     >
-      <div className="w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]">
+      <div className="w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]" style={{ minHeight: '300px' }}>
         <ResponsivePhoto
           photo={photo}
           variant="sm"
@@ -355,7 +324,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         </div>
       )}
       
-      <PhotoStatusBadges photo={photo} variant={variant} photoCount={photoCount} />
+      <PhotoStatusBadges photo={photo} variant={variant} />
 
       {isManagement && can('photo:toggle-pinned') && (
          <button 
@@ -369,12 +338,21 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
 
       <PhotoInfoFooter 
         displayCatName={displayCatName} 
-        isUncategorized={isUncategorized} 
         photoTags={photoTags}
         hideTags={hideDetails}
       />
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.photo.id === nextProps.photo.id &&
+    prevProps.photo.thumb_hash === nextProps.photo.thumb_hash &&
+    prevProps.photo.is_hidden === nextProps.photo.is_hidden &&
+    prevProps.photo.is_pinned === nextProps.photo.is_pinned &&
+    prevProps.variant === nextProps.variant &&
+    prevProps.hideDetails === nextProps.hideDetails &&
+    prevProps.showGroupsCollapsed === nextProps.showGroupsCollapsed
+  );
+});
 
 PhotoCard.displayName = 'PhotoCard';

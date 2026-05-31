@@ -49,7 +49,6 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
     }
 
     const group_id = item.group_id ? String(item.group_id) : undefined;
-    const member_count = (item.member_count as number) ?? 1;
     const group = item.group as any;
     const created_at = item.created_at as string | undefined;
     const updated_at = item.updated_at as string | undefined;
@@ -81,12 +80,12 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       created_at: created_at || new Date().toISOString(),
       updated_at: updated_at || created_at || new Date().toISOString(),
       group_id: group_id,
-      member_count: member_count,
       group: group ? {
           id: group.id,
           name: group.name,
           color: group.color,
           cover_photo_id: group.cover_photo_id,
+          member_count: group.member_count ?? 1,
       } : null,
       is_group_cover: is_group_cover,
       is_hidden: !!item.is_hidden,
@@ -99,8 +98,59 @@ export function mapSupabasePhoto(item: Record<string, unknown>): Photo {
       description_translations: item.description_translations as (Photo['description_translations'] | undefined),
       tag_ids: Array.isArray(tag_ids) ? tag_ids : [],
       dimensions: Array.isArray(item.dimensions) ? (item.dimensions as Photo['dimensions']) : [],
-      created_at_timestamp: item.created_at_timestamp as number | undefined
+      created_at_timestamp: item.created_at_timestamp as number | undefined,
+      categoryName: '',
+      tagNames: [],
+      manufacturerName: ''
     };
+}
+
+async function hydrateGroupInfo(photos: Photo[]): Promise<Photo[]> {
+  const groupIds = Array.from(new Set(photos.map(p => p.group_id).filter(Boolean))) as string[];
+  if (groupIds.length === 0) return photos;
+
+  try {
+    const { data: groupsData, error: groupsError } = await supabase
+      .from('groups')
+      .select('id, name, colors, cover_photo_id')
+      .in('id', groupIds);
+
+    if (groupsError) {
+      console.warn('[hydrateGroupInfo] Failed to fetch groups:', groupsError);
+      return photos;
+    }
+
+    const groupMap = new Map<string, any>();
+    groupsData?.forEach(g => {
+      const dbColors = g.colors;
+      let colorValue: string | null = null;
+      if (Array.isArray(dbColors) && dbColors.length > 0) {
+        colorValue = dbColors[0];
+      } else if (typeof dbColors === 'string') {
+        colorValue = dbColors;
+      }
+      
+      groupMap.set(String(g.id), {
+        id: String(g.id),
+        name: g.name || '',
+        color: colorValue || '#3b82f6',
+        cover_photo_id: g.cover_photo_id || null
+      });
+    });
+
+    return photos.map(p => {
+      if (p.group_id && groupMap.has(p.group_id)) {
+        return {
+          ...p,
+          group: groupMap.get(p.group_id)
+        };
+      }
+      return p;
+    });
+  } catch (e) {
+    console.error('[hydrateGroupInfo] Error during client-side hydration:', e);
+    return photos;
+  }
 }
 
 export const loadAllPhotosFromCloud = async (
@@ -213,7 +263,11 @@ export const loadAllPhotosFromCloud = async (
   const from = page * limit;
   const to = from + limit - 1;
 
+  // 1. 自定义顺序 (用户拖拽排序)
+  query = query.order('sort_order', { ascending: true, nullsFirst: false });
+  // 2. 置顶优先
   query = query.order('is_pinned', { ascending: false, nullsFirst: false });
+  // 原有顺序
   query = query.order('group_order', { ascending: true, nullsFirst: false });
   if (isAdminMode) {
     query = query.order('is_hidden', { ascending: true, nullsFirst: true });
@@ -269,7 +323,7 @@ export const loadAllPhotosFromCloud = async (
     }
   }
 
-  return fetched;
+  return await hydrateGroupInfo(fetched);
 };
 
 export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean = false): Promise<Photo[]> => {

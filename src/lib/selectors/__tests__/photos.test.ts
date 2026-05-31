@@ -3,8 +3,8 @@ import { flattenPhotoInfiniteQueryPages, normalizeAdminPhotos } from '../photos'
 
 describe('Photo Normalization Consistency', () => {
   const samplePhotos = [
-    { id: '1', name: 'A', member_count: 5 },
-    { id: '2', name: 'B', member_count: 10 }
+    { id: '1', name: 'A', group: { member_count: 5 } },
+    { id: '2', name: 'B', group: { member_count: 10 } }
   ];
 
   it('normalizeAdminPhotos should produce same structure as flattenPhotoInfiniteQueryPages', () => {
@@ -16,12 +16,12 @@ describe('Photo Normalization Consistency', () => {
 
   it('normalizeAdminPhotos should handle duplicates by taking max member_count', () => {
     const photos = [
-      { id: '1', name: 'A', member_count: 5 },
-      { id: '1', name: 'A (updated)', member_count: 8 }
+      { id: '1', name: 'A', group: { member_count: 5 } },
+      { id: '1', name: 'A (updated)', group: { member_count: 8 } }
     ];
     const result = normalizeAdminPhotos(photos as any);
     expect(result).toHaveLength(1);
-    expect(result[0].member_count).toBe(8);
+    expect(result[0].group?.member_count).toBe(8);
   });
 });
 

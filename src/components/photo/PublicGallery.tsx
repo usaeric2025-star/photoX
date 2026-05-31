@@ -3,7 +3,7 @@ import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { GalleryFilters } from '@/components/ui/GalleryFilters';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
-import { usePhotoInfiniteList, useFilters, usePhotoFilters, useCategoryList, useTagList } from '@/hooks';
+import { usePhotoInfiniteList, useFilters, usePhotoFilters, useStaticData } from '@/hooks';
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailView } from '../GroupDetailView';
@@ -11,7 +11,7 @@ import { PhotoCard } from './PhotoCard';
 import { PublicFloatingActions } from './PublicFloatingActions';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
 import { translations } from '@/lib/translations';
-import { Photo, Category, Tag } from '@/types';
+import { Photo } from '@/types';
 
 interface PublicGalleryProps {
   variant: GalleryVariant;
@@ -22,8 +22,6 @@ interface PublicGalleryProps {
 }
 
 const EMPTY_ARRAY: Photo[] = [];
-const EMPTY_CATEGORIES: Category[] = [];
-const EMPTY_TAGS: Tag[] = [];
 
 export const PublicGallery: React.FC<PublicGalleryProps> = ({
   variant,
@@ -57,8 +55,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     appLang: s.appLang
   })));
 
-  const categories = useCategoryList().data ?? EMPTY_CATEGORIES;
-  const tags = useTagList().data ?? EMPTY_TAGS;
+  const { categoryMap, tagMap, manufacturerMap } = useStaticData();
 
   const t = useMemo(() => translations[appLang as keyof typeof translations] || translations.en, [appLang]);
 
@@ -70,19 +67,37 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
     isAdminMode: false
   }, PAGINATION.PUBLIC_PAGE_SIZE, true);
 
-  const photos = useMemo(() => {
+  const rawPhotos = useMemo(() => {
     return infiniteQuery.data?.pages?.flatMap(p => p.photos) ?? EMPTY_ARRAY;
   }, [infiniteQuery.data]);
 
+  const photos = useMemo(() => {
+    return rawPhotos.map(photo => ({
+      ...photo,
+      categoryName: categoryMap.get(photo.category_id || '')?.name ?? '',
+      tagNames: photo.tag_ids?.map(id => tagMap.get(id)?.name ?? '').filter(Boolean) ?? [],
+      manufacturerName: manufacturerMap.get(photo.manufacturer_id || '')?.name ?? '',
+    }));
+  }, [rawPhotos, categoryMap, tagMap, manufacturerMap]);
+
   const { displayPhotos, gridPhotos } = usePhotoFilters(
     photos,
-    categories,
-    tags,
+    [],
+    [],
     {
       showGroupsCollapsed: filters.showGroupsCollapsed,
       isAdminModeOverride: false
     }
   );
+
+  console.log('🧪 [PublicGallery] Filters result:', {
+    incomingPhotosCount: photos.length,
+    displayPhotosCount: displayPhotos.length,
+    gridPhotosCount: gridPhotos.length,
+    columns,
+    activeGroupId,
+    activePhotoId
+  });
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
     setActiveGroupId(gid);

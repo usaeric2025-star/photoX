@@ -144,7 +144,7 @@ export const useGalleryStore = create<GalleryStoreState>()((set) => ({
   },
   showPassPrompt: false,
   setShowPassPrompt: (showPassPrompt) => set({ showPassPrompt }),
-  appLang: safeGetItem(STORAGE_KEYS.LANG, 'zh'),
+  appLang: safeGetItem(STORAGE_KEYS.LANG, 'en'),
   setAppLang: (appLang) => {
     safeSetItem(STORAGE_KEYS.LANG, appLang);
     set({ appLang });

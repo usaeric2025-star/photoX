@@ -267,7 +267,19 @@ export function groupPhotos(photos: Photo[], showGroupsCollapsed: boolean, sortO
           ? globalGroupCounts.get(p.group_id)! 
           : groupList.length;
           
-        const cover = { ...sorted[0], member_count: trueMemberCount };
+        const cover = {
+           ...sorted[0],
+           group: sorted[0].group ? {
+             ...sorted[0].group,
+             member_count: trueMemberCount
+           } : {
+             id: p.group_id,
+             name: 'Group',
+             color: null,
+             cover_photo_id: null,
+             member_count: trueMemberCount
+           }
+        };
         cover._time = groupMaxTime.get(p.group_id)!;
         representatives.push(cover);
       } else {

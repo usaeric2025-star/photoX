@@ -34,7 +34,11 @@ export const flattenPhotoInfiniteQueryPages = (pages: { photos: Photo[] }[]): Ph
       // Aggregate counts if needed - just take the maximum for now or sum? Let's take the max as per established logic
       const updatedPhoto = {
         ...existing,
-        member_count: Math.max(existing.member_count ?? 0, photo.member_count ?? 0)
+        ...photo, // Preserve all other fields
+        group: existing.group || photo.group ? {
+          ...(existing.group || photo.group)!,
+          member_count: Math.max(existing.group?.member_count ?? 0, photo.group?.member_count ?? 0)
+        } : null
       };
       photoMap.set(photo.id, updatedPhoto);
     }
@@ -63,7 +67,11 @@ export const normalizeAdminPhotos = (photos: Photo[]): Photo[] => {
       // Aggregate counts or take max for consistency with shared logic
       const updatedPhoto = {
         ...existing,
-        member_count: Math.max(existing.member_count ?? 0, photo.member_count ?? 0)
+        ...photo, // Preserve all other fields
+        group: existing.group || photo.group ? {
+          ...(existing.group || photo.group)!,
+          member_count: Math.max(existing.group?.member_count ?? 0, photo.group?.member_count ?? 0)
+        } : null
       };
       photoMap.set(photo.id, updatedPhoto);
     }

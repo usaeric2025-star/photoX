@@ -37,16 +37,16 @@ const test: DiagnosticTest = {
       const dirtyPages = [
         {
           photos: [
-            { id: '1', name: 'Photo 1' } as Photo,
+            { id: '1', name: 'Photo 1', group: { member_count: 0 } } as Photo,
             { id: '', name: 'Photo Missing ID' } as any as Photo, // Invalid
-            { id: '1', name: 'Photo 1 Duplicated', member_count: 5 } as Photo, // Duplicate
+            { id: '1', name: 'Photo 1 Duplicated', group: { member_count: 5 } } as Photo, // Duplicate
             { id: '5c9ef3bd84a44fef', name: 'Dirty Photo' } as Photo
           ]
         },
         {
           photos: [
             { id: '2', name: 'Photo 2' } as Photo,
-            { id: '1', name: 'Photo 1 Another Duplication', member_count: 2 } as Photo // Duplicate across pages
+            { id: '1', name: 'Photo 1 Another Duplication', group: { member_count: 2 } } as Photo // Duplicate across pages
           ]
         }
       ];
@@ -65,18 +65,18 @@ const test: DiagnosticTest = {
       }
 
       const photo1 = flatResult.find(p => p.id === '1');
-      if (photo1?.member_count !== 5) {
-        throw new Error(`Aggregator failed. Expected member_count to be max (5), got ${photo1?.member_count}`);
+      if (photo1?.group?.member_count !== 5) {
+        throw new Error(`Aggregator failed. Expected member_count to be max (5), got ${photo1?.group?.member_count}`);
       }
 
       const adminDirtyList = [
-        { id: '1', name: 'Admin 1' } as Photo,
+        { id: '1', name: 'Admin 1', group: { member_count: 0 } } as Photo,
         { id: '', name: 'Admin Invalid' } as any as Photo,
-        { id: '1', name: 'Admin 1 Dup', member_count: 10 } as Photo
+        { id: '1', name: 'Admin 1 Dup', group: { member_count: 10 } } as Photo
       ];
 
       const adminResult = normalizeAdminPhotos(adminDirtyList);
-      if (adminResult.length !== 1 || adminResult[0]?.member_count !== 10) {
+      if (adminResult.length !== 1 || adminResult[0]?.group?.member_count !== 10) {
         throw new Error('normalizeAdminPhotos pipeline logic failed validation');
       }
 

@@ -55,7 +55,7 @@ export const LanguageSwitcher: React.FC<{ variant?: GalleryVariant | 'ghost' }> 
     );
   }
 
-  const currentDisplay = langs.find(l => l.code === appLang)?.label || '中文';
+  const currentDisplay = langs.find(l => l.code === appLang)?.label || 'English';
 
   return (
     <div className="relative" ref={ref}>
