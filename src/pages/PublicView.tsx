@@ -6,7 +6,7 @@ import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
   useCategoryList, usePhotoInfiniteList, usePhotoCount, 
   useFeedback, useTagList, useScrollRestoration, useDebouncedSearch,
-  useAuth, useSettings, useMultiSelect
+  useMultiSelect
 } from '@/hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { PAGINATION, ROUTES, UI } from '@/config/constants';
@@ -26,9 +26,6 @@ import { loginWithGoogle } from '@/services/authService';
 const EMPTY_TAGS: Tag[] = [];
 
 export default function PublicView() {
-  const { user } = useAuth();
-  const { settings, isLoading: isSettingsLoading } = useSettings();
-  
   // 滚动恢复
   useScrollRestoration('public_view_scroll');
   
@@ -57,7 +54,7 @@ export default function PublicView() {
       ) : (
         <div className="flex-1 min-h-0 relative">
           <DataLoadingContainer
-            isLoading={isSettingsLoading || !settings}
+            isLoading={false}
             hasData={true} // Data will be handled inside PublicGallery
           >
             <ErrorBoundary>

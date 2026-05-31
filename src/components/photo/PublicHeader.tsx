@@ -1,7 +1,6 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect } from 'react';
 import { LogIn, RefreshCw, X, User as UserIcon, LogOut, Settings } from 'lucide-react';
-import { useAuth, useSettings } from '@/hooks';
+import { checkPublicAuth, logoutPublic } from '@/lib/publicAuth';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { 
@@ -12,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from '@/lib/utils';
 
 interface PublicHeaderProps {
   variant?: string;
@@ -37,27 +37,31 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
   loginWithGoogle,
   handleManageClick
 }) => {
-  const { user, logout } = useAuth();
-  const { settings } = useSettings();
+  const [user, setUser] = useState<any>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const { setActiveScreen } = useGalleryStore(useShallow(s => ({ setActiveScreen: s.setActiveScreen })));
+
+  useEffect(() => {
+    let active = true;
+    checkPublicAuth().then(res => {
+      if (active) {
+        setUser(res.user);
+        setIsAuthLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <header className="h-14 sm:h-16 shrink-0 bg-white border-b border-slate-200 px-2 sm:px-4 flex items-center justify-between flex-nowrap z-30 font-sans overflow-hidden">
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
-        {settings?.logo_url && settings.logo_url.trim() !== '' ? (
-          <img 
-            src={settings.logo_url} 
-            alt="Logo" 
-            className="h-8 sm:h-9 w-auto max-w-[120px] sm:max-w-[140px] object-contain shrink-0" 
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter whitespace-nowrap">
-            PHOT<span className="text-blue-600">O</span>X
-          </h1>
-        )}
+        <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter whitespace-nowrap shrink-0">
+          PHOT<span className="text-blue-600">O</span>X
+        </h1>
         {totalCount !== undefined && (
-          <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[9px] sm:text-[10px] font-bold whitespace-nowrap">
+          <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[9px] sm:text-[10px] font-bold whitespace-nowrap shrink-0">
             {totalCount} PHOTOS
           </span>
         )}
@@ -77,7 +81,9 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
           </button>
         )}
         
-        {!user ? (
+        {isAuthLoading ? (
+          <div className="w-9 h-9 rounded-full bg-slate-50 animate-pulse shrink-0" />
+        ) : !user ? (
           loginWithGoogle && (
             <button 
               onClick={loginWithGoogle}
@@ -120,7 +126,7 @@ export const PublicHeader: React.FC<PublicHeaderProps> = ({
                   <span className="text-sm font-semibold">Dashboard</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
-                  onClick={() => logout()}
+                  onClick={() => logoutPublic()}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-red-600 hover:bg-red-50 cursor-pointer transition-colors mt-1"
                 >
                   <LogOut size={16} />

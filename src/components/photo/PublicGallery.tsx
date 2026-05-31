@@ -3,7 +3,7 @@ import { GalleryVariant } from '@/types/variant';
 import PhotoBoard from '@/components/photo/PhotoGrid';
 import { GalleryFilters } from '@/components/ui/GalleryFilters';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
-import { usePhotoInfiniteList, useFilters, usePhotoFilters, useCategoryList, useTagList, useSettings } from '@/hooks';
+import { usePhotoInfiniteList, useFilters, usePhotoFilters, useCategoryList, useTagList } from '@/hooks';
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailView } from '../GroupDetailView';
@@ -31,7 +31,14 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   virtualGridRef
 }) => {
   const { filters } = useFilters();
-  const { settings } = useSettings();
+  const publicSettings = useMemo(() => ({
+    app_name: 'PhotoX',
+    logo_url: '',
+    whatsapp_1: '',
+    whatsapp_1_name: '',
+    whatsapp_2: '',
+    whatsapp_2_name: '',
+  }), []);
   const { 
     lightboxIndex, setLightboxIndex, sortOrder,
     activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
@@ -160,7 +167,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
         <WhatsAppChoiceDialog 
           isOpen={showWhatsAppChoice}
           onClose={() => setShowWhatsAppChoice(false)}
-          settings={settings || null}
+          settings={publicSettings}
           t={t}
           onSelect={openWhatsApp}
         />
