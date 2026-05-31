@@ -130,6 +130,7 @@ export const AdminGallery: React.FC<AdminGalleryProps> = ({
 
         <FloatingActions 
           variant={variant}
+          scrollToTop={scrollToTop}
           onAdd={() => fileInputRef.current?.click()}
           onBatchAiIdentify={() => {}}
           onBatchEdit={() => store.setBatchEditingIds(selectedIds)}

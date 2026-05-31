@@ -18,7 +18,7 @@ export type VirtualGridProps = {
   onScroll?: (offset: number) => void;
 };
 
-export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void }, VirtualGridProps>((props, ref) => {
+export const VirtualGrid = forwardRef<{ scrollToIndex: (index: number) => void; scrollTo: (offset: number) => void }, VirtualGridProps>((props, ref) => {
   const vlistRef = useRef<VListHandle>(null);
   const lanes = Math.max(1, props.lanes || 1);
   const isGridLayout = lanes > 1;

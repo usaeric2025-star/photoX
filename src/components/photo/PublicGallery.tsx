@@ -133,7 +133,7 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
               hasNextPage={!!infiniteQuery.hasNextPage}
               onLoadMore={infiniteQuery.fetchNextPage}
               renderCard={renderCard}
-              virtualGridRef={virtualGridRef} 
+              ref={virtualGridRef} 
               columns={columns}
             />
         </div>

@@ -37,6 +37,9 @@ export default function PublicView() {
 
   const { isLoading } = usePhotoInfiniteList({});
 
+  const virtualGridRef = useRef<any>(null);
+  const handleScrollToTop = () => virtualGridRef.current?.scrollTo(0);
+
   // ========== 8. 正常渲染 ==========
   return (
     <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden" id="public-view">
@@ -62,8 +65,8 @@ export default function PublicView() {
             <ErrorBoundary>
                 <PublicGallery 
                   variant="public-showcase"
-                  onScrollToTop={() => {}}
-                  virtualGridRef={null}
+                  onScrollToTop={handleScrollToTop}
+                  virtualGridRef={virtualGridRef}
                 />
               </ErrorBoundary>
           </DataLoadingContainer>

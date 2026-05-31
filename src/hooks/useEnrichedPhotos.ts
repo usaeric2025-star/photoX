@@ -20,10 +20,11 @@ export function useEnrichedPhotos(photos: Photo[]): Photo[] {
       const tagIds = Array.isArray(photo.tag_ids) ? photo.tag_ids : [];
 
       const category = categoryMap.get(categoryId);
+      console.log('DEBUG: category lookup', { categoryId, category, appLang });
       
       return {
         ...photo,
-        categoryName: category ? (category[appLang as keyof Category] as string) : '',
+        categoryName: category ? (category[appLang as keyof Category] as string || category.name) : '',
         tagNames: tagIds
           .map(id => tagMap.get(String(id))?.name ?? '')
           .filter(Boolean),

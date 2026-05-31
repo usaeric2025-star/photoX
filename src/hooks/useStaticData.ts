@@ -8,9 +8,9 @@ export function useStaticData() {
   const { data: manufacturers = [] } = useManufacturerList();
 
   return useMemo(() => {
-    const categoryMap = new Map<string, Category>(categories.map(c => [c.id, c]));
-    const tagMap = new Map<string, Tag>(tags.map(t => [t.id, t]));
-    const manufacturerMap = new Map<string, Manufacturer>(manufacturers.map(m => [m.id, m]));
+    const categoryMap = new Map<string, Category>(categories.map(c => [String(c.id), c]));
+    const tagMap = new Map<string, Tag>(tags.map(t => [String(t.id), t]));
+    const manufacturerMap = new Map<string, Manufacturer>(manufacturers.map(m => [String(m.id), m]));
 
     return { categoryMap, tagMap, manufacturerMap };
   }, [categories, tags, manufacturers]);
