@@ -99,16 +99,16 @@ export const PublicGallery: React.FC<PublicGalleryProps> = ({
   }, [setActiveGroupId, setActivePhotoId]);
 
   useEffect(() => {
-    let lastIsMobile = window.innerWidth <= 768;
-    setColumns(lastIsMobile ? 2 : 3);
-
     const handleResize = () => {
       const isMobile = window.innerWidth <= 768;
-      if (isMobile !== lastIsMobile) {
-        lastIsMobile = isMobile;
-        setColumns(isMobile ? 2 : 3);
+      if (isMobile) {
+        setColumns(3);
+      } else {
+        setColumns(4); // Default desktop to 4
       }
     };
+    handleResize(); 
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [setColumns]);
