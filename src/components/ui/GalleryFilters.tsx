@@ -7,6 +7,7 @@ import { SubCategoryChip } from '../../components/ui/SubCategoryChip';
 import { SortButton } from '../../components/ui/SortButton';
 import { LayoutButton } from '../../components/ui/LayoutButton';
 import { GroupToggle } from '../../components/ui/GroupToggle';
+import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { motion, AnimatePresence } from 'motion/react';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { Category, Tag, AppSettings } from '../../types';
@@ -162,30 +163,72 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
               </button>
             )}
           </div>
-          
-          <div className="flex gap-1 shrink-0">
-            <button 
-                onClick={() => setIsMultiSelect(!isMultiSelect)}
-                title={t.select}
-                className={cn("h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] transition-colors", isMultiSelect ? "bg-brand-gold text-white" : "text-[#888] hover:text-[#1A1A1A]")}
-            >
-                <Pin size={16} /> 
-            </button>
-            <button 
-                onClick={toggleMode}
-                title={viewMode === 'public' ? 'Switch to Admin' : 'Switch to Public'}
-                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" 
-            >
-                {viewMode === 'public' ? <Globe size={16} /> : <Sparkles size={16} />}
-            </button>
-            <button 
-                onClick={() => navigate({ to: '/settings' })}
-                title={t.settings}
-                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors"
-            >
-                <span className="text-xl">⚙️</span>
-            </button>
+                    <div className="flex gap-1 shrink-0">
+                <SortButton 
+                    onClick={toggleSortOrder} 
+                    label={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest} 
+                    selected={sortOrder === 'oldest'} 
+                />
+                <LayoutButton 
+                    isGrid={columns !== 2} 
+                    onClick={() => {
+                        const next = columns === 2 ? 3 : columns === 3 ? 5 : 2;
+                        setColumns(next as 2 | 3 | 5);
+                        updateURL({ view: next === 2 ? 'list' : 'grid' });
+                    }}
+                />
+                <GroupToggle 
+                    showGroupsCollapsed={filters.showGroupsCollapsed} 
+                    onClick={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)} 
+                />
+            </div>
           </div>
+          
+          <div className="flex gap-1 shrink-0 justify-end border-t border-[#ECECEC] pt-1">
+             {viewMode === 'public' ? (
+                <>
+                    <button className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" title="Refresh">
+                        <span className="text-xl">🔄</span>
+                    </button>
+                    <LanguageSwitcher currentLang={lang} onLanguageChange={onSetLang!} />
+                    <button 
+                        onClick={toggleMode}
+                        title="Switch to Admin"
+                        className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" 
+                    >
+                        <Sparkles size={16} />
+                    </button>
+                </>
+             ) : (
+                <>
+                    {onBatchAiIdentify && (
+                        <button onClick={onBatchAiIdentify} className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" title="AI Recognition">
+                            <Sparkles size={16} />
+                        </button>
+                    )}
+                    <button 
+                        onClick={() => setIsMultiSelect(!isMultiSelect)}
+                        title={t.select}
+                        className={cn("h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] transition-colors", isMultiSelect ? "bg-brand-gold text-white" : "text-[#888] hover:text-[#1A1A1A]")}
+                    >
+                        <Pin size={16} /> 
+                    </button>
+                    <button 
+                        onClick={() => navigate({ to: '/settings' })}
+                        title={t.settings}
+                        className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors"
+                    >
+                        <span className="text-xl">⚙️</span>
+                    </button>
+                    <button 
+                        onClick={toggleMode}
+                        title="Switch to Public"
+                        className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" 
+                    >
+                        <Globe size={16} />
+                    </button>
+                </>
+             )}
         </div>
 
         <div className="grid grid-cols-4 gap-1">
