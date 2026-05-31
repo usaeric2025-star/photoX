@@ -87,8 +87,7 @@ export const LightboxInfoPanel: React.FC<LightboxInfoPanelProps> = React.memo(({
       >
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1 border-l-[3px] border-brand-gold pl-3">
-            <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em] mb-1">{catName || t.uncategorized}</p>
-            <h2 className="text-xl md:text-2xl font-black text-brand-navy leading-tight uppercase tracking-tight">
+             <h2 className="text-xl md:text-2xl font-black text-brand-navy leading-tight uppercase tracking-tight">
               {photoDisplayName}
             </h2>
           </div>

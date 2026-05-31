@@ -1,0 +1,24 @@
+src/hooks/core/infra/useSyncEngine.ts:7:import { useInvalidatePhotos, useAuth, useTaskExecutor, useSyncMutation, useSettings } from '@/hooks';
+src/hooks/core/infra/useSyncEngine.ts:11:  const { user } = useAuth();
+src/hooks/index.ts:2:export { useAuth } from './core/auth/useAuth';
+src/components/admin/AdminSidebar.tsx:81:  const { user, loginWithGoogle, logout } = useAuth();
+src/components/SettingsScreen.tsx:14:  useAdminCategory, useAuth, useSettings
+src/components/SettingsScreen.tsx:60:  const { user, loginWithGoogle, logout } = useAuth();
+src/components/shared/ToolsMenu.tsx:4:import { useAuth, useAdminMode } from '@/hooks';
+src/components/shared/ToolsMenu.tsx:22:  const { user, loginWithGoogle, logout } = useAuth();
+src/components/groups/useGroupAdminLogic.ts:9:import { useGroupCoverMutation, useRemoveFromGroupMutation, useAdminMode, useFeedback, useGroupDetail, useAuth, usePhotoList } from '@/hooks';
+src/components/groups/useGroupAdminLogic.ts:17:  const { user } = useAuth();
+src/components/AdminScreen.tsx:3:import { useMultiSelect, useAuth, useTasks, useSyncMutation, useAdminMode } from '@/hooks';
+src/components/AdminScreen.tsx:11:  const { user, loginWithGoogle } = useAuth();
+src/components/AdminAuthGuard.tsx:14:  const { isLoading, user } = useAuth();
+src/store/authStore.ts:11:export const useAuthStore = create<AuthState>((set) => ({
+src/pages/AdminView/diagnostics/__tests__/AdminDiagnostics.test.tsx:5:import * as useAuthHook from '@/hooks/core/auth/useAuth';
+src/pages/AdminView/diagnostics/__tests__/AdminDiagnostics.test.tsx:7:vi.mock('@/hooks/core/auth/useAuth', () => ({
+src/pages/AdminView/diagnostics/__tests__/AdminDiagnostics.test.tsx:8:  useAuth: vi.fn()
+src/pages/AdminView/diagnostics/__tests__/AdminDiagnostics.test.tsx:13:    vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+src/pages/AdminView/diagnostics/__tests__/AdminDiagnostics.test.tsx:27:    vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
+src/pages/AdminView/AdminViewContent.tsx:4:import { useAuth, useTasks, useSyncMutation, useFeedback, useAdminMode, useTaskExecutor, useMultiSelect } from '@/hooks';
+src/pages/AdminView/AdminViewContent.tsx:34:  const { user, isLoading: isAuthLoading, loginWithGoogle } = useAuth();
+src/pages/AdminView/AdminViewContent.tsx:35:  console.log('🔍 useAuth 结果:', { user: user?.email, isAuthLoading });
+src/pages/AdminView/AdminDiagnostics.tsx:2:import { useAuth } from '@/hooks/core/auth/useAuth';
+src/pages/AdminView/AdminDiagnostics.tsx:31:  const { user } = useAuth();

@@ -6,18 +6,13 @@ import { User } from '@/types'
  * Hook for authentication state and operations.
  */
 export const useAuth = () => {
-  console.log('🔐 useAuth 被调用');
-
   const { data: user, isPending, isLoading, refetch } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: async () => {
-      console.log('🔐 useAuth queryFn 开始执行');
       try {
         const { data, error } = await supabase.auth.getUser()
-        console.log('🔐 getUser 结果:', { user: data?.user?.email, error: error?.message || error });
         if (error) {
           if (error.message?.includes('session missing') || error.name === 'AuthSessionMissingError' || error.message?.includes('Auth session missing')) {
-            console.log('🔐 No active session (unauthenticated guest)');
           } else {
             console.error('🔐 getUser 错误:', error);
           }
@@ -44,8 +39,6 @@ export const useAuth = () => {
     refetchOnReconnect: false,
     retry: 1,
   })
-
-  console.log('🔐 useAuth 返回:', { user: user?.email, isLoading, isPending });
 
   const loginWithGoogle = useMutation({
     mutationFn: async () => {
