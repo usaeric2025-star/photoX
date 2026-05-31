@@ -297,12 +297,12 @@ export const PhotoCard = React.memo(({
         className
       )}
     >
-      <div className="w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]" style={{ minHeight: '300px' }}>
+      <div className="relative aspect-square w-full h-full pointer-events-none group-data-[selected=true]:opacity-40 group-data-[selected=true]:grayscale-[0.5]" style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}>
         <ResponsivePhoto
           photo={photo}
           variant="sm"
           aspectRatio={1}
-          imgClassName={`w-full h-full object-cover aspect-square ${is_hidden ? 'opacity-70' : ''}`}
+          imgClassName={`w-full h-full object-cover ${is_hidden ? 'opacity-70' : ''}`}
         />
       </div>
 
