@@ -183,7 +183,7 @@ export function AdminViewContent() {
         >
           <AdminGlobalModals />
       
-        <div className="flex h-screen bg-brand-bg overflow-hidden w-full">
+        <div className="flex h-screen bg-slate-50 overflow-hidden w-full">
           {store.viewMode !== 'public' && (
             <div className="hidden lg:block shrink-0 h-full">
               <AdminSidebar />
@@ -203,7 +203,7 @@ export function AdminViewContent() {
                   <AdminScreen />
                 </div>
                 <div className={`absolute inset-0 transition-opacity duration-300 ${store.viewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
-                  <div className="flex flex-col h-full bg-brand-bg">
+                  <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden">
                     <PublicHeader 
                       variant="public-showcase"
                       onRefresh={handleRefreshPublic}
@@ -215,19 +215,21 @@ export function AdminViewContent() {
                         store.setActiveScreen('manage');
                       }}
                     />
-                    <PublicGallery 
-                      variant="public-showcase"
-                      onExit={handleExitPublic} 
-                      loginWithGoogle={loginWithGoogle}
-                      onScrollToTop={() => {}}
-                      virtualGridRef={null}
-                    />
+                    <div className="flex-1 min-h-0 relative">
+                      <PublicGallery 
+                        variant="public-showcase"
+                        onExit={handleExitPublic} 
+                        loginWithGoogle={loginWithGoogle}
+                        onScrollToTop={() => {}}
+                        virtualGridRef={null}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
               {(store.activeScreen === 'manage' || store.activeScreen === 'settings') && (
-                <div className="absolute inset-0 z-20 bg-brand-bg">
+                <div className="absolute inset-0 z-20 bg-slate-50">
                   <SettingsScreen />
                 </div>
               )}

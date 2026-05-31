@@ -3,6 +3,7 @@ import { LogIn, RefreshCw, X, User as UserIcon, LogOut, Settings, Eye, EyeOff } 
 import { checkPublicAuth, logoutPublic } from '@/lib/publicAuth';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useSettings } from '@/hooks';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +43,7 @@ export function PublicHeader({
   const [user, setUser] = useState<any>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const { setActiveScreen } = useGalleryStore(useShallow(s => ({ setActiveScreen: s.setActiveScreen })));
+  const { settings } = useSettings();
 
   useEffect(() => {
     let active = true;
@@ -65,7 +67,11 @@ export function PublicHeader({
     )}>
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 flex-nowrap">
         <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tighter whitespace-nowrap shrink-0 flex items-center">
-          <span>PHOT<span className="text-blue-600">O</span>X</span>
+          {settings?.logo_url ? (
+             <img src={settings.logo_url} className="h-6 sm:h-7 w-auto object-contain shrink-0" alt="Logo" />
+          ) : (
+            <span>PHOT<span className="text-blue-600">O</span>X</span>
+          )}
           {variant === 'full-management' && <span className="ml-2 text-[10px] sm:text-xs font-bold text-red-600 uppercase tracking-widest bg-red-100 px-1.5 sm:px-2 py-0.5 rounded-full">Admin</span>}
           {variant === 'staff-workspace' && <span className="ml-2 text-[10px] sm:text-xs font-bold text-indigo-600 uppercase tracking-widest bg-indigo-100 px-1.5 sm:px-2 py-0.5 rounded-full">Staff</span>}
         </h1>
@@ -78,26 +84,6 @@ export function PublicHeader({
 
       <div className="flex items-center gap-1 sm:gap-2 flex-nowrap shrink-0">
         <LanguageSwitcher variant={variant as any} />
-
-        {adminPreviewMode && setAdminPreviewMode && (
-          <button
-            onClick={() => setAdminPreviewMode(adminPreviewMode === 'public' ? 'private' : 'public')}
-            className={cn(
-              "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-8 sm:h-9 rounded-full font-bold transition-all shrink-0 active:scale-95 text-[10px] sm:text-xs",
-              adminPreviewMode === 'public' 
-                ? "bg-slate-100 text-slate-600 hover:bg-slate-200" 
-                : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-            )}
-            title={adminPreviewMode === 'public' ? 'Exit Public Preview' : 'Enter Public Preview'}
-          >
-            {adminPreviewMode === 'public' ? (
-               <Eye size={14} />
-            ) : (
-               <EyeOff size={14} />
-            )}
-            <span className="hidden sm:inline">{adminPreviewMode === 'public' ? '公开预览' : '管理预览'}</span>
-          </button>
-        )}
 
         {onRefresh && (
           <button 
@@ -173,6 +159,26 @@ export function PublicHeader({
             title="Exit"
           >
             <X size={18} />
+          </button>
+        )}
+
+        {adminPreviewMode && setAdminPreviewMode && (
+          <button
+            onClick={() => setAdminPreviewMode(adminPreviewMode === 'public' ? 'private' : 'public')}
+            className={cn(
+              "flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 h-8 sm:h-9 rounded-full font-bold transition-all shrink-0 active:scale-95 text-[10px] sm:text-xs",
+              adminPreviewMode === 'public' 
+                ? "bg-slate-100 text-slate-600 hover:bg-slate-200" 
+                : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+            )}
+            title={adminPreviewMode === 'public' ? 'Exit Public Preview' : 'Enter Public Preview'}
+          >
+            {adminPreviewMode === 'public' ? (
+               <Eye size={14} />
+            ) : (
+               <EyeOff size={14} />
+            )}
+            <span className="hidden sm:inline">{adminPreviewMode === 'public' ? '公开预览' : '管理预览'}</span>
           </button>
         )}
       </div>

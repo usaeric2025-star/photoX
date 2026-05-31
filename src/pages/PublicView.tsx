@@ -42,7 +42,7 @@ export default function PublicView() {
 
   // ========== 8. 正常渲染 ==========
   return (
-    <div className="flex flex-col fixed inset-0 bg-slate-50 overflow-hidden" id="public-view">
+    <div className="flex flex-col h-full w-full bg-slate-50 overflow-hidden" id="public-view">
       <PublicHeader 
         variant="public-showcase"
         totalCount={count}
