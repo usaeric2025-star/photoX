@@ -54,8 +54,6 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   const { settings } = useSettings();
   
   const { filters, setCategory, setTags, setSearch, setShowGroupsCollapsed } = useFilters();
-  const { searchQuery, categoryId, tagIds, showGroupsCollapsed } = filters;
-
   const { sortOrder, setSortOrder, columns, setColumns, setFilterSubId, filterSubId, lang } = useGalleryStore(useShallow(s => ({
     sortOrder: s.sortOrder,
     setSortOrder: s.setSortOrder,
@@ -66,18 +64,20 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
     lang: s.appLang
   })));
   
-  const setSelectedCatCode = setCategory; // Aliased for backward compatibility in the component
-  const setSelectedTagIds = setTags; // Aliased for backward compatibility
-  const selectedCatCode = categoryId;
-  const selectedTagIds = tagIds;
+  // New buttons state
+  const { isMultiSelect, setIsMultiSelect, viewMode, setViewMode } = useGalleryStore(useShallow(s => ({ isMultiSelect: s.isMultiSelect, setIsMultiSelect: s.setIsMultiSelect, viewMode: s.viewMode, setViewMode: s.setViewMode })));
+
+  const toggleMode = () => {
+    setViewMode(viewMode === 'public' ? 'private' : 'public');
+  };
 
   const t = React.useMemo(() => translations[lang as keyof typeof translations] || translations.en, [lang]);
 
   // Handle URL -> Store sync on mount/change for Public mode
   useEffect(() => {
     if (isPublic) {
-      if (search.q !== undefined && search.q !== searchQuery) setSearch(search.q || '');
-      if (search.category !== undefined && String(search.category) !== String(selectedCatCode)) setSelectedCatCode(search.category);
+      if (search.q !== undefined && search.q !== filters.searchQuery) setSearch(search.q || '');
+      if (search.category !== undefined && String(search.category) !== String(filters.categoryId)) setCategory(search.category);
       if (search.sort !== undefined) {
         const mappedSort = search.sort === 'date' ? 'newest' : search.sort === 'name' ? 'name' : 'newest';
         if (mappedSort !== sortOrder) setSortOrder(mappedSort as any);
@@ -104,12 +104,12 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
   const { tagsToRender, pinnedIds, hotIds } = useTagsDisplay(tags, settings);
 
   // Local state for instant typing responsive feedback
-  const [localSearch, setLocalSearch] = useState(searchQuery || '');
+  const [localSearch, setLocalSearch] = useState(filters.searchQuery || '');
 
   // Keep local search value synced
   useEffect(() => {
-    setLocalSearch(searchQuery || '');
-  }, [searchQuery]);
+    setLocalSearch(filters.searchQuery || '');
+  }, [filters.searchQuery]);
 
   // Debounced parent state update
   // [INTERACTION-FEEDBACK-CSS-ONLY]
@@ -118,7 +118,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
     updateURL({ q: val || undefined });
   }, 300);
 
-  const isSearchingLocal = localSearch !== (searchQuery || '');
+  const isSearchingLocal = localSearch !== (filters.searchQuery || '');
 
   return (
     <div className="shrink-0 px-2 sm:px-3 pt-2 pb-1.5 z-40 bg-white border-b border-[#ECECEC]">
@@ -164,35 +164,38 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
           </div>
           
           <div className="flex gap-1 shrink-0">
-            <SortButton 
-              onClick={toggleSortOrder} 
-              label={sortOrder === 'oldest' ? t.sortOldest : t.sortNewest} 
-              selected={sortOrder === 'oldest'} 
-            />
-            
-            <LayoutButton 
-              isGrid={columns !== 2} 
-              onClick={() => {
-                const next = columns === 2 ? 3 : columns === 3 ? 5 : 2;
-                setColumns(next as 2 | 3 | 5);
-                updateURL({ view: next === 2 ? 'list' : 'grid' });
-              }}
-            />
-            <GroupToggle 
-                showGroupsCollapsed={showGroupsCollapsed} 
-                onClick={() => setShowGroupsCollapsed(!showGroupsCollapsed)} 
-            />
+            <button 
+                onClick={() => setIsMultiSelect(!isMultiSelect)}
+                title={t.select}
+                className={cn("h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] transition-colors", isMultiSelect ? "bg-brand-gold text-white" : "text-[#888] hover:text-[#1A1A1A]")}
+            >
+                <Pin size={16} /> 
+            </button>
+            <button 
+                onClick={toggleMode}
+                title={viewMode === 'public' ? 'Switch to Admin' : 'Switch to Public'}
+                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors" 
+            >
+                {viewMode === 'public' ? <Globe size={16} /> : <Sparkles size={16} />}
+            </button>
+            <button 
+                onClick={() => navigate({ to: '/settings' })}
+                title={t.settings}
+                className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-[#F7F7F7] border border-[#ECECEC] text-[#888] hover:text-[#1A1A1A] transition-colors"
+            >
+                <span className="text-xl">⚙️</span>
+            </button>
           </div>
         </div>
 
         <div className="grid grid-cols-4 gap-1">
             <CategoryChip 
                 name={(t.allCats || 'ALL').toUpperCase()} 
-                selected={!selectedCatCode && (!selectedTagIds || selectedTagIds.length === 0)} 
+                selected={!filters.categoryId && (!filters.tagIds || filters.tagIds.length === 0)} 
                 onClick={() => { 
-                  setSelectedCatCode(null); 
+                  setCategory(null); 
                   setFilterSubId(null); 
-                  setSelectedTagIds([]); 
+                  setTags([]); 
                   onScrollToTop(); 
                   updateURL({ category: undefined, manufacturer: undefined });
                 }} 
@@ -202,16 +205,16 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
               .slice(0, 7) 
               .map(cat => {
                 const displayName = getTranslatedCategoryName(cat.id, categories, lang, t);
-                const isActive = String(selectedCatCode) === String(cat.id) || String(selectedCatCode) === String(cat.code);
+                const isActive = String(filters.categoryId) === String(cat.id) || String(filters.categoryId) === String(cat.code);
                 return (
                   <CategoryChip
                     key={cat.id}
                     name={displayName}
                     selected={isActive}
                     onClick={() => { 
-                      setSelectedCatCode(cat.id); 
+                      setCategory(cat.id); 
                       setFilterSubId(null);
-                      setSelectedTagIds([]);
+                      setTags([]);
                       onScrollToTop();
                       updateURL({ category: cat.id });
                     }}
@@ -223,7 +226,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
       
       <div className="pt-1 border-t border-[#F7F7F7] space-y-1">
         <AnimatePresence initial={false}>
-          {selectedCatCode && (
+          {filters.categoryId && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }} 
                 animate={{ opacity: 1, height: 'auto' }}
@@ -231,7 +234,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                 className="flex flex-wrap gap-2 pb-2 px-1"
               >
                 {(() => {
-                  const currentCat = categories.find(c => (c.id === selectedCatCode || c.code === selectedCatCode));
+                  const currentCat = categories.find(c => (c.id === filters.categoryId || c.code === filters.categoryId));
                   const subList = currentCat?.subcategories || [];
                   return Array.from(new Map(subList.map((s: any) => [s.id, s])).values())
                     .map((sub: any) => (
@@ -259,7 +262,7 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
             ) : (
               tagsToRender.map((tag, idx) => {
                 const strTagId = String(tag.id);
-                const isSelected = (selectedTagIds || []).includes(strTagId);
+                const isSelected = (filters.tagIds || []).includes(strTagId);
                 const isPinned = !!tag.is_pinned || pinnedIds.includes(strTagId);
                 const isHot = !isPinned && hotIds.has(strTagId);
                 return (
@@ -270,9 +273,9 @@ export const GalleryFilters: React.FC<GalleryFiltersProps> = ({
                     pinned={isPinned}
                     hot={isHot}
                     onClick={() => { 
-                      setSelectedCatCode(null);
+                      setCategory(null);
                       setFilterSubId(null);
-                      setSelectedTagIds([strTagId]);
+                      setTags([strTagId]);
                       onScrollToTop();
                       updateURL({ category: undefined }); // Tags usually clear category in this app's logic
                     }}

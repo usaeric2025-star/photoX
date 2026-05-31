@@ -59,7 +59,7 @@ export const DrawerHeader: React.FC<HeaderProps> = ({
         <h2 className="font-black text-sm text-slate-800 tracking-tight leading-tight uppercase truncate w-full text-center">
           {editPhotoId ? '编辑产品信息' : '分析新产品'}
         </h2>
-        <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">Product Details</p>
+        <p className="text-[8px] font-bold text-slate-400 tracking-widest uppercase">{editPhotoId ? 'Product Details' : 'Analyze Product'}</p>
       </div>
 
       <div className="flex-1 flex items-center justify-end gap-2">

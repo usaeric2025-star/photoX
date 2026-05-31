@@ -69,7 +69,7 @@ const PhotoInfoFooter: React.FC<{
     <div className="h-[38px] w-full flex flex-col justify-end items-start gap-0.5" style={{ alignContent: 'end' }}>
        <p className="text-[13px] font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] leading-none truncate flex-shrink-0 w-full mb-0.5 tracking-tight px-0.5">
           {/* [FIELD-LEVEL-FALLBACK] Display category name or generic fallback */}
-          {displayCatName || 'Product Detail'}
+          {displayCatName || t.productDetail || 'Product'}
         </p>
       {!hideTags && photoTags.length > 0 && (
         <div className="flex flex-nowrap gap-1 w-full overflow-x-auto pointer-events-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-0.5 pb-0.5 mt-auto">
