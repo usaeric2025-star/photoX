@@ -1,47 +1,64 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
-import { User } from '@/types'
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { User } from '@/types';
 
-/**
- * Hook for authentication state and operations.
- */
-export const useAuth = () => {
-  const { data: user, isLoading, refetch } = useQuery({
+// 带超时的 getUser（5秒）
+async function getUserWithTimeout(): Promise<User | null> {
+  const timeoutPromise = new Promise<null>((resolve) => {
+    setTimeout(() => {
+      console.warn('[useAuth] getUser timeout after 5s, returning null');
+      resolve(null);
+    }, 5000);
+  });
+
+  const getUserPromise = supabase.auth.getUser().catch(() => ({ data: { user: null }, error: null }));
+
+  const result = await Promise.race([getUserPromise, timeoutPromise]);
+
+  if (result === null) return null;
+
+  const { data, error } = result as any;
+  if (error || !data?.user) return null;
+
+  const u = data.user;
+  return {
+    id: u.id,
+    email: u.email || null,
+    display_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email || null,
+    photo_url: u.user_metadata?.avatar_url || null,
+    avatar_url: u.user_metadata?.avatar_url || null,
+    email_verified: !!u.email_confirmed_at,
+  } as User;
+}
+
+export function useAuth() {
+  const { data: user } = useQuery({
     queryKey: ['auth', 'user'],
-    queryFn: async () => {
-        const { data, error } = await supabase.auth.getUser();
-        if (error || !data?.user) return null;
-        const u = data.user;
-        return {
-          id: u.id,
-          email: u.email || null,
-          display_name: u.user_metadata?.full_name || u.user_metadata?.display_name || u.email || null,
-          photo_url: u.user_metadata?.avatar_url || u.user_metadata?.photo_url || null,
-          avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.photo_url || null,
-          email_verified: !!u.email_confirmed_at || !!(u as any).email_verified
-        } as User;
-    },
+    queryFn: getUserWithTimeout,
     staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 1,
-  })
+    // 关键：不等待，立即返回 null
+    placeholderData: null,
+  });
 
-  const loginWithGoogle = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.auth.signInWithOAuth({
+  // isLoading 永远为 false，不阻塞 UI
+  return {
+    user: user ?? null,
+    isLoading: false,
+    isPending: false,
+    isAuthenticated: !!user,
+    refetch: () => {},
+    loginWithGoogle: async () => {
+      await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { 
-          redirectTo: window.location.origin + '/admin'
-        }
+        options: { redirectTo: window.location.origin + '/admin' }
       });
-      if (error) throw error;
     },
-  })
-
-  const logout = useMutation({
-    mutationFn: async () => {
-      await supabase.auth.signOut()
+    logout: async () => {
+      await supabase.auth.signOut();
     },
-  })
-
-  return { user, isLoading, refetch, loginWithGoogle: loginWithGoogle.mutateAsync, logout: logout.mutateAsync }
+  };
 }

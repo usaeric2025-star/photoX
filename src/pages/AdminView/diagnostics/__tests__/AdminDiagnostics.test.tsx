@@ -13,6 +13,8 @@ describe('AdminDiagnostics Security Locks', () => {
     vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
       user: { role: 'user', email: 'test@example.com' } as any,
       isLoading: false,
+      isPending: false,
+      isAuthenticated: true,
       refetch: vi.fn() as any,
       loginWithGoogle: vi.fn(),
       logout: vi.fn()
@@ -26,6 +28,8 @@ describe('AdminDiagnostics Security Locks', () => {
     vi.spyOn(useAuthHook, 'useAuth').mockReturnValue({
       user: { role: 'admin', email: 'admin@example.com' } as any,
       isLoading: false,
+      isPending: false,
+      isAuthenticated: true,
       refetch: vi.fn() as any,
       loginWithGoogle: vi.fn(),
       logout: vi.fn()
