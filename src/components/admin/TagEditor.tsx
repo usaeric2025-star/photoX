@@ -219,11 +219,13 @@ export function TagEditor({
 }
 
 function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onLongPress }: any) {
-  const longPressBind = useLongPress(null, () => onLongPress(), { delay: 500 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  useLongPress(buttonRef, () => onLongPress(), { delay: 500 });
 
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         type="button"
         style={{
           WebkitTouchCallout: "none",
@@ -231,7 +233,6 @@ function TagButton({ tag, isSelected, isHot, isPinned, isDisabled, onToggle, onL
           userSelect: "none",
           touchAction: "manipulation",
         }}
-        {...longPressBind}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();

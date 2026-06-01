@@ -105,7 +105,7 @@ export function AdminPageContent() {
   }, [isSyncing, syncMut]);
 
   const lastSyncTime = React.useMemo(() => {
-    // [SYNC-STORAGE-IN-RENDER] @ src/pages/AdminView/AdminViewContent.tsx:93 - Read from storage in useMemo to avoid repeated sync reads
+    // [SYNC-STORAGE-IN-RENDER] @ src/pages/AdminPage/AdminPageContent.tsx:108 - Read from storage in useMemo to avoid repeated sync reads
     const saved = localStorage.getItem('lastSyncTime');
     return saved ? new Date(saved).getTime() : null;
   }, []);

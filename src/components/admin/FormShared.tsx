@@ -5,6 +5,7 @@ import { Category, Manufacturer } from "../../types";
 import { useLongPress } from "@shined/react-use";
 import { Pencil, Trash2 } from "lucide-react";
 import { useUIStore, useShallow } from "@/store/useUIStore";
+import { useRef } from "react";
 
 interface SectionHeaderProps {
   title: string;
@@ -123,7 +124,8 @@ export function ManufacturerList({
 }
 
 function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete, update }: any) {
-  const longPressBind = useLongPress(null, () => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  useLongPress(buttonRef, () => {
     if (onEdit || onDelete) {
       update({
         alertDialog: {
@@ -143,7 +145,7 @@ function ManufacturerButton({ mfr, isSelected, onSelect, onEdit, onDelete, updat
 
   return (
     <button
-      {...longPressBind}
+      ref={buttonRef}
       onClick={() => onSelect(isSelected ? null : String(mfr.id))}
       className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSelected ? "bg-slate-800 text-white border-slate-800 shadow-lg" : "bg-white border-slate-200 text-slate-600 active:bg-slate-50"}`}
     >

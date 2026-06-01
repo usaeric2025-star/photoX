@@ -269,8 +269,8 @@ export const PhotoCard = ({
     }
   };
 
-  const longPressBind = useLongPress(
-    null,
+  useLongPress(
+    cardRef,
     () => {
       if (isManagement && can('photo:edit')) {
         const { isMultiSelect } = interactionBus.current;
@@ -308,7 +308,6 @@ export const PhotoCard = ({
         ... { contentVisibility: 'auto', containIntrinsicSize: '300px' },
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       }}
-      {...longPressBind}
       onClick={handleClick}
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group bg-white rounded-2xl shadow-sm ring-1 ring-slate-100",

@@ -42,7 +42,7 @@ export const SearchInput = ({
 
   const handleClear = () => {
     setValue('');
-    debouncedSearch.cancel(); // Cancel any pending debounced search
+    cancel(); // Cancel any pending debounced search
     onSearch('');
   };
 

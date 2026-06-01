@@ -25,12 +25,12 @@ export const ManufacturerItem = ({
   );
 
   const menuRef = useRef<HTMLDivElement>(null);
-  useClickAway(menuRef, () => {
+  useClickAway(menuRef as any, () => {
     if (activeMenuId === manufacturer.id) setActiveMenuId(null);
   });
 
-  const longPressBind = useLongPress(
-    null,
+  useLongPress(
+    menuRef,
     () => {
       setActiveMenuId(manufacturer.id);
     },
@@ -41,7 +41,6 @@ export const ManufacturerItem = ({
     <div
       ref={menuRef}
       className={`bg-white border border-brand-navy/10 pl-3 pr-2 py-1 rounded-full flex items-center gap-2 shadow-sm transition-all active:scale-95 relative ${activeMenuId === manufacturer.id ? "bg-brand-gold/10 border-brand-gold/30 scale-95" : ""}`}
-      {...longPressBind}
     >
       <div className="flex flex-col">
         <span className="text-[11px] font-black text-brand-navy uppercase tracking-tight select-none">
