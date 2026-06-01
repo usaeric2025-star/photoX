@@ -93,7 +93,7 @@ export function PublicGallery({
       if (isMobile) {
         setColumns(3);
       } else {
-        setColumns(4); // Default desktop to 4
+        setColumns(5); // Default desktop to 5
       }
     };
     handleResize(); 
@@ -120,6 +120,11 @@ export function PublicGallery({
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   }, []);
 
+  const handleShare = useCallback((photo: Photo) => {
+    (window as any)._pendingPhoto = photo;
+    setShowWhatsAppChoice(true);
+  }, [setShowWhatsAppChoice]);
+
   const renderCard = useCallback((photo: Photo, index: number) => (
     <PhotoCard 
       photo={photo}
@@ -128,8 +133,9 @@ export function PublicGallery({
       showGroupsCollapsed={filters.showGroupsCollapsed}
       onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
       onLightboxOpen={handleLightboxOpen}
+      onShare={handleShare}
     />
-  ), [variant, filters.showGroupsCollapsed, handleGroupClick, handleLightboxOpen]);
+  ), [variant, filters.showGroupsCollapsed, handleGroupClick, handleLightboxOpen, handleShare]);
 
   return (
     <div className="flex flex-col h-full bg-brand-bg w-full overflow-hidden text-text">

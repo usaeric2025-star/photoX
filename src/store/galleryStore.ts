@@ -28,8 +28,8 @@ export interface PromptDialogProps {
 }
 
 export interface GalleryStoreState {
-  columns: 2 | 3 | 4 | 5;
-  setColumns: (cols: 2 | 3 | 4 | 5) => void;
+  columns: 2 | 3 | 5;
+  setColumns: (cols: 2 | 3 | 5) => void;
   lightboxIndex: number | null;
   setLightboxIndex: (index: number | null) => void;
   activeGroupId: string | null;
@@ -105,7 +105,7 @@ const defaultForm: ProductFormData = {
 export const useGalleryStore = create<GalleryStoreState>()((set) => ({
   columns: safeGetItem(STORAGE_KEYS.COLUMNS, 3, (v) => {
     const n = Number(v);
-    return (n === 2 || n === 3 || n === 4 || n === 5) ? n : 3;
+    return (n === 2 || n === 3 || n === 5) ? n : 3;
   }),
   setColumns: (cols) => {
     safeSetItem(STORAGE_KEYS.COLUMNS, cols);

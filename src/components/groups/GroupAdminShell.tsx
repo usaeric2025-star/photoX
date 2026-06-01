@@ -5,7 +5,7 @@ import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupSettingsSheet } from './GroupSettingsSheet';
 import { GroupDetailSkeleton } from './GroupDetailSkeleton';
 import { GroupHeader } from './GroupHeader';
-import { GroupMultiSelectBar } from './GroupMultiSelectBar';
+import { MultiSelectToolbar } from '../shared/MultiSelectToolbar';
 import { useGroupAdminLogic } from './useGroupAdminLogic';
 import { GroupGridView } from './GroupGridView';
 import { GroupPhotoPicker } from './GroupPhotoPicker';
@@ -194,10 +194,10 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
               </>
             )}
 
-            {/* Multi-Select Floating Bar */}
-            <GroupMultiSelectBar 
-              activeGroupPhotos={activeGroupPhotos}
-              handleBulkAction={hookHandleBulkAction}
+            {/* Unified Multi-Select Floating Bar */}
+            <MultiSelectToolbar 
+              variant="group"
+              onGroupAction={hookHandleBulkAction}
             />
 
             {/* Photo Picker for adding photos to group */}

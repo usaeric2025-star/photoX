@@ -464,7 +464,7 @@ export const getPhotoCount = async (
 ): Promise<number> => {
   let query = supabase
     .from(DB_CONFIG.TABLE_NAME)
-    .select(tagId ? 'id, photo_tags!inner(tag_id)' : 'id', { count: 'estimated', head: true });
+    .select('*', { count: 'exact', head: true });
   
   if (!isAdminMode) {
     query = query.or(VISIBILITY_OR_QUERY);
@@ -551,6 +551,16 @@ export const getPhotoCount = async (
   }
 
   return count || 0;
+};
+
+export const getLocalPhotoCount = async (): Promise<number> => {
+  try {
+    const { syncCache } = await import('@/lib/db/indexedDB');
+    const photos = await syncCache.getPhotos();
+    return Array.isArray(photos) ? photos.length : 0;
+  } catch (e) {
+    return 0;
+  }
 };
 
 export const getPhotosWithoutThumbHash = async (): Promise<{ id: string }[]> => {

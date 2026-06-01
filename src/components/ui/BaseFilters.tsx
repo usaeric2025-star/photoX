@@ -29,7 +29,7 @@ export function BaseFilters({
   const t = (translations as any)[appLang];
 
   const toggleColumns = () => {
-    const nextCols = currentColumns === 2 ? 3 : currentColumns === 3 ? 4 : currentColumns === 4 ? 5 : 2;
+    const nextCols = currentColumns === 2 ? 3 : currentColumns === 3 ? 5 : 2;
     onColumnsChange(nextCols);
   };
 
@@ -60,7 +60,6 @@ export function BaseFilters({
       >
         {currentColumns === 2 && <Grid2x2 size={15} className="text-slate-600" />}
         {currentColumns === 3 && <Grid3x3 size={15} className="text-slate-600" />}
-        {currentColumns === 4 && <LayoutGrid size={15} className="text-slate-600" />}
         {currentColumns === 5 && <LayoutGrid size={15} className="text-blue-600" />}
       </button>
 

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { useFilters, useCategoryList, useTagList } from '@/hooks';
 import { useGalleryStore } from '@/store/galleryStore';
 import { cn } from '@/lib/utils';
@@ -64,9 +65,10 @@ export function FilterPanel() {
                     {sortedTags.length > 15 && (
                          <button 
                              onClick={() => setIsExpanded(!isExpanded)}
-                             className="text-[8px] px-1 py-0.5 rounded-sm bg-slate-50 text-slate-400 hover:bg-slate-100 transition-all cursor-pointer pointer-events-auto font-bold uppercase"
+                             className="text-[10px] p-1.5 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-all cursor-pointer pointer-events-auto"
+                             title={isExpanded ? t.collapse : t.more(hiddenCount)}
                          >
-                             {isExpanded ? t.collapse : t.more(hiddenCount)}
+                             {isExpanded ? <ChevronUp size={14} /> : <MoreHorizontal size={14} />}
                          </button>
                     )}
                 </div>

@@ -8,6 +8,7 @@ import { AdminFilters } from '@/components/ui/AdminFilters';
 import { useScrollRestoration, useTasks, useMultiSelect, useFilters, usePhotoFilters, usePhotoInfiniteList, useAdminMode, usePermission, useCategoryList, useTagList } from '@/hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { FloatingActions } from '@/components/shared/FloatingActions';
+import { MultiSelectToolbar } from '../shared/MultiSelectToolbar';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailView } from '../GroupDetailView';
@@ -127,12 +128,6 @@ export function AdminGallery({
           currentColumns={store.columns}
           onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
           showGroupsCollapsed={filters.showGroupsCollapsed}
-          isMultiSelect={isMultiSelect}
-          onMultiSelect={() => interactionBus.setIsMultiSelect(!isMultiSelect)}
-          onBatchAiIdentify={handleBatchAiIdentifyTrigger}
-          selectedCount={interactionBus.current.selectedIds.size}
-          onSettings={() => store.setActiveScreen('settings')}
-          onUpload={() => fileInputRef.current?.click()}
         />
 
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
@@ -160,6 +155,8 @@ export function AdminGallery({
           onToggleVisibility={() => adminActions.batchUpdate.mutateAsync({ ids: selectedIds, updates: { is_hidden: true } })}
           onClearSelection={disable}
         />
+
+        <MultiSelectToolbar variant="admin" />
 
         {!store.activeGroupId && store.activePhotoId && (
           <PhotoLightbox 

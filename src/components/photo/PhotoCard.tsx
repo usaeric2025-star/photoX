@@ -69,6 +69,7 @@ export interface PhotoCardProps {
   showGroupsCollapsed: boolean;
   onGroupClick?: (groupId: string, photoId?: string) => void;
   onLightboxOpen: (photo: Photo) => void;
+  onShare?: (photo: Photo) => void;
   className?: string;
   onClick?: (e: React.MouseEvent) => void;
   hideDetails?: boolean;
@@ -135,14 +136,7 @@ function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagI
     <div className="absolute bottom-0 left-0 w-full z-20 pointer-events-auto p-2 pt-8 flex flex-col gap-1.5 bg-gradient-to-t from-black/95 via-black/65 to-transparent">
         {displayCatName && (
             <span 
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                setCategory(categoryId ? String(categoryId) : null);
-              }}
-              className="text-[9px] text-brand-gold font-bold tracking-widest leading-none truncate hover:bg-black/85 px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-sm w-fit active:scale-95 transition-all uppercase border border-brand-gold/30 hover:border-brand-gold/60 cursor-pointer shadow-md"
+              className="text-[9px] text-brand-gold font-bold tracking-widest leading-none truncate px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-sm w-fit uppercase border border-brand-gold/30 shadow-md"
             >
             {displayCatName.toUpperCase()}
             </span>
@@ -150,25 +144,10 @@ function PhotoInfoFooter({ displayCatName, photoTags, hideTags, categoryId, tagI
         {photoTags && photoTags.length > 0 && (
             <div className="flex flex-row gap-1.5 overflow-x-auto no-scrollbar pointer-events-auto pb-1 px-1">
                 {photoTags.map((tag, i) => {
-                    const tagId = tagIds && tagIds[i];
                     return (
                         <span 
                             key={tag}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              if (tagId) {
-                                const targetIdStr = String(tagId);
-                                const isSelected = filters.tagIds?.includes(targetIdStr);
-                                const nextTags = isSelected
-                                    ? filters.tagIds?.filter(id => id !== targetIdStr)
-                                    : [...(filters.tagIds || []), targetIdStr];
-                                setTags(nextTags);
-                              }
-                            }}
-                            className="text-[8px] text-slate-100 font-semibold px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-md leading-tight border border-white/10 hover:border-white/30 cursor-pointer hover:bg-black/80 hover:text-white active:scale-95 transition-all whitespace-nowrap"
+                            className="text-[8px] text-slate-100 font-semibold px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-md leading-tight border border-white/10 whitespace-nowrap"
                         >
                         {tag}
                         </span>
@@ -293,11 +272,7 @@ export const PhotoCard = ({
       }
     } else if (!isManagement) {
        // Logic for public share
-       onLightboxOpen(photo);
-       // Assuming lightbox or some UI needs to handle triggering share
-       // Or I just need to trigger a share action?
-       // The user said "分享" (Share). Assuming there's a share action?
-       // Let me check what "分享" might be.
+       onShare?.(photo);
     }
   };
 

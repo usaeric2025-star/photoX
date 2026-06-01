@@ -1,7 +1,6 @@
 import React from 'react';
 import { Plus, ArrowUpToLine, MessageCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { MultiSelectToolbar } from '../admin/MultiSelectToolbar';
+import { motion } from 'motion/react';
 import { buttonStyles } from '../../styles/buttonStyles';
 import { useMultiSelect, usePermission } from '../../hooks';
 import { Photo } from '../../types';
@@ -42,27 +41,6 @@ export function FloatingActions({
 
     return (
       <>
-        <AnimatePresence>
-          {isMultiSelect && (
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 50, scale: 0.9 }}
-              className="fixed bottom-6 left-0 right-0 flex justify-center z-[500]"
-            >
-              <MultiSelectToolbar
-                selectedCount={selectedIds.length}
-                onClose={onClearSelection || (() => {})}
-                onDelete={onDelete || (() => {})}
-                onBatchAiIdentify={onBatchAiIdentify || (() => {})}
-                onGroup={onGroup || (() => {})}
-                onBatchEdit={onBatchEdit || (() => {})}
-                onToggleVisibility={onToggleVisibility}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
         {!isMultiSelect && onAdd && (
           <motion.button
             initial={{ opacity: 0, scale: 0.5 }}
