@@ -25,3 +25,28 @@
 ## 性能安全阀（实测触发）
 - 当照片数量 > 5000 或组件树 > 10 层时，需重新评估
 - 当前 480 张照片，在安全边界内
+
+## Header 组件规则（永久锁定）
+
+### 职责分离
+- `PublicHeader` - 公开页面，无认证，无管理按钮
+- `StaffHeader` - 员工页面，有认证，有员工工具
+- `AdminHeader` - 管理页面，有认证，有管理工具
+
+### 禁止项
+- ❌ PublicHeader 禁止导入 useAuth、usePermission
+- ❌ 禁止三个 Header 共用同一个组件
+- ❌ 禁止使用 variant 或 mode prop 切换行为
+- ❌ 禁止在 Header 内使用条件渲染判断角色
+
+### 使用方式
+```tsx
+// PublicView.tsx
+<PublicHeader ... />
+
+// StaffView.tsx
+<StaffHeader ... />
+
+// AdminView.tsx
+<AdminHeader ... />
+```

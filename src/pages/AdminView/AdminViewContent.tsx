@@ -14,7 +14,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { AdminScreen } from '@/components/AdminScreen';
 import { PublicGallery } from '@/components/photo/PublicGallery';
-import { PublicHeader } from '@/components/photo/PublicHeader';
+import { PublicHeader } from '@/components/layouts/PublicHeader';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { useFilters } from '@/features/filters/useFilters';
 import { useGroupView } from '@/features/groups/useGroupView';

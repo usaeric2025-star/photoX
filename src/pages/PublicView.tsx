@@ -16,9 +16,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { saveData, syncCache } from '@/lib/db/indexedDB';
 import { PublicGallery } from '@/components/photo/PublicGallery';
-import { PublicHeader } from '@/components/photo/PublicHeader';
+import { PublicHeader } from '@/components/layouts/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { loginWithGoogle } from '@/services/authService';
 // import { AdminProvider } from '@/contexts/PhotoActionsContext';
 
 /* Removed ErrorFallback component */
@@ -44,11 +43,7 @@ export default function PublicView() {
   return (
     <div className="flex flex-col h-full w-full bg-slate-50 overflow-hidden" id="public-view">
       <PublicHeader 
-        variant="public-showcase"
         totalCount={count}
-        onRefresh={() => window.location.reload()}
-        loginWithGoogle={() => loginWithGoogle()}
-        handleManageClick={() => navigate({ to: ROUTES.ADMIN })}
       />
       {authError ? (
         <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">

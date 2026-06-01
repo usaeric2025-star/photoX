@@ -1,7 +1,7 @@
 import React from 'react';
 import { GalleryVariant } from '@/types/variant';
 import { Photo } from '@/types';
-import { PublicHeader as UnifiedHeader } from '@/components/photo/PublicHeader';
+import { AdminHeader as UnifiedHeader } from '@/components/layouts/AdminHeader';
 
 interface AdminToolbarProps {
   photos: Photo[];
