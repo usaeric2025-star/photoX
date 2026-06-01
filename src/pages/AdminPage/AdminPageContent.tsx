@@ -27,8 +27,6 @@ import { LanguageCode } from '@/lib/translations';
 
 /* Removed ErrorFallback component */
 
-const AdminDiagnostics = lazy(() => import('./AdminDiagnostics'));
-
 export function AdminPageContent() {
   console.log('🔍 AdminPageContent 组件渲染');
 
@@ -236,12 +234,6 @@ export function AdminPageContent() {
               <PhotoEditDrawer />
             )}
           </AnimatePresence>
-
-          {typeof __ADMIN_DIAGNOSTICS__ !== 'undefined' && __ADMIN_DIAGNOSTICS__ && (
-            <Suspense fallback={null}>
-              <AdminDiagnostics />
-            </Suspense>
-          )}
         </div>
       </div>
       </DataLoadingContainer>

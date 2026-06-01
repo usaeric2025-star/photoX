@@ -1,5 +1,6 @@
-import { registerDiagnostic } from './index';
 import { test, expect } from 'vitest';
+
+const registerDiagnostic = (_arg: any) => {};
 // @ts-ignore
 import GroupHeaderRaw from '@/components/groups/GroupHeader.tsx?raw';
 // @ts-ignore
