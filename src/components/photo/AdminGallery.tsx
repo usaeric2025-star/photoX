@@ -94,7 +94,7 @@ export function AdminGallery({
   // activePhoto can be removed if not needed, but keep activePhotoId
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
      store.setActiveGroupId(gid);
-     store.setActivePhotoId(null);
+     store.setActivePhotoId(photoId || null);
   }, [store.setActiveGroupId, store.setActivePhotoId]);
 
   const handleLightboxOpen = useCallback((photo: Photo) => {
@@ -107,7 +107,7 @@ export function AdminGallery({
       index={index}
       variant={variant}
       showGroupsCollapsed={filters.showGroupsCollapsed}
-      onGroupClick={(gid) => handleGroupClick(gid, photo.id)}
+      onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
       onLightboxOpen={handleLightboxOpen}
     />
   ), [variant, filters.showGroupsCollapsed, handleGroupClick, handleLightboxOpen]);
@@ -136,6 +136,7 @@ export function AdminGallery({
 
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
            <PhotoBoard 
+             key={`photo-grid-${filters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${store.activeGroupId ? 'open' : 'closed'}-${filters.searchQuery || ''}`}
              photos={gridPhotos}
              isFetching={infiniteQuery.isLoading}
              isFetchingNextPage={infiniteQuery.isFetchingNextPage}

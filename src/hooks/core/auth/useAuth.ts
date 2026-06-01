@@ -32,7 +32,7 @@ async function getUserWithTimeout(): Promise<User | null> {
 }
 
 export function useAuth() {
-  const { data: user } = useQuery({
+  const { data: user, isLoading, isPending } = useQuery({
     queryKey: ['auth', 'user'],
     queryFn: getUserWithTimeout,
     staleTime: Infinity,
@@ -40,15 +40,12 @@ export function useAuth() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: 1,
-    // 关键：不等待，立即返回 null
-    placeholderData: null,
   });
 
-  // isLoading 永远为 false，不阻塞 UI
   return {
     user: user ?? null,
-    isLoading: false,
-    isPending: false,
+    isLoading,
+    isPending,
     isAuthenticated: !!user,
     refetch: () => {},
     loginWithGoogle: async () => {

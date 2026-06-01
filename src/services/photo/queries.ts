@@ -7,6 +7,20 @@ import { PAGINATION } from '../../config/constants';
 import { PHOTO_LIST_FIELDS } from '../../constants/photoFields';
 import { SupabasePhotoRaw } from '@/types/supabase';
 
+export function normalizeStoredUrl(url: string | undefined | null): string {
+    if (!url) return '';
+    if (url.startsWith('data:')) return url;
+    
+    // Match prefix like photox/public/ or photox/thumb/ or photox/original/
+    const match = url.match(/photox\/(public|thumb|original)\/(.+)/);
+    if (match) {
+        const pathAndFilename = match[0];
+        return `https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev/${pathAndFilename}`;
+    }
+    
+    return url;
+}
+
 export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
     if (!item) return {} as Photo;
     
@@ -72,10 +86,10 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       category_id: category_id,
       manufacturer_id: manufacturer_id,
       description: item.description || '',
-      image_url: item.image_url || '',
-      thumb_url: item.thumb_url || item.image_url || '',
-      thumbnail_sm_url: item.thumbnail_sm_url || item.thumb_url || item.image_url || '',
-      thumbnail_md_url: item.thumbnail_md_url || item.thumb_url || item.image_url || '',
+      image_url: normalizeStoredUrl(item.image_url || ''),
+      thumb_url: normalizeStoredUrl(item.thumb_url || item.image_url || ''),
+      thumbnail_sm_url: normalizeStoredUrl(item.thumbnail_sm_url || item.thumb_url || item.image_url || ''),
+      thumbnail_md_url: normalizeStoredUrl(item.thumbnail_md_url || item.thumb_url || item.image_url || ''),
       thumb_hash: item.thumb_hash || '',
       exif_data: item.exif_data ?? null,
       created_at: created_at || new Date().toISOString(),
@@ -94,7 +108,7 @@ export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
       is_analyzing: is_analyzing,
       group_order: group_order,
       user_id: user_id,
-      uri: item.image_url || '',
+      uri: normalizeStoredUrl(item.image_url || ''),
       price: item.price ? String(item.price) : '',
       description_translations: item.description_translations as (Photo['description_translations'] | undefined),
       tag_ids: Array.isArray(tag_ids) ? tag_ids : [],

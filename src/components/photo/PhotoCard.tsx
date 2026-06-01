@@ -200,6 +200,7 @@ export const PhotoCard = ({
   hideDetails = false
 }: PhotoCardProps) => {
   const { setters } = useInteractionBridge();
+  const { filters } = useFilters();
   const cardRef = useRef<HTMLDivElement>(null);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
@@ -260,18 +261,19 @@ export const PhotoCard = ({
     }
 
     const { isMultiSelect } = interactionBus.current;
+    const isSearchActive = !!(filters?.searchQuery && filters.searchQuery.trim());
 
     if (isManagement) {
       if (isMultiSelect && !e.shiftKey) {
         setters.toggleSelected(photo.id);
-      } else if (showGroupsCollapsed && photo.group_id && onGroupClick) {
+      } else if ((showGroupsCollapsed || isSearchActive) && photo.group_id && onGroupClick) {
         e.stopPropagation();
         onGroupClick(photo.group_id, photo.id);
       } else {
         handleOpenLightbox();
       }
     } else {
-      if (showGroupsCollapsed && photo.group_id && onGroupClick) {
+      if ((showGroupsCollapsed || isSearchActive) && photo.group_id && onGroupClick) {
         e.stopPropagation();
         onGroupClick(photo.group_id, photo.id);
       } else {

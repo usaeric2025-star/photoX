@@ -126,7 +126,7 @@ export function PublicGallery({
       index={index}
       variant={variant}
       showGroupsCollapsed={filters.showGroupsCollapsed}
-      onGroupClick={(gid) => handleGroupClick(gid, photo.id)}
+      onGroupClick={(gid, pid) => handleGroupClick(gid, pid || photo.id)}
       onLightboxOpen={handleLightboxOpen}
     />
   ), [variant, filters.showGroupsCollapsed, handleGroupClick, handleLightboxOpen]);
@@ -148,6 +148,7 @@ export function PublicGallery({
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <PhotoBoard 
+              key={`photo-grid-${filters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${activeGroupId ? 'open' : 'closed'}-${filters.searchQuery || ''}`}
               photos={gridPhotos}
               isFetching={infiniteQuery.isLoading}
               isFetchingNextPage={infiniteQuery.isFetchingNextPage}
