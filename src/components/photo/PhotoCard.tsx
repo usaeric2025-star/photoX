@@ -245,15 +245,17 @@ export const PhotoCard = ({
     if (isManagement) {
       if (isMultiSelect && !e.shiftKey) {
         setters.toggleSelected(photo.id);
-      } else if ((showGroupsCollapsed || isSearchActive) && photo.group_id && onGroupClick) {
+      } else if (photo.group_id && onGroupClick) {
         e.stopPropagation();
+        e.preventDefault();
         onGroupClick(photo.group_id, photo.id);
       } else {
         handleOpenLightbox();
       }
     } else {
-      if ((showGroupsCollapsed || isSearchActive) && photo.group_id && onGroupClick) {
+      if (photo.group_id && onGroupClick) {
         e.stopPropagation();
+        e.preventDefault();
         onGroupClick(photo.group_id, photo.id);
       } else {
         handleOpenLightbox();

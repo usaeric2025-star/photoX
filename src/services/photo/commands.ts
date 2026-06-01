@@ -66,6 +66,12 @@ export const updatePhoto = async (
   if (setPhotos) setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, ...updates } : p));
   
   await updatePhotoInCloud(photoId, dbUpdates);
+  
+  if (updates.group_id !== undefined || 'group_id' in updates) {
+    const { syncGroupMemberCount } = await import('../photoMutationService');
+    const gid = updates.group_id;
+    if (gid) await syncGroupMemberCount(gid);
+  }
     
   if ('tag_ids' in updates) {
       await supabase.from('photo_tags').delete().eq('photo_id', photoId);
@@ -189,6 +195,9 @@ export const deletePhotosBatch = async (
         
       if (remaining && remaining.length <= 1) {
         await ungroupPhotos(groupId);
+      } else if (remaining) {
+        const { syncGroupMemberCount } = await import('../photoMutationService');
+        await syncGroupMemberCount(groupId);
       }
     }
   }
@@ -199,10 +208,14 @@ export const groupPhotos = async (photoIds: string[], predefinedGroupId?: string
     throw new Error('至少需要选择两张照片才能成组');
   }
   const groupId = predefinedGroupId || crypto.randomUUID();
-  return updatePhotosGroupInCloud(photoIds, { 
+  const res = await updatePhotosGroupInCloud(photoIds, { 
     group_id: groupId,
     is_group_cover: false 
   });
+  
+  const { syncGroupMemberCount } = await import('../photoMutationService');
+  await syncGroupMemberCount(groupId);
+  return res;
 };
 
 export const removePhotosFromGroup = async (photoIds: string[], groupId: string) => {
@@ -214,15 +227,19 @@ export const removePhotosFromGroup = async (photoIds: string[], groupId: string)
     is_pinned: false
   });
 
+  const { syncGroupMemberCount } = await import('../photoMutationService');
+
   const { data: remainingPhotos, error } = await supabase
     .from(DB_CONFIG.TABLE_NAME)
     .select('id')
     .eq('group_id', groupId);
 
-  if (error) return;
-
-  if (remainingPhotos.length <= 1) {
-    await ungroupPhotos(groupId);
+  if (!error && remainingPhotos) {
+    if (remainingPhotos.length <= 1) {
+      await ungroupPhotos(groupId);
+    } else {
+      await syncGroupMemberCount(groupId);
+    }
   }
 };
 

@@ -39,8 +39,8 @@ export function MaintenanceSection({
             <ShieldCheck size={16} />
           </div>
           <div className="text-left">
-            <p className="text-[11px] font-bold text-slate-700">数据库一致性检查</p>
-            <p className="text-[10px] text-slate-400 font-medium">诊断数据库资产与存储链接</p>
+            <p className="text-[11px] font-bold text-slate-700">一键全量系统修复</p>
+            <p className="text-[10px] text-slate-400 font-medium">修复合组计数、清理孤本组、回填占位图</p>
           </div>
           {isChecking && <Spinner size="sm" className="ml-auto" />}
         </button>

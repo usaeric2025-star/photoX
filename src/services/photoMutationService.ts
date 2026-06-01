@@ -169,6 +169,24 @@ export const ungroupPhotos = async (groupId: string) => {
   await deleteGroupFromCloud(groupId);
 };
 
+export const syncGroupMemberCount = async (groupId: string) => {
+  if (!groupId) return;
+  const { count, error: countError } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('id', { count: 'exact', head: true })
+    .eq('group_id', groupId);
+
+  if (countError) {
+    console.warn(`[syncGroupMemberCount] Failed to count for group ${groupId}:`, countError);
+    return;
+  }
+
+  await supabase
+    .from('groups')
+    .update({ member_count: count || 0 })
+    .eq('id', groupId);
+};
+
 export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promise<{ dissolvedGroupId?: string }> => {
   const photoId = photo.id;
   const groupId = photo.group_id;
@@ -209,6 +227,9 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
     if (remaining && remaining.length <= 1) {
       await ungroupPhotos(groupId);
       dissolvedGroupId = groupId;
+    } else {
+      // Sync count if not dissolved
+      await syncGroupMemberCount(groupId);
     }
   }
 
@@ -216,7 +237,26 @@ export const deletePhotoFromCloud = async (userId: string, photo: Photo): Promis
 };
 
 export const movePhotosToGroup = async (userId: string, photoIds: string[], targetGroupId: string | null) => {
-  return await batchUpdatePhotosInCloud(userId, photoIds, { group_id: targetGroupId });
+  // [CONSISTENCY-STRATEGY] Sync counts for both source and target groups
+  const { data: originalPhotos } = await supabase
+    .from(DB_CONFIG.TABLE_NAME)
+    .select('group_id')
+    .in('id', photoIds);
+  
+  const sourceGroupIds = Array.from(new Set(originalPhotos?.map(p => p.group_id).filter(Boolean))) as string[];
+
+  const result = await batchUpdatePhotosInCloud(userId, photoIds, { group_id: targetGroupId });
+
+  // Sync source groups
+  for (const gid of sourceGroupIds) {
+    await syncGroupMemberCount(gid);
+  }
+  // Sync target group
+  if (targetGroupId) {
+    await syncGroupMemberCount(targetGroupId);
+  }
+
+  return result;
 };
 
 export const updatePhotoHiddenState = async (photoId: string, is_hidden: boolean) => {

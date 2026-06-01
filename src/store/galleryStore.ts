@@ -116,7 +116,12 @@ export const useGalleryStore = create<GalleryStoreState>()((set) => ({
   activeGroupId: safeGetItem(STORAGE_KEYS.ACTIVE_GROUP, null, undefined, true),
   setActiveGroupId: (activeGroupId) => {
     safeSetItem(STORAGE_KEYS.ACTIVE_GROUP, activeGroupId, true);
-    set({ activeGroupId });
+    const updates: any = { activeGroupId };
+    if (activeGroupId === null) {
+      safeSetItem(STORAGE_KEYS.ACTIVE_PHOTO, null, true);
+      updates.activePhotoId = null;
+    }
+    set(updates);
   },
   activePhotoId: safeGetItem(STORAGE_KEYS.ACTIVE_PHOTO, null, undefined, true),
   setActivePhotoId: (activePhotoId) => {

@@ -24,6 +24,7 @@ import { createTranslate } from '../lib/i18n';
 export interface GroupDetailViewProps extends GroupAdminShellProps {
   activeGroupId: string | null;
   setActiveGroupId: (id: string | null) => void;
+  setActivePhotoId?: (id: string | null) => void;
   displayPhotos?: Photo[];
   setLightboxIndex?: (idx: number) => void;
   onLongPressStart?: (photo: Photo) => void;
@@ -126,24 +127,29 @@ export function GroupDetailView(props: GroupDetailViewProps) {
     return sortGroupPhotos(visiblePhotos);
   }, [activeGroupId, infinitePhotosData, isAdminMode]);
 
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (activeGroupId && initialPhotoId) {
-      // Auto-scroll to the photo if list is loaded
-      if (!isLoading && activeGroupPhotos.length > 0) {
-        const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
-        if (index !== -1) {
-          // ScrollTo might need a small delay
-          setTimeout(() => {
-             virtualGridRef.current?.scrollToIndex({
-                index,
-                align: 'center',
-                behavior: 'smooth'
-             });
-          }, 300);
+     initializedRef.current = false;
+  }, [activeGroupId]);
+
+  useEffect(() => {
+    if (activeGroupId && activeGroupPhotos.length > 0 && !initializedRef.current) {
+        initializedRef.current = true;
+        if (initialPhotoId) {
+            // Auto-scroll to the photo if list is loaded
+            const index = activeGroupPhotos.findIndex(p => p.id === initialPhotoId);
+            if (index !== -1) {
+                setTimeout(() => {
+                    virtualGridRef.current?.scrollToIndex({
+                        index,
+                        align: 'start',
+                        behavior: 'smooth'
+                    });
+                }, 300);
+            }
         }
-      }
     }
-  }, [activeGroupId, initialPhotoId, isLoading, activeGroupPhotos]);
+  }, [activeGroupId, initialPhotoId, activeGroupPhotos]);
 
   if (!activeGroupId) return null;
 
@@ -183,7 +189,7 @@ export function GroupDetailView(props: GroupDetailViewProps) {
                <div className="flex-shrink-0 sticky top-0 bg-brand-bg/90 backdrop-blur-md z-[100] px-4 sm:px-6 py-4 flex items-center justify-between border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <button 
-                      onClick={() => setActiveGroupId(null)}
+                      onClick={(e) => { e.stopPropagation(); setActiveGroupId(null); props.setActivePhotoId?.(null); }}
                       className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
                     >
                       <ChevronLeft size={24} />
@@ -199,10 +205,12 @@ export function GroupDetailView(props: GroupDetailViewProps) {
                          )}
                       </div>
                       <div className="min-h-[1rem]">
-                        {isGroupDataLoading ? (
+                        {isGroupPhotosLoading ? (
                           <Skeleton className="h-3 w-24 mt-1 bg-slate-100" />
                         ) : (
-                          <p className="text-xs text-slate-500 font-normal">{totalGroupPhotosCount ?? groupData?.member_count ?? activeGroupPhotos.length} 張照片 / Photos</p>
+                          <p className="text-xs text-slate-500 font-normal">
+                            {(totalGroupPhotosCount ?? activeGroupPhotos.length) || groupData?.member_count || 0} 張照片 / Photos
+                          </p>
                         )}
                       </div>
                     </div>
@@ -217,7 +225,7 @@ export function GroupDetailView(props: GroupDetailViewProps) {
                       </button>
                     )}
                     <button 
-                        onClick={() => setActiveGroupId(null)}
+                        onClick={(e) => { e.stopPropagation(); setActiveGroupId(null); props.setActivePhotoId?.(null); }}
                         className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors"
                     >
                         <X size={24} />

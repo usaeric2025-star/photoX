@@ -3,7 +3,7 @@ import { AppSettings, Tag, Manufacturer, Category, User, Photo } from '@/types';
 import { useGalleryStore } from '@/store/galleryStore';
 import { testAiConnection } from '@/services/geminiService';
 import { getPhotosWithoutThumbHash } from '@/services/photo/queries';
-import { deduplicatePhotos, scanAndRepairPhotoIds } from '@/services/photo/photoMaintenanceService';
+import { deduplicatePhotos, scanAndRepairPhotoIds, repairGroupIntegrity } from '@/services/photo/photoMaintenanceService';
 import { backfillThumbHashes } from '@/services/photo/backfillService';
 import { normalizeTagName, normalizeManufacturerName } from '@/lib/utils/stringHelper';
 import { useFeedback, useInvalidatePhotos, useTaskExecutor } from '@/hooks';
@@ -80,13 +80,22 @@ export const useSettingsLogic = ({
 
   const handleHealthCheck = useCallback(async (allPhotos: Photo[]) => {
     try {
-        // 1. Check data consistency
+        showSuccess('正在启动系统级一致性巡检...', true);
+        
+        // 1. Check data consistency (IDs)
         const broken = await scanAndRepairPhotoIds(allPhotos);
         if (broken.length > 0) {
-            showError(new Error(`发现 ${broken.length} 个异常ID`), '建议刷新页面');
+            console.warn(`[HealthCheck] Found ${broken.length} broken IDs`);
         }
 
-        // 2. Storage Audit (Orphans and missing files)
+        // 2. Repair Group Integrity (The "Orphaned group" and "Member count" fix) - HIGH PRIORITY
+        const groupRepair = await repairGroupIntegrity();
+        console.log('[HealthCheck] Group repair results:', groupRepair);
+        if (groupRepair.dissolved > 0 || groupRepair.synced > 0 || groupRepair.deleted > 0) {
+            showSuccess(`合组一致性修复：解散孤立组 ${groupRepair.dissolved} 个，同步计数 ${groupRepair.synced} 个，清理空组 ${groupRepair.deleted} 个`);
+        }
+
+        // 3. Storage Audit (Orphans and missing files)
         const auditResp = await fetch('/api/storage/audit');
         const auditData = await auditResp.json();
         if (auditData.success && auditData.data) {

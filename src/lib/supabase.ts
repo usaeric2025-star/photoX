@@ -36,7 +36,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    storage: localStorage,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
   },
   global: {
     fetch: (url, options) => {

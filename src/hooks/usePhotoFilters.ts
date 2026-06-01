@@ -64,7 +64,7 @@ export function usePhotoFilters(
     isAdminMode: effectiveIsAdminMode,
   }, tags, categories, tagMap, catMap);
 
-  const gridPhotos = groupPhotos(displayPhotos, showGroups, sortOrder, validPhotos);
+  const gridPhotos = groupPhotos(displayPhotos, showGroups, sortOrder);
 
   return { displayPhotos, gridPhotos };
 }

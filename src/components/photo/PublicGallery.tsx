@@ -83,9 +83,13 @@ export function PublicGallery({
   );
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
+    setActivePhotoId(null);
     setActiveGroupId(gid);                
-    setActivePhotoId(photoId || null);
-  }, [setActiveGroupId, setActivePhotoId]);
+    // Only set activePhotoId (anchor) if search query is active
+    if (filters.searchQuery && filters.searchQuery.trim()) {
+        setActivePhotoId(photoId || null);
+    }
+  }, [setActiveGroupId, setActivePhotoId, filters.searchQuery]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -154,7 +158,7 @@ export function PublicGallery({
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
             <PhotoBoard 
-              key={`photo-grid-${filters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${activeGroupId ? 'open' : 'closed'}-${filters.searchQuery || ''}`}
+              key={`photo-grid-${filters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
               photos={gridPhotos}
               isFetching={infiniteQuery.isLoading}
               isFetchingNextPage={infiniteQuery.isFetchingNextPage}
@@ -182,6 +186,7 @@ export function PublicGallery({
         <GroupDetailView
           activeGroupId={activeGroupId}
           setActiveGroupId={setActiveGroupId}
+          setActivePhotoId={setActivePhotoId}
           initialPhotoId={activePhotoId}
           setLightboxIndex={setLightboxIndex}
           variant={variant}
