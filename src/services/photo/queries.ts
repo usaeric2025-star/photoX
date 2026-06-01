@@ -11,14 +11,21 @@ export function normalizeStoredUrl(url: string | undefined | null): string {
     if (!url) return '';
     if (url.startsWith('data:')) return url;
     
+    let processedUrl = url;
+    if (processedUrl.includes('/products/')) {
+        processedUrl = processedUrl
+            .replace('/products/', '/')
+            .replace(/\/(\d+-[a-z0-9]+\.webp)$/i, '/temp-$1');
+    }
+    
     // Match prefix like photox/public/ or photox/thumb/ or photox/original/
-    const match = url.match(/photox\/(public|thumb|original)\/(.+)/);
+    const match = processedUrl.match(/photox\/(public|thumb|original)\/(.+)/);
     if (match) {
         const pathAndFilename = match[0];
         return `https://pub-ffc4b0692ab74fabb58cbccc5287d7b1.r2.dev/${pathAndFilename}`;
     }
     
-    return url;
+    return processedUrl;
 }
 
 export function mapSupabasePhoto(item: SupabasePhotoRaw): Photo {
