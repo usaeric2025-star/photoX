@@ -95,10 +95,8 @@ export function AdminFilters({
           
           {/* 菜单 Dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
-                <MoreVertical size={18} className="text-slate-600" />
-              </button>
+            <DropdownMenuTrigger className="p-2 rounded-lg hover:bg-slate-100 transition-colors outline-none">
+              <MoreVertical size={18} className="text-slate-600" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => setAppLang(appLang === 'en' ? 'zh' : 'en')}>

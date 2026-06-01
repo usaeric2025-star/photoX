@@ -1,7 +1,8 @@
 import React from 'react';
 import { GalleryVariant } from '@/types/variant';
 import { Photo } from '@/types';
-import { AdminHeader as UnifiedHeader } from '@/components/layouts/AdminHeader';
+import { AdminHeader } from '@/components/layouts/headers/AdminHeader';
+import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 
 interface AdminToolbarProps {
   photos: Photo[];
@@ -17,18 +18,24 @@ interface AdminToolbarProps {
 }
 
 export function AdminToolbar(props: AdminToolbarProps) {
+  // 如果是在公开预览模式，使用 PublicHeader
+  if (props.adminPreviewMode === 'public') {
+    return (
+      <PublicHeader 
+        totalCount={props.photos?.length}
+        onRefresh={props.onRefresh}
+        isRefreshing={props.isSyncing}
+        isStaff={props.variant === 'staff-workspace'}
+      />
+    );
+  }
+
   return (
-    <UnifiedHeader 
-      variant={props.variant || 'full-management'}
-      photos={props.photos}
-      handleBatchAiIdentifyTrigger={props.handleBatchAiIdentifyTrigger}
-      handleManageClick={props.onManageClick}
-      loginWithGoogle={props.loginWithGoogle}
+    <AdminHeader 
       onRefresh={props.onRefresh}
-      cloudCount={props.cloudCount}
       isRefreshing={props.isSyncing}
-      adminPreviewMode={props.adminPreviewMode}
-      setAdminPreviewMode={props.setAdminPreviewMode}
+      totalCount={props.photos?.length}
+      onBatchAiIdentify={props.handleBatchAiIdentifyTrigger}
     />
   );
 };

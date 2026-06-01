@@ -6,7 +6,7 @@ import { cleanPhotos, filterPhotos, groupPhotos } from '../lib/filters';
 import { 
   useCategoryList, usePhotoInfiniteList, usePhotoCount, 
   useFeedback, useTagList, useScrollRestoration, useDebouncedSearch,
-  useMultiSelect
+  useMultiSelect, useSyncMutation, useTasks
 } from '@/hooks';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { PAGINATION, ROUTES, UI } from '@/config/constants';
@@ -16,7 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { DataLoadingContainer } from '@/components/ui/DataLoadingContainer';
 import { saveData, syncCache } from '@/lib/db/indexedDB';
 import { PublicGallery } from '@/components/photo/PublicGallery';
-import { PublicHeader } from '@/components/layouts/PublicHeader';
+import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 // import { AdminProvider } from '@/contexts/PhotoActionsContext';
 
@@ -33,8 +33,16 @@ export default function PublicView() {
   const authError = (search as any).authError;
   
   const { data: count } = usePhotoCount({});
-
   const { isLoading } = usePhotoInfiniteList({});
+
+  const { tasks } = useTasks();
+  const { mutateAsync: syncMut } = useSyncMutation();
+  const isSyncing = tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('Sync')));
+
+  const handleRefresh = useCallback(() => {
+    if (isSyncing) return;
+    syncMut('pull');
+  }, [isSyncing, syncMut]);
 
   const virtualGridRef = useRef<any>(null);
   const handleScrollToTop = () => virtualGridRef.current?.scrollTo(0);
@@ -44,6 +52,8 @@ export default function PublicView() {
     <div className="flex flex-col h-full w-full bg-slate-50 overflow-hidden" id="public-view">
       <PublicHeader 
         totalCount={count}
+        onRefresh={handleRefresh}
+        isRefreshing={isSyncing}
       />
       {authError ? (
         <div className="flex-1 flex items-center justify-center p-8 bg-slate-50">

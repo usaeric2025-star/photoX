@@ -128,7 +128,7 @@ export function AdminGallery({
           onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
           showGroupsCollapsed={filters.showGroupsCollapsed}
           isMultiSelect={isMultiSelect}
-          onMultiSelect={() => interactionBus.setMultiSelect(!isMultiSelect)}
+          onMultiSelect={() => interactionBus.setIsMultiSelect(!isMultiSelect)}
           onBatchAiIdentify={handleBatchAiIdentifyTrigger}
           selectedCount={interactionBus.current.selectedIds.size}
           onSettings={() => store.setActiveScreen('settings')}

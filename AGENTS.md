@@ -28,25 +28,18 @@
 
 ## Header 组件规则（永久锁定）
 
-### 职责分离
-- `PublicHeader` - 公开页面，无认证，无管理按钮
-- `StaffHeader` - 员工页面，有认证，有员工工具
-- `AdminHeader` - 管理页面，有认证，有管理工具
+### 目录
+`src/components/layouts/headers/`
+
+### 三个独立组件
+- `PublicHeader.tsx` - 公开页，使用 useAuth（仅判断登录状态），显示「登录」或「管理后台」按钮，无管理工具
+- `StaffHeader.tsx` - 员工页，有员工工具，无管理按钮
+- `AdminHeader.tsx` - 管理页，有全部管理按钮（上传、多选、批量删除、设置）
 
 ### 禁止项
-- ❌ PublicHeader 禁止导入 useAuth、usePermission
-- ❌ 禁止三个 Header 共用同一个组件
-- ❌ 禁止使用 variant 或 mode prop 切换行为
-- ❌ 禁止在 Header 内使用条件渲染判断角色
+- ❌ 禁止三个 Header 共用代码
+- ❌ 禁止使用 variant 或 mode 切换 Header
+- ❌ 禁止 PublicHeader 显示任何管理工具
 
-### 使用方式
-```tsx
-// PublicView.tsx
-<PublicHeader ... />
-
-// StaffView.tsx
-<StaffHeader ... />
-
-// AdminView.tsx
-<AdminHeader ... />
-```
+### 灯箱管理按钮
+- 通过 `variant` 控制，与 Header 无关

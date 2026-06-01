@@ -14,7 +14,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { LoginScreen } from '@/components/admin/LoginScreen';
 import { AdminScreen } from '@/components/AdminScreen';
 import { PublicGallery } from '@/components/photo/PublicGallery';
-import { PublicHeader } from '@/components/layouts/PublicHeader';
+import { PublicHeader } from '@/components/layouts/headers/PublicHeader';
 import { useGalleryStore, useShallow } from '@/store/galleryStore';
 import { useFilters } from '@/features/filters/useFilters';
 import { useGroupView } from '@/features/groups/useGroupView';
@@ -205,15 +205,10 @@ export function AdminViewContent() {
                 <div className={`absolute inset-0 transition-opacity duration-300 ${store.viewMode === 'public' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
                   <div className="flex flex-col h-full bg-slate-50 w-full overflow-hidden">
                     <PublicHeader 
-                      variant="public-showcase"
+                      totalCount={photos?.length}
                       onRefresh={handleRefreshPublic}
                       isRefreshing={isSyncing}
-                      onExit={handleExitPublic}
-                      loginWithGoogle={loginWithGoogle}
-                      handleManageClick={() => {
-                        store.setViewMode('private');
-                        store.setActiveScreen('manage');
-                      }}
+                      isStaff={isEffectiveStaffMode}
                     />
                     <div className="flex-1 min-h-0 relative">
                       <PublicGallery 
