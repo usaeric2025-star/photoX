@@ -7,20 +7,28 @@ import { reportError } from '@/lib/errorTracker';
 import { queryClient } from '@/lib/queryClient';
 import { photoKeys } from '@/lib/queryKeys';
 
+import { fromThrowableAsync } from '@/lib/errorFactory';
+
 async function batchDeleteAction(prevState: { error: string | null; success?: boolean }, formData: FormData) {
   const photoIdsStr = formData.get('photoIds') as string;
   if (!photoIdsStr) return { error: null };
   const photoIds = JSON.parse(photoIdsStr);
-  try {
-    const { error } = await supabase.from('furniture_items').delete().in('id', photoIds);
-    if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
-    return { error: null, success: true };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : '删除失败';
-    reportError(err, 'BatchDeleteAction');
-    return { error: message, success: false };
+  
+  const result = await fromThrowableAsync(
+      async () => {
+          const { data, error } = await supabase.from('furniture_items').delete().in('id', photoIds);
+          if (error) throw error;
+          return data;
+      },
+      'batchDeleteAction'
+  );
+  
+  if (!result.ok) {
+     return { error: result.message, success: false };
   }
+  
+  queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
+  return { error: null, success: true };
 }
 
 function BatchDeleteButton({ selectedIds, onSuccess }: { selectedIds: string[], onSuccess: () => void }) {

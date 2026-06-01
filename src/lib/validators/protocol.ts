@@ -1,4 +1,4 @@
-import { type Result } from '@/lib/errorFactory';
+import { type AppResult } from '@/lib/errorFactory';
 
 /**
  * @validator-contract StandardError
@@ -37,9 +37,9 @@ export interface ValidatorMeta {
  */
 export interface Validator<T> {
     /**
-     * Explicit validation returning a neverthrow Result.
+     * Explicit validation returning a AppResult.
      */
-    validate(input: unknown): Result<T, StandardError>;
+    validate(input: unknown): AppResult<T>;
     /**
      * Serialized metadata for AI assistance and runtime parity checks.
      */

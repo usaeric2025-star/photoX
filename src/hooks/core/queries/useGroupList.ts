@@ -12,8 +12,8 @@ export const useGroupList = (userId: string) => {
     queryKey: groupKeys.list(),
     queryFn: async () => {
       const result = await loadGroupsFromCloud(userId);
-      if (isErr(result)) throw result.error;
-      return result.value;
+      if (!result.ok) throw result;
+      return result.data;
     },
     select: (data) => data ?? [],
     staleTime: createStaleTime('STABLE'),

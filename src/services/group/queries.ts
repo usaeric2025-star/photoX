@@ -1,11 +1,11 @@
-import { type Result, ok, err, createError } from '@/lib/errorFactory';
+import { errorFactory, success } from '@/lib/errorFactory';
+import type { AppResult } from '@/lib/errorFactory';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
 
 export const TABLE_NAME = 'groups';
 
-export const loadGroupsFromCloud = async (userId: string): Promise<Result<ProductGroup[], Error>> => {
-  try {
+export const loadGroupsFromCloud = async (userId: string): Promise<AppResult<ProductGroup[]>> => {
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .select('*')
@@ -14,9 +14,9 @@ export const loadGroupsFromCloud = async (userId: string): Promise<Result<Produc
     if (error) {
       if (error.message.includes('relation "groups" does not exist')) {
         console.warn("Table 'groups' does not exist in DB yet.");
-        return ok([]);
+        return success([]);
       }
-      return err(createError(`Failed to fetch groups: ${error.message}`, ['groups', 'loadGroupsFromCloud']));
+      return errorFactory(`Failed to fetch groups: ${error.message}`, 'DB_ERROR', 'loadGroupsFromCloud', error);
     }
 
     const groups = (data || []).map(item => ({
@@ -32,14 +32,10 @@ export const loadGroupsFromCloud = async (userId: string): Promise<Result<Produc
       user_id: item.user_id,
       member_count: item.member_count ?? 1
     }));
-    return ok(groups);
-  } catch (errValue) {
-    return err(errValue instanceof Error ? errValue : new Error(String(errValue)));
-  }
+    return success(groups);
 };
 
-export const getGroupById = async (id: string): Promise<Result<ProductGroup | null, Error>> => {
-  try {
+export const getGroupById = async (id: string): Promise<AppResult<ProductGroup | null>> => {
     const { data, error } = await supabase
       .from(TABLE_NAME)
       .select('*')
@@ -47,11 +43,11 @@ export const getGroupById = async (id: string): Promise<Result<ProductGroup | nu
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') return ok(null);
-      return err(createError(`Failed to fetch group: ${error.message}`, ['groups', 'getGroupById']));
+      if (error.code === 'PGRST116') return success(null);
+      return errorFactory(`Failed to fetch group: ${error.message}`, 'DB_ERROR', 'getGroupById', error);
     }
 
-    if (!data) return ok(null);
+    if (!data) return success(null);
 
     const result: ProductGroup = {
       id: data.id,
@@ -68,8 +64,5 @@ export const getGroupById = async (id: string): Promise<Result<ProductGroup | nu
       member_count: data.member_count ?? 1
     };
     
-    return ok(result);
-  } catch (errValue) {
-    return err(errValue instanceof Error ? errValue : new Error(String(errValue)));
-  }
+    return success(result);
 };

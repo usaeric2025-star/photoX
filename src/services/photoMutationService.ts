@@ -24,8 +24,8 @@ export const updatePhotoInCloud = async (photoId: string, updates: Partial<Photo
   // [APF-CONTRACT] Validate updates before processing
   const validator = createPhotoValidator();
   const validationRes = validator.validate(cleanUpdates);
-  if (isErr(validationRes)) {
-    throw new Error(`Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
+  if (!validationRes.ok) {
+    throw new Error(`Validation Failed: ${validationRes.message}.`);
   }
 
   const dbUpdates = mapToDb(cleanUpdates);
@@ -82,9 +82,9 @@ export const batchUpdatePhotosInCloud = async (
   // [APF-CONTRACT] Validate updates before batch processing
   const validator = createPhotoValidator();
   const validationRes = validator.validate(updates);
-  if (isErr(validationRes)) {
-    throw new Error(`Batch Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
-  }
+    if (!validationRes.ok) {
+        throw new Error(`Batch Validation Failed: ${validationRes.message}.`);
+    }
 
   const dbUpdates = mapToDb(updates);
   

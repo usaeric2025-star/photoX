@@ -59,7 +59,7 @@ export const usePhotoLightboxLogic = ({
     if (activePhoto?.group_id) {
       runTask('获取产品组数据', async () => {
         const result = await getGroupById(activePhoto.group_id!);
-        const data = isOk(result) ? result.value : null;
+        const data = isOk(result) ? result.data : null;
         setGroupData(data);
       }, { silent: true });
     } else {

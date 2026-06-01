@@ -12,8 +12,8 @@ export const useGroupDetail = (groupId: string | null) => {
     queryKey: groupId ? groupKeys.detail(groupId) : ['groups', 'detail', null],
     queryFn: async () => {
       const result = await getGroupById(groupId!);
-      if (isErr(result)) throw result.error;
-      return result.value;
+      if (!result.ok) throw result;
+      return result.data;
     },
     enabled: !!groupId,
     staleTime: createStaleTime('STABLE'),

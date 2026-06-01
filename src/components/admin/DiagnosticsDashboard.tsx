@@ -13,40 +13,65 @@ import {
 import { client } from '@/lib/api';
 import { DiagnosticsReport, DiagnosticIssue } from '@/types/diagnostics';
 import { motion, AnimatePresence } from 'motion/react';
+import { fromThrowableAsync } from '@/lib/errorFactory';
+import { toast } from 'sonner';
 
 export function DiagnosticsDashboard() {
   const [report, setReport] = useState<DiagnosticsReport | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const runDiagnostics = async () => {
     setIsLoading(true);
     setError(null);
-    try {
-      const res = await (client as any).admin.diagnose.$get();
-      if (!res.ok) throw new Error('Failed to run diagnostics');
-      const data = await res.json() as any;
-      setReport(data);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setIsLoading(false);
+    const result = await fromThrowableAsync(
+        () => (client as any).admin.diagnose.$get(),
+        'runDiagnostics'
+    );
+    
+    if (!result.ok) {
+        setError(result.message);
+        toast.error('诊断运行失败');
+        setIsLoading(false);
+        return;
     }
+
+    const res = result.data as Response;
+    if (!res.ok) {
+        setError('Failed to run diagnostics');
+        toast.error('诊断运行失败');
+        setIsLoading(false);
+        return;
+    }
+    const data = await res.json() as any;
+    setReport(data);
+    setIsLoading(false);
   };
 
   const runRepair = async (issueId: string) => {
     setIsLoading(true);
-    try {
-      const res = await (client as any).admin.repair[':issueId'].$post({
-        param: { issueId }
-      });
-      if (!res.ok) throw new Error('Repair failed');
-      await runDiagnostics(); // Refresh
-    } catch (e: any) {
-      setError(`修复失败: ${e.message}`);
-    } finally {
-      setIsLoading(false);
+    const result = await fromThrowableAsync(
+        () => (client as any).admin.repair[':issueId'].$post({
+            param: { issueId }
+        }),
+        'runRepair'
+    );
+
+    if (!result.ok) {
+        setError(`修复失败: ${result.message}`);
+        toast.error('修复请求失败');
+        setIsLoading(false);
+        return;
     }
+    
+    const res = result.data as Response;
+    if (!res.ok) {
+        setError('Repair failed');
+        toast.error('修复失败');
+        setIsLoading(false);
+        return;
+    }
+    await runDiagnostics(); // Refresh
+    setIsLoading(false);
   };
 
   useEffect(() => {

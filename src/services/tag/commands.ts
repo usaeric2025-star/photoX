@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { Tag } from '../../types';
-import { ok, err, Result } from 'neverthrow';
+import { errorFactory, success } from '@/lib/errorFactory';
+import type { AppResult } from '@/lib/errorFactory';
 import { StandardError } from '@/lib/validators/protocol';
 
 const TABLE_NAME = 'tags';
@@ -24,7 +25,7 @@ const mapToDb = (updates: Partial<Tag> & Record<string, unknown>): Record<string
     return dbUpdates;
 };
 
-export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<Result<void, StandardError>> => {
+export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<AppResult<void>> => {
     const dbUpdates = mapToDb(updates);
     const { error } = await supabase
         .from(TABLE_NAME)
@@ -32,12 +33,12 @@ export const updateTag = async (tagId: string, updates: Partial<Tag>): Promise<R
         .eq('id', tagId);
 
     if (error) {
-        return err(new StandardError(error.message, { aiDebugHint: '[updateTag] error' }));
+        return errorFactory(error.message, 'DB_ERROR', '[updateTag] error');
     }
-    return ok(undefined);
+    return success(undefined);
 };
 
-export const createTag = async (tagData: Omit<Tag, 'id'>): Promise<Result<Tag, StandardError>> => {
+export const createTag = async (tagData: Omit<Tag, 'id'>): Promise<AppResult<Tag>> => {
     const dbUpdates = mapToDb(tagData as any);
     const { error, data } = await supabase
         .from(TABLE_NAME)
@@ -46,12 +47,12 @@ export const createTag = async (tagData: Omit<Tag, 'id'>): Promise<Result<Tag, S
         .single();
 
     if (error) {
-        return err(new StandardError(error.message, { aiDebugHint: '[createTag] error' }));
+        return errorFactory(error.message, 'DB_ERROR', '[createTag] error');
     }
-    return ok(data as Tag);
+    return success(data as Tag);
 };
 
-export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<Result<Tag[], StandardError>> => {
+export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<AppResult<Tag[]>> => {
     const dbUpdates = tags.map(tag => mapToDb(tag as any));
     const { error, data } = await supabase
         .from(TABLE_NAME)
@@ -59,54 +60,54 @@ export const batchCreateTagsInCloud = async (tags: Partial<Tag>[]): Promise<Resu
         .select('id, name');
 
     if (error) {
-        return err(new StandardError(error.message, { aiDebugHint: '[batchCreateTagsInCloud] error' }));
+        return errorFactory(error.message, 'DB_ERROR', '[batchCreateTagsInCloud] error');
     }
-    return ok(data as Tag[]);
+    return success(data as Tag[]);
 };
 
-export const deleteTag = async (tagId: string): Promise<Result<void, StandardError>> => {
+export const deleteTag = async (tagId: string): Promise<AppResult<void>> => {
     const { error } = await supabase
         .from(TABLE_NAME)
         .delete()
         .eq('id', tagId);
     if (error) {
-        return err(new StandardError(error.message, { aiDebugHint: '[deleteTag] error' }));
+        return errorFactory(error.message, 'DB_ERROR', '[deleteTag] error');
     }
-    return ok(undefined);
+    return success(undefined);
 };
 
-export const triggerRefreshTagHotScores = async (): Promise<Result<void, StandardError>> => {
+export const triggerRefreshTagHotScores = async (): Promise<AppResult<void>> => {
     const { error } = await supabase.rpc('refresh_tag_hot_scores');
     if (error) {
-        return err(new StandardError(error.message, { aiDebugHint: '[triggerRefreshTagHotScores] error' }));
+        return errorFactory(error.message, 'DB_ERROR', '[triggerRefreshTagHotScores] error');
     }
-    return ok(undefined);
+    return success(undefined);
 };
 
-export const removeTagFromPhoto = async (photoId: string, tagId: string): Promise<Result<void, StandardError>> => {
+export const removeTagFromPhoto = async (photoId: string, tagId: string): Promise<AppResult<void>> => {
     const { error } = await supabase
         .from('photo_tags')
         .delete()
         .eq('photo_id', photoId)
         .eq('tag_id', tagId);
     if (error) {
-        return err(new StandardError(error.message, { aiDebugHint: '[removeTagFromPhoto] error' }));
+        return errorFactory(error.message, 'DB_ERROR', '[removeTagFromPhoto] error');
     }
-    return ok(undefined);
+    return success(undefined);
 };
 
 export const addTagToDB = async (name: string): Promise<Tag> => {
     const normalizedName = name.toUpperCase().trim();
     const result = await createTag({ name: normalizedName } as Tag);
-    if (result.isErr()) throw result.error;
-    const tag = result.value;
+    if (!result.ok) throw new Error(result.message);
+    const tag = result.data;
     return { ...tag, id: String(tag.id) } as Tag;
 };
 
 export const batchCreateTags = async (names: string[]): Promise<Map<string, string>> => {
     const result = await batchCreateTagsInCloud(names.map(name => ({ name: name.toUpperCase().trim() })));
-    if (result.isErr()) throw result.error;
-    const data = result.value;
+    if (!result.ok) throw new Error(result.message);
+    const data = result.data;
     const map = new Map<string, string>();
     (data || []).forEach(t => map.set(t.name, String(t.id)));
     return map;

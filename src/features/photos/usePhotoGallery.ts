@@ -4,6 +4,8 @@ import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
 import { useMemo, useEffect } from 'react';
 import { useUIStore, useShallow } from '@/store/useUIStore';
+import { queryClient } from '@/lib/queryClient';
+import { photoKeys } from '@/lib/queryKeys';
 
 export function usePhotoGallery() {
   console.log('📸 usePhotoGallery 被调用');
@@ -58,6 +60,6 @@ export function usePhotoGallery() {
     isFetching: infinitePhotosQuery.isFetching,
     hasNextPage: infinitePhotosQuery.hasNextPage,
     loadMore: () => infinitePhotosQuery.fetchNextPage(),
-    refetch: () => infinitePhotosQuery.refetch(),
+    refetch: () => queryClient.invalidateQueries({ queryKey: photoKeys.lists() }),
   };
 }

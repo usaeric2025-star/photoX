@@ -3,12 +3,11 @@ import { Category } from '../../types';
 
 const TABLE_NAME = 'categories';
 
-const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'subcategories', 'userId', 'code', 'sortOrder'];
+const ALLOWED_FIELDS = ['id', 'name', 'zh', 'en', 'ms', 'aliases', 'subcategories', 'userId', 'code'];
 const NEVER_ALLOWED = ['isAnalyzing', 'exif_data', 'is_hidden', 'tempId', 'isSelected', 'isDragging', 'rawResponse'];
 
 const FIELD_MAP: Record<string, string> = {
     userId: 'user_id',
-    sortOrder: 'sort_order',
 };
 
 const mapToDb = (updates: Partial<Category> & Record<string, unknown>): Record<string, unknown> => {
@@ -71,6 +70,6 @@ export const deleteCategoryFromDB = async (categoryId: string): Promise<boolean>
 };
 
 export const addCategoryToDB = async (name: string): Promise<Category | null> => {
-  const data = await createCategory({ name, sortOrder: 0, aliases: [], subcategories: [] } as unknown as Omit<Category, 'id'>);
+  const data = await createCategory({ name, aliases: [], subcategories: [] } as unknown as Omit<Category, 'id'>);
   return data;
 };

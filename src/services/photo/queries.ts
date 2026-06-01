@@ -306,8 +306,7 @@ export const loadAllPhotosFromCloud = async (
   }
 
   // 3. 兜底及拖拽/合组顺序
-  query = query.order('sort_order', { ascending: true, nullsFirst: false })
-               .order('group_order', { ascending: true, nullsFirst: false });
+  query = query.order('group_order', { ascending: true, nullsFirst: false });
 
   const { data, error } = await query.range(from, to);
 

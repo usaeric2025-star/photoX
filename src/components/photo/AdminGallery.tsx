@@ -1,4 +1,6 @@
 import React, { useMemo, useRef, useCallback } from 'react';
+import { queryClient } from '@/lib/queryClient';
+import { photoKeys } from '@/lib/queryKeys';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { Photo, Category, Tag } from '@/types';
 import { GalleryVariant } from '@/types/variant';
@@ -113,7 +115,7 @@ export function AdminGallery({
 
       await savePhotosToCloudBatch(user.id, photoData);
       showSuccess(`成功上传 ${files.length} 张照片`);
-      infiniteQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: photoKeys.lists() });
     } catch (err) {
       showError(err, '上传照片失败');
     } finally {

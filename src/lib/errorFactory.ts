@@ -1,25 +1,93 @@
-import { StandardError } from './validators/protocol';
+export type ErrorCode = 
+  | 'NETWORK_ERROR'
+  | 'AUTH_ERROR'
+  | 'NOT_FOUND'
+  | 'VALIDATION_ERROR'
+  | 'UPLOAD_FAILED'
+  | 'DB_ERROR'
+  | 'PERMISSION_DENIED'
+  | 'UNKNOWN';
 
-export type Result<T, E = Error> =
-  | { ok: true; value: T }
-  | { ok: false; error: E };
-
-export function ok<T, E>(value: T): Result<T, E> {
-  return { ok: true, value };
+export interface AppError {
+  ok: false;
+  error: true;
+  message: string;
+  code: ErrorCode;
+  context?: string;
+  timestamp: number;
+  cause?: unknown;
 }
 
-export function err<T, E>(error: E): Result<T, E> {
-  return { ok: false, error };
+export interface AppSuccess<T> {
+  ok: true;
+  data: T;
 }
 
-export function isOk<T, E>(result: Result<T, E>): result is { ok: true; value: T } {
-  return result.ok === true;
+export type AppResult<T> = AppSuccess<T> | AppError;
+
+export function errorFactory(
+  message: string,
+  code: ErrorCode = 'UNKNOWN',
+  context?: string,
+  cause?: unknown
+): AppError {
+  return {
+    ok: false,
+    error: true,
+    message,
+    code,
+    context,
+    timestamp: Date.now(),
+    cause,
+  };
 }
 
-export function isErr<T, E>(result: Result<T, E>): result is { ok: false; error: E } {
-  return result.ok === false;
+export function success<T>(data: T): AppSuccess<T> {
+  return { ok: true, data };
 }
 
-export function createError(message: string, path: string[] = [], aiDebugHint: string = ''): StandardError {
-  return new StandardError(message, { path, aiDebugHint });
+// COMPATIBILITY SHIMS
+export const ok = success;
+export function err(message: string, code: ErrorCode = 'UNKNOWN') { return errorFactory(message, code); }
+export function createError(message: string) { return errorFactory(message); }
+
+// Type alias for compatibility
+export type Result<T, E = any> = AppResult<T>;
+
+export function isErr<T>(result: AppResult<T>): result is AppError {
+  return !result.ok;
+}
+
+export function isOk<T>(result: AppResult<T>): result is AppSuccess<T> {
+  return result.ok;
+}
+
+export function fromThrowable<T>(fn: () => T, context?: string): AppResult<T> {
+  try {
+    return success(fn());
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return errorFactory(message, 'UNKNOWN', context, err);
+  }
+}
+
+export async function fromThrowableAsync<T>(
+  fn: () => Promise<T>,
+  context?: string
+): Promise<AppResult<T>> {
+  try {
+    return success(await fn());
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return errorFactory(message, 'UNKNOWN', context, err);
+  }
+}
+
+export function getErrorMessage<T>(result: AppResult<T>): string | null {
+  if (isOk(result)) return null;
+  return result.message;
+}
+
+export function isLegacyErr(obj: any): obj is { error: true; message: string } {
+  return obj && typeof obj === 'object' && obj.error === true && !('ok' in obj);
 }

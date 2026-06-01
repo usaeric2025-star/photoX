@@ -13,6 +13,8 @@ import {
   normalizeTagName,
   normalizeManufacturerName,
 } from "@/lib/utils/stringHelper";
+import { fromThrowableAsync } from '@/lib/errorFactory';
+import { toast } from 'sonner';
 import { useFeedback, useInvalidatePhotos, useTaskExecutor } from "@/hooks";
 
 interface UseSettingsLogicProps {
@@ -74,12 +76,11 @@ export const useSettingsLogic = ({
         message:
           "系统将扫描云端数据库，保留最早上传的版本，删除重复的照片记录。此操作不可撤销。",
         confirmLabel: "执行排重",
-        onConfirm: async () => {
-          try {
+          onConfirm: async () => {
             update({ alertDialog: null });
             const result = await deduplicatePhotos(user.id);
-            if (result.isOk()) {
-              const { removed } = result.value;
+            if (result.ok) {
+              const { removed } = result.data;
               if (removed > 0) {
                 await performPullSync();
                 showSuccess(`排重完成！共清理了 ${removed} 张重复记录。`);
@@ -89,10 +90,7 @@ export const useSettingsLogic = ({
             } else {
               handleError(result.error, "排重失败");
             }
-          } catch (err: any) {
-            handleError(err, "排重失败");
-          }
-        },
+          },
       },
     });
   }, [user, update, performPullSync, handleError, showSuccess]);

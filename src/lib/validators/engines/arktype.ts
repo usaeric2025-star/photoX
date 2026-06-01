@@ -1,5 +1,5 @@
 import { type Type, type } from 'arktype';
-import { ok, err, type Result } from '@/lib/errorFactory';
+import { success, errorFactory, type AppResult } from '@/lib/errorFactory';
 import { Validator, StandardError, ValidatorMeta } from '../protocol';
 
 /**
@@ -17,22 +17,20 @@ export class ArkTypeValidator<T> implements Validator<T> {
         return this.arkSchema;
     }
 
-    validate(input: unknown): Result<T, StandardError> {
+    validate(input: unknown): AppResult<T> {
         const out = this.arkSchema(input);
         if (out instanceof type.errors) {
             // [ARKTYPE-ENGINE-COMPAT] Standardizing ArkType errors
             const errorList = Array.from(out as any);
             const firstError = errorList[0] as any;
             
-            return err(new StandardError(
+            return errorFactory(
                 out.summary || 'Validation failed',
-                {
-                    path: firstError?.path || [],
-                    aiDebugHint: `Validation failed at ${firstError?.path?.join('.') || 'root'}. Expected ${firstError?.expected || 'valid data'}. ${this.meta.aiHints.join(' ')}`
-                }
-            ));
+                'VALIDATION_ERROR',
+                `Validation failed at ${firstError?.path?.join('.') || 'root'}. Expected ${firstError?.expected || 'valid data'}. ${this.meta.aiHints.join(' ')}`
+            );
         }
-        return ok(out as T);
+        return success(out as T);
     }
 
     serialize(): ValidatorMeta {

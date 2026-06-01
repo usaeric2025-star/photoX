@@ -1,4 +1,5 @@
-import { type Result, ok, err } from '@/lib/errorFactory';
+import { errorFactory, success, fromThrowableAsync } from '@/lib/errorFactory';
+import type { AppResult } from '@/lib/errorFactory';
 import { supabase } from '../../lib/supabase';
 import { ProductGroup } from '../../types';
 import { 
@@ -8,24 +9,21 @@ import {
   deleteGroupFromCloud as deleteGroup
 } from '../groupMutationService';
 
-export const saveGroup = async (group: Partial<ProductGroup> & { id: string }): Promise<Result<void, Error>> => {
-  try {
-    await upsertGroup(group);
-    return ok(undefined);
-  } catch (errValue) {
-    return err(errValue instanceof Error ? errValue : new Error(String(errValue)));
-  }
+export const saveGroup = async (group: Partial<ProductGroup> & { id: string }): Promise<AppResult<void>> => {
+    const result = await fromThrowableAsync(() => upsertGroup(group), 'saveGroup');
+    if (!result.ok) return result;
+    return success(undefined);
 };
 
-export const deleteGroupFromCloud = async (id: string): Promise<Result<void, Error>> => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    await deleteGroup(id, userId);
-    return ok(undefined);
-  } catch (errValue) {
-    return err(errValue instanceof Error ? errValue : new Error(String(errValue)));
-  }
+export const deleteGroupFromCloud = async (id: string): Promise<AppResult<void>> => {
+    const result = await fromThrowableAsync(async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session?.user?.id;
+        await deleteGroup(id, userId);
+    }, 'deleteGroupFromCloud');
+    
+    if (!result.ok) return result;
+    return success(undefined);
 };
 
 export { updateGroup, upsertGroup, createGroup };

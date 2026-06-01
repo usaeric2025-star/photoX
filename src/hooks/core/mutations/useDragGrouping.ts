@@ -2,13 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { movePhotosToGroup } from '@/services/photoMutationService';
 import { useFeedback } from '@/hooks';
 import { match } from 'ts-pattern';
-import { ResultAsync } from 'neverthrow';
+import { fromThrowableAsync } from '@/lib/errorFactory';
 
 /**
  * [HOOK-CONTRACT] useDragGrouping
- * Handle optimistic grouping updates using defensive coding patterns (ts-pattern + neverthrow).
+ * Handle optimistic grouping updates using defensive coding patterns (ts-pattern + AppResult).
  * @contract: [DRAG-STATE-MACHINE] ensures all mutation outcomes are explicitly handled.
- * @contract: [NEVERTHROW-INTEGRATION] wraps async operations to prevent silent failures.
  */
 export const useDragGrouping = (userId: string) => {
     const queryClient = useQueryClient();
@@ -16,10 +15,9 @@ export const useDragGrouping = (userId: string) => {
 
     return useMutation({
         mutationFn: async ({ photoIds, targetGroupId }: { photoIds: string[], targetGroupId: string | null }) => {
-            // [NEVERTHROW-INTEGRATION] Encapsulate the promise in ResultAsync to force error handling
-            return await ResultAsync.fromPromise(
-                movePhotosToGroup(userId, photoIds, targetGroupId),
-                (e) => (e instanceof Error ? e : new Error(String(e)))
+            return await fromThrowableAsync(
+                () => movePhotosToGroup(userId, photoIds, targetGroupId),
+                'movePhotosToGroup'
             );
         },
         onMutate: async ({ photoIds, targetGroupId }) => {
@@ -31,16 +29,9 @@ export const useDragGrouping = (userId: string) => {
             return { previousPhotos };
         },
         onSuccess: (result) => {
-            // [DRAG-STATE-MACHINE] Using result.match for explicit branch handling
-            // This aligns with neverthrow's primary error handling pattern
-            result.match(
-                () => {
-                    // Success: Silent per Light task protocol
-                },
-                (error) => {
-                    handleError(error, '批量移動照片至分組失敗');
-                }
-            );
+            if (!result.ok) {
+                handleError(result.cause as Error, '批量移動照片至分組失敗');
+            }
         },
         onError: (err) => {
             // Handle critical mutation exceptions (e.g. network failure before mutationFn completes)

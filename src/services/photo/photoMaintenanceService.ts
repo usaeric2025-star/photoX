@@ -9,14 +9,15 @@ import { DB_CONFIG } from '../../constants/config';
 import { Photo } from '../../types';
 import { safeArray } from '../../lib/utils';
 import { deletePhotoFromCloud } from '../photoMutationService';
+import { errorFactory, success } from '@/lib/errorFactory';
+import type { AppResult } from '@/lib/errorFactory';
 import { StandardError } from '@/lib/validators/protocol';
-import { ok, err, Result } from 'neverthrow';
 
 export { updatePhotosBatch, clearCategoryFromPhotos, clearManufacturerFromPhotos, ungroupPhotos };
 
 export const clearGroupIdInCloud = ungroupPhotos;
 
-export const deduplicatePhotos = async (userId?: string): Promise<Result<{removed: number}, StandardError>> => {
+export const deduplicatePhotos = async (userId?: string): Promise<AppResult<{removed: number}>> => {
   try {
     let query = supabase
       .from(DB_CONFIG.TABLE_NAME)
@@ -28,7 +29,7 @@ export const deduplicatePhotos = async (userId?: string): Promise<Result<{remove
     }
 
     const { data, error } = await query;
-    if (error || !data) return ok({ removed: 0 });
+    if (error || !data) return success({ removed: 0 });
 
     const groups: Record<string, Photo[]> = {};
     safeArray(data).forEach(item => {
@@ -55,13 +56,10 @@ export const deduplicatePhotos = async (userId?: string): Promise<Result<{remove
         }
       }
     }
-    return ok({ removed: removedCount });
+    return success({ removed: removedCount });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
-    return err(new StandardError(message, {
-       originalError: error,
-       aiDebugHint: `[deduplicatePhotos] 底層異常: ${message}`
-    }));
+    return errorFactory(message, 'DB_ERROR', `[deduplicatePhotos] 底層異常: ${message}`, error);
   }
 };
 

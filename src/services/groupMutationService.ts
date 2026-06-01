@@ -49,8 +49,8 @@ export const updateGroupInCloud = async (groupId: string, updates: Partial<Produ
     // [APF-CONTRACT] Validate updates
     const validator = createGroupValidator();
     const validationRes = validator.validate(updates);
-    if (isErr(validationRes)) {
-        throw new Error(`Group Update Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
+    if (!validationRes.ok) {
+        throw new Error(`Group Update Validation Failed: ${validationRes.message}.`);
     }
 
     const userId = await getCurrentUserId();
@@ -69,8 +69,8 @@ export const createGroupInCloud = async (groupData: ProductGroup) => {
     // [APF-CONTRACT] Validate groupData
     const validator = createGroupValidator();
     const validationRes = validator.validate(groupData);
-    if (isErr(validationRes)) {
-        throw new Error(`Group Creation Validation Failed: ${validationRes.error.message}. Hint: ${validationRes.error.aiDebugHint}`);
+    if (!validationRes.ok) {
+        throw new Error(`Group Creation Validation Failed: ${validationRes.message}.`);
     }
 
     const userId = await getCurrentUserId();

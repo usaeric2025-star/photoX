@@ -23,18 +23,18 @@ export function usePhotoAction(id: string, initialData?: Photo | null) {
     async (prevState: ActionState, formData: ProductFormData): Promise<ActionState> => {
       const result = await updatePhotoAction(id, formData);
       
-      if (isOk(result)) {
+      if (result.ok) {
         showSuccess('保存成功 / Saved successfully');
         return {
-          data: result.value,
+          data: result.data,
           error: null,
           status: 'success'
         };
       } else {
-        handleError(new Error(result.error instanceof Error ? result.error.message : 'Unknown error'), `保存失败: ${(result.error as any)?.aiDebugHint || ''}`);
+        handleError(new Error(result.message), `保存失败: ${result.context || result.message}`);
         return {
           data: prevState.data,
-          error: result.error as any,
+          error: result as any,
           status: 'error'
         };
       }

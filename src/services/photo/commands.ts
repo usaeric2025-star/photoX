@@ -86,45 +86,37 @@ export const updatePhoto = async (
   }
 };
 
-export async function deleteMany(ids: string[]): Promise<Result<null, Error>> {
-  try {
+import { errorFactory, success } from '@/lib/errorFactory';
+import type { AppResult } from '@/lib/errorFactory';
+// ... other imports
+
+export async function deleteMany(ids: string[]): Promise<AppResult<null>> {
     const { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .delete()
       .in('id', ids);
-    if (error) return err(new Error(error.message));
-    return ok(null);
-  } catch (e) {
-    return err(e instanceof Error ? e : new Error(String(e)));
-  }
+    if (error) return errorFactory(error.message, 'DB_ERROR', 'deleteMany', error);
+    return success(null);
 }
 
-export async function update(id: string, updates: Partial<Photo>): Promise<Result<null, Error>> {
-  try {
+export async function update(id: string, updates: Partial<Photo>): Promise<AppResult<null>> {
     const dbUpdates = mapToDb(updates);
     const { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .update(dbUpdates)
       .eq('id', id);
-    if (error) return err(new Error(error.message));
-    return ok(null);
-  } catch (e) {
-    return err(e instanceof Error ? e : new Error(String(e)));
-  }
+    if (error) return errorFactory(error.message, 'DB_ERROR', 'update', error);
+    return success(null);
 }
 
-export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<Result<null, Error>> {
-  try {
+export async function batchUpdate(ids: string[], updates: Partial<Photo>): Promise<AppResult<null>> {
     const dbUpdates = mapToDb(updates);
     const { error } = await supabase
       .from(DB_CONFIG.TABLE_NAME)
       .update(dbUpdates)
       .in('id', ids);
-    if (error) return err(new Error(error.message));
-    return ok(null);
-  } catch (e) {
-    return err(e instanceof Error ? e : new Error(String(e)));
-  }
+    if (error) return errorFactory(error.message, 'DB_ERROR', 'batchUpdate', error);
+    return success(null);
 }
 
 export const deletePhotosBatch = async (

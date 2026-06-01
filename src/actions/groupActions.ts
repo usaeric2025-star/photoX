@@ -1,8 +1,7 @@
-import { ProductGroup } from '../types';
-import { createGroupValidator } from '../lib/validators/factory';
+import { AppResult, errorFactory, success, fromThrowableAsync } from '../lib/errorFactory';
 import { groupMutationService } from '../services/groupMutationService';
-import { Result, err, ok, isErr } from '../lib/errorFactory';
-import { StandardError } from '../lib/validators/protocol';
+import { createGroupValidator } from '../lib/validators/factory';
+import { ProductGroup } from '../types';
 
 /**
  * [V2.8-FORM-PARADYM]
@@ -11,25 +10,22 @@ import { StandardError } from '../lib/validators/protocol';
 export async function updateGroupAction(
   id: string, 
   data: Partial<ProductGroup>
-): Promise<Result<ProductGroup, StandardError>> {
+): Promise<AppResult<ProductGroup>> {
   const validator = createGroupValidator();
   
   // 1. Validation
   const validationResult = validator.validate(data);
-  if (isErr(validationResult)) {
-    return err(validationResult.error);
+  if (!validationResult.ok) {
+    return validationResult;
   }
 
   // 2. Execution
-  try {
-    await groupMutationService.update(id, data);
-    return ok({ id, ...data } as ProductGroup);
-  } catch (error: any) {
-    return err(new StandardError(error.message || 'Update failed', {
-      path: ['server'],
-      aiDebugHint: 'Check group table permissions and snake_case naming.'
-    }));
+  const result = await fromThrowableAsync(() => groupMutationService.update(id, data), 'updateGroupAction');
+  if (!result.ok) {
+    return errorFactory(result.message, 'DB_ERROR', 'updateGroupAction', result.cause);
   }
+
+  return success({ id, ...data } as ProductGroup);
 }
 
 /**
@@ -38,22 +34,20 @@ export async function updateGroupAction(
  */
 export async function createGroupAction(
   data: ProductGroup
-): Promise<Result<ProductGroup, StandardError>> {
+): Promise<AppResult<ProductGroup>> {
   const validator = createGroupValidator();
   
   // 1. Validation
   const validationResult = validator.validate(data);
-  if (isErr(validationResult)) {
-    return err(validationResult.error);
+  if (!validationResult.ok) {
+    return validationResult;
   }
 
-  try {
-    const group = await groupMutationService.create(data);
-    return ok(group);
-  } catch (error: any) {
-    return err(new StandardError(error.message || 'Creation failed', {
-      path: ['server'],
-      aiDebugHint: 'Check bucket limits or column constraints.'
-    }));
+  // 2. Execution
+  const result = await fromThrowableAsync(() => groupMutationService.create(data), 'createGroupAction');
+  if (!result.ok) {
+    return errorFactory(result.message, 'DB_ERROR', 'createGroupAction', result.cause);
   }
+
+  return success(result.data);
 }
