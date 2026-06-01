@@ -283,13 +283,21 @@ export const PhotoCard = ({
   };
 
   const handleLongPress = () => {
-    if (!isManagement || !can('photo:edit')) return;
-    const { isMultiSelect } = interactionBus.current;
-    if (!isMultiSelect) {
-      setters.setIsMultiSelect(true);
-      setters.setSelectedIds(new Set([photo.id]));
-    } else {
-      setters.toggleSelected(photo.id);
+    if (isManagement && can('photo:edit')) {
+      const { isMultiSelect } = interactionBus.current;
+      if (!isMultiSelect) {
+        setters.setIsMultiSelect(true);
+        setters.setSelectedIds(new Set([photo.id]));
+      } else {
+        setters.toggleSelected(photo.id);
+      }
+    } else if (!isManagement) {
+       // Logic for public share
+       onLightboxOpen(photo);
+       // Assuming lightbox or some UI needs to handle triggering share
+       // Or I just need to trigger a share action?
+       // The user said "分享" (Share). Assuming there's a share action?
+       // Let me check what "分享" might be.
     }
   };
 

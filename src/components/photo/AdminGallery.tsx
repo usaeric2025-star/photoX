@@ -128,7 +128,8 @@ export function AdminGallery({
           onToggleGroups={() => setShowGroupsCollapsed(!filters.showGroupsCollapsed)}
           showGroupsCollapsed={filters.showGroupsCollapsed}
           isMultiSelect={isMultiSelect}
-          onMultiSelect={() => {}} // Placeholder as useMultiSelect doesn't have a simple toggle
+          onMultiSelect={() => interactionBus.setMultiSelect(!isMultiSelect)}
+          onBatchAiIdentify={handleBatchAiIdentifyTrigger}
           selectedCount={interactionBus.current.selectedIds.size}
           onSettings={() => store.setActiveScreen('settings')}
           onUpload={() => fileInputRef.current?.click()}
