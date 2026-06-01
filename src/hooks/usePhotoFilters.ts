@@ -1,5 +1,5 @@
 import { Photo, Category, Tag } from '@/types';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { filterPhotos, groupPhotos } from '@/lib/filters';
 import { isValidPhoto } from '@/lib/typeGuard';
 import { useAdminMode } from '@/hooks';
@@ -21,7 +21,7 @@ export function usePhotoFilters(
   const { filters } = useFilters();
   const { 
     filterSubId, sortOrder
-  } = useGalleryStore(useShallow(s => ({
+  } = useUIStore(useShallow(s => ({
     filterSubId: s.filterSubId,
     sortOrder: s.sortOrder
   })));

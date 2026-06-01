@@ -1,8 +1,8 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { CheckSquare, X } from 'lucide-react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
-import { PromptDialog } from './PromptDialog';
+import React from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { CheckSquare, X } from "lucide-react";
+import { useUIStore, useShallow } from "@/store/useUIStore";
+import { PromptDialog } from "./PromptDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,21 +15,22 @@ import {
 } from "../ui/alert-dialog";
 
 export function AdminGlobalModals() {
-  const { alertDialog, setAlertDialog, promptDialog, setPromptDialog } = useGalleryStore(useShallow(s => ({
-    alertDialog: s.alertDialog,
-    setAlertDialog: s.setAlertDialog,
-    promptDialog: s.promptDialog,
-    setPromptDialog: s.setPromptDialog
-  })));
+  const { alertDialog, update, promptDialog } = useUIStore(
+    useShallow((s) => ({
+      alertDialog: s.alertDialog,
+      update: s.update,
+      promptDialog: s.promptDialog
+    })),
+  );
 
   return (
     <>
-      <AlertDialog 
-        open={!!alertDialog} 
+      <AlertDialog
+        open={!!alertDialog}
         onOpenChange={(open) => {
           if (!open) {
             if (alertDialog?.onCancel) alertDialog.onCancel();
-            setAlertDialog(null);
+            update({ alertDialog: null });
           }
         }}
       >
@@ -43,49 +44,70 @@ export function AdminGlobalModals() {
           <AlertDialogFooter>
             {alertDialog?.onConfirm || alertDialog?.secondaryAction ? (
               <>
-                <AlertDialogCancel onClick={() => {
-                  if (alertDialog.onCancel) alertDialog.onCancel();
-                }}>
-                  {alertDialog.cancelLabel || '取消 / CANCEL'}
+                <AlertDialogCancel
+                  onClick={() => {
+                    if (alertDialog.onCancel) alertDialog.onCancel();
+                  }}
+                >
+                  {alertDialog.cancelLabel || "取消 / CANCEL"}
                 </AlertDialogCancel>
-                
+
                 {alertDialog.secondaryAction && (
-                   <AlertDialogAction 
-                     className={alertDialog.secondaryAction.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
-                     onClick={async () => {
-                        { const clickFn = alertDialog.secondaryAction!.onClick; setAlertDialog(null); if (clickFn) clickFn(); }
-                        // Usually secondary action handles its own closing if needed, but we close by default
-                        setAlertDialog(null);
-                     }}
-                   >
-                     {alertDialog.secondaryAction.label}
-                   </AlertDialogAction>
+                  <AlertDialogAction
+                    className={
+                      alertDialog.secondaryAction.type === "danger"
+                        ? "bg-red-600 hover:bg-red-700"
+                        : ""
+                    }
+                    onClick={async () => {
+                      {
+                        const clickFn = alertDialog.secondaryAction!.onClick;
+                        update({ alertDialog: null });
+                        if (clickFn) clickFn();
+                      }
+                      // Usually secondary action handles its own closing if needed, but we close by default
+                      update({ alertDialog: null });
+                    }}
+                  >
+                    {alertDialog.secondaryAction.label}
+                  </AlertDialogAction>
                 )}
 
                 {alertDialog.onConfirm && (
-                   <AlertDialogAction 
-                     className={alertDialog.type === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
-                     onClick={async () => {
-                       if (alertDialog.onConfirm) {
-                         { const confirmFn = alertDialog.onConfirm; setAlertDialog(null); if (confirmFn) confirmFn(); }
-                       }
-                       setAlertDialog(null);
-                     }}
-                   >
-                     {alertDialog.confirmLabel || '确定 / OK'}
-                   </AlertDialogAction>
+                  <AlertDialogAction
+                    className={
+                      alertDialog.type === "danger"
+                        ? "bg-red-600 hover:bg-red-700"
+                        : ""
+                    }
+                    onClick={async () => {
+                      if (alertDialog.onConfirm) {
+                        {
+                          const confirmFn = alertDialog.onConfirm;
+                          update({ alertDialog: null });
+                          if (confirmFn) confirmFn();
+                        }
+                      }
+                      update({ alertDialog: null });
+                    }}
+                  >
+                    {alertDialog.confirmLabel || "确定 / OK"}
+                  </AlertDialogAction>
                 )}
               </>
             ) : (
-              <AlertDialogAction onClick={() => setAlertDialog(null)}>
-                {alertDialog?.confirmLabel || '确定 / OK'}
+              <AlertDialogAction onClick={() => update({ alertDialog: null })}>
+                {alertDialog?.confirmLabel || "确定 / OK"}
               </AlertDialogAction>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <PromptDialog dialog={promptDialog} onClose={() => setPromptDialog(null)} />
+      <PromptDialog
+        dialog={promptDialog}
+        onClose={() => update({ promptDialog: null })}
+      />
     </>
   );
-};
+}

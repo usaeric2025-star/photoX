@@ -37,10 +37,10 @@ export const cleanupPhysicalStorage = async (fileKeys: string[], urls: string[])
     tasks.push(
       api['r2-delete'].$post({
         json: { fileKeys: r2Files }
-      }).then(res => {
+      }).then((res: Response) => {
         if (!res.ok) console.warn('R2 cleanup API failed');
         return res.json();
-      }).catch(err => console.error('R2 cleanup error:', err))
+      }).catch((err: Error) => console.error('R2 cleanup error:', err))
     );
   }
 

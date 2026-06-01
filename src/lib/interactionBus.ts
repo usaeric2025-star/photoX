@@ -24,7 +24,7 @@ export const interactionBus = {
     listeners.forEach(l => l(interactionBus.current));
   },
 
-  setSelectedIds: (ids: Set<string>) => {
+  update: (ids: Set<string>) => {
     interactionBus.current.selectedIds = ids;
     interactionBus.emit();
   },
@@ -41,10 +41,5 @@ export const interactionBus = {
   setDraggedPhoto: (id: string | null) => {
     interactionBus.current.draggedPhotoId = id;
     interactionBus.emit();
-  },
-  
-  setIsMultiSelect: (isMulti: boolean) => {
-    interactionBus.current.isMultiSelect = isMulti;
-    interactionBus.emit();
-  },
+  }
 };

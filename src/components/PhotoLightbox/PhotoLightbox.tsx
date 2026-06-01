@@ -1,3 +1,4 @@
+import { Activity } from 'react';
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@base-ui/react/dialog';
@@ -9,8 +10,8 @@ import { LightboxImageSection } from './LightboxImageSection';
 import { LightboxInfoPanel } from './LightboxInfoPanel';
 import { useQueryClient } from '@tanstack/react-query';
 
-import { useAdminMode, usePermission, useTasks, useCategoryList, useManufacturerList, useTagList, useFeedback } from '../../hooks';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useAdminMode, usePermission, useTasks, useCategories, useManufacturers, useTags, useFeedback } from '../../hooks';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { createTranslate } from '@/lib/i18n';
 import { translations, LanguageCode } from '../../lib/translations';
 import { useAdminActions } from '@/features/admin/useAdminActions';
@@ -44,30 +45,37 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   } = props;
   const displayPhotos = rawDisplayPhotos ?? [];
   
+  const { update: storeUpdate, lang } = useUIStore(useShallow(s => ({ 
+    update: s.update,
+    lang: s.appLang
+  })));
+
   const index = React.useMemo(() => displayPhotos.findIndex(p => p.id === photoId), [displayPhotos, photoId]);
   const photo = index !== -1 ? displayPhotos[index] : null;
-  const { setActivePhotoId: setStoreActivePhotoId } = useGalleryStore(useShallow(s => ({ setActivePhotoId: s.setActivePhotoId })));
   
-  const setActivePhotoId = onPhotoIdChange || setStoreActivePhotoId;
+  const changePhotoId = React.useCallback((id: string | null) => {
+    if (onPhotoIdChange) {
+      onPhotoIdChange(id);
+    } else {
+      storeUpdate({ activePhotoId: id });
+    }
+  }, [onPhotoIdChange, storeUpdate]);
   
   const onPrev = React.useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (index > 0) setActivePhotoId(displayPhotos[index - 1].id);
-  }, [index, displayPhotos, setActivePhotoId]);
+    if (index > 0) changePhotoId(displayPhotos[index - 1].id);
+  }, [index, displayPhotos, changePhotoId]);
+
   const onNext = React.useCallback((e?: React.MouseEvent) => {
     e?.stopPropagation();
-    if (index < displayPhotos.length - 1) setActivePhotoId(displayPhotos[index + 1].id);
-  }, [index, displayPhotos, setActivePhotoId]);
+    if (index < displayPhotos.length - 1) changePhotoId(displayPhotos[index + 1].id);
+  }, [index, displayPhotos, changePhotoId]);
 
   const actions = useAdminActions();
-  const { setEditPhotoId, lang } = useGalleryStore(useShallow(s => ({ 
-    setEditPhotoId: s.setEditPhotoId,
-    lang: s.appLang
-  })));
   const { tasks } = useTasks();
   const storeIsAnalyzing = React.useMemo(() => tasks.some(task => task.status === 'running' && (task.name.includes('识别') || task.name.includes('分析'))), [tasks]);
 
-  const onEditPhoto = props.onEditPhoto ?? ((p: Photo) => setEditPhotoId(p.id));
+  const onEditPhoto = props.onEditPhoto ?? ((p: Photo) => storeUpdate({ editPhotoId: p.id } as any));
   const onToggleHidden = props.onToggleHidden ?? ((p: Photo) => actions.updatePhoto(p.id, { is_hidden: !p.is_hidden }));
   const onTogglePinned = props.onTogglePinned ?? ((p: Photo) => actions.updatePhoto(p.id, { is_pinned: !p.is_pinned }));
   const onAiAnalyze = props.onAiAnalyze ?? ((p: Photo) => {});
@@ -76,9 +84,9 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   const onSetGroupCover = props.onSetGroupCover ?? ((id: string, gid: string) => {});
   const isAnalyzing = props.isAnalyzing ?? storeIsAnalyzing;
 
-  const { data: categories = [] } = useCategoryList();
-  const { data: manufacturers = [] } = useManufacturerList();
-  const { data: contextTags = [] } = useTagList();
+  const { data: categories = [] } = useCategories();
+  const { data: manufacturers = [] } = useManufacturers();
+  const { data: contextTags = [] } = useTags();
   
   const tagMap = React.useMemo(() => {
     const map: Record<string, string> = { };
@@ -151,101 +159,99 @@ export function PhotoLightbox(props: PhotoLightboxProps) {
   const DialogPopup = Dialog.Popup as any;
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <AnimatePresence>
-        {isOpen && (
-          <Dialog.Portal keepMounted>
-            <Dialog.Backdrop 
-              render={(backdropProps) => {
-                // Remove incompatible animation props to avoid motion conflict
-                const { onAnimationStart: _, onAnimationEnd: __, asChild: ___, ...restBackdropProps } = backdropProps as any;
-                return (
-                  <motion.div 
-                    {...restBackdropProps}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[499] bg-black/40 backdrop-blur-md"
-                  />
-                );
-              }}
-            />
-            <Dialog.Popup 
-              render={(popupProps) => {
-                // Remove asChild and animation props to prevent React/Motion conflict
-                const { asChild: _ , onAnimationStart: __, onAnimationEnd: ___, ...restPopupProps } = popupProps as any;
-                return (
-                  <motion.div 
-                    {...restPopupProps}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
+    <Activity mode={isOpen ? 'visible' : 'hidden'}>
+      <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Dialog.Portal keepMounted>
+          <Dialog.Backdrop 
+            render={(backdropProps) => {
+              // Remove incompatible animation props to avoid motion conflict
+              const { onAnimationStart: _, onAnimationEnd: __, asChild: ___, ...restBackdropProps } = backdropProps as any;
+              return (
+                <motion.div 
+                  {...restBackdropProps}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[499] bg-black/40 backdrop-blur-md"
+                />
+              );
+            }}
+          />
+          <Dialog.Popup 
+            render={(popupProps) => {
+              // Remove asChild and animation props to prevent React/Motion conflict
+              const { asChild: _ , onAnimationStart: __, onAnimationEnd: ___, ...restPopupProps } = popupProps as any;
+              return (
+                <motion.div 
+                  {...restPopupProps}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className={`fixed inset-0 z-[500] bg-brand-bg flex ${isZoomed ? 'flex-col' : 'flex-col md:flex-row'} overflow-hidden focus:outline-none`}
+                >
+                  {/* Always visible close button */}
+                  <button
+                    onClick={onClose}
+                    className="fixed top-4 right-4 z-[501] w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full text-white flex items-center justify-center transition-all"
+                    aria-label={translate.close}
                   >
-                    {/* Always visible close button */}
-                    <button
-                      onClick={onClose}
-                      className="fixed top-4 right-4 z-[501] w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full text-white flex items-center justify-center transition-all"
-                      aria-label={translate.close}
-                    >
-                      <X size={20} />
-                    </button>
+                    <X size={20} />
+                  </button>
 
-                    <LightboxImageSection 
+                  <LightboxImageSection 
+                    photo={activePhoto!}
+                    index={index!}
+                    isZoomed={isZoomed}
+                    setIsZoomed={setIsZoomed}
+                    isImageLoading={isImageLoading}
+                    setIsImageLoading={setIsImageLoading}
+                    isImageError={isImageError}
+                    setIsImageError={setIsImageError}
+                    slides={slides}
+                    onPrev={onPrev}
+                    onNext={onNext}
+                    onClose={onClose}
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                    onEditPhoto={isAdmin ? onEditPhoto : undefined}
+                    handleDownload={handleDownload}
+                    t={translate}
+                    retryImageLoad={retryImageLoad}
+                    isAdminMode={isAdminMode}
+                  />
+
+                  {!isZoomed && (
+                    <LightboxInfoPanel 
                       photo={activePhoto!}
-                      index={index!}
-                      isZoomed={isZoomed}
-                      setIsZoomed={setIsZoomed}
-                      isImageLoading={isImageLoading}
-                      setIsImageLoading={setIsImageLoading}
-                      isImageError={isImageError}
-                      setIsImageError={setIsImageError}
-                      slides={slides}
-                      onPrev={onPrev}
-                      onNext={onNext}
-                      onClose={onClose}
-                      onTouchStart={onTouchStart}
-                      onTouchMove={onTouchMove}
-                      onTouchEnd={onTouchEnd}
-                      onEditPhoto={isAdmin ? onEditPhoto : undefined}
-                      handleDownload={handleDownload}
-                      t={translate}
-                      retryImageLoad={retryImageLoad}
+                      groupData={groupData}
+                      isGroupDataLoading={isGroupDataLoading}
+                      activeLang={activeLang}
+                      setActiveLang={setActiveLang}
                       isAdminMode={isAdminMode}
+                      isCopied={isCopied}
+                      isAnalyzing={isAnalyzing}
+                      t={translate}
+                      categories={categories}
+                      manufacturers={manufacturers}
+                      tagMap={tagMap}
+                      handleShare={handleShare}
+                      onAiAnalyze={isAdminMode ? onAiAnalyze : undefined}
+                      onCancelAnalyze={onCancelAnalyze}
+                      onToggleHidden={isAdminMode ? onToggleHidden : undefined}
+                      onTogglePinned={isAdminMode ? onTogglePinned : undefined}
+                      onUngroup={isAdminMode ? onUngroup : undefined}
+                      onSetGroupCover={isAdminMode ? onSetGroupCover : undefined}
+                      contactWhatsApp={contactWhatsApp}
                     />
-
-                    {!isZoomed && (
-                      <LightboxInfoPanel 
-                        photo={activePhoto!}
-                        groupData={groupData}
-                        isGroupDataLoading={isGroupDataLoading}
-                        activeLang={activeLang}
-                        setActiveLang={setActiveLang}
-                        isAdminMode={isAdminMode}
-                        isCopied={isCopied}
-                        isAnalyzing={isAnalyzing}
-                        t={translate}
-                        categories={categories}
-                        manufacturers={manufacturers}
-                        tagMap={tagMap}
-                        handleShare={handleShare}
-                        onAiAnalyze={isAdminMode ? onAiAnalyze : undefined}
-                        onCancelAnalyze={onCancelAnalyze}
-                        onToggleHidden={isAdminMode ? onToggleHidden : undefined}
-                        onTogglePinned={isAdminMode ? onTogglePinned : undefined}
-                        onUngroup={isAdminMode ? onUngroup : undefined}
-                        onSetGroupCover={isAdminMode ? onSetGroupCover : undefined}
-                        contactWhatsApp={contactWhatsApp}
-                      />
-                    )}
-                  </motion.div>
-                );
-              }}
-            />
-          </Dialog.Portal>
-        )}
-      </AnimatePresence>
-    </Dialog.Root>
+                  )}
+                </motion.div>
+              );
+            }}
+          />
+        </Dialog.Portal>
+      </Dialog.Root>
+    </Activity>
   );
 };

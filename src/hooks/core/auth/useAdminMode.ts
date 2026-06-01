@@ -1,5 +1,5 @@
 import { usePermission } from '@/hooks/core/auth/usePermission';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 
 /**
  * Unified hook to get the effective admin mode.

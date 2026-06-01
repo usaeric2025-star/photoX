@@ -8,10 +8,8 @@ export const useInteractionBridge = () => {
   return {
     state: interactionBus.current,
     setters: {
-      setSelectedIds: interactionBus.setSelectedIds,
+      update: interactionBus.update,
       toggleSelected: interactionBus.toggleSelected,
-      setDraggedPhoto: interactionBus.setDraggedPhoto,
-      setIsMultiSelect: interactionBus.setIsMultiSelect,
-    },
+      setDraggedPhoto: interactionBus.setDraggedPhoto},
   };
 };

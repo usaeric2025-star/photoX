@@ -1,19 +1,19 @@
-import React, { useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Photo } from '../../types';
-import { PhotoLightbox } from '../PhotoLightbox';
-import { GroupSettingsSheet } from './GroupSettingsSheet';
-import { GroupDetailSkeleton } from './GroupDetailSkeleton';
-import { GroupHeader } from './GroupHeader';
-import { MultiSelectToolbar } from '../shared/MultiSelectToolbar';
-import { useGroupAdminLogic } from './useGroupAdminLogic';
-import { GroupGridView } from './GroupGridView';
-import { GroupPhotoPicker } from './GroupPhotoPicker';
+import React, { useCallback } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Photo } from "../../types";
+import { PhotoLightbox } from "../PhotoLightbox";
+import { GroupSettingsSheet } from "./GroupSettingsSheet";
+import { GroupDetailSkeleton } from "./GroupDetailSkeleton";
+import { GroupHeader } from "./GroupHeader";
+import { SelectionToolbar } from "../shared/SelectionToolbar";
+import { useGroupAdminLogic } from "./useGroupAdminLogic";
+import { GroupGridView } from "./GroupGridView";
+import { GroupPhotoPicker } from "./GroupPhotoPicker";
 
-import { useAdminMode } from '@/hooks';
-import { useAdminActions } from '@/features/admin/useAdminActions';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
-import { translations } from '../../lib/translations';
+import { useAdminMode } from "@/hooks";
+import { useAdminActions } from "@/features/admin/useAdminActions";
+import { useUIStore, useShallow } from "@/store/useUIStore";
+import { translations } from "../../lib/translations";
 
 export interface GroupAdminShellProps {
   initialPhotoId?: string | null;
@@ -23,140 +23,164 @@ export interface GroupAdminShellProps {
 }
 
 export function GroupAdminShell(props: GroupAdminShellProps) {
-  const { 
-    onAiAnalyze, onCancelAnalyze, isAnalyzing,
-  } = props;
+  const { onAiAnalyze, onCancelAnalyze, isAnalyzing } = props;
   const isAdminMode = useAdminMode();
-  
-  const {
-     activeGroupId, setActiveGroupId, appLang,
-     setEditPhotoId,
-     isPhotoPickerOpen, setIsPhotoPickerOpen,
-     photoPickerGroupId
-  } = useGalleryStore(useShallow(s => ({
-    activeGroupId: s.activeGroupId,
-    setActiveGroupId: s.setActiveGroupId,
-    appLang: s.appLang,
-    setEditPhotoId: s.setEditPhotoId,
-    isPhotoPickerOpen: s.isPhotoPickerOpen,
-    setIsPhotoPickerOpen: s.setIsPhotoPickerOpen,
-    photoPickerGroupId: s.photoPickerGroupId
-  })));
-  
+
+  const { activeGroupId, appLang, isPhotoPickerOpen, photoPickerGroupId, update } = useUIStore(
+    useShallow((s) => ({
+      activeGroupId: s.activeGroupId,
+      update: s.update,
+      appLang: s.appLang,
+      isPhotoPickerOpen: s.isPhotoPickerOpen,
+      photoPickerGroupId: s.photoPickerGroupId,
+    })),
+  );
+
   const adminActions = useAdminActions();
-  const onUngroup = (groupId: string) => { /* To be implemented properly via useAdminActions */ };
-  const storeEditPhoto = (p: Photo | string) => setEditPhotoId(typeof p === 'string' ? p : p.id);
+  const onUngroup = (groupId: string) => {
+    /* To be implemented properly via useAdminActions */
+  };
+  const storeEditPhoto = (p: Photo | string) =>
+    update({ editPhotoId: typeof p === "string" ? p : p.id });
   const analyzeGroupById = async (id: string) => {}; // Unused or needs porting
   const handleAddToGroup = async (ids: string[], groupId: string) => {
-     await adminActions.batchUpdate.mutateAsync({ ids, updates: { group_id: groupId } });
+    await adminActions.batchUpdate.mutateAsync({
+      ids,
+      updates: { group_id: groupId },
+    });
   };
 
-  const {
-    activeGroupPhotos,
-    focusedGroupPhotoId, setFocusedGroupPhotoId,
-    draggedPhotoId, setDraggedPhotoId,
-    groupSettingsOpen, setGroupSettingsOpen,
-    groupData, setGroupData,
-    isGroupDataLoading,
-    containerRef,
-    virtualGridRef,
-    currentHighlightId,
-    handleScroll,
-    confirmBulkRemove,
-    persistPhotoChange,
-    handleUpdateGroupData,
-    handleBatchUpdateDimensions,
-    handleReorder,
-    isMultiSelect, setIsMultiSelect,
-    setSelectedIds,
-    setCover,
-    setPromptDialog,
-    setAlertDialog,
-    isGroupPhotosLoading,
-    handleBulkAction: hookHandleBulkAction
-  } = useGroupAdminLogic({
-    initialPhotoId: props.initialPhotoId
+  const { activeGroupPhotos, focusedGroupPhotoId, draggedPhotoId, groupSettingsOpen, groupData, setGroupData, isGroupDataLoading, containerRef, virtualGridRef, currentHighlightId, handleScroll, confirmBulkRemove, persistPhotoChange, handleUpdateGroupData, handleBatchUpdateDimensions, handleReorder, isMultiSelect, setCover, isGroupPhotosLoading, handleBulkAction: hookHandleBulkAction } = useGroupAdminLogic({
+    initialPhotoId: props.initialPhotoId,
   });
 
-  const translate = translations[appLang as keyof typeof translations as keyof typeof translations] || translations.en;
+  const translate =
+    translations[
+      appLang as keyof typeof translations as keyof typeof translations
+    ] || translations.en;
 
   const isLoading = isGroupPhotosLoading || isGroupDataLoading;
 
-  const dragState = React.useRef({ draggedPhotoId, handleReorder, isAdminMode, isMultiSelect });
+  const dragState = React.useRef({
+    draggedPhotoId,
+    handleReorder,
+    isAdminMode,
+    isMultiSelect,
+  });
   React.useEffect(() => {
-    dragState.current = { draggedPhotoId, handleReorder, isAdminMode, isMultiSelect };
+    dragState.current = {
+      draggedPhotoId,
+      handleReorder,
+      isAdminMode,
+      isMultiSelect,
+    };
   }, [draggedPhotoId, handleReorder, isAdminMode, isMultiSelect]);
 
-  const stableGetPhotoProps = useCallback((photo: Photo) => ({
-    draggable: dragState.current.isAdminMode && !dragState.current.isMultiSelect,
-    onDragStart: () => setDraggedPhotoId(photo.id),
-    onDragOver: (e: React.DragEvent) => e.preventDefault(),
-    onDrop: (e: React.DragEvent) => {
-      if (e && typeof e.preventDefault === 'function') e.preventDefault();
-      const currentDraggedId = dragState.current.draggedPhotoId;
-      if (currentDraggedId) {
-        dragState.current.handleReorder(currentDraggedId, photo.id);
-        setDraggedPhotoId(null);
+  const stableGetPhotoProps = useCallback(
+    (photo: Photo) => ({
+      draggable:
+        dragState.current.isAdminMode && !dragState.current.isMultiSelect,
+      onDragStart: () => update({ draggedPhotoId: photo.id }),
+      onDragOver: (e: React.DragEvent) => e.preventDefault(),
+      onDrop: (e: React.DragEvent) => {
+        if (e && typeof e.preventDefault === "function") e.preventDefault();
+        const currentDraggedId = dragState.current.draggedPhotoId;
+        if (currentDraggedId) {
+          dragState.current.handleReorder(currentDraggedId, photo.id);
+          update({ draggedPhotoId: null });
+        }
+      },
+    }),
+    [update],
+  );
+
+  const handleEditPhoto = useCallback(
+    (p: Photo) => {
+      if (storeEditPhoto) {
+        storeEditPhoto(p);
+      } else {
+        update({ editPhotoId: p.id });
       }
-    }
-  }), [setDraggedPhotoId]);
+    },
+    [storeEditPhoto, update],
+  );
 
-  const handleEditPhoto = useCallback((p: Photo) => {
-    if (storeEditPhoto) {
-       storeEditPhoto(p);
-    } else {
-       setEditPhotoId(p.id);
-    }
-  }, [storeEditPhoto, setEditPhotoId]);
+  const handlePhotoClick = useCallback(
+    (photo: Photo) => {
+      if (isMultiSelect) {
+        update((state) => ({
+          selectedIds: state.selectedIds.includes(photo.id)
+            ? state.selectedIds.filter((id) => id !== photo.id)
+            : [...state.selectedIds, photo.id],
+        }));
+      } else {
+        update({ focusedGroupPhotoId: photo.id });
+      }
+    },
+    [isMultiSelect, update],
+  );
 
-  const handlePhotoClick = useCallback((photo: Photo) => {
-    if (isMultiSelect) {
-      setSelectedIds(prev => 
-        prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
-      );
-    } else {
-      setFocusedGroupPhotoId(photo.id);
-    }
-  }, [isMultiSelect, setSelectedIds, setFocusedGroupPhotoId]);
+  const handlePhotoContextMenu = useCallback(
+    (e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
+      if (e && typeof e.preventDefault === "function") e.preventDefault();
+      if (isAdminMode) {
+        update({ isMultiSelect: true });
+        update({ selectedIds: [photo.id] });
+        if ("vibrate" in navigator) navigator.vibrate(50);
+      }
+    },
+    [isAdminMode, update],
+  );
 
-  const handlePhotoContextMenu = useCallback((e: React.MouseEvent | React.TouchEvent, photo: Photo) => {
-    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-    if (isAdminMode) {
-      setIsMultiSelect(true);
-      setSelectedIds([photo.id]);
-      if ('vibrate' in navigator) navigator.vibrate(50);
-    }
-  }, [isAdminMode, setIsMultiSelect, setSelectedIds]);
+  const handleCloseLightbox = useCallback(
+    () => update({ focusedGroupPhotoId: null }),
+    [update],
+  );
 
-  const handleCloseLightbox = useCallback(() => setFocusedGroupPhotoId(null), [setFocusedGroupPhotoId]);
+  const handlePrevLightbox = useCallback(
+    (idx: number) => {
+      const prev = idx > 0 ? idx - 1 : activeGroupPhotos.length - 1;
+      if (activeGroupPhotos.length > 0)
+        update({ focusedGroupPhotoId: activeGroupPhotos[prev].id });
+    },
+    [activeGroupPhotos, update],
+  );
 
-  const handlePrevLightbox = useCallback((idx: number) => {
-    const prev = idx > 0 ? idx - 1 : activeGroupPhotos.length - 1;
-    if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[prev].id);
-  }, [activeGroupPhotos, setFocusedGroupPhotoId]);
+  const handleNextLightbox = useCallback(
+    (idx: number) => {
+      const next = idx < activeGroupPhotos.length - 1 ? idx + 1 : 0;
+      if (activeGroupPhotos.length > 0)
+        update({ focusedGroupPhotoId: activeGroupPhotos[next].id });
+    },
+    [activeGroupPhotos, update],
+  );
 
-  const handleNextLightbox = useCallback((idx: number) => {
-    const next = idx < activeGroupPhotos.length - 1 ? idx + 1 : 0;
-    if (activeGroupPhotos.length > 0) setFocusedGroupPhotoId(activeGroupPhotos[next].id);
-  }, [activeGroupPhotos, setFocusedGroupPhotoId]);
+  const handleUngroupLightbox = useCallback(
+    (photoId: string) => {
+      confirmBulkRemove([photoId]);
+      update({ focusedGroupPhotoId: null });
+    },
+    [confirmBulkRemove, update],
+  );
 
-  const handleUngroupLightbox = useCallback((photoId: string) => {
-    confirmBulkRemove([photoId]);
-    setFocusedGroupPhotoId(null);
-  }, [confirmBulkRemove, setFocusedGroupPhotoId]);
+  const handleSetGroupCoverLightbox = useCallback(
+    (photoId: string) => setCover(photoId),
+    [setCover],
+  );
 
-  const handleSetGroupCoverLightbox = useCallback((photoId: string) => setCover(photoId), [setCover]);
-
-  const handleToggleHiddenLightbox = useCallback((p: Photo) => {
-    const newStatus = !p.is_hidden;
-    persistPhotoChange(p.id, { is_hidden: newStatus });
-  }, [persistPhotoChange]);
+  const handleToggleHiddenLightbox = useCallback(
+    (p: Photo) => {
+      const newStatus = !p.is_hidden;
+      persistPhotoChange(p.id, { is_hidden: newStatus });
+    },
+    [persistPhotoChange],
+  );
 
   return (
     <>
       <AnimatePresence mode="wait">
         {activeGroupId !== null && (
-          <motion.div 
+          <motion.div
             key={activeGroupId}
             ref={containerRef}
             onScroll={handleScroll}
@@ -171,9 +195,9 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             ) : (
               <>
                 {/* Top Header */}
-                <GroupHeader 
+                <GroupHeader update={update} 
                   activeGroupId={activeGroupId}
-                  setActiveGroupId={setActiveGroupId}
+                  
                   isAdminMode={isAdminMode}
                   groupData={groupData}
                   isGroupDataLoading={isGroupDataLoading}
@@ -181,7 +205,7 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
                   onBatchAiAnalyzeByGroupId={analyzeGroupById}
                 />
 
-                <GroupGridView 
+                <GroupGridView
                   key={activeGroupId}
                   virtualGridRef={virtualGridRef}
                   photos={activeGroupPhotos}
@@ -195,16 +219,17 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             )}
 
             {/* Unified Multi-Select Floating Bar */}
-            <MultiSelectToolbar 
-              variant="group"
-              onGroupAction={hookHandleBulkAction}
+            <SelectionToolbar
+              onDelete={confirmBulkRemove}
+              onHide={(ids) => adminActions.batchUpdate.mutateAsync({ ids, updates: { is_hidden: true } })}
+              onCopy={(ids) => hookHandleBulkAction('batch')}
             />
 
             {/* Photo Picker for adding photos to group */}
-            <GroupPhotoPicker 
+            <GroupPhotoPicker
               isOpen={!!isPhotoPickerOpen}
-              onClose={() => setIsPhotoPickerOpen(false)}
-              groupId={activeGroupId || ''}
+              onClose={() => update({ isPhotoPickerOpen: false })}
+              groupId={activeGroupId || ""}
               onAdd={async (ids) => {
                 if (activeGroupId) {
                   await handleAddToGroup(ids, activeGroupId);
@@ -215,47 +240,50 @@ export function GroupAdminShell(props: GroupAdminShellProps) {
             {/* Group Settings Sheet */}
             <GroupSettingsSheet 
               showGroupSettings={groupSettingsOpen}
-              setShowGroupSettings={setGroupSettingsOpen}
+              setShowGroupSettings={(show) => update({ groupSettingsOpen: show })}
               activeGroupId={activeGroupId}
               groupData={groupData}
               setGroupData={setGroupData}
               onUngroup={onUngroup}
-              setActiveGroupId={setActiveGroupId}
+              update={update}
               handleUpdateGroupData={handleUpdateGroupData}
               handleBatchUpdateDimensions={handleBatchUpdateDimensions}
-              setAlertDialog={setAlertDialog}
-              setPromptDialog={setPromptDialog}
+              
+              
               t={translate}
             />
 
             {/* Unified Photo Lightbox */}
             <AnimatePresence>
-              {focusedGroupPhotoId && (() => {
-                  const currentIndex = activeGroupPhotos.findIndex(p => p.id === focusedGroupPhotoId);
+              {focusedGroupPhotoId &&
+                (() => {
+                  const currentIndex = activeGroupPhotos.findIndex(
+                    (p) => p.id === focusedGroupPhotoId,
+                  );
                   const photo = activeGroupPhotos[currentIndex];
                   if (!photo) return null;
 
                   return (
-                     <PhotoLightbox 
-                       photoId={focusedGroupPhotoId}
-                       displayPhotos={activeGroupPhotos}
-                       onClose={handleCloseLightbox}
-                       onPhotoIdChange={setFocusedGroupPhotoId}
-                       contactWhatsApp={() => {}}
-                       onUngroup={handleUngroupLightbox}
-                       onSetGroupCover={handleSetGroupCoverLightbox}
-                       onEditPhoto={handleEditPhoto}
-                       onToggleHidden={handleToggleHiddenLightbox}
-                       onAiAnalyze={onAiAnalyze}
-                       onCancelAnalyze={onCancelAnalyze}
-                       isAnalyzing={isAnalyzing}
-                     />
+                    <PhotoLightbox
+                      photoId={focusedGroupPhotoId}
+                      displayPhotos={activeGroupPhotos}
+                      onClose={handleCloseLightbox}
+                      onPhotoIdChange={(id) => update({ activePhotoId: id })}
+                      contactWhatsApp={() => {}}
+                      onUngroup={handleUngroupLightbox}
+                      onSetGroupCover={handleSetGroupCoverLightbox}
+                      onEditPhoto={handleEditPhoto}
+                      onToggleHidden={handleToggleHiddenLightbox}
+                      onAiAnalyze={onAiAnalyze}
+                      onCancelAnalyze={onCancelAnalyze}
+                      isAnalyzing={isAnalyzing}
+                    />
                   );
-              })()}
+                })()}
             </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
     </>
   );
-};
+}

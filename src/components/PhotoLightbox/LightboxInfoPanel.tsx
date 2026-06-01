@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { MessageCircle, Key, Edit3, Eye, EyeOff, Sparkles, Share2, Check, X } from 'lucide-react';
 import { Dimension, Photo, ProductGroup, TranslationType, Category, Manufacturer } from '../../types';
 import { getTranslatedCategoryName, getPhotoDisplayName, getManufacturerName } from '../../lib/ui-helpers';
@@ -38,8 +38,8 @@ export function LightboxInfoPanel({
   onToggleHidden, onTogglePinned, onUngroup, onSetGroupCover, contactWhatsApp
 }: LightboxInfoPanelProps) {
   
-  const { setEditPhotoId } = useGalleryStore(useShallow(s => ({ setEditPhotoId: s.setEditPhotoId })));
-  const onEditPhoto = (p: Photo) => setEditPhotoId(p.id);
+  const { update } = useUIStore(useShallow(s => ({ update: s.update })));
+  const onEditPhoto = (p: Photo) => update({ editPhotoId: p.id });
   const { canEdit } = usePermission();
   const mfrName = getManufacturerName(photo.manufacturer_id || undefined, manufacturers);
   const photoDisplayName = getPhotoDisplayName(photo, categories, activeLang, t);

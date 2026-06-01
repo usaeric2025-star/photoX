@@ -186,6 +186,236 @@ const apiRoutes = app
       return c.json({ success: false, error: e.message }, 500);
     }
   })
+  .get("/admin/diagnose", async (c) => {
+    try {
+      const supabase = await getSupabaseAdmin();
+      const issues: any[] = [];
+      
+      // Fetch all required data for cross-referencing
+      const [
+        { data: photos, error: pErr },
+        { data: groups, error: gErr },
+        { data: categories, error: cErr },
+        { data: manufacturers, error: mErr },
+        { data: tags, error: tErr }
+      ] = await Promise.all([
+        supabase.from("furniture_items").select("id, group_id, category_id, manufacturer_id, image_hash, image_url, thumb_url, thumb_hash, name"),
+        supabase.from("groups").select("id, name, member_count"),
+        supabase.from("categories").select("id"),
+        supabase.from("manufacturers").select("id"),
+        supabase.from("tags").select("id")
+      ]);
+
+      if (pErr) throw pErr;
+      if (!photos) throw new Error("Could not fetch photos");
+      
+      const groupIds = new Set(groups?.map(g => String(g.id)) || []);
+      const categoryIds = new Set(categories?.map(c => String(c.id)) || []);
+      const manufacturerIds = new Set(manufacturers?.map(m => String(m.id)) || []);
+      
+      // 1. Orphaned Photos (P0)
+      const orphanedPhotos = photos.filter(p => p.group_id && !groupIds.has(String(p.group_id)));
+      if (orphanedPhotos.length > 0) {
+        issues.push({
+          id: 'orphaned_photos',
+          category: 'integrity',
+          severity: 'P0',
+          title: '孤儿照片',
+          description: '照片指向了不存在的合组',
+          affectedCount: orphanedPhotos.length,
+          sampleIds: orphanedPhotos.slice(0, 5).map(p => p.id),
+          autoFixable: false
+        });
+      }
+
+      // 2. Empty Groups (P0)
+      const photosByGroup = new Map<string, number>();
+      photos.forEach(p => {
+        if (p.group_id) {
+          const gid = String(p.group_id);
+          photosByGroup.set(gid, (photosByGroup.get(gid) || 0) + 1);
+        }
+      });
+      const emptyGroups = groups?.filter(g => !photosByGroup.has(String(g.id))) || [];
+      if (emptyGroups.length > 0) {
+        issues.push({
+          id: 'empty_groups',
+          category: 'integrity',
+          severity: 'P0',
+          title: '空合组',
+          description: '有些合组中没有任何照片',
+          affectedCount: emptyGroups.length,
+          sampleIds: emptyGroups.slice(0, 5).map(g => String(g.id)),
+          autoFixable: true
+        });
+      }
+
+      // 3. member_count mismatch (P0)
+      const mismatchedGroups = groups?.filter(g => {
+         const actualCount = photosByGroup.get(String(g.id)) || 0;
+         const storedCount = g.member_count ?? 0;
+         return actualCount !== storedCount;
+      }) || [];
+      if (mismatchedGroups.length > 0) {
+         issues.push({
+           id: 'member_count_mismatch',
+           category: 'consistency',
+           severity: 'P0',
+           title: '成员数不匹配',
+           description: '合组记录的成员数量与实际照片数量不符',
+           affectedCount: mismatchedGroups.length,
+           sampleIds: mismatchedGroups.slice(0, 5).map(g => String(g.id)),
+           autoFixable: true
+         });
+      }
+
+      // 4. Duplicate image_hash (P0)
+      const hashCounts = new Map<string, string[]>();
+      photos.forEach(p => {
+        if (p.image_hash) {
+          const list = hashCounts.get(p.image_hash) || [];
+          list.push(p.id);
+          hashCounts.set(p.image_hash, list);
+        }
+      });
+      const duplicateHashes = Array.from(hashCounts.entries()).filter(([_, ids]) => ids.length > 1);
+      if (duplicateHashes.length > 0) {
+        issues.push({
+          id: 'duplicate_hash',
+          category: 'consistency',
+          severity: 'P0',
+          title: '重复的照片 (Hash)',
+          description: '多张照片具有相同的图像指纹，可能是重复上传',
+          affectedCount: duplicateHashes.length,
+          sampleIds: duplicateHashes.slice(0, 5).flatMap(([_, ids]) => ids.slice(0, 2)),
+          autoFixable: false
+        });
+      }
+
+      // 5. Invalid Categories (P1)
+      const invalidCatPhotos = photos.filter(p => p.category_id && !categoryIds.has(String(p.category_id)));
+      if (invalidCatPhotos.length > 0) {
+        issues.push({
+          id: 'invalid_categories',
+          category: 'integrity',
+          severity: 'P1',
+          title: '无效分类',
+          description: '照片引用了不存在的分类 ID',
+          affectedCount: invalidCatPhotos.length,
+          sampleIds: invalidCatPhotos.slice(0, 5).map(p => p.id),
+          autoFixable: false
+        });
+      }
+
+      // 6. Invalid Manufacturers (P1)
+      const invalidMfrPhotos = photos.filter(p => p.manufacturer_id && !manufacturerIds.has(String(p.manufacturer_id)));
+      if (invalidMfrPhotos.length > 0) {
+        issues.push({
+          id: 'invalid_manufacturers',
+          category: 'integrity',
+          severity: 'P1',
+          title: '无效厂商',
+          description: '照片引用了不存在的厂商 ID',
+          affectedCount: invalidMfrPhotos.length,
+          sampleIds: invalidMfrPhotos.slice(0, 5).map(p => p.id),
+          autoFixable: false
+        });
+      }
+
+      // 7. URL format check (P1)
+      const invalidUrls = photos.filter(p => {
+        const checkUrl = (url: string | null) => {
+          if (!url) return false; 
+          return !url.includes('r2.dev') && !url.includes('supabase') && !url.startsWith('http');
+        };
+        return checkUrl(p.image_url) || checkUrl(p.thumb_url);
+      });
+      if (invalidUrls.length > 0) {
+        issues.push({
+          id: 'invalid_urls',
+          category: 'file',
+          severity: 'P1',
+          title: 'URL 格式不规范',
+          description: '图片的存储地址不符合标准格式 (R2/Supabase/HTTP)',
+          affectedCount: invalidUrls.length,
+          sampleIds: invalidUrls.slice(0, 5).map(p => p.id),
+          autoFixable: false
+        });
+      }
+
+      // 8. Missing thumb_hash (P1)
+      const missingThumbHash = photos.filter(p => !p.thumb_hash);
+      if (missingThumbHash.length > 0) {
+        issues.push({
+          id: 'missing_thumb_hash',
+          category: 'file',
+          severity: 'P1',
+          title: '缺少缩略图哈希',
+          description: '照片缺少用于模糊预览的缩略图哈希 (thumb_hash)',
+          affectedCount: missingThumbHash.length,
+          sampleIds: missingThumbHash.slice(0, 5).map(p => p.id),
+          autoFixable: true
+        });
+      }
+
+      return c.json({
+        timestamp: Date.now(),
+        totalIssues: issues.length,
+        issuesBySeverity: {
+          P0: issues.filter(i => i.severity === 'P0').length,
+          P1: issues.filter(i => i.severity === 'P1').length,
+          P2: 0,
+          P3: 0
+        },
+        issues
+      });
+
+    } catch (e: any) {
+      return c.json({ success: false, error: e.message }, 500);
+    }
+  })
+  .post("/admin/repair/:issueId", async (c) => {
+    try {
+      const issueId = c.req.param('issueId');
+      const supabase = await getSupabaseAdmin();
+      
+      if (issueId === 'member_count_mismatch') {
+         const { data: photos } = await supabase.from("furniture_items").select("group_id");
+         const counts = new Map<string, number>();
+         photos?.forEach(p => {
+           if (p.group_id) {
+             const gid = String(p.group_id);
+             counts.set(gid, (counts.get(gid) || 0) + 1);
+           }
+         });
+         
+         const { data: groups } = await supabase.from("groups").select("id");
+         if (groups) {
+           await Promise.all(groups.map(g => 
+             supabase.from("groups").update({ member_count: counts.get(String(g.id)) || 0 }).eq("id", g.id)
+           ));
+         }
+         return c.json({ success: true, message: '成员数同步完成' });
+      }
+
+      if (issueId === 'empty_groups') {
+         const { data: photos } = await supabase.from("furniture_items").select("group_id");
+         const photoGroupIds = new Set(photos?.map(p => String(p.group_id)).filter(Boolean));
+         
+         const { data: groups } = await supabase.from("groups").select("id");
+         const emptyGroupIds = groups?.filter(g => !photoGroupIds.has(String(g.id))).map(g => g.id) || [];
+         
+         if (emptyGroupIds.length > 0) {
+           await supabase.from("groups").delete().in("id", emptyGroupIds);
+         }
+         return c.json({ success: true, message: `清理了 ${emptyGroupIds.length} 个空合组` });
+      }
+
+      return c.json({ success: false, error: 'Unsupported repair' }, 400);
+    } catch (e: any) {
+      return c.json({ success: false, error: e.message }, 500);
+    }
+  })
   .get("/health", (c) => {
     return c.json({ success: true, data: { status: "ok", uptime: process.uptime(), timestamp: Date.now() } });
   })

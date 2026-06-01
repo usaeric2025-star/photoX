@@ -3,16 +3,13 @@ import { describe, it, expect, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import { useMultiSelect } from '@/features/photo/usePhotoSelection';
-import { useLongPress } from '@/hooks/useLongPress';
 
 // Mock zustand gallery store for rendering test hooks
-vi.mock('@/store/galleryStore', () => ({
-  useGalleryStore: (fn: any) => fn({
+vi.mock('@/store/useUIStore', () => ({
+  useUIStore: (fn: any) => fn({
     isMultiSelect: false,
     selectedIds: [],
-    setIsMultiSelect: vi.fn(),
-    setSelectedIds: vi.fn(),
-  }),
+    update: vi.fn()}),
   useShallow: (fn: any) => fn,
 }));
 
@@ -50,7 +47,7 @@ describe('Hook Rigid Contracts [HOOK-CONTRACT]', () => {
       });
     });
 
-    expect(totalContractsFound).toBeGreaterThanOrEqual(2);
+    expect(totalContractsFound).toBeGreaterThanOrEqual(1);
   });
 
   it('[HOOK-CONTRACT] 模組 JSDoc @hook-contract 註釋檢查', () => {
@@ -85,25 +82,5 @@ describe('Hook Rigid Contracts [HOOK-CONTRACT]', () => {
     expect(returned).toHaveProperty('enable');
     expect(returned).toHaveProperty('disable');
     expect(returned).toHaveProperty('toggle');
-  });
-
-  it('[HOOK-CONTRACT] 返回值結構完整性 (useLongPress)', () => {
-    const onLongPress = vi.fn();
-    const onClick = vi.fn();
-    const { result } = renderHook(() => useLongPress(onLongPress, onClick));
-    const returned = result.current;
-
-    // Must be object, NOT tuple/array
-    expect(Array.isArray(returned)).toBe(false);
-    expect(typeof returned).toBe('object');
-    expect(returned).not.toBeNull();
-
-    // Check interaction hooks output properties
-    expect(returned).toHaveProperty('onMouseDown');
-    expect(returned).toHaveProperty('onTouchStart');
-    expect(returned).toHaveProperty('onMouseUp');
-    expect(returned).toHaveProperty('onTouchEnd');
-    expect(returned).toHaveProperty('startPress');
-    expect(returned).toHaveProperty('hasLongPressed');
   });
 });

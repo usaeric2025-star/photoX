@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, Image as ImageIcon, Sparkles, Cloud, Layers, RefreshCcw, Lock } from 'lucide-react';
 import { useFeedback, useSettings } from '../../hooks';
-import { useGalleryStore } from '@/store/galleryStore';
+import { useUIStore } from '@/store/useUIStore';
 
 interface LoginScreenProps {
   loginWithGoogle: () => Promise<void>;

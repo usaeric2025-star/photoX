@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sheet, SheetContent } from "../ui/sheet";
 import { ProductGroup, Dimension } from '../../types';
+import { AlertDialogProps, PromptDialogProps } from '@/store/useUIStore';
 import { GroupSettingsHeader } from './GroupSettingsSheet/GroupSettingsHeader';
 import { GroupSettingsContent } from './GroupSettingsSheet/GroupSettingsContent';
 
@@ -13,11 +14,11 @@ interface GroupSettingsSheetProps {
   groupData: ProductGroup | null;
   setGroupData: React.Dispatch<React.SetStateAction<ProductGroup | null>>;
   onUngroup?: (groupId: string) => void;
-  setActiveGroupId: (id: string | null) => void;
+  update: (updates: any) => void;
   handleUpdateGroupData: (updates: Partial<ProductGroup>) => Promise<void>;
   handleBatchUpdateDimensions: (newDims: Dimension[]) => Promise<void>;
-  setAlertDialog: (d: { title: string; message: string; onConfirm: () => void } | null) => void;
-  setPromptDialog: (d: { title: string; message: string; placeholder?: string; onSubmit: (val: string) => void } | null) => void;
+  
+  
   t: any;
 }
 

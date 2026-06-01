@@ -2,7 +2,7 @@ import React from 'react';
 import { SyncSection } from './SyncSection';
 import { ExportDataSection } from './ExportDataSection';
 import { User, Photo, Category, Tag, Manufacturer, ApiResponse } from '@/types';
-import { useGalleryStore } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 
 interface SyncSettingsProps {
   user: User | null;
@@ -23,7 +23,7 @@ interface SyncSettingsProps {
 }
 
 export function SyncSettings(props: SyncSettingsProps) {
-  const { setAlertDialog } = useGalleryStore();
+  const { update } = useUIStore(useShallow(s => ({ update: s.update })));
   return (
     <>
       <SyncSection 
@@ -35,7 +35,7 @@ export function SyncSettings(props: SyncSettingsProps) {
         refreshCloudData={props.refreshCloudData}
         cloudCount={props.cloudCount}
         isSyncing={props.isSyncing}
-        setAlertDialog={setAlertDialog}
+        update={update}
       />
       <ExportDataSection 
         photos={props.photos}

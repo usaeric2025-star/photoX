@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useCallback } from 'react';
 import { Photo, ProductGroup } from '../../types';
 import { GalleryVariant } from '@/types/variant';
 import { Layers, Quote } from 'lucide-react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { translations } from '../../lib/translations';
 import { PhotoCard } from '../photo/PhotoCard';
 import { VirtualGrid } from '@/components/virtualizer/VirtualGrid';
@@ -65,7 +65,7 @@ export function GroupGridView({
   hasNextPage,
   variant = 'public-showcase'
 }: GroupGridViewProps & { virtualGridRef?: React.Ref<any>, isLoading?: boolean }) {
-  const { lang, columns } = useGalleryStore(useShallow(s => ({
+  const { lang, columns } = useUIStore(useShallow(s => ({
     lang: s.appLang,
     columns: s.columns
   })));

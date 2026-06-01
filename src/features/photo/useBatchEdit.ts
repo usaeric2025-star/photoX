@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useFeedback } from '@/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,11 +8,11 @@ import { photoKeys } from '@/lib/queryKeys';
 export function useBatchEdit() {
   const queryClient = useQueryClient();
   const { 
-    batchEditingIds, setBatchEditingIds,
+    batchEditingIds, update,
     formState, updateForm, resetForm
-  } = useGalleryStore(useShallow(s => ({
+  } = useUIStore(useShallow(s => ({
     batchEditingIds: s.batchEditingIds,
-    setBatchEditingIds: s.setBatchEditingIds,
+    update: s.update,
     formState: s.formState,
     updateForm: s.updateForm,
     resetForm: s.resetForm
@@ -44,7 +44,7 @@ export function useBatchEdit() {
       });
 
       await batchUpdate.mutateAsync({ ids: batchEditingIds, updates: cleanUpdates });
-      setBatchEditingIds(null);
+      update({ batchEditingIds: null });
       resetForm();
     } catch (err) {
       showError(err as Error, '保存失败');
@@ -57,7 +57,7 @@ export function useBatchEdit() {
     if (!batchEditingIds || batchEditingIds.length === 0) return;
     try {
       await deletePhoto(batchEditingIds);
-      setBatchEditingIds(null);
+      update({ batchEditingIds: null });
       resetForm();
     } catch (err) {
       showError(err as Error, '删除失败');
@@ -71,7 +71,7 @@ export function useBatchEdit() {
     handleSave,
     handleDelete,
     handleClose: () => {
-      setBatchEditingIds(null);
+      update({ batchEditingIds: null });
       resetForm();
     },
     isLocalSaving: false,

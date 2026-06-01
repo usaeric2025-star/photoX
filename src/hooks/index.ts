@@ -11,11 +11,7 @@ export { useScrollRestoration } from '../core/infra/useScrollRestoration';
 
 // Features Hooks
 export { useToast, useFeedback } from './useToast';
-export { useClickOutside } from './useClickOutside';
-export { useLongPress } from './useLongPress';
 export { usePhotoFilters } from './usePhotoFilters';
-export { useDebouncedSearch } from './useDebouncedSearch';
-export { useStaticData } from './useStaticData';
 export { useBatchEdit } from '../features/photo/useBatchEdit';
 export { useBatchConfirmation as useBatchConfirmDialog } from '../features/photo/useBatchConfirmDialog';
 export { useMultiSelect } from '../features/photo/usePhotoSelection';
@@ -27,9 +23,9 @@ export { useFilters } from '../features/filters/useFilters';
 export { usePhotoInfiniteList, usePhotoInfiniteGroupList } from './core/queries/useInfinitePhotos';
 export { usePhotoList } from './core/queries/usePhotoList';
 export { usePhotoCount } from './core/queries/usePhotoCount';
-export { useCategoryList } from './core/queries/useCategoryList';
-export { useTagList } from './core/queries/useTagList';
-export { useManufacturerList } from './core/queries/useManufacturerList';
+export { useCategories } from './core/queries/useCategories';
+export { useTags } from './core/queries/useTags';
+export { useManufacturers } from './core/queries/useManufacturers';
 export { useGroupList } from './core/queries/useGroupList';
 export { useGroupDetail } from './core/queries/useGroupDetail';
 export { useInvalidatePhotos } from './queries/useInvalidatePhotos';
@@ -55,7 +51,7 @@ export { useSettingsMutation } from './core/mutations/useSettingsMutation';
 export { useSyncMutation } from './core/mutations/useSyncMutation';
 
 // Utils
-export { useGalleryStore, useStore, useShallow } from '../store/galleryStore';
+export { useUIStore, useStore, useShallow } from '../store/useUIStore';
 
 
 

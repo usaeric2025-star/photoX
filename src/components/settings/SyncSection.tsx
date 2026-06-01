@@ -2,7 +2,8 @@ import React from 'react';
 import { 
   Cloud, LogOut, CloudUpload, CloudDownload, Database 
 } from 'lucide-react';
-import { User, ApiResponse, DialogData } from '@/types';
+import { User, ApiResponse } from '@/types';
+import { AlertDialogProps } from '@/store/useUIStore';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useFeedback } from '@/hooks';
 
@@ -15,7 +16,7 @@ interface SyncSectionProps {
   refreshCloudData: (user: User | null, force?: boolean) => Promise<void>;
   cloudCount: number | null;
   isSyncing: boolean;
-  setAlertDialog: (d: DialogData | null) => void;
+  update: (updates: any) => void;
 }
 
 export function SyncSection({
@@ -27,7 +28,7 @@ export function SyncSection({
   refreshCloudData,
   cloudCount,
   isSyncing,
-  setAlertDialog
+  update
 }: SyncSectionProps) {
   const { showSuccess } = useFeedback();
   
@@ -110,7 +111,7 @@ export function SyncSection({
             </div>
             <button 
               onClick={async () => {
-                setAlertDialog({
+                update({ alertDialog: {
                   title: '确认清空 / Reset Cache',
                   message: '确定要清空本地数据缓存并从云端完整拉取吗？ / Reset local cache and re-sync from cloud?',
                   onConfirm: async () => {
@@ -119,7 +120,7 @@ export function SyncSection({
                     showSuccess('本地缓存已重置 / Cache reset');
                   },
                   type: 'danger'
-                });
+                } });
               }}
               className="text-[9px] font-black text-brand-gold hover:text-white uppercase tracking-[0.2em] px-4 py-2 border border-brand-gold/30 rounded-full bg-brand-gold/5 transition-all active:scale-95"
             >

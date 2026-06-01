@@ -14,7 +14,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { reportError } from '@/lib/errorReporter';
 import { useAuth, usePermission, useSettings, useSyncMutation, useAdminMode } from '@/hooks';
 
@@ -56,15 +56,11 @@ function SidebarItem({ icon: Icon, label, active, onClick, badge, collapsed }: S
 }
 
 export function AdminSidebar() {
-  const { 
-    activeScreen, setActiveScreen, appLang, 
-    isSidebarCollapsed, setIsSidebarCollapsed 
-  } = useGalleryStore(useShallow(s => ({
+  const { activeScreen, update, appLang, isSidebarCollapsed } = useUIStore(useShallow(s => ({
     activeScreen: s.activeScreen,
-    setActiveScreen: s.setActiveScreen,
+    update: s.update,
     appLang: s.appLang,
-    isSidebarCollapsed: s.isSidebarCollapsed,
-    setIsSidebarCollapsed: s.setIsSidebarCollapsed
+    isSidebarCollapsed: s.isSidebarCollapsed
   })));
   
   const { can } = usePermission();
@@ -87,7 +83,7 @@ export function AdminSidebar() {
     <aside className={`${isSidebarCollapsed ? 'w-20' : 'w-72'} bg-brand-bg border-r border-brand-navy/5 flex flex-col h-screen sticky top-0 overflow-hidden transition-all duration-300 relative`}>
       {/* Toggle Button */}
       <button
-        onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onClick={() => update({ isSidebarCollapsed: !isSidebarCollapsed })}
         className="absolute top-6 -right-3 z-50 bg-white border border-brand-navy/10 rounded-full p-1 shadow-sm text-brand-navy hover:bg-brand-navy/5"
       >
         {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
@@ -100,13 +96,13 @@ export function AdminSidebar() {
             src={settings.logo_url} 
             alt="Logo" 
             className={`${isSidebarCollapsed ? 'h-8' : 'h-12'} w-auto object-contain rounded-xl cursor-pointer transition-all`}
-            onClick={() => setActiveScreen('home')}
+            onClick={() => update({ activeScreen: 'home' })}
             title="PhotoX Admin"
           />
         ) : (
           <h1 
             className={`text-xl font-black tracking-tighter text-brand-navy italic cursor-pointer ${isSidebarCollapsed ? 'text-sm' : ''}`}
-            onClick={() => setActiveScreen('home')}
+            onClick={() => update({ activeScreen: 'home' })}
             title="PhotoX Admin"
           >
             {isSidebarCollapsed ? 'PX' : 'PhotoX'} {!isSidebarCollapsed && <span className="text-[10px] uppercase tracking-widest font-bold opacity-30 px-2 border border-brand-navy/10 rounded-full py-0.5 ml-1 not-italic">Admin</span>}
@@ -131,12 +127,21 @@ export function AdminSidebar() {
         <div className="space-y-1">
           {!isSidebarCollapsed && <p className="text-[10px] font-bold text-brand-navy/30 uppercase tracking-[0.2em] px-4 mb-2">主控台 / Dashboard</p>}
           <SidebarItem 
+            icon={BarChart3} 
+            label="仪表盘 / Dashboard" 
+            collapsed={isSidebarCollapsed}
+            active={activeScreen === 'dashboard'} 
+            onClick={() => {
+              update({ activeScreen: 'dashboard' });
+            }} 
+          />
+          <SidebarItem 
             icon={Home} 
-            label="照片库" 
+            label="照片库 / Gallery" 
             collapsed={isSidebarCollapsed}
             active={activeScreen === 'home'} 
             onClick={() => {
-              setActiveScreen('home');
+              update({ activeScreen: 'home' });
             }} 
           />
         </div>
@@ -149,7 +154,7 @@ export function AdminSidebar() {
               label="云端存储管理" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'manage'} 
-              onClick={() => setActiveScreen('manage')}
+              onClick={() => update({ activeScreen: 'manage' })}
             />
           )}
           {can('photo:edit') && (
@@ -158,7 +163,7 @@ export function AdminSidebar() {
               label="AI 智能配置" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'ai_settings'} 
-              onClick={() => setActiveScreen('manage')} // For now direct to settings
+              onClick={() => update({ activeScreen: 'ai_settings' })}
             />
           )}
           {can('photo:edit') && (
@@ -167,7 +172,7 @@ export function AdminSidebar() {
               label="分类 / 厂商管理" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'structure'} 
-              onClick={() => setActiveScreen('manage')}
+              onClick={() => update({ activeScreen: 'structure' })}
             />
           )}
           {can('photo:edit') && (
@@ -176,7 +181,7 @@ export function AdminSidebar() {
               label="标签管理" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'tags'} 
-              onClick={() => setActiveScreen('manage')}
+              onClick={() => update({ activeScreen: 'tags' })}
             />
           )}
         </div>
@@ -189,22 +194,14 @@ export function AdminSidebar() {
               label="系统设置与维护" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'settings'} 
-              onClick={() => setActiveScreen('settings')}
+              onClick={() => update({ activeScreen: 'settings' })}
             />
             <SidebarItem 
               icon={Terminal} 
               label="系统日志" 
               collapsed={isSidebarCollapsed}
               active={activeScreen === 'logs'} 
-              onClick={() => setActiveScreen('manage')}
-            />
-            <SidebarItem 
-              icon={BarChart3} 
-              label="云端统计" 
-              collapsed={isSidebarCollapsed}
-              active={false} 
-              onClick={() => {}}
-              badge={0}
+              onClick={() => update({ activeScreen: 'logs' })}
             />
           </div>
         )}
@@ -278,7 +275,7 @@ export function AdminSidebar() {
               onClick={async () => {
                 try {
                   await loginWithGoogle();
-                } catch (e) {
+                } catch (e: any) {
                   reportError(e, '侧边栏登录', 'warn');
                 }
               }}

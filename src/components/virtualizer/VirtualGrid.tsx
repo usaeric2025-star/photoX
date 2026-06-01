@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, useRef } from 'react';
+import React, { useImperativeHandle, useRef, useEffect } from 'react';
 import { VList, VListHandle } from 'virtua';
 import { cn } from '@/lib/utils';
 
@@ -74,15 +74,18 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
     }
   }), [isGridLayout, lanes, props.header]);
 
-  const handleScroll = (offset: number) => {
+  const onEndReachedRef = useRef(props.onEndReached);
+  useEffect(() => { onEndReachedRef.current = props.onEndReached; }, [props.onEndReached]);
+
+  const handleScroll = React.useCallback((offset: number) => {
     props.onScroll?.(offset);
     if (vlistRef.current) {
       const { scrollSize, viewportSize } = vlistRef.current;
       if (scrollSize && viewportSize && offset + viewportSize >= scrollSize - 200) {
-        props.onEndReached?.();
+        onEndReachedRef.current?.();
       }
     }
-  };
+  }, [props.onScroll]);
 
   if (isTestEnv) {
     return (
@@ -127,7 +130,6 @@ export const VirtualGrid = ({ ref, ...props }: VirtualGridProps & { ref?: React.
         ref={vlistRef}
         data={listItems}
         onScroll={handleScroll}
-        overscan={10}
         style={{ height: '100%', width: '100%' }}
       >
         {(item) => {

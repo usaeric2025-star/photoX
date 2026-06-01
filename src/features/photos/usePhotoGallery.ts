@@ -3,7 +3,7 @@ import { useFilters } from '@/features/filters/useFilters';
 import { cleanPhotos } from '@/lib/filters';
 import { PAGINATION } from '@/constants/config';
 import { useMemo, useEffect } from 'react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 
 export function usePhotoGallery() {
   console.log('📸 usePhotoGallery 被调用');
@@ -11,7 +11,7 @@ export function usePhotoGallery() {
   const { filters } = useFilters();
   console.log('📸 filters:', filters);
 
-  const { sortOrder } = useGalleryStore(useShallow(s => ({ sortOrder: s.sortOrder })));
+  const { sortOrder } = useUIStore(useShallow(s => ({ sortOrder: s.sortOrder })));
   const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
   const pageSize = isAdminPath ? 60 : 20;  // Use fixed numeric sizes to avoid import/rebuild side effects
 

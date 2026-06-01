@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth, useGalleryStore, useShallow, useSettings } from '@/hooks';
+import { useAuth, useUIStore, useShallow, useSettings } from '@/hooks';
 import { logoutPublic } from '@/lib/publicAuth';
 import { cn } from '@/lib/utils';
 
@@ -23,14 +23,13 @@ interface PublicHeaderProps {
 export function PublicHeader({ totalCount, onRefresh, isRefreshing, isStaff }: PublicHeaderProps) {
   const { user, isLoading, loginWithGoogle } = useAuth();
   const { settings } = useSettings();
-  const { setActiveScreen, setViewMode } = useGalleryStore(useShallow(s => ({
-    setActiveScreen: s.setActiveScreen,
-    setViewMode: s.setViewMode
+  const { update } = useUIStore(useShallow(s => ({
+    update: s.update
   })));
 
   const handleGoToAdmin = () => {
-    setViewMode('private');
-    setActiveScreen('manage');
+    update({ viewMode: 'private' });
+    update({ activeScreen: 'manage' });
   };
 
   return (

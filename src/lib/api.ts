@@ -8,7 +8,7 @@ import { clientEnv } from '../shared/envSchema';
 export const client = hc<AppType>(
   clientEnv.DEV ? `http://localhost:3000` : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'),
   {
-    async fetch(input, init) {
+    async fetch(input: string | Request | URL, init?: RequestInit) {
       const resp = await fetch(input, init);
       
       // If it's not JSON, it might be the server crashing or returning HTML

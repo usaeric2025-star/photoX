@@ -9,6 +9,7 @@ import { ROUTES } from './config/constants';
 
 export default function AppRoutes() {
   useEffect(() => {
+    document.title = 'PhotoX';
     // Background cache cleanup and migrations
     migrateStorage();
     clearExpiredCaches(7).catch(err => globalHandleError(err, '本地缓存自动清理失败', true));

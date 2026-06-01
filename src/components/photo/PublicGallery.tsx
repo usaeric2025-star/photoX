@@ -1,13 +1,13 @@
 import React, { useMemo, useCallback, useEffect } from 'react';
 import { GalleryVariant } from '@/types/variant';
-import PhotoBoard from '@/components/photo/PhotoGrid';
+import { VirtualPhotoGrid } from '@/components/photo/VirtualPhotoGrid';
 import { PublicFilters } from '@/components/ui/PublicFilters';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
-import { usePhotoInfiniteList, useFilters, usePhotoFilters, useSettings, useCategoryList, useTagList } from '@/hooks';
+import { useUIStore, useShallow } from '@/store/useUIStore';
+import { usePhotoInfiniteList, useFilters, usePhotoFilters, useSettings, useCategories, useTags } from '@/hooks';
 const updateURL = (params: any) => console.log('updateURL stub', params);
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
-import { GroupDetailView } from '../GroupDetailView';
+import { GroupDetailPage } from '../GroupDetailPage';
 import { PhotoCard } from './PhotoCard';
 import { PublicFloatingActions } from './PublicFloatingActions';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
@@ -34,28 +34,12 @@ export function PublicGallery({
   
   const { setSearch, setShowGroupsCollapsed } = useFilters();
   const { 
-    setLightboxIndex,
-    sortOrder, setSortOrder,
-    activeGroupId, setActiveGroupId, activePhotoId, setActivePhotoId,
-    columns, setColumns, showWhatsAppChoice, setShowWhatsAppChoice, appLang
-  } = useGalleryStore(useShallow(s => ({
-    setLightboxIndex: s.setLightboxIndex,
-    sortOrder: s.sortOrder,
-    setSortOrder: s.setSortOrder,
-    activeGroupId: s.activeGroupId,
-    setActiveGroupId: s.setActiveGroupId,
-    activePhotoId: s.activePhotoId,
-    setActivePhotoId: s.setActivePhotoId,
-    columns: s.columns,
-    setColumns: s.setColumns,
-    showWhatsAppChoice: s.showWhatsAppChoice,
-    setShowWhatsAppChoice: s.setShowWhatsAppChoice,
-    appLang: s.appLang
-  })));
+    update, sortOrder, activeGroupId, activePhotoId, columns, showWhatsAppChoice, appLang
+  } = useUIStore(useShallow(s => ({ update: s.update, sortOrder: s.sortOrder, activeGroupId: s.activeGroupId, activePhotoId: s.activePhotoId, columns: s.columns, showWhatsAppChoice: s.showWhatsAppChoice, appLang: s.appLang })));
 
   const publicSettings = settings;
-  const { data: categories = [] } = useCategoryList();
-  const { data: tags = [] } = useTagList();
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
   
   const t = useMemo(() => translations[appLang as keyof typeof translations] || translations.en, [appLang]);
 
@@ -83,33 +67,33 @@ export function PublicGallery({
   );
 
   const handleGroupClick = useCallback((gid: string, photoId?: string) => {
-    setActivePhotoId(null);
-    setActiveGroupId(gid);                
+    update({ activePhotoId: null });
+    update({ activeGroupId: gid });                
     // Only set activePhotoId (anchor) if search query is active
     if (filters.searchQuery && filters.searchQuery.trim()) {
-        setActivePhotoId(photoId || null);
+        update({ activePhotoId: photoId || null });
     }
-  }, [setActiveGroupId, setActivePhotoId, filters.searchQuery]);
+  }, [update, filters.searchQuery]);
 
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth <= 768;
       if (isMobile) {
-        setColumns(3);
+        update({ columns: 3 });
       } else {
-        setColumns(5); // Default desktop to 5
+        update({ columns: 5 }); // Default desktop to 5
       }
     };
     handleResize(); 
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [setColumns]);
+  }, [update]);
 
 
   const handleLightboxOpen = useCallback((photo: Photo) => {
-    setActivePhotoId(photo.id);
-  }, [setActivePhotoId]);
+    update({ activePhotoId: photo.id });
+  }, [update]);
 
   const openWhatsApp = useCallback((phone: string) => {
     const cleanPhone = phone.replace(/[^\d+]/g, '');
@@ -126,8 +110,8 @@ export function PublicGallery({
 
   const handleShare = useCallback((photo: Photo) => {
     (window as any)._pendingPhoto = photo;
-    setShowWhatsAppChoice(true);
-  }, [setShowWhatsAppChoice]);
+    update({ showWhatsAppChoice: true });
+  }, [update]);
 
   const renderCard = useCallback((photo: Photo, index: number) => (
     <PhotoCard 
@@ -146,10 +130,10 @@ export function PublicGallery({
         <PublicFilters 
           onSearch={setSearch}
           searchQuery={filters.searchQuery || ''}
-          onSortChange={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          onSortChange={() => update({ sortOrder: sortOrder === 'newest' ? 'oldest' : 'newest' })}
           currentSort={sortOrder}
           onColumnsChange={(cols) => {
-              setColumns(cols as 2 | 3 | 4 | 5);
+              update({ columns: cols as 2 | 3 | 5 });
               updateURL({ view: cols === 2 ? 'list' : 'grid' });
           }}
           currentColumns={columns}
@@ -157,7 +141,7 @@ export function PublicGallery({
           showGroupsCollapsed={filters.showGroupsCollapsed}
         />
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
-            <PhotoBoard 
+            <VirtualPhotoGrid 
               key={`photo-grid-${filters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
               photos={gridPhotos}
               isFetching={infiniteQuery.isLoading}
@@ -174,21 +158,21 @@ export function PublicGallery({
           <PhotoLightbox 
             photoId={activePhotoId}
             displayPhotos={displayPhotos}
-            onClose={() => setActivePhotoId(null)}
+            onClose={() => update({ activePhotoId: null })}
             contactWhatsApp={(photo) => {
               (window as any)._pendingPhoto = photo;
-              setShowWhatsAppChoice(true);
+              update({ showWhatsAppChoice: true });
             }}
             variant={variant}
           />
         )}
 
-        <GroupDetailView
+        <GroupDetailPage
           activeGroupId={activeGroupId}
-          setActiveGroupId={setActiveGroupId}
-          setActivePhotoId={setActivePhotoId}
+          
+          
           initialPhotoId={activePhotoId}
-          setLightboxIndex={setLightboxIndex}
+          
           variant={variant}
         />
 
@@ -196,13 +180,13 @@ export function PublicGallery({
           onScrollToTop={onScrollToTop} 
           onWhatsAppClick={() => {
             (window as any)._pendingPhoto = null;
-            setShowWhatsAppChoice(true);
+            update({ showWhatsAppChoice: true });
           }}
         />
 
         <WhatsAppChoiceDialog 
           isOpen={showWhatsAppChoice}
-          onClose={() => setShowWhatsAppChoice(false)}
+          onClose={() => update({ showWhatsAppChoice: false })}
           settings={publicSettings}
           t={t}
           onSelect={openWhatsApp}

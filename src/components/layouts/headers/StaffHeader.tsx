@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth, useSettings, useGalleryStore, useShallow } from '@/hooks';
+import { useAuth, useSettings, useUIStore, useShallow } from '@/hooks';
 import { logoutPublic } from '@/lib/publicAuth';
 import { cn } from '@/lib/utils';
 
@@ -22,14 +22,13 @@ interface StaffHeaderProps {
 export function StaffHeader({ totalCount, onRefresh, isRefreshing }: StaffHeaderProps) {
   const { user } = useAuth();
   const { settings } = useSettings();
-  const { setActiveScreen, setViewMode } = useGalleryStore(useShallow(s => ({
-    setActiveScreen: s.setActiveScreen,
-    setViewMode: s.setViewMode
+  const { update } = useUIStore(useShallow(s => ({
+    update: s.update
   })));
 
   const handleGoToAdmin = () => {
-    setViewMode('private');
-    setActiveScreen('manage');
+    update({ viewMode: 'private' });
+    update({ activeScreen: 'manage' });
   };
 
   return (

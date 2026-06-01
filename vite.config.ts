@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { fileURLToPath } from 'url';
 import { defineConfig, loadEnv } from 'vite';
 
@@ -13,12 +14,18 @@ export default defineConfig(({mode}) => {
         babel: {
           plugins: [
             ['babel-plugin-react-compiler', {
+              compilationMode: 'strict',
+              panicThreshold: 'none',
               target: '19'
             }]
           ]
         }
       }), 
       tailwindcss(),
+      visualizer({
+        filename: 'dist/stats.html',
+        gzipSize: true,
+      }) as any,
     ],
     build: {
       emptyOutDir: true,

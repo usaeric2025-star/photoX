@@ -1,15 +1,20 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { 
-  X, Check, Search, Plus, Upload, Sparkles
-} from 'lucide-react';
-import { 
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
-} from '../ui/dialog';
-import { Photo } from '../../types';
-import { usePhotoInfiniteList, useTaskExecutor, useTasks } from '@/hooks';
-import { PAGINATION } from '../../constants/config';
-import { GroupGridView } from './GroupGridView';
-import { cn } from '@/lib/utils';
+import { useUIStore } from '@/store/useUIStore';
+import React, { useState, useMemo, useCallback, useRef } from "react";
+import { X, Check, Search, Plus, Upload, Sparkles } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "../ui/dialog";
+import { Photo } from "../../types";
+import { usePhotoInfiniteList, useTaskExecutor, useTasks, useFeedback } from "@/hooks";
+import { PAGINATION } from "../../constants/config";
+import { GroupGridView } from "./GroupGridView";
+import { cn } from "@/lib/utils";
+import { savePhotosToCloudBatch } from "@/services/photo/photoUploadService";
+import { useAuth } from "@/hooks/core/auth/useAuth";
 
 interface GroupPhotoPickerProps {
   isOpen: boolean;
@@ -22,37 +27,61 @@ export function GroupPhotoPicker({
   isOpen,
   onClose,
   groupId,
-  onAdd
+  onAdd,
 }: GroupPhotoPickerProps) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const handlePhotoImport = async (e: React.ChangeEvent<HTMLInputElement>, isGallery: boolean, groupId?: string) => {};
+  const { user } = useAuth();
+  const { showError, showSuccess } = useFeedback();
+
+  const handlePhotoImport = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isGallery: boolean,
+    targetGroupId?: string,
+  ) => {
+    if (!e.target.files || e.target.files.length === 0 || !user) return;
+    
+    // Simple photo conversion for batch upload
+    const files = Array.from(e.target.files);
+    const photoData: Photo[] = files.map(file => ({
+      id: `temp-${crypto.randomUUID()}`,
+      uri: URL.createObjectURL(file), // This is okay for now, but usually need better handling
+      name: file.name,
+      group_id: targetGroupId,
+      created_at: new Date().toISOString(),
+      dimensions: { width: 0, height: 0 },
+      is_hidden: false,
+    } as any));
+
+    await savePhotosToCloudBatch(user.id, photoData);
+    showSuccess("照片已上传");
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { runTask } = useTaskExecutor();
   const { tasks } = useTasks();
-  const isRunning = tasks.some(t => t.status === 'running');
+  const isRunning = tasks.some((t) => t.status === "running");
 
-  const queryParams = useMemo(() => ({
-    searchQuery: search,
-    isAdminMode: true,
-    onlyUngrouped: true
-  }), [search]);
+  const queryParams = useMemo(
+    () => ({
+      searchQuery: search,
+      isAdminMode: true,
+      onlyUngrouped: true,
+    }),
+    [search],
+  );
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading
-  } = usePhotoInfiniteList(queryParams, PAGINATION.ADMIN_BATCH_SIZE);
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    usePhotoInfiniteList(queryParams, PAGINATION.ADMIN_BATCH_SIZE);
 
   const photos = useMemo(() => {
-    return data?.pages.flatMap(p => p.photos) || [];
+    return data?.pages.flatMap((p) => p.photos) || [];
   }, [data]);
 
   const handleToggleSelect = useCallback((photo: Photo) => {
-    setSelectedIds(prev => 
-      prev.includes(photo.id) ? prev.filter(id => id !== photo.id) : [...prev, photo.id]
+    setSelectedIds((prev) => 
+      prev.includes(photo.id)
+        ? prev.filter((id) => id !== photo.id)
+        : [...prev, photo.id]
     );
   }, []);
 
@@ -62,24 +91,32 @@ export function GroupPhotoPicker({
 
   const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     // Use the global handler but pre-assign groupId
     if (handlePhotoImport) {
-        await runTask('上传照片', async () => {
-            await handlePhotoImport(e, true, groupId);
-            onClose();
-        }, { showSuccessToast: true });
+      await runTask(
+        "上传照片",
+        async () => {
+          await handlePhotoImport(e, true, groupId);
+          onClose();
+        },
+        { showSuccessToast: true },
+      );
     }
   };
 
   const handleConfirm = async () => {
     if (selectedIds.length === 0) return;
-    
-    await runTask('添加照片到群组', async () => {
-      await onAdd(selectedIds);
-      onClose();
-      setSelectedIds([]);
-    }, { showSuccessToast: true, silent: true });
+
+    await runTask(
+      "添加照片到群组",
+      async () => {
+        await onAdd(selectedIds);
+        onClose();
+        setSelectedIds([]);
+      },
+      { showSuccessToast: true, silent: true },
+    );
   };
 
   return (
@@ -89,15 +126,21 @@ export function GroupPhotoPicker({
           <DialogTitle className="text-xl font-black text-slate-800 tracking-tight">
             添加照片到群组 / ADD PHOTOS
           </DialogTitle>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+          >
             <X size={20} className="text-slate-400" />
           </button>
         </DialogHeader>
 
         <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <input 
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+            />
+            <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -107,15 +150,15 @@ export function GroupPhotoPicker({
           </div>
 
           <div className="flex shrink-0">
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              multiple 
-              onChange={onFileChange} 
-              className="hidden" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              multiple
+              onChange={onFileChange}
+              className="hidden"
               accept="image/*"
             />
-            <button 
+            <button
               onClick={handleUploadClick}
               disabled={isRunning}
               className="flex items-center gap-2 px-4 py-2 bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/20 rounded-xl transition-all font-black text-xs uppercase tracking-tight disabled:opacity-50"
@@ -134,13 +177,17 @@ export function GroupPhotoPicker({
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-8 h-8 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">加载中 / Loading</p>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+                  加载中 / Loading
+                </p>
               </div>
             </div>
           ) : photos.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-slate-400 flex-col gap-4">
-              <p className="italic">现有库找不到符合条件的照片 / Library is empty</p>
-              <button 
+              <p className="italic">
+                现有库找不到符合条件的照片 / Library is empty
+              </p>
+              <button
                 onClick={handleUploadClick}
                 disabled={isRunning}
                 className="flex items-center gap-2 px-8 py-4 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-100 transition-all font-black disabled:opacity-50"
@@ -150,16 +197,16 @@ export function GroupPhotoPicker({
               </button>
             </div>
           ) : (
-            <GroupGridView 
+            <GroupGridView
               photos={photos}
               onPhotoClick={handleToggleSelect}
               getPhotoProps={(photo) => ({
                 className: cn(
                   "cursor-pointer transition-all border-4 rounded-[1.5rem]",
-                  selectedIds.includes(photo.id) 
-                    ? "border-emerald-500 scale-95 shadow-lg shadow-emerald-500/20" 
-                    : "border-transparent"
-                )
+                  selectedIds.includes(photo.id)
+                    ? "border-emerald-500 scale-95 shadow-lg shadow-emerald-500/20"
+                    : "border-transparent",
+                ),
               })}
               isLoading={isLoading}
               hasNextPage={hasNextPage}
@@ -171,23 +218,25 @@ export function GroupPhotoPicker({
 
         <DialogFooter className="px-6 py-4 border-t border-slate-100 bg-white flex items-center justify-between sm:justify-between">
           <div className="text-sm font-bold text-slate-500">
-            {selectedIds.length > 0 ? `已选择 ${selectedIds.length} 张现有照片` : '选择或直接上传新照片'}
+            {selectedIds.length > 0
+              ? `已选择 ${selectedIds.length} 张现有照片`
+              : "选择或直接上传新照片"}
           </div>
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={onClose}
               className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
             >
               取消 / Cancel
             </button>
-            <button 
+            <button
               onClick={handleConfirm}
               disabled={selectedIds.length === 0 || isRunning}
               className={cn(
                 "px-6 py-2 rounded-xl font-bold text-sm shadow-lg transition-all flex items-center gap-2",
                 selectedIds.length > 0 && !isRunning
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 shadow-emerald-500/20" 
-                  : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600 active:scale-95 shadow-emerald-500/20"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none",
               )}
             >
               <Check size={18} />
@@ -198,5 +247,4 @@ export function GroupPhotoPicker({
       </DialogContent>
     </Dialog>
   );
-};
-
+}

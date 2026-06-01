@@ -69,8 +69,8 @@ function lazyWithRetry(importFn: () => Promise<any>, pageName: string) {
   );
 }
 
-const PublicView = lazyWithRetry(() => import('@/pages/PublicView'), 'PublicView');
-const AdminView = lazyWithRetry(() => import('@/pages/AdminView'), 'AdminView');
+const PublicPage = lazyWithRetry(() => import('@/pages/PublicPage'), 'PublicPage');
+const AdminPage = lazyWithRetry(() => import('@/pages/AdminPage'), 'AdminPage');
 
 // 1. Root Route
 export const rootRoute = createRootRouteWithContext<RouterContext>()({
@@ -141,13 +141,13 @@ const indexRoute = createRoute({
       staleTime: createStaleTime('REALTIME'),
     });
   },
-  component: PublicView,
+  component: PublicPage,
 });
 
 const hashRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/h/$hash',
-  component: PublicView,
+  component: PublicPage,
 });
 
 const groupRoute = createRoute({
@@ -170,14 +170,14 @@ const groupRoute = createRoute({
       staleTime: createStaleTime('STABLE'),
     });
   },
-  component: PublicView,
+  component: PublicPage,
 });
 
 // For backward compatibility
 const gRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/g/$groupId',
-  component: PublicView,
+  component: PublicPage,
 });
 
 const adminRoute = createRoute({
@@ -185,7 +185,7 @@ const adminRoute = createRoute({
   path: ROUTES.ADMIN,
   component: () => (
     <AdminAuthGuard>
-      <AdminView />
+      <AdminPage />
     </AdminAuthGuard>
   ),
 });

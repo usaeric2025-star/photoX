@@ -1,16 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { RefreshCw, MoreHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
-import { useFilters, useCategoryList, useTagList } from '@/hooks';
-import { useGalleryStore } from '@/store/galleryStore';
+import { useFilters, useCategories, useTags } from '@/hooks';
+import { useUIStore } from '@/store/useUIStore';
 import { cn } from '@/lib/utils';
 import { Category } from '@/types';
 import { translations } from '@/lib/translations';
 
 export function FilterPanel() {
     const { filters, setCategory, setTags } = useFilters();
-    const { data: categories = [] } = useCategoryList();
-    const { data: tags = [] } = useTagList();
-    const appLang = useGalleryStore(s => s.appLang);
+    const { data: categories = [] } = useCategories();
+    const { data: tags = [] } = useTags();
+    const appLang = useUIStore(s => s.appLang);
     const [isExpanded, setIsExpanded] = useState(false);
 
     const t = (translations as any)[appLang];

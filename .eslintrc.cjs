@@ -6,8 +6,9 @@ module.exports = {
     'plugin:react-hooks/recommended',
   ],
   parser: '@typescript-eslint/parser',
-  plugins: ['react-refresh', 'react-hooks'],
+  plugins: ['react-refresh', 'react-hooks', 'react-compiler'],
   rules: {
+    'react-compiler/react-compiler': 'error',
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },

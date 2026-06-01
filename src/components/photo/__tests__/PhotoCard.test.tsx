@@ -14,9 +14,7 @@ vi.mock('../virtualizer/useInteractionBridge', () => ({
   useInteractionBridge: () => ({
     setters: {
       toggleSelected: vi.fn(),
-      setIsMultiSelect: vi.fn(),
-      setSelectedIds: vi.fn(),
-    },
+      update: vi.fn()},
   }),
 }));
 

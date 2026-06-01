@@ -1,4 +1,4 @@
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { useCallback } from 'react';
 
 /**
@@ -25,53 +25,52 @@ import { useCallback } from 'react';
  * }
  */
 export const useMultiSelect = () => {
-  const { isMultiSelect, selectedIds, setIsMultiSelect, setSelectedIds } = useGalleryStore(useShallow((state) => ({
+  const { isMultiSelect, selectedIds, update } = useUIStore(useShallow((state) => ({
     isMultiSelect: state.isMultiSelect,
     selectedIds: state.selectedIds ?? [],
-    setIsMultiSelect: state.setIsMultiSelect,
-    setSelectedIds: state.setSelectedIds,
+    update: state.update,
   })));
 
   const enable = useCallback((initialId?: string) => {
-    setIsMultiSelect(true);
+    update({ isMultiSelect: true });
     if (initialId) {
-      setSelectedIds([initialId]);
+      update({ selectedIds: [initialId] });
     }
-  }, [setIsMultiSelect, setSelectedIds]);
+  }, [update]);
 
   const disable = useCallback(() => {
-    setIsMultiSelect(false);
-    setSelectedIds([]);
-  }, [setIsMultiSelect, setSelectedIds]);
+    update({ isMultiSelect: false });
+    update({ selectedIds: [] });
+  }, [update]);
 
   const toggle = useCallback((id: string) => {
-    const current = (useGalleryStore.getState().selectedIds) ?? [];
+    const current = (useUIStore.getState().selectedIds) ?? [];
     const next = current.includes(id) 
       ? current.filter((i: string) => i !== id) 
       : [...current, id];
-    setSelectedIds(next);
-  }, [setSelectedIds]);
+    update({ selectedIds: next });
+  }, [update]);
 
   const clear = useCallback(() => {
-    setSelectedIds([]);
-  }, [setSelectedIds]);
+    update({ selectedIds: [] });
+  }, [update]);
 
   const reset = useCallback(() => {
-    setIsMultiSelect(false);
-    setSelectedIds([]);
-  }, [setIsMultiSelect, setSelectedIds]);
+    update({ isMultiSelect: false });
+    update({ selectedIds: [] });
+  }, [update]);
 
   const selectAll = useCallback((ids: string[]) => {
-    setIsMultiSelect(true);
-    const current = (useGalleryStore.getState().selectedIds) ?? [];
+    update({ isMultiSelect: true });
+    const current = (useUIStore.getState().selectedIds) ?? [];
     const combined = new Set([...current, ...ids]);
-    setSelectedIds(Array.from(combined));
-  }, [setIsMultiSelect, setSelectedIds]);
+    update({ selectedIds: Array.from(combined) });
+  }, [update]);
 
   const deselectAllForList = useCallback((ids: string[]) => {
-    const current = (useGalleryStore.getState().selectedIds) ?? [];
-    setSelectedIds(current.filter(id => !ids.includes(id)));
-  }, [setSelectedIds]);
+    const current = (useUIStore.getState().selectedIds) ?? [];
+    update(state => ({ selectedIds: current.filter(id => !ids.includes(id)) }));
+  }, [update]);
 
   return {
     isMultiSelect,

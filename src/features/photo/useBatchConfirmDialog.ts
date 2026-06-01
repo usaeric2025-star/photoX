@@ -1,4 +1,4 @@
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 
 interface Config {
   actionType: 'delete' | 'show' | 'hide';
@@ -7,7 +7,7 @@ interface Config {
 }
 
 export function useBatchConfirmation({ actionType, selectedCount, onConfirm }: Config) {
-  const { setAlertDialog } = useGalleryStore(useShallow(s => ({ setAlertDialog: s.setAlertDialog })));
+  const { update } = useUIStore(useShallow(s => ({ update: s.update })));
 
   const openDialog = () => {
     const titles = {
@@ -22,14 +22,14 @@ export function useBatchConfirmation({ actionType, selectedCount, onConfirm }: C
       hide: `确定要隐藏选中的 ${selectedCount} 张照片吗？`
     };
 
-    setAlertDialog({
+    update({ alertDialog: {
       title: titles[actionType],
       message: messages[actionType],
       onConfirm: () => {
         onConfirm();
-        setAlertDialog(null);
+        update({ alertDialog: null });
       }
-    });
+    } });
   };
 
   return { openDialog };

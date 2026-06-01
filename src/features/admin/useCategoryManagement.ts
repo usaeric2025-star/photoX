@@ -5,7 +5,7 @@ import {
   useManufacturerCreate, useManufacturerEdit, useManufacturerDelete
 } from '@/hooks';
 
-export function useAdminCategory({ setAlertDialog }: { setAlertDialog: (d: any) => void }) {
+export function useAdminCategory({ update }: { update: (d: any) => void }) {
   const tagCreate = useTagCreate();
   const tagEdit = useTagEdit();
   const tagDelete = useTagDelete();

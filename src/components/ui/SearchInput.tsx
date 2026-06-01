@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
-import { useDebouncedSearch } from '@/hooks';
+import { useDebounceFn } from "@/hooks/ui";
 import { Input } from './input';
 import { cn } from '@/lib/utils';
 
@@ -30,9 +30,9 @@ export const SearchInput = ({
     setValue(controlledValue);
   }, [controlledValue]);
 
-  const debouncedSearch = useDebouncedSearch((val: string) => {
+  const { run: debouncedSearch, cancel } = useDebounceFn((val: string) => {
     onSearch(val);
-  }, delay);
+  }, { wait: delay });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;

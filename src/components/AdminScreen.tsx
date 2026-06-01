@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { AdminGallery } from '@/components/photo/AdminGallery';
 import { useMultiSelect, useAuth, useTasks, useSyncMutation, useAdminMode } from '@/hooks';
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { translations } from '@/lib/translations';
-import { AdminToolbar } from '@/pages/AdminView/AdminToolbar';
-import { AdminEmptyState } from '@/pages/AdminView/AdminEmptyState';
+import { AdminToolbar } from '@/pages/AdminPage/AdminToolbar';
+import { AdminEmptyState } from '@/pages/AdminPage/AdminEmptyState';
 
 export function AdminScreen() {
   const { user, loginWithGoogle } = useAuth();
@@ -16,14 +16,13 @@ export function AdminScreen() {
   const onRefresh = () => syncMut('pull');
   const cloudCount = 0;
 
-  const { lang, setActiveScreen, viewMode, setViewMode } = useGalleryStore(useShallow(s => ({
+  const { lang, update, viewMode } = useUIStore(useShallow(s => ({
     lang: s.appLang,
-    setActiveScreen: s.setActiveScreen,
-    viewMode: s.viewMode,
-    setViewMode: s.setViewMode
+    update: s.update,
+    viewMode: s.viewMode
   })));
   
-  const onManageClick = () => setActiveScreen('manage');
+  const onManageClick = () => update({ activeScreen: 'manage' });
 
   const { selectedIds, clear } = useMultiSelect();
   const hasAdminAccess = useAdminMode();
@@ -59,7 +58,7 @@ export function AdminScreen() {
               cloudCount={cloudCount}
               isSyncing={isSyncing}
               adminPreviewMode={viewMode as any}
-              setAdminPreviewMode={setViewMode as any}
+              setAdminPreviewMode={update as any}
               handleBatchAiIdentifyTrigger={async () => {
               if (selectedIds.length > 0) {
                 // Same logic as floating buttons

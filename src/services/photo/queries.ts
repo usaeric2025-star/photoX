@@ -361,7 +361,7 @@ export const loadPhotosByGroupId = async (groupId: string, isAdminMode: boolean 
             const rows = Array.isArray(data) ? data : (data.photos || []);
             let photos = rows.map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
             if (!isAdminMode) {
-               photos = photos.filter(p => !p.is_hidden);
+               photos = photos.filter((p: Photo) => !p.is_hidden);
             }
             return photos;
         }
@@ -412,7 +412,7 @@ export const loadPhotosByGroupIdPaginated = async (
        const rows = Array.isArray(data) ? data : (data.photos || []);
        let photos = rows.map((item: SupabasePhotoRaw) => mapSupabasePhoto(item));
        if (!isAdminMode) {
-          photos = photos.filter(p => !p.is_hidden);
+          photos = photos.filter((p: Photo) => !p.is_hidden);
        }
        const paginatedPhotos = photos.slice(from, to + 1);
        return { photos: paginatedPhotos, total: photos.length || data.total_count || 0 };

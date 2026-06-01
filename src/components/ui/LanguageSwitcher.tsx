@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { GalleryVariant } from '@/types/variant';
 
 export function LanguageSwitcher({ variant = 'full-management' }: { variant?: GalleryVariant | 'ghost' }) {
-  const { appLang, setAppLang } = useGalleryStore(useShallow(s => ({ 
+  const { appLang, update } = useUIStore(useShallow(s => ({ 
     appLang: s.appLang,
-    setAppLang: s.setAppLang
+    update: s.update
   })));
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -45,7 +45,7 @@ export function LanguageSwitcher({ variant = 'full-management' }: { variant?: Ga
         ].map(l => (
           <button 
             key={l.code} 
-            onClick={() => setAppLang(l.code as any)} 
+            onClick={() => update({ appLang: l.code as any })} 
             className={`px-1.5 sm:px-3 h-8 flex items-center justify-center rounded-full text-[11px] sm:text-[12px] font-bold whitespace-nowrap transition-all ${appLang === l.code ? 'bg-[#1A1C3E] text-white shadow-sm' : 'text-[#888888] hover:text-[#1A1A1A]'}`}
           >
             {l.label}
@@ -73,7 +73,7 @@ export function LanguageSwitcher({ variant = 'full-management' }: { variant?: Ga
             <button
               key={l.code}
               onClick={() => {
-                setAppLang(l.code as any);
+                update({ appLang: l.code as any });
                 setIsOpen(false);
               }}
               className={`w-full text-left px-4 py-2 transition-colors flex items-center justify-between ${appLang === l.code ? 'text-white font-bold bg-[#1A1C3E]' : 'text-slate-600 font-medium hover:bg-slate-50'}`}

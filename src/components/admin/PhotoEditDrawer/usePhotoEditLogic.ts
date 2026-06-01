@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useGalleryStore, useShallow } from '../../../store';
+import { useUIStore, useShallow } from '../../../store';
 import { 
-  useCategoryList, useTagList, useManufacturerList,
+  useCategories, useTags, useManufacturers,
   useTagCreate, useTagEdit, useTagDelete,
   useManufacturerCreate, useManufacturerEdit, useManufacturerDelete,
   useFeedback, useTaskExecutor, useTasks
@@ -16,13 +16,12 @@ interface Props {
   photos: Photo[];
   newPhotoData?: string | null;
   editPhotoPreview?: string | null;
-  setNewPhotoData?: (data: string | null) => void;
   analyzeSingle: (photo: Photo) => Promise<any>;
   saveNewPhoto: () => Promise<void>;
 }
 
 export const usePhotoEditLogic = (props: Props) => {
-  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, setNewPhotoData, analyzeSingle, saveNewPhoto } = props;
+  const { photos, editPhotoId, formState, updateForm, newPhotoData, editPhotoPreview, analyzeSingle, saveNewPhoto } = props;
   const { tasks } = useTasks();
   const isAnalyzing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('识别') || t.name.includes('分析'))), [tasks]);
   const isSyncing = useMemo(() => tasks.some(t => t.status === 'running' && (t.name.includes('同步') || t.name.includes('导入'))), [tasks]);
@@ -34,16 +33,15 @@ export const usePhotoEditLogic = (props: Props) => {
   const aiDebugInfo = null;
 
   const { runTask } = useTaskExecutor();
-  const { setPromptDialog, setAlertDialog, appLang } = useGalleryStore(useShallow(s => ({
-    setPromptDialog: s.setPromptDialog,
-    setAlertDialog: s.setAlertDialog,
+  const { update, appLang } = useUIStore(useShallow(s => ({
+    update: s.update,
     appLang: s.appLang
   })));
   const { showError, showSuccess } = useFeedback();
 
-  const { data: categories = [] } = useCategoryList();
-  const { data: tags = [] } = useTagList();
-  const { data: manufacturers = [] } = useManufacturerList();
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
+  const { data: manufacturers = [] } = useManufacturers();
 
   const { mutateAsync: addTagMut } = useTagCreate();
   const { mutateAsync: updateTagMut } = useTagEdit();
@@ -87,8 +85,8 @@ export const usePhotoEditLogic = (props: Props) => {
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
 
       const newData = canvas.toDataURL('image/jpeg', 0.95);
-      if (setNewPhotoData) {
-        setNewPhotoData(newData);
+      if (update) {
+        update({ newPhotoData: newData } as any);
       }
     }, { showSuccessToast: true, silent: true });
   };
@@ -136,7 +134,6 @@ export const usePhotoEditLogic = (props: Props) => {
     rotatePhoto,
     handleSave, toggleHidden, triggerAiAnalyze,
     isAnalyzing, aiDebugInfo, isPartOfGroup, isSyncing, isRotating, isRunning,
-    isSavingAction,
-    setPromptDialog, setAlertDialog, appLang, showError
+    isSavingAction, appLang, showError
   };
 };

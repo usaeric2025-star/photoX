@@ -1,3 +1,4 @@
+import { useUIStore } from '../../store/useUIStore';
 import React from 'react';
 import { AnimatePresence } from 'motion/react';
 import { StaffUnlockDialog } from '../StaffUnlockDialog';
@@ -5,9 +6,7 @@ import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
 import { AppSettings, TranslationType } from '../../types';
 
 interface GalleryDialogsProps {
-  showPassPrompt: boolean;
-  setShowPassPrompt: (show: boolean) => void;
-  passInput: string;
+  showPassPrompt: boolean; passInput: string;
   setPassInput: (val: string) => void;
   passError: boolean;
   setPassError: (err: boolean) => void;
@@ -16,9 +15,7 @@ interface GalleryDialogsProps {
   settings?: AppSettings;
   setIsStaffMode: (is: boolean) => void;
   navigate: (options: { to: string }) => void;
-  showWhatsAppChoice: boolean;
-  setShowWhatsAppChoice: (show: boolean) => void;
-  openWhatsApp: (num: string) => void;
+  showWhatsAppChoice: boolean; openWhatsApp: (num: string) => void;
 }
 
 export function GalleryDialogs(props: GalleryDialogsProps) {
@@ -28,7 +25,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
         {props.showPassPrompt && (
           <StaffUnlockDialog 
             isOpen={props.showPassPrompt}
-            onClose={() => { props.setShowPassPrompt(false); props.setPassInput(''); props.setPassError(false); }}
+            onClose={() => { useUIStore.getState().update({ showPassPrompt: false }); props.setPassInput(''); props.setPassError(false); }}
             passInput={props.passInput}
             setPassInput={props.setPassInput}
             passError={props.passError}
@@ -38,7 +35,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
               e.preventDefault();
               if (props.passInput === props.settings?.access_passcode) {
                 props.setIsStaffMode(true);
-                props.setShowPassPrompt(false);
+                useUIStore.getState().update({ showPassPrompt: false });
                 props.setPassInput('');
                 props.navigate({ to: '/admin' });
               } else {
@@ -51,7 +48,7 @@ export function GalleryDialogs(props: GalleryDialogsProps) {
 
       <WhatsAppChoiceDialog 
         isOpen={props.showWhatsAppChoice}
-        onClose={() => props.setShowWhatsAppChoice(false)}
+        onClose={() => useUIStore.getState().update({ showWhatsAppChoice: false })}
         settings={props.settings || null}
         t={props.t}
         onSelect={(num) => props.openWhatsApp(num)}

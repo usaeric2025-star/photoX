@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useActionState, useOptimistic, startTransition } from 'react';
+import { useLongPress } from "@shined/react-use";
 import { supabase } from '@/lib/supabase';
 import { reportError } from '@/lib/errorTracker';
 import { queryClient } from '@/lib/queryClient';
@@ -53,14 +54,15 @@ import { GalleryVariant } from '@/types/variant';
 import { Layers, Heart, Check, EyeOff } from 'lucide-react';
 import { getCacheBustedImageUrl } from '../../lib/ui-helpers';
 import { ResponsivePhoto } from '../shared/ResponsivePhoto';
-import { usePermission, useFilters, useStaticData } from '../../hooks';
+import { usePermission, useFilters, useCategories, useTags } from '../../hooks';
 import { useAdminActions } from '@/features/admin/useAdminActions';
 import { useTogglePin } from '@/hooks/core/mutations/useTogglePin';
 import { useInteractionBridge } from '../virtualizer/useInteractionBridge';
 import { interactionBus } from '@/lib/interactionBus';
 import { cn } from '@/lib/utils';
 import { translations } from '@/lib/translations';
-import { useGalleryStore } from '@/store/galleryStore';
+import { useUIStore } from '@/store/useUIStore';
+import { useMemo } from 'react';
 
 export interface PhotoCardProps {
   variant: GalleryVariant;
@@ -71,7 +73,7 @@ export interface PhotoCardProps {
   onLightboxOpen: (photo: Photo) => void;
   onShare?: (photo: Photo) => void;
   className?: string;
-  onClick?: (e: React.MouseEvent) => void;
+  onClick?: React.MouseEventHandler<any>;
   hideDetails?: boolean;
 }
 
@@ -175,6 +177,7 @@ export const PhotoCard = ({
   variant, photo, index, showGroupsCollapsed,
   onGroupClick, 
   onLightboxOpen, 
+  onShare,
   className = '', onClick,
   hideDetails = false
 }: PhotoCardProps) => {
@@ -183,10 +186,14 @@ export const PhotoCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const isManagement = variant === 'full-management' || variant === 'staff-workspace';
   
-  const lang = useGalleryStore(s => s.appLang);
+  const lang = useUIStore(s => s.appLang);
   const t = translations[lang as keyof typeof translations] || translations.en;
   
-  const { categoryMap, tagMap } = useStaticData();
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
+
+  const categoryMap = useMemo(() => new Map(categories.map(c => [String(c.id), c])), [categories]);
+  const tagMap = useMemo(() => new Map(tags.map(t => [String(t.id), t])), [tags]);
   
   const categoryId = photo.category_id ? String(photo.category_id) : '';
   const category = categoryMap.get(categoryId);
@@ -240,8 +247,7 @@ export const PhotoCard = ({
     }
 
     const { isMultiSelect } = interactionBus.current;
-    const isSearchActive = !!(filters?.searchQuery && filters.searchQuery.trim());
-
+    
     if (isManagement) {
       if (isMultiSelect && !e.shiftKey) {
         setters.toggleSelected(photo.id);
@@ -263,85 +269,29 @@ export const PhotoCard = ({
     }
   };
 
-  const handleLongPress = () => {
-    if (isManagement && can('photo:edit')) {
-      const { isMultiSelect } = interactionBus.current;
-      if (!isMultiSelect) {
-        setters.setIsMultiSelect(true);
-        setters.setSelectedIds(new Set([photo.id]));
-      } else {
-        setters.toggleSelected(photo.id);
+  const longPressBind = useLongPress(
+    null,
+    () => {
+      if (isManagement && can('photo:edit')) {
+        const { isMultiSelect } = interactionBus.current;
+        if (!isMultiSelect) {
+          setters.update({ isMultiSelect: true } as any);
+          setters.update({ selectedIds: [photo.id] } as any);
+        } else {
+          setters.toggleSelected(photo.id);
+        }
+        if ('vibrate' in navigator) navigator.vibrate(50);
+      } else if (!isManagement) {
+        onShare?.(photo);
       }
-    } else if (!isManagement) {
-       // Logic for public share
-       onShare?.(photo);
-    }
-  };
+    },
+    { delay: 500 }
+  );
 
   const thumbSrc = getCacheBustedImageUrl(photo, 'thumb');
 
   const is_hidden = !!photo.is_hidden;
 
-  const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const isLongPressedRef = useRef(false);
-  const isTouchRef = useRef(false);
-
-  const startPress = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isManagement || !can('photo:edit')) return;
-    if (e.type === 'touchstart') {
-      isTouchRef.current = true;
-    } else if (isTouchRef.current && e.type === 'mousedown') {
-      return; 
-    }
-
-    isLongPressedRef.current = false;
-
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-    }
-
-    pressTimerRef.current = setTimeout(() => {
-      handleLongPress();
-      isLongPressedRef.current = true;
-      if ('vibrate' in navigator) navigator.vibrate(50);
-    }, 500); 
-  };
-
-  const cancelPress = (e: React.MouseEvent | React.TouchEvent) => {
-    if (!isManagement) return;
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
-  };
-
-  const shouldEagerLoad = index < 10;
-
-  const handleContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (isManagement) {
-      handleLongPress();
-    }
-    if ('vibrate' in navigator) navigator.vibrate(50);
-  };
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    if (isManagement) {
-      if (pressTimerRef.current) {
-        clearTimeout(pressTimerRef.current);
-        pressTimerRef.current = null;
-      }
-
-      if (isLongPressedRef.current) {
-        e.preventDefault();
-        e.stopPropagation();
-        isLongPressedRef.current = false;
-        return;
-      }
-    }
-
-    handleClick(e);
-  };
 
   return (
     <div 
@@ -358,15 +308,8 @@ export const PhotoCard = ({
         ... { contentVisibility: 'auto', containIntrinsicSize: '300px' },
         transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
       }}
-      onContextMenu={handleContextMenu}
-      onMouseDown={startPress}
-      onMouseUp={cancelPress}
-      onMouseLeave={cancelPress}
-      onTouchStart={startPress}
-      onTouchEnd={cancelPress}
-      onTouchMove={cancelPress}
-      onTouchCancel={cancelPress}
-      onClick={handleCardClick}
+      {...longPressBind}
+      onClick={handleClick}
       className={cn(
         "aspect-square overflow-hidden cursor-pointer relative transition-all duration-300 group bg-white rounded-2xl shadow-sm ring-1 ring-slate-100",
         "before:absolute before:inset-0 before:z-30 before:pointer-events-none before:transition-all before:duration-300",

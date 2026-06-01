@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Settings2, LogIn, LogOut, Database, Globe } from 'lucide-react';
 import { useAuth, useAdminMode } from '@/hooks';
 import { reportError } from '@/lib/errorReporter';
-import { useGalleryStore } from '@/store/galleryStore';
+import { useUIStore } from '@/store/useUIStore';
 import { TranslationType } from '@/types';
 
 interface ToolsMenuProps {
@@ -45,7 +45,7 @@ export function ToolsMenu({
           {user ? (
             <button 
               onClick={() => {
-                useGalleryStore.getState().setAlertDialog({
+                useUIStore.getState().update({ alertDialog: {
                     title: '确认登出 / Confirm Logout',
                     message: '确定要登出管理员模式吗？ / Are you sure you want to log out?',
                     onConfirm: async () => {
@@ -53,7 +53,7 @@ export function ToolsMenu({
                         window.location.reload();
                     },
                     type: 'danger'
-                });
+    } });
               }}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 text-red-650 transition-colors text-left"
             >
@@ -64,7 +64,7 @@ export function ToolsMenu({
               onClick={async () => {
                 try {
                   await loginWithGoogle();
-                } catch (e) {
+                } catch (e: any) {
                   reportError(e, '管理员登录', 'warn');
                 }
               }}
@@ -77,14 +77,14 @@ export function ToolsMenu({
           {hasAdminAccess && (
             <button 
               onClick={() => {
-                useGalleryStore.getState().setAlertDialog({
+                useUIStore.getState().update({ alertDialog: {
                     title: '确认退出员工模式 / Confirm Exit Staff Mode',
                     message: '确定要退出员工模式吗？ / Are you sure you want to exit staff mode?',
                     onConfirm: () => {
                         if (handleExitStaffMode) handleExitStaffMode();
                     },
                     type: 'danger'
-                });
+    } });
               }}
               className="w-full px-4 py-3 flex items-center gap-3 hover:bg-red-50 transition-colors text-left text-red-600 border-t border-slate-100"
             >

@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react';
-import { useGalleryStore, useShallow } from '@/store/galleryStore';
+import { useUIStore, useShallow } from '@/store/useUIStore';
 import { User } from '@/types';
 import { fetchSettings } from '@/services/settingService';
 import { getPhotoCount } from '@/services/photo/queries';

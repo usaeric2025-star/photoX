@@ -7,10 +7,10 @@ import { useFeedback } from '@/hooks';
 import { ErrorLogViewer } from './admin/ErrorLogViewer';
 import { AppSettings, User, ApiResponse } from '@/types';
 import { 
-  useGalleryStore, useShallow
-} from '@/store/galleryStore';
+  useUIStore, useShallow
+} from '@/store/useUIStore';
 import { 
-  useCategoryList, useTagList, useManufacturerList, usePhotoInfiniteList,
+  useCategories, useTags, useManufacturers, usePhotoInfiniteList,
   useAdminCategory, useAuth, useSettings
 } from '@/hooks';
 import { useSettingsLogic } from './settings/useSettingsLogic';
@@ -21,6 +21,7 @@ import { SyncSettings } from './settings/SyncSettings';
 import { TagsManager } from './settings/TagsManager';
 import { CategoriesManager } from './settings/CategoriesManager';
 import { MaintenanceSection } from './settings/MaintenanceSection';
+import { DiagnosticsDashboard } from './admin/DiagnosticsDashboard';
 import { translations } from '@/lib/translations';
 
 import { usePhotoGallery } from '@/features/photos/usePhotoGallery';
@@ -33,15 +34,15 @@ const BUTTON_STYLES = {
 };
 
 export function SettingsScreen() {
-  const { setActiveScreen, setAlertDialog } = useGalleryStore(useShallow(s => ({
-    setActiveScreen: s.setActiveScreen,
-    setAlertDialog: s.setAlertDialog
+  const { update, activeScreen } = useUIStore(useShallow(s => ({
+    update: s.update,
+    activeScreen: s.activeScreen
   })));
   
   const { photos } = usePhotoGallery();
-  const { data: categories = [] } = useCategoryList();
-  const { data: tags = [] } = useTagList();
-  const { data: manufacturers = [] } = useManufacturerList();
+  const { data: categories = [] } = useCategories();
+  const { data: tags = [] } = useTags();
+  const { data: manufacturers = [] } = useManufacturers();
   const { tasks } = useTasks();
   const { mutateAsync: syncMut } = useSyncMutation();
 
@@ -95,13 +96,13 @@ export function SettingsScreen() {
   const setGeminiApiKey = (key: string) => updateSettings({ ...settings, gemini_api_key: key });
   const setCustomModel = (model: string) => updateSettings({ ...settings, custom_model: model });
   const setAccessPasscode = (code: string) => updateSettings({ ...settings, access_passcode: code });
-  const setSettings = updateSettings;
+  const setSettings = (s: AppSettings) => { updateSettings(s as any); };
   const saveSettings = async (s: Partial<AppSettings>) => { await updateSettings(s); };
 
   const {
       updateTag, deleteTag, updateCategory, deleteCategory, addCategory, 
       addManufacturer, updateManufacturer, deleteManufacturer, addTag
-  } = useAdminCategory({ setAlertDialog });
+  } = useAdminCategory({ update });
 
   const {
     testResult,
@@ -120,18 +121,25 @@ export function SettingsScreen() {
     customModel,
     saveSettings,
     performPullSync,
-    setSettings: (s) => { void updateSettings(s as Partial<AppSettings>); }
+    setSettings: (s: AppSettings) => { void updateSettings(s as Partial<AppSettings>); }
   });
 
   const inputClass = "flex-1 min-w-0 bg-brand-navy/5 border border-brand-navy/10 p-3 rounded-2xl text-sm outline-none focus:border-brand-gold focus:bg-white shadow-inner font-normal tracking-tight placeholder:text-brand-navy/30 text-brand-navy";
   const cardClass = "bg-white rounded-[32px] p-6 shadow-sm border border-brand-navy/10 space-y-4";
   const [activeTab, setActiveTab] = React.useState('cloud');
 
+  React.useEffect(() => {
+    if (activeScreen === 'ai_settings') setActiveTab('app');
+    if (activeScreen === 'manage') setActiveTab('cloud');
+    if (activeScreen === 'structure' || activeScreen === 'tags') setActiveTab('content');
+    if (activeScreen === 'settings') setActiveTab('cloud');
+  }, [activeScreen]);
+
   return (
     <div className="fixed inset-0 z-[500] bg-brand-bg flex flex-col pt-safe">
       <div className="px-6 py-4 flex items-center gap-3 bg-brand-bg sticky top-0 z-10">
         <button 
-          onClick={() => setActiveScreen('home')} 
+          onClick={() => update({ activeScreen: 'home' })} 
           className="p-2 -ml-2 text-brand-navy/50 hover:text-brand-navy transition-colors rounded-full active:bg-brand-navy/5"
         >
           <ChevronLeft size={24} />
@@ -179,6 +187,7 @@ export function SettingsScreen() {
               />
               <MaintenanceSection 
                 onHealthCheck={onRunMaintenance}
+                onDeduplicate={handleDeduplicate}
                 isChecking={isMaintenanceRunning}
                 cardClass={cardClass}
                 buttonStyles={BUTTON_STYLES}
@@ -248,6 +257,10 @@ export function SettingsScreen() {
                 buttonStyles={BUTTON_STYLES}
               />
             </>
+          )}
+
+          {activeTab === 'health' && (
+            <DiagnosticsDashboard />
           )}
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Cloud, Cog, LayoutGrid, Info } from 'lucide-react';
+import { Cloud, Cog, LayoutGrid, Activity } from 'lucide-react';
 
 interface SettingsTabsProps {
   activeTab: string;
@@ -11,6 +11,7 @@ export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
     { id: 'cloud', label: '云端与同步', icon: Cloud, subLabel: 'Cloud & Sync' },
     { id: 'app', label: '基础与 AI', icon: Cog, subLabel: 'General & AI' },
     { id: 'content', label: '目录与标签', icon: LayoutGrid, subLabel: 'Content' },
+    { id: 'health', label: '系统诊断', icon: Activity, subLabel: 'Health' },
   ];
 
   return (
