@@ -85,3 +85,24 @@
 - ❌ 禁止从 `api/` 导入 `src/` 下的文件
 - ❌ 禁止用 Vite 打包后端代码
 
+## Vercel 函数导出规则（锁定，2026-06-02）
+
+### 标准写法
+```typescript
+// api/index.ts
+import { handle } from "hono/vercel";
+import { app } from "./app.js";
+
+export const fetch = handle(app);
+```
+
+### 理由
+- Vercel 的 Node.js 运行时和 Edge 运行时都支持具名 `fetch` 导出
+- Hono 的 `hono/vercel` 适配器专为此设计
+- 与本地开发 `serve({ fetch: app.fetch })` 完全一致
+
+### 禁止事项
+- ❌ 禁止 `export default handle(app)`（在某些 ES Modules 编译阶段，Vercel 构建可能报错或解析失败）
+- ❌ 禁止动态导入 `await import("./app")`
+
+
