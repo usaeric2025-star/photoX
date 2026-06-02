@@ -20,7 +20,6 @@ import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailPage } from '../GroupDetailPage';
 import { PAGINATION } from '@/constants/config';
 import { normalizeAdminPhotos } from '@/lib/selectors/photos';
-const updateURL = (params: any) => console.log('updateURL stub', params);
 import { useNavigate } from '@tanstack/react-router';
 
 interface AdminGridContainerProps {
@@ -43,7 +42,7 @@ export function AdminGridContainer({
   
   const { can } = usePermission();
   const isAdminMode = useAdminMode() || isManagement;
-  const { tasks } = useTasks();
+  const { tasks, addTask, updateTask } = useTasks();
   const { runTask } = useTaskExecutor();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -102,12 +101,21 @@ export function AdminGridContainer({
     const files = e.target.files;
     if (!files || files.length === 0 || !user) return;
 
+    const taskId = addTask({ 
+      name: `上传 ${files.length} 张照片`,
+      message: '正在准备中...'
+    });
+
     try {
       const photoData: Photo[] = [];
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
+        updateTask(taskId, { 
+          progress: Math.round(((i) / files.length) * 50), 
+          message: `正在准备 (${i + 1}/${files.length})` 
+        });
+
         const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = (event) => {
@@ -121,10 +129,8 @@ export function AdminGridContainer({
           reader.readAsDataURL(file);
         });
 
-        const id = `temp-${crypto.randomUUID()}`;
-        
         photoData.push({
-          id,
+          id: `temp-${crypto.randomUUID()}`,
           name: file.name.split('.')[0],
           uri: dataUrl,
           created_at: new Date().toISOString(),
@@ -132,20 +138,22 @@ export function AdminGridContainer({
         } as Photo);
       }
 
-      await runTask(`上传 ${files.length} 张照片`, async ({ updateProgress }) => {
-        let completed = 0;
-        return await savePhotosToCloudBatch(user.id, photoData, (count) => {
-          completed = count;
-          const pct = Math.round((completed / files.length) * 100);
-          updateProgress(pct, `正在保存照片 (${count}/${files.length})`);
+      updateTask(taskId, { progress: 50, message: `正在上传 ${files.length} 张照片...` });
+      
+      await savePhotosToCloudBatch(user.id, photoData, (count) => {
+        const pct = 50 + Math.round((count / files.length) * 50);
+        updateTask(taskId, { 
+          progress: pct, 
+          message: `正在保存 (${count}/${files.length})` 
         });
-      }, {
-        showSuccessToast: true,
-        showErrorToast: true
       });
+
+      updateTask(taskId, { status: 'completed', progress: 100, message: '上传完成' });
+      toast.success('上传成功');
       queryClient.invalidateQueries({ queryKey: photoKeys.all });
     } catch (err) {
       handleError(err, '上传照片失败');
+      updateTask(taskId, { status: 'error', progress: 100, message: '上传失败' });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -188,13 +196,14 @@ export function AdminGridContainer({
           currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
               update({ columns: cols as 2 | 3 | 5 });
-              updateURL({ view: cols === 2 ? 'list' : 'grid' });
+              navigate({ 
+                search: (prev) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' }) 
+              });
           }}
           currentColumns={columns}
           onToggleGroups={() => setShowGroupsCollapsed(!urlFilters.showGroupsCollapsed)}
           showGroupsCollapsed={urlFilters.showGroupsCollapsed}
         />
-
         <div className="flex-1 overflow-hidden bg-brand-bg relative">
            <VirtualPhotoGrid 
              key={`photo-grid-${urlFilters.showGroupsCollapsed ? 'collapsed' : 'expanded'}-${filters.searchQuery || ''}`}
@@ -278,3 +287,4 @@ export function AdminGridContainer({
     </LayoutGroup>
   );
 };
+

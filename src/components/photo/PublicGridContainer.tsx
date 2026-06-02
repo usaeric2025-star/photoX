@@ -5,7 +5,6 @@ import { PublicFilters } from '@/components/ui/PublicFilters';
 import { useUIStore, useShallow } from '@/store/useUIStore';
 import { usePhotos, useFilters, useSettings, useCategories, useTags, useUrlFilters } from '@/hooks';
 import { processPhotos, cleanPhotos } from '@/lib/filters';
-const updateURL = (params: any) => console.log('updateURL stub', params);
 import { PAGINATION } from '@/constants/config';
 import { PhotoLightbox } from '../PhotoLightbox';
 import { GroupDetailPage } from '../GroupDetailPage';
@@ -14,6 +13,7 @@ import { PublicFloatingActions } from './PublicFloatingActions';
 import { WhatsAppChoiceDialog } from '../WhatsAppChoiceDialog';
 import { translations } from '@/lib/translations';
 import { Photo } from '@/types';
+import { useNavigate } from '@tanstack/react-router';
 
 interface PublicGridContainerProps {
   variant: GalleryVariant;
@@ -34,6 +34,7 @@ export function PublicGridContainer({
   const { settings } = useSettings(); 
   
   const { setSearch } = useFilters();
+  const navigate = useNavigate();
   const { filters: urlFilters, setGroupId, setPhotoId, setSortOrder, setShowGroupsCollapsed } = useUrlFilters();
 
   const { 
@@ -142,7 +143,9 @@ export function PublicGridContainer({
           currentSort={urlFilters.sortOrder as 'newest' | 'oldest' | 'name'}
           onColumnsChange={(cols) => {
               update({ columns: cols as 2 | 3 | 5 });
-              updateURL({ view: cols === 2 ? 'list' : 'grid' });
+              navigate({ 
+                search: (prev) => ({ ...prev, view: cols === 2 ? 'list' : 'grid' }) 
+              });
           }}
           currentColumns={columns}
           onToggleGroups={() => setShowGroupsCollapsed(!urlFilters.showGroupsCollapsed)}
