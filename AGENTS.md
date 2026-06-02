@@ -54,3 +54,22 @@
 ### 性能监控
 - 关键耗时操作使用 `logger.time()` / `logger.timeEnd()`
 - 视图渲染监控使用 `usePerformance('ComponentName')`
+
+## 构建工具链规则（锁定，2026-06-02）
+
+### 前端
+- 开发/构建 → **Vite**
+- ❌ 禁止用 Vite 打包后端代码
+- ❌ 禁止引入 Rspack / Rolldown 替代 Vite（除非 Vite 前端 DX 出现不可修复的问题）
+
+### 后端（Vercel Serverless）
+- 部署 → **Vercel 原生 TypeScript 编译**
+- 本地开发 → `tsx server.ts`
+- ❌ 禁止打包后端代码（不产生 createRequire 冲突）
+- ⚠️ 若未来必须打包后端（如非 Vercel 部署），仅允许 **esbuild + bundle: false**
+
+### 理由
+- 每个工具做自己擅长的事
+- 零额外配置，零学习成本
+- 与 Vercel 设计理念完美对齐
+
